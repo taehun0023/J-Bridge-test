@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { recalculateUserScores } from './scores'
 
 export async function startQuizAttempt(quizId: string) {
   const supabase = await createClient()
@@ -15,7 +16,7 @@ export async function startQuizAttempt(quizId: string) {
     .select('id')
     .single()
 
-  if (error) return { error: '퀴즈 시작에 실패했습니다' }
+  if (error) return { error: '퀴즈 시작에 실패했습니다: ' + error.message }
 
   return { attemptId: data.id }
 }
@@ -65,21 +66,24 @@ export async function submitQuizAnswers(
     }
   })
 
-  await supabase.from('quiz_answers').insert(answerRows)
+  const { error: answersError } = await supabase.from('quiz_answers').insert(answerRows)
+  if (answersError) return { error: '답안 저장에 실패했습니다: ' + answersError.message }
 
   // Calculate score and update attempt
   const score = answers.length > 0 ? Math.round((correctCount / answers.length) * 100) : 0
 
   // Get passing score
-  const { data: quiz } = await supabase
+  const { data: quiz, error: quizError } = await supabase
     .from('quizzes')
     .select('passing_score')
     .eq('id', attempt.quiz_id)
     .single()
 
+  if (quizError) return { error: '퀴즈 정보 조회 실패: ' + quizError.message }
+
   const passed = score >= (quiz?.passing_score ?? 70)
 
-  await supabase
+  const { error: updateError } = await supabase
     .from('quiz_attempts')
     .update({
       score,
@@ -88,7 +92,12 @@ export async function submitQuizAnswers(
     })
     .eq('id', attemptId)
 
+  if (updateError) return { error: '퀴즈 결과 저장 실패: ' + updateError.message }
+
   revalidatePath('/japanese/jlpt/quiz')
+
+  // Recalculate user scores after quiz completion
+  recalculateUserScores(user.id).catch(() => {})
 
   return {
     score,

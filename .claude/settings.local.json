@@ -14,7 +14,20 @@
       "Bash(powershell -Command \"\\(Select-String -Path ''C:\\\\Users\\\\zenoa\\\\Desktop\\\\Programming\\\\edu_cha\\\\supabase\\\\seed_jlpt_n2.sql'' -Pattern \"\"^\\\\s+\\\\\\(''\"\" | Measure-Object\\).Count\")",
       "Bash(powershell -Command:*)",
       "Bash(cmd /c findstr /c:\"'', ''N2'', ''\" \"C:\\\\Users\\\\zenoa\\\\Desktop\\\\Programming\\\\edu_cha\\\\supabase\\\\seed_jlpt_n2.sql\")",
-      "Bash(cmd /c findstr:*)"
+      "Bash(cmd /c findstr:*)",
+      "Bash(wc:*)",
+      "Bash(npm run dev:*)",
+      "Bash(taskkill:*)",
+      "Bash(cmd //c \"taskkill /PID 16868 /F\")",
+      "Bash(curl:*)",
+      "Bash(docker search:*)",
+      "Bash(docker exec:*)",
+      "Bash(wsl -e sh -c \"ls /sys/fs/cgroup/\")",
+      "Bash(PGPASSWORD=\"29qOe2JzAwejZ1R0\" psql:*)",
+      "Bash(echo:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }

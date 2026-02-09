@@ -26,12 +26,25 @@ export default async function ExamPage({ params }: { params: Promise<Params> }) 
     .eq('exam_id', examId)
     .order('sort_order', { ascending: true })
 
-  // Get sample test cases for each problem
-  const problems = examProblems?.map(ep => ({
-    ...ep.coding_problems,
-    sort_order: ep.sort_order,
-    points: ep.points,
-  })) ?? []
+  // Flatten junction table data into problem objects
+  const problems = (examProblems ?? [])
+    .filter(ep => ep.coding_problems)
+    .map(ep => {
+      const cp = ep.coding_problems as unknown as {
+        id: string; title: string; description: string; difficulty: string;
+        language: string; starter_code: string | null;
+      }
+      return {
+        id: cp.id,
+        title: cp.title,
+        description: cp.description,
+        difficulty: cp.difficulty,
+        language: cp.language,
+        starter_code: cp.starter_code,
+        sort_order: ep.sort_order,
+        points: ep.points,
+      }
+    })
 
   return (
     <ExamTaker exam={exam} problems={problems} />

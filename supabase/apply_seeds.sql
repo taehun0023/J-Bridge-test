@@ -52,3 +52,5 @@
 -- SELECT category, COUNT(*) FROM it_glossary GROUP BY category;
 -- SELECT COUNT(*) as courses_count FROM courses;
 
+
+

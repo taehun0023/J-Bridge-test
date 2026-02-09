@@ -4,13 +4,16 @@ import { useState } from 'react'
 import Sidebar from './Sidebar'
 import Header from './Header'
 import MobileNav from './MobileNav'
+import type { UserRole } from '@/lib/supabase/types'
 
 export default function MainShell({
   children,
   userName,
+  userRole = 'mentee',
 }: {
   children: React.ReactNode
   userName: string | null
+  userRole?: UserRole
 }) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -18,11 +21,11 @@ export default function MainShell({
     <div className="flex h-screen bg-gray-50">
       {/* Desktop sidebar */}
       <div className="hidden w-64 shrink-0 lg:block">
-        <Sidebar />
+        <Sidebar userRole={userRole} />
       </div>
 
       {/* Mobile nav */}
-      <MobileNav isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <MobileNav isOpen={mobileOpen} onClose={() => setMobileOpen(false)} userRole={userRole} />
 
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">

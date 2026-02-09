@@ -69,7 +69,7 @@ export default function QuizQuestion({
                 <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                   isSelected ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'
                 }`}>
-                  {option.sort_order + 1}
+                  {option.sort_order}
                 </div>
                 <span className="text-sm text-gray-800">{option.option_text}</span>
               </button>

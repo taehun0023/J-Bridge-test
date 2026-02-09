@@ -49,6 +49,13 @@ export default function CodeEditor({ problem, sampleCases }: Props) {
     passedCount: number
     totalCount: number
   } | null>(null)
+  const [reviews, setReviews] = useState<{
+    feedback: string
+    severity: string
+    line_number: number | null
+    review_type: string
+  }[]>([])
+  const [showReviews, setShowReviews] = useState(false)
 
   async function handleRun() {
     setRunning(true)
@@ -82,6 +89,12 @@ export default function CodeEditor({ problem, sampleCases }: Props) {
         setOutput(results.map((r, i) =>
           `테스트 ${i + 1}: ${r.status === 'accepted' ? 'PASS' : 'FAIL'}\n  입력: ${r.input}\n  기대: ${r.expected}\n  실제: ${r.actual ?? '(없음)'}`
         ).join('\n\n'))
+      }
+      // Show code reviews
+      const reviewData = (result as { reviews?: { feedback: string; severity: string; line_number: number | null; review_type: string }[] }).reviews
+      if (reviewData && reviewData.length > 0) {
+        setReviews(reviewData)
+        setShowReviews(true)
       }
     }
     setSubmitting(false)
@@ -158,6 +171,38 @@ export default function CodeEditor({ problem, sampleCases }: Props) {
             {output || '실행 결과가 여기에 표시됩니다'}
           </pre>
         </div>
+
+        {/* Code Review Panel */}
+        {showReviews && reviews.length > 0 && (
+          <div className="max-h-48 overflow-y-auto rounded-xl border border-gray-200 bg-white">
+            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2">
+              <span className="text-xs font-medium text-gray-700">코드 리뷰 ({reviews.length}건)</span>
+              <button onClick={() => setShowReviews(false)} className="text-xs text-gray-400 hover:text-gray-600">닫기</button>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {reviews.map((r, i) => (
+                <div key={i} className="px-4 py-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                      r.severity === 'error' ? 'bg-red-100 text-red-700' :
+                      r.severity === 'warning' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-blue-100 text-blue-700'
+                    }`}>
+                      {r.severity === 'error' ? 'ERROR' : r.severity === 'warning' ? 'WARN' : 'INFO'}
+                    </span>
+                    <span className="text-[10px] text-gray-400">
+                      {r.review_type === 'japan_convention' ? '日本慣習' : r.review_type}
+                    </span>
+                    {r.line_number && (
+                      <span className="text-[10px] text-gray-400">Line {r.line_number}</span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-gray-600">{r.feedback}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Action buttons */}
         <div className="flex gap-3">

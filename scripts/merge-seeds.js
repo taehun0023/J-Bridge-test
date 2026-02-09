@@ -80,3 +80,5 @@ console.log(`2. 프로젝트 선택 → SQL Editor 열기`);
 console.log(`3. ${outputFile} 파일의 내용을 복사하여 실행`);
 console.log(`\n⚠️  주의: 기존 데이터가 있다면 중복 방지 쿼리를 먼저 실행하세요.`);
 
+
+

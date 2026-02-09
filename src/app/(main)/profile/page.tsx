@@ -127,7 +127,7 @@ export default async function ProfilePage() {
                 <div key={s.id} className="flex items-center justify-between py-2.5">
                   <div>
                     <p className="text-sm text-gray-900">
-                      {(s.coding_problems as { title: string } | null)?.title ?? '문제'}
+                      {(s.coding_problems as unknown as { title: string } | null)?.title ?? '문제'}
                     </p>
                     <p className="text-xs text-gray-500">
                       {new Date(s.submitted_at).toLocaleDateString('ko-KR')} · {s.language}

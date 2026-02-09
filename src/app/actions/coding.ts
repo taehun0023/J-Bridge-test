@@ -2,7 +2,9 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createSubmission, pollSubmissionResult, getLanguageId, mapJudge0Status } from '@/lib/judge0/client'
+import { analyzeCode } from '@/lib/code-review/analyzer'
 import { revalidatePath } from 'next/cache'
+import { recalculateUserScores } from './scores'
 
 export async function submitCode(problemId: string, sourceCode: string, language: string) {
   const supabase = await createClient()
@@ -33,7 +35,7 @@ export async function submitCode(problemId: string, sourceCode: string, language
     .select('id')
     .single()
 
-  if (insertError || !submission) return { error: '제출 생성 실패' }
+  if (insertError || !submission) return { error: '제출 생성 실패: ' + (insertError?.message ?? 'unknown') }
 
   try {
     let passedCount = 0
@@ -76,7 +78,24 @@ export async function submitCode(problemId: string, sourceCode: string, language
       })
       .eq('id', submission.id)
 
+    // Run automated code review
+    const reviewItems = analyzeCode(sourceCode, language)
+    if (reviewItems.length > 0) {
+      await supabase.from('code_reviews').insert(
+        reviewItems.map(r => ({
+          submission_id: submission.id,
+          review_type: r.review_type,
+          feedback: r.feedback,
+          severity: r.severity,
+          line_number: r.line_number,
+        }))
+      )
+    }
+
     revalidatePath('/coding/problems')
+
+    // Recalculate user scores after coding submission
+    recalculateUserScores(user.id).catch(() => {})
 
     return {
       submissionId: submission.id,
@@ -84,6 +103,12 @@ export async function submitCode(problemId: string, sourceCode: string, language
       passedCount,
       totalCount: testCases.length,
       results: results.filter(r => r.isSample), // Only return sample test case results
+      reviews: reviewItems.map(r => ({
+        feedback: r.feedback,
+        severity: r.severity,
+        line_number: r.line_number,
+        review_type: r.review_type,
+      })),
     }
   } catch (err) {
     // Update submission as runtime error
@@ -92,7 +117,13 @@ export async function submitCode(problemId: string, sourceCode: string, language
       .update({ status: 'runtime_error' })
       .eq('id', submission.id)
 
-    return { error: '코드 실행 중 오류가 발생했습니다' }
+    const message = err instanceof Error ? err.message : String(err)
+    const isJudge0Error = message.includes('Judge0') || message.includes('submission')
+    return {
+      error: isJudge0Error
+        ? `코드 실행 서버 연결 실패: ${message}`
+        : `코드 실행 중 오류가 발생했습니다: ${message}`,
+    }
   }
 }
 
