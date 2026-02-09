@@ -1,5 +1,6 @@
-const JUDGE0_API_URL = process.env.JUDGE0_API_URL ?? 'https://judge0-ce.p.rapidapi.com'
+const JUDGE0_API_URL = process.env.JUDGE0_API_URL ?? 'http://localhost:2358'
 const JUDGE0_API_KEY = process.env.JUDGE0_API_KEY ?? ''
+const IS_RAPIDAPI = JUDGE0_API_URL.includes('rapidapi.com')
 
 // Judge0 language IDs
 const LANGUAGE_IDS: Record<string, number> = {
@@ -34,18 +35,37 @@ export function getLanguageId(language: string): number {
   return LANGUAGE_IDS[language] ?? 62
 }
 
+function getHeaders(includeContentType = false): Record<string, string> {
+  const headers: Record<string, string> = {}
+
+  if (includeContentType) {
+    headers['Content-Type'] = 'application/json'
+  }
+
+  if (IS_RAPIDAPI) {
+    // RapidAPI hosted Judge0
+    headers['X-RapidAPI-Key'] = JUDGE0_API_KEY
+    headers['X-RapidAPI-Host'] = 'judge0-ce.p.rapidapi.com'
+  } else if (JUDGE0_API_KEY) {
+    // Self-hosted Judge0 with authentication
+    headers['X-Auth-Token'] = JUDGE0_API_KEY
+  }
+
+  return headers
+}
+
 export async function createSubmission(submission: Judge0Submission): Promise<string> {
   const res = await fetch(`${JUDGE0_API_URL}/submissions?base64_encoded=false&wait=false`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-RapidAPI-Key': JUDGE0_API_KEY,
-      'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
-    },
+    headers: getHeaders(true),
     body: JSON.stringify(submission),
   })
 
-  if (!res.ok) throw new Error('Judge0 submission failed')
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    console.error(`[Judge0] createSubmission failed: ${res.status} ${res.statusText}`, body)
+    throw new Error(`Judge0 submission failed (${res.status}): ${body || res.statusText}`)
+  }
   const data = await res.json()
   return data.token
 }
@@ -54,14 +74,15 @@ export async function getSubmissionResult(token: string): Promise<Judge0Result> 
   const res = await fetch(
     `${JUDGE0_API_URL}/submissions/${token}?base64_encoded=false&fields=status,stdout,stderr,compile_output,time,memory,token`,
     {
-      headers: {
-        'X-RapidAPI-Key': JUDGE0_API_KEY,
-        'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
-      },
+      headers: getHeaders(),
     }
   )
 
-  if (!res.ok) throw new Error('Failed to get submission result')
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    console.error(`[Judge0] getSubmissionResult failed: ${res.status} ${res.statusText}`, body)
+    throw new Error(`Failed to get submission result (${res.status}): ${body || res.statusText}`)
+  }
   return res.json()
 }
 
