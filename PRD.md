@@ -1,72 +1,204 @@
-Project Name: J-Bridge (Japan IT Engineer Dispatch Platform)
-1. Project Goal & Business Objective
-목표: 한국인 IT 엔지니어를 교육하여 일본 기업에 성공적으로 파견(Haken) 및 정착시킨다.
+# J-Bridge PRD (Product Requirements Document)
 
-핵심 가치: "단순한 코딩 실력이 아니라, 일본 현장에서 '통하는' 실무 능력을 기른다."
+**Project Name:** J-Bridge (Japan IT Engineer Dispatch Platform)
 
-수익 모델: 교육 수료생의 일본 파견 계약 체결 시 발생하는 수수료 수익.
+---
 
-2. User Persona
-Target User (Mentee):
+## 1. Project Goal & Business Objective
 
-일본 취업을 희망하는 한국인 개발자 (신입 ~ 경력 3년 차).
-일본어는 초급이나 코딩은 좀 하는 경우, 혹은 그 반대.
+**목표:** 한국인 IT 엔지니어를 교육하여 일본 기업에 성공적으로 파견(Haken) 및 정착시킨다.
 
-자신의 현재 실력이 일본 시장에서 어느 정도 연봉을 받을 수 있는지 궁금해함.
+**핵심 가치:** "단순한 코딩 실력이 아니라, 일본 현장에서 '통하는' 실무 능력을 기른다."
 
-3. Key Features (Functional Requirements)
-A. Main Dashboard (The "Readiness" Monitor)
-단순한 학습 진도율이 아닌 **'일본 파견 준비도(Dispatch Readiness Score)'**를 시각화하여 보여준다.
+**수익 모델:** 교육 수료생의 일본 파견 계약 체결 시 발생하는 수수료 수익.
 
-Radar Chart (5축):
+**벤치마킹 모델:** Paiza (パイザ) — 코딩 등급제(S/A/B/C/D) 기반 실력 측정 시스템을 사내용으로 도입.
+- Paiza: 등급 기반 코딩 실력 정량화 (https://paiza.jp/)
+- AtCoder: 일본 기업 채용에 활용되는 알고리즘 대회 (https://atcoder.jp/) — 난이도 기준 참조
 
-JLPT/기초 일본어: 자격증 점수 기반.
+**등급 결과 활용:** 사내 인사 평가 + 파견처 매칭 참고용 (외부 취업 연계 없음)
 
-IT/비즈니스 일본어: 설계서 독해, 회화 능력.
+---
 
-Core Programming: Java/JS 기초 문법 및 알고리즘.
+## 2. User Persona & Roles
 
-Framework/Practical: Spring Boot, React, DB 설계 능력.
+### Admin (관리자)
+- 회사의 교육 담당자 / 매니저
+- 신입사원 계정 생성 및 지급
+- 전체 사원의 실력 현황 모니터링
+- 콘텐츠(문제/퀴즈) 등록 및 관리
+- 사원에게 과제 배정 및 피드백 제공
+- 인사 평가 및 파견처 매칭 참고 자료로 등급/점수 활용
 
-Attitude/Culture: 근태, 호렌소(보고) 이해도 (퀴즈로 측정).
+### Mentor (지도자)
+- 특정 분야 전문가 (일본어 강사, 시니어 개발자 등)
+- 사원 학습 현황 조회
+- 코드 리뷰 및 학습 피드백 제공
 
-B. Japanese Curriculum (Dual-Track)
-Track 1: JLPT Exam Prep
+### Mentee (신입사원)
+- 일본 파견을 준비하는 한국인 IT 엔지니어 (신입 ~ 경력 3년 차)
+- 일본어는 초급이나 코딩은 좀 하는 경우, 혹은 그 반대
+- 본인 실력을 정량적으로 파악하고 부족한 부분을 보강하고자 함
 
-N5 ~ N1 단어/문법/독해/청해 문제 은행.
+---
 
-모의고사 기능.
+## 3. User Flow
 
-Track 2: Survival IT Japanese (Business)
+### 3-1. Admin Flow
 
-용어집: 변수명 짓기(일본어 발음), 현장 용어(테스트 사양서, 요건 정의서 등).
+```
+계정 생성/지급 → 콘텐츠 관리 → 과제 배정 → 전 사원 점수/등급 모니터링 → 피드백 작성 → 인사 평가/파견처 참고
+```
 
-Role-Play: "납기가 지연될 것 같을 때 상사에게 보고하는 법" 등을 시나리오 퀴즈로 제공.
+1. 관리자가 Supabase Admin API로 신입사원 계정(이메일+비밀번호) 생성
+2. 생성된 자격 증명을 신입사원에게 지급
+3. 문제/퀴즈/과제 콘텐츠를 등록 및 관리
+4. 특정 사원에게 과제(퀴즈/코딩 문제/프로젝트)를 배정
+5. 관리자 대시보드에서 전 사원의 점수/등급/랭킹을 실시간 조회
+6. 사원별 코멘트 및 피드백 작성
+7. 등급 + 5축 점수를 인사 평가 및 파견처 물색에 참고
 
-C. Programming Curriculum (Job-Simulated)
-Language: Java (Primary), React (Secondary), SQL (Essential).
+### 3-2. Mentee Flow
 
-Algorithm Section:
+```
+로그인 → 온보딩(희망 등급/분야 선택) → 메인 대시보드 → 학습/시험 → 자동 채점 → 등급 산정 → 랭킹 반영
+```
 
-기본적인 자료구조/알고리즘 (코딩 테스트용).
+1. 관리자로부터 지급받은 이메일+비밀번호로 로그인
+2. 최초 로그인 시 온보딩: 희망 JLPT 등급 + 코딩 분야 선택
+3. 메인 대시보드 진입 (초기 상태: "아직 데이터가 없습니다" 표시)
+4. 분야별 학습 및 시험 응시:
+   - 일본어: JLPT 단어/문법 퀴즈 + IT용어 퀴즈
+   - 코딩: Paiza식 등급 시험 (S/A/B/C/D) 응시
+   - 태도/문화: 호렌소 시나리오 퀴즈
+5. 자동 채점 → 점수 및 등급 반영
+6. 메인 대시보드에 5축 레이더 차트 + 코딩 등급 뱃지 표시
+7. 전체 랭킹보드에서 본인 순위 확인
+8. 관리자가 배정한 과제 확인 및 수행
 
-백준 스타일의 문제 풀이 및 자동 채점 시스템.
+---
 
-Project Section (Practical):
+## 4. Feature Spec (Functional Requirements)
 
-"게시판 만들기"가 아니라 "사내 근태 관리 시스템 만들기" 등 실제 SI 업무와 유사한 주제.
+### A. 메인 대시보드 (Dispatch Readiness Monitor)
 
-Unit Test: 작성한 코드에 대해 JUnit 테스트 통과 여부 검증.
+**목적:** 단순한 학습 진도율이 아닌 '일본 파견 준비도'를 시각화.
 
-Code Review: AI 에이전트가 변수명(일본어 스타일 권장)과 주석 등을 리뷰.
+**구성 요소:**
+- **5축 레이더 차트** (Radar Chart):
+  - 축1: JLPT/기초 일본어 — JLPT 퀴즈 점수 기반
+  - 축2: IT/비즈니스 일본어 — IT용어, 설계서 독해, 비즈니스 회화 점수
+  - 축3: Core Programming — Java/JS/SQL 기초 문법 및 알고리즘 점수
+  - 축4: Framework/Practical — Spring Boot, React, DB 설계 점수
+  - 축5: Attitude/Culture — 근태, 호렌소, 비즈니스 매너 퀴즈 점수
+- **코딩 등급 뱃지**: Paiza식 S/A/B/C/D 등급 표시
+- **최근 활동 내역**: 최근 풀었던 문제, 응시한 시험 목록
+- **배정된 과제**: 관리자가 배정한 미완료 과제 목록
 
-4. Technical Stack Strategy
-Frontend: Next.js (React), Tailwind CSS, Chart.js (레이더 차트용).
+**초기 빈 상태 UX:**
+- 가입 직후 대시보드 진입 시 "아직 데이터가 없습니다" 메시지 표시
+- 각 영역별 "시작하기" 버튼으로 학습 유도
 
-Backend: Supabase (Auth, DB) or Spring Boot (if aiming to simulate usage).
+### B. 일본어 커리큘럼 (Dual-Track)
 
-AI Integration:
+**Track 1: JLPT Exam Prep**
+- N5 ~ N1 급수별 단어/문법/독해/청해 문제 은행
+- 모의고사 기능 (시간 제한 + 자동 채점)
+- 급수별 진행률 및 정답률 표시
 
-사용자의 코드를 분석하여 "일본 현장에서 선호하는 코딩 스타일"로 피드백.
+**Track 2: Survival IT Japanese (Business)**
+- IT 용어집: 변수명 짓기(일본어 발음), 현장 용어(테スト仕様書, 要件定義書 등)
+- Role-Play 시나리오 퀴즈: "납기가 지연될 것 같을 때 상사에게 보고하는 법" 등
 
-일본어 작문(비즈니스 메일) 자동 교정.
+### C. 코딩 실력 측정 (Paiza식 등급제)
+
+**등급 체계:**
+
+| 등급 | 설명 | 난이도 참고 |
+|---|---|---|
+| **D** | 기본 문법 이해 (변수, 조건문, 반복문) | AtCoder ABC A번 수준 |
+| **C** | 기초 알고리즘 (배열, 문자열 처리, 간단한 정렬) | AtCoder ABC B번 수준 |
+| **B** | 중급 알고리즘 (탐색, 정렬, 스택/큐, 해시) | AtCoder ABC C번 수준 |
+| **A** | 고급 알고리즘 (DP, 그래프, DFS/BFS) | AtCoder ABC D번 수준 |
+| **S** | 최상위 (복합 알고리즘, 최적화) | AtCoder ABC E번 이상 |
+
+**시험 방식:**
+- 등급별 시험 세트 (여러 문제로 구성)
+- 시간 제한 내 문제 풀이 + Judge0 API로 자동 채점
+- 통과 기준 충족 시 해당 등급 부여
+- 상위 등급 도전 가능 (순차적)
+- 언어 선택: Java (Primary), JavaScript, SQL
+
+**콘텐츠 소싱 전략:**
+- 자체 제작 문제 (AI 생성 + 전문가 검수)
+- Paiza/AtCoder의 등급 체계와 난이도 기준만 벤치마킹
+- 콘텐츠 확보 어려울 시 Paiza 등 외부 사이트 링크 안내 가능
+
+### D. 랭킹 시스템
+
+**전체 랭킹보드:**
+- 모든 사원의 종합 점수 기반 순위
+- 분야별 랭킹 (일본어, 코딩, 태도/문화)
+- 코딩 등급별 분포 표시
+
+**시즌제 (3개월 주기):**
+- 매 분기 랭킹 리셋 (1~3월, 4~6월, 7~9월, 10~12월)
+- 이전 시즌 기록은 아카이브로 보존
+- 시즌 종료 시 랭킹 스냅샷 저장
+
+### E. 관리자 기능 (Full Admin)
+
+**E-1. 계정 관리:**
+- 신입사원 계정 생성 (이메일+비밀번호) — Supabase Admin API 활용
+- 사원 목록 조회 / 검색 / 필터링
+- 역할 변경 (mentee/mentor/admin)
+- 계정 비활성화
+
+**E-2. 콘텐츠 관리 (CRUD):**
+- 코딩 문제 등록/수정/삭제 + 테스트 케이스 관리
+- 퀴즈 등록/수정/삭제 + 문제/선택지 관리
+- 코스/레슨 구조 관리
+- 등급 시험 세트 구성
+
+**E-3. 과제 배정:**
+- 특정 사원에게 퀴즈/코딩 문제/프로젝트 배정
+- 마감일 설정
+- 과제 진행 상태 추적 (미시작/진행중/완료/기한초과)
+
+**E-4. 사원 역량 리포트 (사내 인사 평가/파견처 매칭 참고):**
+- 전 사원의 5축 점수 + 코딩 등급 한눈에 조회
+- 사원별 상세 리포트 (점수 변화 추이, 시험 이력, 과제 수행률)
+- 코멘트/피드백 작성 (사원별)
+- 파견처 매칭 시 참고 자료로 활용
+
+### F. 코드 리뷰 (AI)
+
+- 사용자의 코드를 분석하여 "일본 현장에서 선호하는 코딩 스타일"로 피드백
+- 변수명(일본어 스타일 권장), 주석, 코드 구조 리뷰
+- 일본어 작문(비즈니스 메일) 자동 교정
+
+---
+
+## 5. Technical Stack
+
+| 영역 | 기술 |
+|---|---|
+| Framework | Next.js 14 (App Router) |
+| Language | TypeScript |
+| Styling | Tailwind CSS |
+| Backend/DB | Supabase (Auth, DB, Storage) |
+| Chart | Chart.js + react-chartjs-2 |
+| SSR Auth | @supabase/ssr |
+| Validation | zod |
+| Code Editor | @monaco-editor/react |
+| Code Execution | Judge0 (API) |
+| Data Fetching | @tanstack/react-query |
+
+---
+
+## 6. 비기능 요구사항
+
+- 관리자가 생성한 계정 외 자가 회원가입 불가 (초대 전용)
+- 모바일 반응형 UI (Tailwind CSS 기반)
+- 코딩 시험 제출물은 서버 사이드에서만 채점 (클라이언트 조작 방지)
+- 퀴즈 정답은 클라이언트에 노출되지 않음 (뷰를 통한 is_correct 숨김)

@@ -6,7 +6,15 @@
       "Bash(npx create-next-app:*)",
       "Bash(xcopy:*)",
       "Bash(npm install:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx supabase:*)",
+      "Bash(ls:*)",
+      "Bash(findstr:*)",
+      "Bash(powershell -Command \"\\(Select-String -Path ''C:\\\\Users\\\\zenoa\\\\Desktop\\\\Programming\\\\edu_cha\\\\supabase\\\\seed_jlpt_n2.sql'' -Pattern \"\"^\\\\s+\\\\\\(''\"\" | Measure-Object\\).Count\")",
+      "Bash(powershell -Command:*)",
+      "Bash(cmd /c findstr /c:\"'', ''N2'', ''\" \"C:\\\\Users\\\\zenoa\\\\Desktop\\\\Programming\\\\edu_cha\\\\supabase\\\\seed_jlpt_n2.sql\")",
+      "Bash(cmd /c findstr:*)"
     ]
   }
 }

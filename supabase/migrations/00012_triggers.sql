@@ -5,8 +5,12 @@ BEGIN
   INSERT INTO profiles (id, email, full_name, avatar_url)
   VALUES (
     NEW.id,
-    NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', ''),
+    COALESCE(NEW.email, 'user_' || LEFT(NEW.id::text, 8) || '@unknown.com'),
+    COALESCE(
+      NEW.raw_user_meta_data->>'full_name',
+      NEW.raw_user_meta_data->>'name',
+      'User_' || floor(random() * 90000 + 10000)::text
+    ),
     COALESCE(NEW.raw_user_meta_data->>'avatar_url', '')
   );
 
@@ -14,6 +18,9 @@ BEGIN
   INSERT INTO coding_skills (user_id) VALUES (NEW.id);
   INSERT INTO attitude_culture_skills (user_id) VALUES (NEW.id);
 
+  RETURN NEW;
+EXCEPTION WHEN others THEN
+  RAISE LOG 'handle_new_user failed for %: %', NEW.id, SQLERRM;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

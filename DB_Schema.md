@@ -1,6 +1,6 @@
 # J-Bridge Database Schema
 
-Supabase (PostgreSQL) 기반 DB 스키마. 총 19개 테이블.
+Supabase (PostgreSQL) 기반 DB 스키마. 총 29개 테이블 (기존 23 + 신규 6).
 
 ## ERD 개요
 
@@ -9,6 +9,7 @@ auth.users (Supabase Auth)
     │
     ▼
 profiles ─────────────────────────────────────────────────────────┐
+    │  (+ target_jlpt_level, target_coding_area, coding_rank)     │
     │                                                             │
     ├── japanese_skills (축1: JLPT + 축2: IT일본어)                │
     ├── coding_skills (축3: Core + 축4: Framework)                 │
@@ -28,6 +29,11 @@ profiles ───────────────────────�
     ├── quiz_attempts ── quiz_answers                             │
     ├── code_submissions ── code_reviews                          │
     │                                                             │
+    ├── coding_skill_exams ── coding_exam_attempts (Paiza식 등급) │
+    ├── ranking_seasons ── user_rankings (3개월 시즌 랭킹)         │
+    ├── task_assignments (관리자 과제 배정)                         │
+    ├── admin_feedbacks (관리자 피드백)                             │
+    │                                                             │
     └── jlpt_vocabulary / it_glossary (콘텐츠 뱅크)               │
 ```
 
@@ -40,6 +46,9 @@ profiles ───────────────────────�
 | 퀴즈 시스템 | quizzes, quiz_questions, quiz_question_options, quiz_attempts, quiz_answers | 5 |
 | 코딩 제출 & AI 리뷰 | code_submissions, code_reviews | 2 |
 | 일본어 콘텐츠 뱅크 | jlpt_vocabulary, it_glossary | 2 |
+| **코딩 등급 시험 (신규)** | coding_skill_exams, coding_exam_attempts | 2 |
+| **랭킹 시스템 (신규)** | ranking_seasons, user_rankings | 2 |
+| **관리자 기능 (신규)** | task_assignments, admin_feedbacks | 2 |
 
 ---
 
@@ -66,6 +75,13 @@ CREATE TABLE profiles (
   years_of_experience INTEGER DEFAULT 0,
   target_dispatch_date DATE,
   bio TEXT,
+
+  -- 온보딩 필드 (신규)
+  target_jlpt_level TEXT CHECK (target_jlpt_level IN ('N5', 'N4', 'N3', 'N2', 'N1', NULL)),
+  target_coding_area TEXT CHECK (target_coding_area IN ('java', 'javascript', 'sql', NULL)),
+  coding_rank TEXT DEFAULT 'D' CHECK (coding_rank IN ('S', 'A', 'B', 'C', 'D')),
+  is_onboarded BOOLEAN NOT NULL DEFAULT FALSE,
+
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -648,6 +664,265 @@ CREATE POLICY "Authenticated users can view it_glossary"
 CREATE VIEW quiz_question_options_safe AS
 SELECT id, question_id, option_text, sort_order
 FROM quiz_question_options;
+```
+
+---
+
+---
+
+## 신규 테이블 (v2: 등급 시험 + 랭킹 + 관리자)
+
+### 24. coding_skill_exams
+
+Paiza식 등급 시험 세트 정의. 각 등급(S/A/B/C/D)별로 시험 세트를 구성한다.
+
+```sql
+CREATE TABLE coding_skill_exams (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  target_rank TEXT NOT NULL CHECK (target_rank IN ('S', 'A', 'B', 'C', 'D')),
+  language TEXT NOT NULL DEFAULT 'java' CHECK (language IN ('java', 'javascript', 'sql')),
+  description TEXT,
+  time_limit_minutes INTEGER NOT NULL DEFAULT 60,
+  passing_score SMALLINT NOT NULL DEFAULT 70 CHECK (passing_score BETWEEN 0 AND 100),
+  is_published BOOLEAN NOT NULL DEFAULT FALSE,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 등급 시험 ↔ 코딩 문제 연결 (M:N)
+CREATE TABLE coding_exam_problems (
+  exam_id UUID NOT NULL REFERENCES coding_skill_exams(id) ON DELETE CASCADE,
+  problem_id UUID NOT NULL REFERENCES coding_problems(id) ON DELETE CASCADE,
+  sort_order INTEGER DEFAULT 0,
+  points SMALLINT NOT NULL DEFAULT 10,
+  PRIMARY KEY (exam_id, problem_id)
+);
+```
+
+### 25. coding_exam_attempts
+
+유저의 등급 시험 도전 기록.
+
+```sql
+CREATE TABLE coding_exam_attempts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  exam_id UUID NOT NULL REFERENCES coding_skill_exams(id) ON DELETE CASCADE,
+  score SMALLINT,
+  passed BOOLEAN,
+  achieved_rank TEXT CHECK (achieved_rank IN ('S', 'A', 'B', 'C', 'D', NULL)),
+  started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  completed_at TIMESTAMPTZ
+);
+
+CREATE INDEX idx_coding_exam_attempts_user ON coding_exam_attempts(user_id, started_at DESC);
+```
+
+### 26. ranking_seasons
+
+3개월 시즌 관리.
+
+```sql
+CREATE TABLE ranking_seasons (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  CHECK (end_date > start_date)
+);
+
+CREATE INDEX idx_ranking_seasons_active ON ranking_seasons(is_active) WHERE is_active = TRUE;
+```
+
+### 27. user_rankings
+
+시즌별 유저 랭킹 스냅샷.
+
+```sql
+CREATE TABLE user_rankings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  season_id UUID NOT NULL REFERENCES ranking_seasons(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+
+  overall_score SMALLINT NOT NULL DEFAULT 0 CHECK (overall_score BETWEEN 0 AND 100),
+  jlpt_score SMALLINT NOT NULL DEFAULT 0 CHECK (jlpt_score BETWEEN 0 AND 100),
+  coding_score SMALLINT NOT NULL DEFAULT 0 CHECK (coding_score BETWEEN 0 AND 100),
+  attitude_score SMALLINT NOT NULL DEFAULT 0 CHECK (attitude_score BETWEEN 0 AND 100),
+  coding_rank TEXT DEFAULT 'D' CHECK (coding_rank IN ('S', 'A', 'B', 'C', 'D')),
+
+  overall_rank INTEGER,
+  jlpt_rank INTEGER,
+  coding_rank_position INTEGER,
+  attitude_rank INTEGER,
+
+  recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  UNIQUE(season_id, user_id)
+);
+
+CREATE INDEX idx_user_rankings_season ON user_rankings(season_id, overall_rank);
+```
+
+### 28. task_assignments
+
+관리자가 사원에게 과제를 배정.
+
+```sql
+CREATE TABLE task_assignments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  assigned_by UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  assigned_to UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+
+  target_type TEXT NOT NULL CHECK (target_type IN ('quiz', 'coding_problem', 'coding_exam', 'project')),
+  target_id UUID NOT NULL,
+
+  title TEXT,
+  description TEXT,
+  due_date TIMESTAMPTZ,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'completed', 'overdue')),
+
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  completed_at TIMESTAMPTZ
+);
+
+CREATE INDEX idx_task_assignments_assignee ON task_assignments(assigned_to, status);
+CREATE INDEX idx_task_assignments_assigner ON task_assignments(assigned_by, created_at DESC);
+```
+
+### 29. admin_feedbacks
+
+관리자가 사원에게 남기는 코멘트/피드백.
+
+```sql
+CREATE TABLE admin_feedbacks (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  admin_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+
+  category TEXT NOT NULL DEFAULT 'general' CHECK (category IN (
+    'general', 'japanese', 'coding', 'attitude', 'assignment', 'dispatch_readiness'
+  )),
+  content TEXT NOT NULL,
+
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_admin_feedbacks_user ON admin_feedbacks(user_id, created_at DESC);
+```
+
+---
+
+## 관리자 RLS 정책 (신규)
+
+관리자(Admin) 역할이 전 사원의 데이터를 조회/관리할 수 있도록 RLS 정책 추가.
+
+```sql
+-- 헬퍼 함수: 현재 유저가 admin인지 확인
+CREATE OR REPLACE FUNCTION is_admin()
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'
+  );
+$$ LANGUAGE sql SECURITY DEFINER;
+
+-- Admin이 전 사원의 프로필 조회 가능
+CREATE POLICY "Admins can view all profiles"
+  ON profiles FOR SELECT USING (is_admin());
+
+-- Admin이 전 사원의 스킬 점수 조회 가능
+CREATE POLICY "Admins can view all japanese_skills"
+  ON japanese_skills FOR SELECT USING (is_admin());
+CREATE POLICY "Admins can view all coding_skills"
+  ON coding_skills FOR SELECT USING (is_admin());
+CREATE POLICY "Admins can view all attitude_culture_skills"
+  ON attitude_culture_skills FOR SELECT USING (is_admin());
+CREATE POLICY "Admins can view all dispatch_readiness_scores"
+  ON dispatch_readiness_scores FOR SELECT USING (is_admin());
+
+-- Admin이 전 사원의 제출/시도 기록 조회 가능
+CREATE POLICY "Admins can view all code_submissions"
+  ON code_submissions FOR SELECT USING (is_admin());
+CREATE POLICY "Admins can view all code_reviews"
+  ON code_reviews FOR SELECT USING (is_admin());
+CREATE POLICY "Admins can view all quiz_attempts"
+  ON quiz_attempts FOR SELECT USING (is_admin());
+
+-- Admin이 콘텐츠 CRUD 가능
+CREATE POLICY "Admins can manage courses"
+  ON courses FOR ALL USING (is_admin());
+CREATE POLICY "Admins can manage lessons"
+  ON lessons FOR ALL USING (is_admin());
+CREATE POLICY "Admins can manage coding_problems"
+  ON coding_problems FOR ALL USING (is_admin());
+CREATE POLICY "Admins can manage coding_test_cases"
+  ON coding_test_cases FOR ALL USING (is_admin());
+CREATE POLICY "Admins can manage quizzes"
+  ON quizzes FOR ALL USING (is_admin());
+CREATE POLICY "Admins can manage quiz_questions"
+  ON quiz_questions FOR ALL USING (is_admin());
+CREATE POLICY "Admins can manage quiz_question_options"
+  ON quiz_question_options FOR ALL USING (is_admin());
+
+-- 신규 테이블 RLS
+ALTER TABLE coding_skill_exams ENABLE ROW LEVEL SECURITY;
+ALTER TABLE coding_exam_problems ENABLE ROW LEVEL SECURITY;
+ALTER TABLE coding_exam_attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ranking_seasons ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_rankings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE task_assignments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_feedbacks ENABLE ROW LEVEL SECURITY;
+
+-- coding_skill_exams: 인증된 사용자 읽기, Admin CRUD
+CREATE POLICY "Authenticated users can view published exams"
+  ON coding_skill_exams FOR SELECT USING (auth.role() = 'authenticated' AND is_published = TRUE);
+CREATE POLICY "Admins can manage coding_skill_exams"
+  ON coding_skill_exams FOR ALL USING (is_admin());
+
+-- coding_exam_problems: 인증된 사용자 읽기, Admin CRUD
+CREATE POLICY "Authenticated users can view exam problems"
+  ON coding_exam_problems FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Admins can manage coding_exam_problems"
+  ON coding_exam_problems FOR ALL USING (is_admin());
+
+-- coding_exam_attempts: 본인 + Admin 조회
+CREATE POLICY "Users can view own exam attempts"
+  ON coding_exam_attempts FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own exam attempts"
+  ON coding_exam_attempts FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Admins can view all exam attempts"
+  ON coding_exam_attempts FOR SELECT USING (is_admin());
+
+-- ranking_seasons: 인증된 사용자 읽기, Admin CRUD
+CREATE POLICY "Authenticated users can view ranking_seasons"
+  ON ranking_seasons FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Admins can manage ranking_seasons"
+  ON ranking_seasons FOR ALL USING (is_admin());
+
+-- user_rankings: 인증된 사용자 전원 조회 가능 (랭킹보드)
+CREATE POLICY "Authenticated users can view rankings"
+  ON user_rankings FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Admins can manage user_rankings"
+  ON user_rankings FOR ALL USING (is_admin());
+
+-- task_assignments: 본인 배정 조회 + Admin 전체 관리
+CREATE POLICY "Users can view own assignments"
+  ON task_assignments FOR SELECT USING (auth.uid() = assigned_to);
+CREATE POLICY "Users can update own assignment status"
+  ON task_assignments FOR UPDATE USING (auth.uid() = assigned_to);
+CREATE POLICY "Admins can manage all task_assignments"
+  ON task_assignments FOR ALL USING (is_admin());
+
+-- admin_feedbacks: 본인 피드백 조회 + Admin CRUD
+CREATE POLICY "Users can view own feedbacks"
+  ON admin_feedbacks FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Admins can manage all admin_feedbacks"
+  ON admin_feedbacks FOR ALL USING (is_admin());
 ```
 
 ---
