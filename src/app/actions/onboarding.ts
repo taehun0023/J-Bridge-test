@@ -9,7 +9,7 @@ export async function completeOnboarding(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: '인증이 필요합니다' }
+    return { error: '認証が必要です' }
   }
 
   const targetJlptLevel = formData.get('target_jlpt_level') as string
@@ -19,10 +19,10 @@ export async function completeOnboarding(formData: FormData) {
   const validCodingAreas = ['java', 'javascript', 'sql']
 
   if (!validJlptLevels.includes(targetJlptLevel)) {
-    return { error: '유효한 JLPT 레벨을 선택해주세요' }
+    return { error: '有効なJLPTレベルを選択してください' }
   }
   if (!validCodingAreas.includes(targetCodingArea)) {
-    return { error: '유효한 코딩 분야를 선택해주세요' }
+    return { error: '有効なコーディング分野を選択してください' }
   }
 
   const { error } = await supabase
@@ -36,7 +36,7 @@ export async function completeOnboarding(formData: FormData) {
     .eq('id', user.id)
 
   if (error) {
-    return { error: '저장 중 오류가 발생했습니다' }
+    return { error: '保存中にエラーが発生しました' }
   }
 
   revalidatePath('/', 'layout')

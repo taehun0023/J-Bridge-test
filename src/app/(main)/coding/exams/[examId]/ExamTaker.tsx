@@ -99,17 +99,17 @@ export default function ExamTaker({ exam, problems }: Props) {
   if (finished) {
     return (
       <div className="mx-auto max-w-lg py-12 text-center">
-        <div className={`rounded-2xl p-8 ${passed ? 'bg-green-50' : 'bg-red-50'}`}>
+        <div className={`rounded-2xl p-8 ${passed ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'}`}>
           <Badge label={exam.target_rank} variant="coding_rank" className="text-3xl px-4 py-2" />
-          <h2 className="mt-4 text-2xl font-bold">{passed ? '합격!' : '불합격'}</h2>
-          <p className="mt-2 text-4xl font-bold text-gray-900">{currentScore} / {maxScore}점</p>
-          <p className="mt-2 text-gray-500">합격 기준: {exam.passing_score}%</p>
+          <h2 className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">{passed ? '合格！' : '不合格'}</h2>
+          <p className="mt-2 text-4xl font-bold text-gray-900 dark:text-white">{currentScore} / {maxScore}点</p>
+          <p className="mt-2 text-gray-500 dark:text-gray-400">合格基準: {exam.passing_score}%</p>
         </div>
         <button
           onClick={() => router.push('/coding/exams')}
           className="mt-6 rounded-lg bg-blue-600 px-6 py-3 text-sm font-medium text-white hover:bg-blue-700"
         >
-          시험 목록으로
+          試験一覧へ
         </button>
       </div>
     )
@@ -120,10 +120,10 @@ export default function ExamTaker({ exam, problems }: Props) {
   return (
     <div className="flex h-[calc(100vh-8rem)] flex-col">
       {/* Exam header */}
-      <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-5 py-3">
+      <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-5 py-3 dark:border-gray-700 dark:bg-gray-900">
         <div className="flex items-center gap-3">
           <Badge label={exam.target_rank} variant="coding_rank" />
-          <span className="font-semibold text-gray-900">{exam.title}</span>
+          <span className="font-semibold text-gray-900 dark:text-white">{exam.title}</span>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex gap-1">
@@ -137,10 +137,10 @@ export default function ExamTaker({ exam, problems }: Props) {
                     i === currentProblemIndex
                       ? 'bg-blue-600 text-white'
                       : r?.status === 'accepted'
-                      ? 'bg-green-100 text-green-700'
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
                       : r
-                      ? 'bg-red-100 text-red-700'
-                      : 'bg-gray-100 text-gray-600'
+                      ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                      : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
                   }`}
                 >
                   {i + 1}
@@ -148,43 +148,43 @@ export default function ExamTaker({ exam, problems }: Props) {
               )
             })}
           </div>
-          <span className={`font-mono text-sm font-bold ${timeLeft < 300 ? 'text-red-600' : 'text-gray-700'}`}>
+          <span className={`font-mono text-sm font-bold ${timeLeft < 300 ? 'text-red-600' : 'text-gray-700 dark:text-gray-300'}`}>
             {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
           </span>
           <button
             onClick={() => setFinished(true)}
             className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
           >
-            시험 종료
+            試験終了
           </button>
         </div>
       </div>
 
       {/* Problem + Editor */}
       <div className="mt-4 flex flex-1 gap-4 overflow-hidden">
-        <div className="w-2/5 overflow-y-auto rounded-xl border border-gray-200 bg-white p-5">
+        <div className="w-2/5 overflow-y-auto rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">문제 {currentProblemIndex + 1}</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">問題 {currentProblemIndex + 1}</span>
             <Badge label={currentProblem.difficulty} variant="difficulty" />
-            <span className="text-xs text-gray-400">{currentProblem.points}점</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">{currentProblem.points}点</span>
           </div>
-          <h2 className="mt-2 text-lg font-bold text-gray-900">{currentProblem.title}</h2>
-          <div className="mt-4 whitespace-pre-wrap text-sm text-gray-700">
+          <h2 className="mt-2 text-lg font-bold text-gray-900 dark:text-white">{currentProblem.title}</h2>
+          <div className="mt-4 whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300">
             {currentProblem.description}
           </div>
           {results[currentProblem.id] && (
             <div className={`mt-4 rounded-lg p-3 text-sm ${
               results[currentProblem.id].status === 'accepted'
-                ? 'bg-green-50 text-green-700'
-                : 'bg-red-50 text-red-700'
+                ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                : 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300'
             }`}>
-              {results[currentProblem.id].passedCount}/{results[currentProblem.id].totalCount} 테스트 통과
+              {results[currentProblem.id].passedCount}/{results[currentProblem.id].totalCount} テスト通過
             </div>
           )}
         </div>
 
         <div className="flex w-3/5 flex-col gap-3">
-          <div className="flex-1 overflow-hidden rounded-xl border border-gray-200">
+          <div className="flex-1 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
             <MonacoEditor
               height="100%"
               language={currentProblem.language === 'java' ? 'java' : 'javascript'}
@@ -204,7 +204,7 @@ export default function ExamTaker({ exam, problems }: Props) {
             disabled={submitting}
             className="rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {submitting ? '채점 중...' : `문제 ${currentProblemIndex + 1} 제출`}
+            {submitting ? '採点中...' : `問題 ${currentProblemIndex + 1} 提出`}
           </button>
         </div>
       </div>

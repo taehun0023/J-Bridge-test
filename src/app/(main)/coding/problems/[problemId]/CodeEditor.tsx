@@ -30,7 +30,7 @@ interface Props {
 }
 
 const difficultyLabels: Record<string, string> = {
-  easy: '쉬움', medium: '보통', hard: '어려움',
+  easy: '易しい', medium: '普通', hard: '難しい',
 }
 
 const monacoLanguageMap: Record<string, string> = {
@@ -87,7 +87,7 @@ export default function CodeEditor({ problem, sampleCases }: Props) {
       const results = (result as { results?: { input: string; expected: string; actual: string | null; status: string }[] }).results
       if (results) {
         setOutput(results.map((r, i) =>
-          `테스트 ${i + 1}: ${r.status === 'accepted' ? 'PASS' : 'FAIL'}\n  입력: ${r.input}\n  기대: ${r.expected}\n  실제: ${r.actual ?? '(없음)'}`
+          `テスト ${i + 1}: ${r.status === 'accepted' ? 'PASS' : 'FAIL'}\n  入力: ${r.input}\n  期待: ${r.expected}\n  実際: ${r.actual ?? '(なし)'}`
         ).join('\n\n'))
       }
       // Show code reviews
@@ -103,32 +103,32 @@ export default function CodeEditor({ problem, sampleCases }: Props) {
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-4">
       {/* Left: Problem description */}
-      <div className="flex w-1/2 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white">
-        <div className="border-b border-gray-200 px-5 py-4">
+      <div className="flex w-1/2 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+        <div className="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
           <div className="flex items-center gap-3">
-            <h1 className="text-lg font-bold text-gray-900">{problem.title}</h1>
+            <h1 className="text-lg font-bold text-gray-900 dark:text-white">{problem.title}</h1>
             <Badge label={difficultyLabels[problem.difficulty] ?? problem.difficulty} variant="difficulty" />
           </div>
-          <div className="mt-1 flex gap-4 text-xs text-gray-500">
-            <span>언어: {problem.language.toUpperCase()}</span>
-            <span>시간: {problem.time_limit_ms}ms</span>
-            <span>메모리: {problem.memory_limit_mb}MB</span>
+          <div className="mt-1 flex gap-4 text-xs text-gray-500 dark:text-gray-400">
+            <span>言語: {problem.language.toUpperCase()}</span>
+            <span>時間: {problem.time_limit_ms}ms</span>
+            <span>メモリ: {problem.memory_limit_mb}MB</span>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-5">
-          <div className="prose prose-sm max-w-none whitespace-pre-wrap text-gray-700">
+          <div className="prose prose-sm max-w-none whitespace-pre-wrap text-gray-700 dark:text-gray-300">
             {problem.description}
           </div>
 
           {sampleCases.length > 0 && (
             <div className="mt-6 space-y-4">
-              <h3 className="text-sm font-semibold text-gray-900">예제</h3>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">例題</h3>
               {sampleCases.map((tc, i) => (
-                <div key={i} className="rounded-lg bg-gray-50 p-4">
-                  <div className="text-xs font-medium text-gray-500">입력</div>
-                  <pre className="mt-1 text-sm text-gray-800">{tc.input}</pre>
-                  <div className="mt-2 text-xs font-medium text-gray-500">출력</div>
-                  <pre className="mt-1 text-sm text-gray-800">{tc.expected_output}</pre>
+                <div key={i} className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
+                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400">入力</div>
+                  <pre className="mt-1 text-sm text-gray-800 dark:text-gray-200">{tc.input}</pre>
+                  <div className="mt-2 text-xs font-medium text-gray-500 dark:text-gray-400">出力</div>
+                  <pre className="mt-1 text-sm text-gray-800 dark:text-gray-200">{tc.expected_output}</pre>
                 </div>
               ))}
             </div>
@@ -138,7 +138,7 @@ export default function CodeEditor({ problem, sampleCases }: Props) {
 
       {/* Right: Code editor + output */}
       <div className="flex w-1/2 flex-col gap-4">
-        <div className="flex-1 overflow-hidden rounded-xl border border-gray-200">
+        <div className="flex-1 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
           <MonacoEditor
             height="100%"
             language={monacoLanguageMap[problem.language] ?? 'plaintext'}
@@ -155,49 +155,49 @@ export default function CodeEditor({ problem, sampleCases }: Props) {
         </div>
 
         {/* Output panel */}
-        <div className="h-48 overflow-hidden rounded-xl border border-gray-200 bg-gray-900">
+        <div className="h-48 overflow-hidden rounded-xl border border-gray-200 bg-gray-900 dark:border-gray-700">
           <div className="flex items-center justify-between border-b border-gray-700 px-4 py-2">
-            <span className="text-xs font-medium text-gray-400">출력</span>
+            <span className="text-xs font-medium text-gray-400">出力</span>
             {submitResult && (
               <span className={`text-xs font-medium ${
                 submitResult.status === 'accepted' ? 'text-green-400' : 'text-red-400'
               }`}>
-                {submitResult.passedCount}/{submitResult.totalCount} 통과
-                {submitResult.status === 'accepted' ? ' - 정답!' : ` - ${submitResult.status}`}
+                {submitResult.passedCount}/{submitResult.totalCount} 合格
+                {submitResult.status === 'accepted' ? ' - 正解！' : ` - ${submitResult.status}`}
               </span>
             )}
           </div>
           <pre className="h-full overflow-y-auto p-4 text-sm text-gray-300">
-            {output || '실행 결과가 여기에 표시됩니다'}
+            {output || '実行結果がここに表示されます'}
           </pre>
         </div>
 
         {/* Code Review Panel */}
         {showReviews && reviews.length > 0 && (
-          <div className="max-h-48 overflow-y-auto rounded-xl border border-gray-200 bg-white">
-            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2">
-              <span className="text-xs font-medium text-gray-700">코드 리뷰 ({reviews.length}건)</span>
-              <button onClick={() => setShowReviews(false)} className="text-xs text-gray-400 hover:text-gray-600">닫기</button>
+          <div className="max-h-48 overflow-y-auto rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2 dark:border-gray-700">
+              <span className="text-xs font-medium text-gray-700 dark:text-gray-300">コードレビュー ({reviews.length}件)</span>
+              <button onClick={() => setShowReviews(false)} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">閉じる</button>
             </div>
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
               {reviews.map((r, i) => (
                 <div key={i} className="px-4 py-2.5">
                   <div className="flex items-center gap-2">
                     <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
-                      r.severity === 'error' ? 'bg-red-100 text-red-700' :
-                      r.severity === 'warning' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-blue-100 text-blue-700'
+                      r.severity === 'error' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                      r.severity === 'warning' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                      'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
                     }`}>
                       {r.severity === 'error' ? 'ERROR' : r.severity === 'warning' ? 'WARN' : 'INFO'}
                     </span>
-                    <span className="text-[10px] text-gray-400">
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500">
                       {r.review_type === 'japan_convention' ? '日本慣習' : r.review_type}
                     </span>
                     {r.line_number && (
-                      <span className="text-[10px] text-gray-400">Line {r.line_number}</span>
+                      <span className="text-[10px] text-gray-400 dark:text-gray-500">Line {r.line_number}</span>
                     )}
                   </div>
-                  <p className="mt-1 text-xs text-gray-600">{r.feedback}</p>
+                  <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">{r.feedback}</p>
                 </div>
               ))}
             </div>
@@ -209,16 +209,16 @@ export default function CodeEditor({ problem, sampleCases }: Props) {
           <button
             onClick={handleRun}
             disabled={running || submitting}
-            className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
           >
-            {running ? '실행 중...' : '실행'}
+            {running ? '実行中...' : '実行'}
           </button>
           <button
             onClick={handleSubmit}
             disabled={running || submitting}
             className="flex-1 rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {submitting ? '채점 중...' : '제출'}
+            {submitting ? '採点中...' : '提出'}
           </button>
         </div>
       </div>

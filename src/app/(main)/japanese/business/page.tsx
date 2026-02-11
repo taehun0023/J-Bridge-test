@@ -10,13 +10,13 @@ interface SearchParams {
 const ITEMS_PER_PAGE = 30
 
 const CATEGORIES = [
-  { key: '', label: '전체' },
-  { key: 'development', label: '개발' },
-  { key: 'testing', label: '테스트' },
-  { key: 'design_doc', label: '설계 문서' },
-  { key: 'infrastructure', label: '인프라' },
-  { key: 'project_management', label: '프로젝트 관리' },
-  { key: 'business', label: '비즈니스' },
+  { key: '', label: '全て' },
+  { key: 'development', label: '開発' },
+  { key: 'testing', label: 'テスト' },
+  { key: 'design_doc', label: '設計書' },
+  { key: 'infrastructure', label: 'インフラ' },
+  { key: 'project_management', label: 'プロジェクト管理' },
+  { key: 'business', label: 'ビジネス' },
 ]
 
 export default async function BusinessJapanesePage({ searchParams }: { searchParams: Promise<SearchParams> }) {
@@ -48,8 +48,8 @@ export default async function BusinessJapanesePage({ searchParams }: { searchPar
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">IT/비즈니스 일본어</h1>
-        <p className="mt-1 text-gray-500">일본 IT 현장에서 사용하는 용어와 비즈니스 표현을 학습하세요</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">IT/ビジネス日本語</h1>
+        <p className="mt-1 text-gray-500 dark:text-gray-400">日本のIT現場で使用する用語とビジネス表現を学習しましょう</p>
       </div>
 
       <BusinessGlossaryClient

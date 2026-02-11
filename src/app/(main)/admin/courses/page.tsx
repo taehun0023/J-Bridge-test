@@ -30,24 +30,24 @@ export default async function AdminCoursesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900">콘텐츠 관리</h1>
-      <p className="mt-1 text-gray-500">코스, 퀴즈, 코딩 문제 관리</p>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">コンテンツ管理</h1>
+      <p className="mt-1 text-gray-500 dark:text-gray-400">コース、クイズ、コーディング問題管理</p>
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Card>
-          <p className="text-sm text-gray-500">전체 코스</p>
-          <p className="text-2xl font-bold text-gray-900">{stats.courses}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">全コース</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.courses}</p>
         </Card>
         <Card>
-          <p className="text-sm text-gray-500">공개됨</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">公開済み</p>
           <p className="text-2xl font-bold text-green-600">{stats.published}</p>
         </Card>
         <Card>
-          <p className="text-sm text-gray-500">퀴즈</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">クイズ</p>
           <p className="text-2xl font-bold text-blue-600">{stats.quizzes}</p>
         </Card>
         <Card>
-          <p className="text-sm text-gray-500">코딩 문제</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">コーディング問題</p>
           <p className="text-2xl font-bold text-purple-600">{stats.problems}</p>
         </Card>
       </div>

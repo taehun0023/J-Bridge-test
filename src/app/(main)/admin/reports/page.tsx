@@ -63,8 +63,8 @@ export default async function AdminReportsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900">리포트</h1>
-      <p className="mt-1 text-gray-500">전 사원 5축 차트 및 피드백 관리</p>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">レポート</h1>
+      <p className="mt-1 text-gray-500 dark:text-gray-400">全社員5軸チャート及びフィードバック管理</p>
 
       <AdminReportsClient
         users={users ?? []}

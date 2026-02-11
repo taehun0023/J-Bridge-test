@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "J-Bridge | Japan IT Engineer Dispatch Platform",
-  description: "한국인 IT 엔지니어를 교육하여 일본 기업에 파견하기 위한 LMS 플랫폼",
+  description: "ITエンジニアを育成し、日本企業に派遣するためのLMSプラットフォーム",
 };
 
 export default function RootLayout({
@@ -23,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko">
+    <html lang="ja" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

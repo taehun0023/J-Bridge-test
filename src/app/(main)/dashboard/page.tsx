@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { ASSESSMENT_QUIZ_IDS, ASSESSMENT_LABELS } from '@/lib/assessment-config'
 import DashboardClient from './DashboardClient'
 
 export default async function DashboardPage() {
@@ -52,6 +53,27 @@ export default async function DashboardPage() {
     .order('due_date', { ascending: true })
     .limit(5)
 
+  // Check which assessment quizzes are not yet completed
+  const allQuizIds = Object.values(ASSESSMENT_QUIZ_IDS)
+  const { data: completedAssessments } = await supabase
+    .from('quiz_attempts')
+    .select('quiz_id')
+    .eq('user_id', user.id)
+    .in('quiz_id', allQuizIds)
+    .not('completed_at', 'is', null)
+
+  const completedQuizIds = new Set(completedAssessments?.map(a => a.quiz_id) ?? [])
+  const pendingAssessments = Object.entries(ASSESSMENT_QUIZ_IDS)
+    .filter(([, quizId]) => !completedQuizIds.has(quizId))
+    .map(([stepStr]) => {
+      const step = parseInt(stepStr, 10)
+      return {
+        step,
+        label: ASSESSMENT_LABELS[step],
+        link: `/onboarding/assessment/${step}`,
+      }
+    })
+
   // Compute radar scores
   const radarScores = {
     jlpt: japaneseSkills?.jlpt_normalized ?? 0,
@@ -67,6 +89,7 @@ export default async function DashboardPage() {
       radarScores={radarScores}
       recentQuizzes={recentQuizzes ?? []}
       tasks={tasks ?? []}
+      pendingAssessments={pendingAssessments}
     />
   )
 }

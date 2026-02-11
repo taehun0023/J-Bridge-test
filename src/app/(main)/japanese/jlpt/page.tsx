@@ -51,8 +51,8 @@ export default async function JlptPage({ searchParams }: { searchParams: Promise
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">JLPT 어휘 학습</h1>
-        <p className="mt-1 text-gray-500">급수별 단어를 학습하고 플래시카드로 복습하세요</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">JLPT語彙学習</h1>
+        <p className="mt-1 text-gray-500 dark:text-gray-400">級別の単語を学習し、フラッシュカードで復習しましょう</p>
       </div>
 
       <JlptVocabularyClient

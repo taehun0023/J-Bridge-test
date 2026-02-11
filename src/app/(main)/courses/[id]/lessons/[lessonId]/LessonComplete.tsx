@@ -32,7 +32,7 @@ export default function LessonComplete({ lessonId, isCompleted }: { lessonId: st
   if (completed) {
     return (
       <span className="rounded-lg bg-green-100 px-4 py-2 text-sm font-medium text-green-700">
-        완료됨 ✓
+        完了済み ✓
       </span>
     )
   }
@@ -43,7 +43,7 @@ export default function LessonComplete({ lessonId, isCompleted }: { lessonId: st
       disabled={loading}
       className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
     >
-      {loading ? '저장 중...' : '학습 완료'}
+      {loading ? '保存中...' : '学習完了'}
     </button>
   )
 }

@@ -24,8 +24,8 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
   if (!season) {
     return (
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">랭킹</h1>
-        <EmptyState title="활성 시즌이 없습니다" icon="🏆" />
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ランキング</h1>
+        <EmptyState title="アクティブなシーズンがありません" icon="🏆" />
       </div>
     )
   }
@@ -47,9 +47,9 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">랭킹</h1>
-        <p className="mt-1 text-gray-500">
-          {season.name} 시즌 ({new Date(season.start_date).toLocaleDateString('ko-KR')} ~ {new Date(season.end_date).toLocaleDateString('ko-KR')})
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ランキング</h1>
+        <p className="mt-1 text-gray-500 dark:text-gray-400">
+          {season.name} シーズン ({new Date(season.start_date).toLocaleDateString('ja-JP')} 〜 {new Date(season.end_date).toLocaleDateString('ja-JP')})
         </p>
       </div>
 

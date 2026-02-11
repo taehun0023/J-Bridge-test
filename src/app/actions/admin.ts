@@ -42,7 +42,7 @@ export async function createUserAccount(formData: FormData) {
   const role = formData.get('role') as string
 
   if (!email || !password || !fullName) {
-    return { error: '필수 필드를 모두 입력하세요' }
+    return { error: '必須フィールドをすべて入力してください' }
   }
 
   // Create auth user via admin API
@@ -118,7 +118,7 @@ export async function createFeedback(formData: FormData) {
   const category = formData.get('category') as string
   const content = formData.get('content') as string
 
-  if (!userId || !content) return { error: '필수 필드를 모두 입력하세요' }
+  if (!userId || !content) return { error: '必須フィールドをすべて入力してください' }
 
   const { error } = await supabase
     .from('admin_feedbacks')

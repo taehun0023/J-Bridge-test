@@ -28,7 +28,7 @@ export default function EnrollButton({ courseId }: { courseId: string }) {
       disabled={loading}
       className="mb-6 rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
     >
-      {loading ? '등록 중...' : '수강 신청'}
+      {loading ? '登録中...' : '受講申請'}
     </button>
   )
 }

@@ -53,8 +53,8 @@ export default async function CodingProblemsPage({ searchParams }: { searchParam
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">코딩 문제</h1>
-        <p className="mt-1 text-gray-500">난이도별 알고리즘 문제를 풀고 코딩 실력을 키우세요</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">コーディング問題</h1>
+        <p className="mt-1 text-gray-500 dark:text-gray-400">難易度別のアルゴリズム問題を解いてコーディング力を高めましょう</p>
       </div>
 
       <CodingProblemsClient

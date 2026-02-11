@@ -44,16 +44,16 @@ export default async function CodingExamsPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">코딩 등급 시험</h1>
-        <p className="mt-1 text-gray-500">Paiza식 D~S 등급 시험으로 코딩 실력을 인증하세요</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">コーディング等級試験</h1>
+        <p className="mt-1 text-gray-500 dark:text-gray-400">Paiza式D〜S等級試験でコーディング力を認定しましょう</p>
         <div className="mt-3 flex items-center gap-2">
-          <span className="text-sm text-gray-600">현재 등급:</span>
+          <span className="text-sm text-gray-600 dark:text-gray-400">現在の等級:</span>
           <Badge label={currentRank} variant="coding_rank" className="text-base px-3 py-1" />
         </div>
       </div>
 
       {!exams?.length ? (
-        <EmptyState title="시험이 없습니다" icon="🏆" />
+        <EmptyState title="試験がありません" icon="🏆" />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {exams.map((exam) => {
@@ -70,16 +70,16 @@ export default async function CodingExamsPage() {
                     <span className="text-green-500 text-lg">&#10003;</span>
                   )}
                 </div>
-                <h3 className="mt-3 font-semibold text-gray-900">{exam.title}</h3>
-                <p className="mt-1 text-sm text-gray-500">{exam.description}</p>
-                <div className="mt-3 flex items-center gap-3 text-xs text-gray-400">
-                  <span>제한시간 {exam.time_limit_minutes}분</span>
-                  <span>합격 {exam.passing_score}점</span>
+                <h3 className="mt-3 font-semibold text-gray-900 dark:text-white">{exam.title}</h3>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{exam.description}</p>
+                <div className="mt-3 flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
+                  <span>制限時間 {exam.time_limit_minutes}分</span>
+                  <span>合格 {exam.passing_score}点</span>
                 </div>
                 {attempt && (
                   <p className="mt-2 text-sm">
                     <span className={attempt.passed ? 'text-green-600' : 'text-red-600'}>
-                      최고점: {attempt.score}점
+                      最高点: {attempt.score}点
                     </span>
                   </p>
                 )}
@@ -89,11 +89,11 @@ export default async function CodingExamsPage() {
                       href={`/coding/exams/${exam.id}`}
                       className="block w-full rounded-lg bg-blue-600 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-700"
                     >
-                      {attempt ? '다시 응시' : '시험 시작'}
+                      {attempt ? '再受験' : '試験開始'}
                     </Link>
                   ) : (
-                    <div className="rounded-lg bg-gray-100 py-2.5 text-center text-sm text-gray-500">
-                      {rankOrder[examRankIndex - 1]}등급 합격 후 응시 가능
+                    <div className="rounded-lg bg-gray-100 py-2.5 text-center text-sm text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+                      {rankOrder[examRankIndex - 1]}等級合格後に受験可能
                     </div>
                   )}
                 </div>

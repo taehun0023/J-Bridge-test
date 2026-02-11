@@ -50,7 +50,7 @@ export default function FlashcardMode({ items, onClose }: FlashcardModeProps) {
             onClick={onClose}
             className="rounded-lg px-3 py-1.5 text-sm font-medium text-white hover:bg-white/20"
           >
-            닫기
+            閉じる
           </button>
         </div>
 
@@ -63,7 +63,7 @@ export default function FlashcardMode({ items, onClose }: FlashcardModeProps) {
             <>
               <p className="text-4xl font-bold text-gray-900">{current.word}</p>
               <p className="mt-2 text-lg text-gray-500">{current.reading}</p>
-              <p className="mt-6 text-sm text-gray-400">클릭하여 뜻 확인</p>
+              <p className="mt-6 text-sm text-gray-400">クリックして意味を確認</p>
             </>
           ) : (
             <>
@@ -76,7 +76,7 @@ export default function FlashcardMode({ items, onClose }: FlashcardModeProps) {
                   )}
                 </div>
               )}
-              <p className="mt-6 text-sm text-gray-400">클릭하여 다음 단어</p>
+              <p className="mt-6 text-sm text-gray-400">クリックして次の単語</p>
             </>
           )}
         </button>
@@ -88,14 +88,14 @@ export default function FlashcardMode({ items, onClose }: FlashcardModeProps) {
             disabled={index === 0}
             className="rounded-lg px-4 py-2 text-sm font-medium text-white hover:bg-white/20 disabled:opacity-40"
           >
-            이전
+            前へ
           </button>
           <button
             onClick={next}
             disabled={index === items.length - 1}
             className="rounded-lg px-4 py-2 text-sm font-medium text-white hover:bg-white/20 disabled:opacity-40"
           >
-            다음
+            次へ
           </button>
         </div>
       </div>

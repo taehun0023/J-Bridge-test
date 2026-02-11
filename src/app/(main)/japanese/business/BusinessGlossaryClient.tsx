@@ -69,22 +69,22 @@ export default function BusinessGlossaryClient({
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="일본어/한국어/영어 검색..."
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            placeholder="日本語/韓国語/英語で検索..."
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           <button
             type="submit"
-            className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+            className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
           >
-            검색
+            検索
           </button>
         </form>
-        <span className="ml-auto text-sm text-gray-500">{totalCount}개 용어</span>
+        <span className="ml-auto text-sm text-gray-500 dark:text-gray-400">{totalCount}語</span>
       </div>
 
-      <div className="mt-4 rounded-xl border border-gray-200 bg-white">
+      <div className="mt-4 rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
         {items.length === 0 ? (
-          <EmptyState title="용어가 없습니다" description="검색 조건을 변경해보세요" icon="📖" />
+          <EmptyState title="用語がありません" description="検索条件を変更してください" icon="📖" />
         ) : (
           <GlossaryTable items={items} />
         )}

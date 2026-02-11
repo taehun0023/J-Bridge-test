@@ -25,9 +25,9 @@ interface Props {
 }
 
 const difficultyLabels: Record<string, string> = {
-  easy: '쉬움',
-  medium: '보통',
-  hard: '어려움',
+  easy: '易しい',
+  medium: '普通',
+  hard: '難しい',
 }
 
 export default function CodingProblemsClient({
@@ -53,41 +53,41 @@ export default function CodingProblemsClient({
         <select
           value={difficulty}
           onChange={(e) => updateParams({ difficulty: e.target.value })}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
         >
-          <option value="">전체 난이도</option>
-          <option value="easy">쉬움</option>
-          <option value="medium">보통</option>
-          <option value="hard">어려움</option>
+          <option value="">全難易度</option>
+          <option value="easy">易しい</option>
+          <option value="medium">普通</option>
+          <option value="hard">難しい</option>
         </select>
 
         <select
           value={language}
           onChange={(e) => updateParams({ language: e.target.value })}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
         >
-          <option value="">전체 언어</option>
+          <option value="">全言語</option>
           <option value="java">Java</option>
           <option value="javascript">JavaScript</option>
           <option value="sql">SQL</option>
         </select>
 
-        <span className="ml-auto text-sm text-gray-500">{totalCount}개 문제</span>
+        <span className="ml-auto text-sm text-gray-500 dark:text-gray-400">{totalCount}問</span>
       </div>
 
       {/* Problem list */}
-      <div className="mt-4 rounded-xl border border-gray-200 bg-white">
+      <div className="mt-4 rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
         {problems.length === 0 ? (
-          <EmptyState title="문제가 없습니다" icon="💻" />
+          <EmptyState title="問題がありません" icon="💻" />
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {problems.map((problem) => {
               const status = solvedMap[problem.id]
               return (
                 <a
                   key={problem.id}
                   href={`/coding/problems/${problem.id}`}
-                  className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50"
+                  className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   <div className="flex h-6 w-6 items-center justify-center">
                     {status === 'accepted' ? (
@@ -99,10 +99,10 @@ export default function CodingProblemsClient({
                     )}
                   </div>
                   <div className="flex-1">
-                    <span className="text-sm font-medium text-gray-900">{problem.title}</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">{problem.title}</span>
                   </div>
                   <Badge label={difficultyLabels[problem.difficulty] ?? problem.difficulty} variant="difficulty" />
-                  <span className="text-xs text-gray-400 uppercase">{problem.language}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500 uppercase">{problem.language}</span>
                 </a>
               )
             })}
@@ -117,14 +117,14 @@ export default function CodingProblemsClient({
       />
 
       {/* Link to coding exams */}
-      <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50 p-5">
-        <h3 className="font-semibold text-blue-900">코딩 등급 시험</h3>
-        <p className="mt-1 text-sm text-blue-700">D~S 등급 시험을 통해 코딩 등급을 획득하세요</p>
+      <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50 p-5 dark:border-blue-800 dark:bg-blue-900/30">
+        <h3 className="font-semibold text-blue-900 dark:text-blue-300">コーディング等級試験</h3>
+        <p className="mt-1 text-sm text-blue-700 dark:text-blue-400">D〜S等級試験でコーディング等級を取得しましょう</p>
         <a
           href="/coding/exams"
           className="mt-3 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
-          등급 시험 보기
+          等級試験を受ける
         </a>
       </div>
     </div>

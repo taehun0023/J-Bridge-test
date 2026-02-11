@@ -33,33 +33,42 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/login') ||
     request.nextUrl.pathname.startsWith('/signup')
 
-  // 미인증 사용자 → 로그인 페이지로 리다이렉트
+  // 未認証ユーザー → ログインページへリダイレクト
   if (!user && !isAuthPage && !request.nextUrl.pathname.startsWith('/auth')) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  // 인증된 사용자가 로그인/회원가입 페이지 접근 → 대시보드로 리다이렉트
+  // 認証済みユーザーがログイン/サインアップページにアクセス → ダッシュボードへリダイレクト
   if (user && isAuthPage) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }
 
-  // 온보딩 체크: 인증된 사용자가 온보딩 미완료 시 온보딩 페이지로 리다이렉트
+  // オンボーディングチェック: 認証済みユーザーがオンボーディング未完了の場合、適切なオンボーディングステップへリダイレクト
   const isOnboardingPage = request.nextUrl.pathname.startsWith('/onboarding')
-  if (user && !isAuthPage && !isOnboardingPage && !request.nextUrl.pathname.startsWith('/auth')) {
+  if (user && !isAuthPage && !request.nextUrl.pathname.startsWith('/auth')) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('is_onboarded, role')
+      .select('is_onboarded, role, onboarding_step')
       .eq('id', user.id)
       .single()
 
     if (profile && !profile.is_onboarded && profile.role !== 'admin') {
-      const url = request.nextUrl.clone()
-      url.pathname = '/onboarding'
-      return NextResponse.redirect(url)
+      if (!isOnboardingPage) {
+        const url = request.nextUrl.clone()
+        const step = profile.onboarding_step ?? 0
+        if (step === 0) {
+          url.pathname = '/onboarding'
+        } else if (step >= 1 && step <= 5) {
+          url.pathname = `/onboarding/assessment/${step}`
+        } else {
+          url.pathname = '/onboarding/results'
+        }
+        return NextResponse.redirect(url)
+      }
     }
   }
 

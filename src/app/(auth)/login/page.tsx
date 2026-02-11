@@ -29,7 +29,7 @@ export default function LoginPage() {
       <form action={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            이메일
+            メールアドレス
           </label>
           <input
             id="email"
@@ -43,7 +43,7 @@ export default function LoginPage() {
 
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-            비밀번호
+            パスワード
           </label>
           <input
             id="password"
@@ -64,12 +64,12 @@ export default function LoginPage() {
           disabled={loading}
           className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
         >
-          {loading ? '로그인 중...' : '로그인'}
+          {loading ? 'ログイン中...' : 'ログイン'}
         </button>
       </form>
 
       <p className="mt-6 text-center text-xs text-gray-400">
-        계정이 없으시면 관리자에게 문의하세요
+        アカウントがない場合は管理者にお問い合わせください
       </p>
     </div>
   )

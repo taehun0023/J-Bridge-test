@@ -8,7 +8,7 @@ export async function startQuizAttempt(quizId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) return { error: '인증이 필요합니다' }
+  if (!user) return { error: '認証が必要です' }
 
   const { data, error } = await supabase
     .from('quiz_attempts')
@@ -16,7 +16,7 @@ export async function startQuizAttempt(quizId: string) {
     .select('id')
     .single()
 
-  if (error) return { error: '퀴즈 시작에 실패했습니다: ' + error.message }
+  if (error) return { error: 'クイズの開始に失敗しました: ' + error.message }
 
   return { attemptId: data.id }
 }
@@ -28,7 +28,7 @@ export async function submitQuizAnswers(
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) return { error: '인증이 필요합니다' }
+  if (!user) return { error: '認証が必要です' }
 
   // Verify attempt belongs to user
   const { data: attempt } = await supabase
@@ -39,7 +39,7 @@ export async function submitQuizAnswers(
     .is('completed_at', null)
     .single()
 
-  if (!attempt) return { error: '유효하지 않은 시도입니다' }
+  if (!attempt) return { error: '無効な試行です' }
 
   // Get correct answers (server-side only)
   const questionIds = answers.map(a => a.questionId)
@@ -67,7 +67,7 @@ export async function submitQuizAnswers(
   })
 
   const { error: answersError } = await supabase.from('quiz_answers').insert(answerRows)
-  if (answersError) return { error: '답안 저장에 실패했습니다: ' + answersError.message }
+  if (answersError) return { error: '回答の保存に失敗しました: ' + answersError.message }
 
   // Calculate score and update attempt
   const score = answers.length > 0 ? Math.round((correctCount / answers.length) * 100) : 0
@@ -79,7 +79,7 @@ export async function submitQuizAnswers(
     .eq('id', attempt.quiz_id)
     .single()
 
-  if (quizError) return { error: '퀴즈 정보 조회 실패: ' + quizError.message }
+  if (quizError) return { error: 'クイズ情報の取得に失敗しました: ' + quizError.message }
 
   const passed = score >= (quiz?.passing_score ?? 70)
 
@@ -92,7 +92,7 @@ export async function submitQuizAnswers(
     })
     .eq('id', attemptId)
 
-  if (updateError) return { error: '퀴즈 결과 저장 실패: ' + updateError.message }
+  if (updateError) return { error: 'クイズ結果の保存に失敗しました: ' + updateError.message }
 
   revalidatePath('/japanese/jlpt/quiz')
 

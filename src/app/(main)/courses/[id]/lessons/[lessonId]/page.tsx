@@ -53,36 +53,36 @@ export default async function LessonPage({ params }: { params: Promise<Params> }
       {/* Breadcrumb */}
       <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
         <Link href={`/courses/${courseId}`} className="hover:text-blue-600">
-          {course?.title ?? '코스'}
+          {course?.title ?? 'コース'}
         </Link>
         <span>/</span>
-        <span className="text-gray-900">{lesson.title}</span>
+        <span className="text-gray-900 dark:text-white">{lesson.title}</span>
       </div>
 
       <Card>
-        <h1 className="text-xl font-bold text-gray-900">{lesson.title}</h1>
-        <div className="mt-1 text-sm text-gray-500">
-          {lesson.duration_minutes && `${lesson.duration_minutes}분`}
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">{lesson.title}</h1>
+        <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          {lesson.duration_minutes && `${lesson.duration_minutes}分`}
         </div>
 
         {/* Content */}
         <div className="mt-6 prose prose-sm max-w-none">
           {lesson.content_body ? (
-            <div className="whitespace-pre-wrap text-gray-700">{lesson.content_body}</div>
+            <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300">{lesson.content_body}</div>
           ) : lesson.content_url ? (
             <div>
               {lesson.content_type === 'video' ? (
                 <div className="aspect-video rounded-lg bg-gray-900 flex items-center justify-center">
-                  <p className="text-gray-400">영상 준비 중</p>
+                  <p className="text-gray-400">動画準備中</p>
                 </div>
               ) : (
                 <a href={lesson.content_url} className="text-blue-600 hover:underline" target="_blank" rel="noreferrer">
-                  콘텐츠 링크
+                  コンテンツリンク
                 </a>
               )}
             </div>
           ) : (
-            <p className="text-gray-400">콘텐츠가 아직 등록되지 않았습니다.</p>
+            <p className="text-gray-400">コンテンツはまだ登録されていません。</p>
           )}
         </div>
       </Card>

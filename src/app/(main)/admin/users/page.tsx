@@ -20,24 +20,24 @@ export default async function AdminUsersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900">사용자 관리</h1>
-      <p className="mt-1 text-gray-500">계정 생성 및 역할 관리</p>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ユーザー管理</h1>
+      <p className="mt-1 text-gray-500 dark:text-gray-400">アカウント作成及び役割管理</p>
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Card>
-          <p className="text-sm text-gray-500">전체</p>
-          <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">全体</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
         </Card>
         <Card>
-          <p className="text-sm text-gray-500">관리자</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">管理者</p>
           <p className="text-2xl font-bold text-red-600">{stats.admin}</p>
         </Card>
         <Card>
-          <p className="text-sm text-gray-500">멘토</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">メンター</p>
           <p className="text-2xl font-bold text-blue-600">{stats.mentor}</p>
         </Card>
         <Card>
-          <p className="text-sm text-gray-500">멘티</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">メンティー</p>
           <p className="text-2xl font-bold text-green-600">{stats.mentee}</p>
         </Card>
       </div>

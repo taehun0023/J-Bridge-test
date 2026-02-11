@@ -45,12 +45,12 @@ export default async function QuizListPage({ searchParams }: { searchParams: Pro
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">JLPT 어휘 퀴즈</h1>
-        <p className="mt-1 text-gray-500">급수별 어휘 퀴즈를 풀고 실력을 점검하세요</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">JLPT語彙クイズ</h1>
+        <p className="mt-1 text-gray-500 dark:text-gray-400">級別の語彙クイズを解いて実力を確認しましょう</p>
       </div>
 
       {!quizzes?.length ? (
-        <EmptyState title="퀴즈가 없습니다" description="아직 등록된 퀴즈가 없습니다" icon="📝" />
+        <EmptyState title="クイズはありません" description="まだ登録されたクイズはありません" icon="📝" />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {quizzes.map((quiz) => {
@@ -59,29 +59,29 @@ export default async function QuizListPage({ searchParams }: { searchParams: Pro
               <Link
                 key={quiz.id}
                 href={`/japanese/jlpt/quiz/${quiz.id}`}
-                className="group rounded-xl border border-gray-200 bg-white p-5 transition-shadow hover:shadow-md"
+                className="group rounded-xl border border-gray-200 bg-white p-5 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
               >
                 <div className="flex items-start justify-between">
-                  <h3 className="font-semibold text-gray-900 group-hover:text-blue-600">
+                  <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 dark:text-white">
                     {quiz.title}
                   </h3>
                   {attempt && (
                     <Badge
-                      label={attempt.passed ? '합격' : '불합격'}
+                      label={attempt.passed ? '合格' : '不合格'}
                       variant="default"
                     />
                   )}
                 </div>
-                <div className="mt-3 flex items-center gap-3 text-sm text-gray-500">
+                <div className="mt-3 flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
                   {quiz.time_limit_minutes && (
-                    <span>제한시간 {quiz.time_limit_minutes}분</span>
+                    <span>制限時間 {quiz.time_limit_minutes}分</span>
                   )}
-                  <span>합격 {quiz.passing_score}점</span>
+                  <span>合格 {quiz.passing_score}点</span>
                 </div>
                 {attempt && (
                   <div className="mt-2 text-sm">
                     <span className={attempt.passed ? 'text-green-600' : 'text-red-600'}>
-                      최고점: {attempt.score}점
+                      最高点: {attempt.score}点
                     </span>
                   </div>
                 )}

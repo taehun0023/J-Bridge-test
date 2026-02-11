@@ -24,7 +24,7 @@ export default function VocabularyList({ items, level }: VocabularyListProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   return (
-    <div className="divide-y divide-gray-100">
+    <div className="divide-y divide-gray-100 dark:divide-gray-700">
       {items.map((item) => (
         <div key={item.id} className="py-3">
           <button
@@ -33,13 +33,13 @@ export default function VocabularyList({ items, level }: VocabularyListProps) {
           >
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="text-lg font-semibold text-gray-900">{item.word}</span>
-                <span className="text-sm text-gray-500">{item.reading}</span>
+                <span className="text-lg font-semibold text-gray-900 dark:text-white">{item.word}</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">{item.reading}</span>
                 {item.part_of_speech && (
-                  <span className="text-xs text-gray-400">{item.part_of_speech}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">{item.part_of_speech}</span>
                 )}
               </div>
-              <p className="mt-0.5 text-sm text-gray-700">{item.meaning_ko}</p>
+              <p className="mt-0.5 text-sm text-gray-700 dark:text-gray-300">{item.meaning_ko}</p>
             </div>
             <Badge label={level} variant="jlpt" />
             <svg
@@ -51,10 +51,10 @@ export default function VocabularyList({ items, level }: VocabularyListProps) {
           </button>
 
           {expandedId === item.id && item.example_sentence && (
-            <div className="mt-3 rounded-lg bg-gray-50 p-4">
-              <p className="text-sm font-medium text-gray-900">{item.example_sentence}</p>
+            <div className="mt-3 rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
+              <p className="text-sm font-medium text-gray-900 dark:text-white">{item.example_sentence}</p>
               {item.example_sentence_ko && (
-                <p className="mt-1 text-sm text-gray-600">{item.example_sentence_ko}</p>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{item.example_sentence_ko}</p>
               )}
             </div>
           )}

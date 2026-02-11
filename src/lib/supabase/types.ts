@@ -24,6 +24,8 @@ export type QuizType =
   | 'it_terminology'
   | 'role_play_scenario'
   | 'attitude_culture'
+  | 'core_programming'
+  | 'framework'
 
 export type SubmissionStatus =
   | 'pending'
@@ -51,6 +53,7 @@ export interface Profile {
   target_coding_area: CodingLanguage | null
   coding_rank: CodingRank
   is_onboarded: boolean
+  onboarding_step: number
   created_at: string
   updated_at: string
 }

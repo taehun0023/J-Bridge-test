@@ -10,7 +10,7 @@ export async function submitCode(problemId: string, sourceCode: string, language
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) return { error: '인증이 필요합니다' }
+  if (!user) return { error: '認証が必要です' }
 
   // Get all test cases for this problem
   const { data: testCases } = await supabase
@@ -19,7 +19,7 @@ export async function submitCode(problemId: string, sourceCode: string, language
     .eq('problem_id', problemId)
     .order('sort_order', { ascending: true })
 
-  if (!testCases?.length) return { error: '테스트 케이스가 없습니다' }
+  if (!testCases?.length) return { error: 'テストケースがありません' }
 
   // Create initial submission record
   const { data: submission, error: insertError } = await supabase
@@ -35,7 +35,7 @@ export async function submitCode(problemId: string, sourceCode: string, language
     .select('id')
     .single()
 
-  if (insertError || !submission) return { error: '제출 생성 실패: ' + (insertError?.message ?? 'unknown') }
+  if (insertError || !submission) return { error: '提出作成失敗: ' + (insertError?.message ?? 'unknown') }
 
   try {
     let passedCount = 0
@@ -121,8 +121,8 @@ export async function submitCode(problemId: string, sourceCode: string, language
     const isJudge0Error = message.includes('Judge0') || message.includes('submission')
     return {
       error: isJudge0Error
-        ? `코드 실행 서버 연결 실패: ${message}`
-        : `코드 실행 중 오류가 발생했습니다: ${message}`,
+        ? `コード実行サーバー接続失敗: ${message}`
+        : `コード実行中にエラーが発生しました: ${message}`,
     }
   }
 }
@@ -145,6 +145,6 @@ export async function runCode(sourceCode: string, language: string, input: strin
       memory: result.memory,
     }
   } catch {
-    return { error: '코드 실행 중 오류가 발생했습니다', output: '', status: 'runtime_error', time: null, memory: null }
+    return { error: 'コード実行中にエラーが発生しました', output: '', status: 'runtime_error', time: null, memory: null }
   }
 }

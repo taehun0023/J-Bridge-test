@@ -36,12 +36,12 @@ interface Feedback {
 }
 
 const categoryLabels: Record<string, string> = {
-  general: '일반',
-  japanese: '일본어',
-  coding: '코딩',
-  attitude: '태도',
-  assignment: '과제',
-  dispatch_readiness: '파견준비도',
+  general: '一般',
+  japanese: '日本語',
+  coding: 'コーディング',
+  attitude: '態度',
+  assignment: '課題',
+  dispatch_readiness: '派遣準備度',
 }
 
 export default function AdminReportsClient({
@@ -67,7 +67,7 @@ export default function AdminReportsClient({
       const result = await createFeedback(formData)
       if (result.error) setMessage(result.error)
       else {
-        setMessage('피드백이 등록되었습니다')
+        setMessage('フィードバックが登録されました')
         setShowFeedbackForm(false)
       }
       setTimeout(() => setMessage(null), 3000)
@@ -78,7 +78,7 @@ export default function AdminReportsClient({
     startTransition(async () => {
       const result = await recalculateAllScores()
       if (result.error) setMessage(result.error)
-      else setMessage(`${result.processed}명의 점수를 재계산했습니다`)
+      else setMessage(`${result.processed}名のスコアを再計算しました`)
       setTimeout(() => setMessage(null), 5000)
     })
   }
@@ -86,23 +86,23 @@ export default function AdminReportsClient({
   return (
     <div className="mt-6">
       {message && (
-        <div className="mb-4 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-700">{message}</div>
+        <div className="mb-4 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">{message}</div>
       )}
 
       <div className="mb-4">
         <button
           onClick={handleRecalcAll}
           disabled={pending}
-          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
         >
-          {pending ? '재계산 중...' : '전체 점수 재계산'}
+          {pending ? '再計算中...' : '全体スコア再計算'}
         </button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* User list */}
         <div className="lg:col-span-1">
-          <Card title="사원 목록">
+          <Card title="社員一覧">
             <div className="max-h-[600px] space-y-1 overflow-y-auto">
               {users.map(user => (
                 <button
@@ -110,22 +110,22 @@ export default function AdminReportsClient({
                   onClick={() => setSelectedUserId(user.id)}
                   className={`w-full rounded-lg px-3 py-2.5 text-left transition-colors ${
                     selectedUserId === user.id
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'hover:bg-gray-50'
+                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
+                      : 'hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
                     {user.full_name ?? user.email}
                   </p>
                   <div className="mt-0.5 flex items-center gap-2">
                     <Badge label={user.coding_rank} variant="coding_rank" />
                     {user.jlpt_level && <Badge label={user.jlpt_level} variant="jlpt" />}
-                    <span className="text-xs text-gray-400">{user.role}</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500">{user.role}</span>
                   </div>
                 </button>
               ))}
               {users.length === 0 && (
-                <p className="py-4 text-center text-sm text-gray-400">사원이 없습니다</p>
+                <p className="py-4 text-center text-sm text-gray-400 dark:text-gray-500">社員がいません</p>
               )}
             </div>
           </Card>
@@ -135,7 +135,7 @@ export default function AdminReportsClient({
         <div className="lg:col-span-2 space-y-6">
           {selectedUser && selectedSkills ? (
             <>
-              <Card title={`${selectedUser.full_name ?? selectedUser.email} - 5축 차트`}>
+              <Card title={`${selectedUser.full_name ?? selectedUser.email} - 5軸チャート`}>
                 <div className="mx-auto max-w-md">
                   <RadarChart
                     scores={{
@@ -149,47 +149,47 @@ export default function AdminReportsClient({
                 </div>
                 <div className="mt-4 grid grid-cols-5 gap-2 text-center">
                   <div>
-                    <p className="text-xs text-gray-500">JLPT</p>
-                    <p className="text-sm font-bold text-gray-900">{selectedSkills.jlpt}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">JLPT</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white">{selectedSkills.jlpt}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">IT 일본어</p>
-                    <p className="text-sm font-bold text-gray-900">{selectedSkills.itJapanese}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">IT日本語</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white">{selectedSkills.itJapanese}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">프로그래밍</p>
-                    <p className="text-sm font-bold text-gray-900">{selectedSkills.core}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">プログラミング</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white">{selectedSkills.core}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">프레임워크</p>
-                    <p className="text-sm font-bold text-gray-900">{selectedSkills.framework}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">フレームワーク</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white">{selectedSkills.framework}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">태도/문화</p>
-                    <p className="text-sm font-bold text-gray-900">{selectedSkills.attitude}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">態度・文化</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white">{selectedSkills.attitude}</p>
                   </div>
                 </div>
               </Card>
 
               {/* Feedback section */}
-              <Card title="피드백">
+              <Card title="フィードバック">
                 <div className="mb-4">
                   <button
                     onClick={() => setShowFeedbackForm(!showFeedbackForm)}
                     className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
                   >
-                    {showFeedbackForm ? '취소' : '+ 피드백 작성'}
+                    {showFeedbackForm ? 'キャンセル' : '+ フィードバック作成'}
                   </button>
                 </div>
 
                 {showFeedbackForm && (
-                  <form action={handleFeedback} className="mb-4 rounded-lg border border-gray-200 p-4">
+                  <form action={handleFeedback} className="mb-4 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
                     <input type="hidden" name="user_id" value={selectedUserId ?? ''} />
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">카테고리</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">カテゴリ</label>
                         <select name="category"
-                          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
+                          className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                           {Object.entries(categoryLabels).map(([key, label]) => (
                             <option key={key} value={key}>{label}</option>
                           ))}
@@ -197,41 +197,41 @@ export default function AdminReportsClient({
                       </div>
                     </div>
                     <div className="mt-3">
-                      <label className="block text-sm font-medium text-gray-700">내용 *</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">内容 *</label>
                       <textarea name="content" required rows={3}
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
+                        className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
                     </div>
                     <button type="submit" disabled={pending}
                       className="mt-3 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
-                      {pending ? '등록 중...' : '등록'}
+                      {pending ? '登録中...' : '登録'}
                     </button>
                   </form>
                 )}
 
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-gray-100 dark:divide-gray-700">
                   {userFeedbacks.map(fb => (
                     <div key={fb.id} className="py-3">
                       <div className="flex items-center gap-2">
-                        <span className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                        <span className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400">
                           {categoryLabels[fb.category] ?? fb.category}
                         </span>
-                        <span className="text-xs text-gray-400">
-                          {new Date(fb.created_at).toLocaleDateString('ko-KR')}
+                        <span className="text-xs text-gray-400 dark:text-gray-500">
+                          {new Date(fb.created_at).toLocaleDateString('ja-JP')}
                         </span>
                       </div>
-                      <p className="mt-1 text-sm text-gray-700">{fb.content}</p>
+                      <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">{fb.content}</p>
                     </div>
                   ))}
                   {userFeedbacks.length === 0 && (
-                    <p className="py-4 text-center text-sm text-gray-400">피드백이 없습니다</p>
+                    <p className="py-4 text-center text-sm text-gray-400 dark:text-gray-500">フィードバックがありません</p>
                   )}
                 </div>
               </Card>
             </>
           ) : (
             <Card>
-              <div className="py-12 text-center text-sm text-gray-400">
-                왼쪽 목록에서 사원을 선택하세요
+              <div className="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
+                左の一覧から社員を選択してください
               </div>
             </Card>
           )}

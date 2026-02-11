@@ -121,8 +121,9 @@ export async function recalculateUserScores(userId: string) {
   const sqlScore = avg(langScores['sql'] ?? [])
   const algorithmScore = algorithmCount > 0 ? Math.round(algorithmTotal / algorithmCount) : 0
 
-  // Core normalized = average of active language scores + algorithm
-  const coreScores = [javaScore, jsScore, sqlScore, algorithmScore].filter(s => s > 0)
+  // Core normalized = average of active language scores + algorithm + core_programming quiz
+  const coreQuizAvg = avg(quizScoresByType['core_programming'] ?? [])
+  const coreScores = [javaScore, jsScore, sqlScore, algorithmScore, coreQuizAvg].filter(s => s > 0)
   const coreNormalized = avg(coreScores)
 
   // Framework scores - approximate from exam results and advanced coding
@@ -140,12 +141,13 @@ export async function recalculateUserScores(userId: string) {
     if (rs > highestRankScore) highestRankScore = rs
   }
 
-  // Framework scores are derived from coding exam rank
+  // Framework scores are derived from coding exam rank + framework quiz
   const springBootScore = Math.min(100, Math.round(highestRankScore * 0.8))
   const reactScore = Math.min(100, Math.round(highestRankScore * 0.7))
   const dbDesignScore = Math.min(100, Math.round(sqlScore * 0.9))
   const projectScore = Math.min(100, Math.round(highestRankScore * 0.6))
-  const frameworkNormalized = avg([springBootScore, reactScore, dbDesignScore, projectScore].filter(s => s > 0))
+  const fwQuizAvg = avg(quizScoresByType['framework'] ?? [])
+  const frameworkNormalized = avg([springBootScore, reactScore, dbDesignScore, projectScore, fwQuizAvg].filter(s => s > 0))
 
   // ─── 5. Calculate Axis 5: Attitude/Culture ───
   const attitudeScores = quizScoresByType['attitude_culture'] ?? []

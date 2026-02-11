@@ -53,15 +53,15 @@ export default async function CoursePage({ params }: { params: Promise<Params> }
   const progress = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0
 
   const contentTypeLabels: Record<string, string> = {
-    video: '영상', text: '텍스트', quiz: '퀴즈', coding_exercise: '코딩', role_play: '롤플레이',
+    video: '動画', text: 'テキスト', quiz: 'クイズ', coding_exercise: 'コーディング', role_play: 'ロールプレイング',
   }
 
   return (
     <div>
       <div className="mb-6">
         <Badge label={course.category} variant="default" />
-        <h1 className="mt-2 text-2xl font-bold text-gray-900">{course.title}</h1>
-        <p className="mt-1 text-gray-500">{course.description}</p>
+        <h1 className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{course.title}</h1>
+        <p className="mt-1 text-gray-500 dark:text-gray-400">{course.description}</p>
       </div>
 
       {!enrolled ? (
@@ -69,37 +69,37 @@ export default async function CoursePage({ params }: { params: Promise<Params> }
       ) : (
         <div className="mb-6">
           <div className="flex items-center gap-3">
-            <div className="flex-1 h-2 rounded-full bg-gray-200">
+            <div className="flex-1 h-2 rounded-full bg-gray-200 dark:bg-gray-700">
               <div className="h-2 rounded-full bg-green-500" style={{ width: `${progress}%` }} />
             </div>
-            <span className="text-sm text-gray-600">{progress}% 완료</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">{progress}% 完了</span>
           </div>
         </div>
       )}
 
-      <Card title={`레슨 (${totalLessons}개)`}>
+      <Card title={`レッスン (${totalLessons})`}>
         {!lessons?.length ? (
-          <p className="py-4 text-center text-sm text-gray-400">등록된 레슨이 없습니다</p>
-        ) : (
-          <div className="divide-y divide-gray-100">
-            {lessons.map((lesson, i) => {
-              const completed = completedLessonIds.has(lesson.id)
-              return (
-                <Link
-                  key={lesson.id}
-                  href={enrolled ? `/courses/${id}/lessons/${lesson.id}` : '#'}
-                  className={`flex items-center gap-4 py-3 ${enrolled ? 'hover:bg-gray-50' : 'opacity-60 cursor-default'}`}
-                >
-                  <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
-                    completed ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-                  }`}>
-                    {completed ? '✓' : i + 1}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{lesson.title}</p>
-                    <div className="flex gap-2 text-xs text-gray-500">
+            <p className="py-4 text-center text-sm text-gray-400 dark:text-gray-500">登録されたレッスンはありません</p>
+          ) : (
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
+              {lessons.map((lesson, i) => {
+                const completed = completedLessonIds.has(lesson.id)
+                return (
+                  <Link
+                    key={lesson.id}
+                    href={enrolled ? `/courses/${id}/lessons/${lesson.id}` : '#'}
+                    className={`flex items-center gap-4 py-3 ${enrolled ? 'hover:bg-gray-50 dark:hover:bg-gray-700' : 'opacity-60 cursor-default'}`}
+                  >
+                    <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
+                      completed ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                    }`}>
+                      {completed ? '✓' : i + 1}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">{lesson.title}</p>
+                      <div className="flex gap-2 text-xs text-gray-500 dark:text-gray-400">
                       <span>{contentTypeLabels[lesson.content_type] ?? lesson.content_type}</span>
-                      {lesson.duration_minutes && <span>{lesson.duration_minutes}분</span>}
+                      {lesson.duration_minutes && <span>{lesson.duration_minutes}分</span>}
                     </div>
                   </div>
                 </Link>

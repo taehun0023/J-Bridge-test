@@ -6,6 +6,7 @@ export async function fetchQuizzes(quizType?: QuizType) {
   let query = supabase
     .from('quizzes')
     .select('*, quiz_questions(count)')
+    .eq('is_assessment', false)
     .order('created_at', { ascending: true })
 
   if (quizType) {

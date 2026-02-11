@@ -22,6 +22,7 @@ const seedFiles = [
   'seed_jlpt_n2.sql',   // N2 단어
   'seed_jlpt_n1.sql',   // N1 단어
   'seed_it_glossary.sql', // IT 용어집
+  'seed_assessment_quizzes.sql', // 초기 등급 테스트 (390문항)
 ];
 
 console.log('🌱 Supabase Seed Data 적용 시작...\n');
@@ -55,6 +56,7 @@ console.log('1. Supabase Dashboard (https://supabase.com/dashboard) 접속');
 console.log('2. 프로젝트 선택 → SQL Editor 열기');
 console.log('3. 위의 파일들을 순서대로 복사하여 실행');
 console.log('\n또는 각 파일의 내용을 하나의 SQL 파일로 합쳐서 실행할 수 있습니다.');
+
 
 
 

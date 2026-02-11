@@ -52,7 +52,7 @@ export default function QuizTaker({ quiz, questions }: Props) {
 
     const { attemptId, error: startError } = await startQuizAttempt(quiz.id)
     if (startError || !attemptId) {
-      alert(startError ?? '퀴즈 시작 실패')
+      alert(startError ?? 'クイズ開始に失敗しました')
       setSubmitting(false)
       return
     }
@@ -101,16 +101,16 @@ export default function QuizTaker({ quiz, questions }: Props) {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-900">{quiz.title}</h1>
-        <div className="mt-2 flex items-center gap-4 text-sm text-gray-500">
-          <span>{questions.length}문제</span>
-          <span>합격 {quiz.passing_score}점</span>
-          {quiz.time_limit_minutes && <span>제한시간 {quiz.time_limit_minutes}분</span>}
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">{quiz.title}</h1>
+        <div className="mt-2 flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+          <span>{questions.length}問</span>
+          <span>合格 {quiz.passing_score}点</span>
+          {quiz.time_limit_minutes && <span>制限時間 {quiz.time_limit_minutes}分</span>}
         </div>
       </div>
 
       {/* Progress bar */}
-      <div className="mb-6 h-2 rounded-full bg-gray-200">
+      <div className="mb-6 h-2 rounded-full bg-gray-200 dark:bg-gray-700">
         <div
           className="h-2 rounded-full bg-blue-600 transition-all"
           style={{ width: `${(answeredCount / questions.length) * 100}%` }}
@@ -118,16 +118,22 @@ export default function QuizTaker({ quiz, questions }: Props) {
       </div>
 
       {/* Question */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
         <QuizQuestion
           questionNumber={currentIndex + 1}
           totalQuestions={questions.length}
           questionText={currentQuestion.question_text}
           options={currentQuestion.quiz_question_options_safe}
           selectedOptionId={answers[currentQuestion.id] ?? null}
-          onSelect={(optionId) =>
-            setAnswers({ ...answers, [currentQuestion.id]: optionId })
-          }
+          onSelect={(optionId) => {
+            if (optionId === '') {
+              const newAnswers = { ...answers }
+              delete newAnswers[currentQuestion.id]
+              setAnswers(newAnswers)
+            } else {
+              setAnswers({ ...answers, [currentQuestion.id]: optionId })
+            }
+          }}
         />
       </div>
 
@@ -136,9 +142,9 @@ export default function QuizTaker({ quiz, questions }: Props) {
         <button
           onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
           disabled={currentIndex === 0}
-          className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-40"
+          className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-40 dark:text-gray-300 dark:hover:bg-gray-800"
         >
-          이전 문제
+          前の問題
         </button>
 
         <div className="flex gap-1">
@@ -150,8 +156,8 @@ export default function QuizTaker({ quiz, questions }: Props) {
                 i === currentIndex
                   ? 'bg-blue-600 text-white'
                   : answers[q.id]
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'bg-gray-100 text-gray-500'
+                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                  : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
               }`}
             >
               {i + 1}
@@ -162,9 +168,9 @@ export default function QuizTaker({ quiz, questions }: Props) {
         {currentIndex < questions.length - 1 ? (
           <button
             onClick={() => setCurrentIndex(currentIndex + 1)}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
           >
-            다음 문제
+            次の問題
           </button>
         ) : (
           <button
@@ -172,7 +178,7 @@ export default function QuizTaker({ quiz, questions }: Props) {
             disabled={!allAnswered || submitting}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {submitting ? '제출 중...' : '제출하기'}
+            {submitting ? '提出中...' : '提出する'}
           </button>
         )}
       </div>
