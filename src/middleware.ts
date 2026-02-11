@@ -47,28 +47,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // オンボーディングチェック: 認証済みユーザーがオンボーディング未完了の場合、適切なオンボーディングステップへリダイレクト
+  // オンボーディング未完了のユーザーをオンボーディングページへリダイレクト
   const isOnboardingPage = request.nextUrl.pathname.startsWith('/onboarding')
-  if (user && !isAuthPage && !request.nextUrl.pathname.startsWith('/auth')) {
+  if (user && !isAuthPage && !isOnboardingPage) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('is_onboarded, role, onboarding_step')
+      .select('is_onboarded')
       .eq('id', user.id)
       .single()
 
-    if (profile && !profile.is_onboarded && profile.role !== 'admin') {
-      if (!isOnboardingPage) {
-        const url = request.nextUrl.clone()
-        const step = profile.onboarding_step ?? 0
-        if (step === 0) {
-          url.pathname = '/onboarding'
-        } else if (step >= 1 && step <= 5) {
-          url.pathname = `/onboarding/assessment/${step}`
-        } else {
-          url.pathname = '/onboarding/results'
-        }
-        return NextResponse.redirect(url)
-      }
+    if (profile && profile.is_onboarded === false) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/onboarding'
+      return NextResponse.redirect(url)
     }
   }
 

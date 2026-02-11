@@ -16,7 +16,7 @@ export async function completeOnboarding(formData: FormData) {
   const targetCodingArea = formData.get('target_coding_area') as string
 
   const validJlptLevels = ['N5', 'N4', 'N3', 'N2', 'N1']
-  const validCodingAreas = ['java', 'javascript', 'sql']
+  const validCodingAreas = ['java', 'javascript']
 
   if (!validJlptLevels.includes(targetJlptLevel)) {
     return { error: '有効なJLPTレベルを選択してください' }

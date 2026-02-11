@@ -24,12 +24,12 @@ BEGIN
   -- Q2: N3 어휘
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「経験」の読み方と意味として正しいものは？', '経験(けいけん)は「경험」という意味です。', 1, 2, 'easy', NULL);
+  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「経験」の意味は何ですか？', '経験(けいけん)は「경험」という意味です。', 1, 2, 'easy', NULL);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'けいざい - 경제', FALSE, 1),
-    (gen_random_uuid(), q_id, 'けっか　 - 결과', FALSE, 2),
-    (gen_random_uuid(), q_id, 'けんきゅう - 연구', FALSE, 3),
-    (gen_random_uuid(), q_id, 'けいけん - 경험', TRUE, 4);
+    (gen_random_uuid(), q_id, '경제', FALSE, 1),
+    (gen_random_uuid(), q_id, '결과', FALSE, 2),
+    (gen_random_uuid(), q_id, '연구', FALSE, 3),
+    (gen_random_uuid(), q_id, '경험', TRUE, 4);
 
   -- Q3: N3 문법
   q_id := gen_random_uuid();
@@ -64,12 +64,12 @@ BEGIN
   -- Q6: N3 어휘
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「相談」の読み方と意味として正しいものは？', '相談(そうだん)は「상담」という意味です。', 1, 6, 'easy', NULL);
+  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「相談」の意味は何ですか？', '相談(そうだん)は「상담」という意味です。', 1, 6, 'easy', NULL);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'しんだん - 진단', FALSE, 1),
-    (gen_random_uuid(), q_id, 'しつもん - 질문', FALSE, 2),
-    (gen_random_uuid(), q_id, 'そうだん - 상담', TRUE, 3),
-    (gen_random_uuid(), q_id, 'そうさく - 수색', FALSE, 4);
+    (gen_random_uuid(), q_id, '진단', FALSE, 1),
+    (gen_random_uuid(), q_id, '질문', FALSE, 2),
+    (gen_random_uuid(), q_id, '상담', TRUE, 3),
+    (gen_random_uuid(), q_id, '수색', FALSE, 4);
 
   -- Q7: N3 어휘
   q_id := gen_random_uuid();
@@ -114,12 +114,12 @@ BEGIN
   -- Q11: N3 어휘
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「連絡」の読み方と意味として正しいものは？', '連絡(れんらく)は「연락」という意味です。', 1, 11, 'easy', NULL);
+  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「連絡」の意味は何ですか？', '連絡(れんらく)は「연락」という意味です。', 1, 11, 'easy', NULL);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'れんらく - 연락', TRUE, 1),
-    (gen_random_uuid(), q_id, 'れんしゅう - 연습', FALSE, 2),
-    (gen_random_uuid(), q_id, 'れんぞく - 연속', FALSE, 3),
-    (gen_random_uuid(), q_id, 'れんきゅう - 연휴', FALSE, 4);
+    (gen_random_uuid(), q_id, '연락', TRUE, 1),
+    (gen_random_uuid(), q_id, '연습', FALSE, 2),
+    (gen_random_uuid(), q_id, '연속', FALSE, 3),
+    (gen_random_uuid(), q_id, '연휴', FALSE, 4);
 
   -- Q12: N3 문법
   q_id := gen_random_uuid();
@@ -164,12 +164,12 @@ BEGIN
   -- Q16: N3 어휘
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「割合」の読み方と意味として正しいものは？', '割合(わりあい)は「비율」という意味です。', 1, 16, 'easy', NULL);
+  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「割合」の意味は何ですか？', '割合(わりあい)は「비율」という意味です。', 1, 16, 'easy', NULL);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'わりびき - 할인', FALSE, 1),
-    (gen_random_uuid(), q_id, 'かつよう - 활용', FALSE, 2),
-    (gen_random_uuid(), q_id, 'わりあい - 비율', TRUE, 3),
-    (gen_random_uuid(), q_id, 'わりあて - 배분', FALSE, 4);
+    (gen_random_uuid(), q_id, '할인', FALSE, 1),
+    (gen_random_uuid(), q_id, '활용', FALSE, 2),
+    (gen_random_uuid(), q_id, '비율', TRUE, 3),
+    (gen_random_uuid(), q_id, '배분', FALSE, 4);
 
   -- Q17: N3 어휘
   q_id := gen_random_uuid();
@@ -224,12 +224,12 @@ BEGIN
   -- Q22: N3 어휘
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「受付」の読み方と意味として正しいものは？', '受付(うけつけ)は「접수/안내 데스크」という意味です。', 1, 22, 'easy', NULL);
+  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「受付」の意味は何ですか？', '受付(うけつけ)は「접수/안내 데스크」という意味です。', 1, 22, 'easy', NULL);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'うけとり - 수취', FALSE, 1),
-    (gen_random_uuid(), q_id, 'うけつけ - 접수', TRUE, 2),
-    (gen_random_uuid(), q_id, 'うけもち - 담당', FALSE, 3),
-    (gen_random_uuid(), q_id, 'じゅけん - 수험', FALSE, 4);
+    (gen_random_uuid(), q_id, '수취', FALSE, 1),
+    (gen_random_uuid(), q_id, '접수', TRUE, 2),
+    (gen_random_uuid(), q_id, '담당', FALSE, 3),
+    (gen_random_uuid(), q_id, '수험', FALSE, 4);
 
   -- Q23: N3 어휘
   q_id := gen_random_uuid();
@@ -264,12 +264,12 @@ BEGIN
   -- Q26: N3 어휘
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「紹介」の読み方と意味として正しいものは？', '紹介(しょうかい)は「소개」という意味です。', 1, 26, 'easy', NULL);
+  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「紹介」の意味は何ですか？', '紹介(しょうかい)は「소개」という意味です。', 1, 26, 'easy', NULL);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'しょうかい - 소개', TRUE, 1),
-    (gen_random_uuid(), q_id, 'しょうがい - 장애', FALSE, 2),
-    (gen_random_uuid(), q_id, 'しょうひん - 상품', FALSE, 3),
-    (gen_random_uuid(), q_id, 'しょうめい - 증명', FALSE, 4);
+    (gen_random_uuid(), q_id, '소개', TRUE, 1),
+    (gen_random_uuid(), q_id, '장애', FALSE, 2),
+    (gen_random_uuid(), q_id, '상품', FALSE, 3),
+    (gen_random_uuid(), q_id, '증명', FALSE, 4);
 
   -- Q27: N3 문법
   q_id := gen_random_uuid();
@@ -348,12 +348,12 @@ BEGIN
   -- Q34: N2 어휘
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「影響」の読み方と意味として正しいものは？', '影響(えいきょう)は「영향」という意味です。', 1, 34, 'medium', NULL);
+  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「影響」の意味は何ですか？', '影響(えいきょう)は「영향」という意味です。', 1, 34, 'medium', NULL);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'えいぎょう - 영업', FALSE, 1),
-    (gen_random_uuid(), q_id, 'えいよう　 - 영양', FALSE, 2),
-    (gen_random_uuid(), q_id, 'えいがく　 - 영학', FALSE, 3),
-    (gen_random_uuid(), q_id, 'えいきょう - 영향', TRUE, 4);
+    (gen_random_uuid(), q_id, '영업', FALSE, 1),
+    (gen_random_uuid(), q_id, '영양', FALSE, 2),
+    (gen_random_uuid(), q_id, '영학', FALSE, 3),
+    (gen_random_uuid(), q_id, '영향', TRUE, 4);
 
   -- Q35: N2 문법
   q_id := gen_random_uuid();
@@ -388,12 +388,12 @@ BEGIN
   -- Q38: N2 어휘
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「効率」の読み方と意味として正しいものは？', '効率(こうりつ)は「효율」という意味です。', 1, 38, 'medium', NULL);
+  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「効率」の意味は何ですか？', '効率(こうりつ)は「효율」という意味です。', 1, 38, 'medium', NULL);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'こうけん - 공헌', FALSE, 1),
-    (gen_random_uuid(), q_id, 'こうせい - 구성', FALSE, 2),
-    (gen_random_uuid(), q_id, 'こうか　 - 효과', FALSE, 3),
-    (gen_random_uuid(), q_id, 'こうりつ - 효율', TRUE, 4);
+    (gen_random_uuid(), q_id, '공헌', FALSE, 1),
+    (gen_random_uuid(), q_id, '구성', FALSE, 2),
+    (gen_random_uuid(), q_id, '효과', FALSE, 3),
+    (gen_random_uuid(), q_id, '효율', TRUE, 4);
 
   -- Q39: N2 독해
   q_id := gen_random_uuid();
@@ -438,12 +438,12 @@ BEGIN
   -- Q43: N2 어휘
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「傾向」の読み方と意味として正しいものは？', '傾向(けいこう)は「경향」という意味です。', 1, 43, 'medium', NULL);
+  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「傾向」の意味は何ですか？', '傾向(けいこう)は「경향」という意味です。', 1, 43, 'medium', NULL);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'けいこう - 경향', TRUE, 1),
-    (gen_random_uuid(), q_id, 'けいけん - 경험', FALSE, 2),
-    (gen_random_uuid(), q_id, 'けいえい - 경영', FALSE, 3),
-    (gen_random_uuid(), q_id, 'けいさん - 계산', FALSE, 4);
+    (gen_random_uuid(), q_id, '경향', TRUE, 1),
+    (gen_random_uuid(), q_id, '경험', FALSE, 2),
+    (gen_random_uuid(), q_id, '경영', FALSE, 3),
+    (gen_random_uuid(), q_id, '계산', FALSE, 4);
 
   -- Q44: N2 문법
   q_id := gen_random_uuid();
@@ -498,12 +498,12 @@ BEGIN
   -- Q49: N2 어휘
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「基準」の読み方と意味として正しいものは？', '基準(きじゅん)は「기준」という意味です。', 1, 49, 'medium', NULL);
+  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「基準」の意味は何ですか？', '基準(きじゅん)は「기준」という意味です。', 1, 49, 'medium', NULL);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'きそ　　 - 기초', FALSE, 1),
-    (gen_random_uuid(), q_id, 'きほん　 - 기본', FALSE, 2),
-    (gen_random_uuid(), q_id, 'きじゅん - 기준', TRUE, 3),
-    (gen_random_uuid(), q_id, 'きかく　 - 기획', FALSE, 4);
+    (gen_random_uuid(), q_id, '기초', FALSE, 1),
+    (gen_random_uuid(), q_id, '기본', FALSE, 2),
+    (gen_random_uuid(), q_id, '기준', TRUE, 3),
+    (gen_random_uuid(), q_id, '기획', FALSE, 4);
 
   -- Q50: N2 어휘
   q_id := gen_random_uuid();
@@ -548,12 +548,12 @@ BEGIN
   -- Q54: N2 어휘
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「適切」の読み方と意味として正しいものは？', '適切(てきせつ)は「적절」という意味です。', 1, 54, 'medium', NULL);
+  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「適切」の意味は何ですか？', '適切(てきせつ)は「적절」という意味です。', 1, 54, 'medium', NULL);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'てきとう - 적당', FALSE, 1),
-    (gen_random_uuid(), q_id, 'てきよう - 적용', FALSE, 2),
-    (gen_random_uuid(), q_id, 'てきかく - 적격', FALSE, 3),
-    (gen_random_uuid(), q_id, 'てきせつ - 적절', TRUE, 4);
+    (gen_random_uuid(), q_id, '적당', FALSE, 1),
+    (gen_random_uuid(), q_id, '적용', FALSE, 2),
+    (gen_random_uuid(), q_id, '적격', FALSE, 3),
+    (gen_random_uuid(), q_id, '적절', TRUE, 4);
 
   -- Q55: N2 문법
   q_id := gen_random_uuid();
@@ -622,12 +622,12 @@ BEGIN
   -- Q61: N1 어휘
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「顕著」の読み方と意味として正しいものは？', '顕著(けんちょ)は「뚜렷한/현저한」という意味のN1語彙です。', 1, 61, 'hard', NULL);
+  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「顕著」の意味は何ですか？', '顕著(けんちょ)は「뚜렷한/현저한」という意味のN1語彙です。', 1, 61, 'hard', NULL);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'けんちょ　 - 뚜렷한/현저한', TRUE, 1),
-    (gen_random_uuid(), q_id, 'けんめい　 - 현명한/똑똑한', FALSE, 2),
-    (gen_random_uuid(), q_id, 'げんじょう - 현상/상태', FALSE, 3),
-    (gen_random_uuid(), q_id, 'けんぜん　 - 건전한/온전한', FALSE, 4);
+    (gen_random_uuid(), q_id, '뚜렷한/현저한', TRUE, 1),
+    (gen_random_uuid(), q_id, '현명한/똑똑한', FALSE, 2),
+    (gen_random_uuid(), q_id, '현상/상태', FALSE, 3),
+    (gen_random_uuid(), q_id, '건전한/온전한', FALSE, 4);
 
   -- Q62: N1 문법
   q_id := gen_random_uuid();
@@ -662,12 +662,12 @@ BEGIN
   -- Q65: N1 어휘
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「瞬時」の読み方と意味として正しいものは？', '瞬時(しゅんじ)は「순간/순식간」という意味です。', 1, 65, 'hard', NULL);
+  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「瞬時」の意味は何ですか？', '瞬時(しゅんじ)は「순간/순식간」という意味です。', 1, 65, 'hard', NULL);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'しゅんじ　 - 순간/순식간', TRUE, 1),
-    (gen_random_uuid(), q_id, 'しゅんかん - 순간/찰나', FALSE, 2),
-    (gen_random_uuid(), q_id, 'ぜんじ　　 - 전시/진열', FALSE, 3),
-    (gen_random_uuid(), q_id, 'りんじ　　 - 임시/임의', FALSE, 4);
+    (gen_random_uuid(), q_id, '순간/순식간', TRUE, 1),
+    (gen_random_uuid(), q_id, '순간/찰나', FALSE, 2),
+    (gen_random_uuid(), q_id, '전시/진열', FALSE, 3),
+    (gen_random_uuid(), q_id, '임시/임의', FALSE, 4);
 
   -- Q66: N1 문법
   q_id := gen_random_uuid();
@@ -712,12 +712,12 @@ BEGIN
   -- Q70: N1 어휘
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「冗長」の読み方と意味として正しいものは？', '冗長(じょうちょう)は「중복된/장황한」という意味です。IT用語として「冗長化」などで使われます。', 1, 70, 'hard', NULL);
+  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「冗長」の意味は何ですか？', '冗長(じょうちょう)は「중복된/장황한」という意味です。IT用語として「冗長化」などで使われます。', 1, 70, 'hard', NULL);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'じょうきょう - 상황/형편', FALSE, 1),
-    (gen_random_uuid(), q_id, 'じょうほう　 - 정보/데이터', FALSE, 2),
-    (gen_random_uuid(), q_id, 'じょうけん　 - 조건/전제', FALSE, 3),
-    (gen_random_uuid(), q_id, 'じょうちょう - 장황한/중복된', TRUE, 4);
+    (gen_random_uuid(), q_id, '상황/형편', FALSE, 1),
+    (gen_random_uuid(), q_id, '정보/데이터', FALSE, 2),
+    (gen_random_uuid(), q_id, '조건/전제', FALSE, 3),
+    (gen_random_uuid(), q_id, '장황한/중복된', TRUE, 4);
 
   -- Q71: N1 어휘
   q_id := gen_random_uuid();
@@ -742,12 +742,12 @@ BEGIN
   -- Q73: N1 어휘
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「俯瞰」の読み方と意味として正しいものは？', '俯瞰(ふかん)は「부감/조감(높은 곳에서 내려다봄)」という意味です。', 1, 73, 'hard', NULL);
+  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「俯瞰」の意味は何ですか？', '俯瞰(ふかん)は「부감/조감(높은 곳에서 내려다봄)」という意味です。', 1, 73, 'hard', NULL);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'びかん　 - 미관/아름다움', FALSE, 1),
-    (gen_random_uuid(), q_id, 'ぼうかん - 방관/관망', FALSE, 2),
-    (gen_random_uuid(), q_id, 'ふかん　 - 부감/조감', TRUE, 3),
-    (gen_random_uuid(), q_id, 'たいかん - 체감/실감', FALSE, 4);
+    (gen_random_uuid(), q_id, '미관/아름다움', FALSE, 1),
+    (gen_random_uuid(), q_id, '방관/관망', FALSE, 2),
+    (gen_random_uuid(), q_id, '부감/조감', TRUE, 3),
+    (gen_random_uuid(), q_id, '체감/실감', FALSE, 4);
 
   -- Q74: N1 문법
   q_id := gen_random_uuid();
@@ -792,12 +792,12 @@ BEGIN
   -- Q78: N1 어휘
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「恣意的」の読み方と意味として正しいものは？', '恣意的(しいてき)は「자의적인」という意味です。', 1, 78, 'hard', NULL);
+  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「恣意的」の意味は何ですか？', '恣意的(しいてき)は「자의적인」という意味です。', 1, 78, 'hard', NULL);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'こういてき - 호의적인', FALSE, 1),
-    (gen_random_uuid(), q_id, 'しいてき　 - 자의적인', TRUE, 2),
-    (gen_random_uuid(), q_id, 'いしてき　 - 의식적인', FALSE, 3),
-    (gen_random_uuid(), q_id, 'ごういてき - 합의적인', FALSE, 4);
+    (gen_random_uuid(), q_id, '호의적인', FALSE, 1),
+    (gen_random_uuid(), q_id, '자의적인', TRUE, 2),
+    (gen_random_uuid(), q_id, '의식적인', FALSE, 3),
+    (gen_random_uuid(), q_id, '합의적인', FALSE, 4);
 
   -- Q79: N1 문법
   q_id := gen_random_uuid();
@@ -842,12 +842,12 @@ BEGIN
   -- Q83: N1 어휘
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「網羅」の読み方と意味として正しいものは？', '網羅(もうら)は「망라/모두 포함」という意味です。', 1, 83, 'hard', NULL);
+  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「網羅」の意味は何ですか？', '網羅(もうら)は「망라/모두 포함」という意味です。', 1, 83, 'hard', NULL);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'もうら　 - 망라/모두 포함', TRUE, 1),
-    (gen_random_uuid(), q_id, 'もうろう - 몽롱/흐릿함', FALSE, 2),
-    (gen_random_uuid(), q_id, 'ぼうら　 - 방라/흩어짐', FALSE, 3),
-    (gen_random_uuid(), q_id, 'もうそう - 망상/공상', FALSE, 4);
+    (gen_random_uuid(), q_id, '망라/모두 포함', TRUE, 1),
+    (gen_random_uuid(), q_id, '몽롱/흐릿함', FALSE, 2),
+    (gen_random_uuid(), q_id, '방라/흩어짐', FALSE, 3),
+    (gen_random_uuid(), q_id, '망상/공상', FALSE, 4);
 
   -- Q84: N1 어휘
   q_id := gen_random_uuid();
@@ -882,12 +882,12 @@ BEGIN
   -- Q87: N1 어휘
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「簡潔」の読み方と意味として正しいものは？', '簡潔(かんけつ)は「간결」という意味です。', 1, 87, 'hard', NULL);
+  VALUES (q_id, 'a0000001-0000-0000-0000-000000000001', 'multiple_choice', '「簡潔」の意味は何ですか？', '簡潔(かんけつ)は「간결」という意味です。', 1, 87, 'hard', NULL);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'かんけつ - 간결', TRUE, 1),
-    (gen_random_uuid(), q_id, 'かんぜん - 완전', FALSE, 2),
-    (gen_random_uuid(), q_id, 'かんたん - 간단', FALSE, 3),
-    (gen_random_uuid(), q_id, 'かんそう - 감상', FALSE, 4);
+    (gen_random_uuid(), q_id, '간결', TRUE, 1),
+    (gen_random_uuid(), q_id, '완전', FALSE, 2),
+    (gen_random_uuid(), q_id, '간단', FALSE, 3),
+    (gen_random_uuid(), q_id, '감상', FALSE, 4);
 
   -- Q88: N1 문법
   q_id := gen_random_uuid();

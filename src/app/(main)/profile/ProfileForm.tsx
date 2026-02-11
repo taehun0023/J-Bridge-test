@@ -10,6 +10,7 @@ interface Profile {
   bio: string | null
   target_jlpt_level: string | null
   target_coding_area: string | null
+  is_japanese: boolean
 }
 
 export default function ProfileForm({ profile }: { profile: Profile | null }) {
@@ -17,6 +18,7 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
   const [bio, setBio] = useState(profile?.bio ?? '')
   const [targetJlpt, setTargetJlpt] = useState(profile?.target_jlpt_level ?? '')
   const [targetCoding, setTargetCoding] = useState(profile?.target_coding_area ?? '')
+  const [isJapanese, setIsJapanese] = useState(profile?.is_japanese ?? false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
@@ -33,6 +35,7 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
         bio: bio || null,
         target_jlpt_level: targetJlpt || null,
         target_coding_area: targetCoding || null,
+        is_japanese: isJapanese,
         updated_at: new Date().toISOString(),
       })
       .eq('id', profile?.id ?? '')
@@ -46,32 +49,60 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
     <Card title="個人情報">
       <form onSubmit={handleSave} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">名前</label>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">名前</label>
           <input
             type="text"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:outline-none"
+            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">自己紹介</label>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">自己紹介</label>
           <textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             rows={3}
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:outline-none"
+            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">日本人ですか？</label>
+          <div className="mt-1 flex gap-3">
+            {[
+              { value: true, label: 'はい（日本語テスト省略）' },
+              { value: false, label: 'いいえ（全テスト受験）' },
+            ].map((opt) => (
+              <label
+                key={String(opt.value)}
+                className={`flex-1 cursor-pointer rounded-xl border-2 px-3 py-2 text-center text-sm transition-colors ${
+                  isJapanese === opt.value
+                    ? 'border-indigo-500 bg-indigo-500/5 text-indigo-400 dark:bg-indigo-500/10 dark:text-indigo-400'
+                    : 'border-gray-200 dark:border-white/[0.08] text-zinc-700 dark:text-zinc-300 hover:border-gray-300 dark:hover:border-white/[0.15]'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="is_japanese"
+                  checked={isJapanese === opt.value}
+                  onChange={() => setIsJapanese(opt.value)}
+                  className="sr-only"
+                />
+                {opt.label}
+              </label>
+            ))}
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">目標JLPT</label>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">目標JLPT</label>
             <select
               value={targetJlpt}
               onChange={(e) => setTargetJlpt(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
             >
               <option value="">選択</option>
               <option value="N5">N5</option>
@@ -82,16 +113,15 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">コーディング分野</label>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">開発言語</label>
             <select
               value={targetCoding}
               onChange={(e) => setTargetCoding(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
             >
               <option value="">選択</option>
               <option value="java">Java</option>
               <option value="javascript">JavaScript</option>
-              <option value="sql">SQL</option>
             </select>
           </div>
         </div>
@@ -100,11 +130,11 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
           <button
             type="submit"
             disabled={saving}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50"
+            className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
           >
             {saving ? '保存中...' : '保存'}
           </button>
-          {saved && <span className="text-sm text-green-600 dark:text-green-400">保存しました</span>}
+          {saved && <span className="text-sm text-emerald-400">保存しました</span>}
         </div>
       </form>
     </Card>

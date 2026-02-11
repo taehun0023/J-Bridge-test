@@ -23,21 +23,21 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed"
+        className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 hover:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/5 hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed"
       >
         前へ
       </button>
       {pages.map((page, i) =>
         page === '...' ? (
-          <span key={`ellipsis-${i}`} className="px-2 text-gray-400 dark:text-gray-500">...</span>
+          <span key={`ellipsis-${i}`} className="px-2 text-zinc-500 font-mono">...</span>
         ) : (
           <button
             key={page}
             onClick={() => onPageChange(page)}
-            className={`rounded-lg px-3 py-2 text-sm font-medium ${
+            className={`rounded-lg px-3 py-2 text-sm font-mono font-medium ${
               page === currentPage
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'
+                ? 'bg-indigo-600 text-white'
+                : 'text-zinc-400 hover:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/5 hover:bg-zinc-100'
             }`}
           >
             {page}
@@ -47,7 +47,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed"
+        className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 hover:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/5 hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed"
       >
         次へ
       </button>

@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { getRelevantAxes, getMaxTotalScore } from '@/lib/assessment-config'
+import type { AxisKey } from '@/lib/assessment-config'
 import ResultsSummary from './ResultsSummary'
 
 export default async function ResultsPage() {
@@ -9,7 +11,7 @@ export default async function ResultsPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('onboarding_step, is_onboarded')
+    .select('*')
     .eq('id', user.id)
     .single()
 
@@ -20,6 +22,8 @@ export default async function ResultsPage() {
     redirect(`/onboarding/assessment/${profile.onboarding_step}`)
   }
 
+  const isJapanese = profile.is_japanese ?? false
+
   // Fetch latest dispatch readiness scores
   const { data: scores } = await supabase
     .from('dispatch_readiness_scores')
@@ -29,7 +33,7 @@ export default async function ResultsPage() {
     .limit(1)
     .single()
 
-  const radarScores = {
+  const allScores: Record<AxisKey, number> = {
     jlpt: scores?.jlpt_score ?? 0,
     itJapanese: scores?.it_japanese_score ?? 0,
     coreProgramming: scores?.core_programming_score ?? 0,
@@ -37,11 +41,18 @@ export default async function ResultsPage() {
     attitudeCulture: scores?.attitude_culture_score ?? 0,
   }
 
-  const totalScore = radarScores.jlpt + radarScores.itJapanese + radarScores.coreProgramming + radarScores.framework + radarScores.attitudeCulture
+  const relevantAxes = getRelevantAxes(isJapanese)
+  const totalScore = relevantAxes.reduce((sum, key) => sum + allScores[key], 0)
+  const maxScore = getMaxTotalScore(isJapanese)
 
   return (
     <div className="mx-auto max-w-2xl py-8">
-      <ResultsSummary radarScores={radarScores} totalScore={totalScore} />
+      <ResultsSummary
+        radarScores={allScores}
+        totalScore={totalScore}
+        maxScore={maxScore}
+        isJapanese={isJapanese}
+      />
     </div>
   )
 }

@@ -29,7 +29,12 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(npx tsc:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(powershell:*)",
+      "Bash(node scripts/assemble-seeds.js:*)",
+      "Bash(python3 -m json.tool:*)",
+      "Bash(python -m json.tool:*)",
+      "Bash(node scripts/fix-quiz2.js:*)"
     ]
   }
 }

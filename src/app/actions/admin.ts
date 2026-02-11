@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 async function assertAdmin() {
@@ -15,15 +15,20 @@ async function assertAdmin() {
     .single()
 
   if (profile?.role !== 'admin') throw new Error('Not authorized')
-  return { supabase, adminId: user.id }
+
+  // Service role client bypasses RLS — needed for admin operations
+  const serviceClient = createServiceRoleClient()
+  if (!serviceClient) throw new Error('Service role key not configured')
+
+  return { supabase, serviceClient, adminId: user.id }
 }
 
 // ─── User Management ───
 
 export async function updateUserRole(userId: string, role: string) {
-  const { supabase } = await assertAdmin()
+  const { serviceClient } = await assertAdmin()
 
-  const { error } = await supabase
+  const { error } = await serviceClient
     .from('profiles')
     .update({ role, updated_at: new Date().toISOString() })
     .eq('id', userId)
@@ -34,7 +39,7 @@ export async function updateUserRole(userId: string, role: string) {
 }
 
 export async function createUserAccount(formData: FormData) {
-  const { supabase } = await assertAdmin()
+  const { serviceClient } = await assertAdmin()
 
   const email = formData.get('email') as string
   const password = formData.get('password') as string
@@ -45,8 +50,8 @@ export async function createUserAccount(formData: FormData) {
     return { error: '必須フィールドをすべて入力してください' }
   }
 
-  // Create auth user via admin API
-  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+  // Create auth user via admin API (requires service role key)
+  const { data: authData, error: authError } = await serviceClient.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
@@ -55,12 +60,17 @@ export async function createUserAccount(formData: FormData) {
 
   if (authError) return { error: authError.message }
 
-  // Update profile role (profile is auto-created by trigger)
+  // Update profile role if not default mentee
+  // Service role client bypasses RLS so admin can update any profile
   if (authData.user && role !== 'mentee') {
-    await supabase
+    const { error: updateError } = await serviceClient
       .from('profiles')
       .update({ role, full_name: fullName })
       .eq('id', authData.user.id)
+
+    if (updateError) {
+      return { error: `ユーザーは作成されましたが、ロール設定に失敗しました: ${updateError.message}` }
+    }
   }
 
   revalidatePath('/admin/users')
@@ -131,6 +141,43 @@ export async function createFeedback(formData: FormData) {
 
   if (error) return { error: error.message }
   revalidatePath('/admin/reports')
+  return { success: true }
+}
+
+// ─── Retake Management ───
+
+export async function approveRetakeRequest(attemptId: string) {
+  const { serviceClient } = await assertAdmin()
+
+  const { error } = await serviceClient
+    .from('quiz_attempts')
+    .update({
+      retake_request_status: 'approved',
+      retake_approved_at: new Date().toISOString(),
+    })
+    .eq('id', attemptId)
+    .eq('retake_request_status', 'requested')
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/users')
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+
+export async function denyRetakeRequest(attemptId: string) {
+  const { serviceClient } = await assertAdmin()
+
+  const { error } = await serviceClient
+    .from('quiz_attempts')
+    .update({
+      retake_request_status: 'denied',
+    })
+    .eq('id', attemptId)
+    .eq('retake_request_status', 'requested')
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/users')
+  revalidatePath('/dashboard')
   return { success: true }
 }
 

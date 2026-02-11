@@ -16,10 +16,11 @@ interface Props {
   label: string
   timeLimit: number
   questions: Question[]
-  isOnboarded?: boolean
+  totalSteps: number
+  displayStep: number
 }
 
-export default function AssessmentTaker({ step, label, timeLimit, questions, isOnboarded }: Props) {
+export default function AssessmentTaker({ step, label, timeLimit, questions, totalSteps, displayStep }: Props) {
   const router = useRouter()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
@@ -27,10 +28,31 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, isO
   const [error, setError] = useState('')
   const [remainingSeconds, setRemainingSeconds] = useState(timeLimit * 60)
   const hasSubmittedRef = useRef(false)
+  const answersRef = useRef(answers)
 
   const totalQuestions = questions.length
   const currentQuestion = questions[currentIndex]
   const answeredCount = Object.keys(answers).length
+
+  useEffect(() => {
+    answersRef.current = answers
+  }, [answers])
+
+  const doSubmit = useCallback(async (currentAnswers: Record<string, string>) => {
+    if (hasSubmittedRef.current) return
+    hasSubmittedRef.current = true
+
+    const answerArray = questions
+      .map(q => ({ questionId: q.id, selectedOptionId: currentAnswers[q.id] ?? '' }))
+      .filter(a => a.selectedOptionId !== '')
+
+    if (answerArray.length === 0) {
+      hasSubmittedRef.current = false
+      return
+    }
+
+    await submitAssessment(answerArray, step, totalQuestions)
+  }, [questions, step, totalQuestions])
 
   const handleSubmit = useCallback(async () => {
     if (hasSubmittedRef.current) return
@@ -38,10 +60,9 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, isO
     setSubmitting(true)
     setError('')
 
-    const answerArray = questions.map(q => ({
-      questionId: q.id,
-      selectedOptionId: answers[q.id] ?? '',
-    })).filter(a => a.selectedOptionId !== '')
+    const answerArray = questions
+      .map(q => ({ questionId: q.id, selectedOptionId: answers[q.id] ?? '' }))
+      .filter(a => a.selectedOptionId !== '')
 
     if (answerArray.length === 0) {
       setError('最低1問以上回答してください')
@@ -50,7 +71,7 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, isO
       return
     }
 
-    const result = await submitAssessment(answerArray, step)
+    const result = await submitAssessment(answerArray, step, totalQuestions)
 
     if ('error' in result && result.error) {
       setError(result.error)
@@ -59,11 +80,9 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, isO
       return
     }
 
-    // Always redirect to dashboard after each assessment
     router.push('/dashboard')
-  }, [answers, questions, step, router])
+  }, [answers, questions, step, totalQuestions, router])
 
-  // Timer countdown
   useEffect(() => {
     const timer = setInterval(() => {
       setRemainingSeconds(prev => {
@@ -78,20 +97,32 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, isO
     return () => clearInterval(timer)
   }, [handleSubmit])
 
-  // Warn before leaving & auto-submit on leave
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    const handleClick = (e: MouseEvent) => {
       if (hasSubmittedRef.current) return
+      const anchor = (e.target as HTMLElement).closest('a')
+      if (!anchor || !anchor.href) return
+
+      const url = new URL(anchor.href, window.location.origin)
+      if (url.pathname === window.location.pathname) return
+
       e.preventDefault()
-      // Auto-submit when actually leaving
-      handleSubmit()
+      e.stopPropagation()
+
+      const leave = window.confirm(
+        'テストを中断すると、回答済みの問題のみ採点されます。本当に退出しますか？'
+      )
+      if (leave) {
+        doSubmit(answersRef.current).then(() => {
+          window.location.href = anchor.href
+        })
+      }
     }
 
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-  }, [handleSubmit])
+    document.addEventListener('click', handleClick, true)
+    return () => document.removeEventListener('click', handleClick, true)
+  }, [doSubmit])
 
-  // Intercept in-app navigation (back button, link click)
   useEffect(() => {
     const handlePopState = () => {
       if (hasSubmittedRef.current) return
@@ -99,18 +130,28 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, isO
         'テストを中断すると、回答済みの問題のみ採点されます。本当に退出しますか？'
       )
       if (leave) {
-        handleSubmit()
+        doSubmit(answersRef.current).then(() => {
+          router.push('/dashboard')
+        })
       } else {
-        // Push the current URL back to prevent navigation
         window.history.pushState(null, '', window.location.href)
       }
     }
 
-    // Push a state so we can intercept the back button
     window.history.pushState(null, '', window.location.href)
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
-  }, [handleSubmit])
+  }, [doSubmit, router])
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasSubmittedRef.current) return
+      e.preventDefault()
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [])
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60)
@@ -137,13 +178,15 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, isO
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-blue-600">
-            {isOnboarded ? '等級テスト' : `テスト ${step}/5`}
+          <p className="text-sm font-medium text-indigo-400">
+            等級テスト {displayStep}/{totalSteps}
           </p>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">{label}</h1>
+          <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">{label}</h1>
         </div>
-        <div className={`rounded-lg px-4 py-2 text-sm font-mono font-bold ${
-          isTimeLow ? 'bg-red-100 text-red-700 animate-pulse' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+        <div className={`rounded-xl px-4 py-2 text-sm font-mono font-bold backdrop-blur-md ${
+          isTimeLow
+            ? 'bg-red-500/10 text-red-400 ring-1 ring-red-500/20 animate-pulse'
+            : 'bg-white/[0.03] text-zinc-300 border border-white/[0.08] dark:bg-white/[0.03] dark:text-zinc-300 dark:border-white/[0.08] bg-zinc-100 text-zinc-700 border-gray-200'
         }`}>
           {formatTime(remainingSeconds)}
         </div>
@@ -151,13 +194,13 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, isO
 
       {/* Progress bar */}
       <div className="mb-6">
-        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+        <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 mb-1">
           <span>進捗</span>
           <span>{answeredCount}/{totalQuestions} 回答完了</span>
         </div>
-        <div className="h-2 rounded-full bg-gray-200 dark:bg-gray-700">
+        <div className="h-2 rounded-full bg-white/5 dark:bg-white/5 bg-zinc-200">
           <div
-            className="h-2 rounded-full bg-blue-600 transition-all"
+            className="h-2 rounded-full bg-indigo-600 transition-all"
             style={{ width: `${(answeredCount / totalQuestions) * 100}%` }}
           />
         </div>
@@ -171,10 +214,10 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, isO
             onClick={() => setCurrentIndex(i)}
             className={`h-7 w-7 rounded text-xs font-medium transition-colors ${
               i === currentIndex
-                ? 'bg-blue-600 text-white'
+                ? 'bg-indigo-600 text-white'
                 : answers[q.id]
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                  : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                  ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20'
+                  : 'bg-white/5 text-zinc-500 dark:bg-white/5 dark:text-zinc-400 bg-zinc-100 text-zinc-500'
             }`}
           >
             {i + 1}
@@ -183,7 +226,7 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, isO
       </div>
 
       {/* Current question */}
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
+      <div className="rounded-2xl border border-gray-200/60 bg-white/80 backdrop-blur-md p-6 dark:border-white/[0.08] dark:bg-white/[0.03]">
         <QuizQuestion
           questionNumber={currentIndex + 1}
           totalQuestions={totalQuestions}
@@ -199,7 +242,7 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, isO
         <button
           onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
           disabled={currentIndex === 0}
-          className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="rounded-xl border border-gray-200 dark:border-white/[0.08] px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           前へ
         </button>
@@ -207,7 +250,7 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, isO
         {currentIndex < totalQuestions - 1 ? (
           <button
             onClick={() => setCurrentIndex(prev => Math.min(totalQuestions - 1, prev + 1))}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
           >
             次へ
           </button>
@@ -215,7 +258,7 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, isO
           <button
             onClick={handleSubmit}
             disabled={submitting || answeredCount === 0}
-            className="rounded-lg bg-green-600 px-6 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-xl bg-emerald-600 px-6 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {submitting ? '提出中...' : '提出する'}
           </button>
@@ -223,12 +266,11 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, isO
       </div>
 
       {error && (
-        <p className="mt-4 text-center text-sm text-red-600">{error}</p>
+        <p className="mt-4 text-center text-sm text-red-500">{error}</p>
       )}
 
-      {/* Unanswered warning */}
       {currentIndex === totalQuestions - 1 && answeredCount < totalQuestions && (
-        <p className="mt-3 text-center text-xs text-amber-600 dark:text-amber-400">
+        <p className="mt-3 text-center text-xs text-amber-400 dark:text-amber-400">
           {totalQuestions - answeredCount}問がまだ未回答です
         </p>
       )}

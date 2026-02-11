@@ -7,22 +7,18 @@ import { fetchRandomAssessmentQuestions, fetchAssessmentQuiz } from '@/lib/supab
 import { recalculateUserScores } from './scores'
 import { ASSESSMENT_QUIZ_IDS } from '@/lib/assessment-config'
 
-/** Save onboarding preferences (step 0 → 1) */
+/** Save onboarding preferences and mark as onboarded → dashboard */
 export async function savePreferences(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return { error: '認証が必要です' }
 
-  const targetJlptLevel = formData.get('target_jlpt_level') as string
+  const isJapanese = formData.get('is_japanese') === 'true'
   const targetCodingArea = formData.get('target_coding_area') as string
 
-  const validJlptLevels = ['N5', 'N4', 'N3', 'N2', 'N1']
-  const validCodingAreas = ['java', 'javascript', 'sql']
+  const validCodingAreas = ['java', 'javascript']
 
-  if (!validJlptLevels.includes(targetJlptLevel)) {
-    return { error: '有効なJLPTレベルを選択してください' }
-  }
   if (!validCodingAreas.includes(targetCodingArea)) {
     return { error: '有効なコーディング分野を選択してください' }
   }
@@ -30,9 +26,9 @@ export async function savePreferences(formData: FormData) {
   const { error } = await supabase
     .from('profiles')
     .update({
-      target_jlpt_level: targetJlptLevel,
+      is_japanese: isJapanese,
       target_coding_area: targetCodingArea,
-      onboarding_step: 1,
+      is_onboarded: true,
       updated_at: new Date().toISOString(),
     })
     .eq('id', user.id)
@@ -40,7 +36,7 @@ export async function savePreferences(formData: FormData) {
   if (error) return { error: '保存中にエラーが発生しました' }
 
   revalidatePath('/', 'layout')
-  redirect('/onboarding/assessment/1')
+  redirect('/dashboard')
 }
 
 /** Get assessment quiz + randomly selected questions for a step */
@@ -60,7 +56,8 @@ export async function getAssessmentForStep(step: number, targetCodingArea?: stri
 /** Submit assessment answers and advance step */
 export async function submitAssessment(
   answers: { questionId: string; selectedOptionId: string }[],
-  step: number
+  step: number,
+  totalQuestions: number
 ) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -69,15 +66,6 @@ export async function submitAssessment(
 
   const quizId = ASSESSMENT_QUIZ_IDS[step]
   if (!quizId) return { error: '無効なステップです' }
-
-  // Check if user is already onboarded
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_onboarded, onboarding_step')
-    .eq('id', user.id)
-    .single()
-
-  const isOnboarded = profile?.is_onboarded ?? false
 
   // Create attempt
   const { data: attempt, error: attemptError } = await supabase
@@ -115,8 +103,9 @@ export async function submitAssessment(
 
   await supabase.from('quiz_answers').insert(answerRows)
 
-  // Score: max(1, round((correct/total) * 100))
-  const score = Math.max(1, Math.round((correctCount / answers.length) * 100))
+  // Score: correct / totalQuestions (unanswered = wrong)
+  const denominator = Math.max(totalQuestions, answers.length)
+  const score = Math.max(1, Math.round((correctCount / denominator) * 100))
 
   await supabase
     .from('quiz_attempts')
@@ -127,18 +116,6 @@ export async function submitAssessment(
     })
     .eq('id', attempt.id)
 
-  // Only advance onboarding step for non-onboarded users
-  const nextStep = step + 1
-  if (!isOnboarded) {
-    await supabase
-      .from('profiles')
-      .update({
-        onboarding_step: nextStep,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', user.id)
-  }
-
   // Recalculate scores
   await recalculateUserScores(user.id)
 
@@ -148,10 +125,47 @@ export async function submitAssessment(
   return {
     score,
     correctCount,
-    totalCount: answers.length,
-    nextStep,
-    redirectTo: isOnboarded ? '/dashboard' : undefined,
+    totalCount: totalQuestions,
   }
+}
+
+/** Request retake for a completed assessment step */
+export async function requestRetake(step: number) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return { error: '認証が必要です' }
+
+  const quizId = ASSESSMENT_QUIZ_IDS[step]
+  if (!quizId) return { error: '無効なステップです' }
+
+  // Find the latest completed attempt for this step
+  const { data: attempt } = await supabase
+    .from('quiz_attempts')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('quiz_id', quizId)
+    .not('completed_at', 'is', null)
+    .order('completed_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!attempt) return { error: '完了済みの試験が見つかりません' }
+  if (attempt.retake_request_status === 'requested') return { error: '既にリクエスト済みです' }
+  if (attempt.retake_request_status === 'approved') return { error: '既に承認されています' }
+
+  const { error } = await supabase
+    .from('quiz_attempts')
+    .update({
+      retake_request_status: 'requested',
+      retake_requested_at: new Date().toISOString(),
+    })
+    .eq('id', attempt.id)
+
+  if (error) return { error: 'リクエスト送信に失敗しました' }
+
+  revalidatePath('/dashboard')
+  return { success: true }
 }
 
 /** Finalize onboarding: set is_onboarded=true and redirect to dashboard */

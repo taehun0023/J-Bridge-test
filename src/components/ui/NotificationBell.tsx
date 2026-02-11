@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Bell } from 'lucide-react'
 import { getUnreadTaskCount, getTaskNotifications } from '@/app/actions/notifications'
 
 export default function NotificationBell() {
@@ -21,25 +22,12 @@ export default function NotificationBell() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative rounded-lg p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+        className="relative rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/5"
         aria-label="通知"
       >
-        <svg
-          className="h-6 w-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-          />
-        </svg>
+        <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+          <span className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-500 text-xs font-bold text-white">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -50,7 +38,7 @@ export default function NotificationBell() {
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 top-12 z-50 w-80 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+          <div className="absolute right-0 top-12 z-50 w-80 rounded-2xl border border-gray-200 bg-white shadow-lg dark:border-white/[0.08] dark:bg-zinc-900/90 dark:backdrop-blur-xl">
             <NotificationDropdown onClose={() => setIsOpen(false)} />
           </div>
         </>
@@ -74,7 +62,7 @@ function NotificationDropdown({ onClose }: { onClose: () => void }) {
 
   if (loading) {
     return (
-      <div className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+      <div className="p-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
         読み込み中...
       </div>
     )
@@ -82,7 +70,7 @@ function NotificationDropdown({ onClose }: { onClose: () => void }) {
 
   if (notifications.length === 0) {
     return (
-      <div className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+      <div className="p-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
         通知はありません
       </div>
     )
@@ -90,24 +78,24 @@ function NotificationDropdown({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="max-h-96 overflow-y-auto">
-      <div className="border-b border-gray-200 px-4 py-3 dark:border-gray-700">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">通知</h3>
+      <div className="border-b border-gray-200 px-4 py-3 dark:border-white/[0.06]">
+        <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">通知</h3>
       </div>
-      <div className="divide-y divide-gray-200 dark:divide-gray-700">
+      <div className="divide-y divide-gray-200 dark:divide-white/[0.06]">
         {notifications.map((notification) => (
           <div
             key={notification.id}
-            className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700"
+            className="px-4 py-3 hover:bg-zinc-50 dark:hover:bg-white/5"
           >
-            <p className="text-sm font-medium text-gray-900 dark:text-white">
+            <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
               {notification.title}
             </p>
             {notification.description && (
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                 {notification.description}
               </p>
             )}
-            <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+            <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
               {notification.assignedBy} · {new Date(notification.createdAt).toLocaleDateString('ja-JP')}
             </p>
           </div>

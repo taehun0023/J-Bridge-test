@@ -3,7 +3,7 @@ export type JlptLevel = 'N5' | 'N4' | 'N3' | 'N2' | 'N1'
 export type CodingRank = 'S' | 'A' | 'B' | 'C' | 'D'
 export type Difficulty = 'beginner' | 'intermediate' | 'advanced'
 export type ProblemDifficulty = 'easy' | 'medium' | 'hard'
-export type CodingLanguage = 'java' | 'javascript' | 'sql'
+export type CodingLanguage = 'java' | 'javascript'
 
 export type CourseCategory =
   | 'jlpt_prep'
@@ -53,6 +53,7 @@ export interface Profile {
   target_coding_area: CodingLanguage | null
   coding_rank: CodingRank
   is_onboarded: boolean
+  is_japanese: boolean
   onboarding_step: number
   created_at: string
   updated_at: string
@@ -97,6 +98,8 @@ export interface AttitudeCultureSkills {
   horenso_score: number
   teamwork_score: number
   business_manner_score: number
+  business_culture_score: number
+  it_security_score: number
   attitude_normalized: number
   updated_at: string
 }
@@ -104,12 +107,13 @@ export interface AttitudeCultureSkills {
 export interface DispatchReadinessScore {
   id: string
   user_id: string
-  jlpt_score: number
-  it_japanese_score: number
+  jlpt_score: number | null
+  it_japanese_score: number | null
   core_programming_score: number
   framework_score: number
   attitude_culture_score: number
-  overall_score: number
+  overall_score: number | null
+  is_japanese: boolean
   recorded_at: string
 }
 

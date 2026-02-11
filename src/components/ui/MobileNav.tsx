@@ -17,7 +17,7 @@ export default function MobileNav({
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-black/50 dark:bg-black/70 lg:hidden"
+        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
         onClick={onClose}
       />
       <div className="fixed inset-y-0 left-0 z-50 w-64 lg:hidden">

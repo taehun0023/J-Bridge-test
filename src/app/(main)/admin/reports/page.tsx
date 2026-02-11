@@ -7,7 +7,7 @@ export default async function AdminReportsPage() {
   // Get all mentee/mentor users with their skills
   const { data: users } = await supabase
     .from('profiles')
-    .select('id, full_name, email, role, coding_rank, jlpt_level')
+    .select('*')
     .in('role', ['mentee', 'mentor'])
     .order('full_name')
 
@@ -41,7 +41,7 @@ export default async function AdminReportsPage() {
 
   // Build skill map per user
   const skillMap: Record<string, {
-    jlpt: number; itJapanese: number; core: number; framework: number; attitude: number
+    jlpt: number; itJapanese: number; core: number; framework: number; attitude: number; isJapanese: boolean
   }> = {}
 
   for (const u of users ?? []) {
@@ -49,7 +49,6 @@ export default async function AdminReportsPage() {
     const cs = codingSkills?.find(s => s.user_id === u.id)
     const as_ = attitudeSkills?.find(s => s.user_id === u.id)
 
-    // Check dispatch readiness first (most recent snapshot)
     const dr = readinessScores?.find(s => s.user_id === u.id)
 
     skillMap[u.id] = {
@@ -58,13 +57,14 @@ export default async function AdminReportsPage() {
       core: dr?.core_programming_score ?? cs?.core_normalized ?? 0,
       framework: dr?.framework_score ?? cs?.framework_normalized ?? 0,
       attitude: dr?.attitude_culture_score ?? as_?.attitude_normalized ?? 0,
+      isJapanese: u.is_japanese ?? false,
     }
   }
 
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white">レポート</h1>
-      <p className="mt-1 text-gray-500 dark:text-gray-400">全社員5軸チャート及びフィードバック管理</p>
+      <p className="mt-1 text-gray-500 dark:text-gray-400">全社員チャート及びフィードバック管理</p>
 
       <AdminReportsClient
         users={users ?? []}

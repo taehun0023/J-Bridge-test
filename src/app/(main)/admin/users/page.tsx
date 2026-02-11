@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import Card from '@/components/ui/Card'
-import Badge from '@/components/ui/Badge'
 import AdminUsersClient from './AdminUsersClient'
 
 export default async function AdminUsersPage() {
@@ -8,8 +7,24 @@ export default async function AdminUsersPage() {
 
   const { data: users } = await supabase
     .from('profiles')
-    .select('id, email, full_name, role, coding_rank, jlpt_level, is_onboarded, created_at')
+    .select('*')
     .order('created_at', { ascending: false })
+
+  // Fetch pending retake requests (graceful fallback if retake columns not yet migrated)
+  const retakeRes = await supabase
+    .from('quiz_attempts')
+    .select('id, user_id, retake_requested_at, quizzes(title), profiles:user_id(full_name)')
+    .eq('retake_request_status', 'requested')
+    .order('retake_requested_at', { ascending: false })
+  const retakeAttempts = retakeRes.error ? null : retakeRes.data
+
+  const retakeRequests = (retakeAttempts ?? []).map(a => ({
+    attempt_id: a.id,
+    user_id: a.user_id,
+    user_name: (a.profiles as unknown as { full_name: string | null } | null)?.full_name ?? null,
+    quiz_title: (a.quizzes as unknown as { title: string } | null)?.title ?? null,
+    retake_requested_at: a.retake_requested_at,
+  }))
 
   const stats = {
     total: users?.length ?? 0,
@@ -42,7 +57,7 @@ export default async function AdminUsersPage() {
         </Card>
       </div>
 
-      <AdminUsersClient users={users ?? []} />
+      <AdminUsersClient users={users ?? []} retakeRequests={retakeRequests} />
     </div>
   )
 }

@@ -1,41 +1,26 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
-  Chart as ChartJS,
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-  Tooltip,
+  ResponsiveContainer,
+  RadarChart as RechartsRadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
   Legend,
-} from 'chart.js'
-import { Radar } from 'react-chartjs-2'
-import { getGrade } from '@/lib/assessment-config'
-
-ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
+  Tooltip,
+} from 'recharts'
+import { getGrade, getRelevantAxes, AXIS_DISPLAY_LABELS } from '@/lib/assessment-config'
+import type { AxisKey } from '@/lib/assessment-config'
 
 interface RadarChartProps {
-  scores: {
-    jlpt: number
-    itJapanese: number
-    coreProgramming: number
-    framework: number
-    attitudeCulture: number
-  }
+  scores: Record<AxisKey, number>
+  isJapanese?: boolean
 }
 
-const LABELS = ['JLPT', 'IT日本語', '基本プログラミング', 'フレームワーク', '態度・文化']
-
-function getPointColor(score: number, isDark: boolean): string {
-  if (score >= 90) return isDark ? 'rgba(74, 222, 128, 1)' : 'rgba(22, 163, 74, 1)' // green
-  if (score >= 70) return isDark ? 'rgba(96, 165, 250, 1)' : 'rgba(59, 130, 246, 1)' // blue
-  return isDark ? 'rgba(248, 113, 113, 1)' : 'rgba(220, 38, 38, 1)' // red
-}
-
-export default function RadarChart({ scores }: RadarChartProps) {
+export default function RadarChart({ scores, isJapanese = false }: RadarChartProps) {
   const [isDark, setIsDark] = useState(false)
-  const chartRef = useRef<ChartJS<'radar'>>(null)
 
   useEffect(() => {
     const check = () => setIsDark(document.documentElement.classList.contains('dark'))
@@ -45,96 +30,71 @@ export default function RadarChart({ scores }: RadarChartProps) {
     return () => observer.disconnect()
   }, [])
 
-  const labelColor = isDark ? '#d1d5db' : '#374151'
-  const gridColor = isDark ? 'rgba(107,114,128,0.3)' : 'rgba(0,0,0,0.1)'
-  const tickColor = isDark ? '#9ca3af' : '#6b7280'
+  const relevantAxes = getRelevantAxes(isJapanese)
 
-  const scoreValues = [
-    scores.jlpt,
-    scores.itJapanese,
-    scores.coreProgramming,
-    scores.framework,
-    scores.attitudeCulture,
-  ]
+  const data = relevantAxes.map((key) => ({
+    axis: AXIS_DISPLAY_LABELS[key],
+    score: scores[key],
+    threshold: 70,
+    fullMark: 100,
+  }))
 
-  const pointColors = scoreValues.map(s => getPointColor(s, isDark))
+  const gridStroke = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'
+  const labelFill = isDark ? '#a1a1aa' : '#52525b'
 
-  const data = {
-    labels: LABELS,
-    datasets: [
-      {
-        label: 'エンジニア能力',
-        data: scoreValues,
-        backgroundColor: isDark ? 'rgba(96, 165, 250, 0.15)' : 'rgba(59, 130, 246, 0.12)',
-        borderColor: isDark ? 'rgba(96, 165, 250, 1)' : 'rgba(59, 130, 246, 1)',
-        borderWidth: 2,
-        pointBackgroundColor: pointColors,
-        pointBorderColor: isDark ? '#1f2937' : '#fff',
-        pointRadius: 5,
-        pointHoverRadius: 7,
-      },
-      {
-        label: '派遣基準 (Bランク)',
-        data: [70, 70, 70, 70, 70],
-        borderColor: 'rgba(245, 158, 11, 0.6)',
-        borderDash: [6, 4],
-        borderWidth: 2,
-        backgroundColor: 'transparent',
-        pointRadius: 0,
-        pointHoverRadius: 0,
-      },
-    ],
-  }
-
-  const options = {
-    responsive: true,
-    maintainAspectRatio: true,
-    scales: {
-      r: {
-        min: 0,
-        max: 100,
-        ticks: {
-          stepSize: 10,
-          display: true,
-          color: tickColor,
-          backdropColor: 'transparent',
-          font: { size: 9 },
-        },
-        grid: {
-          color: gridColor,
-        },
-        angleLines: {
-          color: gridColor,
-        },
-        pointLabels: {
-          font: { size: 12 },
-          color: labelColor,
-        },
-      },
-    },
-    plugins: {
-      legend: {
-        display: true,
-        position: 'bottom' as const,
-        labels: {
-          color: labelColor,
-          font: { size: 11 },
-          usePointStyle: true,
-          padding: 16,
-        },
-      },
-      tooltip: {
-        callbacks: {
-          label: (context: { datasetIndex: number; dataIndex: number; raw: unknown }) => {
-            if (context.datasetIndex === 1) return '派遣基準: 70点 (B)'
-            const score = context.raw as number
-            const grade = getGrade(score)
-            return `${LABELS[context.dataIndex]}: ${score}点 (${grade})`
-          },
-        },
-      },
-    },
-  }
-
-  return <Radar ref={chartRef} data={data} options={options} />
+  return (
+    <ResponsiveContainer width="100%" height={320}>
+      <RechartsRadarChart data={data} cx="50%" cy="50%" outerRadius="75%">
+        <PolarGrid stroke={gridStroke} />
+        <PolarAngleAxis
+          dataKey="axis"
+          tick={{ fill: labelFill, fontSize: 12 }}
+        />
+        <PolarRadiusAxis
+          angle={90}
+          domain={[0, 100]}
+          tick={{ fill: isDark ? '#71717a' : '#a1a1aa', fontSize: 9 }}
+          tickCount={6}
+          axisLine={false}
+        />
+        <Radar
+          name="派遣基準 (B)"
+          dataKey="threshold"
+          stroke="#f59e0b"
+          strokeWidth={2}
+          strokeDasharray="6 4"
+          fill="transparent"
+          dot={false}
+        />
+        <Radar
+          name="エンジニア能力"
+          dataKey="score"
+          stroke="#6366f1"
+          strokeWidth={2}
+          fill="#6366f1"
+          fillOpacity={0.15}
+          dot={{ r: 4, fill: '#6366f1', stroke: isDark ? '#09090b' : '#fafafa', strokeWidth: 2 }}
+        />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: isDark ? 'rgba(24,24,27,0.95)' : 'rgba(255,255,255,0.95)',
+            border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)',
+            borderRadius: '0.75rem',
+            backdropFilter: 'blur(12px)',
+            color: isDark ? '#fafafa' : '#09090b',
+            fontSize: '0.875rem',
+          }}
+          formatter={(value: number, name: string) => {
+            if (name === '派遣基準 (B)') return ['70点 (B)', '派遣基準']
+            const grade = getGrade(value)
+            return [`${value}点 (${grade})`, 'スコア']
+          }}
+        />
+        <Legend
+          wrapperStyle={{ fontSize: '0.75rem', color: labelFill }}
+          iconType="line"
+        />
+      </RechartsRadarChart>
+    </ResponsiveContainer>
+  )
 }

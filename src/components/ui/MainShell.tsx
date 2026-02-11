@@ -20,7 +20,7 @@ export default function MainShell({
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-screen bg-zinc-50 dark:bg-zinc-950">
       {/* Desktop sidebar */}
       <div className="hidden w-64 shrink-0 lg:block">
         <Sidebar userRole={userRole} />

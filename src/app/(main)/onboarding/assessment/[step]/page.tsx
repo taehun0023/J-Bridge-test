@@ -1,12 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getAssessmentForStep } from '@/app/actions/assessment'
-import { ASSESSMENT_LABELS, ASSESSMENT_TIME_LIMITS, ASSESSMENT_QUIZ_IDS } from '@/lib/assessment-config'
+import { ASSESSMENT_LABELS, ASSESSMENT_TIME_LIMITS, ASSESSMENT_QUIZ_IDS, getRelevantSteps } from '@/lib/assessment-config'
 import AssessmentTaker from './AssessmentTaker'
 
 interface Props {
   params: Promise<{ step: string }>
 }
+
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
 
 export default async function AssessmentPage({ params }: Props) {
   const { step: stepParam } = await params
@@ -22,39 +24,43 @@ export default async function AssessmentPage({ params }: Props) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('onboarding_step, is_onboarded, target_coding_area')
+    .select('*')
     .eq('id', user.id)
     .single()
 
   if (!profile) redirect('/login')
 
-  if (profile.is_onboarded) {
-    // Onboarded user: allow access only if this specific assessment is not yet completed
-    const quizId = ASSESSMENT_QUIZ_IDS[step]
-    const { data: completedAttempt } = await supabase
-      .from('quiz_attempts')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('quiz_id', quizId)
-      .not('completed_at', 'is', null)
-      .limit(1)
-      .maybeSingle()
+  const isJapanese = profile.is_japanese ?? false
+  const relevantSteps = getRelevantSteps(isJapanese)
+  const totalSteps = relevantSteps.length
 
-    if (completedAttempt) redirect('/dashboard')
-  } else {
-    // Non-onboarded user: follow the step-based onboarding flow
-    if (profile.onboarding_step === 0) redirect('/onboarding')
+  // Japanese users cannot access steps 1 and 2
+  if (isJapanese && (step === 1 || step === 2)) {
+    redirect('/dashboard')
+  }
 
-    const expectedStep = profile.onboarding_step
-    if (step > expectedStep) {
-      if (expectedStep <= 5) {
-        redirect(`/onboarding/assessment/${expectedStep}`)
-      } else {
-        redirect('/onboarding/results')
-      }
+  // Check if this specific assessment has been completed
+  const quizId = ASSESSMENT_QUIZ_IDS[step]
+  const { data: completedAttempt } = await supabase
+    .from('quiz_attempts')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('quiz_id', quizId)
+    .not('completed_at', 'is', null)
+    .order('completed_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (completedAttempt) {
+    // Allow retake if 30+ days elapsed or admin approved
+    const completedAt = new Date(completedAttempt.completed_at).getTime()
+    const daysSinceCompletion = Date.now() - completedAt
+    const isAutoRetake = daysSinceCompletion > THIRTY_DAYS_MS
+    const isApprovedRetake = completedAttempt.retake_request_status === 'approved'
+
+    if (!isAutoRetake && !isApprovedRetake) {
+      redirect('/dashboard')
     }
-
-    if (expectedStep >= 6) redirect('/onboarding/results')
   }
 
   const result = await getAssessmentForStep(step, profile.target_coding_area)
@@ -68,6 +74,9 @@ export default async function AssessmentPage({ params }: Props) {
 
   const label = ASSESSMENT_LABELS[step]
   const timeLimit = ASSESSMENT_TIME_LIMITS[step]
+
+  // Compute display step number (e.g. for Japanese users, step 3 is displayed as 1)
+  const displayStep = relevantSteps.indexOf(step) + 1
 
   // Shuffle options so correct answer isn't always in position 1
   const serializedQuestions = result.questions.map(q => {
@@ -88,7 +97,8 @@ export default async function AssessmentPage({ params }: Props) {
         label={label}
         timeLimit={timeLimit}
         questions={serializedQuestions}
-        isOnboarded={profile.is_onboarded}
+        totalSteps={totalSteps}
+        displayStep={displayStep}
       />
     </div>
   )

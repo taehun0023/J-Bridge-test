@@ -4,11 +4,20 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 /**
- * Recalculate all 5-axis scores for a user based on their quiz attempts and coding submissions.
- * Updates japanese_skills, coding_skills, attitude_culture_skills, and creates a dispatch_readiness_scores snapshot.
+ * Recalculate all axis scores for a user based on their quiz attempts and coding submissions.
+ * Respects is_japanese flag: Japanese users skip JLPT/IT Japanese axes.
  */
 export async function recalculateUserScores(userId: string) {
   const supabase = await createClient()
+
+  // Fetch profile to check is_japanese
+  const { data: profileData } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single()
+
+  const isJapanese = profileData?.is_japanese ?? false
 
   // ─── 1. Fetch all completed quiz attempts with quiz type ───
   const { data: quizAttempts } = await supabase
@@ -43,51 +52,57 @@ export async function recalculateUserScores(userId: string) {
     return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
   }
 
-  // ─── 2. Calculate Axis 1: JLPT ───
-  const vocabScores = quizScoresByType['jlpt_vocab'] ?? []
-  const grammarScores = quizScoresByType['jlpt_grammar'] ?? []
-  const readingScores = quizScoresByType['jlpt_reading'] ?? []
-  const listeningScores = quizScoresByType['jlpt_listening'] ?? []
+  // ─── 2. Calculate Axis 1: 生活日本語 (skip for Japanese users) ───
+  let jlptNormalized = 0
+  let vocabMastery = 0, grammarMastery = 0, readingMastery = 0, listeningMastery = 0
 
-  const vocabMastery = avg(vocabScores)
-  const grammarMastery = avg(grammarScores)
-  const readingMastery = avg(readingScores)
-  const listeningMastery = avg(listeningScores)
+  if (!isJapanese) {
+    const vocabScores = quizScoresByType['jlpt_vocab'] ?? []
+    const grammarScores = quizScoresByType['jlpt_grammar'] ?? []
+    const readingScores = quizScoresByType['jlpt_reading'] ?? []
+    const listeningScores = quizScoresByType['jlpt_listening'] ?? []
 
-  // JLPT normalized = weighted average (vocab 30%, grammar 30%, reading 25%, listening 15%)
-  // If no grammar/reading/listening data, use vocab only
-  const jlptParts = [
-    { score: vocabMastery, weight: 0.3 },
-    { score: grammarMastery, weight: 0.3 },
-    { score: readingMastery, weight: 0.25 },
-    { score: listeningMastery, weight: 0.15 },
-  ]
-  const activeJlptParts = jlptParts.filter(p => p.score > 0)
-  const jlptNormalized = activeJlptParts.length > 0
-    ? Math.round(activeJlptParts.reduce((s, p) => s + p.score * p.weight, 0) / activeJlptParts.reduce((s, p) => s + p.weight, 0))
-    : 0
+    vocabMastery = avg(vocabScores)
+    grammarMastery = avg(grammarScores)
+    readingMastery = avg(readingScores)
+    listeningMastery = avg(listeningScores)
 
-  // ─── 3. Calculate Axis 2: IT Japanese ───
-  const itTermScores = quizScoresByType['it_terminology'] ?? []
-  const rolePlayScores = quizScoresByType['role_play_scenario'] ?? []
+    const jlptParts = [
+      { score: vocabMastery, weight: 0.3 },
+      { score: grammarMastery, weight: 0.3 },
+      { score: readingMastery, weight: 0.25 },
+      { score: listeningMastery, weight: 0.15 },
+    ]
+    const activeJlptParts = jlptParts.filter(p => p.score > 0)
+    jlptNormalized = activeJlptParts.length > 0
+      ? Math.round(activeJlptParts.reduce((s, p) => s + p.score * p.weight, 0) / activeJlptParts.reduce((s, p) => s + p.weight, 0))
+      : 0
+  }
 
-  const itTermScore = avg(itTermScores)
-  const businessConvScore = avg(rolePlayScores)
-  // doc_reading_score comes from reading quizzes in IT context, approximate from IT term score
-  const docReadingScore = Math.round(itTermScore * 0.8)
+  // ─── 3. Calculate Axis 2: ビジネス日本語 (skip for Japanese users) ───
+  let itJapaneseNormalized = 0
+  let itTermScore = 0, docReadingScore = 0, businessConvScore = 0
 
-  const itJapaneseNormalized = itTermScore > 0 || businessConvScore > 0
-    ? Math.round((itTermScore * 0.4 + docReadingScore * 0.3 + businessConvScore * 0.3) /
-        ((itTermScore > 0 ? 0.4 : 0) + (docReadingScore > 0 ? 0.3 : 0) + (businessConvScore > 0 ? 0.3 : 0) || 1))
-    : 0
+  if (!isJapanese) {
+    const itTermScores = quizScoresByType['it_terminology'] ?? []
+    const rolePlayScores = quizScoresByType['role_play_scenario'] ?? []
 
-  // ─── 4. Calculate Axis 3 & 4: Coding ───
+    itTermScore = avg(itTermScores)
+    businessConvScore = avg(rolePlayScores)
+    docReadingScore = Math.round(itTermScore * 0.8)
+
+    itJapaneseNormalized = itTermScore > 0 || businessConvScore > 0
+      ? Math.round((itTermScore * 0.4 + docReadingScore * 0.3 + businessConvScore * 0.3) /
+          ((itTermScore > 0 ? 0.4 : 0) + (docReadingScore > 0 ? 0.3 : 0) + (businessConvScore > 0 ? 0.3 : 0) || 1))
+      : 0
+  }
+
+  // ─── 4. Calculate Axis 3 & 4: CS知識 & 開発実務能力 ───
   const { data: submissions } = await supabase
     .from('code_submissions')
     .select('problem_id, language, status, passed_test_cases, total_test_cases, coding_problems(difficulty)')
     .eq('user_id', userId)
 
-  // Best submission per problem
   const bestByProblem: Record<string, { language: string; ratio: number; difficulty: string }> = {}
   for (const sub of submissions ?? []) {
     if (!sub.problem_id || !sub.total_test_cases) continue
@@ -98,8 +113,7 @@ export async function recalculateUserScores(userId: string) {
     }
   }
 
-  // Calculate per-language scores
-  const langScores: Record<string, number[]> = { java: [], javascript: [], sql: [] }
+  const langScores: Record<string, number[]> = { java: [], javascript: [] }
   const difficultyMultiplier: Record<string, number> = { easy: 0.6, medium: 0.8, hard: 1.0 }
   let algorithmTotal = 0
   let algorithmCount = 0
@@ -109,7 +123,6 @@ export async function recalculateUserScores(userId: string) {
     const lang = best.language.toLowerCase()
     if (langScores[lang]) langScores[lang].push(score)
 
-    // Medium/hard problems contribute to algorithm score
     if (best.difficulty === 'medium' || best.difficulty === 'hard') {
       algorithmTotal += score
       algorithmCount++
@@ -118,15 +131,13 @@ export async function recalculateUserScores(userId: string) {
 
   const javaScore = avg(langScores['java'] ?? [])
   const jsScore = avg(langScores['javascript'] ?? [])
-  const sqlScore = avg(langScores['sql'] ?? [])
   const algorithmScore = algorithmCount > 0 ? Math.round(algorithmTotal / algorithmCount) : 0
 
-  // Core normalized = average of active language scores + algorithm + core_programming quiz
   const coreQuizAvg = avg(quizScoresByType['core_programming'] ?? [])
-  const coreScores = [javaScore, jsScore, sqlScore, algorithmScore, coreQuizAvg].filter(s => s > 0)
+  const coreScores = [javaScore, jsScore, algorithmScore, coreQuizAvg].filter(s => s > 0)
   const coreNormalized = avg(coreScores)
 
-  // Framework scores - approximate from exam results and advanced coding
+  // Framework / 開発実務能力 scores
   const { data: examAttempts } = await supabase
     .from('coding_exam_attempts')
     .select('score, passed, coding_skill_exams(target_rank)')
@@ -141,23 +152,23 @@ export async function recalculateUserScores(userId: string) {
     if (rs > highestRankScore) highestRankScore = rs
   }
 
-  // Framework scores are derived from coding exam rank + framework quiz
   const springBootScore = Math.min(100, Math.round(highestRankScore * 0.8))
   const reactScore = Math.min(100, Math.round(highestRankScore * 0.7))
-  const dbDesignScore = Math.min(100, Math.round(sqlScore * 0.9))
+  const dbDesignScore = Math.min(100, Math.round((avg(langScores['java'] ?? []) || avg(langScores['javascript'] ?? [])) * 0.9))
   const projectScore = Math.min(100, Math.round(highestRankScore * 0.6))
   const fwQuizAvg = avg(quizScoresByType['framework'] ?? [])
   const frameworkNormalized = avg([springBootScore, reactScore, dbDesignScore, projectScore, fwQuizAvg].filter(s => s > 0))
 
-  // ─── 5. Calculate Axis 5: Attitude/Culture ───
+  // ─── 5. Calculate Axis 5: ビジネスリテラシー ───
   const attitudeScores = quizScoresByType['attitude_culture'] ?? []
   const attitudeAvg = avg(attitudeScores)
 
-  // Distribute across sub-scores
   const punctualityScore = attitudeAvg
   const horensoScore = attitudeAvg
   const teamworkScore = attitudeAvg
   const businessMannerScore = attitudeAvg
+  const businessCultureScore = attitudeAvg
+  const itSecurityScore = attitudeAvg
   const attitudeNormalized = attitudeAvg
 
   // ─── 6. Update skill tables ───
@@ -181,7 +192,7 @@ export async function recalculateUserScores(userId: string) {
     user_id: userId,
     java_score: javaScore,
     javascript_score: jsScore,
-    sql_score: sqlScore,
+    sql_score: 0,
     algorithm_score: algorithmScore,
     core_normalized: coreNormalized,
     spring_boot_score: springBootScore,
@@ -198,6 +209,8 @@ export async function recalculateUserScores(userId: string) {
     horenso_score: horensoScore,
     teamwork_score: teamworkScore,
     business_manner_score: businessMannerScore,
+    business_culture_score: businessCultureScore,
+    it_security_score: itSecurityScore,
     attitude_normalized: attitudeNormalized,
     updated_at: now,
   }, { onConflict: 'user_id' })
@@ -205,11 +218,12 @@ export async function recalculateUserScores(userId: string) {
   // ─── 7. Create dispatch readiness snapshot ───
   await supabase.from('dispatch_readiness_scores').insert({
     user_id: userId,
-    jlpt_score: jlptNormalized,
-    it_japanese_score: itJapaneseNormalized,
+    jlpt_score: isJapanese ? null : jlptNormalized,
+    it_japanese_score: isJapanese ? null : itJapaneseNormalized,
     core_programming_score: coreNormalized,
     framework_score: frameworkNormalized,
     attitude_culture_score: attitudeNormalized,
+    is_japanese: isJapanese,
   })
 
   revalidatePath('/dashboard')

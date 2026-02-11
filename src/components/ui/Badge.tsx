@@ -9,29 +9,29 @@ interface BadgeProps {
 }
 
 const jlptColors: Record<JlptLevel, string> = {
-  N5: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  N4: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-  N3: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-  N2: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-  N1: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+  N5: 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20 bg-emerald-50 text-emerald-700 ring-emerald-200',
+  N4: 'bg-blue-500/10 text-blue-400 ring-1 ring-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400 dark:ring-blue-500/20 bg-blue-50 text-blue-700 ring-blue-200',
+  N3: 'bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/20 bg-amber-50 text-amber-700 ring-amber-200',
+  N2: 'bg-orange-500/10 text-orange-400 ring-1 ring-orange-500/20 dark:bg-orange-500/10 dark:text-orange-400 dark:ring-orange-500/20 bg-orange-50 text-orange-700 ring-orange-200',
+  N1: 'bg-red-500/10 text-red-400 ring-1 ring-red-500/20 dark:bg-red-500/10 dark:text-red-400 dark:ring-red-500/20 bg-red-50 text-red-700 ring-red-200',
 }
 
 const rankColors: Record<CodingRank, string> = {
-  D: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-  C: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  B: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-  A: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-  S: 'bg-yellow-100 text-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-300',
+  D: 'bg-zinc-500/10 text-zinc-400 ring-1 ring-zinc-500/20 dark:bg-zinc-500/10 dark:text-zinc-400 dark:ring-zinc-500/20 bg-zinc-50 text-zinc-700 ring-zinc-200',
+  C: 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20 bg-emerald-50 text-emerald-700 ring-emerald-200',
+  B: 'bg-blue-500/10 text-blue-400 ring-1 ring-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400 dark:ring-blue-500/20 bg-blue-50 text-blue-700 ring-blue-200',
+  A: 'bg-violet-500/10 text-violet-400 ring-1 ring-violet-500/20 dark:bg-violet-500/10 dark:text-violet-400 dark:ring-violet-500/20 bg-violet-50 text-violet-700 ring-violet-200',
+  S: 'bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/20 bg-amber-50 text-amber-700 ring-amber-200',
 }
 
 const difficultyColors: Record<ProblemDifficulty, string> = {
-  easy: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-  hard: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+  easy: 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20 bg-emerald-50 text-emerald-700 ring-emerald-200',
+  medium: 'bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/20 bg-amber-50 text-amber-700 ring-amber-200',
+  hard: 'bg-red-500/10 text-red-400 ring-1 ring-red-500/20 dark:bg-red-500/10 dark:text-red-400 dark:ring-red-500/20 bg-red-50 text-red-700 ring-red-200',
 }
 
 export default function Badge({ label, variant = 'default', className = '' }: BadgeProps) {
-  let colorClass = 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+  let colorClass = 'bg-zinc-500/10 text-zinc-400 ring-1 ring-zinc-500/20 dark:bg-zinc-500/10 dark:text-zinc-400 dark:ring-zinc-500/20 bg-zinc-100 text-zinc-700 ring-zinc-200'
 
   if (variant === 'jlpt' && label in jlptColors) {
     colorClass = jlptColors[label as JlptLevel]
