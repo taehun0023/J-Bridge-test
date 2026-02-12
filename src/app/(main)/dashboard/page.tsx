@@ -120,6 +120,73 @@ export default async function DashboardPage() {
     }
   }
 
+  // Compute ranking from skill tables
+  const { data: allMentees } = await supabase
+    .from('profiles')
+    .select(`
+      id, full_name, avatar_url, is_japanese,
+      japanese_skills(jlpt_normalized, it_japanese_normalized, updated_at),
+      coding_skills(core_normalized, framework_normalized, updated_at)
+    `)
+    .eq('role', 'mentee')
+    .eq('is_onboarded', true)
+
+  let userRanking: {
+    overall_score: number
+    overall_rank: number
+    japanese_score: number
+    programming_score: number
+  } | null = null
+
+  if (allMentees && allMentees.length > 0) {
+    const scored = allMentees.map((m: Record<string, unknown>) => {
+      const jp = m.japanese_skills as { jlpt_normalized: number; it_japanese_normalized: number } | null
+      const cs = m.coding_skills as { core_normalized: number; framework_normalized: number } | null
+      const jpScore = (m.is_japanese as boolean) ? 200 : ((jp?.jlpt_normalized ?? 0) + (jp?.it_japanese_normalized ?? 0))
+      const progScore = (cs?.core_normalized ?? 0) + (cs?.framework_normalized ?? 0)
+      return {
+        id: m.id as string,
+        overall_score: jpScore + progScore,
+        japanese_score: jpScore,
+        programming_score: progScore,
+      }
+    }).sort((a, b) => b.overall_score - a.overall_score)
+
+    const myEntry = scored.find(s => s.id === user.id)
+    if (myEntry) {
+      const rank = scored.findIndex(s => s.id === user.id) + 1
+      userRanking = {
+        overall_score: myEntry.overall_score,
+        overall_rank: rank,
+        japanese_score: myEntry.japanese_score,
+        programming_score: myEntry.programming_score,
+      }
+    }
+  }
+
+  // Fetch learning assignments summary
+  const { data: learningAssignments } = await supabase
+    .from('learning_assignments')
+    .select('id, status')
+    .eq('assigned_to', user.id)
+
+  const learningStats = {
+    total: learningAssignments?.length ?? 0,
+    inProgress: learningAssignments?.filter(a => a.status === 'in_progress').length ?? 0,
+    completed: learningAssignments?.filter(a => a.status === 'completed').length ?? 0,
+  }
+
+  // Fetch enrolled courses (mentee only)
+  let enrolledCourses: { id: string; course_id: string; courses: { title: string; category: string } | null }[] = []
+  if (profile?.role === 'mentee') {
+    const { data } = await supabase
+      .from('enrollments')
+      .select('id, course_id, courses(title, category)')
+      .eq('user_id', user.id)
+      .limit(5)
+    enrolledCourses = (data ?? []) as typeof enrolledCourses
+  }
+
   // Compute radar scores
   const radarScores: Record<AxisKey, number> = {
     jlpt: japaneseSkills?.jlpt_normalized ?? 0,
@@ -155,6 +222,9 @@ export default async function DashboardPage() {
       pendingAssessments={pendingAssessments}
       isJapanese={isJapanese}
       completedAssessments={completedAssessmentInfo}
+      userRanking={userRanking}
+      enrolledCourses={enrolledCourses}
+      learningStats={learningStats}
     />
   )
 }

@@ -4,6 +4,21 @@ import { useState } from 'react'
 import Badge from '@/components/ui/Badge'
 import type { JlptLevel } from '@/lib/supabase/types'
 
+const posLabels: Record<string, string> = {
+  '동사': '動詞',
+  '명사': '名詞',
+  'い형용사': 'い形容詞',
+  'な형용사': 'な形容詞',
+  '형용사': '形容詞',
+  '부사': '副詞',
+  '대명사': '代名詞',
+  '접속사': '接続詞',
+  '연체사': '連体詞',
+  '접두사': '接頭辞',
+  '접미사': '接尾辞',
+  '표현': '表現',
+}
+
 interface VocabularyItem {
   id: string
   word: string
@@ -36,7 +51,7 @@ export default function VocabularyList({ items, level }: VocabularyListProps) {
                 <span className="text-lg font-semibold text-gray-900 dark:text-white">{item.word}</span>
                 <span className="text-sm text-gray-500 dark:text-gray-400">{item.reading}</span>
                 {item.part_of_speech && (
-                  <span className="text-xs text-gray-400 dark:text-gray-500">{item.part_of_speech}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">{posLabels[item.part_of_speech] ?? item.part_of_speech}</span>
                 )}
               </div>
               <p className="mt-0.5 text-sm text-gray-700 dark:text-gray-300">{item.meaning_ko}</p>

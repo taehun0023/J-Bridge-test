@@ -18,7 +18,7 @@ export default function Header({
   const { theme, toggleTheme } = useTheme()
 
   return (
-    <header className="flex h-16 items-center justify-between bg-white/80 backdrop-blur-xl px-4 dark:bg-zinc-950/80 dark:backdrop-blur-xl border-b border-gray-200 dark:border-white/[0.06] lg:px-6">
+    <header className="relative z-50 flex h-16 items-center justify-between bg-white/80 backdrop-blur-xl px-4 dark:bg-zinc-950/80 dark:backdrop-blur-xl border-b border-gray-200 dark:border-white/[0.06] lg:px-6">
       <button
         onClick={onMenuToggle}
         className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/5 lg:hidden"

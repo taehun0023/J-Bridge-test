@@ -34,7 +34,9 @@
       "Bash(node scripts/assemble-seeds.js:*)",
       "Bash(python3 -m json.tool:*)",
       "Bash(python -m json.tool:*)",
-      "Bash(node scripts/fix-quiz2.js:*)"
+      "Bash(node scripts/fix-quiz2.js:*)",
+      "Bash(dir:*)",
+      "Bash(node scripts/deploy-listening.js:*)"
     ]
   }
 }

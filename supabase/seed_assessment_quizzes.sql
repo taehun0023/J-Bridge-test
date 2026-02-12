@@ -1,7 +1,7 @@
 -- ============================================
 -- J-Bridge Assessment Quiz Seed Data
 -- 5 Assessment Quizzes for Onboarding
--- Total: 390 questions, 1560 options
+-- Total: 450 questions, 1800 options
 -- ============================================
 
 BEGIN;
@@ -1453,96 +1453,112 @@ BEGIN
     (gen_random_uuid(), q_id, '매일 정해진 시간에 자동으로 머지 실행', FALSE, 3),
     (gen_random_uuid(), q_id, '릴리스 시에만 머지하고 반드시 태그 부여', TRUE, 4);
 
-  -- reading hard (10 questions)
-  q_id := gen_random_uuid();
-  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の設計書を読んでください。\n「本システムのデータベース設計において、ユーザーテーブルと注文テーブルは1対多の関係とする。注文テーブルにはuser_idを外部キーとして持ち、CASCADE削除を設定する。これにより、ユーザーが削除された場合、関連する注文データも自動的に削除される。」\nCASCADE削除の意味は？', 'データベース設計のCASCADE削除の仕様を理解する問題です。', 1, 51, 'hard', 'reading');
-  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '주문 삭제 시 관련 사용자 데이터도 자동으로 삭제된다', FALSE, 1),
-    (gen_random_uuid(), q_id, '사용자 삭제 시 관련 주문 데이터도 자동으로 삭제된다', TRUE, 2),
-    (gen_random_uuid(), q_id, '외부 키 제약으로 인해 사용자 삭제 자체가 불가능하다', FALSE, 3),
-    (gen_random_uuid(), q_id, '주문 데이터는 별도의 배치 처리로 수동 삭제해야 한다', FALSE, 4);
+  -- ============================================================
+  -- reading hard (10 questions, sort_order 51-60)
+  -- IT workplace business document reading comprehension
+  -- ============================================================
 
+  -- reading hard Q51: WBS and project scope
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次のアーキテクチャ文書を読んでください。\n「本システムではCQRSパターンを採用する。書き込み操作はCommand側で処理し、RDBMSに永続化する。読み取り操作はQuery側で処理し、読み取り専用のNoSQLデータベースから取得する。データの同期はイベント駆動で非同期に行う。」\nCQRSパターンの特徴として正しいのは？', 'CQRSアーキテクチャパターンの理解を問う問題です。', 1, 52, 'hard', 'reading');
+  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文書を読んでください。\n「本プロジェクトでは、WBS（Work Breakdown Structure）を用いてタスクを分解し、各担当者に作業を割り当てる。WBSの最下層に位置するワークパッケージごとに成果物と完了条件を明確に定義すること。なお、WBSに記載のない作業はプロジェクトスコープ外とし、追加作業が発生した場合は変更管理プロセスを経て承認を得る必要がある。」\nこの文書によると、WBSに記載されていない作業を実施するにはどうすればよいですか？', 'WBSに記載のない作業は「変更管理プロセスを経て承認を得る必要がある」と明記されています。', 1, 51, 'hard', 'reading');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '쓰기와 읽기를 분리하고 이벤트 기반으로 비동기 동기화', TRUE, 1),
-    (gen_random_uuid(), q_id, '쓰기와 읽기를 같은 DB에서 동기 방식으로 일괄 처리', FALSE, 2),
-    (gen_random_uuid(), q_id, '모든 데이터를 NoSQL에만 저장하여 성능을 최적화', FALSE, 3),
-    (gen_random_uuid(), q_id, '동기 방식의 2PC 트랜잭션으로 데이터를 동기화', FALSE, 4);
+    (gen_random_uuid(), q_id, '담당자가 자체적으로 판단하여 실시한다', FALSE, 1),
+    (gen_random_uuid(), q_id, '프로젝트 매니저에게 구두로 보고하면 된다', FALSE, 2),
+    (gen_random_uuid(), q_id, '변경 관리 프로세스를 거쳐 승인을 받아야 한다', TRUE, 3),
+    (gen_random_uuid(), q_id, '다음 프로젝트에서 반영하도록 기록만 해둔다', FALSE, 4);
 
+  -- reading hard Q52: Gantt chart and critical path
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の障害分析レポートを読んでください。\n「根本原因分析（RCA）の結果、今回の障害はデプロイスクリプトにおけるロールバック手順の不備に起因するものと判明した。具体的には、データベースマイグレーションの巻き戻し処理が未実装であったため、デプロイ失敗時にデータの整合性が崩れた。再発防止策として、全マイグレーションにロールバックスクリプトの実装を必須とする。」\n再発防止策は？', '障害分析レポートの再発防止策を読み取る問題です。', 1, 53, 'hard', 'reading');
+  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文書を読んでください。\n「ガントチャートによるスケジュール管理において、クリティカルパス上のタスクが遅延した場合、プロジェクト全体の完了日に直接影響する。一方、クリティカルパス上にないタスクにはフロート（余裕時間）が存在し、フロートの範囲内であれば遅延してもプロジェクト全体の完了日には影響しない。今回のプロジェクトでは、タスクAからタスクDまでの経路がクリティカルパスと特定されている。」\nこの文書によると、タスクAからタスクDまでの経路上のタスクが遅延した場合、どうなりますか？', 'クリティカルパス上のタスク遅延は「プロジェクト全体の完了日に直接影響する」と記載されています。', 1, 52, 'hard', 'reading');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '모든 배포 작업을 당분간 중단하고 재검토한다', FALSE, 1),
-    (gen_random_uuid(), q_id, '데이터베이스를 다른 제품으로 전면 교체한다', FALSE, 2),
-    (gen_random_uuid(), q_id, '모든 마이그레이션에 롤백 스크립트 구현을 필수화', TRUE, 3),
-    (gen_random_uuid(), q_id, '마이그레이션 사용을 중지하고 수동 SQL로 전환', FALSE, 4);
+    (gen_random_uuid(), q_id, '프로젝트 전체 완료일에 직접적인 영향을 준다', TRUE, 1),
+    (gen_random_uuid(), q_id, '플로트 범위 내라면 영향이 없다', FALSE, 2),
+    (gen_random_uuid(), q_id, '해당 태스크만 일정이 변경된다', FALSE, 3),
+    (gen_random_uuid(), q_id, '다른 경로의 태스크에만 영향을 준다', FALSE, 4);
 
+  -- reading hard Q53: Review findings and quality management
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次のSLA文書を読んでください。\n「サービスレベル目標：\n・可用性：99.9%（年間ダウンタイム8.76時間以内）\n・平均応答時間：200ms以下\n・インシデント対応：重大障害は30分以内に一次対応開始\n目標未達の場合、月額利用料の10%を返金する。」\n年間許容ダウンタイムは？', 'SLA文書の可用性指標を読み取る問題です。', 1, 54, 'hard', 'reading');
+  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文書を読んでください。\n「設計レビューの結果、重大な指摘事項が3件、軽微な指摘事項が12件発見された。品質管理基準では、重大な指摘事項が0件になるまで次工程に進めないと定められている。軽微な指摘事項については、対応計画を作成した上で次工程への移行が認められる。なお、すべての指摘事項は課題管理表に登録し、対応状況を追跡すること。」\n設計レビュー後、次の工程に進むために最低限必要なことは何ですか？', '重大な指摘事項が0件になることと、軽微な指摘事項については対応計画を作成することが条件です。', 1, 53, 'hard', 'reading');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '24시간 이내 (99.7% 가용성 기준)', FALSE, 1),
-    (gen_random_uuid(), q_id, '1시간 이내 (99.99% 가용성 기준)', FALSE, 2),
-    (gen_random_uuid(), q_id, '8.76시간 이내 (99.9% 가용성 기준)', TRUE, 3),
-    (gen_random_uuid(), q_id, '0시간 (100% 가용성, 다운타임 불허)', FALSE, 4);
+    (gen_random_uuid(), q_id, '모든 지적 사항(15건)을 완전히 수정해야 한다', FALSE, 1),
+    (gen_random_uuid(), q_id, '경미한 지적 사항만 수정하면 된다', FALSE, 2),
+    (gen_random_uuid(), q_id, '중대한 지적 사항을 0건으로 만들고 경미한 지적 사항은 대응 계획을 수립해야 한다', TRUE, 3),
+    (gen_random_uuid(), q_id, '과제 관리표에 등록만 하면 다음 공정으로 진행할 수 있다', FALSE, 4);
 
+  -- reading hard Q54: SES contract and dispatch
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の技術文書を読んでください。\n「コンテナオーケストレーションにはKubernetesを使用する。Podの水平スケーリングはHPAにより、CPU使用率が70%を超えた場合に自動的にレプリカ数を増加させる。最小レプリカ数は2、最大レプリカ数は10とする。」\nスケーリングの条件は？', 'Kubernetes HPAの設定を読み取る問題です。', 1, 55, 'hard', 'reading');
+  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文書を読んでください。\n「SES（System Engineering Service）契約では、技術者の労働力を提供する形態であり、成果物の完成責任は発注者側にある。一方、請負契約では、受注者が成果物の完成責任を負い、発注者は作業の進め方について直接指示を出すことができない。また、SES契約の場合、技術者への業務指示は発注者の現場責任者が行うが、雇用関係はあくまで技術者の所属会社にある。」\nSES契約について、この文書から読み取れる内容として正しいものはどれですか？', 'SES契約では「技術者の労働力を提供する形態」であり「成果物の完成責任は発注者側にある」と記載されています。', 1, 54, 'hard', 'reading');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'CPU 사용률 70% 초과 시 자동 스케일링 (최소2, 최대10)', TRUE, 1),
-    (gen_random_uuid(), q_id, '메모리 사용률 80% 초과 시 자동 스케일링 (최소1, 최대5)', FALSE, 2),
-    (gen_random_uuid(), q_id, '관리자가 수동으로 레플리카 수를 조정 (최소1, 최대10)', FALSE, 3),
-    (gen_random_uuid(), q_id, '시간 기반 스케줄링으로 피크 시간에 자동 확장 (최소2, 최대8)', FALSE, 4);
+    (gen_random_uuid(), q_id, '수주자가 성과물 완성 책임을 진다', FALSE, 1),
+    (gen_random_uuid(), q_id, '발주자가 작업 진행 방식에 대해 직접 지시할 수 없다', FALSE, 2),
+    (gen_random_uuid(), q_id, '기술자의 고용 관계는 발주자에게 있다', FALSE, 3),
+    (gen_random_uuid(), q_id, '성과물 완성 책임은 발주자 측에 있으며, 기술자의 고용 관계는 소속 회사에 있다', TRUE, 4);
 
+  -- reading hard Q55: Information security policy (ISMS)
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次のCI/CDパイプライン設計書を読んでください。\n「パイプラインは以下の段階で構成する：\n1. ソースコードチェックアウト\n2. 静的解析（SonarQube）\n3. 単体テスト実行\n4. ビルド\n5. 結合テスト実行\n6. ステージング環境デプロイ\n7. 承認ゲート\n8. 本番デプロイ\nいずれかのステージが失敗した場合、パイプラインは停止し、担当者に通知する。」\n承認ゲートはどの段階で行われますか？', 'CI/CDパイプラインの設計を読み取る問題です。', 1, 56, 'hard', 'reading');
+  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文書を読んでください。\n「当社の情報セキュリティ方針に基づき、以下のルールを遵守すること。①業務で使用するPCには必ずパスワードロックを設定し、離席時にはスクリーンロックをかけること。②社外秘の文書は、暗号化した上でのみメール送信が許可される。③USBメモリ等の外部記憶媒体の使用は原則禁止とし、業務上やむを得ない場合は情報セキュリティ管理者の事前承認を得ること。④セキュリティインシデントを発見した場合は、24時間以内に情報セキュリティ管理者に報告すること。」\nこの方針に従った場合、社外秘の文書を社外にメールで送るにはどうすればよいですか？', '②に「社外秘の文書は暗号化した上でのみメール送信が許可される」と明記されています。', 1, 55, 'hard', 'reading');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '소스 코드 체크아웃 직후에 승인 게이트를 실행', FALSE, 1),
-    (gen_random_uuid(), q_id, '스테이징 환경 배포 후, 본번 배포 전에 승인 게이트 실행', TRUE, 2),
-    (gen_random_uuid(), q_id, '단위 테스트 실행 전에 승인 게이트를 실행', FALSE, 3),
-    (gen_random_uuid(), q_id, '본번 배포가 완료된 후에 승인 게이트를 실행', FALSE, 4);
+    (gen_random_uuid(), q_id, '문서를 암호화하여 메일로 송신한다', TRUE, 1),
+    (gen_random_uuid(), q_id, '정보 보안 관리자의 사전 승인을 받아 USB로 전달한다', FALSE, 2),
+    (gen_random_uuid(), q_id, '비밀번호가 설정된 PC에서만 송신하면 된다', FALSE, 3),
+    (gen_random_uuid(), q_id, '사외비 문서의 메일 송신은 일절 금지되어 있다', FALSE, 4);
 
+  -- reading hard Q56: SLA and incident management
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次のセキュリティレビュー結果を読んでください。\n「1. SQLインジェクション対策：パラメータバインドが未実装の箇所が3件あり。至急対応が必要。\n2. XSS対策：出力時のエスケープ処理は全画面で実装済み。\n3. CSRF対策：トークン検証が一部のフォームで欠落。中優先度で対応。\n4. 認証・認可：適切に実装されている。」\n至急対応が必要な項目は？', 'セキュリティレビュー結果から優先度を読み取る問題です。', 1, 57, 'hard', 'reading');
+  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文書を読んでください。\n「本サービスのSLA（Service Level Agreement）では、システム稼働率99.9%以上を保証する。月間稼働率がこの基準を下回った場合、サービス提供者は翌月の利用料金から所定の割合で減額する。また、インシデント発生時の対応時間について、重大インシデント（サービス全面停止）は発生から30分以内に一次対応を開始し、4時間以内に復旧すること。軽微なインシデント（一部機能の障害）は翌営業日までに対応すること。」\n重大インシデントが発生した場合、復旧までの時間として定められているのはどれですか？', '重大インシデントは「4時間以内に復旧すること」と明記されています。30分以内は一次対応の開始時間です。', 1, 56, 'hard', 'reading');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'XSS 대책 (출력 시 이스케이프 처리 관련)', FALSE, 1),
-    (gen_random_uuid(), q_id, 'CSRF 대책 (토큰 검증 누락 관련 항목)', FALSE, 2),
-    (gen_random_uuid(), q_id, '인증/인가 (권한 관리 및 접근 제어)', FALSE, 3),
-    (gen_random_uuid(), q_id, 'SQL 인젝션 대책 (파라미터 바인딩 미구현 3건)', TRUE, 4);
+    (gen_random_uuid(), q_id, '발생으로부터 30분 이내', FALSE, 1),
+    (gen_random_uuid(), q_id, '발생으로부터 4시간 이내', TRUE, 2),
+    (gen_random_uuid(), q_id, '다음 영업일까지', FALSE, 3),
+    (gen_random_uuid(), q_id, '24시간 이내', FALSE, 4);
 
+  -- reading hard Q57: Test plan and acceptance criteria
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の性能テスト結果を読んでください。\n「同時接続数1000ユーザーの負荷テストを実施した結果、95パーセンタイルの応答時間は800msで、目標の500msを超過している。ボトルネック分析の結果、データベースの接続プール枯渇が原因と特定された。接続プールのサイズを現状の50から100に拡張することを推奨する。」\nボトルネックの原因は？', '性能テスト結果の分析を読み取る問題です。', 1, 58, 'hard', 'reading');
+  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文書を読んでください。\n「テスト計画書に基づき、以下の手順でテストを実施する。まず単体テストを開発者自身が実施し、バグ密度が基準値（1Kステップあたり5件以下）を満たすことを確認する。次に結合テストをテストチームが実施し、モジュール間のインターフェースの正常性を検証する。最後に受入テストを発注者が実施し、要件定義書に記載された全機能が正常に動作することを確認する。受入テストの合格をもって検収完了とする。」\n検収完了の条件として正しいものはどれですか？', '「受入テストの合格をもって検収完了とする」と記載されています。', 1, 57, 'hard', 'reading');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '데이터베이스 커넥션 풀 고갈이 원인으로 특정됨', TRUE, 1),
-    (gen_random_uuid(), q_id, 'CPU 사용률 과다로 인한 처리 지연이 원인임', FALSE, 2),
-    (gen_random_uuid(), q_id, '네트워크 대역폭 부족으로 인한 패킷 손실이 원인', FALSE, 3),
-    (gen_random_uuid(), q_id, '디스크 I/O 병목으로 인한 읽기/쓰기 지연이 원인', FALSE, 4);
+    (gen_random_uuid(), q_id, '단체 테스트에서 버그 밀도 기준치를 충족하는 것', FALSE, 1),
+    (gen_random_uuid(), q_id, '결합 테스트에서 인터페이스 정상성이 검증되는 것', FALSE, 2),
+    (gen_random_uuid(), q_id, '테스트 팀이 모든 테스트를 완료하는 것', FALSE, 3),
+    (gen_random_uuid(), q_id, '발주자가 실시하는 수락 테스트에 합격하는 것', TRUE, 4);
 
+  -- reading hard Q58: Personal data protection
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の技術提案書を読んでください。\n「現行システムのモノリシックアーキテクチャをマイクロサービスに移行することを提案する。移行にあたっては、ストラングラーフィグパターンを採用し、段階的に機能を切り出す。まず認証サービスを分離し、次にユーザー管理、最後に注文管理を移行する。各フェーズ間のデータ整合性はSagaパターンで担保する。」\n移行の順序として正しいのは？', 'マイクロサービス移行提案書の理解を問う問題です。', 1, 59, 'hard', 'reading');
+  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文書を読んでください。\n「個人情報の取り扱いについて、以下の規定を定める。①個人情報を収集する際は、利用目的を本人に明示し、同意を得ること。②収集した個人情報は、明示した利用目的の範囲内でのみ使用し、目的外利用は禁止する。③個人情報を第三者に提供する場合は、本人の同意を得るか、法令に基づく場合に限る。④個人情報の保管期間は利用目的達成後3年間とし、保管期間終了後は速やかに削除すること。」\n個人情報の保管期間終了後に行うべきことは何ですか？', '④に「保管期間終了後は速やかに削除すること」と明記されています。', 1, 58, 'hard', 'reading');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '주문 관리 → 사용자 관리 → 인증 서비스 순서', FALSE, 1),
-    (gen_random_uuid(), q_id, '사용자 관리 → 인증 서비스 → 주문 관리 순서', FALSE, 2),
-    (gen_random_uuid(), q_id, '인증 서비스 → 사용자 관리 → 주문 관리 순서', TRUE, 3),
-    (gen_random_uuid(), q_id, '모든 서비스를 동시에 일괄적으로 이관하는 방식', FALSE, 4);
+    (gen_random_uuid(), q_id, '본인에게 통지하여 보관 연장 동의를 받는다', FALSE, 1),
+    (gen_random_uuid(), q_id, '신속하게 삭제한다', TRUE, 2),
+    (gen_random_uuid(), q_id, '암호화하여 별도 서버에 보관한다', FALSE, 3),
+    (gen_random_uuid(), q_id, '익명화 처리하여 계속 보관한다', FALSE, 4);
 
+  -- reading hard Q59: Procurement and vendor selection
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の運用設計書を読んでください。\n「監視設計：\n・インフラ監視：Prometheusでメトリクスを収集し、Grafanaで可視化\n・アプリケーション監視：分散トレーシングにJaegerを使用\n・ログ管理：ELKスタック（Elasticsearch, Logstash, Kibana）で集約\n・アラート：PagerDutyと連携し、重要度に応じてエスカレーション\nログの保持期間は90日とし、その後アーカイブストレージに移動する。」\nログの保持期間は？', '運用設計書からログ保持期間を読み取る問題です。', 1, 60, 'hard', 'reading');
+  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文書を読んでください。\n「ベンダー選定にあたり、RFP（提案依頼書）を3社に送付した。評価基準は以下の通りである。技術力（40点）、コスト（30点）、納期（20点）、サポート体制（10点）の合計100点満点で評価する。評価結果は、A社85点、B社78点、C社82点であった。ただし、技術力の最低基準（30点以上）を満たさないベンダーは、総合点に関わらず選定対象外とする。B社は技術力の評価が28点であった。」\nこの文書によると、最終的に選定対象となるベンダーはどれですか？', 'B社は技術力28点で最低基準30点を下回るため選定対象外。残りのA社（85点）とC社（82点）のうちA社が最高点です。', 1, 59, 'hard', 'reading');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '30일간 보관 후 완전 삭제 처리', FALSE, 1),
-    (gen_random_uuid(), q_id, '90일간 보관 후 아카이브 스토리지로 이동', TRUE, 2),
-    (gen_random_uuid(), q_id, '365일간 보관 후 아카이브 스토리지로 이동', FALSE, 3),
-    (gen_random_uuid(), q_id, '무기한 보관하며 자동 삭제 없이 유지', FALSE, 4);
+    (gen_random_uuid(), q_id, 'A사와 C사가 선정 대상이며, A사가 최고 점수이다', TRUE, 1),
+    (gen_random_uuid(), q_id, 'A사, B사, C사 모두 선정 대상이다', FALSE, 2),
+    (gen_random_uuid(), q_id, 'B사는 기술력이 낮지만 총합점이 78점이므로 선정 대상이다', FALSE, 3),
+    (gen_random_uuid(), q_id, 'C사가 기술력 기준을 충족하므로 C사만 선정 대상이다', FALSE, 4);
+
+  -- reading hard Q60: Change management process
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文書を読んでください。\n「システム変更管理規定に基づき、本番環境への変更は以下の手順で行う。①変更依頼書を作成し、変更内容・影響範囲・リスクを記載する。②変更諮問委員会（CAB）が変更依頼書を審査し、承認・却下・保留のいずれかを決定する。③承認された変更は、事前にテスト環境で検証を行った上で本番環境に適用する。④変更適用後、正常性確認を実施し、問題があれば切り戻し手順に従ってロールバックする。緊急変更の場合は、CABの事後承認を条件に②を省略できる。」\n緊急変更の場合、通常の手順と異なる点は何ですか？', '「緊急変更の場合は、CABの事後承認を条件に②を省略できる」と記載されています。', 1, 60, 'hard', 'reading');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '테스트 환경에서의 검증을 생략할 수 있다', FALSE, 1),
+    (gen_random_uuid(), q_id, '변경 의뢰서 작성을 생략할 수 있다', FALSE, 2),
+    (gen_random_uuid(), q_id, 'CAB의 사후 승인을 조건으로 사전 심사를 생략할 수 있다', TRUE, 3),
+    (gen_random_uuid(), q_id, '정상성 확인 및 롤백 절차를 생략할 수 있다', FALSE, 4);
+
+  -- ============================================================
 
   -- ==========================================
   -- FILL_BLANK category (30 questions, sort_order 61-90)
@@ -1730,96 +1746,110 @@ BEGIN
     (gen_random_uuid(), q_id, 'ストラテジー', FALSE, 3),
     (gen_random_uuid(), q_id, 'ファクトリー', TRUE, 4);
 
-  -- fill_blank hard (10 questions)
-  q_id := gen_random_uuid();
-  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文の空欄に入る言葉は？\n「マイクロサービス間のデータ整合性を保つために、___パターンを採用しました。」', 'Sagaパターンは分散トランザクションを管理するパターンです。', 1, 81, 'hard', 'fill_blank');
-  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'CQRS', FALSE, 1),
-    (gen_random_uuid(), q_id, 'Saga', TRUE, 2),
-    (gen_random_uuid(), q_id, 'Bulkhead', FALSE, 3),
-    (gen_random_uuid(), q_id, 'Circuit Breaker', FALSE, 4);
+  -- fill_blank hard (10 questions, sort_order 81-90)
+  -- IT business Japanese terminology
+  -- ============================================================
 
+  -- fill_blank hard Q81: 要件定義
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文の空欄に入る言葉は？\n「外部サービスの障害が伝播しないように、___パターンを導入しました。」', 'サーキットブレーカーパターンは障害の伝播を防ぐパターンです。', 1, 82, 'hard', 'fill_blank');
+  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文の空欄に入る言葉は？\n「システム開発の最初の工程で、顧客の業務内容を分析し、システムに必要な機能や性能を明確にすることを___という。」', '要件定義は、顧客の要求を分析してシステムに必要な機能・性能を明確にする工程です。', 1, 81, 'hard', 'fill_blank');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'サーキットブレーカー', TRUE, 1),
-    (gen_random_uuid(), q_id, 'フォールバック', FALSE, 2),
-    (gen_random_uuid(), q_id, 'バルクヘッド', FALSE, 3),
-    (gen_random_uuid(), q_id, 'リトライ', FALSE, 4);
+    (gen_random_uuid(), q_id, '基本設計', FALSE, 1),
+    (gen_random_uuid(), q_id, '要件定義', TRUE, 2),
+    (gen_random_uuid(), q_id, '運用テスト', FALSE, 3),
+    (gen_random_uuid(), q_id, '詳細設計', FALSE, 4);
 
+  -- fill_blank hard Q82: 議事録
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文の空欄に入る言葉は？\n「データベースの___レベルをREAD COMMITTEDに設定しています。」', 'トランザクション分離レベルはデータの一貫性を制御する設定です。', 1, 83, 'hard', 'fill_blank');
+  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文の空欄に入る言葉は？\n「会議の内容、決定事項、参加者、次のアクションアイテムなどを記録した文書を___という。会議後24時間以内に関係者に共有すること。」', '議事録は会議の内容・決定事項・アクションアイテムなどを記録した公式文書です。', 1, 82, 'hard', 'fill_blank');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '接続（コネクション）', FALSE, 1),
-    (gen_random_uuid(), q_id, 'セキュリティ', FALSE, 2),
-    (gen_random_uuid(), q_id, '分離（アイソレーション）', TRUE, 3),
-    (gen_random_uuid(), q_id, 'パフォーマンス', FALSE, 4);
+    (gen_random_uuid(), q_id, '報告書', FALSE, 1),
+    (gen_random_uuid(), q_id, '提案書', FALSE, 2),
+    (gen_random_uuid(), q_id, '議事録', TRUE, 3),
+    (gen_random_uuid(), q_id, '仕様書', FALSE, 4);
 
+  -- fill_blank hard Q83: マイルストーン
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文の空欄に入る言葉は？\n「コンテナの___にはDockerfileを使用し、マルチステージビルドで最終イメージのサイズを削減しています。」', 'ビルドはDockerイメージを作成するプロセスです。', 1, 84, 'hard', 'fill_blank');
+  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文の空欄に入る言葉は？\n「プロジェクトの進捗管理において、設計完了や結合テスト開始などの重要な節目を___と呼び、スケジュール上に明示する。」', 'マイルストーンはプロジェクトにおける重要な節目（設計完了、テスト開始など）を示す管理上のポイントです。', 1, 83, 'hard', 'fill_blank');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'デプロイ', FALSE, 1),
-    (gen_random_uuid(), q_id, 'オーケストレーション', FALSE, 2),
-    (gen_random_uuid(), q_id, 'モニタリング', FALSE, 3),
-    (gen_random_uuid(), q_id, 'ビルド', TRUE, 4);
+    (gen_random_uuid(), q_id, 'マイルストーン', TRUE, 1),
+    (gen_random_uuid(), q_id, 'ベースライン', FALSE, 2),
+    (gen_random_uuid(), q_id, 'チェックポイント', FALSE, 3),
+    (gen_random_uuid(), q_id, 'デッドライン', FALSE, 4);
 
+  -- fill_blank hard Q84: 検収
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文の空欄に入る言葉は？\n「___原則に従い、クラスは変更の理由がただ一つだけであるべきです。」', '単一責任の原則(SRP)はSOLID原則の一つです。', 1, 85, 'hard', 'fill_blank');
+  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文の空欄に入る言葉は？\n「納品された成果物が契約内容や仕様書の要件を満たしているかを確認し、正式に受け入れることを___という。」', '検収は納品物が契約・仕様の要件を満たしているか確認し、正式に受け入れるプロセスです。', 1, 84, 'hard', 'fill_blank');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '単一責任', TRUE, 1),
-    (gen_random_uuid(), q_id, 'オープン・クローズド', FALSE, 2),
-    (gen_random_uuid(), q_id, 'リスコフ置換', FALSE, 3),
-    (gen_random_uuid(), q_id, 'インターフェース分離', FALSE, 4);
+    (gen_random_uuid(), q_id, '品質保証', FALSE, 1),
+    (gen_random_uuid(), q_id, '受入テスト', FALSE, 2),
+    (gen_random_uuid(), q_id, '納品確認', FALSE, 3),
+    (gen_random_uuid(), q_id, '検収', TRUE, 4);
 
+  -- fill_blank hard Q85: 認証
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文の空欄に入る言葉は？\n「認証情報を安全に管理するため、___管理ツールとしてVaultを導入しました。」', 'シークレット管理はAPI鍵やパスワードを安全に扱う仕組みです。', 1, 86, 'hard', 'fill_blank');
+  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文の空欄に入る言葉は？\n「システムにログインする際、ユーザーIDとパスワードを入力して本人であることを確認するプロセスを___という。これに対し、ログイン後にそのユーザーがどの機能を利用できるかを判定することを認可という。」', '認証は本人確認のプロセスであり、認可はアクセス権限の判定です。この2つは情報セキュリティの基本概念です。', 1, 85, 'hard', 'fill_blank');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'コンフィグ', FALSE, 1),
-    (gen_random_uuid(), q_id, 'シークレット', TRUE, 2),
-    (gen_random_uuid(), q_id, 'バージョン', FALSE, 3),
-    (gen_random_uuid(), q_id, 'パッケージ', FALSE, 4);
+    (gen_random_uuid(), q_id, '認可', FALSE, 1),
+    (gen_random_uuid(), q_id, '認証', TRUE, 2),
+    (gen_random_uuid(), q_id, '暗号化', FALSE, 3),
+    (gen_random_uuid(), q_id, '署名', FALSE, 4);
 
+  -- fill_blank hard Q86: 品質保証
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文の空欄に入る言葉は？\n「___テストでは、同時に1000ユーザーがアクセスした場合のシステムの挙動を確認します。」', '負荷テストはシステムの性能限界を確認するテストです。', 1, 87, 'hard', 'fill_blank');
+  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文の空欄に入る言葉は？\n「開発プロセス全体を通じて、成果物が所定の品質基準を満たすように計画的に活動し、その品質を保証する取り組みを___という。レビューやテストだけでなく、プロセス改善も含まれる。」', '品質保証（QA）はプロセス全体を通じた計画的な品質確保の取り組みで、レビュー・テスト・プロセス改善を含みます。', 1, 86, 'hard', 'fill_blank');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '結合', FALSE, 1),
-    (gen_random_uuid(), q_id, '回帰', FALSE, 2),
-    (gen_random_uuid(), q_id, '負荷', TRUE, 3),
-    (gen_random_uuid(), q_id, '受入', FALSE, 4);
+    (gen_random_uuid(), q_id, '品質管理', FALSE, 1),
+    (gen_random_uuid(), q_id, '品質検査', FALSE, 2),
+    (gen_random_uuid(), q_id, '品質保証', TRUE, 3),
+    (gen_random_uuid(), q_id, '品質評価', FALSE, 4);
 
+  -- fill_blank hard Q87: バックアップ
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文の空欄に入る言葉は？\n「本番環境へのデプロイは___デプロイ方式を採用し、ダウンタイムゼロでリリースします。」', 'ブルーグリーンデプロイはダウンタイムなしでリリースする方式です。', 1, 88, 'hard', 'fill_blank');
+  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文の空欄に入る言葉は？\n「システム障害やデータ消失に備えて、重要なデータを定期的に別の記憶媒体に複製して保管することを___という。フル、差分、増分の3つの方式がある。」', 'バックアップはデータを別の記憶媒体に複製・保管する作業で、フル・差分・増分の方式があります。', 1, 87, 'hard', 'fill_blank');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'ローリング', FALSE, 1),
-    (gen_random_uuid(), q_id, 'カナリア', FALSE, 2),
-    (gen_random_uuid(), q_id, 'ブルーグリーン', TRUE, 3),
-    (gen_random_uuid(), q_id, 'インプレース', FALSE, 4);
+    (gen_random_uuid(), q_id, 'アーカイブ', FALSE, 1),
+    (gen_random_uuid(), q_id, 'リストア', FALSE, 2),
+    (gen_random_uuid(), q_id, 'レプリケーション', FALSE, 3),
+    (gen_random_uuid(), q_id, 'バックアップ', TRUE, 4);
 
+  -- fill_blank hard Q88: 工数
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文の空欄に入る言葉は？\n「___の原則に基づき、上位モジュールは下位モジュールに依存すべきではなく、両者とも抽象に依存すべきです。」', '依存性逆転の原則(DIP)はSOLID原則のDです。', 1, 89, 'hard', 'fill_blank');
+  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文の空欄に入る言葉は？\n「プロジェクトの見積もりでは、各作業に必要な人数と期間を掛け合わせた___を算出し、それに基づいてコストとスケジュールを策定する。単位は人月や人日で表す。」', '工数は作業量を人数×期間で表したもので、人月・人日が単位として使われます。', 1, 88, 'hard', 'fill_blank');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '依存性逆転', TRUE, 1),
-    (gen_random_uuid(), q_id, 'インターフェース分離', FALSE, 2),
-    (gen_random_uuid(), q_id, 'リスコフ置換', FALSE, 3),
-    (gen_random_uuid(), q_id, 'オープン・クローズド', FALSE, 4);
+    (gen_random_uuid(), q_id, '工数', TRUE, 1),
+    (gen_random_uuid(), q_id, '工期', FALSE, 2),
+    (gen_random_uuid(), q_id, '原価', FALSE, 3),
+    (gen_random_uuid(), q_id, '予算', FALSE, 4);
 
+  -- fill_blank hard Q89: 提案書
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文の空欄に入る言葉は？\n「分散システムにおいて、___定理により、一貫性、可用性、分断耐性の3つを同時に満たすことはできない。」', 'CAP定理は分散システムの基本的な制約を示す定理です。', 1, 90, 'hard', 'fill_blank');
+  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文の空欄に入る言葉は？\n「RFP（提案依頼書）を受けて、自社のソリューションや実施体制、スケジュール、見積もりなどをまとめた文書を___という。顧客への提出期限を厳守すること。」', '提案書はRFPに対して自社のソリューション・体制・見積もりなどをまとめた文書です。', 1, 89, 'hard', 'fill_blank');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'ACID', FALSE, 1),
-    (gen_random_uuid(), q_id, 'BASE', FALSE, 2),
-    (gen_random_uuid(), q_id, 'CAP', TRUE, 3),
-    (gen_random_uuid(), q_id, 'SOLID', FALSE, 4);
+    (gen_random_uuid(), q_id, '見積書', FALSE, 1),
+    (gen_random_uuid(), q_id, '企画書', FALSE, 2),
+    (gen_random_uuid(), q_id, '提案書', TRUE, 3),
+    (gen_random_uuid(), q_id, '契約書', FALSE, 4);
+
+  -- fill_blank hard Q90: レビュー
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文の空欄に入る言葉は？\n「設計書やソースコードなどの成果物を、作成者以外の第三者が検査し、誤りや改善点を指摘する作業を___という。ウォークスルー、インスペクションなどの手法がある。」', 'レビューは成果物を第三者が検査し、誤りや改善点を発見する作業です。ウォークスルーやインスペクションはその手法です。', 1, 90, 'hard', 'fill_blank');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'デバッグ', FALSE, 1),
+    (gen_random_uuid(), q_id, 'テスト', FALSE, 2),
+    (gen_random_uuid(), q_id, '監査', FALSE, 3),
+    (gen_random_uuid(), q_id, 'レビュー', TRUE, 4);
+
 
 END $$;
 
@@ -2017,95 +2047,95 @@ BEGIN
 
   -- ===== algorithm - HARD (9) =====
 
-  -- Q19: ダイクストラ法
+-- Q19: ヒープソートの仕組みと計算量
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'ダイクストラ法の制約として正しいものはどれか。', 'ダイクストラ法は負の重みを持つ辺があると正しく動作しません。負の辺がある場合はベルマンフォード法を使います。', 1, 19, 'hard', 'algorithm');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'ヒープソートの平均時間計算量と、その特徴として正しいものはどれか。', 'ヒープソートはヒープ（二分ヒープ）を利用した比較ベースのソートアルゴリズムで、平均・最悪ともにO(n log n)の時間計算量を持つ。追加メモリはO(1)で済むインプレースソートだが、安定ソートではない。', 1, 19, 'hard', 'algorithm');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'グラフが無向グラフでなければならない', FALSE, 1),
-    (gen_random_uuid(), q_id, '辺の重みが負でないことが必要である', TRUE, 2),
-    (gen_random_uuid(), q_id, 'グラフが完全グラフでなければならない', FALSE, 3),
-    (gen_random_uuid(), q_id, '頂点数が辺数より多くなければならない', FALSE, 4);
+    (gen_random_uuid(), q_id, '平均計算量はO(n²)であり、安定ソートである', FALSE, 1),
+    (gen_random_uuid(), q_id, '平均計算量はO(n log n)であり、安定ソートである', FALSE, 2),
+    (gen_random_uuid(), q_id, '平均計算量はO(n log n)であり、安定ソートではない', TRUE, 3),
+    (gen_random_uuid(), q_id, '平均計算量はO(n)であり、追加メモリO(n)が必要である', FALSE, 4);
 
-  -- Q20: ベルマンフォード法
+  -- Q20: 基数ソートの特徴
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'ベルマンフォード法の時間計算量はどれか（頂点数V、辺数E）。', 'ベルマンフォード法はすべての辺を(V-1)回緩和するため、時間計算量はO(VE)です。', 1, 20, 'hard', 'algorithm');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', '基数ソート（Radix Sort）の特徴として最も適切なものはどれか。', '基数ソートは比較を行わない非比較ソートで、各桁ごとに安定ソート（通常カウンティングソート）を適用する。データの桁数をd、基数をkとするとO(d(n+k))の計算量となり、桁数が少ない整数データに対しては非常に高速に動作する。', 1, 20, 'hard', 'algorithm');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'O(V + E)', FALSE, 1),
-    (gen_random_uuid(), q_id, 'O(V log V)', FALSE, 2),
-    (gen_random_uuid(), q_id, 'O(E log V)', FALSE, 3),
-    (gen_random_uuid(), q_id, 'O(VE)', TRUE, 4);
+    (gen_random_uuid(), q_id, '比較ベースのソートであり、最悪計算量はO(n log n)である', FALSE, 1),
+    (gen_random_uuid(), q_id, '非比較ソートであり、桁数dと基数kに対してO(d(n+k))の計算量を持つ', TRUE, 2),
+    (gen_random_uuid(), q_id, '任意のデータ型に適用でき、常にO(n)で動作する', FALSE, 3),
+    (gen_random_uuid(), q_id, '不安定ソートであり、追加メモリを必要としない', FALSE, 4);
 
-  -- Q21: 高度なDP（ナップサック問題）
+  -- Q21: 動的計画法（フィボナッチ・最長共通部分列）
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', '0-1ナップサック問題をDPで解く場合の時間計算量はどれか（品物数n、容量W）。', '0-1ナップサック問題は品物ごとに各容量の最適値を更新するため、時間計算量はO(nW)です。', 1, 21, 'hard', 'algorithm');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', '動的計画法（DP）に関する説明として最も適切なものはどれか。', '動的計画法は、問題を部分問題に分割し、各部分問題の解を記録（メモ化）して再利用することで効率的に解を求める手法である。最適部分構造と部分問題の重複という2つの性質を持つ問題に適用できる。フィボナッチ数列の計算や最長共通部分列（LCS）問題が代表例である。', 1, 21, 'hard', 'algorithm');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'O(n log W)', FALSE, 1),
-    (gen_random_uuid(), q_id, 'O(nW)', TRUE, 2),
-    (gen_random_uuid(), q_id, 'O(2^n)', FALSE, 3),
-    (gen_random_uuid(), q_id, 'O(n²)', FALSE, 4);
+    (gen_random_uuid(), q_id, '常に貪欲法より最適な解が得られるが、計算量は指数的になる', FALSE, 1),
+    (gen_random_uuid(), q_id, '部分問題の解を再利用せず、毎回再計算することで正確性を保つ手法である', FALSE, 2),
+    (gen_random_uuid(), q_id, '最適部分構造と部分問題の重複を持つ問題に適用し、部分問題の解を記録して再利用する', TRUE, 3),
+    (gen_random_uuid(), q_id, '分割統治法と同じ原理であり、部分問題が重複しない場合にのみ適用できる', FALSE, 4);
 
-  -- Q22: 最小全域木（クラスカル法）
+  -- Q22: BFS/DFSの応用
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'クラスカル法で最小全域木を求める際に使用される代表的なデータ構造はどれか。', 'クラスカル法では辺を重みの昇順に処理し、閉路の検出にUnion-Find（素集合データ構造）を使用します。', 1, 22, 'hard', 'algorithm');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'グラフ探索における幅優先探索（BFS）と深さ優先探索（DFS）の比較として正しいものはどれか。', 'BFSはキューを使い、始点から近い頂点を先に探索するため、重みなしグラフの最短経路を求められる。DFSはスタック（または再帰）を使い、行き止まりまで深く探索する。DFSはトポロジカルソートや連結成分の検出に適している。', 1, 22, 'hard', 'algorithm');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '優先度キュー', FALSE, 1),
-    (gen_random_uuid(), q_id, 'Union-Find（素集合データ構造）', TRUE, 2),
-    (gen_random_uuid(), q_id, 'AVL木', FALSE, 3),
-    (gen_random_uuid(), q_id, 'ハッシュテーブル', FALSE, 4);
+    (gen_random_uuid(), q_id, 'BFSはスタックを使用し、DFSはキューを使用する', FALSE, 1),
+    (gen_random_uuid(), q_id, 'BFSは重みなしグラフの最短経路に適し、DFSはトポロジカルソートに適している', TRUE, 2),
+    (gen_random_uuid(), q_id, 'DFSは常にBFSよりメモリ使用量が多い', FALSE, 3),
+    (gen_random_uuid(), q_id, 'BFSもDFSも重み付きグラフの最短経路を正しく求めることができる', FALSE, 4);
 
-  -- Q23: NP完全問題
+  -- Q23: マージソートの安定性と計算量
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'NP完全問題の説明として正しいものはどれか。', 'NP完全問題はNPに属し、かつすべてのNP問題が多項式時間で帰着可能な問題です。多項式時間の解法は見つかっていません。', 1, 23, 'hard', 'algorithm');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'マージソートに関する説明として正しいものはどれか。', 'マージソートは分割統治法に基づく安定ソートで、最悪・平均ともにO(n log n)の時間計算量を持つ。ただし、マージ処理のためにO(n)の追加メモリが必要となる点がインプレースソートとの違いである。', 1, 23, 'hard', 'algorithm');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '多項式時間で必ず解ける問題', FALSE, 1),
-    (gen_random_uuid(), q_id, '解が存在しないことが証明された問題', FALSE, 2),
-    (gen_random_uuid(), q_id, 'NPに属し全てのNP問題から多項式時間で帰着可能な問題', TRUE, 3),
-    (gen_random_uuid(), q_id, '指数時間でしか検証できない問題', FALSE, 4);
+    (gen_random_uuid(), q_id, '不安定ソートであるが、追加メモリを必要としないインプレースソートである', FALSE, 1),
+    (gen_random_uuid(), q_id, '安定ソートであり、最悪計算量はO(n²)である', FALSE, 2),
+    (gen_random_uuid(), q_id, '不安定ソートであり、最悪計算量はO(n log n)である', FALSE, 3),
+    (gen_random_uuid(), q_id, '安定ソートであり、最悪計算量はO(n log n)だが、O(n)の追加メモリが必要である', TRUE, 4);
 
-  -- Q24: 計算量クラス P vs NP
+  -- Q24: クイックソートの最悪・平均計算量
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', '計算量クラスPの説明として正しいものはどれか。', 'クラスPは決定性チューリングマシンで多項式時間で解ける決定問題の集合です。', 1, 24, 'hard', 'algorithm');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'クイックソートの計算量に関する説明として正しいものはどれか。', 'クイックソートの平均計算量はO(n log n)だが、ピボットの選び方によっては最悪O(n²)になる。例えば、既にソート済みの配列に対して先頭要素をピボットに選ぶと最悪ケースとなる。ランダムなピボット選択や三値の中央値法で最悪ケースを回避できる。', 1, 24, 'hard', 'algorithm');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '決定性チューリングマシンで多項式時間で解ける問題の集合', TRUE, 1),
-    (gen_random_uuid(), q_id, '非決定性チューリングマシンでのみ解ける問題の集合', FALSE, 2),
-    (gen_random_uuid(), q_id, '解の検証に指数時間かかる問題の集合', FALSE, 3),
-    (gen_random_uuid(), q_id, '近似アルゴリズムでしか解けない問題の集合', FALSE, 4);
+    (gen_random_uuid(), q_id, '平均・最悪ともにO(n log n)であり、ピボット選択の影響を受けない', FALSE, 1),
+    (gen_random_uuid(), q_id, '平均はO(n log n)だが、最悪はO(n²)となり、ピボット選択が性能に影響する', TRUE, 2),
+    (gen_random_uuid(), q_id, '平均はO(n²)だが、最悪はO(n log n)である', FALSE, 3),
+    (gen_random_uuid(), q_id, '平均・最悪ともにO(n²)であるが、実用上は定数が小さく高速である', FALSE, 4);
 
-  -- Q25: ダイクストラ法の計算量
+  -- Q25: ハッシュ関数の衝突と解決法の概要
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', '優先度キュー（二分ヒープ）を使ったダイクストラ法の時間計算量はどれか（頂点数V、辺数E）。', '二分ヒープを使うと頂点の取り出しにO(log V)、各辺の緩和にO(log V)かかるため、全体でO((V + E) log V)です。', 1, 25, 'hard', 'algorithm');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'ハッシュ法における衝突（コリジョン）に関する説明として最も適切なものはどれか。', 'ハッシュ法では、異なるキーが同じハッシュ値に写像される衝突が発生しうる。衝突の解決方法には、チェイン法（連鎖法）とオープンアドレス法がある。チェイン法はリンクリストで同一バケットに複数要素を格納し、オープンアドレス法は別のバケットを探索する。', 1, 25, 'hard', 'algorithm');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'O(V²)', FALSE, 1),
-    (gen_random_uuid(), q_id, 'O(VE)', FALSE, 2),
-    (gen_random_uuid(), q_id, 'O((V + E) log V)', TRUE, 3),
-    (gen_random_uuid(), q_id, 'O(V log E)', FALSE, 4);
+    (gen_random_uuid(), q_id, '良いハッシュ関数を使えば衝突は絶対に発生しない', FALSE, 1),
+    (gen_random_uuid(), q_id, '衝突が発生した場合、ハッシュテーブルを破棄して再構築するのが唯一の方法である', FALSE, 2),
+    (gen_random_uuid(), q_id, '衝突の解決にはチェイン法とオープンアドレス法があり、それぞれ異なる方式で対処する', TRUE, 3),
+    (gen_random_uuid(), q_id, '衝突はキーのデータ型が異なる場合にのみ発生する現象である', FALSE, 4);
 
-  -- Q26: プリム法
+  -- Q26: トポロジカルソートの用途
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'プリム法とクラスカル法の共通点として正しいものはどれか。', 'プリム法もクラスカル法もグラフの最小全域木を求める貪欲アルゴリズムです。', 1, 26, 'hard', 'algorithm');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'トポロジカルソートに関する説明として正しいものはどれか。', 'トポロジカルソートは有向非巡回グラフ（DAG）の頂点を、すべての辺の向きに矛盾しない順序で並べるアルゴリズムである。タスクの依存関係の解決やビルドシステムでのコンパイル順序決定などに用いられる。閉路があるグラフには適用できない。', 1, 26, 'hard', 'algorithm');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'どちらも最短経路を求めるアルゴリズムである', FALSE, 1),
-    (gen_random_uuid(), q_id, 'どちらも動的計画法に基づくアルゴリズムである', FALSE, 2),
-    (gen_random_uuid(), q_id, 'どちらも負の辺がある場合のみ使用される', FALSE, 3),
-    (gen_random_uuid(), q_id, 'どちらも最小全域木を求める貪欲アルゴリズムである', TRUE, 4);
+    (gen_random_uuid(), q_id, '任意の有向グラフに適用でき、閉路がある場合でも正しく動作する', FALSE, 1),
+    (gen_random_uuid(), q_id, '無向グラフの頂点を次数の昇順に並べるアルゴリズムである', FALSE, 2),
+    (gen_random_uuid(), q_id, 'DAGの頂点を依存関係に矛盾しない順序に並べ、タスク依存解決等に用いられる', TRUE, 3),
+    (gen_random_uuid(), q_id, '重み付きグラフの最短経路を求めるために使用されるアルゴリズムである', FALSE, 4);
 
-  -- Q27: メモ化再帰とDP
+  -- Q27: 償却解析の基本概念
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'メモ化再帰（トップダウンDP）とボトムアップDPの違いとして正しいものはどれか。', 'メモ化再帰は必要な部分問題のみを解くのに対し、ボトムアップDPは小さい部分問題からすべて順に解いていきます。', 1, 27, 'hard', 'algorithm');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', '償却解析（Amortized Analysis）の基本概念として正しいものはどれか。', '償却解析は、一連の操作全体にかかるコストを操作の回数で割り、1回あたりの平均的なコストを評価する手法である。例えば動的配列の拡張では、個々のpush操作は最悪O(n)だが、n回の操作全体ではO(n)なので、償却コストはO(1)となる。最悪計算量とは異なり、長期的な性能を評価できる。', 1, 27, 'hard', 'algorithm');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'メモ化再帰は再帰を使わずループで実装する', FALSE, 1),
-    (gen_random_uuid(), q_id, 'ボトムアップDPは必要な部分問題だけを計算する', FALSE, 2),
-    (gen_random_uuid(), q_id, 'メモ化再帰は必要な部分問題のみを解きボトムアップは全部分問題を順に解く', TRUE, 3),
-    (gen_random_uuid(), q_id, '両者の計算量は常に異なる', FALSE, 4);
+    (gen_random_uuid(), q_id, '各操作の最悪計算量を合計し、全体の最悪ケースを求める手法である', FALSE, 1),
+    (gen_random_uuid(), q_id, '確率的な分析手法であり、期待値を計算するものである', FALSE, 2),
+    (gen_random_uuid(), q_id, '一連の操作全体のコストを操作回数で割り、1回あたりの平均的コストを評価する手法である', TRUE, 3),
+    (gen_random_uuid(), q_id, '最良ケースのみを考慮し、アルゴリズムの下限を評価する手法である', FALSE, 4);
 
   -- ===== data_structure - EASY (9) =====
 
@@ -2293,95 +2323,95 @@ BEGIN
 
   -- ===== data_structure - HARD (9) =====
 
-  -- Q46: AVL木
+-- Q46: B木の特性とデータベースでの利用
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'AVL木の特徴として正しいものはどれか。', 'AVL木は各ノードの左右部分木の高さの差が最大1以内に保たれる自己平衡二分探索木です。', 1, 46, 'hard', 'data_structure');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'B木（B-tree）の特性とデータベースでの利用に関する説明として正しいものはどれか。', 'B木は多分岐の平衡探索木であり、1ノードに複数のキーを格納できる。ディスクアクセスを最小化するよう設計されており、データベースのインデックスやファイルシステムで広く使われている。すべての葉ノードが同じ深さにあるため、検索・挿入・削除がO(log n)で行える。', 1, 46, 'hard', 'data_structure');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '各ノードの左右部分木の高さの差が最大1以内である', TRUE, 1),
-    (gen_random_uuid(), q_id, '各ノードが赤または黒の色を持つ', FALSE, 2),
-    (gen_random_uuid(), q_id, '各ノードが最大4つの子を持てる', FALSE, 3),
-    (gen_random_uuid(), q_id, '葉ノードにのみデータを格納する', FALSE, 4);
+    (gen_random_uuid(), q_id, '二分探索木の一種であり、各ノードは最大2つの子を持つ', FALSE, 1),
+    (gen_random_uuid(), q_id, '多分岐の平衡木で、ディスクアクセスを最小化するようノードに複数キーを格納する', TRUE, 2),
+    (gen_random_uuid(), q_id, '葉ノードの深さが異なることがあり、最悪検索時間はO(n)となる', FALSE, 3),
+    (gen_random_uuid(), q_id, 'メモリ上のデータ構造として設計されており、ディスクベースの用途には適さない', FALSE, 4);
 
-  -- Q47: B木
+  -- Q47: ハッシュ衝突解決（チェイン法 vs オープンアドレス法）
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'B木が主に使用される場面として最も適切なのはどれか。', 'B木はノードに複数のキーを持ちディスクI/Oを減らすため、データベースやファイルシステムのインデックスに広く使われています。', 1, 47, 'hard', 'data_structure');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'ハッシュテーブルの衝突解決手法であるチェイン法とオープンアドレス法の比較として正しいものはどれか。', 'チェイン法は各バケットにリンクリストを持ち、衝突した要素をリストに追加する。負荷率が1を超えても動作する。オープンアドレス法はテーブル内の別のバケットを探査して格納するため、テーブルの容量を超えて格納できない。オープンアドレス法はキャッシュ効率が良いが、削除操作が複雑になる。', 1, 47, 'hard', 'data_structure');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'メモリ内のソート処理', FALSE, 1),
-    (gen_random_uuid(), q_id, 'データベースやファイルシステムのインデックス', TRUE, 2),
-    (gen_random_uuid(), q_id, 'グラフの最短経路探索', FALSE, 3),
-    (gen_random_uuid(), q_id, 'ネットワークパケットのルーティング', FALSE, 4);
+    (gen_random_uuid(), q_id, 'チェイン法はテーブル容量を超えて格納できないが、オープンアドレス法は可能である', FALSE, 1),
+    (gen_random_uuid(), q_id, 'オープンアドレス法はキャッシュ効率が良いが、チェイン法に比べて削除操作が複雑である', TRUE, 2),
+    (gen_random_uuid(), q_id, '両方とも負荷率が1を超えると動作しなくなる', FALSE, 3),
+    (gen_random_uuid(), q_id, 'チェイン法ではリンクリストの代わりに二分探索木のみ使用される', FALSE, 4);
 
-  -- Q48: トライ木
+  -- Q48: ヒープによる優先度キューの実装
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'トライ木（Trie）の説明として正しいものはどれか。', 'トライ木は文字列の各文字をノードとして格納する木構造で、文字列の探索が文字列長mに対してO(m)で行えます。', 1, 48, 'hard', 'data_structure');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', '二分ヒープを用いた優先度キューに関する説明として正しいものはどれか。', '二分ヒープは完全二分木の性質を持ち、配列で効率的に表現できる。最小ヒープでは親ノードが子ノード以下の値を持つ。要素の挿入と最小値の取り出しはともにO(log n)で行える。ヒープの構築はO(n)で可能である。', 1, 48, 'hard', 'data_structure');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '数値データの高速ソートに使われる', FALSE, 1),
-    (gen_random_uuid(), q_id, 'グラフの閉路検出に使われる', FALSE, 2),
-    (gen_random_uuid(), q_id, '文字列の各文字をノードとして格納し高速な文字列探索を実現する', TRUE, 3),
-    (gen_random_uuid(), q_id, 'ヒープ条件を満たす完全二分木である', FALSE, 4);
+    (gen_random_uuid(), q_id, '要素の挿入はO(1)、最小値の取り出しはO(n)で行える', FALSE, 1),
+    (gen_random_uuid(), q_id, '二分ヒープは平衡二分探索木であり、任意の要素の検索がO(log n)で行える', FALSE, 2),
+    (gen_random_uuid(), q_id, '要素の挿入と最小値の取り出しがともにO(log n)で行え、配列で効率的に表現できる', TRUE, 3),
+    (gen_random_uuid(), q_id, 'ヒープの構築にはO(n log n)が必要であり、ソート済み配列からでも短縮できない', FALSE, 4);
 
-  -- Q49: Union-Find
+  -- Q49: グラフ表現（隣接行列 vs 隣接リスト）のトレードオフ
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'Union-Find（素集合データ構造）で経路圧縮とランクによる統合を両方適用した場合の1操作あたりの償却計算量はどれか。', '経路圧縮とランクによる統合を組み合わせると、1操作あたりの償却計算量はほぼO(1)であるO(α(n))になります。α(n)は逆アッカーマン関数です。', 1, 49, 'hard', 'data_structure');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'グラフの表現方法である隣接行列と隣接リストのトレードオフとして正しいものはどれか。', '隣接行列は頂点数Vに対してO(V²)のメモリを使用し、辺の存在確認がO(1)で行える。隣接リストはO(V+E)のメモリで済み、疎グラフに適している。密グラフでは隣接行列の方が効率的な場合がある。', 1, 49, 'hard', 'data_structure');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'O(log n)', FALSE, 1),
-    (gen_random_uuid(), q_id, 'O(n)', FALSE, 2),
-    (gen_random_uuid(), q_id, 'O(α(n))（ほぼ定数時間）', TRUE, 3),
-    (gen_random_uuid(), q_id, 'O(√n)', FALSE, 4);
+    (gen_random_uuid(), q_id, '隣接行列はO(V+E)のメモリ、隣接リストはO(V²)のメモリを使用する', FALSE, 1),
+    (gen_random_uuid(), q_id, '隣接リストは辺の存在確認がO(1)で行え、隣接行列より常に効率的である', FALSE, 2),
+    (gen_random_uuid(), q_id, '隣接行列は辺の存在確認がO(1)だがO(V²)のメモリを使い、隣接リストはO(V+E)で疎グラフに適する', TRUE, 3),
+    (gen_random_uuid(), q_id, '両方ともメモリ使用量は同じだが、辺の追加操作の速度が異なる', FALSE, 4);
 
-  -- Q50: 赤黒木
+  -- Q50: トライ木（接頭辞木）の特徴
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', '赤黒木の性質として正しいものはどれか。', '赤黒木ではルートから任意の葉までの黒ノードの数（黒高さ）が同じであるという性質により、木の高さがO(log n)に保たれます。', 1, 50, 'hard', 'data_structure');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'トライ木（Trie、接頭辞木）の特徴として最も適切なものはどれか。', 'トライ木は文字列の各文字をノードとして保持する木構造で、共通接頭辞を共有してメモリを節約する。文字列の検索や接頭辞検索がO(m)（mは文字列長）で行える。辞書やオートコンプリート、IPルーティングテーブルなどに利用される。', 1, 50, 'hard', 'data_structure');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'すべてのノードが同じ深さにある', FALSE, 1),
-    (gen_random_uuid(), q_id, '左右の部分木の高さの差が常に0である', FALSE, 2),
-    (gen_random_uuid(), q_id, 'ルートから任意の葉までの黒ノード数が等しい', TRUE, 3),
-    (gen_random_uuid(), q_id, '赤ノードは必ず2つの子を持つ', FALSE, 4);
+    (gen_random_uuid(), q_id, '二分探索木の一種であり、文字列の比較にO(log n)かかる', FALSE, 1),
+    (gen_random_uuid(), q_id, '文字列の検索が文字列長mに対してO(m)で行え、共通接頭辞を共有する木構造である', TRUE, 2),
+    (gen_random_uuid(), q_id, 'ハッシュテーブルと同様にキーのハッシュ値を用いて格納位置を決定する', FALSE, 3),
+    (gen_random_uuid(), q_id, '数値データの格納に特化しており、文字列の格納には適さない', FALSE, 4);
 
-  -- Q51: AVL木の回転
+  -- Q51: 赤黒木とAVL木の基本比較
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'AVL木で挿入後にバランスが崩れた場合に行う操作はどれか。', 'AVL木ではバランス因子が-1から1の範囲を超えた場合、単回転または二重回転を行って平衡を回復します。', 1, 51, 'hard', 'data_structure');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', '赤黒木とAVL木の比較として最も適切なものはどれか。', 'AVL木は厳密に平衡を保つため検索が高速だが、挿入・削除時の回転操作が多くなる。赤黒木はAVL木ほど厳密に平衡を保たないが、挿入・削除時の回転回数が少なく、更新が頻繁な場面に適している。両方とも検索・挿入・削除はO(log n)である。', 1, 51, 'hard', 'data_structure');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'ノードの色を変更する', FALSE, 1),
-    (gen_random_uuid(), q_id, '木を再構築する', FALSE, 2),
-    (gen_random_uuid(), q_id, '回転操作（単回転または二重回転）を行う', TRUE, 3),
-    (gen_random_uuid(), q_id, 'ノードを分割して新しい親を作る', FALSE, 4);
+    (gen_random_uuid(), q_id, 'AVL木は赤黒木より挿入・削除が高速だが、検索は遅い', FALSE, 1),
+    (gen_random_uuid(), q_id, '赤黒木はAVL木より厳密に平衡を保ち、検索が高速である', FALSE, 2),
+    (gen_random_uuid(), q_id, '両方ともO(log n)だが、AVL木は検索が速く、赤黒木は更新時の回転が少ない', TRUE, 3),
+    (gen_random_uuid(), q_id, '赤黒木の最悪検索時間はO(n)であり、AVL木はO(log n)である', FALSE, 4);
 
-  -- Q52: B木のノード特性
+  -- Q52: 双方向リンクリストの操作
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', '次数mのB木において、ルート以外の各ノードが持つキーの最小数はいくつか。', '次数mのB木では、ルート以外の各ノードは最低⌈m/2⌉-1個のキーを持つ必要があります。', 1, 52, 'hard', 'data_structure');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', '双方向リンクリスト（Doubly Linked List）の特徴として正しいものはどれか。', '双方向リンクリストは各ノードが前後両方のポインタを持つため、任意のノードからの前方・後方への移動がO(1)で行える。単方向リストと比べて削除操作が容易だが、ポインタが2つ必要なのでメモリ使用量が増える。', 1, 52, 'hard', 'data_structure');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '1', FALSE, 1),
-    (gen_random_uuid(), q_id, 'm-1', FALSE, 2),
-    (gen_random_uuid(), q_id, '⌈m/2⌉-1', TRUE, 3),
-    (gen_random_uuid(), q_id, 'm/2', FALSE, 4);
+    (gen_random_uuid(), q_id, '各ノードは次のノードへのポインタのみを持ち、前方への移動にはO(n)かかる', FALSE, 1),
+    (gen_random_uuid(), q_id, '単方向リストと同じメモリ使用量で、前後両方への移動がO(1)で行える', FALSE, 2),
+    (gen_random_uuid(), q_id, '前後2つのポインタを持ち、任意ノードの削除が容易だが、メモリ使用量が単方向より多い', TRUE, 3),
+    (gen_random_uuid(), q_id, 'ランダムアクセスがO(1)で行え、配列と同等の検索性能を持つ', FALSE, 4);
 
-  -- Q53: 赤黒木 vs AVL木
+  -- Q53: 環状バッファの概念
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', '赤黒木とAVL木の比較として正しいものはどれか。', 'AVL木はより厳密に平衡が保たれるため探索が速い反面、挿入・削除時の回転が多くなります。赤黒木は緩い平衡条件で挿入・削除が効率的です。', 1, 53, 'hard', 'data_structure');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', '環状バッファ（Circular Buffer / Ring Buffer）の特徴として正しいものはどれか。', '環状バッファは固定サイズの配列を論理的にリング状に使用するデータ構造である。先頭と末尾のポインタを管理し、キューの実装に適している。データの追加と取り出しがO(1)で行え、メモリの再割り当てが不要である。バッファが満杯時は古いデータを上書きする用途にも使われる。', 1, 53, 'hard', 'data_structure');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '赤黒木の方が探索が常に速い', FALSE, 1),
-    (gen_random_uuid(), q_id, 'AVL木の方が挿入・削除が常に速い', FALSE, 2),
-    (gen_random_uuid(), q_id, '赤黒木は挿入・削除が効率的でAVL木は探索が効率的', TRUE, 3),
-    (gen_random_uuid(), q_id, '両者の性能は完全に同一である', FALSE, 4);
+    (gen_random_uuid(), q_id, '動的にサイズが拡張される配列であり、メモリの再割り当てが頻繁に発生する', FALSE, 1),
+    (gen_random_uuid(), q_id, 'リンクリストで実装され、各ノードの接続を循環させる構造である', FALSE, 2),
+    (gen_random_uuid(), q_id, 'スタックの実装に特化しており、LIFO操作のみをサポートする', FALSE, 3),
+    (gen_random_uuid(), q_id, '固定サイズの配列をリング状に使い、追加・取り出しがO(1)で行えるキュー向き構造である', TRUE, 4);
 
-  -- Q54: トライ木の空間計算量
+  -- Q54: 素集合データ構造（Union-Find）の基本概念
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'トライ木の欠点として最も適切なものはどれか。', 'トライ木は各ノードが文字集合サイズ分のポインタを持つため、メモリ使用量が大きくなりがちです。', 1, 54, 'hard', 'data_structure');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', '素集合データ構造（Union-Find）に関する説明として正しいものはどれか。', 'Union-Findは互いに素な集合を効率的に管理するデータ構造で、Union（2つの集合の併合）とFind（要素が属する集合の代表元の取得）を提供する。経路圧縮とランクによる併合を組み合わせると、ほぼO(1)の償却計算量で操作できる。グラフの連結成分判定やクラスカル法に利用される。', 1, 54, 'hard', 'data_structure');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '文字列の探索がO(n²)になる', FALSE, 1),
-    (gen_random_uuid(), q_id, 'ソート済みデータしか格納できない', FALSE, 2),
-    (gen_random_uuid(), q_id, '各ノードが文字集合サイズ分のポインタを持ちメモリ使用量が大きい', TRUE, 3),
-    (gen_random_uuid(), q_id, '同じ前方一致の文字列を格納できない', FALSE, 4);
+    (gen_random_uuid(), q_id, 'Union操作とFind操作を提供し、経路圧縮により操作がほぼO(1)の償却計算量となる', TRUE, 1),
+    (gen_random_uuid(), q_id, '集合の積集合や差集合を高速に求めるためのデータ構造である', FALSE, 2),
+    (gen_random_uuid(), q_id, 'Find操作は常にO(n)であり、最適化手法は存在しない', FALSE, 3),
+    (gen_random_uuid(), q_id, 'ソート済みデータに対してのみ適用可能であり、動的なデータには不向きである', FALSE, 4);
 
   -- ===== os - EASY (6) =====
 
@@ -2509,65 +2539,65 @@ BEGIN
 
   -- ===== os - HARD (6) =====
 
-  -- Q67: セマフォとミューテックス
+-- Q69: 仮想記憶とページテーブル
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'セマフォとミューテックスの違いとして正しいものはどれか。', 'ミューテックスはロックした本人のみが解放でき排他制御に特化しています。セマフォはカウンタ値を持ち複数のリソースへの同時アクセスを制御できます。', 1, 67, 'hard', 'os');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', '仮想記憶方式におけるページテーブルの役割として正しいものはどれか。', 'ページテーブルは仮想アドレスから物理アドレスへの変換（アドレス変換）を行うための対応表である。各プロセスが独立した仮想アドレス空間を持ち、ページテーブルによって実際の物理メモリやディスク上の位置に対応付けられる。TLB（Translation Lookaside Buffer）はページテーブルのキャッシュとして高速化に利用される。', 1, 69, 'hard', 'os');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'セマフォはバイナリ値しか取れない', FALSE, 1),
-    (gen_random_uuid(), q_id, 'ミューテックスはカウンタ値を持つ', FALSE, 2),
-    (gen_random_uuid(), q_id, 'ミューテックスはロック取得者のみ解放でき、セマフォはカウンタで複数アクセスを制御する', TRUE, 3),
-    (gen_random_uuid(), q_id, '両者に機能上の違いはない', FALSE, 4);
+    (gen_random_uuid(), q_id, 'プロセス間の通信データを格納するための共有メモリ領域を管理する', FALSE, 1),
+    (gen_random_uuid(), q_id, '仮想アドレスから物理アドレスへの変換を行う対応表である', TRUE, 2),
+    (gen_random_uuid(), q_id, 'ディスク上のファイルシステムのブロック割り当てを管理する', FALSE, 3),
+    (gen_random_uuid(), q_id, 'CPUのレジスタ割り当てを最適化するためのテーブルである', FALSE, 4);
 
-  -- Q68: メモリ断片化
+  -- Q70: ページ置換アルゴリズム（LRU、FIFO）
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', '外部断片化の説明として正しいものはどれか。', '外部断片化は空きメモリが小さなブロックに分散し、合計では十分な空きがあるのに連続した大きな領域が確保できない状態です。', 1, 68, 'hard', 'os');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'ページ置換アルゴリズムに関する説明として正しいものはどれか。', 'FIFO（First In First Out）は最も古くロードされたページを置換する。LRU（Least Recently Used）は最も長い間使用されていないページを置換する。一般にLRUの方がFIFOよりページフォールト率が低いが、実装コストが高い。FIFOにはBéládyの異常（フレーム数を増やすとページフォールトが増える場合がある）が起こりうる。', 1, 70, 'hard', 'os');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '確保されたメモリブロック内部に未使用部分が生じること', FALSE, 1),
-    (gen_random_uuid(), q_id, '空きメモリが分散して大きな連続領域を確保できないこと', TRUE, 2),
-    (gen_random_uuid(), q_id, 'ディスクの空き容量が不足していること', FALSE, 3),
-    (gen_random_uuid(), q_id, 'CPUキャッシュのヒット率が低下すること', FALSE, 4);
+    (gen_random_uuid(), q_id, 'FIFOは最も使用頻度の低いページを置換し、LRUは最も古いページを置換する', FALSE, 1),
+    (gen_random_uuid(), q_id, 'LRUとFIFOは常に同じページフォールト率を示す', FALSE, 2),
+    (gen_random_uuid(), q_id, 'FIFOではBéládyの異常が起こりうるが、LRUでは起こらない', TRUE, 3),
+    (gen_random_uuid(), q_id, 'LRUの方がFIFOより実装コストが低く、常にすべての面で優れている', FALSE, 4);
 
-  -- Q69: LRUページ置換
+  -- Q71: デッドロックの4条件
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'LRU（Least Recently Used）ページ置換アルゴリズムの説明として正しいものはどれか。', 'LRUは最も長い間アクセスされていないページを置換対象に選ぶアルゴリズムで、時間的局所性の原理に基づいています。', 1, 69, 'hard', 'os');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'デッドロックが発生するための4つの必要条件の組み合わせとして正しいものはどれか。', 'デッドロックの4条件は、(1)相互排除（Mutual Exclusion）、(2)占有と待機（Hold and Wait）、(3)非プリエンプション（No Preemption）、(4)循環待ち（Circular Wait）である。これら4つすべてが同時に成立するとデッドロックが発生する。いずれか1つを破れば防止できる。', 1, 71, 'hard', 'os');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '最も最近にアクセスされたページを置換する', FALSE, 1),
-    (gen_random_uuid(), q_id, '最もアクセス回数が少ないページを置換する', FALSE, 2),
-    (gen_random_uuid(), q_id, 'ランダムにページを選んで置換する', FALSE, 3),
-    (gen_random_uuid(), q_id, '最も長い間アクセスされていないページを置換する', TRUE, 4);
+    (gen_random_uuid(), q_id, '相互排除、占有と待機、プリエンプション、先着順', FALSE, 1),
+    (gen_random_uuid(), q_id, '相互排除、非プリエンプション、タイムアウト、循環待ち', FALSE, 2),
+    (gen_random_uuid(), q_id, '占有と待機、非プリエンプション、優先度逆転、循環待ち', FALSE, 3),
+    (gen_random_uuid(), q_id, '相互排除、占有と待機、非プリエンプション、循環待ち', TRUE, 4);
 
-  -- Q70: スラッシング
+  -- Q72: メモリ管理：ページングとセグメンテーション
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'スラッシングの説明として正しいものはどれか。', 'スラッシングはページフォルトが頻発しOSがページの入れ替えに多くの時間を費やし、実質的な処理がほとんど進まなくなる状態です。', 1, 70, 'hard', 'os');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'メモリ管理方式であるページングとセグメンテーションの比較として正しいものはどれか。', 'ページングはメモリを固定サイズのページに分割する方式で、外部フラグメンテーションが発生しない。セグメンテーションは論理的な単位（コード、データ、スタックなど）で可変サイズのセグメントに分割する方式で、外部フラグメンテーションが発生しうる。現代のOSは両者を組み合わせたセグメントページング方式を採用することが多い。', 1, 72, 'hard', 'os');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'CPUの温度が上がりすぎて性能が低下する現象', FALSE, 1),
-    (gen_random_uuid(), q_id, 'ページフォルトが頻発しページ入れ替えにCPU時間が費やされ処理が進まない状態', TRUE, 2),
-    (gen_random_uuid(), q_id, 'ディスクのシーク時間が増大する現象', FALSE, 3),
-    (gen_random_uuid(), q_id, 'ネットワークの帯域幅が飽和する状態', FALSE, 4);
+    (gen_random_uuid(), q_id, 'ページングは固定サイズで外部フラグメンテーションがなく、セグメンテーションは可変サイズで外部フラグメンテーションが起こりうる', TRUE, 1),
+    (gen_random_uuid(), q_id, 'セグメンテーションは固定サイズで外部フラグメンテーションがなく、ページングは可変サイズである', FALSE, 2),
+    (gen_random_uuid(), q_id, '両方とも固定サイズで管理され、フラグメンテーションの違いはない', FALSE, 3),
+    (gen_random_uuid(), q_id, 'ページングは論理的な単位で分割し、セグメンテーションは物理的な単位で分割する', FALSE, 4);
 
-  -- Q71: 内部断片化
+  -- Q73: プロセススケジューリング：優先度ベースとラウンドロビンの比較
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', '内部断片化が発生する原因として正しいものはどれか。', '内部断片化は固定サイズのメモリブロックを割り当てた際に、実際に必要な量よりブロックが大きいために生じる未使用部分です。', 1, 71, 'hard', 'os');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'プロセススケジューリングにおける優先度ベース方式とラウンドロビン方式の比較として正しいものはどれか。', 'ラウンドロビン方式は各プロセスにタイムクォンタム（時間量子）を割り当て、公平にCPU時間を分配する。優先度ベース方式は優先度の高いプロセスを先に実行するが、低優先度プロセスが長時間実行されないスタベーション（飢餓）が発生しうる。エージング技法で優先度を徐々に上げることでスタベーションを防止できる。', 1, 73, 'hard', 'os');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '可変サイズのメモリ割り当てを行うこと', FALSE, 1),
-    (gen_random_uuid(), q_id, 'メモリの空き領域が分散すること', FALSE, 2),
-    (gen_random_uuid(), q_id, '固定サイズのブロック割り当てで使用量よりブロックが大きいこと', TRUE, 3),
-    (gen_random_uuid(), q_id, 'ディスクのセクタサイズが不均一であること', FALSE, 4);
+    (gen_random_uuid(), q_id, 'ラウンドロビンはスタベーションが発生するが、優先度ベースでは発生しない', FALSE, 1),
+    (gen_random_uuid(), q_id, '優先度ベースではスタベーションが起こりうるが、エージング技法で防止できる', TRUE, 2),
+    (gen_random_uuid(), q_id, 'ラウンドロビンは非プリエンプティブであり、実行中のプロセスは完了まで中断されない', FALSE, 3),
+    (gen_random_uuid(), q_id, '優先度ベースは常にラウンドロビンより応答時間が短い', FALSE, 4);
 
-  -- Q72: ベラディの異常
+  -- Q74: ファイルシステム：i-nodeの概念
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'ベラディの異常（Belady''s Anomaly）の説明として正しいものはどれか。', 'ベラディの異常はFIFOページ置換で、ページフレーム数を増やしたにもかかわらずページフォルト率が増加する現象です。LRUでは発生しません。', 1, 72, 'hard', 'os');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'UNIX系ファイルシステムにおけるi-node（アイノード）の説明として正しいものはどれか。', 'i-nodeはファイルのメタデータ（所有者、パーミッション、タイムスタンプ、データブロックへのポインタなど）を格納するデータ構造である。ファイル名はi-nodeには含まれず、ディレクトリエントリがファイル名とi-node番号の対応を保持する。ハードリンクは同じi-nodeを複数のディレクトリエントリから参照する仕組みである。', 1, 74, 'hard', 'os');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'LRUでページフレームを増やすとページフォルトが増える現象', FALSE, 1),
-    (gen_random_uuid(), q_id, 'FIFOでページフレームを増やしてもページフォルトが増えることがある現象', TRUE, 2),
-    (gen_random_uuid(), q_id, 'すべてのページ置換アルゴリズムで発生する現象', FALSE, 3),
-    (gen_random_uuid(), q_id, 'ページサイズを大きくするとフォルト率が上がる現象', FALSE, 4);
+    (gen_random_uuid(), q_id, 'ファイル名とファイルの内容データを直接格納するデータ構造である', FALSE, 1),
+    (gen_random_uuid(), q_id, 'ディレクトリの階層構造を表現するためのツリー構造である', FALSE, 2),
+    (gen_random_uuid(), q_id, 'ファイルのメタデータとデータブロックへのポインタを格納し、ファイル名は含まない', TRUE, 3),
+    (gen_random_uuid(), q_id, 'ファイルのバックアップ情報を保存するための補助構造である', FALSE, 4);
 
   -- ===== network - EASY (6) =====
 
@@ -2695,65 +2725,65 @@ BEGIN
 
   -- ===== network - HARD (6) =====
 
-  -- Q85: ロードバランシング
+-- Q81: TCPフロー制御（スライディングウィンドウ）
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'L7ロードバランサーがL4ロードバランサーと異なる点として正しいものはどれか。', 'L7ロードバランサーはアプリケーション層で動作し、HTTPヘッダーやURLパスなどの内容に基づいてルーティングできます。L4はトランスポート層でIPとポートに基づきます。', 1, 85, 'hard', 'network');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'TCPのフロー制御におけるスライディングウィンドウ方式に関する説明として正しいものはどれか。', 'スライディングウィンドウ方式では、受信側がウィンドウサイズを通知し、送信側はACKを待たずにウィンドウサイズ分のデータを連続送信できる。受信側のバッファがいっぱいになるとウィンドウサイズを0に設定して送信を停止させる。これにより受信側の処理能力に合わせた送信制御が実現される。', 1, 81, 'hard', 'network');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'IPアドレスとポート番号のみに基づいて振り分ける', FALSE, 1),
-    (gen_random_uuid(), q_id, 'HTTPヘッダーやURLパスなどアプリケーション層の情報で振り分けられる', TRUE, 2),
-    (gen_random_uuid(), q_id, 'MACアドレスに基づいて振り分ける', FALSE, 3),
-    (gen_random_uuid(), q_id, 'L4より処理速度が常に速い', FALSE, 4);
+    (gen_random_uuid(), q_id, '送信側がウィンドウサイズを一方的に決定し、受信側はそれに従う', FALSE, 1),
+    (gen_random_uuid(), q_id, '各セグメントごとにACKを受信してから次のセグメントを送信するストップアンドウェイト方式である', FALSE, 2),
+    (gen_random_uuid(), q_id, '受信側が通知するウィンドウサイズに基づき、ACKを待たずに複数セグメントを連続送信できる', TRUE, 3),
+    (gen_random_uuid(), q_id, 'ウィンドウサイズは接続確立時に固定され、通信中は変更できない', FALSE, 4);
 
-  -- Q86: NAT
+  -- Q82: DNS再帰クエリと反復クエリ
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'NAT（Network Address Translation）の主な目的として正しいものはどれか。', 'NATはプライベートIPアドレスをグローバルIPアドレスに変換することで、限られたIPv4アドレスを共有し、内部ネットワークを外部から隠蔽します。', 1, 86, 'hard', 'network');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'DNSにおける再帰クエリと反復クエリの違いとして正しいものはどれか。', '再帰クエリでは、クライアントがDNSサーバに問い合わせると、そのサーバが他のDNSサーバに代理で問い合わせを行い、最終的な回答を返す。反復クエリでは、問い合わせを受けたDNSサーバは自分が知っている範囲で回答し、知らない場合は次に問い合わせるべきサーバのアドレスを返す。通常、クライアントからキャッシュDNSサーバへは再帰クエリ、キャッシュDNSサーバから権威サーバへは反復クエリが使われる。', 1, 82, 'hard', 'network');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'データの暗号化を行う', FALSE, 1),
-    (gen_random_uuid(), q_id, 'ドメイン名を解決する', FALSE, 2),
-    (gen_random_uuid(), q_id, 'プライベートIPをグローバルIPに変換しアドレスを共有する', TRUE, 3),
-    (gen_random_uuid(), q_id, 'パケットの順序制御を行う', FALSE, 4);
+    (gen_random_uuid(), q_id, '再帰クエリではサーバが代理で最終回答を取得し、反復クエリでは次に問い合わせるべきサーバを返す', TRUE, 1),
+    (gen_random_uuid(), q_id, '再帰クエリは次の問い合わせ先を返し、反復クエリはサーバが代理で回答を取得する', FALSE, 2),
+    (gen_random_uuid(), q_id, '両方とも同じ動作であり、名称が異なるだけである', FALSE, 3),
+    (gen_random_uuid(), q_id, '再帰クエリはUDPでのみ使用され、反復クエリはTCPでのみ使用される', FALSE, 4);
 
-  -- Q87: WebSocket
+  -- Q83: VPNトンネリングの概念
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'WebSocketの特徴として正しいものはどれか。', 'WebSocketはHTTPのアップグレード機構で接続を確立した後、全二重通信（双方向同時通信）を低オーバーヘッドで行えます。', 1, 87, 'hard', 'network');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'VPN（Virtual Private Network）のトンネリングに関する説明として正しいものはどれか。', 'VPNトンネリングは、パケットを別のプロトコルのパケットにカプセル化して、公衆ネットワーク上で暗号化された仮想的な専用通信路を構築する技術である。IPsecやSSL/TLSなどのプロトコルが使用される。トンネリングにより、元のパケットのヘッダ情報も暗号化できるため、通信内容と通信経路の双方を保護できる。', 1, 83, 'hard', 'network');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'リクエスト・レスポンス型の半二重通信のみ行える', FALSE, 1),
-    (gen_random_uuid(), q_id, 'UDPの上で動作する軽量プロトコルである', FALSE, 2),
-    (gen_random_uuid(), q_id, '全二重通信が可能でサーバーからクライアントへもリアルタイムに送信できる', TRUE, 3),
-    (gen_random_uuid(), q_id, '毎回のメッセージにHTTPヘッダーが付与される', FALSE, 4);
+    (gen_random_uuid(), q_id, '物理的な専用回線を敷設してプライベートネットワークを構築する技術である', FALSE, 1),
+    (gen_random_uuid(), q_id, 'パケットをカプセル化し、公衆ネットワーク上に暗号化された仮想専用通信路を構築する技術である', TRUE, 2),
+    (gen_random_uuid(), q_id, 'LANスイッチのVLAN機能を用いてネットワークを論理的に分割する技術である', FALSE, 3),
+    (gen_random_uuid(), q_id, 'DNSサーバを経由してトラフィックをリダイレクトする匿名化技術である', FALSE, 4);
 
-  -- Q88: CDN
+  -- Q84: ファイアウォールの種類
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'CDN（Content Delivery Network）の主な利点として正しいものはどれか。', 'CDNは世界各地に分散したエッジサーバーにコンテンツをキャッシュし、ユーザーに最も近いサーバーから配信することで遅延を低減します。', 1, 88, 'hard', 'network');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'ファイアウォールの種類に関する説明として正しいものはどれか。', 'パケットフィルタリング型はIPアドレスやポート番号でパケットを検査する。ステートフルインスペクション型は通信の状態を追跡し、確立されたセッションに基づいて判断する。アプリケーションゲートウェイ型（プロキシ型）はアプリケーション層でデータ内容を検査できるが、処理負荷が大きい。', 1, 84, 'hard', 'network');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'データベースのクエリを最適化する', FALSE, 1),
-    (gen_random_uuid(), q_id, 'サーバーサイドのコード実行を高速化する', FALSE, 2),
-    (gen_random_uuid(), q_id, 'SSL証明書の発行を自動化する', FALSE, 3),
-    (gen_random_uuid(), q_id, '地理的に分散したサーバーからコンテンツを配信し遅延を低減する', TRUE, 4);
+    (gen_random_uuid(), q_id, 'パケットフィルタリング型はアプリケーション層のデータ内容まで検査できる', FALSE, 1),
+    (gen_random_uuid(), q_id, 'ステートフルインスペクション型は通信の状態を追跡せず、個々のパケットを独立に判断する', FALSE, 2),
+    (gen_random_uuid(), q_id, 'アプリケーションゲートウェイ型は処理負荷が小さく、最も高速なファイアウォールである', FALSE, 3),
+    (gen_random_uuid(), q_id, 'ステートフルインスペクション型は通信状態を追跡し、アプリケーションゲートウェイ型はデータ内容を検査できる', TRUE, 4);
 
-  -- Q89: REST vs GraphQL
+  -- Q85: HTTPS/TLSハンドシェイクの概要
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'GraphQLがRESTと比較して優れている点として正しいものはどれか。', 'GraphQLではクライアントが必要なデータのみを指定して取得でき、REST APIで起こりがちなオーバーフェッチ（不要データの取得）を防げます。', 1, 89, 'hard', 'network');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'HTTPS通信におけるTLSハンドシェイクの流れとして正しいものはどれか。', 'TLSハンドシェイクでは、まずクライアントがClientHelloで対応する暗号スイートを提示し、サーバがServerHelloで暗号スイートを選択してサーバ証明書を送信する。クライアントは証明書を検証し、共通鍵の素材を交換する。最終的に双方が共通鍵（セッション鍵）を生成し、以降の通信を共通鍵暗号で暗号化する。', 1, 85, 'hard', 'network');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'キャッシュが容易でパフォーマンスが常に良い', FALSE, 1),
-    (gen_random_uuid(), q_id, 'クライアントが必要なデータのみを指定して取得できオーバーフェッチを防げる', TRUE, 2),
-    (gen_random_uuid(), q_id, 'HTTPメソッドの使い分けが明確で直感的である', FALSE, 3),
-    (gen_random_uuid(), q_id, 'サーバー側の実装が常にシンプルになる', FALSE, 4);
+    (gen_random_uuid(), q_id, 'サーバが最初にClientHelloを送信し、クライアントがServerHelloで応答する', FALSE, 1),
+    (gen_random_uuid(), q_id, '通信全体を公開鍵暗号で暗号化するため、共通鍵の生成は行わない', FALSE, 2),
+    (gen_random_uuid(), q_id, 'クライアントがClientHelloを送信後、サーバ証明書の検証と鍵交換を経て共通鍵を生成する', TRUE, 3),
+    (gen_random_uuid(), q_id, 'ハンドシェイクではクライアント証明書が必須であり、双方の証明書交換が常に行われる', FALSE, 4);
 
-  -- Q90: ファイアウォール
+  -- Q86: NATとポートフォワーディングの概念
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'ステートフルインスペクション型ファイアウォールの特徴として正しいものはどれか。', 'ステートフルインスペクションは通信の状態（コネクションの確立状況など）を追跡し、その文脈に基づいてパケットの許可・拒否を判断します。', 1, 90, 'hard', 'network');
+  VALUES (q_id, 'a0000003-0000-0000-0000-000000000003', 'multiple_choice', 'NAT（Network Address Translation）とポートフォワーディングに関する説明として正しいものはどれか。', 'NATはプライベートIPアドレスとグローバルIPアドレスを相互に変換する技術で、IPv4アドレスの枯渇対策として広く使われている。NAPT（IPマスカレード）ではポート番号も変換することで、1つのグローバルIPで複数の端末が同時にインターネット接続できる。ポートフォワーディングは外部からの特定ポートへの通信を内部の特定ホストに転送する設定である。', 1, 86, 'hard', 'network');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'パケットのヘッダー情報のみで判断する', FALSE, 1),
-    (gen_random_uuid(), q_id, 'アプリケーション層のデータ内容を解析する', FALSE, 2),
-    (gen_random_uuid(), q_id, '通信の状態を追跡しコネクションの文脈に基づいて判断する', TRUE, 3),
-    (gen_random_uuid(), q_id, 'すべてのパケットを暗号化して転送する', FALSE, 4);
+    (gen_random_uuid(), q_id, 'NATはIPv6で導入された技術であり、IPv4環境では使用されない', FALSE, 1),
+    (gen_random_uuid(), q_id, 'NAPTでは1つのグローバルIPで1台の端末しかインターネット接続できない', FALSE, 2),
+    (gen_random_uuid(), q_id, 'ポートフォワーディングはLAN内のすべての端末に対して同じポートを開放する仕組みである', FALSE, 3),
+    (gen_random_uuid(), q_id, 'NAPTはポート番号も変換して複数端末の同時接続を実現し、ポートフォワーディングは外部通信を内部の特定ホストに転送する', TRUE, 4);
 
 END $$;
 
@@ -3606,6 +3636,640 @@ BEGIN
     (gen_random_uuid(), q_id, '現在の行から指定した行数だけ後の行の値を取得する', FALSE, 2),
     (gen_random_uuid(), q_id, 'パーティション内の最初の行の値を取得する', FALSE, 3),
     (gen_random_uuid(), q_id, 'パーティション内の最後の行の値を取得する', FALSE, 4);
+
+END $$;
+
+-- ============================================
+-- Quiz 4 追加: Javaコード出力問題 (30 questions)
+-- Category: java_code
+-- sort_order: 91-120
+-- ============================================
+DO $$
+DECLARE q_id UUID;
+BEGIN
+
+  -- ===== java_code - EASY (10) =====
+
+  -- Q91: 基本的な算術演算
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\npublic class Main {\n  public static void main(String[] args) {\n    int x = 10;\n    System.out.println(x + 5);\n  }\n}', '変数xに10が代入され、x + 5 = 15が計算されてprintlnで出力される。int同士の加算なので数値の加算となる。', 1, 91, 'easy', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '10', FALSE, 1),
+    (gen_random_uuid(), q_id, '15', TRUE, 4),
+    (gen_random_uuid(), q_id, '105', FALSE, 2),
+    (gen_random_uuid(), q_id, 'コンパイルエラー', FALSE, 3);
+
+  -- Q92: 文字列結合
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\npublic class Main {\n  public static void main(String[] args) {\n    String s = "Hello";\n    System.out.println(s + " World");\n  }\n}', 'String同士の+演算子は文字列結合を行う。"Hello"と" World"が結合され"Hello World"が出力される。', 1, 92, 'easy', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'Hello World', TRUE, 4),
+    (gen_random_uuid(), q_id, 'HelloWorld', FALSE, 3),
+    (gen_random_uuid(), q_id, 'Hello + World', FALSE, 1),
+    (gen_random_uuid(), q_id, 'コンパイルエラー', FALSE, 2);
+
+  -- Q93: int型のキャスト（小数の切り捨て）
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\npublic class Main {\n  public static void main(String[] args) {\n    double d = 9.7;\n    int n = (int) d;\n    System.out.println(n);\n  }\n}', 'double型からint型へのキャストは小数部分を切り捨てる（四捨五入ではない）。9.7の小数部分が切り捨てられ9が出力される。', 1, 93, 'easy', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '10', FALSE, 3),
+    (gen_random_uuid(), q_id, '9.7', FALSE, 4),
+    (gen_random_uuid(), q_id, '9', TRUE, 2),
+    (gen_random_uuid(), q_id, 'コンパイルエラー', FALSE, 1);
+
+  -- Q94: if-else文
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\npublic class Main {\n  public static void main(String[] args) {\n    int a = 3;\n    if (a > 5) {\n      System.out.println("big");\n    } else {\n      System.out.println("small");\n    }\n  }\n}', 'a = 3であり、3 > 5はfalseなのでelseブロックが実行され"small"が出力される。', 1, 94, 'easy', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'big', FALSE, 4),
+    (gen_random_uuid(), q_id, 'small', TRUE, 2),
+    (gen_random_uuid(), q_id, 'bigsmall', FALSE, 1),
+    (gen_random_uuid(), q_id, '何も出力されない', FALSE, 3);
+
+  -- Q95: forループの出力
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\npublic class Main {\n  public static void main(String[] args) {\n    String result = "";\n    for (int i = 0; i < 3; i++) {\n      result += i;\n    }\n    System.out.println(result);\n  }\n}', 'ループでiは0, 1, 2と変化する。Stringに+=でintを結合すると文字列結合になるため、"" + 0 + 1 + 2 = "012"が出力される。', 1, 95, 'easy', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '3', FALSE, 4),
+    (gen_random_uuid(), q_id, '012', TRUE, 1),
+    (gen_random_uuid(), q_id, '123', FALSE, 2),
+    (gen_random_uuid(), q_id, '0 1 2', FALSE, 3);
+
+  -- Q96: 配列アクセス
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\npublic class Main {\n  public static void main(String[] args) {\n    int[] arr = {10, 20, 30, 40};\n    System.out.println(arr[2]);\n  }\n}', '配列のインデックスは0から始まる。arr[0]=10, arr[1]=20, arr[2]=30なので、arr[2]は30が出力される。', 1, 96, 'easy', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '20', FALSE, 3),
+    (gen_random_uuid(), q_id, '40', FALSE, 2),
+    (gen_random_uuid(), q_id, '30', TRUE, 1),
+    (gen_random_uuid(), q_id, 'ArrayIndexOutOfBoundsException', FALSE, 4);
+
+  -- Q97: メソッド呼び出し
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\npublic class Main {\n  static int add(int a, int b) {\n    return a + b;\n  }\n  public static void main(String[] args) {\n    System.out.println(add(3, 7));\n  }\n}', 'addメソッドに3と7を渡すと、3 + 7 = 10が返される。その値がprintlnで出力される。', 1, 97, 'easy', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '10', TRUE, 4),
+    (gen_random_uuid(), q_id, '37', FALSE, 1),
+    (gen_random_uuid(), q_id, '0', FALSE, 3),
+    (gen_random_uuid(), q_id, 'コンパイルエラー', FALSE, 2);
+
+  -- Q98: Stringのlength()メソッド
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\npublic class Main {\n  public static void main(String[] args) {\n    String s = "Java";\n    System.out.println(s.length());\n  }\n}', 'String.length()は文字列の文字数を返す。"Java"は4文字なので4が出力される。', 1, 98, 'easy', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '3', FALSE, 1),
+    (gen_random_uuid(), q_id, '5', FALSE, 3),
+    (gen_random_uuid(), q_id, 'コンパイルエラー', FALSE, 4),
+    (gen_random_uuid(), q_id, '4', TRUE, 2);
+
+  -- Q99: 三項演算子
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\npublic class Main {\n  public static void main(String[] args) {\n    int x = 8;\n    String result = (x % 2 == 0) ? "even" : "odd";\n    System.out.println(result);\n  }\n}', 'x = 8、8 % 2 = 0なので条件は true。三項演算子により"even"がresultに代入され出力される。', 1, 99, 'easy', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'odd', FALSE, 1),
+    (gen_random_uuid(), q_id, 'even', TRUE, 3),
+    (gen_random_uuid(), q_id, '0', FALSE, 2),
+    (gen_random_uuid(), q_id, 'true', FALSE, 4);
+
+  -- Q100: 前置・後置インクリメント
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\npublic class Main {\n  public static void main(String[] args) {\n    int a = 5;\n    int b = a++;\n    int c = ++a;\n    System.out.println(b + " " + c);\n  }\n}', 'a++ は後置インクリメント。b に現在の a の値5が代入された後、a が6になる。++a は前置インクリメント。a が7になった後、c に7が代入される。結果は"5 7"。', 1, 100, 'easy', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '5 6', FALSE, 2),
+    (gen_random_uuid(), q_id, '6 7', FALSE, 4),
+    (gen_random_uuid(), q_id, '5 7', TRUE, 1),
+    (gen_random_uuid(), q_id, '6 8', FALSE, 3);
+
+  -- ===== java_code - MEDIUM (10) =====
+
+  -- Q101: ArrayListの操作
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\nimport java.util.ArrayList;\npublic class Main {\n  public static void main(String[] args) {\n    ArrayList<String> list = new ArrayList<>();\n    list.add("A");\n    list.add("B");\n    list.add("C");\n    list.remove(1);\n    System.out.println(list);\n  }\n}', 'list.remove(1)はインデックス1の要素"B"を削除する。残りは["A", "C"]となり、ArrayListのtoString()で[A, C]が出力される。', 2, 101, 'medium', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '[A, B]', FALSE, 1),
+    (gen_random_uuid(), q_id, '[A, C]', TRUE, 2),
+    (gen_random_uuid(), q_id, '[B, C]', FALSE, 3),
+    (gen_random_uuid(), q_id, '[A, B, C]', FALSE, 4);
+
+  -- Q102: 継承とポリモーフィズム
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\nclass Animal {\n  String speak() { return "..."; }\n}\nclass Dog extends Animal {\n  String speak() { return "Woof"; }\n}\npublic class Main {\n  public static void main(String[] args) {\n    Animal a = new Dog();\n    System.out.println(a.speak());\n  }\n}', '変数の型はAnimalだが、実際のオブジェクトはDogである。メソッド呼び出しは実行時の型（Dog）で解決されるため、Dogのspeak()が呼ばれ"Woof"が出力される。これがポリモーフィズムである。', 2, 102, 'medium', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '...', FALSE, 2),
+    (gen_random_uuid(), q_id, 'コンパイルエラー', FALSE, 4),
+    (gen_random_uuid(), q_id, 'Woof', TRUE, 3),
+    (gen_random_uuid(), q_id, 'null', FALSE, 1);
+
+  -- Q103: インターフェースの動作
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\ninterface Greeter {\n  default String greet() { return "Hello"; }\n}\nclass JapaneseGreeter implements Greeter {\n  public String greet() { return "こんにちは"; }\n}\npublic class Main {\n  public static void main(String[] args) {\n    Greeter g = new JapaneseGreeter();\n    System.out.println(g.greet());\n  }\n}', 'JapaneseGreeterはGreeterインターフェースのdefaultメソッドgreet()をオーバーライドしている。実行時の型はJapaneseGreeterなので"こんにちは"が出力される。', 2, 103, 'medium', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'Hello', FALSE, 3),
+    (gen_random_uuid(), q_id, 'こんにちは', TRUE, 1),
+    (gen_random_uuid(), q_id, 'コンパイルエラー', FALSE, 2),
+    (gen_random_uuid(), q_id, 'null', FALSE, 4);
+
+  -- Q104: StringBuilderの操作
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\npublic class Main {\n  public static void main(String[] args) {\n    StringBuilder sb = new StringBuilder("Hello");\n    sb.append(" World");\n    sb.insert(5, ",");\n    System.out.println(sb);\n  }\n}', 'sb.append(" World")で"Hello World"になる。sb.insert(5, ",")はインデックス5の位置に","を挿入するので"Hello, World"が出力される。', 2, 104, 'medium', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'Hello World', FALSE, 1),
+    (gen_random_uuid(), q_id, 'Hello, World', TRUE, 2),
+    (gen_random_uuid(), q_id, ',Hello World', FALSE, 3),
+    (gen_random_uuid(), q_id, 'Hello ,World', FALSE, 4);
+
+  -- Q105: try-catch例外処理
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\npublic class Main {\n  public static void main(String[] args) {\n    try {\n      int[] arr = {1, 2, 3};\n      System.out.println(arr[5]);\n      System.out.println("OK");\n    } catch (ArrayIndexOutOfBoundsException e) {\n      System.out.println("Error");\n    } finally {\n      System.out.println("Done");\n    }\n  }\n}', 'arr[5]は配列の範囲外アクセスでArrayIndexOutOfBoundsExceptionが発生する。"OK"は実行されず、catchブロックで"Error"が出力される。finallyブロックは常に実行されるため"Done"も出力される。', 2, 105, 'medium', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'OK\nDone', FALSE, 2),
+    (gen_random_uuid(), q_id, 'Error', FALSE, 4),
+    (gen_random_uuid(), q_id, 'Error\nDone', TRUE, 1),
+    (gen_random_uuid(), q_id, 'コンパイルエラー', FALSE, 3);
+
+  -- Q106: HashMapの操作
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\nimport java.util.HashMap;\npublic class Main {\n  public static void main(String[] args) {\n    HashMap<String, Integer> map = new HashMap<>();\n    map.put("a", 1);\n    map.put("b", 2);\n    map.put("a", 3);\n    System.out.println(map.get("a"));\n  }\n}', 'HashMapでは同じキーに対してputすると値が上書きされる。キー"a"は最初1が設定され、その後3で上書きされるため、get("a")は3を返す。', 2, 106, 'medium', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '1', FALSE, 1),
+    (gen_random_uuid(), q_id, '2', FALSE, 3),
+    (gen_random_uuid(), q_id, 'コンパイルエラー', FALSE, 2),
+    (gen_random_uuid(), q_id, '3', TRUE, 4);
+
+  -- Q107: オートボクシング
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\npublic class Main {\n  public static void main(String[] args) {\n    Integer a = 127;\n    Integer b = 127;\n    Integer c = 128;\n    Integer d = 128;\n    System.out.println((a == b) + " " + (c == d));\n  }\n}', 'Javaでは-128から127までのIntegerオブジェクトはキャッシュされるため、a == bはtrue（同一オブジェクト）。128はキャッシュ範囲外なので新しいオブジェクトが生成され、c == dはfalse。', 2, 107, 'medium', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'true true', FALSE, 3),
+    (gen_random_uuid(), q_id, 'false false', FALSE, 2),
+    (gen_random_uuid(), q_id, 'true false', TRUE, 1),
+    (gen_random_uuid(), q_id, 'false true', FALSE, 4);
+
+  -- Q108: Stringの==比較とequals比較
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\npublic class Main {\n  public static void main(String[] args) {\n    String s1 = "Hello";\n    String s2 = new String("Hello");\n    System.out.println(s1 == s2);\n    System.out.println(s1.equals(s2));\n  }\n}', 's1はStringプール内のオブジェクトを参照し、s2はnewで生成された別のオブジェクト。==は参照比較なのでfalse。equals()は内容比較なのでtrue。', 2, 108, 'medium', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'true\ntrue', FALSE, 2),
+    (gen_random_uuid(), q_id, 'false\nfalse', FALSE, 4),
+    (gen_random_uuid(), q_id, 'false\ntrue', TRUE, 1),
+    (gen_random_uuid(), q_id, 'true\nfalse', FALSE, 3);
+
+  -- Q109: static変数
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\nclass Counter {\n  static int count = 0;\n  Counter() { count++; }\n}\npublic class Main {\n  public static void main(String[] args) {\n    new Counter();\n    new Counter();\n    new Counter();\n    System.out.println(Counter.count);\n  }\n}', 'static変数countはクラスに属し、すべてのインスタンスで共有される。コンストラクタが3回呼ばれるため、countは0→1→2→3となり、3が出力される。', 2, 109, 'medium', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '1', FALSE, 2),
+    (gen_random_uuid(), q_id, '0', FALSE, 3),
+    (gen_random_uuid(), q_id, '3', TRUE, 4),
+    (gen_random_uuid(), q_id, 'コンパイルエラー', FALSE, 1);
+
+  -- Q110: メソッドオーバーロード
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\npublic class Main {\n  static String greet(String name) {\n    return "Hello, " + name;\n  }\n  static String greet(String name, int times) {\n    return name + " x" + times;\n  }\n  public static void main(String[] args) {\n    System.out.println(greet("Java"));\n    System.out.println(greet("Java", 3));\n  }\n}', 'メソッドオーバーロードにより引数の数で呼び出すメソッドが決まる。greet("Java")は1引数版で"Hello, Java"、greet("Java", 3)は2引数版で"Java x3"が出力される。', 2, 110, 'medium', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'Hello, Java\nJava x3', TRUE, 4),
+    (gen_random_uuid(), q_id, 'Hello, Java\nHello, Java', FALSE, 2),
+    (gen_random_uuid(), q_id, 'コンパイルエラー', FALSE, 1),
+    (gen_random_uuid(), q_id, 'Hello, Java\nJava x 3', FALSE, 3);
+
+  -- ===== java_code - HARD (10) =====
+
+  -- Q111: ジェネリクス
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\nclass Box<T> {\n  private T value;\n  Box(T value) { this.value = value; }\n  T get() { return value; }\n}\npublic class Main {\n  public static void main(String[] args) {\n    Box<Integer> box = new Box<>(42);\n    System.out.println(box.get() + 8);\n  }\n}', 'Box<Integer>のget()はInteger型の42を返す。42 + 8はアンボクシングされて50が計算され出力される。', 3, 111, 'hard', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '42', FALSE, 2),
+    (gen_random_uuid(), q_id, '50', TRUE, 4),
+    (gen_random_uuid(), q_id, '428', FALSE, 1),
+    (gen_random_uuid(), q_id, 'コンパイルエラー', FALSE, 3);
+
+  -- Q112: ラムダ式
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\nimport java.util.function.Function;\npublic class Main {\n  public static void main(String[] args) {\n    Function<Integer, Integer> square = x -> x * x;\n    Function<Integer, Integer> doubleIt = x -> x * 2;\n    System.out.println(square.andThen(doubleIt).apply(3));\n  }\n}', 'andThenは最初の関数の結果を次の関数に渡す。square.apply(3) = 9、次にdoubleIt.apply(9) = 18。結果は18が出力される。', 3, 112, 'hard', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '12', FALSE, 2),
+    (gen_random_uuid(), q_id, '36', FALSE, 1),
+    (gen_random_uuid(), q_id, '18', TRUE, 3),
+    (gen_random_uuid(), q_id, '9', FALSE, 4);
+
+  -- Q113: Stream APIの出力
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\nimport java.util.Arrays;\nimport java.util.List;\nimport java.util.stream.Collectors;\npublic class Main {\n  public static void main(String[] args) {\n    List<Integer> nums = Arrays.asList(1, 2, 3, 4, 5);\n    List<Integer> result = nums.stream()\n      .filter(n -> n % 2 == 0)\n      .map(n -> n * 10)\n      .collect(Collectors.toList());\n    System.out.println(result);\n  }\n}', 'filter(n -> n % 2 == 0)で偶数2, 4が残る。map(n -> n * 10)で20, 40に変換される。結果は[20, 40]が出力される。', 3, 113, 'hard', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '[10, 20, 30, 40, 50]', FALSE, 4),
+    (gen_random_uuid(), q_id, '[2, 4]', FALSE, 1),
+    (gen_random_uuid(), q_id, '[20, 40]', TRUE, 2),
+    (gen_random_uuid(), q_id, '[10, 30, 50]', FALSE, 3);
+
+  -- Q114: スレッドの基本動作
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードについて正しい説明はどれか。\n\npublic class Main {\n  public static void main(String[] args) {\n    Runnable task = () -> System.out.println("Task");\n    Thread t = new Thread(task);\n    t.start();\n    System.out.println("Main");\n  }\n}', 't.start()は新しいスレッドを開始するが、mainスレッドは並行して実行を続ける。"Task"と"Main"の出力順序はスレッドスケジューリングに依存するため不定である。', 3, 114, 'hard', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '必ず"Task"が先に出力される', FALSE, 2),
+    (gen_random_uuid(), q_id, '必ず"Main"が先に出力される', FALSE, 3),
+    (gen_random_uuid(), q_id, '"Task"と"Main"の出力順序は不定', TRUE, 1),
+    (gen_random_uuid(), q_id, 'コンパイルエラーが発生する', FALSE, 4);
+
+  -- Q115: 内部クラス
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\npublic class Main {\n  private String msg = "Outer";\n  class Inner {\n    private String msg = "Inner";\n    void print() {\n      System.out.println(this.msg);\n      System.out.println(Main.this.msg);\n    }\n  }\n  public static void main(String[] args) {\n    Main outer = new Main();\n    Main.Inner inner = outer.new Inner();\n    inner.print();\n  }\n}', 'this.msgは内部クラスのフィールド"Inner"を参照する。Main.this.msgは外部クラスのフィールド"Outer"を参照する。結果は"Inner"と"Outer"が順に出力される。', 3, 115, 'hard', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'Outer\nOuter', FALSE, 3),
+    (gen_random_uuid(), q_id, 'Inner\nInner', FALSE, 4),
+    (gen_random_uuid(), q_id, 'コンパイルエラー', FALSE, 1),
+    (gen_random_uuid(), q_id, 'Inner\nOuter', TRUE, 2);
+
+  -- Q116: enumの動作
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\nenum Color {\n  RED(1), GREEN(2), BLUE(3);\n  private final int code;\n  Color(int code) { this.code = code; }\n  int getCode() { return code; }\n}\npublic class Main {\n  public static void main(String[] args) {\n    System.out.println(Color.GREEN.getCode());\n    System.out.println(Color.BLUE.name());\n  }\n}', 'Color.GREEN.getCode()はGREENに関連付けられたcode値2を返す。Color.BLUE.name()はenum定数の名前を文字列で返すので"BLUE"が出力される。', 3, 116, 'hard', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '2\nBLUE', TRUE, 2),
+    (gen_random_uuid(), q_id, '1\nGREEN', FALSE, 4),
+    (gen_random_uuid(), q_id, 'GREEN\n2', FALSE, 1),
+    (gen_random_uuid(), q_id, 'コンパイルエラー', FALSE, 3);
+
+  -- Q117: Collections.sortとComparator
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\nimport java.util.*;\npublic class Main {\n  public static void main(String[] args) {\n    List<String> list = new ArrayList<>(Arrays.asList("Banana", "Apple", "Cherry"));\n    Collections.sort(list, (a, b) -> b.compareTo(a));\n    System.out.println(list);\n  }\n}', 'Comparatorで(a, b) -> b.compareTo(a)は逆順（降順）ソートを意味する。文字列の自然順序はApple < Banana < Cherryなので、降順にするとCherry, Banana, Appleとなる。', 3, 117, 'hard', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '[Apple, Banana, Cherry]', FALSE, 2),
+    (gen_random_uuid(), q_id, '[Cherry, Banana, Apple]', TRUE, 3),
+    (gen_random_uuid(), q_id, '[Banana, Apple, Cherry]', FALSE, 4),
+    (gen_random_uuid(), q_id, 'コンパイルエラー', FALSE, 1);
+
+  -- Q118: 関数型インターフェース
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\nimport java.util.function.Predicate;\npublic class Main {\n  public static void main(String[] args) {\n    Predicate<String> isEmpty = String::isEmpty;\n    Predicate<String> notEmpty = isEmpty.negate();\n    System.out.println(isEmpty.test(""));\n    System.out.println(notEmpty.test("Hello"));\n  }\n}', 'isEmpty.test("")は空文字列なのでtrue。notEmptyはisEmptyの否定なので、notEmpty.test("Hello")は「"Hello"が空でない」を意味しtrue。', 3, 118, 'hard', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'true\nfalse', FALSE, 4),
+    (gen_random_uuid(), q_id, 'false\ntrue', FALSE, 2),
+    (gen_random_uuid(), q_id, 'true\ntrue', TRUE, 3),
+    (gen_random_uuid(), q_id, 'false\nfalse', FALSE, 1);
+
+  -- Q119: Stream reduceの動作
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\nimport java.util.Arrays;\nimport java.util.List;\npublic class Main {\n  public static void main(String[] args) {\n    List<Integer> nums = Arrays.asList(1, 2, 3, 4, 5);\n    int sum = nums.stream()\n      .reduce(0, (a, b) -> a + b);\n    System.out.println(sum);\n  }\n}', 'reduceは初期値0から始め、各要素を累積的に加算する。0+1=1, 1+2=3, 3+3=6, 6+4=10, 10+5=15。結果は15が出力される。', 3, 119, 'hard', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '10', FALSE, 1),
+    (gen_random_uuid(), q_id, '15', TRUE, 3),
+    (gen_random_uuid(), q_id, '120', FALSE, 4),
+    (gen_random_uuid(), q_id, '0', FALSE, 2);
+
+  -- Q120: 型消去のエッジケース
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaコードの出力は何か。\n\nimport java.util.*;\npublic class Main {\n  public static void main(String[] args) {\n    List<String> strList = new ArrayList<>();\n    List<Integer> intList = new ArrayList<>();\n    System.out.println(strList.getClass() == intList.getClass());\n    System.out.println(strList.getClass().getName());\n  }\n}', 'Javaのジェネリクスは型消去（type erasure）によりコンパイル時にのみ有効で、実行時にはArrayListとなる。そのため両方のgetClass()はjava.util.ArrayListを返し、==比較はtrue。getName()は"java.util.ArrayList"を返す。', 3, 120, 'hard', 'java_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'false\njava.util.ArrayList', FALSE, 1),
+    (gen_random_uuid(), q_id, 'true\njava.util.List', FALSE, 4),
+    (gen_random_uuid(), q_id, 'コンパイルエラー', FALSE, 2),
+    (gen_random_uuid(), q_id, 'true\njava.util.ArrayList', TRUE, 3);
+
+END $$;
+
+-- ============================================
+-- Quiz 4 追加: JavaScriptコード出力問題 (30 questions)
+-- Category: javascript_code
+-- sort_order: 121-150
+-- ============================================
+DO $$
+DECLARE q_id UUID;
+BEGIN
+
+  -- ===== javascript_code - EASY (10) =====
+
+  -- Q121: typeof null
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconsole.log(typeof null);', 'typeof nullは歴史的なバグにより"object"を返す。これはJavaScript初期の実装上の誤りだが、互換性のため仕様として残されている。', 1, 121, 'easy', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '"null"', FALSE, 1),
+    (gen_random_uuid(), q_id, '"undefined"', FALSE, 2),
+    (gen_random_uuid(), q_id, '"string"', FALSE, 3),
+    (gen_random_uuid(), q_id, '"object"', TRUE, 4);
+
+  -- Q122: 文字列と数値の+演算子
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconsole.log("5" + 3);', '+演算子の片方が文字列の場合、もう片方も文字列に変換されて結合される。"5" + 3は"5" + "3"となり"53"が出力される。', 1, 122, 'easy', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '"53"', TRUE, 1),
+    (gen_random_uuid(), q_id, '8', FALSE, 2),
+    (gen_random_uuid(), q_id, 'NaN', FALSE, 3),
+    (gen_random_uuid(), q_id, 'エラーが発生する', FALSE, 4);
+
+  -- Q123: テンプレートリテラルの式評価
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconst a = 3;\nconst b = 4;\nconsole.log(`${a + b} = ${a} + ${b}`);', 'テンプレートリテラル内の${...}は式として評価される。${a + b}は7に、${a}は3に、${b}は4に評価され、"7 = 3 + 4"が出力される。', 1, 123, 'easy', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '"3 + 4 = 3 + 4"', FALSE, 1),
+    (gen_random_uuid(), q_id, '"7 = 7"', FALSE, 2),
+    (gen_random_uuid(), q_id, '"7 = 3 + 4"', TRUE, 3),
+    (gen_random_uuid(), q_id, 'SyntaxError', FALSE, 4);
+
+  -- Q124: 配列のlengthと疎な配列
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconst arr = [1, , 3];\nconsole.log(arr.length);', '配列[1, , 3]はインデックス1が空（hole）の疎な配列である。しかしlengthは最大インデックス+1で計算されるため、3が返される。', 1, 124, 'easy', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '2', FALSE, 1),
+    (gen_random_uuid(), q_id, '4', FALSE, 2),
+    (gen_random_uuid(), q_id, 'エラーが発生する', FALSE, 3),
+    (gen_random_uuid(), q_id, '3', TRUE, 4);
+
+  -- Q125: if/elseと型変換
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nif ("") {\n  console.log("A");\n} else if (0) {\n  console.log("B");\n} else if ("0") {\n  console.log("C");\n} else {\n  console.log("D");\n}', '空文字列""と数値0はfalsyな値である。文字列"0"は空でない文字列なのでtruthyである。最初にtruthyと判定される"0"の条件でCが出力される。', 1, 125, 'easy', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'A', FALSE, 1),
+    (gen_random_uuid(), q_id, 'B', FALSE, 2),
+    (gen_random_uuid(), q_id, 'D', FALSE, 3),
+    (gen_random_uuid(), q_id, 'C', TRUE, 4);
+
+  -- Q126: forループの合計
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nlet sum = 0;\nfor (let i = 1; i <= 4; i++) {\n  sum += i;\n}\nconsole.log(sum);', 'ループはi=1,2,3,4で実行される。sum = 0 + 1 + 2 + 3 + 4 = 10が出力される。', 1, 126, 'easy', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '4', FALSE, 1),
+    (gen_random_uuid(), q_id, '10', TRUE, 2),
+    (gen_random_uuid(), q_id, '15', FALSE, 3),
+    (gen_random_uuid(), q_id, '0', FALSE, 4);
+
+  -- Q127: parseIntの先頭パース
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconsole.log(parseInt("42abc"));', 'parseInt()は文字列の先頭から数値として解釈できる部分までを変換する。"42abc"の先頭"42"が数値に変換され42が返される。', 1, 127, 'easy', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'NaN', FALSE, 1),
+    (gen_random_uuid(), q_id, '42', TRUE, 2),
+    (gen_random_uuid(), q_id, '42abc', FALSE, 3),
+    (gen_random_uuid(), q_id, 'エラーが発生する', FALSE, 4);
+
+  -- Q128: Math.floorの負の数
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconsole.log(Math.floor(-2.3));', 'Math.floor()は引数以下の最大の整数を返す（負の無限大方向への切り捨て）。-2.3以下の最大整数は-3である。-2ではない点に注意。', 1, 128, 'easy', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '-3', TRUE, 1),
+    (gen_random_uuid(), q_id, '-2', FALSE, 2),
+    (gen_random_uuid(), q_id, '-2.0', FALSE, 3),
+    (gen_random_uuid(), q_id, 'NaN', FALSE, 4);
+
+  -- Q129: ==と===の違い
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconsole.log(null == undefined, null === undefined);', 'null == undefinedはtrue（仕様でnullとundefinedは緩い等価で等しいと定義されている）。null === undefinedはfalse（型が異なるため）。', 1, 129, 'easy', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'true true', FALSE, 1),
+    (gen_random_uuid(), q_id, 'false false', FALSE, 2),
+    (gen_random_uuid(), q_id, 'true false', TRUE, 3),
+    (gen_random_uuid(), q_id, 'false true', FALSE, 4);
+
+  -- Q130: Boolean変換とfalsyな値
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconst str = "hello";\nstr.toUpperCase();\nconsole.log(str);', '文字列はJavaScriptでイミュータブル（不変）である。toUpperCase()は新しい文字列を返すが、戻り値を変数に代入していないため、元のstrは変更されずそのまま出力される。', 1, 130, 'easy', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '"hello"', TRUE, 1),
+    (gen_random_uuid(), q_id, '"HELLO"', FALSE, 2),
+    (gen_random_uuid(), q_id, 'undefined', FALSE, 3),
+    (gen_random_uuid(), q_id, '"Hello"', FALSE, 4);
+
+  -- ===== javascript_code - MEDIUM (10) =====
+
+  -- Q131: クロージャ
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nfunction outer() {\n  let count = 0;\n  return function() {\n    count++;\n    return count;\n  };\n}\nconst fn = outer();\nconsole.log(fn(), fn(), fn());', 'クロージャにより内部関数はouter()のcount変数への参照を保持する。fn()を呼ぶたびにcountがインクリメントされ、1, 2, 3が順に返される。', 1, 131, 'medium', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '0 1 2', FALSE, 1),
+    (gen_random_uuid(), q_id, '1 1 1', FALSE, 2),
+    (gen_random_uuid(), q_id, 'NaN NaN NaN', FALSE, 3),
+    (gen_random_uuid(), q_id, '1 2 3', TRUE, 4);
+
+  -- Q132: Array.mapとparseIntの罠
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconst result = ["1", "2", "3"].map(parseInt);\nconsole.log(result);', 'map()はコールバックに(value, index, array)を渡す。parseInt("1", 0)=1（基数0は10として扱われる）、parseInt("2", 1)=NaN（基数1は無効）、parseInt("3", 2)=NaN（2進数に3は存在しない）。', 1, 132, 'medium', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '[1, NaN, NaN]', TRUE, 1),
+    (gen_random_uuid(), q_id, '[1, 2, 3]', FALSE, 2),
+    (gen_random_uuid(), q_id, '[NaN, NaN, NaN]', FALSE, 3),
+    (gen_random_uuid(), q_id, '["1", "2", "3"]', FALSE, 4);
+
+  -- Q133: Array.reduceの合計
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconst nums = [1, 2, 3, 4];\nconst sum = nums.reduce((acc, cur) => acc + cur, 0);\nconsole.log(sum);', 'reduce()は初期値0から始めて各要素を順に加算する。0+1=1、1+2=3、3+3=6、6+4=10。最終結果は10。', 1, 133, 'medium', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '10', TRUE, 1),
+    (gen_random_uuid(), q_id, '24', FALSE, 2),
+    (gen_random_uuid(), q_id, '[1, 3, 6, 10]', FALSE, 3),
+    (gen_random_uuid(), q_id, '0', FALSE, 4);
+
+  -- Q134: オブジェクトの分割代入とデフォルト値
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconst { a = 10, b = 20 } = { a: 3, b: undefined };\nconsole.log(a, b);', '分割代入のデフォルト値はプロパティがundefinedの場合にのみ適用される。aは3が設定済みなのでそのまま。bはundefinedなのでデフォルト値20が使われる。', 1, 134, 'medium', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '10 20', FALSE, 1),
+    (gen_random_uuid(), q_id, '3 20', TRUE, 2),
+    (gen_random_uuid(), q_id, '3 undefined', FALSE, 3),
+    (gen_random_uuid(), q_id, '10 undefined', FALSE, 4);
+
+  -- Q135: スプレッド演算子の独立性
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconst a = [1, 2];\nconst b = [...a, 3];\na.push(4);\nconsole.log(b);', 'スプレッド演算子は配列のシャローコピーを作成する。bは[1, 2, 3]として作成された時点でaとは独立した配列になるため、その後のa.push(4)はbに影響しない。', 1, 135, 'medium', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '[1, 2, 3]', TRUE, 1),
+    (gen_random_uuid(), q_id, '[1, 2, 3, 4]', FALSE, 2),
+    (gen_random_uuid(), q_id, '[1, 2, 4, 3]', FALSE, 3),
+    (gen_random_uuid(), q_id, '[1, 2]', FALSE, 4);
+
+  -- Q136: Promiseマイクロタスクの順序
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力順序は何か。\n\nconsole.log("A");\nPromise.resolve().then(() => console.log("B"));\nconsole.log("C");', 'Promise.then()のコールバックはマイクロタスクキューに入れられ、現在の同期コードの実行が完了した後に実行される。よってA → C → Bの順に出力される。', 1, 136, 'medium', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'A B C', FALSE, 1),
+    (gen_random_uuid(), q_id, 'A C B', TRUE, 2),
+    (gen_random_uuid(), q_id, 'B A C', FALSE, 3),
+    (gen_random_uuid(), q_id, 'C A B', FALSE, 4);
+
+  -- Q137: Setの重複除去
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconst s = new Set([1, 2, 2, 3, 3, 3]);\nconsole.log([...s]);', 'Setは重複を許さないコレクションである。配列[1, 2, 2, 3, 3, 3]からSetを作成すると重複が除去され{1, 2, 3}となる。スプレッド演算子で配列に変換すると[1, 2, 3]。', 1, 137, 'medium', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '[1, 2, 2, 3, 3, 3]', FALSE, 1),
+    (gen_random_uuid(), q_id, '[1, 2, 3]', TRUE, 2),
+    (gen_random_uuid(), q_id, '[3, 2, 1]', FALSE, 3),
+    (gen_random_uuid(), q_id, 'エラーが発生する', FALSE, 4);
+
+  -- Q138: Null合体演算子(??)と||の違い
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconst a = 0;\nconsole.log(a || "default", a ?? "default");', '||は左辺がfalsyなら右辺を返す。0はfalsyなので"default"が返される。??は左辺がnullまたはundefinedの場合のみ右辺を返す。0はnullでもundefinedでもないので0がそのまま返される。', 1, 138, 'medium', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '0 0', FALSE, 1),
+    (gen_random_uuid(), q_id, '"default" "default"', FALSE, 2),
+    (gen_random_uuid(), q_id, '"default" 0', TRUE, 3),
+    (gen_random_uuid(), q_id, '0 "default"', FALSE, 4);
+
+  -- Q139: オプショナルチェイニングとNull合体の組み合わせ
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconst user = { name: "Alice", address: null };\nconsole.log(user.address?.city ?? "不明");', 'オプショナルチェイニング(?.)はaddressがnullなのでundefinedを返す。Null合体演算子(??)は左辺がundefinedなので右辺の"不明"を返す。', 1, 139, 'medium', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'null', FALSE, 1),
+    (gen_random_uuid(), q_id, 'undefined', FALSE, 2),
+    (gen_random_uuid(), q_id, 'TypeError', FALSE, 3),
+    (gen_random_uuid(), q_id, '"不明"', TRUE, 4);
+
+  -- Q140: Array.sortの辞書順ソート
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconsole.log([10, 9, 80, 1].sort());', 'Array.sort()は比較関数を指定しない場合、要素を文字列に変換してUTF-16コード順で並べ替える。文字列比較で"1" < "10" < "80" < "9"となるため[1, 10, 80, 9]が出力される。', 1, 140, 'medium', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '[1, 9, 10, 80]', FALSE, 1),
+    (gen_random_uuid(), q_id, '[1, 10, 80, 9]', TRUE, 2),
+    (gen_random_uuid(), q_id, '[80, 10, 9, 1]', FALSE, 3),
+    (gen_random_uuid(), q_id, '[1, 10, 9, 80]', FALSE, 4);
+
+  -- ===== javascript_code - HARD (10) =====
+
+  -- Q141: イベントループ - setTimeout vs Promise
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力順序は何か。\n\nconsole.log("1");\nsetTimeout(() => console.log("2"), 0);\nPromise.resolve().then(() => console.log("3"));\nconsole.log("4");', 'まず同期コード"1"と"4"が実行される。次にマイクロタスクキューのPromise.then("3")が実行され、最後にマクロタスクのsetTimeout("2")が実行される。出力順は1 4 3 2。', 1, 141, 'hard', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '1 2 3 4', FALSE, 1),
+    (gen_random_uuid(), q_id, '1 4 2 3', FALSE, 2),
+    (gen_random_uuid(), q_id, '1 4 3 2', TRUE, 3),
+    (gen_random_uuid(), q_id, '1 3 4 2', FALSE, 4);
+
+  -- Q142: プロトタイプチェーンとhasOwnProperty
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nfunction Animal(name) {\n  this.name = name;\n}\nAnimal.prototype.speak = function() {\n  return this.name;\n};\nconst dog = new Animal("犬");\nconsole.log(dog.hasOwnProperty("name"), dog.hasOwnProperty("speak"));', 'nameはコンストラクタでthisに直接設定されるため、dogオブジェクト自身のプロパティである（true）。speakはAnimal.prototypeに定義されているため、dog自身のプロパティではない（false）。', 1, 142, 'hard', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'true true', FALSE, 1),
+    (gen_random_uuid(), q_id, 'true false', TRUE, 2),
+    (gen_random_uuid(), q_id, 'false true', FALSE, 3),
+    (gen_random_uuid(), q_id, 'false false', FALSE, 4);
+
+  -- Q143: ジェネレータ関数とreturn
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nfunction* gen() {\n  yield 1;\n  yield 2;\n  return 3;\n}\nconst g = gen();\nconsole.log(g.next().value);\nconsole.log(g.next().value);\nconsole.log(g.next().done);\nconsole.log(g.next().value);', 'ジェネレータはnext()でyieldまで実行する。1回目: {value:1, done:false}、2回目: {value:2, done:false}、3回目: return 3で{value:3, done:true}、4回目: 完了済みなので{value:undefined, done:true}。', 1, 143, 'hard', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '1 2 false undefined', FALSE, 1),
+    (gen_random_uuid(), q_id, '1 2 true 3', FALSE, 2),
+    (gen_random_uuid(), q_id, '1 2 true undefined', TRUE, 3),
+    (gen_random_uuid(), q_id, '1 2 false 3', FALSE, 4);
+
+  -- Q144: Symbol
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconst s1 = Symbol("id");\nconst s2 = Symbol("id");\nconsole.log(s1 === s2);\nconsole.log(typeof s1);', 'Symbolは呼び出すたびに一意の値を生成する。同じ説明文字列"id"を持っていても、s1とs2は異なるSymbolである。typeofは"symbol"を返す。', 1, 144, 'hard', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'true "symbol"', FALSE, 1),
+    (gen_random_uuid(), q_id, 'false "object"', FALSE, 2),
+    (gen_random_uuid(), q_id, 'true "string"', FALSE, 3),
+    (gen_random_uuid(), q_id, 'false "symbol"', TRUE, 4);
+
+  -- Q145: varのホイスティングとTDZ
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconsole.log(a);\nconsole.log(b);\nvar a = 1;\nlet b = 2;', 'var宣言はホイスティングされ初期値undefinedが設定されるため、最初のconsole.logはundefinedを出力する。let宣言もホイスティングされるが、TDZ（Temporal Dead Zone）により初期化前のアクセスはReferenceErrorになる。', 1, 145, 'hard', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'undefinedの後にReferenceError', TRUE, 1),
+    (gen_random_uuid(), q_id, 'undefined undefined', FALSE, 2),
+    (gen_random_uuid(), q_id, 'ReferenceError（1行目で発生）', FALSE, 3),
+    (gen_random_uuid(), q_id, '1 2', FALSE, 4);
+
+  -- Q146: IIFE（即時実行関数式）によるループ変数キャプチャ
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconst funcs = [];\nfor (var i = 0; i < 3; i++) {\n  funcs.push((function(j) {\n    return function() { return j; };\n  })(i));\n}\nconsole.log(funcs[0](), funcs[1](), funcs[2]());', 'IIFEを使いループ変数iの値を引数jとして各反復でキャプチャしている。varを使ってもIIFEで値を閉じ込めるため、各関数はそれぞれ0, 1, 2を保持する。', 1, 146, 'hard', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '3 3 3', FALSE, 1),
+    (gen_random_uuid(), q_id, '0 0 0', FALSE, 2),
+    (gen_random_uuid(), q_id, '0 1 2', TRUE, 3),
+    (gen_random_uuid(), q_id, 'undefined undefined undefined', FALSE, 4);
+
+  -- Q147: thisバインディング（アロー関数 vs 通常関数）
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconst obj = {\n  value: 100,\n  getValue: () => this.value\n};\nconsole.log(obj.getValue());', 'アロー関数は定義時のスコープのthisをキャプチャする。オブジェクトリテラルはスコープを作成しないため、thisはグローバルスコープのthisを指す。グローバルスコープにvalueは存在しないのでundefined。', 1, 147, 'hard', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '100', FALSE, 1),
+    (gen_random_uuid(), q_id, 'null', FALSE, 2),
+    (gen_random_uuid(), q_id, 'TypeError', FALSE, 3),
+    (gen_random_uuid(), q_id, 'undefined', TRUE, 4);
+
+  -- Q148: マイクロタスク vs マクロタスクキューの処理順序
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力順序は何か。\n\nsetTimeout(() => console.log("A"), 0);\nPromise.resolve()\n  .then(() => console.log("B"))\n  .then(() => console.log("C"));\nsetTimeout(() => console.log("D"), 0);', 'マイクロタスク（Promise.then）はマクロタスク（setTimeout）より優先される。全マイクロタスク完了後にマクロタスクが処理される。B→C（マイクロタスク）→A→D（マクロタスク、登録順）。', 1, 148, 'hard', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'A B C D', FALSE, 1),
+    (gen_random_uuid(), q_id, 'B A C D', FALSE, 2),
+    (gen_random_uuid(), q_id, 'B C A D', TRUE, 3),
+    (gen_random_uuid(), q_id, 'A D B C', FALSE, 4);
+
+  -- Q149: NaNの特性
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconsole.log(NaN === NaN);\nconsole.log(Number.isNaN(NaN));\nconsole.log(isNaN("hello"));', 'NaN === NaNはfalse（NaNは自身と等しくない唯一の値）。Number.isNaN(NaN)はtrue（厳密にNaNか判定）。isNaN("hello")はtrue（引数を数値変換しNumber("hello")がNaNになるため）。', 1, 149, 'hard', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'true true true', FALSE, 1),
+    (gen_random_uuid(), q_id, 'false true true', TRUE, 2),
+    (gen_random_uuid(), q_id, 'false true false', FALSE, 3),
+    (gen_random_uuid(), q_id, 'false false true', FALSE, 4);
+
+  -- Q150: Proxyのgetトラップ
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'a0000004-0000-0000-0000-000000000004', 'multiple_choice', '次のJavaScriptコードの出力は何か。\n\nconst handler = {\n  get(target, prop) {\n    return prop in target ? target[prop] : -1;\n  }\n};\nconst obj = new Proxy({ x: 1, y: 2 }, handler);\nconsole.log(obj.x + obj.z);', 'Proxyのgetトラップはプロパティアクセス時に呼ばれる。obj.xはtargetに存在するので1が返る。obj.zは存在しないので-1が返る。1 + (-1) = 0が出力される。', 1, 150, 'hard', 'javascript_code');
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'NaN', FALSE, 1),
+    (gen_random_uuid(), q_id, '1', FALSE, 2),
+    (gen_random_uuid(), q_id, 'undefined', FALSE, 3),
+    (gen_random_uuid(), q_id, '0', TRUE, 4);
 
 END $$;
 

@@ -1,0 +1,116 @@
+import {
+  LayoutDashboard,
+  Languages,
+  Briefcase,
+  Cpu,
+  Code2,
+  Handshake,
+  User,
+  Users,
+  FileEdit,
+  ClipboardList,
+  BarChart3,
+  UserCog,
+  type LucideIcon,
+} from 'lucide-react'
+import type { UserRole } from '@/lib/supabase/types'
+
+export interface NavItem {
+  key: string
+  href: string
+  label: string
+  icon: LucideIcon
+}
+
+export interface AdminNavItem {
+  href: string
+  label: string
+  icon: LucideIcon
+  allowedRoles: UserRole[]
+}
+
+export interface CategoryChild {
+  href: string
+  label: string
+  description: string
+}
+
+export const categoryChildren: Record<string, {
+  title: string
+  description: string
+  children: CategoryChild[]
+}> = {
+  seikatsu: {
+    title: '生活日本語',
+    description: 'JLPT対策の語彙・文法・読解・聴解を学習しましょう',
+    children: [
+      { href: '/japanese/jlpt/vocabulary', label: '語彙', description: 'JLPT級別の単語学習とフラッシュカード' },
+      { href: '/japanese/jlpt/grammar', label: '文法', description: 'JLPT級別の文法パターン' },
+      { href: '/japanese/jlpt/reading', label: '読解', description: '読解問題で読む力を鍛える' },
+      { href: '/japanese/jlpt/listening', label: '聴解', description: 'リスニング問題で聞く力を鍛える' },
+    ],
+  },
+  'business-jp': {
+    title: 'ビジネス日本語',
+    description: 'IT語彙、文章パターン、ビジネス表現を学習しましょう',
+    children: [
+      { href: '/japanese/business/glossary', label: 'IT語彙', description: 'IT現場の専門用語' },
+      { href: '/japanese/business/sentence-patterns', label: '文章パターン', description: '日本語の文章パターン' },
+      { href: '/japanese/business/expressions', label: 'ビジネス表現', description: 'ビジネスで使える表現' },
+    ],
+  },
+  cs: {
+    title: 'CS知識',
+    description: 'コンピュータサイエンスの基礎知識を学習しましょう',
+    children: [
+      { href: '/cs/data-structures', label: 'データ構造', description: 'リスト、スタック、キュー、ツリーなど' },
+      { href: '/cs/os', label: 'OS', description: 'オペレーティングシステムの基礎' },
+      { href: '/cs/algorithms', label: 'アルゴリズム', description: 'ソート、探索、動的計画法など' },
+      { href: '/cs/networking', label: 'ネットワーク', description: 'TCP/IP、HTTP、DNS、セキュリティ' },
+    ],
+  },
+  dev: {
+    title: '開発実務能力',
+    description: 'プログラミング言語とフレームワークを学習しましょう',
+    children: [
+      { href: '/dev/java', label: 'Java', description: 'エンタープライズ開発の基盤' },
+      { href: '/dev/javascript', label: 'JavaScript', description: 'Web開発の必須言語' },
+      { href: '/dev/spring-boot', label: 'Spring Boot', description: 'Javaバックエンドフレームワーク' },
+      { href: '/dev/react', label: 'React', description: 'フロントエンドUIライブラリ' },
+      { href: '/dev/nextjs', label: 'Next.js', description: 'Reactフルスタックフレームワーク' },
+      { href: '/dev/python', label: 'Python', description: '汎用プログラミング言語' },
+      { href: '/dev/sql', label: 'SQL', description: 'データベース操作言語' },
+    ],
+  },
+  'business-lit': {
+    title: 'ビジネスリテラシー',
+    description: 'ビジネスマナーと企業文化を学習しましょう',
+    children: [
+      { href: '/business-literacy/attitude', label: '態度', description: '社会人としての姿勢と行動' },
+      { href: '/business-literacy/culture', label: '企業文化', description: '日本企業の文化と慣習' },
+      { href: '/business-literacy/security', label: 'セキュリティ', description: '情報セキュリティの基礎知識' },
+    ],
+  },
+}
+
+export const mainNavItems: NavItem[] = [
+  { key: 'dashboard', href: '/dashboard', label: 'ダッシュボード', icon: LayoutDashboard },
+  { key: 'seikatsu', href: '/japanese/jlpt', label: '生活日本語', icon: Languages },
+  { key: 'business-jp', href: '/japanese/business', label: 'ビジネス日本語', icon: Briefcase },
+  { key: 'cs', href: '/cs', label: 'CS知識', icon: Cpu },
+  { key: 'dev', href: '/dev', label: '開発実務能力', icon: Code2 },
+  { key: 'business-lit', href: '/business-literacy', label: 'ビジネスリテラシー', icon: Handshake },
+  { key: 'profile', href: '/profile', label: 'プロフィール', icon: User },
+]
+
+export const adminNavItems: AdminNavItem[] = [
+  { href: '/admin/users', label: 'ユーザー管理', icon: Users, allowedRoles: ['admin'] },
+  { href: '/admin/mentors', label: 'メンター管理', icon: UserCog, allowedRoles: ['admin'] },
+  { href: '/admin/courses', label: 'コンテンツ管理', icon: FileEdit, allowedRoles: ['admin'] },
+  { href: '/admin/tasks', label: '課題配信', icon: ClipboardList, allowedRoles: ['admin', 'mentor'] },
+  { href: '/admin/reports', label: 'レポート', icon: BarChart3, allowedRoles: ['admin', 'mentor'] },
+]
+
+export function getAdminNavForRole(role: UserRole): AdminNavItem[] {
+  return adminNavItems.filter((item) => item.allowedRoles.includes(role))
+}

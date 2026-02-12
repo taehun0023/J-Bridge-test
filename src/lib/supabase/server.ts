@@ -44,6 +44,7 @@ export function createServiceRoleClient() {
         autoRefreshToken: false,
         persistSession: false,
       },
+      db: { schema: 'public' },
     }
   )
 }

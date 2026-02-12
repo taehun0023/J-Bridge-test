@@ -33,8 +33,10 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/login') ||
     request.nextUrl.pathname.startsWith('/signup')
 
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api/')
+
   // 未認証ユーザー → ログインページへリダイレクト
-  if (!user && !isAuthPage && !request.nextUrl.pathname.startsWith('/auth')) {
+  if (!user && !isAuthPage && !isApiRoute && !request.nextUrl.pathname.startsWith('/auth')) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
@@ -52,7 +54,7 @@ export async function middleware(request: NextRequest) {
   if (user && !isAuthPage && !isOnboardingPage) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('is_onboarded')
+      .select('is_onboarded, role')
       .eq('id', user.id)
       .single()
 
@@ -60,6 +62,35 @@ export async function middleware(request: NextRequest) {
       const url = request.nextUrl.clone()
       url.pathname = '/onboarding'
       return NextResponse.redirect(url)
+    }
+
+    // RBAC: /admin 경로 역할 기반 접근 제어
+    const { pathname } = request.nextUrl
+    if (pathname.startsWith('/admin')) {
+      const role = profile?.role ?? 'mentee'
+
+      if (pathname.startsWith('/admin/users') || pathname.startsWith('/admin/courses') || pathname.startsWith('/admin/mentors')) {
+        // admin only
+        if (role !== 'admin') {
+          const url = request.nextUrl.clone()
+          url.pathname = '/dashboard'
+          return NextResponse.redirect(url)
+        }
+      } else if (pathname.startsWith('/admin/tasks') || pathname.startsWith('/admin/reports')) {
+        // admin + mentor
+        if (role === 'mentee') {
+          const url = request.nextUrl.clone()
+          url.pathname = '/dashboard'
+          return NextResponse.redirect(url)
+        }
+      } else {
+        // 기타 /admin/* 경로 → admin only
+        if (role !== 'admin') {
+          const url = request.nextUrl.clone()
+          url.pathname = '/dashboard'
+          return NextResponse.redirect(url)
+        }
+      }
     }
   }
 

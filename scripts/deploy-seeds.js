@@ -183,13 +183,9 @@ function parseSeedPart(filePath) {
       questionText = questionText.replace(/^E?'/, '').replace(/'$/, '');
       explanation = explanation.replace(/^E?'/, '').replace(/'$/, '');
 
-      // Process escape sequences for E'' strings
-      if (qMatch[2].startsWith("E'")) {
-        questionText = questionText.replace(/\\n/g, '\n');
-      }
-      if (qMatch[3].startsWith("E'")) {
-        explanation = explanation.replace(/\\n/g, '\n');
-      }
+      // Convert \n to actual newlines (for both E'' and regular strings)
+      questionText = questionText.replace(/\\n/g, '\n');
+      explanation = explanation.replace(/\\n/g, '\n');
 
       // Unescape SQL single quotes
       questionText = questionText.replace(/''/g, "'");
@@ -315,6 +311,8 @@ async function main() {
     { file: 'quiz2_it_japanese.sql', label: 'Quiz 2 (ビジネス日本語)' },
     { file: 'quiz3_programming.sql', label: 'Quiz 3 (CS知識)' },
     { file: 'quiz4_framework.sql', label: 'Quiz 4 (開発実務能力)' },
+    { file: 'quiz4_java_code.sql', label: 'Quiz 4+ (Javaコード)' },
+    { file: 'quiz4_javascript_code.sql', label: 'Quiz 4+ (JSコード)' },
     { file: 'quiz5_attitude.sql', label: 'Quiz 5 (ビジネスリテラシー)' },
   ];
 

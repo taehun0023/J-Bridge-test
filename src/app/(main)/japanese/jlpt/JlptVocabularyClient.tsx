@@ -31,6 +31,21 @@ interface Props {
   totalCount: number
 }
 
+const posLabels: Record<string, string> = {
+  '동사': '動詞',
+  '명사': '名詞',
+  'い형용사': 'い形容詞',
+  'な형용사': 'な形容詞',
+  '형용사': '形容詞',
+  '부사': '副詞',
+  '대명사': '代名詞',
+  '접속사': '接続詞',
+  '연체사': '連体詞',
+  '접두사': '接頭辞',
+  '접미사': '接尾辞',
+  '표현': '表現',
+}
+
 const levelTabs = [
   { key: 'N5', label: 'N5 基礎' },
   { key: 'N4', label: 'N4 初級' },
@@ -55,7 +70,7 @@ export default function JlptVocabularyClient({
     })
     // Reset page when changing filters
     if (!('page' in updates)) params.delete('page')
-    router.push(`/japanese/jlpt?${params.toString()}`)
+    router.push(`/japanese/jlpt/vocabulary?${params.toString()}`)
   }
 
   function handleSearch(e: React.FormEvent) {
@@ -97,7 +112,7 @@ export default function JlptVocabularyClient({
         >
           <option value="">全品詞</option>
           {partOfSpeechOptions.map((p) => (
-            <option key={p} value={p}>{p}</option>
+            <option key={p} value={p}>{posLabels[p] ?? p}</option>
           ))}
         </select>
 
@@ -116,7 +131,7 @@ export default function JlptVocabularyClient({
       {/* Quiz link */}
       <div className="mt-3">
         <a
-          href={`/japanese/jlpt/quiz?level=${level}`}
+          href={`/japanese/jlpt/quiz?level=${level}&type=jlpt_vocab`}
           className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
         >
           {level} 語彙クイズに挑戦 &rarr;

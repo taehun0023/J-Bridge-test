@@ -3,12 +3,20 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { submitAssessment } from '@/app/actions/assessment'
+import { submitQuestionClaim } from '@/app/actions/claims'
 import QuizQuestion from '@/components/quiz/QuizQuestion'
 
 interface Question {
   id: string
   question_text: string
   options: { id: string; option_text: string; sort_order: number }[]
+}
+
+interface ReviewResult {
+  questionId: string
+  selectedOptionId: string
+  correctOptionId: string
+  isCorrect: boolean
 }
 
 interface Props {
@@ -22,6 +30,26 @@ interface Props {
 
 export default function AssessmentTaker({ step, label, timeLimit, questions, totalSteps, displayStep }: Props) {
   const router = useRouter()
+
+  // Stabilize questions: lock the initial set to prevent re-render issues
+  const [stableQuestions] = useState<Question[]>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = sessionStorage.getItem(`assessment_${step}`)
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored) as Question[]
+          if (parsed.length === questions.length) return parsed
+        } catch { /* ignore parse errors */ }
+      }
+    }
+    return questions
+  })
+
+  // Persist stableQuestions to sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem(`assessment_${step}`, JSON.stringify(stableQuestions))
+  }, [stableQuestions, step])
+
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
@@ -30,8 +58,16 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
   const hasSubmittedRef = useRef(false)
   const answersRef = useRef(answers)
 
-  const totalQuestions = questions.length
-  const currentQuestion = questions[currentIndex]
+  // Review mode state
+  const [reviewMode, setReviewMode] = useState(false)
+  const [reviewResults, setReviewResults] = useState<ReviewResult[] | null>(null)
+  const [reviewScore, setReviewScore] = useState<{ score: number; correctCount: number; totalCount: number } | null>(null)
+  const [claimedQuestions, setClaimedQuestions] = useState<Set<string>>(new Set())
+  const [claimingId, setClaimingId] = useState<string | null>(null)
+  const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set())
+
+  const totalQuestions = stableQuestions.length
+  const currentQuestion = stableQuestions[currentIndex]
   const answeredCount = Object.keys(answers).length
 
   useEffect(() => {
@@ -42,7 +78,7 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
     if (hasSubmittedRef.current) return
     hasSubmittedRef.current = true
 
-    const answerArray = questions
+    const answerArray = stableQuestions
       .map(q => ({ questionId: q.id, selectedOptionId: currentAnswers[q.id] ?? '' }))
       .filter(a => a.selectedOptionId !== '')
 
@@ -52,7 +88,8 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
     }
 
     await submitAssessment(answerArray, step, totalQuestions)
-  }, [questions, step, totalQuestions])
+    sessionStorage.removeItem(`assessment_${step}`)
+  }, [stableQuestions, step, totalQuestions])
 
   const handleSubmit = useCallback(async () => {
     if (hasSubmittedRef.current) return
@@ -60,7 +97,7 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
     setSubmitting(true)
     setError('')
 
-    const answerArray = questions
+    const answerArray = stableQuestions
       .map(q => ({ questionId: q.id, selectedOptionId: answers[q.id] ?? '' }))
       .filter(a => a.selectedOptionId !== '')
 
@@ -80,10 +117,21 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
       return
     }
 
-    router.push('/dashboard')
-  }, [answers, questions, step, totalQuestions, router])
+    // Clear sessionStorage and enter review mode
+    sessionStorage.removeItem(`assessment_${step}`)
+
+    if ('results' in result && result.results) {
+      setReviewResults(result.results)
+      setReviewScore({ score: result.score, correctCount: result.correctCount, totalCount: result.totalCount })
+      setReviewMode(true)
+      setSubmitting(false)
+    } else {
+      router.push('/dashboard')
+    }
+  }, [answers, stableQuestions, step, totalQuestions, router])
 
   useEffect(() => {
+    if (reviewMode) return // Don't count down in review mode
     const timer = setInterval(() => {
       setRemainingSeconds(prev => {
         if (prev <= 1) {
@@ -95,9 +143,10 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
       })
     }, 1000)
     return () => clearInterval(timer)
-  }, [handleSubmit])
+  }, [handleSubmit, reviewMode])
 
   useEffect(() => {
+    if (reviewMode) return
     const handleClick = (e: MouseEvent) => {
       if (hasSubmittedRef.current) return
       const anchor = (e.target as HTMLElement).closest('a')
@@ -121,9 +170,10 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
 
     document.addEventListener('click', handleClick, true)
     return () => document.removeEventListener('click', handleClick, true)
-  }, [doSubmit])
+  }, [doSubmit, reviewMode])
 
   useEffect(() => {
+    if (reviewMode) return
     const handlePopState = () => {
       if (hasSubmittedRef.current) return
       const leave = window.confirm(
@@ -141,9 +191,10 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
     window.history.pushState(null, '', window.location.href)
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
-  }, [doSubmit, router])
+  }, [doSubmit, router, reviewMode])
 
   useEffect(() => {
+    if (reviewMode) return
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (hasSubmittedRef.current) return
       e.preventDefault()
@@ -151,7 +202,7 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
 
     window.addEventListener('beforeunload', handleBeforeUnload)
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-  }, [])
+  }, [reviewMode])
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60)
@@ -171,6 +222,171 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
     }
   }
 
+  const handleClaim = async (questionId: string) => {
+    setClaimingId(questionId)
+    const result = await submitQuestionClaim(questionId)
+    if (result.success) {
+      setClaimedQuestions(prev => new Set(prev).add(questionId))
+    }
+    setClaimingId(null)
+  }
+
+  const toggleExpanded = (questionId: string) => {
+    setExpandedQuestions(prev => {
+      const next = new Set(prev)
+      if (next.has(questionId)) next.delete(questionId)
+      else next.add(questionId)
+      return next
+    })
+  }
+
+  // ==================== REVIEW MODE ====================
+  if (reviewMode && reviewResults && reviewScore) {
+    const resultMap = new Map(reviewResults.map(r => [r.questionId, r]))
+
+    return (
+      <div>
+        {/* Review Header */}
+        <div className="mb-6">
+          <p className="text-sm font-medium text-indigo-400">
+            等級テスト {displayStep}/{totalSteps} — 結果レビュー
+          </p>
+          <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">{label}</h1>
+          <div className="mt-3 flex items-center gap-4">
+            <div className="rounded-xl bg-white/[0.03] border border-white/[0.08] px-4 py-2 dark:bg-white/[0.03] dark:border-white/[0.08] bg-zinc-100 border-gray-200">
+              <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{reviewScore.score}</span>
+              <span className="text-sm text-zinc-500 dark:text-zinc-400">点</span>
+            </div>
+            <div className="text-sm text-zinc-500 dark:text-zinc-400">
+              {reviewScore.correctCount}/{reviewScore.totalCount} 正解
+            </div>
+          </div>
+        </div>
+
+        {/* Question Review List */}
+        <div className="space-y-3">
+          {stableQuestions.map((q, i) => {
+            const r = resultMap.get(q.id)
+            const isCorrect = r?.isCorrect ?? false
+            const wasAnswered = !!r
+            const isExpanded = expandedQuestions.has(q.id)
+            const isClaimed = claimedQuestions.has(q.id)
+
+            return (
+              <div
+                key={q.id}
+                className={`rounded-xl border p-4 transition-colors ${
+                  isCorrect
+                    ? 'border-emerald-500/20 bg-emerald-500/5'
+                    : wasAnswered
+                    ? 'border-red-500/20 bg-red-500/5'
+                    : 'border-zinc-200/60 bg-zinc-50 dark:border-white/[0.08] dark:bg-white/[0.02]'
+                }`}
+              >
+                <button
+                  onClick={() => toggleExpanded(q.id)}
+                  className="flex w-full items-center justify-between text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={`flex h-7 w-7 items-center justify-center rounded text-xs font-bold ${
+                      isCorrect
+                        ? 'bg-emerald-500/20 text-emerald-500'
+                        : wasAnswered
+                        ? 'bg-red-500/20 text-red-500'
+                        : 'bg-zinc-200 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400'
+                    }`}>
+                      {isCorrect ? '\u2713' : wasAnswered ? '\u2717' : '-'}
+                    </span>
+                    <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                      問{i + 1}
+                    </span>
+                  </div>
+                  <svg
+                    className={`h-4 w-4 text-zinc-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {isExpanded && (
+                  <div className="mt-3 border-t border-zinc-200/60 dark:border-white/[0.06] pt-3">
+                    <p className="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-line mb-3">
+                      {q.question_text}
+                    </p>
+                    <div className="space-y-2">
+                      {q.options.map(opt => {
+                        const isSelected = r?.selectedOptionId === opt.id
+                        const isCorrectOption = r?.correctOptionId === opt.id
+                        let optionClass = 'border-zinc-200/60 bg-white dark:border-white/[0.08] dark:bg-white/[0.02]'
+                        if (isCorrectOption) {
+                          optionClass = 'border-emerald-500/40 bg-emerald-500/10'
+                        } else if (isSelected && !isCorrect) {
+                          optionClass = 'border-red-500/40 bg-red-500/10'
+                        }
+
+                        return (
+                          <div
+                            key={opt.id}
+                            className={`rounded-lg border px-3 py-2 text-sm ${optionClass}`}
+                          >
+                            <div className="flex items-center gap-2">
+                              {isCorrectOption && (
+                                <span className="text-emerald-500 font-bold text-xs">{'\u2713'}</span>
+                              )}
+                              {isSelected && !isCorrect && (
+                                <span className="text-red-500 font-bold text-xs">{'\u2717'}</span>
+                              )}
+                              <span className={`${
+                                isCorrectOption
+                                  ? 'text-emerald-700 dark:text-emerald-300 font-medium'
+                                  : isSelected && !isCorrect
+                                  ? 'text-red-700 dark:text-red-300'
+                                  : 'text-zinc-600 dark:text-zinc-400'
+                              }`}>
+                                {opt.option_text}
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    {/* Claim button */}
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        onClick={() => handleClaim(q.id)}
+                        disabled={isClaimed || claimingId === q.id}
+                        className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                          isClaimed
+                            ? 'bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500 cursor-default'
+                            : 'bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 dark:text-amber-400 disabled:opacity-50'
+                        }`}
+                      >
+                        {isClaimed ? 'クレーム送信済み' : claimingId === q.id ? '送信中...' : '問題にクレーム'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors"
+          >
+            ダッシュボードに戻る
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ==================== EXAM MODE ====================
   const isTimeLow = remainingSeconds < 60
 
   return (
@@ -208,7 +424,7 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
 
       {/* Question navigation dots */}
       <div className="mb-6 flex flex-wrap gap-1.5">
-        {questions.map((q, i) => (
+        {stableQuestions.map((q, i) => (
           <button
             key={q.id}
             onClick={() => setCurrentIndex(i)}

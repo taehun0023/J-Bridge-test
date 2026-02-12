@@ -1,14 +1,15 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 /**
  * Recalculate all axis scores for a user based on their quiz attempts and coding submissions.
  * Respects is_japanese flag: Japanese users skip JLPT/IT Japanese axes.
+ * Uses service role client to bypass RLS for reliable reads/writes.
  */
 export async function recalculateUserScores(userId: string) {
-  const supabase = await createClient()
+  const supabase = createServiceRoleClient() ?? await createClient()
 
   // Fetch profile to check is_japanese
   const { data: profileData } = await supabase

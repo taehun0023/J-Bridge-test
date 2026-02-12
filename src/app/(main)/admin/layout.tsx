@@ -17,7 +17,8 @@ export default async function AdminLayout({
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'admin') redirect('/dashboard')
+  const role = profile?.role
+  if (role !== 'admin' && role !== 'mentor') redirect('/dashboard')
 
   return <>{children}</>
 }

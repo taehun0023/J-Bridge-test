@@ -1,10 +1,11 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { fetchRandomAssessmentQuestions, fetchAssessmentQuiz } from '@/lib/supabase/queries/assessments'
 import { recalculateUserScores } from './scores'
+import { createNotification } from './notifications'
 import { ASSESSMENT_QUIZ_IDS } from '@/lib/assessment-config'
 
 /** Save onboarding preferences and mark as onboarded → dashboard */
@@ -67,6 +68,18 @@ export async function submitAssessment(
   const quizId = ASSESSMENT_QUIZ_IDS[step]
   if (!quizId) return { error: '無効なステップです' }
 
+  // Delete previous attempts for this user + quiz (retake = overwrite)
+  // Use service role client to bypass RLS (no DELETE policy on quiz_attempts)
+  // quiz_answers are cascade-deleted via FK ON DELETE CASCADE
+  const serviceClient = createServiceRoleClient()
+  if (serviceClient) {
+    await serviceClient
+      .from('quiz_attempts')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('quiz_id', quizId)
+  }
+
   // Create attempt
   const { data: attempt, error: attemptError } = await supabase
     .from('quiz_attempts')
@@ -122,10 +135,19 @@ export async function submitAssessment(
   revalidatePath('/', 'layout')
   revalidatePath('/dashboard')
 
+  // Build per-question results for review screen
+  const results = answers.map(a => ({
+    questionId: a.questionId,
+    selectedOptionId: a.selectedOptionId,
+    correctOptionId: correctMap.get(a.questionId) ?? '',
+    isCorrect: correctMap.get(a.questionId) === a.selectedOptionId,
+  }))
+
   return {
     score,
     correctCount,
     totalCount: totalQuestions,
+    results,
   }
 }
 
@@ -163,6 +185,58 @@ export async function requestRetake(step: number) {
     .eq('id', attempt.id)
 
   if (error) return { error: 'リクエスト送信に失敗しました' }
+
+  // Notify mentor(s) and admins
+  const serviceClient = createServiceRoleClient()
+  if (serviceClient) {
+    const { data: mentorAssignments } = await serviceClient
+      .from('mentor_mentee_assignments')
+      .select('mentor_id')
+      .eq('mentee_id', user.id)
+
+    const { data: userProfile } = await serviceClient
+      .from('profiles')
+      .select('full_name')
+      .eq('id', user.id)
+      .single()
+
+    const { data: quizData } = await serviceClient
+      .from('quizzes')
+      .select('title')
+      .eq('id', quizId)
+      .single()
+
+    const userName = userProfile?.full_name ?? 'メンティー'
+    const quizTitle = quizData?.title ?? '評価テスト'
+
+    for (const assignment of mentorAssignments ?? []) {
+      await createNotification(
+        assignment.mentor_id,
+        'retake_requested',
+        `${userName}さんが再試験をリクエスト`,
+        quizTitle,
+        '/admin/tasks',
+        attempt.id
+      )
+    }
+
+    // Also notify admins
+    const { data: admins } = await serviceClient
+      .from('profiles')
+      .select('id')
+      .eq('role', 'admin')
+
+    for (const admin of admins ?? []) {
+      await createNotification(
+        admin.id,
+        'retake_requested',
+        `${userName}さんが再試験をリクエスト`,
+        quizTitle,
+        '/admin/tasks',
+        attempt.id
+      )
+    }
+  }
 
   revalidatePath('/dashboard')
   return { success: true }

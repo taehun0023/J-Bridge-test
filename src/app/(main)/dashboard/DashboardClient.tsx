@@ -5,10 +5,11 @@ import { useState, useTransition } from 'react'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import Link from 'next/link'
-import { BarChart3 } from 'lucide-react'
+import { BarChart3, Trophy, BookOpen } from 'lucide-react'
 import { getGrade, getGradeColor, DISPATCH_MINIMUM_SCORE, getRelevantAxes, AXIS_DISPLAY_LABELS } from '@/lib/assessment-config'
 import type { AxisKey } from '@/lib/assessment-config'
 import { requestRetake } from '@/app/actions/assessment'
+import { CATEGORY_LABELS } from '@/lib/constants'
 
 const RadarChart = dynamic(() => import('@/components/dashboard/RadarChart'), { ssr: false })
 
@@ -51,6 +52,25 @@ interface CompletedAssessment {
   retakeStatus: string | null
 }
 
+interface UserRanking {
+  overall_score: number
+  overall_rank: number
+  japanese_score: number
+  programming_score: number
+}
+
+interface EnrolledCourse {
+  id: string
+  course_id: string
+  courses: { title: string; category: string } | null
+}
+
+interface LearningStats {
+  total: number
+  inProgress: number
+  completed: number
+}
+
 interface Props {
   profile: Profile | null
   radarScores: Record<AxisKey, number>
@@ -59,6 +79,9 @@ interface Props {
   pendingAssessments: PendingAssessment[]
   isJapanese: boolean
   completedAssessments: CompletedAssessment[]
+  userRanking: UserRanking | null
+  enrolledCourses: EnrolledCourse[]
+  learningStats?: LearningStats
 }
 
 function getBadgeStyle(badge: BadgeType): string {
@@ -71,10 +94,12 @@ function getBadgeStyle(badge: BadgeType): string {
 
 export default function DashboardClient({
   profile, radarScores, recentQuizzes, tasks, pendingAssessments, isJapanese, completedAssessments,
+  userRanking, enrolledCourses, learningStats,
 }: Props) {
   const relevantAxes = getRelevantAxes(isJapanese)
   const hasScores = relevantAxes.some(key => radarScores[key] > 0)
   const hasTasks = tasks.length > 0 || pendingAssessments.length > 0
+  const hasEnrolledCourses = enrolledCourses.length > 0
 
   const allAxesAboveB = hasScores && relevantAxes.every(key => radarScores[key] >= DISPATCH_MINIMUM_SCORE)
 
@@ -257,8 +282,46 @@ export default function DashboardClient({
         </Card>
       </div>
 
-      {/* Tasks section */}
-      <div className="mt-4">
+      {/* Learning Assignments Summary */}
+      {learningStats && learningStats.total > 0 && (
+        <div className="mt-4">
+          <Card title="学習課題">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10">
+                  <BookOpen className="h-5 w-5 text-indigo-500" />
+                </div>
+                <div>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400">進行中 / 完了 / 全体</p>
+                  <p className="text-lg font-bold font-mono text-zinc-900 dark:text-zinc-100">
+                    {learningStats.inProgress} / {learningStats.completed} / {learningStats.total}
+                  </p>
+                </div>
+              </div>
+              {learningStats.total > 0 && (
+                <div className="flex-1">
+                  <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-600">
+                    <div
+                      className="h-2 rounded-full bg-indigo-500 transition-all"
+                      style={{ width: `${Math.round((learningStats.completed / learningStats.total) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            <Link
+              href="/dashboard/assignments"
+              className="mt-4 block rounded-xl bg-indigo-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+            >
+              課題一覧へ
+            </Link>
+          </Card>
+        </div>
+      )}
+
+      {/* Bottom grid: Tasks | Ranking | Enrolled Courses (mentee) */}
+      <div className={`mt-4 grid gap-4 ${hasEnrolledCourses ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
+        {/* Tasks */}
         <Card title="配信された課題">
           {!hasTasks ? (
             <p className="py-4 text-center text-sm text-zinc-500">配信された課題はありません</p>
@@ -303,6 +366,73 @@ export default function DashboardClient({
             </div>
           )}
         </Card>
+
+        {/* Ranking */}
+        <Card title="ランキング">
+          {userRanking ? (
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <Trophy className="h-8 w-8 text-amber-400" />
+                <div>
+                  <p className="text-2xl font-bold font-mono text-zinc-900 dark:text-zinc-100">#{userRanking.overall_rank}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] dark:border-white/[0.08] dark:bg-white/[0.03] border-gray-200/60 p-2 text-center">
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">日本語力 /200</p>
+                  <p className="mt-1 text-sm font-mono font-bold text-zinc-900 dark:text-zinc-100">
+                    {isJapanese ? '—' : userRanking.japanese_score}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] dark:border-white/[0.08] dark:bg-white/[0.03] border-gray-200/60 p-2 text-center">
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">プログラミング /200</p>
+                  <p className="mt-1 text-sm font-mono font-bold text-zinc-900 dark:text-zinc-100">{userRanking.programming_score}</p>
+                </div>
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] dark:border-white/[0.08] dark:bg-white/[0.03] border-gray-200/60 p-2 text-center">
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">全体 /400</p>
+                  <p className="mt-1 text-sm font-mono font-bold text-zinc-900 dark:text-zinc-100">{userRanking.overall_score}</p>
+                </div>
+              </div>
+              <Link
+                href="/ranking"
+                className="mt-4 block rounded-xl bg-indigo-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+              >
+                ランキングを見る
+              </Link>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <Trophy className="h-10 w-10 text-zinc-500" />
+              <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">ランキングデータがありません</p>
+            </div>
+          )}
+        </Card>
+
+        {/* Enrolled Courses (mentee only) */}
+        {hasEnrolledCourses && (
+          <Card title="受講中コース">
+            <div className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">
+              {enrolledCourses.map((enrollment) => (
+                <div key={enrollment.id} className="py-3">
+                  <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                    {enrollment.courses?.title ?? 'コース'}
+                  </p>
+                  {enrollment.courses?.category && (
+                    <span className="mt-1 inline-block rounded-full bg-indigo-500/10 px-2 py-0.5 text-xs font-medium text-indigo-400 ring-1 ring-indigo-500/20">
+                      {CATEGORY_LABELS[enrollment.courses.category] ?? enrollment.courses.category}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+            <Link
+              href="/courses"
+              className="mt-4 block rounded-xl bg-indigo-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+            >
+              全てのコースを見る
+            </Link>
+          </Card>
+        )}
       </div>
     </div>
   )

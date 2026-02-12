@@ -1,106 +1,159 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Bell } from 'lucide-react'
-import { getUnreadTaskCount, getTaskNotifications } from '@/app/actions/notifications'
+import { useRouter } from 'next/navigation'
+import { getUnreadNotificationCount, getNotifications, markAsRead, markAllAsRead } from '@/app/actions/notifications'
+
+interface NotificationItem {
+  id: string
+  type: string
+  title: string
+  message: string | null
+  link: string | null
+  is_read: boolean
+  created_at: string
+}
 
 export default function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0)
+  const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [isOpen, setIsOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
-  useEffect(() => {
-    async function fetchCount() {
-      const { count } = await getUnreadTaskCount()
-      setUnreadCount(count)
-    }
-    fetchCount()
-    const interval = setInterval(fetchCount, 30000)
-    return () => clearInterval(interval)
+  const fetchCount = useCallback(async () => {
+    const result = await getUnreadNotificationCount()
+    setUnreadCount(result.count)
   }, [])
 
+  useEffect(() => {
+    fetchCount()
+    const interval = setInterval(fetchCount, 5000)
+    return () => clearInterval(interval)
+  }, [fetchCount])
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  async function handleOpen() {
+    if (isOpen) {
+      setIsOpen(false)
+      return
+    }
+    setIsOpen(true)
+    setLoading(true)
+    const result = await getNotifications(15)
+    setNotifications(result.notifications as NotificationItem[])
+    setLoading(false)
+  }
+
+  async function handleNotificationClick(notification: NotificationItem) {
+    if (!notification.is_read) {
+      await markAsRead(notification.id)
+      setNotifications(prev =>
+        prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n)
+      )
+      setUnreadCount(prev => Math.max(0, prev - 1))
+    }
+    if (notification.link) {
+      setIsOpen(false)
+      router.push(notification.link)
+    }
+  }
+
+  async function handleMarkAllRead() {
+    await markAllAsRead()
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
+    setUnreadCount(0)
+  }
+
+  function formatTime(dateStr: string) {
+    const diff = Date.now() - new Date(dateStr).getTime()
+    const minutes = Math.floor(diff / 60000)
+    if (minutes < 1) return 'たった今'
+    if (minutes < 60) return `${minutes}分前`
+    const hours = Math.floor(minutes / 60)
+    if (hours < 24) return `${hours}時間前`
+    const days = Math.floor(hours / 24)
+    return `${days}日前`
+  }
+
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/5"
+        onClick={handleOpen}
+        className="relative rounded-lg p-1.5 text-zinc-500 hover:bg-gray-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-200 transition-colors"
         aria-label="通知"
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-500 text-xs font-bold text-white">
-            {unreadCount > 9 ? '9+' : unreadCount}
+          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+            {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
       </button>
+
       {isOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="absolute right-0 top-12 z-50 w-80 rounded-2xl border border-gray-200 bg-white shadow-lg dark:border-white/[0.08] dark:bg-zinc-900/90 dark:backdrop-blur-xl">
-            <NotificationDropdown onClose={() => setIsOpen(false)} />
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
-function NotificationDropdown({ onClose }: { onClose: () => void }) {
-  const [notifications, setNotifications] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function fetchNotifications() {
-      const { notifications } = await getTaskNotifications()
-      setNotifications(notifications)
-      setLoading(false)
-    }
-    fetchNotifications()
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="p-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
-        読み込み中...
-      </div>
-    )
-  }
-
-  if (notifications.length === 0) {
-    return (
-      <div className="p-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
-        通知はありません
-      </div>
-    )
-  }
-
-  return (
-    <div className="max-h-96 overflow-y-auto">
-      <div className="border-b border-gray-200 px-4 py-3 dark:border-white/[0.06]">
-        <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">通知</h3>
-      </div>
-      <div className="divide-y divide-gray-200 dark:divide-white/[0.06]">
-        {notifications.map((notification) => (
-          <div
-            key={notification.id}
-            className="px-4 py-3 hover:bg-zinc-50 dark:hover:bg-white/5"
-          >
-            <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-              {notification.title}
-            </p>
-            {notification.description && (
-              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                {notification.description}
-              </p>
+        <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-xl border border-gray-200 bg-white shadow-lg dark:border-white/[0.08] dark:bg-zinc-900">
+          <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-white/[0.06]">
+            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">通知</h3>
+            {unreadCount > 0 && (
+              <button
+                onClick={handleMarkAllRead}
+                className="text-xs text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+              >
+                すべて既読
+              </button>
             )}
-            <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
-              {notification.assignedBy} · {new Date(notification.createdAt).toLocaleDateString('ja-JP')}
-            </p>
           </div>
-        ))}
-      </div>
+
+          <div className="max-h-80 overflow-y-auto">
+            {loading ? (
+              <div className="py-8 text-center text-sm text-zinc-400">読み込み中...</div>
+            ) : notifications.length === 0 ? (
+              <div className="py-8 text-center text-sm text-zinc-400">通知はありません</div>
+            ) : (
+              notifications.map(notification => (
+                <button
+                  key={notification.id}
+                  onClick={() => handleNotificationClick(notification)}
+                  className={`w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors border-b border-gray-50 dark:border-white/[0.03] last:border-0 ${
+                    !notification.is_read ? 'bg-indigo-50/50 dark:bg-indigo-500/5' : ''
+                  }`}
+                >
+                  <div className="flex items-start gap-2">
+                    {!notification.is_read && (
+                      <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-indigo-500" />
+                    )}
+                    <div className={!notification.is_read ? '' : 'pl-4'}>
+                      <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 line-clamp-2">
+                        {notification.title}
+                      </p>
+                      {notification.message && (
+                        <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400 line-clamp-1">
+                          {notification.message}
+                        </p>
+                      )}
+                      <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
+                        {formatTime(notification.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

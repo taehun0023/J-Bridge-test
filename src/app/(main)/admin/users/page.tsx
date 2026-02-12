@@ -5,26 +5,22 @@ import AdminUsersClient from './AdminUsersClient'
 export default async function AdminUsersPage() {
   const supabase = await createClient()
 
-  const { data: users } = await supabase
+  const { data: rawUsers } = await supabase
     .from('profiles')
-    .select('*')
+    .select(`
+      *,
+      japanese_skills(jlpt_normalized, it_japanese_normalized),
+      coding_skills(core_normalized, framework_normalized)
+    `)
     .order('created_at', { ascending: false })
 
-  // Fetch pending retake requests (graceful fallback if retake columns not yet migrated)
-  const retakeRes = await supabase
-    .from('quiz_attempts')
-    .select('id, user_id, retake_requested_at, quizzes(title), profiles:user_id(full_name)')
-    .eq('retake_request_status', 'requested')
-    .order('retake_requested_at', { ascending: false })
-  const retakeAttempts = retakeRes.error ? null : retakeRes.data
-
-  const retakeRequests = (retakeAttempts ?? []).map(a => ({
-    attempt_id: a.id,
-    user_id: a.user_id,
-    user_name: (a.profiles as unknown as { full_name: string | null } | null)?.full_name ?? null,
-    quiz_title: (a.quizzes as unknown as { title: string } | null)?.title ?? null,
-    retake_requested_at: a.retake_requested_at,
-  }))
+  const users = (rawUsers ?? []).map((u: Record<string, unknown>) => {
+    const jp = u.japanese_skills as { jlpt_normalized: number; it_japanese_normalized: number } | null
+    const cs = u.coding_skills as { core_normalized: number; framework_normalized: number } | null
+    const jpScore = (u.is_japanese as boolean) ? 200 : ((jp?.jlpt_normalized ?? 0) + (jp?.it_japanese_normalized ?? 0))
+    const progScore = (cs?.core_normalized ?? 0) + (cs?.framework_normalized ?? 0)
+    return { ...u, japanese_score: jpScore, programming_score: progScore }
+  })
 
   const stats = {
     total: users?.length ?? 0,
@@ -57,7 +53,7 @@ export default async function AdminUsersPage() {
         </Card>
       </div>
 
-      <AdminUsersClient users={users ?? []} retakeRequests={retakeRequests} />
+      <AdminUsersClient users={users ?? []} />
     </div>
   )
 }

@@ -3,31 +3,18 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Crown, Medal, Award } from 'lucide-react'
 import TabBar from '@/components/ui/TabBar'
-import Badge from '@/components/ui/Badge'
-
-interface RankingEntry {
-  id: string
-  user_id: string
-  overall_score: number
-  jlpt_score: number
-  coding_score: number
-  attitude_score: number
-  coding_rank: string
-  overall_rank: number | null
-  profiles: { full_name: string | null; coding_rank: string } | null
-}
+import type { ComputedRankingEntry, RankingCategory } from '@/lib/ranking'
 
 interface Props {
-  rankings: RankingEntry[]
-  category: string
+  rankings: ComputedRankingEntry[]
+  category: RankingCategory
   currentUserId: string
 }
 
 const tabs = [
-  { key: 'overall', label: '総合' },
-  { key: 'jlpt', label: '生活日本語' },
-  { key: 'coding', label: 'CS知識/開発' },
-  { key: 'attitude', label: 'ビジネスリテラシー' },
+  { key: 'overall', label: '全体' },
+  { key: 'japanese', label: '日本語力' },
+  { key: 'programming', label: 'プログラミング技術力' },
 ]
 
 function RankIcon({ rank }: { rank: number }) {
@@ -37,18 +24,32 @@ function RankIcon({ rank }: { rank: number }) {
   return <span className="text-sm font-mono font-bold text-zinc-500 dark:text-zinc-400">{rank}</span>
 }
 
+function getColumnHeaders(category: RankingCategory) {
+  switch (category) {
+    case 'overall':
+      return { total: '全体 /400', sub1: '日本語力', sub2: 'プログラミング技術力' }
+    case 'japanese':
+      return { total: '日本語力 /200', sub1: '生活日本語', sub2: 'ビジネス日本語' }
+    case 'programming':
+      return { total: 'プログラミング /200', sub1: 'CS知識', sub2: '開発実務能力' }
+  }
+}
+
+function getScores(entry: ComputedRankingEntry, category: RankingCategory) {
+  switch (category) {
+    case 'overall':
+      return { total: entry.overall_score, sub1: entry.japanese_score, sub2: entry.programming_score }
+    case 'japanese':
+      return { total: entry.japanese_score, sub1: entry.jlpt_normalized, sub2: entry.it_japanese_normalized }
+    case 'programming':
+      return { total: entry.programming_score, sub1: entry.core_normalized, sub2: entry.framework_normalized }
+  }
+}
+
 export default function RankingClient({ rankings, category, currentUserId }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
-
-  function getScore(entry: RankingEntry) {
-    switch (category) {
-      case 'jlpt': return entry.jlpt_score
-      case 'coding': return entry.coding_score
-      case 'attitude': return entry.attitude_score
-      default: return entry.overall_score
-    }
-  }
+  const headers = getColumnHeaders(category)
 
   return (
     <div>
@@ -68,35 +69,54 @@ export default function RankingClient({ rankings, category, currentUserId }: Pro
             <thead>
               <tr className="bg-white/[0.02] dark:bg-white/[0.02]">
                 <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">順位</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">名前</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">コーディング等級</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400">スコア</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">ユーザー</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400">{headers.total}</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400">{headers.sub1}</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400">{headers.sub2}</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400">スコア更新日</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">
               {rankings.map((entry, i) => {
                 const isMe = entry.user_id === currentUserId
+                const scores = getScores(entry, category)
                 return (
-                  <tr key={entry.id} className={isMe ? 'bg-indigo-500/5 dark:bg-indigo-500/5' : ''}>
+                  <tr key={entry.user_id} className={isMe ? 'bg-indigo-500/5 dark:bg-indigo-500/5' : ''}>
                     <td className="whitespace-nowrap px-4 py-3">
                       <div className="flex items-center justify-center w-8">
                         <RankIcon rank={i + 1} />
                       </div>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3">
-                      <span className={`text-sm ${isMe ? 'font-bold text-indigo-400' : 'text-zinc-900 dark:text-zinc-100'}`}>
-                        {(entry.profiles as { full_name: string | null } | null)?.full_name ?? 'ユーザー'}
-                        {isMe && ' (自分)'}
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3">
-                      <Badge
-                        label={(entry.profiles as { coding_rank: string } | null)?.coding_rank ?? entry.coding_rank}
-                        variant="coding_rank"
-                      />
+                      <div className="flex items-center gap-2.5">
+                        {entry.avatar_url ? (
+                          <img src={entry.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
+                        ) : (
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-white text-xs font-medium">
+                            {(entry.full_name ?? 'U').charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <span className={`text-sm ${isMe ? 'font-bold text-indigo-400' : 'text-zinc-900 dark:text-zinc-100'}`}>
+                          {entry.full_name ?? 'ユーザー'}
+                          {isMe && ' (自分)'}
+                        </span>
+                      </div>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-right">
-                      <span className="text-sm font-mono font-semibold text-zinc-900 dark:text-zinc-100">{getScore(entry)}</span>
+                      <span className="text-sm font-mono font-semibold text-zinc-900 dark:text-zinc-100">{scores.total}</span>
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-right">
+                      <span className="text-sm font-mono text-zinc-600 dark:text-zinc-300">{scores.sub1}</span>
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-right">
+                      <span className="text-sm font-mono text-zinc-600 dark:text-zinc-300">{scores.sub2}</span>
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-right">
+                      <span className="text-sm text-zinc-500 dark:text-zinc-400">
+                        {entry.last_exam_date
+                          ? new Date(entry.last_exam_date).toLocaleDateString('ja-JP')
+                          : '—'}
+                      </span>
                     </td>
                   </tr>
                 )

@@ -35,6 +35,28 @@ interface Props {
 
 export default function QuizTaker({ quiz, questions }: Props) {
   const router = useRouter()
+
+  // Stabilize questions: lock the initial set to prevent server re-render issues
+  const [stableQuestions] = useState<Question[]>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = sessionStorage.getItem(`quiz_${quiz.id}`)
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored) as Question[]
+          if (parsed.length === questions.length) return parsed
+        } catch { /* ignore parse errors */ }
+      }
+    }
+    return questions
+  })
+
+  // Persist stableQuestions to sessionStorage
+  useState(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(`quiz_${quiz.id}`, JSON.stringify(stableQuestions))
+    }
+  })
+
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
@@ -45,7 +67,7 @@ export default function QuizTaker({ quiz, questions }: Props) {
     totalCount: number
   } | null>(null)
 
-  const currentQuestion = questions[currentIndex]
+  const currentQuestion = stableQuestions[currentIndex]
 
   async function handleSubmit() {
     setSubmitting(true)
@@ -69,6 +91,8 @@ export default function QuizTaker({ quiz, questions }: Props) {
       return
     }
 
+    // Clear sessionStorage after successful submission
+    sessionStorage.removeItem(`quiz_${quiz.id}`)
     setResult(submitResult)
     setSubmitting(false)
   }
@@ -96,14 +120,14 @@ export default function QuizTaker({ quiz, questions }: Props) {
   if (!currentQuestion) return null
 
   const answeredCount = Object.keys(answers).length
-  const allAnswered = answeredCount === questions.length
+  const allAnswered = answeredCount === stableQuestions.length
 
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-6">
         <h1 className="text-xl font-bold text-gray-900 dark:text-white">{quiz.title}</h1>
         <div className="mt-2 flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-          <span>{questions.length}問</span>
+          <span>{stableQuestions.length}問</span>
           <span>合格 {quiz.passing_score}点</span>
           {quiz.time_limit_minutes && <span>制限時間 {quiz.time_limit_minutes}分</span>}
         </div>
@@ -113,7 +137,7 @@ export default function QuizTaker({ quiz, questions }: Props) {
       <div className="mb-6 h-2 rounded-full bg-gray-200 dark:bg-gray-700">
         <div
           className="h-2 rounded-full bg-blue-600 transition-all"
-          style={{ width: `${(answeredCount / questions.length) * 100}%` }}
+          style={{ width: `${(answeredCount / stableQuestions.length) * 100}%` }}
         />
       </div>
 
@@ -148,7 +172,7 @@ export default function QuizTaker({ quiz, questions }: Props) {
         </button>
 
         <div className="flex gap-1">
-          {questions.map((q, i) => (
+          {stableQuestions.map((q, i) => (
             <button
               key={q.id}
               onClick={() => setCurrentIndex(i)}
@@ -165,7 +189,7 @@ export default function QuizTaker({ quiz, questions }: Props) {
           ))}
         </div>
 
-        {currentIndex < questions.length - 1 ? (
+        {currentIndex < stableQuestions.length - 1 ? (
           <button
             onClick={() => setCurrentIndex(currentIndex + 1)}
             className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"

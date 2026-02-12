@@ -39,6 +39,122 @@ export type SubmissionStatus =
 
 export type TaskAssignmentStatus = 'pending' | 'in_progress' | 'completed' | 'overdue'
 
+export type GrammarCategory =
+  | 'permission' | 'obligation' | 'desire' | 'ability' | 'condition'
+  | 'reason' | 'contrast' | 'conjecture' | 'change' | 'degree'
+  | 'time' | 'manner' | 'listing' | 'emphasis' | 'formal'
+
+export interface JlptGrammar {
+  id: string
+  pattern: string
+  meaning_ko: string
+  meaning_ja: string
+  jlpt_level: JlptLevel
+  formation: string
+  formation_detail: string | null
+  category: GrammarCategory | null
+  example_sentences: { ja: string; ko: string; highlight: string }[]
+  related_patterns: string[] | null
+  common_mistakes: string | null
+  usage_notes: string | null
+  sort_order: number
+  created_at: string
+}
+
+export type ReadingPassageType = 'notice' | 'email' | 'article' | 'advertisement' | 'instruction' | 'essay' | 'letter' | 'report'
+export type ListeningScriptType = 'dialogue' | 'monologue' | 'announcement' | 'instruction' | 'meeting' | 'phone_call'
+
+export interface JlptReadingPassage {
+  id: string
+  title: string
+  passage: string
+  passage_type: ReadingPassageType
+  jlpt_level: JlptLevel
+  word_count: number
+  topic: string | null
+  vocabulary_notes: { word: string; reading: string; meaning_ko: string }[]
+  grammar_notes: string[] | null
+  translation_ko: string | null
+  sort_order: number
+  created_at: string
+}
+
+export interface JlptListeningScript {
+  id: string
+  title: string
+  script: string
+  script_type: ListeningScriptType
+  jlpt_level: JlptLevel
+  speakers: string[] | null
+  situation: string | null
+  vocabulary_notes: { word: string; reading: string; meaning_ko: string }[]
+  translation_ko: string | null
+  sort_order: number
+  created_at: string
+}
+
+export type AccessRequestStatus = 'pending' | 'approved' | 'denied'
+
+export type NotificationType = 'task_assigned' | 'exam_requested' | 'exam_approved' | 'exam_denied' | 'exam_completed' | 'retake_requested'
+export type LearningAssignmentStatus = 'pending' | 'in_progress' | 'completed'
+export type ComprehensiveExamStatus = 'requested' | 'approved' | 'denied' | 'in_progress' | 'completed' | 'failed'
+
+export interface Notification {
+  id: string
+  user_id: string
+  type: NotificationType
+  title: string
+  message: string | null
+  link: string | null
+  is_read: boolean
+  related_id: string | null
+  created_at: string
+}
+
+export interface LearningAssignment {
+  id: string
+  assigned_by: string
+  assigned_to: string
+  category: string
+  subcategory: string
+  content_level: string | null
+  title: string
+  description: string | null
+  due_date: string | null
+  status: LearningAssignmentStatus
+  required_quiz_ids: string[]
+  passed_quiz_ids: string[]
+  created_at: string
+  completed_at: string | null
+}
+
+export interface ComprehensiveExam {
+  id: string
+  user_id: string
+  category: string
+  subcategory: string
+  content_level: string | null
+  status: ComprehensiveExamStatus
+  requested_at: string
+  approved_at: string | null
+  approved_by: string | null
+  started_at: string | null
+  completed_at: string | null
+  time_limit_minutes: number
+  total_questions: number
+  score: number | null
+  passed: boolean | null
+  passing_score: number
+}
+
+export interface MentorMenteeAssignment {
+  id: string
+  mentor_id: string
+  mentee_id: string
+  assigned_by: string
+  created_at: string
+}
+
 export interface Profile {
   id: string
   email: string

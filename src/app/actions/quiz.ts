@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { recalculateUserScores } from './scores'
+import { checkAssignmentProgress } from './learning-assignments'
 
 export async function startQuizAttempt(quizId: string) {
   const supabase = await createClient()
@@ -98,6 +99,11 @@ export async function submitQuizAnswers(
 
   // Recalculate user scores after quiz completion
   recalculateUserScores(user.id).catch(() => {})
+
+  // Update learning assignment progress on quiz pass
+  if (passed) {
+    checkAssignmentProgress(user.id, attempt.quiz_id).catch(() => {})
+  }
 
   return {
     score,

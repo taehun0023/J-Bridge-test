@@ -8,7 +8,7 @@ const outFile = path.join(supabaseDir, 'seed_assessment_quizzes.sql');
 const header = `-- ============================================
 -- J-Bridge Assessment Quiz Seed Data
 -- 5 Assessment Quizzes for Onboarding
--- Total: 390 questions, 1560 options
+-- Total: 450 questions, 1800 options
 -- ============================================
 
 BEGIN;
@@ -71,7 +71,15 @@ const parts = [
   'quiz2_it_japanese.sql',
   'quiz3_programming.sql',
   'quiz4_framework.sql',
+  'quiz4_java_code.sql',
+  'quiz4_javascript_code.sql',
   'quiz5_attitude.sql',
+  'jlpt_grammar_content.sql',
+  'jlpt_grammar_quizzes.sql',
+  'jlpt_reading_content.sql',
+  'jlpt_reading_quizzes.sql',
+  'jlpt_listening_content.sql',
+  'jlpt_listening_quizzes.sql',
 ];
 
 let output = header + '\n';

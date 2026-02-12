@@ -18,6 +18,21 @@ interface QuizQuestionProps {
   isCorrect?: boolean
 }
 
+const CODE_INDICATORS = ['{', 'class ', 'function ', 'console.', 'const ', 'import ', 'public ', 'static ', 'void ', 'System.', 'return ', 'int ', 'String ']
+
+function splitQuestionText(text: string): { prompt: string; codeBlock: string | null } {
+  const splitIndex = text.indexOf('\n\n')
+  if (splitIndex === -1) return { prompt: text, codeBlock: null }
+
+  const before = text.substring(0, splitIndex)
+  const after = text.substring(splitIndex + 2)
+
+  const hasCode = CODE_INDICATORS.some(indicator => after.includes(indicator))
+  if (!hasCode) return { prompt: text, codeBlock: null }
+
+  return { prompt: before, codeBlock: after }
+}
+
 export default function QuizQuestion({
   questionNumber,
   totalQuestions,
@@ -28,6 +43,7 @@ export default function QuizQuestion({
   showResult,
   isCorrect,
 }: QuizQuestionProps) {
+  const { prompt: promptText, codeBlock } = splitQuestionText(questionText)
   function handleClick(optionId: string) {
     if (showResult) return
     if (selectedOptionId === optionId) {
@@ -54,7 +70,13 @@ export default function QuizQuestion({
         )}
       </div>
 
-      <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 whitespace-pre-line">{questionText}</h3>
+      <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 whitespace-pre-line">{promptText}</h3>
+
+      {codeBlock && (
+        <pre className="mt-3 rounded-xl bg-zinc-50 border border-zinc-200 p-4 font-mono text-sm text-zinc-800 overflow-x-auto dark:bg-zinc-900 dark:border-white/[0.08] dark:text-zinc-300">
+          <code>{codeBlock}</code>
+        </pre>
+      )}
 
       <div className="mt-4 space-y-2">
         {options
