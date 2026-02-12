@@ -280,7 +280,7 @@ export async function recalculateAllScores() {
   const { data: users } = await supabase
     .from('profiles')
     .select('id')
-    .in('role', ['mentee', 'mentor'])
+    .in('role', ['mentee', 'mentor', 'admin'])
 
   let processed = 0
   for (const u of users ?? []) {

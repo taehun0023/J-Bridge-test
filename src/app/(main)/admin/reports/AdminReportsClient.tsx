@@ -40,22 +40,23 @@ interface Feedback {
 }
 
 const categoryLabels: Record<string, string> = {
-  general: '一般',
-  japanese: '日本語',
-  coding: 'コーディング',
-  attitude: '態度',
-  assignment: '課題',
-  dispatch_readiness: '派遣準備度',
+  seikatsu: '生活日本語',
+  business_jp: 'ビジネス日本語',
+  cs: 'CS知識',
+  dev: '開発実務能力',
+  business_lit: 'ビジネスリテラシー',
 }
 
 export default function AdminReportsClient({
   users,
   skillMap,
   feedbacks,
+  userRole,
 }: {
   users: User[]
   skillMap: Record<string, SkillData>
   feedbacks: Feedback[]
+  userRole: string
 }) {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [showFeedbackForm, setShowFeedbackForm] = useState(false)
@@ -120,7 +121,7 @@ export default function AdminReportsClient({
       <div className="grid gap-6 lg:grid-cols-3">
         {/* User list */}
         <div className="lg:col-span-1">
-          <Card title="社員一覧">
+          <Card title={userRole === 'mentor' ? 'メンティー一覧' : '社員一覧'}>
             <div className="max-h-[600px] space-y-1 overflow-y-auto">
               {users.map(user => (
                 <button
@@ -146,7 +147,9 @@ export default function AdminReportsClient({
                 </button>
               ))}
               {users.length === 0 && (
-                <p className="py-4 text-center text-sm text-zinc-500">社員がいません</p>
+                <p className="py-4 text-center text-sm text-zinc-500">
+                  {userRole === 'mentor' ? 'メンティーがいません' : '社員がいません'}
+                </p>
               )}
             </div>
           </Card>
@@ -191,9 +194,9 @@ export default function AdminReportsClient({
                       <div>
                         <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">カテゴリ</label>
                         <select name="category"
-                          className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100">
+                          className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-gray-700 dark:text-white">
                           {Object.entries(categoryLabels).map(([key, label]) => (
-                            <option key={key} value={key}>{label}</option>
+                            <option key={key} value={key} className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white">{label}</option>
                           ))}
                         </select>
                       </div>
@@ -201,7 +204,7 @@ export default function AdminReportsClient({
                     <div className="mt-3">
                       <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">内容 *</label>
                       <textarea name="content" required rows={3}
-                        className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100" />
+                        className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-gray-700 dark:text-white" />
                     </div>
                     <button type="submit" disabled={pending}
                       className="mt-3 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors">
@@ -233,7 +236,7 @@ export default function AdminReportsClient({
           ) : (
             <Card>
               <div className="py-12 text-center text-sm text-zinc-500">
-                左の一覧から社員を選択してください
+                {userRole === 'mentor' ? '左の一覧からメンティーを選択してください' : '左の一覧から社員を選択してください'}
               </div>
             </Card>
           )}

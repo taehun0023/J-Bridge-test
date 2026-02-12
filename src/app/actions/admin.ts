@@ -2,6 +2,7 @@
 
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { createNotification } from '@/app/actions/notifications'
 
 async function assertAdmin() {
   const supabase = await createClient()
@@ -122,7 +123,21 @@ export async function deleteTaskAssignment(taskId: string) {
 // ─── Feedback ───
 
 export async function createFeedback(formData: FormData) {
-  const { supabase, adminId } = await assertAdmin()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: '認証が必要です' }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'mentor'))
+    return { error: '権限がありません' }
+
+  const serviceClient = createServiceRoleClient()
+  if (!serviceClient) return { error: 'Service role key not configured' }
 
   const userId = formData.get('user_id') as string
   const category = formData.get('category') as string
@@ -130,17 +145,65 @@ export async function createFeedback(formData: FormData) {
 
   if (!userId || !content) return { error: '必須フィールドをすべて入力してください' }
 
-  const { error } = await supabase
+  const { data, error } = await serviceClient
     .from('admin_feedbacks')
     .insert({
-      admin_id: adminId,
+      admin_id: user.id,
       user_id: userId,
-      category: category || 'general',
+      category: category || 'seikatsu',
       content,
     })
+    .select('id')
+    .single()
+
+  if (error) return { error: error.message }
+
+  // 受信者に通知
+  await createNotification(
+    userId,
+    'feedback_received',
+    'フィードバックが届きました',
+    content.slice(0, 100),
+    '/feedback',
+    data.id
+  )
+
+  revalidatePath('/admin/reports')
+  revalidatePath('/feedback')
+  return { success: true }
+}
+
+export async function updateFeedback(feedbackId: string, content: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: '認証が必要です' }
+
+  const { error } = await supabase
+    .from('admin_feedbacks')
+    .update({ content })
+    .eq('id', feedbackId)
+    .eq('admin_id', user.id)
 
   if (error) return { error: error.message }
   revalidatePath('/admin/reports')
+  revalidatePath('/feedback')
+  return { success: true }
+}
+
+export async function deleteFeedback(feedbackId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: '認証が必要です' }
+
+  const { error } = await supabase
+    .from('admin_feedbacks')
+    .delete()
+    .eq('id', feedbackId)
+    .eq('admin_id', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/reports')
+  revalidatePath('/feedback')
   return { success: true }
 }
 
@@ -203,6 +266,136 @@ export async function deleteCourse(courseId: string) {
     .from('courses')
     .delete()
     .eq('id', courseId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/courses')
+  return { success: true }
+}
+
+// ─── Question Management ───
+
+interface QuestionOptionData {
+  option_text: string
+  is_correct: boolean
+  sort_order: number
+}
+
+interface QuestionFormData {
+  question_text: string
+  question_type: string
+  difficulty: string
+  question_category: string | null
+  explanation: string | null
+  options: QuestionOptionData[]
+}
+
+export async function createQuestion(quizId: string, data: QuestionFormData) {
+  const { serviceClient } = await assertAdmin()
+
+  // Get next sort_order
+  const { data: existing } = await serviceClient
+    .from('quiz_questions')
+    .select('sort_order')
+    .eq('quiz_id', quizId)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+
+  const nextOrder = (existing?.[0]?.sort_order ?? 0) + 1
+
+  const { data: question, error } = await serviceClient
+    .from('quiz_questions')
+    .insert({
+      quiz_id: quizId,
+      question_text: data.question_text,
+      question_type: data.question_type,
+      difficulty: data.difficulty,
+      question_category: data.question_category,
+      explanation: data.explanation,
+      points: 1,
+      sort_order: nextOrder,
+      is_published: true,
+    })
+    .select('id')
+    .single()
+
+  if (error) return { error: error.message }
+
+  // Insert options
+  const optionRows = data.options.map((opt, i) => ({
+    question_id: question.id,
+    option_text: opt.option_text,
+    is_correct: opt.is_correct,
+    sort_order: i + 1,
+  }))
+
+  const { error: optError } = await serviceClient
+    .from('quiz_question_options')
+    .insert(optionRows)
+
+  if (optError) return { error: optError.message }
+
+  revalidatePath('/admin/courses')
+  return { success: true }
+}
+
+export async function updateQuestion(questionId: string, data: QuestionFormData) {
+  const { serviceClient } = await assertAdmin()
+
+  const { error } = await serviceClient
+    .from('quiz_questions')
+    .update({
+      question_text: data.question_text,
+      difficulty: data.difficulty,
+      question_category: data.question_category,
+      explanation: data.explanation,
+    })
+    .eq('id', questionId)
+
+  if (error) return { error: error.message }
+
+  // Delete existing options and re-insert
+  await serviceClient
+    .from('quiz_question_options')
+    .delete()
+    .eq('question_id', questionId)
+
+  const optionRows = data.options.map((opt, i) => ({
+    question_id: questionId,
+    option_text: opt.option_text,
+    is_correct: opt.is_correct,
+    sort_order: i + 1,
+  }))
+
+  const { error: optError } = await serviceClient
+    .from('quiz_question_options')
+    .insert(optionRows)
+
+  if (optError) return { error: optError.message }
+
+  revalidatePath('/admin/courses')
+  return { success: true }
+}
+
+export async function deleteQuestion(questionId: string) {
+  const { serviceClient } = await assertAdmin()
+
+  const { error } = await serviceClient
+    .from('quiz_questions')
+    .delete()
+    .eq('id', questionId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/courses')
+  return { success: true }
+}
+
+export async function toggleQuestionPublished(questionId: string, isPublished: boolean) {
+  const { serviceClient } = await assertAdmin()
+
+  const { error } = await serviceClient
+    .from('quiz_questions')
+    .update({ is_published: isPublished })
+    .eq('id', questionId)
 
   if (error) return { error: error.message }
   revalidatePath('/admin/courses')

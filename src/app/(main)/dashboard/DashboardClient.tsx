@@ -5,7 +5,7 @@ import { useState, useTransition } from 'react'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import Link from 'next/link'
-import { BarChart3, Trophy, BookOpen } from 'lucide-react'
+import { BarChart3, Trophy, BookOpen, MessageSquare } from 'lucide-react'
 import { getGrade, getGradeColor, DISPATCH_MINIMUM_SCORE, getRelevantAxes, AXIS_DISPLAY_LABELS } from '@/lib/assessment-config'
 import type { AxisKey } from '@/lib/assessment-config'
 import { requestRetake } from '@/app/actions/assessment'
@@ -71,6 +71,22 @@ interface LearningStats {
   completed: number
 }
 
+interface RecentFeedback {
+  id: string
+  category: string
+  content: string
+  created_at: string
+  admin: { full_name: string | null } | null
+}
+
+const feedbackCategoryLabels: Record<string, string> = {
+  seikatsu: '生活日本語',
+  business_jp: 'ビジネス日本語',
+  cs: 'CS知識',
+  dev: '開発実務能力',
+  business_lit: 'ビジネスリテラシー',
+}
+
 interface Props {
   profile: Profile | null
   radarScores: Record<AxisKey, number>
@@ -82,6 +98,7 @@ interface Props {
   userRanking: UserRanking | null
   enrolledCourses: EnrolledCourse[]
   learningStats?: LearningStats
+  recentFeedbacks?: RecentFeedback[]
 }
 
 function getBadgeStyle(badge: BadgeType): string {
@@ -94,7 +111,7 @@ function getBadgeStyle(badge: BadgeType): string {
 
 export default function DashboardClient({
   profile, radarScores, recentQuizzes, tasks, pendingAssessments, isJapanese, completedAssessments,
-  userRanking, enrolledCourses, learningStats,
+  userRanking, enrolledCourses, learningStats, recentFeedbacks = [],
 }: Props) {
   const relevantAxes = getRelevantAxes(isJapanese)
   const hasScores = relevantAxes.some(key => radarScores[key] > 0)
@@ -229,7 +246,7 @@ export default function DashboardClient({
             <p className="py-4 text-center text-sm text-zinc-500">まだクイズを受けていません</p>
           ) : (
             <div className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">
-              {recentQuizzes.map((q) => (
+              {recentQuizzes.slice(0, 5 - Math.min(completedAssessments.length, 2)).map((q) => (
                 <div key={q.id} className="flex items-center justify-between py-3">
                   <div>
                     <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
@@ -250,7 +267,7 @@ export default function DashboardClient({
               {completedAssessments.length > 0 && (
                 <div className="pt-3">
                   <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2">完了済テスト</p>
-                  {completedAssessments.map((ca) => (
+                  {completedAssessments.slice(0, 2).map((ca) => (
                     <div key={ca.step} className="flex items-center justify-between py-2">
                       <div>
                         <p className="text-sm text-zinc-900 dark:text-zinc-100">{ca.label}</p>
@@ -279,6 +296,12 @@ export default function DashboardClient({
               )}
             </div>
           )}
+          <Link
+            href="/dashboard/history"
+            className="mt-3 block text-center text-sm font-medium text-indigo-500 hover:text-indigo-400 transition-colors"
+          >
+            全履歴を見る →
+          </Link>
         </Card>
       </div>
 
@@ -314,6 +337,38 @@ export default function DashboardClient({
               className="mt-4 block rounded-xl bg-indigo-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
             >
               課題一覧へ
+            </Link>
+          </Card>
+        </div>
+      )}
+
+      {/* Recent Feedbacks */}
+      {recentFeedbacks.length > 0 && (
+        <div className="mt-4">
+          <Card title="最近のフィードバック">
+            <div className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">
+              {recentFeedbacks.map((fb) => (
+                <div key={fb.id} className="py-3">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex rounded-full bg-indigo-500/10 px-2 py-0.5 text-xs font-medium text-indigo-400 ring-1 ring-indigo-500/20">
+                      {feedbackCategoryLabels[fb.category] ?? fb.category}
+                    </span>
+                    <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                      {(fb.admin as { full_name: string | null } | null)?.full_name ?? '管理者'}
+                    </span>
+                    <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                      {new Date(fb.created_at).toLocaleDateString('ja-JP')}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300 line-clamp-2">{fb.content}</p>
+                </div>
+              ))}
+            </div>
+            <Link
+              href="/feedback"
+              className="mt-3 block text-center text-sm font-medium text-indigo-500 hover:text-indigo-400 transition-colors"
+            >
+              詳細はこちら →
             </Link>
           </Card>
         </div>

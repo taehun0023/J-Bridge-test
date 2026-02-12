@@ -128,7 +128,6 @@ export default async function DashboardPage() {
       japanese_skills(jlpt_normalized, it_japanese_normalized, updated_at),
       coding_skills(core_normalized, framework_normalized, updated_at)
     `)
-    .eq('is_onboarded', true)
 
   let userRanking: {
     overall_score: number
@@ -138,7 +137,9 @@ export default async function DashboardPage() {
   } | null = null
 
   if (allMentees && allMentees.length > 0) {
-    const scored = allMentees.map((m: Record<string, unknown>) => {
+    const scored = allMentees
+      .filter((m: Record<string, unknown>) => m.japanese_skills !== null || m.coding_skills !== null)
+      .map((m: Record<string, unknown>) => {
       const jp = m.japanese_skills as { jlpt_normalized: number; it_japanese_normalized: number } | null
       const cs = m.coding_skills as { core_normalized: number; framework_normalized: number } | null
       const jpScore = (m.is_japanese as boolean) ? 200 : ((jp?.jlpt_normalized ?? 0) + (jp?.it_japanese_normalized ?? 0))
@@ -186,6 +187,14 @@ export default async function DashboardPage() {
     enrolledCourses = (data ?? []) as typeof enrolledCourses
   }
 
+  // Fetch recent feedbacks
+  const { data: recentFeedbacks } = await supabase
+    .from('admin_feedbacks')
+    .select('id, category, content, created_at, admin:profiles!admin_feedbacks_admin_id_fkey(full_name)')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(5)
+
   // Compute radar scores
   const radarScores: Record<AxisKey, number> = {
     jlpt: japaneseSkills?.jlpt_normalized ?? 0,
@@ -224,6 +233,7 @@ export default async function DashboardPage() {
       userRanking={userRanking}
       enrolledCourses={enrolledCourses}
       learningStats={learningStats}
+      recentFeedbacks={recentFeedbacks ?? []}
     />
   )
 }

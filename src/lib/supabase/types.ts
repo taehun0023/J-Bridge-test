@@ -95,7 +95,7 @@ export interface JlptListeningScript {
 
 export type AccessRequestStatus = 'pending' | 'approved' | 'denied'
 
-export type NotificationType = 'task_assigned' | 'exam_requested' | 'exam_approved' | 'exam_denied' | 'exam_completed' | 'retake_requested'
+export type NotificationType = 'task_assigned' | 'exam_requested' | 'exam_approved' | 'exam_denied' | 'exam_completed' | 'retake_requested' | 'feedback_received' | 'feedback_reply'
 export type LearningAssignmentStatus = 'pending' | 'in_progress' | 'completed'
 export type ComprehensiveExamStatus = 'requested' | 'approved' | 'denied' | 'in_progress' | 'completed' | 'failed'
 

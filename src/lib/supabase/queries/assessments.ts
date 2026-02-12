@@ -43,6 +43,7 @@ async function fetchAllQuestions(quizId: string): Promise<QuestionWithOptions[]>
     .from('quiz_questions')
     .select('*, quiz_question_options_safe(*)')
     .eq('quiz_id', quizId)
+    .eq('is_published', true)
     .order('sort_order', { ascending: true })
 
   if (error || !data) return []

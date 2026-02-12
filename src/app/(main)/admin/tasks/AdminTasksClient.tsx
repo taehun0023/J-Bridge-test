@@ -71,24 +71,16 @@ const statusLabels: Record<string, string> = {
   failed: '不合格',
 }
 
-interface QuestionClaim {
-  question_id: string
-  question_text: string
-  quiz_title: string
-  claim_count: number
-}
-
 interface Props {
   learningAssignments: LearningAssignmentRow[]
   examRequests: ExamRequest[]
   retakeRequests: RetakeRequest[]
-  questionClaims: QuestionClaim[]
   users: User[]
   currentRole: string
 }
 
-export default function AdminTasksClient({ learningAssignments, examRequests, retakeRequests, questionClaims, users, currentRole }: Props) {
-  const [activeTab, setActiveTab] = useState<'learning' | 'approvals' | 'claims'>('learning')
+export default function AdminTasksClient({ learningAssignments, examRequests, retakeRequests, users, currentRole }: Props) {
+  const [activeTab, setActiveTab] = useState<'learning' | 'approvals'>('learning')
   const [showForm, setShowForm] = useState(false)
   const [pending, startTransition] = useTransition()
   const [message, setMessage] = useState<string | null>(null)
@@ -183,7 +175,6 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
   const tabs = [
     { key: 'learning' as const, label: '学習課題' },
     { key: 'approvals' as const, label: '承認リクエスト' },
-    { key: 'claims' as const, label: '問題クレーム' },
   ]
 
   return (
@@ -208,11 +199,6 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
             {tab.key === 'approvals' && pendingApprovals > 0 && (
               <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
                 {pendingApprovals}
-              </span>
-            )}
-            {tab.key === 'claims' && questionClaims.length > 0 && (
-              <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-white">
-                {questionClaims.length}
               </span>
             )}
           </button>
@@ -380,46 +366,6 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
             )}
           </div>
         </>
-      )}
-
-      {/* Claims Tab */}
-      {activeTab === 'claims' && (
-        <div>
-          <h3 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">問題クレーム集計</h3>
-          <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">クレーム数</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">クイズ</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">問題テキスト</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                  {questionClaims.map(claim => (
-                    <tr key={claim.question_id}>
-                      <td className="px-4 py-3">
-                        <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-red-100 px-2 text-xs font-bold text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                          {claim.claim_count}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                        {claim.quiz_title || '-'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900 dark:text-white max-w-md truncate">
-                        {claim.question_text}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {questionClaims.length === 0 && (
-              <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">クレームがありません</div>
-            )}
-          </div>
-        </div>
       )}
 
       {/* Approvals Tab */}

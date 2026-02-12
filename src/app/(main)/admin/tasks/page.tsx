@@ -48,37 +48,6 @@ export default async function AdminTasksPage() {
     }))
   }
 
-  // Fetch question claims aggregated by question
-  let questionClaims: { question_id: string; question_text: string; quiz_title: string; claim_count: number }[] = []
-  if (serviceClient) {
-    const { data: claimsData } = await serviceClient
-      .from('question_claims')
-      .select('question_id, quiz_questions(question_text, quizzes(title))')
-
-    if (claimsData && claimsData.length > 0) {
-      // Aggregate claims by question_id
-      const claimMap = new Map<string, { question_text: string; quiz_title: string; count: number }>()
-      for (const c of claimsData) {
-        const existing = claimMap.get(c.question_id)
-        const qText = (c.quiz_questions as any)?.question_text ?? ''
-        const qTitle = (c.quiz_questions as any)?.quizzes?.title ?? ''
-        if (existing) {
-          existing.count++
-        } else {
-          claimMap.set(c.question_id, { question_text: qText, quiz_title: qTitle, count: 1 })
-        }
-      }
-      questionClaims = Array.from(claimMap.entries())
-        .map(([question_id, v]) => ({
-          question_id,
-          question_text: v.question_text,
-          quiz_title: v.quiz_title,
-          claim_count: v.count,
-        }))
-        .sort((a, b) => b.claim_count - a.claim_count)
-    }
-  }
-
   // For mentors: only show their assigned mentees (use serviceClient to bypass RLS/schema cache issues)
   let users: { id: string; full_name: string | null; email: string; role: string }[] = []
   if (currentRole === 'mentor' && serviceClient) {
@@ -139,7 +108,6 @@ export default async function AdminTasksPage() {
         learningAssignments={learningAssignments ?? []}
         examRequests={examRequests ?? []}
         retakeRequests={retakeRequests}
-        questionClaims={questionClaims}
         users={users}
         currentRole={currentRole}
       />

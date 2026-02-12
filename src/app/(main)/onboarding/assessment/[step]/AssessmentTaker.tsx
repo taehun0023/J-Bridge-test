@@ -66,6 +66,8 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
   const [claimedQuestions, setClaimedQuestions] = useState<Set<string>>(new Set())
   const [claimingId, setClaimingId] = useState<string | null>(null)
   const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set())
+  const [claimForms, setClaimForms] = useState<Set<string>>(new Set())
+  const [claimReasons, setClaimReasons] = useState<Record<string, string>>({})
 
   // If server says already completed and client has no review state → redirect to dashboard
   useEffect(() => {
@@ -232,11 +234,22 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
 
   const handleClaim = async (questionId: string) => {
     setClaimingId(questionId)
-    const result = await submitQuestionClaim(questionId)
+    const reason = claimReasons[questionId] || undefined
+    const result = await submitQuestionClaim(questionId, reason)
     if (result.success) {
       setClaimedQuestions(prev => new Set(prev).add(questionId))
+      setClaimForms(prev => { const next = new Set(prev); next.delete(questionId); return next })
     }
     setClaimingId(null)
+  }
+
+  const toggleClaimForm = (questionId: string) => {
+    setClaimForms(prev => {
+      const next = new Set(prev)
+      if (next.has(questionId)) next.delete(questionId)
+      else next.add(questionId)
+      return next
+    })
   }
 
   const toggleExpanded = (questionId: string) => {
@@ -360,19 +373,49 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
                       })}
                     </div>
 
-                    {/* Claim button */}
-                    <div className="mt-3 flex justify-end">
-                      <button
-                        onClick={() => handleClaim(q.id)}
-                        disabled={isClaimed || claimingId === q.id}
-                        className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                          isClaimed
-                            ? 'bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500 cursor-default'
-                            : 'bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 dark:text-amber-400 disabled:opacity-50'
-                        }`}
-                      >
-                        {isClaimed ? 'クレーム送信済み' : claimingId === q.id ? '送信中...' : '問題にクレーム'}
-                      </button>
+                    {/* Claim section */}
+                    <div className="mt-3">
+                      {isClaimed ? (
+                        <div className="flex justify-end">
+                          <span className="rounded-lg bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500">
+                            クレーム送信済み
+                          </span>
+                        </div>
+                      ) : claimForms.has(q.id) ? (
+                        <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+                          <textarea
+                            placeholder="クレーム理由（任意）"
+                            value={claimReasons[q.id] ?? ''}
+                            onChange={e => setClaimReasons(prev => ({ ...prev, [q.id]: e.target.value }))}
+                            rows={2}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-amber-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                          />
+                          <div className="mt-2 flex justify-end gap-2">
+                            <button
+                              onClick={() => toggleClaimForm(q.id)}
+                              className="rounded-lg px-3 py-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+                            >
+                              キャンセル
+                            </button>
+                            <button
+                              onClick={() => handleClaim(q.id)}
+                              disabled={claimingId === q.id}
+                              className="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-600 disabled:opacity-50"
+                            >
+                              {claimingId === q.id ? '送信中...' : '送信'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => toggleClaimForm(q.id)}
+                            className="rounded-lg bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-600 hover:bg-amber-500/20 dark:text-amber-400"
+                          >
+                            問題にクレーム
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

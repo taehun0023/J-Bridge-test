@@ -1,15 +1,40 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 import AdminReportsClient from './AdminReportsClient'
 
 export default async function AdminReportsPage() {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  // Get all mentee/mentor users with their skills
-  const { data: users } = await supabase
+  if (!user) redirect('/login')
+
+  const { data: myProfile } = await supabase
     .from('profiles')
-    .select('*')
-    .in('role', ['mentee', 'mentor'])
-    .order('full_name')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  const myRole = myProfile?.role
+  const serviceClient = createServiceRoleClient()
+
+  // Mentor: only show their mentees. Admin: show all mentee/mentor users.
+  let users
+  if (myRole === 'mentor' && serviceClient) {
+    // Use serviceClient to bypass RLS/schema cache issues (same pattern as tasks page)
+    const { data: menteeAssignments } = await serviceClient
+      .from('mentor_mentee_assignments')
+      .select('mentee:profiles!mentor_mentee_assignments_mentee_id_fkey(id, full_name, email, role, coding_rank, jlpt_level, is_japanese)')
+      .eq('mentor_id', user.id)
+
+    users = (menteeAssignments ?? [])
+      .map(a => a.mentee as unknown as { id: string; full_name: string | null; email: string; role: string; coding_rank: string; jlpt_level: string | null; is_japanese: boolean })
+      .filter(Boolean)
+  } else {
+    const { data } = await supabase.from('profiles').select('*').in('role', ['mentee', 'mentor']).order('full_name')
+    users = data
+  }
+
+  const userIds = (users ?? []).map(u => u.id)
 
   // Get all dispatch readiness scores (latest per user)
   const { data: readinessScores } = await supabase
@@ -32,12 +57,26 @@ export default async function AdminReportsPage() {
     .from('attitude_culture_skills')
     .select('user_id, attitude_normalized')
 
-  // Get recent feedbacks
-  const { data: feedbacks } = await supabase
-    .from('admin_feedbacks')
-    .select('*, user:profiles!admin_feedbacks_user_id_fkey(full_name)')
-    .order('created_at', { ascending: false })
-    .limit(50)
+  // Get recent feedbacks — mentor sees only their mentees' feedbacks
+  let feedbacks
+  if (myRole === 'mentor' && userIds.length > 0) {
+    const { data } = await supabase
+      .from('admin_feedbacks')
+      .select('*, user:profiles!admin_feedbacks_user_id_fkey(full_name)')
+      .in('user_id', userIds)
+      .order('created_at', { ascending: false })
+      .limit(50)
+    feedbacks = data
+  } else if (myRole === 'mentor') {
+    feedbacks = []
+  } else {
+    const { data } = await supabase
+      .from('admin_feedbacks')
+      .select('*, user:profiles!admin_feedbacks_user_id_fkey(full_name)')
+      .order('created_at', { ascending: false })
+      .limit(50)
+    feedbacks = data
+  }
 
   // Build skill map per user
   const skillMap: Record<string, {
@@ -64,12 +103,15 @@ export default async function AdminReportsPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white">レポート</h1>
-      <p className="mt-1 text-gray-500 dark:text-gray-400">全社員チャート及びフィードバック管理</p>
+      <p className="mt-1 text-gray-500 dark:text-gray-400">
+        {myRole === 'mentor' ? 'メンティーチャート及びフィードバック管理' : '全社員チャート及びフィードバック管理'}
+      </p>
 
       <AdminReportsClient
         users={users ?? []}
         skillMap={skillMap}
         feedbacks={feedbacks ?? []}
+        userRole={myRole ?? 'admin'}
       />
     </div>
   )

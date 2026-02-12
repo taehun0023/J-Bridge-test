@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 
-export async function submitQuestionClaim(questionId: string): Promise<{ success?: boolean; error?: string }> {
+export async function submitQuestionClaim(questionId: string, reason?: string): Promise<{ success?: boolean; error?: string }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -20,7 +20,11 @@ export async function submitQuestionClaim(questionId: string): Promise<{ success
   // Insert claim (ON CONFLICT DO NOTHING for unique constraint)
   const { error } = await supabase
     .from('question_claims')
-    .insert({ question_id: questionId, user_id: user.id })
+    .insert({
+      question_id: questionId,
+      user_id: user.id,
+      claim_reason: reason || null,
+    })
 
   if (error) {
     // Unique violation means already claimed

@@ -20,9 +20,10 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
       japanese_skills(jlpt_normalized, it_japanese_normalized, updated_at),
       coding_skills(core_normalized, framework_normalized, updated_at)
     `)
-    .eq('is_onboarded', true)
 
-  const rankingUsers: RankingUserData[] = (users ?? []).map((u: Record<string, unknown>) => {
+  const rankingUsers: RankingUserData[] = (users ?? [])
+    .filter((u: Record<string, unknown>) => u.japanese_skills !== null || u.coding_skills !== null)
+    .map((u: Record<string, unknown>) => {
     const jp = u.japanese_skills as { jlpt_normalized: number; it_japanese_normalized: number; updated_at: string } | null
     const cs = u.coding_skills as { core_normalized: number; framework_normalized: number; updated_at: string } | null
     return {

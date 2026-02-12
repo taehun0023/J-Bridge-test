@@ -5,6 +5,7 @@ import {
   Cpu,
   Code2,
   Handshake,
+  MessageSquare,
   User,
   Users,
   FileEdit,
@@ -100,6 +101,7 @@ export const mainNavItems: NavItem[] = [
   { key: 'cs', href: '/cs', label: 'CS知識', icon: Cpu },
   { key: 'dev', href: '/dev', label: '開発実務能力', icon: Code2 },
   { key: 'business-lit', href: '/business-literacy', label: 'ビジネスリテラシー', icon: Handshake },
+  { key: 'feedback', href: '/feedback', label: 'フィードバック', icon: MessageSquare },
   { key: 'profile', href: '/profile', label: 'プロフィール', icon: User },
 ]
 
