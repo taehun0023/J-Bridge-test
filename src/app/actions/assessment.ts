@@ -132,7 +132,6 @@ export async function submitAssessment(
   // Recalculate scores
   await recalculateUserScores(user.id)
 
-  revalidatePath('/', 'layout')
   revalidatePath('/dashboard')
 
   // Build per-question results for review screen
