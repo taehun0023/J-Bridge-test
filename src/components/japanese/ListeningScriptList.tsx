@@ -26,6 +26,7 @@ export default function ListeningScriptList({ items, level }: Props) {
   const [playingId, setPlayingId] = useState<string | null>(null)
   const [playState, setPlayState] = useState<PlayState>('idle')
   const [speed, setSpeed] = useState(1.0)
+  const [errorId, setErrorId] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const audioBlobUrlRef = useRef<string | null>(null)
 
@@ -64,6 +65,7 @@ export default function ListeningScriptList({ items, level }: Props) {
     cleanupAudio()
     setPlayingId(id)
     setPlayState('loading')
+    setErrorId(null)
 
     try {
       const res = await fetch('/api/tts', {
@@ -73,6 +75,7 @@ export default function ListeningScriptList({ items, level }: Props) {
       })
 
       if (!res.ok) {
+        setErrorId(id)
         throw new Error('TTS request failed')
       }
 
@@ -218,6 +221,11 @@ export default function ListeningScriptList({ items, level }: Props) {
                   <option value={1.25}>1.25x</option>
                 </select>
               </div>
+
+              {/* Error message */}
+              {errorId === item.id && (
+                <p className="text-sm text-red-600 dark:text-red-400">音声の読み込みに失敗しました。しばらくしてからもう一度お試しください。</p>
+              )}
 
               {/* Situation */}
               {item.situation && (
