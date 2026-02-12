@@ -26,9 +26,10 @@ interface Props {
   questions: Question[]
   totalSteps: number
   displayStep: number
+  isAlreadyCompleted?: boolean
 }
 
-export default function AssessmentTaker({ step, label, timeLimit, questions, totalSteps, displayStep }: Props) {
+export default function AssessmentTaker({ step, label, timeLimit, questions, totalSteps, displayStep, isAlreadyCompleted }: Props) {
   const router = useRouter()
 
   // Stabilize questions: lock the initial set to prevent re-render issues
@@ -65,6 +66,13 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
   const [claimedQuestions, setClaimedQuestions] = useState<Set<string>>(new Set())
   const [claimingId, setClaimingId] = useState<string | null>(null)
   const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set())
+
+  // If server says already completed and client has no review state → redirect to dashboard
+  useEffect(() => {
+    if (isAlreadyCompleted && !reviewMode) {
+      router.replace('/dashboard')
+    }
+  }, [isAlreadyCompleted, reviewMode, router])
 
   const totalQuestions = stableQuestions.length
   const currentQuestion = stableQuestions[currentIndex]

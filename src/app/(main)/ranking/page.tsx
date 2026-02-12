@@ -20,7 +20,6 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
       japanese_skills(jlpt_normalized, it_japanese_normalized, updated_at),
       coding_skills(core_normalized, framework_normalized, updated_at)
     `)
-    .eq('role', 'mentee')
     .eq('is_onboarded', true)
 
   const rankingUsers: RankingUserData[] = (users ?? []).map((u: Record<string, unknown>) => {

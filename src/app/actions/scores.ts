@@ -2,11 +2,18 @@
 
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { ASSESSMENT_QUIZ_IDS } from '@/lib/assessment-config'
+
+// Reverse map: quiz_id → assessment step number
+const ASSESSMENT_ID_TO_STEP = new Map(
+  Object.entries(ASSESSMENT_QUIZ_IDS).map(([step, quizId]) => [quizId, parseInt(step)])
+)
 
 /**
  * Recalculate all axis scores for a user based on their quiz attempts and coding submissions.
- * Respects is_japanese flag: Japanese users skip JLPT/IT Japanese axes.
- * Uses service role client to bypass RLS for reliable reads/writes.
+ *
+ * Assessment quizzes (등급테스ト) directly set the _normalized value for each radar axis.
+ * Regular learning quizzes supplement via Math.max so improvement is always reflected.
  */
 export async function recalculateUserScores(userId: string) {
   const supabase = createServiceRoleClient() ?? await createClient()
@@ -20,29 +27,41 @@ export async function recalculateUserScores(userId: string) {
 
   const isJapanese = profileData?.is_japanese ?? false
 
-  // ─── 1. Fetch all completed quiz attempts with quiz type ───
+  // ─── 1. Fetch all completed quiz attempts ───
   const { data: quizAttempts } = await supabase
     .from('quiz_attempts')
     .select('score, passed, quiz_id, quizzes(quiz_type)')
     .eq('user_id', userId)
     .not('completed_at', 'is', null)
 
-  // Group quiz scores by type, take best score per quiz
-  const quizScoresByType: Record<string, number[]> = {}
-  const bestPerQuiz: Record<string, number> = {}
+  // ─── 1a. Separate assessment vs regular quiz attempts ───
+  // Assessment step → best score (direct radar axis mapping)
+  const assessmentScores: Record<number, number> = {}
+  // Regular quizzes grouped by quiz_type
+  const regularBestPerQuiz: Record<string, number> = {}
 
   for (const attempt of quizAttempts ?? []) {
     const quizType = (attempt.quizzes as unknown as { quiz_type: string } | null)?.quiz_type
     if (!quizType || attempt.score == null) continue
 
-    const key = `${quizType}:${attempt.quiz_id}`
-    if (!bestPerQuiz[key] || attempt.score > bestPerQuiz[key]) {
-      bestPerQuiz[key] = attempt.score
+    const assessmentStep = ASSESSMENT_ID_TO_STEP.get(attempt.quiz_id)
+    if (assessmentStep) {
+      // Assessment quiz → track best score per step
+      if (!assessmentScores[assessmentStep] || attempt.score > assessmentScores[assessmentStep]) {
+        assessmentScores[assessmentStep] = attempt.score
+      }
+    } else {
+      // Regular learning quiz → group by type
+      const key = `${quizType}:${attempt.quiz_id}`
+      if (!regularBestPerQuiz[key] || attempt.score > regularBestPerQuiz[key]) {
+        regularBestPerQuiz[key] = attempt.score
+      }
     }
   }
 
-  // Organize best scores by quiz type
-  for (const [key, score] of Object.entries(bestPerQuiz)) {
+  // Organize regular quiz best scores by quiz type
+  const quizScoresByType: Record<string, number[]> = {}
+  for (const [key, score] of Object.entries(regularBestPerQuiz)) {
     const quizType = key.split(':')[0]
     if (!quizScoresByType[quizType]) quizScoresByType[quizType] = []
     quizScoresByType[quizType].push(score)
@@ -58,15 +77,11 @@ export async function recalculateUserScores(userId: string) {
   let vocabMastery = 0, grammarMastery = 0, readingMastery = 0, listeningMastery = 0
 
   if (!isJapanese) {
-    const vocabScores = quizScoresByType['jlpt_vocab'] ?? []
-    const grammarScores = quizScoresByType['jlpt_grammar'] ?? []
-    const readingScores = quizScoresByType['jlpt_reading'] ?? []
-    const listeningScores = quizScoresByType['jlpt_listening'] ?? []
-
-    vocabMastery = avg(vocabScores)
-    grammarMastery = avg(grammarScores)
-    readingMastery = avg(readingScores)
-    listeningMastery = avg(listeningScores)
+    // Regular learning quiz scores (vocab, grammar, reading, listening separately)
+    vocabMastery = avg(quizScoresByType['jlpt_vocab'] ?? [])
+    grammarMastery = avg(quizScoresByType['jlpt_grammar'] ?? [])
+    readingMastery = avg(quizScoresByType['jlpt_reading'] ?? [])
+    listeningMastery = avg(quizScoresByType['jlpt_listening'] ?? [])
 
     const jlptParts = [
       { score: vocabMastery, weight: 0.3 },
@@ -75,9 +90,12 @@ export async function recalculateUserScores(userId: string) {
       { score: listeningMastery, weight: 0.15 },
     ]
     const activeJlptParts = jlptParts.filter(p => p.score > 0)
-    jlptNormalized = activeJlptParts.length > 0
+    const learningJlpt = activeJlptParts.length > 0
       ? Math.round(activeJlptParts.reduce((s, p) => s + p.score * p.weight, 0) / activeJlptParts.reduce((s, p) => s + p.weight, 0))
       : 0
+
+    // Assessment Step 1 → directly sets jlpt_normalized
+    jlptNormalized = Math.max(assessmentScores[1] ?? 0, learningJlpt)
   }
 
   // ─── 3. Calculate Axis 2: ビジネス日本語 (skip for Japanese users) ───
@@ -85,17 +103,18 @@ export async function recalculateUserScores(userId: string) {
   let itTermScore = 0, docReadingScore = 0, businessConvScore = 0
 
   if (!isJapanese) {
-    const itTermScores = quizScoresByType['it_terminology'] ?? []
-    const rolePlayScores = quizScoresByType['role_play_scenario'] ?? []
-
-    itTermScore = avg(itTermScores)
-    businessConvScore = avg(rolePlayScores)
+    // Regular learning quiz scores
+    itTermScore = avg(quizScoresByType['it_terminology'] ?? [])
+    businessConvScore = avg(quizScoresByType['role_play_scenario'] ?? [])
     docReadingScore = Math.round(itTermScore * 0.8)
 
-    itJapaneseNormalized = itTermScore > 0 || businessConvScore > 0
+    const learningItJapanese = itTermScore > 0 || businessConvScore > 0
       ? Math.round((itTermScore * 0.4 + docReadingScore * 0.3 + businessConvScore * 0.3) /
           ((itTermScore > 0 ? 0.4 : 0) + (docReadingScore > 0 ? 0.3 : 0) + (businessConvScore > 0 ? 0.3 : 0) || 1))
       : 0
+
+    // Assessment Step 2 → directly sets it_japanese_normalized
+    itJapaneseNormalized = Math.max(assessmentScores[2] ?? 0, learningItJapanese)
   }
 
   // ─── 4. Calculate Axis 3 & 4: CS知識 & 開発実務能力 ───
@@ -134,9 +153,13 @@ export async function recalculateUserScores(userId: string) {
   const jsScore = avg(langScores['javascript'] ?? [])
   const algorithmScore = algorithmCount > 0 ? Math.round(algorithmTotal / algorithmCount) : 0
 
+  // Regular learning: CS quiz + code submissions
   const coreQuizAvg = avg(quizScoresByType['core_programming'] ?? [])
-  const coreScores = [javaScore, jsScore, algorithmScore, coreQuizAvg].filter(s => s > 0)
-  const coreNormalized = avg(coreScores)
+  const learningCoreScores = [javaScore, jsScore, algorithmScore, coreQuizAvg].filter(s => s > 0)
+  const learningCore = avg(learningCoreScores)
+
+  // Assessment Step 3 → directly sets core_normalized
+  const coreNormalized = Math.max(assessmentScores[3] ?? 0, learningCore)
 
   // Framework / 開発実務能力 scores
   const { data: examAttempts } = await supabase
@@ -158,19 +181,23 @@ export async function recalculateUserScores(userId: string) {
   const dbDesignScore = Math.min(100, Math.round((avg(langScores['java'] ?? []) || avg(langScores['javascript'] ?? [])) * 0.9))
   const projectScore = Math.min(100, Math.round(highestRankScore * 0.6))
   const fwQuizAvg = avg(quizScoresByType['framework'] ?? [])
-  const frameworkNormalized = avg([springBootScore, reactScore, dbDesignScore, projectScore, fwQuizAvg].filter(s => s > 0))
+  const learningFramework = avg([springBootScore, reactScore, dbDesignScore, projectScore, fwQuizAvg].filter(s => s > 0))
+
+  // Assessment Step 4 → directly sets framework_normalized
+  const frameworkNormalized = Math.max(assessmentScores[4] ?? 0, learningFramework)
 
   // ─── 5. Calculate Axis 5: ビジネスリテラシー ───
-  const attitudeScores = quizScoresByType['attitude_culture'] ?? []
-  const attitudeAvg = avg(attitudeScores)
+  const learningAttitude = avg(quizScoresByType['attitude_culture'] ?? [])
 
-  const punctualityScore = attitudeAvg
-  const horensoScore = attitudeAvg
-  const teamworkScore = attitudeAvg
-  const businessMannerScore = attitudeAvg
-  const businessCultureScore = attitudeAvg
-  const itSecurityScore = attitudeAvg
-  const attitudeNormalized = attitudeAvg
+  // Assessment Step 5 → directly sets attitude_normalized
+  const attitudeNormalized = Math.max(assessmentScores[5] ?? 0, learningAttitude)
+
+  const punctualityScore = attitudeNormalized
+  const horensoScore = attitudeNormalized
+  const teamworkScore = attitudeNormalized
+  const businessMannerScore = attitudeNormalized
+  const businessCultureScore = attitudeNormalized
+  const itSecurityScore = attitudeNormalized
 
   // ─── 6. Update skill tables ───
   const now = new Date().toISOString()

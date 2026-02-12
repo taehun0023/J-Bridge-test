@@ -51,6 +51,10 @@ export default async function AssessmentPage({ params }: Props) {
     .limit(1)
     .maybeSingle()
 
+  const label = ASSESSMENT_LABELS[step]
+  const timeLimit = ASSESSMENT_TIME_LIMITS[step]
+  const displayStep = relevantSteps.indexOf(step) + 1
+
   if (completedAttempt) {
     // Allow retake if 30+ days elapsed or admin approved
     const completedAt = new Date(completedAttempt.completed_at).getTime()
@@ -59,7 +63,22 @@ export default async function AssessmentPage({ params }: Props) {
     const isApprovedRetake = completedAttempt.retake_request_status === 'approved'
 
     if (!isAutoRetake && !isApprovedRetake) {
-      redirect('/dashboard')
+      // Don't redirect here — let client handle it so review mode works.
+      // Server action re-renders this component after submission; client
+      // preserves reviewMode state and keeps showing the review screen.
+      return (
+        <div className="mx-auto max-w-3xl py-6">
+          <AssessmentTaker
+            step={step}
+            label={label}
+            timeLimit={timeLimit}
+            questions={[]}
+            totalSteps={totalSteps}
+            displayStep={displayStep}
+            isAlreadyCompleted
+          />
+        </div>
+      )
     }
   }
 
@@ -71,12 +90,6 @@ export default async function AssessmentPage({ params }: Props) {
       </div>
     )
   }
-
-  const label = ASSESSMENT_LABELS[step]
-  const timeLimit = ASSESSMENT_TIME_LIMITS[step]
-
-  // Compute display step number (e.g. for Japanese users, step 3 is displayed as 1)
-  const displayStep = relevantSteps.indexOf(step) + 1
 
   // Shuffle options so correct answer isn't always in position 1
   const serializedQuestions = result.questions.map(q => {
