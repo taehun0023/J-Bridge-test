@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 async function getAdminContext() {
@@ -16,17 +16,14 @@ async function getAdminContext() {
 
   if (profile?.role !== 'admin') return { error: 'Not authorized' as const }
 
-  const serviceClient = createServiceRoleClient()
-  if (!serviceClient) return { error: 'Service role key not configured' as const }
-
-  return { supabase, serviceClient, adminId: user.id }
+  return { supabase, adminId: user.id }
 }
 
 export async function assignMenteeToMentor(mentorId: string, menteeId: string) {
   const ctx = await getAdminContext()
   if ('error' in ctx) return { error: ctx.error }
 
-  const { error } = await ctx.serviceClient
+  const { error } = await ctx.supabase
     .from('mentor_mentee_assignments')
     .insert({
       mentor_id: mentorId,
@@ -43,7 +40,7 @@ export async function removeMenteeFromMentor(mentorId: string, menteeId: string)
   const ctx = await getAdminContext()
   if ('error' in ctx) return { error: ctx.error }
 
-  const { error } = await ctx.serviceClient
+  const { error } = await ctx.supabase
     .from('mentor_mentee_assignments')
     .delete()
     .eq('mentor_id', mentorId)

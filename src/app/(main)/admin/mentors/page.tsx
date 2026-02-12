@@ -1,4 +1,4 @@
-import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import AdminMentorsClient from './AdminMentorsClient'
 
@@ -15,23 +15,20 @@ export default async function AdminMentorsPage() {
 
   if (profile?.role !== 'admin') redirect('/dashboard')
 
-  const serviceClient = createServiceRoleClient()
-  if (!serviceClient) redirect('/dashboard')
-
-  // Fetch mentors
-  const { data: mentors } = await serviceClient
+  // Fetch mentors (admin has full SELECT access via RLS)
+  const { data: mentors } = await supabase
     .from('profiles')
     .select('id, full_name, email')
     .eq('role', 'mentor')
     .order('full_name')
 
-  // Fetch all assignments via service client (bypasses RLS)
-  const { data: assignments } = await serviceClient
+  // Fetch all assignments (admin has full access via RLS)
+  const { data: assignments } = await supabase
     .from('mentor_mentee_assignments')
     .select('id, mentor_id, mentee_id, mentee:profiles!mentor_mentee_assignments_mentee_id_fkey(id, full_name, email, coding_rank, jlpt_level)')
 
   // Fetch ALL mentees (for dropdown — can be assigned to multiple mentors)
-  const { data: allMentees } = await serviceClient
+  const { data: allMentees } = await supabase
     .from('profiles')
     .select('id, full_name, email')
     .eq('role', 'mentee')
