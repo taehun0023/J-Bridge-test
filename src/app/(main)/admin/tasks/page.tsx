@@ -29,29 +29,27 @@ export default async function AdminTasksPage() {
     .order('requested_at', { ascending: false })
     .limit(50)
 
-  // Fetch pending retake requests
-  let retakeRequests: { attempt_id: string; user_id: string; user_name: string | null; quiz_title: string | null; retake_requested_at: string | null }[] = []
+  // Fetch pending retake requests (admin/mentor can view all quiz_attempts via RLS)
   const serviceClient = createServiceRoleClient()
-  if (serviceClient) {
-    const { data: retakeAttempts } = await serviceClient
-      .from('quiz_attempts')
-      .select('id, user_id, retake_requested_at, quizzes(title), profiles:user_id(full_name)')
-      .eq('retake_request_status', 'requested')
-      .order('retake_requested_at', { ascending: false })
+  const queryClient = serviceClient ?? supabase
+  const { data: retakeAttempts } = await queryClient
+    .from('quiz_attempts')
+    .select('id, user_id, retake_requested_at, quizzes(title), profiles:user_id(full_name)')
+    .eq('retake_request_status', 'requested')
+    .order('retake_requested_at', { ascending: false })
 
-    retakeRequests = (retakeAttempts ?? []).map(a => ({
-      attempt_id: a.id,
-      user_id: a.user_id,
-      user_name: (a.profiles as any)?.full_name ?? null,
-      quiz_title: (a.quizzes as any)?.title ?? null,
-      retake_requested_at: a.retake_requested_at,
-    }))
-  }
+  const retakeRequests = (retakeAttempts ?? []).map((a: Record<string, unknown>) => ({
+    attempt_id: a.id as string,
+    user_id: a.user_id as string,
+    user_name: (a.profiles as { full_name: string | null } | null)?.full_name ?? null,
+    quiz_title: (a.quizzes as { title: string | null } | null)?.title ?? null,
+    retake_requested_at: a.retake_requested_at as string | null,
+  }))
 
   // For mentors: only show their assigned mentees (use serviceClient to bypass RLS/schema cache issues)
   let users: { id: string; full_name: string | null; email: string; role: string }[] = []
-  if (currentRole === 'mentor' && serviceClient) {
-    const { data: menteeAssignments } = await serviceClient
+  if (currentRole === 'mentor') {
+    const { data: menteeAssignments } = await queryClient
       .from('mentor_mentee_assignments')
       .select('mentee:profiles!mentor_mentee_assignments_mentee_id_fkey(id, full_name, email, role)')
       .eq('mentor_id', user!.id)

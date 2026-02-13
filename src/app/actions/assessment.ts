@@ -186,55 +186,56 @@ export async function requestRetake(step: number) {
   if (error) return { error: 'リクエスト送信に失敗しました' }
 
   // Notify mentor(s) and admins
+  // Use serviceClient if available, otherwise fall back to regular client
   const serviceClient = createServiceRoleClient()
-  if (serviceClient) {
-    const { data: mentorAssignments } = await serviceClient
-      .from('mentor_mentee_assignments')
-      .select('mentor_id')
-      .eq('mentee_id', user.id)
+  const queryClient = serviceClient ?? supabase
 
-    const { data: userProfile } = await serviceClient
-      .from('profiles')
-      .select('full_name')
-      .eq('id', user.id)
-      .single()
+  const { data: mentorAssignments } = await queryClient
+    .from('mentor_mentee_assignments')
+    .select('mentor_id')
+    .eq('mentee_id', user.id)
 
-    const { data: quizData } = await serviceClient
-      .from('quizzes')
-      .select('title')
-      .eq('id', quizId)
-      .single()
+  const { data: userProfile } = await queryClient
+    .from('profiles')
+    .select('full_name')
+    .eq('id', user.id)
+    .single()
 
-    const userName = userProfile?.full_name ?? 'メンティー'
-    const quizTitle = quizData?.title ?? '評価テスト'
+  const { data: quizData } = await queryClient
+    .from('quizzes')
+    .select('title')
+    .eq('id', quizId)
+    .single()
 
-    for (const assignment of mentorAssignments ?? []) {
-      await createNotification(
-        assignment.mentor_id,
-        'retake_requested',
-        `${userName}さんが再試験をリクエスト`,
-        quizTitle,
-        '/admin/tasks',
-        attempt.id
-      )
-    }
+  const userName = userProfile?.full_name ?? 'メンティー'
+  const quizTitle = quizData?.title ?? '評価テスト'
 
-    // Also notify admins
-    const { data: admins } = await serviceClient
-      .from('profiles')
-      .select('id')
-      .eq('role', 'admin')
+  for (const assignment of mentorAssignments ?? []) {
+    await createNotification(
+      assignment.mentor_id,
+      'retake_requested',
+      `${userName}さんが再試験をリクエスト`,
+      quizTitle,
+      '/admin/tasks',
+      attempt.id
+    )
+  }
 
-    for (const admin of admins ?? []) {
-      await createNotification(
-        admin.id,
-        'retake_requested',
-        `${userName}さんが再試験をリクエスト`,
-        quizTitle,
-        '/admin/tasks',
-        attempt.id
-      )
-    }
+  // Also notify admins
+  const { data: admins } = await queryClient
+    .from('profiles')
+    .select('id')
+    .eq('role', 'admin')
+
+  for (const admin of admins ?? []) {
+    await createNotification(
+      admin.id,
+      'retake_requested',
+      `${userName}さんが再試験をリクエスト`,
+      quizTitle,
+      '/admin/tasks',
+      attempt.id
+    )
   }
 
   revalidatePath('/dashboard')

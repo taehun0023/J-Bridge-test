@@ -384,10 +384,11 @@ export async function requestRetakeExam(examId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: '認証が必要です' }
 
+  // Use serviceClient if available, otherwise fall back to regular client
   const serviceClient = createServiceRoleClient()
-  if (!serviceClient) return { error: 'Service role key not configured' }
+  const queryClient = serviceClient ?? supabase
 
-  const { data: exam } = await serviceClient
+  const { data: exam } = await queryClient
     .from('comprehensive_exams')
     .select('*')
     .eq('id', examId)
@@ -398,7 +399,7 @@ export async function requestRetakeExam(examId: string) {
   if (exam.status !== 'failed') return { error: '不合格の試験のみ再試験リクエストできます' }
 
   // Create a new exam request (retake)
-  const { data: newExam, error: insertError } = await serviceClient
+  const { data: newExam, error: insertError } = await queryClient
     .from('comprehensive_exams')
     .insert({
       user_id: user.id,
@@ -413,12 +414,12 @@ export async function requestRetakeExam(examId: string) {
   if (insertError) return { error: insertError.message }
 
   // Notify mentor(s)
-  const { data: mentorAssignments } = await serviceClient
+  const { data: mentorAssignments } = await queryClient
     .from('mentor_mentee_assignments')
     .select('mentor_id')
     .eq('mentee_id', user.id)
 
-  const { data: userProfile } = await serviceClient
+  const { data: userProfile } = await queryClient
     .from('profiles')
     .select('full_name')
     .eq('id', user.id)
@@ -438,7 +439,7 @@ export async function requestRetakeExam(examId: string) {
   }
 
   // Also notify admins
-  const { data: admins } = await serviceClient
+  const { data: admins } = await queryClient
     .from('profiles')
     .select('id')
     .eq('role', 'admin')

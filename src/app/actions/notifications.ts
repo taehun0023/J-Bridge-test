@@ -76,22 +76,43 @@ export async function createNotification(
   link?: string,
   relatedId?: string
 ) {
+  // Try service role client first (bypasses RLS, works for any caller)
   const serviceClient = createServiceRoleClient()
-  if (!serviceClient) return { error: 'Service role key not configured' }
+  if (serviceClient) {
+    const { error } = await serviceClient
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        type,
+        title,
+        message: message ?? null,
+        link: link ?? null,
+        related_id: relatedId ?? null,
+      })
 
-  const { error } = await serviceClient
-    .from('notifications')
-    .insert({
-      user_id: userId,
-      type,
-      title,
-      message: message ?? null,
-      link: link ?? null,
-      related_id: relatedId ?? null,
-    })
+    if (error) return { error: error.message }
+    return { success: true }
+  }
 
-  if (error) return { error: error.message }
-  return { success: true }
+  // Fallback: use regular client (works if caller is admin/mentor via RLS INSERT policy)
+  try {
+    const supabase = await createClient()
+    const { error } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        type,
+        title,
+        message: message ?? null,
+        link: link ?? null,
+        related_id: relatedId ?? null,
+      })
+
+    if (error) return { error: error.message }
+    return { success: true }
+  } catch {
+    return { error: 'Notification creation failed: no service role key and insufficient permissions' }
+  }
 }
 
 // Keep legacy functions for backward compatibility with existing Sidebar
