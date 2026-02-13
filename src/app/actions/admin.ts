@@ -210,9 +210,23 @@ export async function deleteFeedback(feedbackId: string) {
 // ─── Retake Management ───
 
 export async function approveRetakeRequest(attemptId: string) {
-  const { serviceClient } = await assertAdmin()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: '認証が必要です' }
 
-  const { error } = await serviceClient
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'mentor'))
+    return { error: '権限がありません' }
+
+  const serviceClient = createServiceRoleClient()
+  const updateClient = serviceClient ?? supabase
+
+  const { error } = await updateClient
     .from('quiz_attempts')
     .update({
       retake_request_status: 'approved',
@@ -222,15 +236,29 @@ export async function approveRetakeRequest(attemptId: string) {
     .eq('retake_request_status', 'requested')
 
   if (error) return { error: error.message }
-  revalidatePath('/admin/users')
+  revalidatePath('/admin/tasks')
   revalidatePath('/dashboard')
   return { success: true }
 }
 
 export async function denyRetakeRequest(attemptId: string) {
-  const { serviceClient } = await assertAdmin()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: '認証が必要です' }
 
-  const { error } = await serviceClient
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'mentor'))
+    return { error: '権限がありません' }
+
+  const serviceClient = createServiceRoleClient()
+  const updateClient = serviceClient ?? supabase
+
+  const { error } = await updateClient
     .from('quiz_attempts')
     .update({
       retake_request_status: 'denied',
@@ -239,7 +267,7 @@ export async function denyRetakeRequest(attemptId: string) {
     .eq('retake_request_status', 'requested')
 
   if (error) return { error: error.message }
-  revalidatePath('/admin/users')
+  revalidatePath('/admin/tasks')
   revalidatePath('/dashboard')
   return { success: true }
 }
