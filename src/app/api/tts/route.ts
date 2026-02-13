@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import { createHash } from 'crypto'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
-import { join } from 'path'
 
 const MAX_TEXT_LENGTH = 5000
-const CACHE_DIR = join(process.cwd(), 'public', 'audio')
+const BUCKET = 'tts-cache'
 
 // 話者ごとに異なる音声を割り当てるための音声プール
 const voicePool = [
@@ -30,24 +29,29 @@ function getCacheKey(text: string, speed: number): string {
 }
 
 /**
- * キャッシュからMP3を取得（あれば返す、なければnull）
+ * Supabase StorageからMP3を取得（あれば返す、なければnull）
  */
-function getFromCache(hash: string): Buffer | null {
-  const filePath = join(CACHE_DIR, `${hash}.mp3`)
-  if (existsSync(filePath)) {
-    return readFileSync(filePath)
-  }
-  return null
+async function getFromCache(supabase: ReturnType<typeof createServiceRoleClient>, hash: string): Promise<Buffer | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .download(`${hash}.mp3`)
+
+  if (error || !data) return null
+  return Buffer.from(await data.arrayBuffer())
 }
 
 /**
- * MP3をキャッシュに保存
+ * MP3をSupabase Storageに保存
  */
-function saveToCache(hash: string, data: Buffer): void {
-  if (!existsSync(CACHE_DIR)) {
-    mkdirSync(CACHE_DIR, { recursive: true })
-  }
-  writeFileSync(join(CACHE_DIR, `${hash}.mp3`), data)
+async function saveToCache(supabase: ReturnType<typeof createServiceRoleClient>, hash: string, data: Buffer): Promise<void> {
+  if (!supabase) return
+  await supabase.storage
+    .from(BUCKET)
+    .upload(`${hash}.mp3`, data, {
+      contentType: 'audio/mpeg',
+      upsert: true,
+    })
 }
 
 /**
@@ -163,8 +167,11 @@ export async function POST(request: NextRequest) {
   const speakingRate = Math.max(0.5, Math.min(2.0, speed))
   const cacheKey = getCacheKey(text, speakingRate)
 
+  // Storage用クライアント（serviceClient優先、なければ通常クライアント）
+  const storageClient = createServiceRoleClient() ?? supabase
+
   // キャッシュ確認
-  const cached = getFromCache(cacheKey)
+  const cached = await getFromCache(storageClient, cacheKey)
   if (cached) {
     return new NextResponse(cached, {
       headers: {
@@ -208,8 +215,8 @@ export async function POST(request: NextRequest) {
       audioBuffer = Buffer.concat(audioBuffers)
     }
 
-    // キャッシュに保存
-    saveToCache(cacheKey, audioBuffer)
+    // キャッシュに保存（失敗しても音声は返す）
+    saveToCache(storageClient, cacheKey, audioBuffer).catch(() => {})
 
     return new NextResponse(audioBuffer, {
       headers: {

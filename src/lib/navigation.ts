@@ -12,6 +12,7 @@ import {
   ClipboardList,
   BarChart3,
   UserCog,
+  Volume2,
   type LucideIcon,
 } from 'lucide-react'
 import type { UserRole } from '@/lib/supabase/types'
@@ -114,6 +115,7 @@ export const adminNavItems: AdminNavItem[] = [
   { href: '/admin/courses', label: 'コンテンツ管理', icon: FileEdit, allowedRoles: ['admin'] },
   { href: '/admin/tasks', label: '課題配信', icon: ClipboardList, allowedRoles: ['admin', 'mentor'] },
   { href: '/admin/reports', label: 'レポート', icon: BarChart3, allowedRoles: ['admin', 'mentor'] },
+  { href: '/admin/tts-cache', label: 'TTSキャッシュ', icon: Volume2, allowedRoles: ['admin'] },
 ]
 
 export function getAdminNavForRole(role: UserRole): AdminNavItem[] {
