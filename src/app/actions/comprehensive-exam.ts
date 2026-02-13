@@ -430,13 +430,31 @@ export async function requestRetakeExam(examId: string) {
     await createNotification(
       assignment.mentor_id,
       'exam_requested',
-      `${userName}さんが再試験をリクエスト`,
+      `${userName}さんが総合試験の再試験をリクエスト`,
       undefined,
       '/admin/tasks',
       newExam.id
     )
   }
 
+  // Also notify admins
+  const { data: admins } = await serviceClient
+    .from('profiles')
+    .select('id')
+    .eq('role', 'admin')
+
+  for (const admin of admins ?? []) {
+    await createNotification(
+      admin.id,
+      'exam_requested',
+      `${userName}さんが総合試験の再試験をリクエスト`,
+      undefined,
+      '/admin/tasks',
+      newExam.id
+    )
+  }
+
+  revalidatePath('/dashboard')
   revalidatePath('/dashboard/assignments')
   return { success: true }
 }

@@ -9,7 +9,9 @@ import { BarChart3, Trophy, BookOpen, MessageSquare } from 'lucide-react'
 import { getGrade, getGradeColor, DISPATCH_MINIMUM_SCORE, getRelevantAxes, AXIS_DISPLAY_LABELS } from '@/lib/assessment-config'
 import type { AxisKey } from '@/lib/assessment-config'
 import { requestRetake } from '@/app/actions/assessment'
+import { requestRetakeExam } from '@/app/actions/comprehensive-exam'
 import { CATEGORY_LABELS } from '@/lib/constants'
+import { getCategoryLabel, getSubcategoryLabel } from '@/lib/assignment-categories'
 
 const RadarChart = dynamic(() => import('@/components/dashboard/RadarChart'), { ssr: false })
 
@@ -80,6 +82,15 @@ interface RecentFeedback {
   admin: { full_name: string | null } | null
 }
 
+interface CompExamRetake {
+  examId: string
+  category: string
+  subcategory: string
+  contentLevel: string | null
+  score: number | null
+  retakeStatus: 'failed' | 'requested' | 'approved'
+}
+
 const feedbackCategoryLabels: Record<string, string> = {
   seikatsu: '生活日本語',
   business_jp: 'ビジネス日本語',
@@ -108,6 +119,7 @@ interface Props {
   enrolledCourses: EnrolledCourse[]
   learningStats?: LearningStats
   recentFeedbacks?: RecentFeedback[]
+  compExamRetakes?: CompExamRetake[]
 }
 
 function getBadgeStyle(badge: BadgeType): string {
@@ -120,7 +132,7 @@ function getBadgeStyle(badge: BadgeType): string {
 
 export default function DashboardClient({
   profile, radarScores, recentResults, tasks, pendingAssessments, isJapanese, completedAssessments,
-  userRanking, enrolledCourses, learningStats, recentFeedbacks = [],
+  userRanking, enrolledCourses, learningStats, recentFeedbacks = [], compExamRetakes = [],
 }: Props) {
   const relevantAxes = getRelevantAxes(isJapanese)
   const hasScores = relevantAxes.some(key => radarScores[key] > 0)
@@ -141,6 +153,18 @@ export default function DashboardClient({
         setRetakeMessage(result.error)
       } else {
         setRetakeMessage('再試験リクエストを送信しました')
+      }
+      setTimeout(() => setRetakeMessage(null), 3000)
+    })
+  }
+
+  function handleCompRetakeRequest(examId: string) {
+    startTransition(async () => {
+      const result = await requestRetakeExam(examId)
+      if ('error' in result && result.error) {
+        setRetakeMessage(result.error)
+      } else {
+        setRetakeMessage('総合試験の再試験リクエストを送信しました')
       }
       setTimeout(() => setRetakeMessage(null), 3000)
     })
@@ -214,6 +238,51 @@ export default function DashboardClient({
                   )
                 })}
               </div>
+
+              {/* Comprehensive exam retake section */}
+              {compExamRetakes.length > 0 && (
+                <div className="mt-4 border-t border-white/[0.06] dark:border-white/[0.06] border-gray-100 pt-3">
+                  <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2">総合試験 再試験</p>
+                  <div className="space-y-2">
+                    {compExamRetakes.map((exam) => (
+                      <div
+                        key={exam.examId}
+                        className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] dark:border-white/[0.08] dark:bg-white/[0.03] border-gray-200/60 px-3 py-2"
+                      >
+                        <div>
+                          <p className="text-xs font-medium text-zinc-900 dark:text-zinc-100">
+                            {getCategoryLabel(exam.category)} &gt; {getSubcategoryLabel(exam.category, exam.subcategory)}
+                            {exam.contentLevel && ` (${exam.contentLevel})`}
+                          </p>
+                          {exam.score !== null && (
+                            <p className="text-[10px] text-red-400">{exam.score}点（不合格）</p>
+                          )}
+                        </div>
+                        <div>
+                          {exam.retakeStatus === 'requested' ? (
+                            <span className="text-[10px] text-amber-400">リクエスト中</span>
+                          ) : exam.retakeStatus === 'approved' ? (
+                            <Link
+                              href={`/exam/${exam.examId}`}
+                              className="rounded-md bg-emerald-600 px-2 py-0.5 text-[10px] font-medium text-white hover:bg-emerald-500 transition-colors"
+                            >
+                              試験を受ける
+                            </Link>
+                          ) : (
+                            <button
+                              onClick={() => handleCompRetakeRequest(exam.examId)}
+                              disabled={pending}
+                              className="rounded-md border border-white/[0.08] dark:border-white/[0.08] border-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-zinc-400 hover:bg-white/5 dark:hover:bg-white/5 hover:bg-zinc-50 disabled:opacity-50 transition-colors"
+                            >
+                              再試験リクエスト
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Dispatch readiness badge */}
               <div className="mt-3 text-center">

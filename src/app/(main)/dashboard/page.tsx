@@ -205,6 +205,44 @@ export default async function DashboardPage() {
     .order('created_at', { ascending: false })
     .limit(5)
 
+  // Fetch comprehensive exam retake info (failed + active retakes)
+  const { data: userCompExams } = await supabase
+    .from('comprehensive_exams')
+    .select('id, category, subcategory, content_level, score, status')
+    .eq('user_id', user.id)
+    .in('status', ['failed', 'requested', 'approved'])
+    .order('created_at', { ascending: false })
+
+  const STATUS_PRIORITY: Record<string, number> = { approved: 3, requested: 2, failed: 1 }
+  const compExamRetakeMap: Record<string, {
+    examId: string
+    category: string
+    subcategory: string
+    contentLevel: string | null
+    score: number | null
+    retakeStatus: 'failed' | 'requested' | 'approved'
+  }> = {}
+
+  for (const exam of userCompExams ?? []) {
+    const key = `${exam.category}:${exam.subcategory}`
+    const existing = compExamRetakeMap[key]
+    const newPriority = STATUS_PRIORITY[exam.status] ?? 0
+    const existingPriority = existing ? (STATUS_PRIORITY[existing.retakeStatus] ?? 0) : 0
+
+    if (!existing || newPriority > existingPriority) {
+      compExamRetakeMap[key] = {
+        examId: exam.id,
+        category: exam.category,
+        subcategory: exam.subcategory,
+        contentLevel: exam.content_level,
+        score: exam.score,
+        retakeStatus: exam.status as 'failed' | 'requested' | 'approved',
+      }
+    }
+  }
+
+  const compExamRetakes = Object.values(compExamRetakeMap)
+
   // Compute radar scores
   const radarScores: Record<AxisKey, number> = {
     jlpt: japaneseSkills?.jlpt_normalized ?? 0,
@@ -275,6 +313,7 @@ export default async function DashboardPage() {
       enrolledCourses={enrolledCourses}
       learningStats={learningStats}
       recentFeedbacks={recentFeedbacks ?? []}
+      compExamRetakes={compExamRetakes}
     />
   )
 }
