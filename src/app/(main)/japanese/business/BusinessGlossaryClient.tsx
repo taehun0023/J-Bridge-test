@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import TabBar from '@/components/ui/TabBar'
 import Pagination from '@/components/ui/Pagination'
 import EmptyState from '@/components/ui/EmptyState'
 import GlossaryTable from '@/components/japanese/GlossaryTable'
+import RangeQuizModal from '@/components/japanese/RangeQuizModal'
+import { generateGlossaryQuiz } from '@/app/actions/range-quiz'
 
 interface GlossaryItem {
   id: string
@@ -14,6 +16,7 @@ interface GlossaryItem {
   term_ko: string
   term_en: string | null
   category: string
+  subcategory?: string | null
   description: string | null
   example_sentence: string | null
 }
@@ -31,14 +34,27 @@ interface Props {
   currentPage: number
   totalPages: number
   totalCount: number
+  basePath?: string
+  offset: number
+  masteredIds: string[]
+  mastery: string
+  itemType: 'it_glossary'
 }
 
+const MASTERY_FILTERS = [
+  { key: '', label: '全て' },
+  { key: 'mastered', label: '暗記済み' },
+  { key: 'unmastered', label: '未暗記' },
+]
+
 export default function BusinessGlossaryClient({
-  items, categories, activeCategory, search, currentPage, totalPages, totalCount
+  items, categories, activeCategory, search, currentPage, totalPages, totalCount,
+  basePath = '/japanese/business', offset, masteredIds, mastery, itemType
 }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [searchInput, setSearchInput] = useState(search)
+  const [showQuiz, setShowQuiz] = useState(false)
 
   function updateParams(updates: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString())
@@ -47,7 +63,7 @@ export default function BusinessGlossaryClient({
       else params.delete(k)
     })
     if (!('page' in updates)) params.delete('page')
-    router.push(`/japanese/business?${params.toString()}`)
+    router.push(`${basePath}?${params.toString()}`)
   }
 
   function handleSearch(e: React.FormEvent) {
@@ -55,12 +71,43 @@ export default function BusinessGlossaryClient({
     updateParams({ search: searchInput })
   }
 
+  const fetchQuestions = useCallback(async (start: number, end: number, count: number) => {
+    // Determine query params based on basePath
+    if (basePath.includes('expressions')) {
+      return generateGlossaryQuiz({
+        category: 'expression',
+        subcategory: activeCategory || undefined,
+        rangeStart: start,
+        rangeEnd: end,
+        questionCount: count,
+      })
+    } else if (basePath.includes('sentence-patterns')) {
+      return generateGlossaryQuiz({
+        category: 'sentence_pattern',
+        subcategory: activeCategory || undefined,
+        rangeStart: start,
+        rangeEnd: end,
+        questionCount: count,
+      })
+    } else {
+      // glossary page
+      const glossaryCategories = ['development', 'testing', 'design_doc', 'infrastructure', 'project_management', 'business']
+      return generateGlossaryQuiz({
+        category: activeCategory || undefined,
+        categories: activeCategory ? undefined : glossaryCategories,
+        rangeStart: start,
+        rangeEnd: end,
+        questionCount: count,
+      })
+    }
+  }, [basePath, activeCategory])
+
   return (
     <div>
       <TabBar
         tabs={categories}
         activeKey={activeCategory}
-        onChange={(key) => updateParams({ category: key, search: '' })}
+        onChange={(key) => updateParams({ category: key, search: '', mastery: '' })}
       />
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -79,14 +126,41 @@ export default function BusinessGlossaryClient({
             検索
           </button>
         </form>
-        <span className="ml-auto text-sm text-gray-500 dark:text-gray-400">{totalCount}語</span>
+
+        {/* Mastery filter */}
+        <div className="flex rounded-lg border border-gray-200 dark:border-gray-600">
+          {MASTERY_FILTERS.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => updateParams({ mastery: f.key })}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors first:rounded-l-lg last:rounded-r-lg ${
+                mastery === f.key
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="ml-auto flex items-center gap-3">
+          <span className="text-sm text-gray-500 dark:text-gray-400">{totalCount}語</span>
+          <button
+            onClick={() => setShowQuiz(true)}
+            disabled={totalCount === 0}
+            className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+          >
+            範囲クイズ
+          </button>
+        </div>
       </div>
 
       <div className="mt-4 rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
         {items.length === 0 ? (
           <EmptyState title="用語がありません" description="検索条件を変更してください" icon="📖" />
         ) : (
-          <GlossaryTable items={items} />
+          <GlossaryTable items={items} offset={offset} masteredIds={masteredIds} itemType={itemType} />
         )}
       </div>
 
@@ -95,6 +169,14 @@ export default function BusinessGlossaryClient({
         totalPages={totalPages}
         onPageChange={(page) => updateParams({ page: String(page) })}
       />
+
+      {showQuiz && (
+        <RangeQuizModal
+          totalCount={totalCount}
+          onClose={() => setShowQuiz(false)}
+          fetchQuestions={fetchQuestions}
+        />
+      )}
     </div>
   )
 }

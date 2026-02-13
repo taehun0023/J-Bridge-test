@@ -15,14 +15,23 @@ const { execSync } = require('child_process');
 const supabaseDir = path.join(__dirname, '..', 'supabase');
 
 const seedFiles = [
-  'seed.sql',           // 기본 seed (courses, 샘플 데이터)
-  'seed_jlpt_n5.sql',   // N5 단어
-  'seed_jlpt_n4.sql',   // N4 단어
-  'seed_jlpt_n3.sql',   // N3 단어
-  'seed_jlpt_n2.sql',   // N2 단어
-  'seed_jlpt_n1.sql',   // N1 단어
-  'seed_it_glossary.sql', // IT 용어집
-  'seed_assessment_quizzes.sql', // 초기 등급 테스트 (390문항)
+  'seed.sql',                        // 기본 seed (courses, 샘플 데이터)
+  'seed_jlpt_n5.sql',                // N5 단어
+  'seed_jlpt_n4.sql',                // N4 단어
+  'seed_jlpt_n3.sql',                // N3 단어
+  'seed_jlpt_n2.sql',                // N2 단어
+  'seed_jlpt_n1.sql',                // N1 단어
+  'seed_it_glossary_v2.sql',         // IT 용어집 v2 (166개, reading 완전 보완)
+  'seed_it_passport_security.sql',   // IT 패스포트: セキュリティ
+  'seed_it_passport_network.sql',    // IT 패스포트: ネットワーク
+  'seed_it_passport_database.sql',   // IT 패스포트: データベース
+  'seed_it_passport_strategy.sql',   // IT 패스포트: 経営・戦略
+  'seed_it_passport_fundamentals.sql', // IT 패스포트: IT基礎
+  'seed_business_expressions.sql',   // ビジネス表現 (~60개)
+  'seed_sentence_patterns.sql',      // 文章パターン (~35개)
+  'seed_employee_vocabulary.sql',    // 사내 스프레드시트 데이터
+  'seed_assessment_quizzes.sql',     // 초기 등급 테스트 (390문항)
+  'seed_it_passport_quizzes.sql',    // IT 패스포트 퀴즈 (55문항)
 ];
 
 console.log('🌱 Supabase Seed Data 적용 시작...\n');
@@ -56,6 +65,7 @@ console.log('1. Supabase Dashboard (https://supabase.com/dashboard) 접속');
 console.log('2. 프로젝트 선택 → SQL Editor 열기');
 console.log('3. 위의 파일들을 순서대로 복사하여 실행');
 console.log('\n또는 각 파일의 내용을 하나의 SQL 파일로 합쳐서 실행할 수 있습니다.');
+
 
 
 

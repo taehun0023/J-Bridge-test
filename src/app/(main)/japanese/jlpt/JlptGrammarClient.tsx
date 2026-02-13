@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import TabBar from '@/components/ui/TabBar'
 import Pagination from '@/components/ui/Pagination'
 import EmptyState from '@/components/ui/EmptyState'
 import GrammarList from '@/components/japanese/GrammarList'
 import GrammarFlashcard from '@/components/japanese/GrammarFlashcard'
+import { toggleMastery } from '@/app/actions/mastery'
 import type { JlptLevel, JlptGrammar, GrammarCategory } from '@/lib/supabase/types'
 
 interface Props {
@@ -18,6 +19,9 @@ interface Props {
   category: string
   categoryOptions: string[]
   totalCount: number
+  offset: number
+  masteredIds: string[]
+  mastery: string
 }
 
 const levelTabs = [
@@ -46,8 +50,15 @@ const categoryLabels: Record<GrammarCategory, string> = {
   formal: '丁寧',
 }
 
+const MASTERY_FILTERS = [
+  { key: '', label: '全て' },
+  { key: 'mastered', label: '暗記済み' },
+  { key: 'unmastered', label: '未暗記' },
+]
+
 export default function JlptGrammarClient({
-  items, level, totalPages, currentPage, search, category, categoryOptions, totalCount
+  items, level, totalPages, currentPage, search, category, categoryOptions, totalCount,
+  offset, masteredIds, mastery
 }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -69,13 +80,17 @@ export default function JlptGrammarClient({
     updateParams({ search: searchInput })
   }
 
+  const handleToggleMastery = useCallback(async (itemId: string) => {
+    await toggleMastery('jlpt_grammar', itemId)
+  }, [])
+
   return (
     <div>
       {/* Level tabs */}
       <TabBar
         tabs={levelTabs}
         activeKey={level}
-        onChange={(key) => updateParams({ level: key, search: '', category: '' })}
+        onChange={(key) => updateParams({ level: key, search: '', category: '', mastery: '' })}
       />
 
       {/* Filters */}
@@ -107,6 +122,23 @@ export default function JlptGrammarClient({
           ))}
         </select>
 
+        {/* Mastery filter */}
+        <div className="flex rounded-lg border border-gray-200 dark:border-gray-600">
+          {MASTERY_FILTERS.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => updateParams({ mastery: f.key })}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors first:rounded-l-lg last:rounded-r-lg ${
+                mastery === f.key
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
         <div className="ml-auto flex items-center gap-3">
           <span className="text-sm text-gray-500 dark:text-gray-400">{totalCount}項目</span>
           <button
@@ -134,7 +166,7 @@ export default function JlptGrammarClient({
         {items.length === 0 ? (
           <EmptyState title="文法項目がありません" description="検索条件を変更してください" icon="📝" />
         ) : (
-          <GrammarList items={items} level={level} />
+          <GrammarList items={items} level={level} offset={offset} masteredIds={masteredIds} onToggleMastery={handleToggleMastery} />
         )}
       </div>
 
@@ -147,7 +179,7 @@ export default function JlptGrammarClient({
 
       {/* Flashcard mode */}
       {showFlashcard && (
-        <GrammarFlashcard items={items} onClose={() => setShowFlashcard(false)} />
+        <GrammarFlashcard items={items} onClose={() => setShowFlashcard(false)} masteredIds={masteredIds} onToggleMastery={handleToggleMastery} />
       )}
     </div>
   )

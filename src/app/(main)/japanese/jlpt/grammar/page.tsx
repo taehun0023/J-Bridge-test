@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getMasteredIds } from '@/app/actions/mastery'
 import type { JlptLevel } from '@/lib/supabase/types'
 import JlptGrammarClient from '../JlptGrammarClient'
 
@@ -7,6 +8,7 @@ interface SearchParams {
   search?: string
   category?: string
   page?: string
+  mastery?: string
 }
 
 const ITEMS_PER_PAGE = 30
@@ -17,9 +19,11 @@ export default async function JlptGrammarPage({ searchParams }: { searchParams: 
   const search = params.search ?? ''
   const category = params.category ?? ''
   const page = Math.max(1, parseInt(params.page ?? '1'))
+  const mastery = params.mastery ?? ''
   const offset = (page - 1) * ITEMS_PER_PAGE
 
   const supabase = await createClient()
+  const masteredIds = await getMasteredIds('jlpt_grammar')
 
   let query = supabase
     .from('jlpt_grammar')
@@ -32,6 +36,14 @@ export default async function JlptGrammarPage({ searchParams }: { searchParams: 
   }
   if (category) {
     query = query.eq('category', category)
+  }
+
+  if (mastery === 'mastered' && masteredIds.length > 0) {
+    query = query.in('id', masteredIds)
+  } else if (mastery === 'mastered' && masteredIds.length === 0) {
+    query = query.in('id', ['00000000-0000-0000-0000-000000000000'])
+  } else if (mastery === 'unmastered' && masteredIds.length > 0) {
+    query = query.not('id', 'in', `(${masteredIds.join(',')})`)
   }
 
   query = query.range(offset, offset + ITEMS_PER_PAGE - 1)
@@ -64,6 +76,9 @@ export default async function JlptGrammarPage({ searchParams }: { searchParams: 
         category={category}
         categoryOptions={categoryOptions as string[]}
         totalCount={count ?? 0}
+        offset={offset}
+        masteredIds={masteredIds}
+        mastery={mastery}
       />
     </div>
   )

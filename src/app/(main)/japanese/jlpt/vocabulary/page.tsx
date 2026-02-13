@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getMasteredIds } from '@/app/actions/mastery'
 import type { JlptLevel } from '@/lib/supabase/types'
 import JlptVocabularyClient from '../JlptVocabularyClient'
 
@@ -7,6 +8,7 @@ interface SearchParams {
   search?: string
   pos?: string
   page?: string
+  mastery?: string
 }
 
 const ITEMS_PER_PAGE = 30
@@ -17,9 +19,11 @@ export default async function JlptVocabularyPage({ searchParams }: { searchParam
   const search = params.search ?? ''
   const pos = params.pos ?? ''
   const page = Math.max(1, parseInt(params.page ?? '1'))
+  const mastery = params.mastery ?? ''
   const offset = (page - 1) * ITEMS_PER_PAGE
 
   const supabase = await createClient()
+  const masteredIds = await getMasteredIds('jlpt_vocabulary')
 
   let query = supabase
     .from('jlpt_vocabulary')
@@ -32,6 +36,14 @@ export default async function JlptVocabularyPage({ searchParams }: { searchParam
   }
   if (pos) {
     query = query.eq('part_of_speech', pos)
+  }
+
+  if (mastery === 'mastered' && masteredIds.length > 0) {
+    query = query.in('id', masteredIds)
+  } else if (mastery === 'mastered' && masteredIds.length === 0) {
+    query = query.in('id', ['00000000-0000-0000-0000-000000000000'])
+  } else if (mastery === 'unmastered' && masteredIds.length > 0) {
+    query = query.not('id', 'in', `(${masteredIds.join(',')})`)
   }
 
   query = query.range(offset, offset + ITEMS_PER_PAGE - 1)
@@ -64,6 +76,9 @@ export default async function JlptVocabularyPage({ searchParams }: { searchParam
         pos={pos}
         partOfSpeechOptions={partOfSpeechOptions as string[]}
         totalCount={count ?? 0}
+        offset={offset}
+        masteredIds={masteredIds}
+        mastery={mastery}
       />
     </div>
   )

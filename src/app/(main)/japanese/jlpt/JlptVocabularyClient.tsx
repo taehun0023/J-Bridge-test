@@ -1,12 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import TabBar from '@/components/ui/TabBar'
 import Pagination from '@/components/ui/Pagination'
 import EmptyState from '@/components/ui/EmptyState'
 import VocabularyList from '@/components/japanese/VocabularyList'
 import FlashcardMode from '@/components/japanese/FlashcardMode'
+import RangeQuizModal from '@/components/japanese/RangeQuizModal'
+import { generateVocabQuiz } from '@/app/actions/range-quiz'
+import { toggleMastery } from '@/app/actions/mastery'
 import type { JlptLevel } from '@/lib/supabase/types'
 
 interface VocabItem {
@@ -29,6 +32,9 @@ interface Props {
   pos: string
   partOfSpeechOptions: string[]
   totalCount: number
+  offset: number
+  masteredIds: string[]
+  mastery: string
 }
 
 const posLabels: Record<string, string> = {
@@ -54,12 +60,20 @@ const levelTabs = [
   { key: 'N1', label: 'N1 上級' },
 ]
 
+const MASTERY_FILTERS = [
+  { key: '', label: '全て' },
+  { key: 'mastered', label: '暗記済み' },
+  { key: 'unmastered', label: '未暗記' },
+]
+
 export default function JlptVocabularyClient({
-  items, level, totalPages, currentPage, search, pos, partOfSpeechOptions, totalCount
+  items, level, totalPages, currentPage, search, pos, partOfSpeechOptions, totalCount,
+  offset, masteredIds, mastery
 }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [showFlashcard, setShowFlashcard] = useState(false)
+  const [showQuiz, setShowQuiz] = useState(false)
   const [searchInput, setSearchInput] = useState(search)
 
   function updateParams(updates: Record<string, string>) {
@@ -78,13 +92,27 @@ export default function JlptVocabularyClient({
     updateParams({ search: searchInput })
   }
 
+  const handleToggleMastery = useCallback(async (itemId: string) => {
+    await toggleMastery('jlpt_vocabulary', itemId)
+  }, [])
+
+  const fetchQuestions = useCallback(async (start: number, end: number, count: number) => {
+    return generateVocabQuiz({
+      level,
+      pos: pos || undefined,
+      rangeStart: start,
+      rangeEnd: end,
+      questionCount: count,
+    })
+  }, [level, pos])
+
   return (
     <div>
       {/* Level tabs */}
       <TabBar
         tabs={levelTabs}
         activeKey={level}
-        onChange={(key) => updateParams({ level: key, search: '', pos: '' })}
+        onChange={(key) => updateParams({ level: key, search: '', pos: '', mastery: '' })}
       />
 
       {/* Filters */}
@@ -116,8 +144,32 @@ export default function JlptVocabularyClient({
           ))}
         </select>
 
+        {/* Mastery filter */}
+        <div className="flex rounded-lg border border-gray-200 dark:border-gray-600">
+          {MASTERY_FILTERS.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => updateParams({ mastery: f.key })}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors first:rounded-l-lg last:rounded-r-lg ${
+                mastery === f.key
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
         <div className="ml-auto flex items-center gap-3">
           <span className="text-sm text-gray-500 dark:text-gray-400">{totalCount}語</span>
+          <button
+            onClick={() => setShowQuiz(true)}
+            disabled={totalCount === 0}
+            className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+          >
+            範囲クイズ
+          </button>
           <button
             onClick={() => setShowFlashcard(true)}
             disabled={items.length === 0}
@@ -143,7 +195,7 @@ export default function JlptVocabularyClient({
         {items.length === 0 ? (
           <EmptyState title="単語がありません" description="検索条件を変更してください" icon="📝" />
         ) : (
-          <VocabularyList items={items} level={level} />
+          <VocabularyList items={items} level={level} offset={offset} masteredIds={masteredIds} onToggleMastery={handleToggleMastery} />
         )}
       </div>
 
@@ -156,7 +208,16 @@ export default function JlptVocabularyClient({
 
       {/* Flashcard mode */}
       {showFlashcard && (
-        <FlashcardMode items={items} onClose={() => setShowFlashcard(false)} />
+        <FlashcardMode items={items} onClose={() => setShowFlashcard(false)} masteredIds={masteredIds} onToggleMastery={handleToggleMastery} />
+      )}
+
+      {/* Range quiz */}
+      {showQuiz && (
+        <RangeQuizModal
+          totalCount={totalCount}
+          onClose={() => setShowQuiz(false)}
+          fetchQuestions={fetchQuestions}
+        />
       )}
     </div>
   )

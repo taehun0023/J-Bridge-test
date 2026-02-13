@@ -18,7 +18,16 @@ const seedFiles = [
   { file: 'seed_jlpt_n3.sql', comment: 'JLPT N3 단어' },
   { file: 'seed_jlpt_n2.sql', comment: 'JLPT N2 단어' },
   { file: 'seed_jlpt_n1.sql', comment: 'JLPT N1 단어 (200개)' },
-  { file: 'seed_it_glossary.sql', comment: 'IT 용어집 (166개)' },
+  { file: 'seed_it_glossary_v2.sql', comment: 'IT 용어집 v2 (166개, reading 완전 보완)' },
+  { file: 'seed_it_passport_security.sql', comment: 'IT 패스포트: セキュリティ (~35개)' },
+  { file: 'seed_it_passport_network.sql', comment: 'IT 패스포트: ネットワーク (~30개)' },
+  { file: 'seed_it_passport_database.sql', comment: 'IT 패스포트: データベース (~30개)' },
+  { file: 'seed_it_passport_strategy.sql', comment: 'IT 패스포트: 経営・戦略 (~50개)' },
+  { file: 'seed_it_passport_fundamentals.sql', comment: 'IT 패스포트: IT基礎 (~35개)' },
+  { file: 'seed_business_expressions.sql', comment: 'ビジネス表現 (~60개)' },
+  { file: 'seed_sentence_patterns.sql', comment: '文章パターン (~35개)' },
+  { file: 'seed_employee_vocabulary.sql', comment: '사내 스프레드시트 데이터' },
+  { file: 'seed_it_passport_quizzes.sql', comment: 'IT 패스포트 퀴즈 (55문항)' },
 ];
 
 let mergedContent = `-- ============================================
@@ -66,7 +75,10 @@ mergedContent += `-- ============================================\n`;
 mergedContent += `-- SELECT COUNT(*) as jlpt_total FROM jlpt_vocabulary;\n`;
 mergedContent += `-- SELECT jlpt_level, COUNT(*) FROM jlpt_vocabulary GROUP BY jlpt_level ORDER BY jlpt_level;\n`;
 mergedContent += `-- SELECT COUNT(*) as it_glossary_total FROM it_glossary;\n`;
-mergedContent += `-- SELECT category, COUNT(*) FROM it_glossary GROUP BY category;\n`;
+mergedContent += `-- SELECT category, COUNT(*) FROM it_glossary GROUP BY category ORDER BY category;\n`;
+mergedContent += `-- SELECT COUNT(*) FROM it_glossary WHERE reading IS NULL; -- 0이어야 함\n`;
+mergedContent += `-- SELECT subcategory, COUNT(*) FROM it_glossary WHERE category = 'expression' GROUP BY subcategory;\n`;
+mergedContent += `-- SELECT subcategory, COUNT(*) FROM it_glossary WHERE category = 'sentence_pattern' GROUP BY subcategory;\n`;
 mergedContent += `-- SELECT COUNT(*) as courses_total FROM courses;\n`;
 mergedContent += `-- SELECT COUNT(*) as coding_problems_total FROM coding_problems;\n`;
 mergedContent += `-- SELECT COUNT(*) as coding_exams_total FROM coding_skill_exams;\n`;
@@ -79,6 +91,7 @@ console.log(`1. Supabase Dashboard (https://supabase.com/dashboard) 접속`);
 console.log(`2. 프로젝트 선택 → SQL Editor 열기`);
 console.log(`3. ${outputFile} 파일의 내용을 복사하여 실행`);
 console.log(`\n⚠️  주의: 기존 데이터가 있다면 중복 방지 쿼리를 먼저 실행하세요.`);
+
 
 
 
