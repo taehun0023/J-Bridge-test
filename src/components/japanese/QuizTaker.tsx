@@ -31,9 +31,10 @@ interface Quiz {
 interface Props {
   quiz: Quiz
   questions: Question[]
+  backUrl: string
 }
 
-export default function QuizTaker({ quiz, questions }: Props) {
+export default function QuizTaker({ quiz, questions, backUrl }: Props) {
   const router = useRouter()
 
   // Stabilize questions: lock the initial set to prevent server re-render issues
@@ -112,7 +113,7 @@ export default function QuizTaker({ quiz, questions }: Props) {
         totalCount={result.totalCount}
         quizTitle={quiz.title}
         onRetry={handleRetry}
-        onBack={() => router.push('/japanese/jlpt/quiz')}
+        onBack={() => router.push(backUrl)}
       />
     )
   }

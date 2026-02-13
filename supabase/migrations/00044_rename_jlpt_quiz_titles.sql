@@ -1,0 +1,19 @@
+-- Rename JLPT vocabulary quiz titles from Korean to Japanese
+UPDATE quizzes SET title = 'N5 語彙テスト 第1回' WHERE id = 'a0000001-0000-4000-a000-000000000001';
+UPDATE quizzes SET title = 'N5 語彙テスト 第2回' WHERE id = 'a0000001-0000-4000-a000-000000000002';
+UPDATE quizzes SET title = 'N5 語彙テスト 第3回' WHERE id = 'a0000001-0000-4000-a000-000000000003';
+UPDATE quizzes SET title = 'N5 語彙テスト 第4回' WHERE id = 'a0000001-0000-4000-a000-000000000004';
+UPDATE quizzes SET title = 'N5 語彙テスト 第5回' WHERE id = 'a0000001-0000-4000-a000-000000000005';
+UPDATE quizzes SET title = 'N4 語彙テスト 第1回' WHERE id = 'a0000001-0000-4000-a000-000000000006';
+UPDATE quizzes SET title = 'N4 語彙テスト 第2回' WHERE id = 'a0000001-0000-4000-a000-000000000007';
+UPDATE quizzes SET title = 'N4 語彙テスト 第3回' WHERE id = 'a0000001-0000-4000-a000-000000000008';
+UPDATE quizzes SET title = 'N4 語彙テスト 第4回' WHERE id = 'a0000001-0000-4000-a000-000000000009';
+UPDATE quizzes SET title = 'N4 語彙テスト 第5回' WHERE id = 'a0000001-0000-4000-a000-00000000000a';
+UPDATE quizzes SET title = 'N3 語彙テスト 第1回' WHERE id = 'a0000001-0000-4000-a000-00000000000b';
+UPDATE quizzes SET title = 'N3 語彙テスト 第2回' WHERE id = 'a0000001-0000-4000-a000-00000000000c';
+UPDATE quizzes SET title = 'N3 語彙テスト 第3回' WHERE id = 'a0000001-0000-4000-a000-00000000000d';
+UPDATE quizzes SET title = 'N2 語彙テスト 第1回' WHERE id = 'a0000001-0000-4000-a000-00000000000e';
+UPDATE quizzes SET title = 'N2 語彙テスト 第2回' WHERE id = 'a0000001-0000-4000-a000-00000000000f';
+UPDATE quizzes SET title = 'N2 語彙テスト 第3回' WHERE id = 'a0000001-0000-4000-a000-000000000010';
+UPDATE quizzes SET title = 'N1 語彙テスト 第1回' WHERE id = 'a0000001-0000-4000-a000-000000000011';
+UPDATE quizzes SET title = 'N1 語彙テスト 第2回' WHERE id = 'a0000001-0000-4000-a000-000000000012';

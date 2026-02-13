@@ -102,5 +102,5 @@ console.log(`Quiz sections: ${quizHeaders.length}`);
 quizHeaders.forEach(h => console.log(`  ${h}`));
 
 // Verify quiz titles are correct
-const titleLine = lines.find(l => l.includes("'生活日本語ランク試験'"));
+const titleLine = lines.find(l => l.includes("'生活日本語総合試験'"));
 console.log(`\nJapanese titles OK: ${!!titleLine}`);

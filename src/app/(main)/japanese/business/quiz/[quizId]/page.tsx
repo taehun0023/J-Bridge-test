@@ -15,7 +15,7 @@ function shuffleArray<T>(arr: T[]): T[] {
   return result
 }
 
-export default async function QuizPage({ params }: { params: Promise<Params> }) {
+export default async function BusinessQuizPage({ params }: { params: Promise<Params> }) {
   const { quizId } = await params
   const supabase = await createClient()
 
@@ -46,7 +46,7 @@ export default async function QuizPage({ params }: { params: Promise<Params> }) 
     <QuizTaker
       quiz={quiz}
       questions={shuffledQuestions}
-      backUrl="/japanese/jlpt/quiz"
+      backUrl="/japanese/business/quiz"
     />
   )
 }

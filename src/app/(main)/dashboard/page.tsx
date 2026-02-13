@@ -51,6 +51,16 @@ export default async function DashboardPage() {
     .order('completed_at', { ascending: false })
     .limit(5)
 
+  // Fetch recent comprehensive exams (completed/failed only)
+  const { data: recentExams } = await supabase
+    .from('comprehensive_exams')
+    .select('id, category, score, passed, completed_at')
+    .eq('user_id', user.id)
+    .in('status', ['completed', 'failed'])
+    .not('completed_at', 'is', null)
+    .order('completed_at', { ascending: false })
+    .limit(5)
+
   // Fetch assigned tasks
   const { data: tasks } = await supabase
     .from('task_assignments')
@@ -204,6 +214,37 @@ export default async function DashboardPage() {
     attitudeCulture: attitudeSkills?.attitude_normalized ?? 0,
   }
 
+  // Build unified recent results (quiz_attempts + comprehensive_exams)
+  const EXAM_CATEGORY_LABELS: Record<string, string> = {
+    seikatsu: '生活日本語 総合試験',
+    'business-jp': 'ビジネス日本語 総合試験',
+    cs: 'CS知識 総合試験',
+    dev: '開発実務能力 総合試験',
+    'business-lit': 'ビジネスリテラシー 総合試験',
+  }
+
+  const quizResults = (recentQuizzes ?? []).map(q => ({
+    id: q.id as string,
+    title: (q.quizzes as { title: string } | null)?.title ?? 'クイズ',
+    score: q.score as number,
+    passed: q.passed as boolean,
+    completed_at: q.completed_at as string,
+    type: 'quiz' as const,
+  }))
+
+  const examResults = (recentExams ?? []).map(e => ({
+    id: e.id,
+    title: EXAM_CATEGORY_LABELS[e.category] ?? e.category,
+    score: e.score ?? 0,
+    passed: e.passed ?? false,
+    completed_at: e.completed_at!,
+    type: 'comprehensive' as const,
+  }))
+
+  const recentResults = [...quizResults, ...examResults]
+    .sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())
+    .slice(0, 5)
+
   // Build completed assessments info for retake request UI
   const completedAssessmentInfo = relevantSteps
     .filter(step => {
@@ -225,7 +266,7 @@ export default async function DashboardPage() {
     <DashboardClient
       profile={profile}
       radarScores={radarScores}
-      recentQuizzes={recentQuizzes ?? []}
+      recentResults={recentResults}
       tasks={tasks ?? []}
       pendingAssessments={pendingAssessments}
       isJapanese={isJapanese}

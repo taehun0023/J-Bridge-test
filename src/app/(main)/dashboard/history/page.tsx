@@ -11,7 +11,7 @@ export default async function HistoryPage() {
   // Fetch all quiz attempts
   const { data: quizAttempts } = await supabase
     .from('quiz_attempts')
-    .select('id, score, passed, completed_at, retake_request_status, quizzes(title, quiz_type)')
+    .select('id, score, passed, completed_at, retake_request_status, quizzes(title, quiz_type, is_assessment)')
     .eq('user_id', user.id)
     .not('completed_at', 'is', null)
     .order('completed_at', { ascending: false })
@@ -35,7 +35,7 @@ export default async function HistoryPage() {
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">テスト履歴</h1>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">全てのクイズ・等級テスト・総合試験の履歴</p>
+        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">全てのテスト・総合試験の履歴</p>
       </div>
       <HistoryClient
         quizAttempts={quizAttempts ?? []}

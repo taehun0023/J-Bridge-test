@@ -109,7 +109,7 @@ export default function JlptReadingClient({
           href={`/japanese/jlpt/quiz?level=${level}&type=jlpt_reading`}
           className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
         >
-          {level} 読解クイズに挑戦 &rarr;
+          {level} 読解テストに挑戦 &rarr;
         </a>
       </div>
 

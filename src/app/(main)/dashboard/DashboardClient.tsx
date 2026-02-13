@@ -20,12 +20,13 @@ interface Profile {
   target_coding_area: string | null
 }
 
-interface QuizAttempt {
+interface UnifiedResult {
   id: string
+  title: string
   score: number
   passed: boolean
   completed_at: string
-  quizzes: { title: string } | null
+  type: 'quiz' | 'comprehensive'
 }
 
 interface TaskAssignment {
@@ -87,10 +88,18 @@ const feedbackCategoryLabels: Record<string, string> = {
   business_lit: 'ビジネスリテラシー',
 }
 
+const AXIS_TO_STEP: Record<AxisKey, number> = {
+  jlpt: 1,
+  itJapanese: 2,
+  coreProgramming: 3,
+  framework: 4,
+  attitudeCulture: 5,
+}
+
 interface Props {
   profile: Profile | null
   radarScores: Record<AxisKey, number>
-  recentQuizzes: QuizAttempt[]
+  recentResults: UnifiedResult[]
   tasks: TaskAssignment[]
   pendingAssessments: PendingAssessment[]
   isJapanese: boolean
@@ -110,7 +119,7 @@ function getBadgeStyle(badge: BadgeType): string {
 }
 
 export default function DashboardClient({
-  profile, radarScores, recentQuizzes, tasks, pendingAssessments, isJapanese, completedAssessments,
+  profile, radarScores, recentResults, tasks, pendingAssessments, isJapanese, completedAssessments,
   userRanking, enrolledCourses, learningStats, recentFeedbacks = [],
 }: Props) {
   const relevantAxes = getRelevantAxes(isJapanese)
@@ -148,19 +157,26 @@ export default function DashboardClient({
       <div className="mt-6 grid gap-4 lg:grid-cols-3 lg:grid-rows-[auto_auto]">
         {/* Radar chart — spans 2 cols, 2 rows */}
         <Card title="エンジニア力量" className="lg:col-span-2 lg:row-span-2">
+          {retakeMessage && (
+            <div className="mb-3 rounded-xl bg-indigo-500/10 px-3 py-2 text-sm text-indigo-400 ring-1 ring-indigo-500/20">
+              {retakeMessage}
+            </div>
+          )}
           {hasScores ? (
             <div>
               <div className="mx-auto max-w-md">
                 <RadarChart scores={radarScores} isJapanese={isJapanese} />
               </div>
 
-              {/* Grade summary cards */}
+              {/* Grade summary cards with retake buttons */}
               <div className={`mt-4 grid ${gridCols} gap-2`}>
                 {relevantAxes.map((key) => {
                   const score = radarScores[key]
                   const grade = getGrade(score)
                   const colorClass = getGradeColor(grade)
                   const isBelowB = score < DISPATCH_MINIMUM_SCORE
+                  const step = AXIS_TO_STEP[key]
+                  const ca = completedAssessments.find(a => a.step === step)
                   return (
                     <div
                       key={key}
@@ -175,6 +191,25 @@ export default function DashboardClient({
                       <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-bold ${colorClass}`}>
                         {grade}
                       </span>
+                      {ca && (
+                        <div className="mt-1.5">
+                          {ca.retakeStatus === 'requested' ? (
+                            <span className="text-[10px] text-amber-400">リクエスト中</span>
+                          ) : ca.retakeStatus === 'approved' ? (
+                            <span className="text-[10px] text-emerald-400">承認済</span>
+                          ) : ca.retakeStatus === 'denied' ? (
+                            <span className="text-[10px] text-red-400">拒否</span>
+                          ) : (
+                            <button
+                              onClick={() => handleRetakeRequest(ca.step)}
+                              disabled={pending}
+                              className="rounded-md border border-white/[0.08] dark:border-white/[0.08] border-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-zinc-400 hover:bg-white/5 dark:hover:bg-white/5 hover:bg-zinc-50 disabled:opacity-50 transition-colors"
+                            >
+                              再試験リクエスト
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )
                 })}
@@ -235,65 +270,34 @@ export default function DashboardClient({
           )}
         </Card>
 
-        {/* Recent quizzes — below coding rank on right */}
-        <Card title="最近のクイズ結果">
-          {retakeMessage && (
-            <div className="mb-3 rounded-xl bg-indigo-500/10 px-3 py-2 text-sm text-indigo-400 ring-1 ring-indigo-500/20">
-              {retakeMessage}
-            </div>
-          )}
-          {recentQuizzes.length === 0 && completedAssessments.length === 0 ? (
-            <p className="py-4 text-center text-sm text-zinc-500">まだクイズを受けていません</p>
+        {/* Recent results — below coding rank on right */}
+        <Card title="最近の試験結果">
+          {recentResults.length === 0 ? (
+            <p className="py-4 text-center text-sm text-zinc-500">まだ試験を受けていません</p>
           ) : (
             <div className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">
-              {recentQuizzes.slice(0, 5 - Math.min(completedAssessments.length, 2)).map((q) => (
-                <div key={q.id} className="flex items-center justify-between py-3">
+              {recentResults.map((r) => (
+                <div key={r.id} className="flex items-center justify-between py-3">
                   <div>
                     <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                      {(q.quizzes as { title: string } | null)?.title ?? 'クイズ'}
+                      {r.title}
                     </p>
                     <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                      {new Date(q.completed_at).toLocaleDateString('ja-JP')}
+                      {new Date(r.completed_at).toLocaleDateString('ja-JP')}
+                      {r.type === 'comprehensive' && (
+                        <span className="ml-1.5 inline-flex rounded-full bg-indigo-500/10 px-1.5 py-0.5 text-[10px] font-medium text-indigo-400 ring-1 ring-indigo-500/20">
+                          総合
+                        </span>
+                      )}
                     </p>
                   </div>
                   <div className="text-right">
-                    <span className={`text-sm font-mono font-bold ${q.passed ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {q.score}点
+                    <span className={`text-sm font-mono font-bold ${r.passed ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {r.score}点
                     </span>
                   </div>
                 </div>
               ))}
-
-              {completedAssessments.length > 0 && (
-                <div className="pt-3">
-                  <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2">完了済テスト</p>
-                  {completedAssessments.slice(0, 2).map((ca) => (
-                    <div key={ca.step} className="flex items-center justify-between py-2">
-                      <div>
-                        <p className="text-sm text-zinc-900 dark:text-zinc-100">{ca.label}</p>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                          {new Date(ca.completedAt).toLocaleDateString('ja-JP')}
-                        </p>
-                      </div>
-                      {ca.retakeStatus === 'requested' ? (
-                        <span className="text-xs text-amber-400">リクエスト中</span>
-                      ) : ca.retakeStatus === 'approved' ? (
-                        <span className="text-xs text-emerald-400">承認済</span>
-                      ) : ca.retakeStatus === 'denied' ? (
-                        <span className="text-xs text-red-400">拒否</span>
-                      ) : (
-                        <button
-                          onClick={() => handleRetakeRequest(ca.step)}
-                          disabled={pending}
-                          className="rounded-lg border border-white/[0.08] dark:border-white/[0.08] border-gray-200 px-2.5 py-1 text-xs font-medium text-zinc-400 hover:bg-white/5 dark:hover:bg-white/5 hover:bg-zinc-50 disabled:opacity-50 transition-colors"
-                        >
-                          再試験リクエスト
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           )}
           <Link
@@ -396,7 +400,7 @@ export default function DashboardClient({
                       <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-400 transition-colors">
                         {assessment.label}
                       </p>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">初期等級テスト</p>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">初期総合試験</p>
                     </div>
                   </div>
                   <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getBadgeStyle(assessment.badge)}`}>

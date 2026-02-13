@@ -26,6 +26,8 @@ export type QuizType =
   | 'attitude_culture'
   | 'core_programming'
   | 'framework'
+  | 'sentence_pattern'
+  | 'business_expression'
 
 export type SubmissionStatus =
   | 'pending'

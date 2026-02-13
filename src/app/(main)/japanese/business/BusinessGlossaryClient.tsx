@@ -156,6 +156,22 @@ export default function BusinessGlossaryClient({
         </div>
       </div>
 
+      {/* Quiz link */}
+      <div className="mt-3">
+        <a
+          href={`/japanese/business/quiz?type=${
+            basePath.includes('expressions') ? 'business_expression'
+            : basePath.includes('sentence-patterns') ? 'sentence_pattern'
+            : 'it_terminology'
+          }`}
+          className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+        >
+          {basePath.includes('expressions') ? 'ビジネス表現'
+           : basePath.includes('sentence-patterns') ? '文章パターン'
+           : 'IT語彙'}テストに挑戦 &rarr;
+        </a>
+      </div>
+
       <div className="mt-4 rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
         {items.length === 0 ? (
           <EmptyState title="用語がありません" description="検索条件を変更してください" icon="📖" />

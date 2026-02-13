@@ -186,7 +186,7 @@ export default function JlptVocabularyClient({
           href={`/japanese/jlpt/quiz?level=${level}&type=jlpt_vocab`}
           className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
         >
-          {level} 語彙クイズに挑戦 &rarr;
+          {level} 語彙テストに挑戦 &rarr;
         </a>
       </div>
 

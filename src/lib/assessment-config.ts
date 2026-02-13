@@ -7,11 +7,11 @@ export const ASSESSMENT_QUIZ_IDS: Record<number, string> = {
 }
 
 export const ASSESSMENT_LABELS: Record<number, string> = {
-  1: '生活日本語ランク試験',
-  2: 'ビジネス日本語ランク試験',
-  3: 'CS知識ランク試験',
-  4: '開発実務能力ランク試験',
-  5: 'ビジネスリテラシーランク試験',
+  1: '生活日本語総合試験',
+  2: 'ビジネス日本語総合試験',
+  3: 'CS知識総合試験',
+  4: '開発実務能力総合試験',
+  5: 'ビジネスリテラシー総合試験',
 }
 
 export const ASSESSMENT_TIME_LIMITS: Record<number, number> = {

@@ -141,11 +141,11 @@ async function deleteExistingData() {
 async function insertQuizzes() {
   console.log('\n2. Inserting quiz definitions...');
   const quizzes = [
-    { id: 'a0000001-0000-0000-0000-000000000001', title: '生活日本語ランク試験', quiz_type: 'jlpt_vocab', passing_score: 0, time_limit_minutes: 25, is_assessment: true, questions_per_attempt: 30 },
-    { id: 'a0000002-0000-0000-0000-000000000002', title: 'ビジネス日本語ランク試験', quiz_type: 'it_terminology', passing_score: 0, time_limit_minutes: 25, is_assessment: true, questions_per_attempt: 30 },
-    { id: 'a0000003-0000-0000-0000-000000000003', title: 'CS知識ランク試験', quiz_type: 'core_programming', passing_score: 0, time_limit_minutes: 30, is_assessment: true, questions_per_attempt: 30 },
-    { id: 'a0000004-0000-0000-0000-000000000004', title: '開発実務能力ランク試験', quiz_type: 'framework', passing_score: 0, time_limit_minutes: 30, is_assessment: true, questions_per_attempt: 30 },
-    { id: 'a0000005-0000-0000-0000-000000000005', title: 'ビジネスリテラシーランク試験', quiz_type: 'attitude_culture', passing_score: 0, time_limit_minutes: 25, is_assessment: true, questions_per_attempt: 30 },
+    { id: 'a0000001-0000-0000-0000-000000000001', title: '生活日本語総合試験', quiz_type: 'jlpt_vocab', passing_score: 0, time_limit_minutes: 25, is_assessment: true, questions_per_attempt: 30 },
+    { id: 'a0000002-0000-0000-0000-000000000002', title: 'ビジネス日本語総合試験', quiz_type: 'it_terminology', passing_score: 0, time_limit_minutes: 25, is_assessment: true, questions_per_attempt: 30 },
+    { id: 'a0000003-0000-0000-0000-000000000003', title: 'CS知識総合試験', quiz_type: 'core_programming', passing_score: 0, time_limit_minutes: 30, is_assessment: true, questions_per_attempt: 30 },
+    { id: 'a0000004-0000-0000-0000-000000000004', title: '開発実務能力総合試験', quiz_type: 'framework', passing_score: 0, time_limit_minutes: 30, is_assessment: true, questions_per_attempt: 30 },
+    { id: 'a0000005-0000-0000-0000-000000000005', title: 'ビジネスリテラシー総合試験', quiz_type: 'attitude_culture', passing_score: 0, time_limit_minutes: 25, is_assessment: true, questions_per_attempt: 30 },
   ];
 
   const resp = await fetch(`${SUPABASE_URL}/rest/v1/quizzes`, {

@@ -32,7 +32,7 @@ export default function ResultsSummary({ radarScores, totalScore, maxScore, isJa
   return (
     <div>
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">初期ランク試験完了！</h1>
+        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">初期総合試験完了！</h1>
         <p className="mt-2 text-zinc-500 dark:text-zinc-400">
           合計点: <span className="font-mono font-bold text-indigo-400 text-lg">{totalScore}</span> / {maxScore}点
         </p>

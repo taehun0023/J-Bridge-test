@@ -107,7 +107,7 @@ export default function JlptListeningClient({
           href={`/japanese/jlpt/quiz?level=${level}&type=jlpt_listening`}
           className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
         >
-          {level} 聴解クイズに挑戦 &rarr;
+          {level} 聴解テストに挑戦 &rarr;
         </a>
       </div>
 

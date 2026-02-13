@@ -48,7 +48,7 @@ export default function QuizResults({
           onClick={onBack}
           className="flex-1 rounded-xl border border-gray-300 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
         >
-          クイズ一覧
+          テスト一覧
         </button>
         <button
           onClick={onRetry}

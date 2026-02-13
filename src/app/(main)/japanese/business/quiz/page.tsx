@@ -3,11 +3,6 @@ import Link from 'next/link'
 import Badge from '@/components/ui/Badge'
 import EmptyState from '@/components/ui/EmptyState'
 
-interface SearchParams {
-  level?: string
-  type?: string
-}
-
 interface Quiz {
   id: string
   title: string
@@ -16,28 +11,27 @@ interface Quiz {
   time_limit_minutes: number | null
 }
 
-export default async function QuizListPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const params = await searchParams
+interface SearchParams {
+  type?: string
+}
+
+export default async function BusinessQuizListPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const supabase = await createClient()
+  const params = await searchParams
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const quizTypes = params.type && ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening'].includes(params.type)
+  const validTypes = ['it_terminology', 'sentence_pattern', 'business_expression']
+  const quizTypes = params.type && validTypes.includes(params.type)
     ? [params.type]
-    : ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening']
+    : validTypes
 
-  let query = supabase
+  const { data: quizzes } = await supabase
     .from('quizzes')
     .select('*')
     .in('quiz_type', quizTypes)
     .eq('is_assessment', false)
     .order('created_at', { ascending: true })
-
-  if (params.level) {
-    query = query.ilike('title', `%${params.level}%`)
-  }
-
-  const { data: quizzes } = await query
 
   // Fetch user's attempts
   let attemptMap: Record<string, { score: number; passed: boolean }> = {}
@@ -56,17 +50,16 @@ export default async function QuizListPage({ searchParams }: { searchParams: Pro
     })
   }
 
-  const vocabQuizzes = quizzes?.filter(q => q.quiz_type === 'jlpt_vocab') ?? []
-  const grammarQuizzes = quizzes?.filter(q => q.quiz_type === 'jlpt_grammar') ?? []
-  const readingQuizzes = quizzes?.filter(q => q.quiz_type === 'jlpt_reading') ?? []
-  const listeningQuizzes = quizzes?.filter(q => q.quiz_type === 'jlpt_listening') ?? []
+  const itTermQuizzes = quizzes?.filter(q => q.quiz_type === 'it_terminology') ?? []
+  const patternQuizzes = quizzes?.filter(q => q.quiz_type === 'sentence_pattern') ?? []
+  const expressionQuizzes = quizzes?.filter(q => q.quiz_type === 'business_expression') ?? []
 
   function renderQuizCard(quiz: Quiz) {
     const attempt = attemptMap[quiz.id]
     return (
       <Link
         key={quiz.id}
-        href={`/japanese/jlpt/quiz/${quiz.id}`}
+        href={`/japanese/business/quiz/${quiz.id}`}
         className="group rounded-xl border border-gray-200 bg-white p-5 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
       >
         <div className="flex items-start justify-between">
@@ -97,12 +90,12 @@ export default async function QuizListPage({ searchParams }: { searchParams: Pro
     )
   }
 
-  const hasAny = vocabQuizzes.length > 0 || grammarQuizzes.length > 0 || readingQuizzes.length > 0 || listeningQuizzes.length > 0
+  const hasAny = itTermQuizzes.length > 0 || patternQuizzes.length > 0 || expressionQuizzes.length > 0
 
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">生活日本語 テスト</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ビジネス日本語 テスト</h1>
         <p className="mt-1 text-gray-500 dark:text-gray-400">テストを解いて実力を確認しましょう</p>
       </div>
 
@@ -110,38 +103,29 @@ export default async function QuizListPage({ searchParams }: { searchParams: Pro
         <EmptyState title="テストはありません" description="まだ登録されたテストはありません" icon="📝" />
       ) : (
         <div className="space-y-8">
-          {vocabQuizzes.length > 0 && (
+          {itTermQuizzes.length > 0 && (
             <div>
-              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">語彙テスト</h2>
+              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">IT語彙テスト</h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {vocabQuizzes.map(renderQuizCard)}
+                {itTermQuizzes.map(renderQuizCard)}
               </div>
             </div>
           )}
 
-          {grammarQuizzes.length > 0 && (
+          {patternQuizzes.length > 0 && (
             <div>
-              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">文法テスト</h2>
+              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">文章パターンテスト</h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {grammarQuizzes.map(renderQuizCard)}
+                {patternQuizzes.map(renderQuizCard)}
               </div>
             </div>
           )}
 
-          {readingQuizzes.length > 0 && (
+          {expressionQuizzes.length > 0 && (
             <div>
-              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">読解テスト</h2>
+              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">ビジネス表現テスト</h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {readingQuizzes.map(renderQuizCard)}
-              </div>
-            </div>
-          )}
-
-          {listeningQuizzes.length > 0 && (
-            <div>
-              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">聴解テスト</h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {listeningQuizzes.map(renderQuizCard)}
+                {expressionQuizzes.map(renderQuizCard)}
               </div>
             </div>
           )}
