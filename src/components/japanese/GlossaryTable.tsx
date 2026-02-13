@@ -19,7 +19,7 @@ interface GlossaryTableProps {
   items: GlossaryItem[]
   offset?: number
   masteredIds?: string[]
-  itemType?: 'it_glossary'
+  itemType?: 'it_glossary' | 'cs_term'
 }
 
 export default function GlossaryTable({ items, offset = 0, masteredIds = [], itemType = 'it_glossary' }: GlossaryTableProps) {

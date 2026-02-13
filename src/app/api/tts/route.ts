@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createHash } from 'crypto'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
+import { join } from 'path'
 
 const MAX_TEXT_LENGTH = 5000
+const CACHE_DIR = join(process.cwd(), 'public', 'audio')
 
 // 話者ごとに異なる音声を割り当てるための音声プール
 const voicePool = [
@@ -16,6 +20,34 @@ const narratorVoice = { name: 'ja-JP-Neural2-B', ssmlGender: 'FEMALE' }
 interface Segment {
   speaker: string | null
   text: string
+}
+
+/**
+ * テキスト+速度からキャッシュ用ハッシュを生成
+ */
+function getCacheKey(text: string, speed: number): string {
+  return createHash('sha256').update(`${text}__${speed}`).digest('hex')
+}
+
+/**
+ * キャッシュからMP3を取得（あれば返す、なければnull）
+ */
+function getFromCache(hash: string): Buffer | null {
+  const filePath = join(CACHE_DIR, `${hash}.mp3`)
+  if (existsSync(filePath)) {
+    return readFileSync(filePath)
+  }
+  return null
+}
+
+/**
+ * MP3をキャッシュに保存
+ */
+function saveToCache(hash: string, data: Buffer): void {
+  if (!existsSync(CACHE_DIR)) {
+    mkdirSync(CACHE_DIR, { recursive: true })
+  }
+  writeFileSync(join(CACHE_DIR, `${hash}.mp3`), data)
 }
 
 /**
@@ -129,48 +161,61 @@ export async function POST(request: NextRequest) {
   }
 
   const speakingRate = Math.max(0.5, Math.min(2.0, speed))
+  const cacheKey = getCacheKey(text, speakingRate)
+
+  // キャッシュ確認
+  const cached = getFromCache(cacheKey)
+  if (cached) {
+    return new NextResponse(cached, {
+      headers: {
+        'Content-Type': 'audio/mpeg',
+        'Content-Length': String(cached.length),
+        'X-TTS-Cache': 'hit',
+      },
+    })
+  }
 
   try {
     const { isDialogue, segments } = parseDialogueScript(text)
+    let audioBuffer: Buffer
 
     if (!isDialogue) {
       // 非対話：単一音声で全文を読む
-      const audioBuffer = await synthesize(apiKey, text, narratorVoice, speakingRate)
-      return new NextResponse(audioBuffer, {
-        headers: {
-          'Content-Type': 'audio/mpeg',
-          'Content-Length': String(audioBuffer.length),
-        },
-      })
-    }
+      audioBuffer = await synthesize(apiKey, text, narratorVoice, speakingRate)
+    } else {
+      // 対話モード：話者ごとに異なる音声を割り当て
+      const grouped = groupSegments(segments)
+      const speakerVoiceMap = new Map<string, (typeof voicePool)[0]>()
+      let voiceIndex = 0
 
-    // 対話モード：話者ごとに異なる音声を割り当て
-    const grouped = groupSegments(segments)
-    const speakerVoiceMap = new Map<string, (typeof voicePool)[0]>()
-    let voiceIndex = 0
+      const audioBuffers: Buffer[] = []
 
-    const audioBuffers: Buffer[] = []
+      for (const seg of grouped) {
+        let voice = narratorVoice
 
-    for (const seg of grouped) {
-      let voice = narratorVoice
-
-      if (seg.speaker) {
-        if (!speakerVoiceMap.has(seg.speaker)) {
-          speakerVoiceMap.set(seg.speaker, voicePool[voiceIndex % voicePool.length])
-          voiceIndex++
+        if (seg.speaker) {
+          if (!speakerVoiceMap.has(seg.speaker)) {
+            speakerVoiceMap.set(seg.speaker, voicePool[voiceIndex % voicePool.length])
+            voiceIndex++
+          }
+          voice = speakerVoiceMap.get(seg.speaker)!
         }
-        voice = speakerVoiceMap.get(seg.speaker)!
+
+        const buf = await synthesize(apiKey, seg.text, voice, speakingRate)
+        audioBuffers.push(buf)
       }
 
-      const buf = await synthesize(apiKey, seg.text, voice, speakingRate)
-      audioBuffers.push(buf)
+      audioBuffer = Buffer.concat(audioBuffers)
     }
 
-    const combined = Buffer.concat(audioBuffers)
-    return new NextResponse(combined, {
+    // キャッシュに保存
+    saveToCache(cacheKey, audioBuffer)
+
+    return new NextResponse(audioBuffer, {
       headers: {
         'Content-Type': 'audio/mpeg',
-        'Content-Length': String(combined.length),
+        'Content-Length': String(audioBuffer.length),
+        'X-TTS-Cache': 'miss',
       },
     })
   } catch (err) {

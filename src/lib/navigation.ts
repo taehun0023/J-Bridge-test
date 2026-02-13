@@ -62,12 +62,15 @@ export const categoryChildren: Record<string, {
   },
   cs: {
     title: 'CS知識',
-    description: 'コンピュータサイエンスの基礎知識を学習しましょう',
+    description: 'ITパスポート・基本情報技術者試験のテクノロジ系を学習しましょう',
     children: [
-      { href: '/cs/data-structures', label: 'データ構造', description: 'リスト、スタック、キュー、ツリーなど' },
-      { href: '/cs/os', label: 'OS', description: 'オペレーティングシステムの基礎' },
-      { href: '/cs/algorithms', label: 'アルゴリズム', description: 'ソート、探索、動的計画法など' },
-      { href: '/cs/networking', label: 'ネットワーク', description: 'TCP/IP、HTTP、DNS、セキュリティ' },
+      { href: '/cs/basic-theory', label: '基礎理論', description: '2進数、論理演算、情報理論、確率統計' },
+      { href: '/cs/algorithms', label: 'アルゴリズム', description: 'ソート、探索、再帰、計算量、動的計画法' },
+      { href: '/cs/data-structures', label: 'データ構造', description: '配列、リスト、スタック、キュー、ツリー、ハッシュ' },
+      { href: '/cs/computer-architecture', label: 'コンピュータシステム', description: 'CPU、メモリ、プロセス、OS機能' },
+      { href: '/cs/database', label: 'データベース', description: '正規化、SQL理論、トランザクション、ER図' },
+      { href: '/cs/networking', label: 'ネットワーク', description: 'OSI/TCP/IP、プロトコル、ルーティング' },
+      { href: '/cs/security', label: 'セキュリティ', description: '暗号化、認証、攻撃手法、セキュリティ対策' },
     ],
   },
   dev: {

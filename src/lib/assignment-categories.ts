@@ -31,10 +31,13 @@ export const ASSIGNMENT_CATEGORIES: Record<string, CategoryConfig> = {
   cs: {
     label: 'CS知識',
     subcategories: {
-      'data-structures': { label: 'データ構造', quizType: 'core_programming', hasLevel: false },
-      os: { label: 'OS', quizType: 'core_programming', hasLevel: false },
-      algorithms: { label: 'アルゴリズム', quizType: 'core_programming', hasLevel: false },
-      networking: { label: 'ネットワーク', quizType: 'core_programming', hasLevel: false },
+      'basic-theory': { label: '基礎理論', quizType: 'cs_knowledge', hasLevel: false },
+      algorithms: { label: 'アルゴリズム', quizType: 'cs_knowledge', hasLevel: false },
+      'data-structures': { label: 'データ構造', quizType: 'cs_knowledge', hasLevel: false },
+      'computer-architecture': { label: 'コンピュータシステム', quizType: 'cs_knowledge', hasLevel: false },
+      database: { label: 'データベース', quizType: 'cs_knowledge', hasLevel: false },
+      networking: { label: 'ネットワーク', quizType: 'cs_knowledge', hasLevel: false },
+      security: { label: 'セキュリティ', quizType: 'cs_knowledge', hasLevel: false },
     },
   },
   dev: {

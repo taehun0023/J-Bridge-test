@@ -10,9 +10,9 @@ interface SearchParams {
 }
 
 const ITEMS_PER_PAGE = 30
-const CATEGORY = 'algorithms'
+const CATEGORY = 'database'
 
-export default async function AlgorithmsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+export default async function DatabasePage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams
   const difficulty = params.difficulty ?? 'ip'
   const search = params.search ?? ''
@@ -50,8 +50,8 @@ export default async function AlgorithmsPage({ searchParams }: { searchParams: P
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">アルゴリズム</h1>
-        <p className="mt-1 text-gray-500 dark:text-gray-400">ソート、探索、再帰、計算量、動的計画法を学習しましょう</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">データベース</h1>
+        <p className="mt-1 text-gray-500 dark:text-gray-400">正規化、SQL理論、トランザクション、ER図を学習しましょう</p>
       </div>
 
       <CsGlossaryClient
@@ -62,11 +62,11 @@ export default async function AlgorithmsPage({ searchParams }: { searchParams: P
         currentPage={page}
         totalPages={totalPages}
         totalCount={count ?? 0}
-        basePath="/cs/algorithms"
+        basePath="/cs/database"
         offset={offset}
         masteredIds={masteredIds}
         mastery={mastery}
-        categoryLabel="アルゴリズム"
+        categoryLabel="データベース"
       />
     </div>
   )

@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 
-type ItemType = 'it_glossary' | 'jlpt_vocabulary' | 'jlpt_grammar'
+type ItemType = 'it_glossary' | 'jlpt_vocabulary' | 'jlpt_grammar' | 'cs_term'
 
 export async function toggleMastery(itemType: ItemType, itemId: string) {
   const supabase = await createClient()

@@ -28,6 +28,7 @@ export type QuizType =
   | 'framework'
   | 'sentence_pattern'
   | 'business_expression'
+  | 'cs_knowledge'
 
 export type SubmissionStatus =
   | 'pending'

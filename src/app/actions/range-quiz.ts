@@ -96,6 +96,68 @@ export async function generateGlossaryQuiz({
   return { questions }
 }
 
+export async function generateCsTermQuiz({
+  category,
+  difficultyLevel,
+  rangeStart,
+  rangeEnd,
+  questionCount = 10,
+}: {
+  category: string
+  difficultyLevel?: string
+  rangeStart: number
+  rangeEnd: number
+  questionCount?: number
+}): Promise<{ questions?: QuizQuestion[]; error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: '認証が必要です' }
+
+  let query = supabase
+    .from('cs_terms')
+    .select('id, term_ja, reading, term_ko')
+    .eq('category', category)
+    .order('sort_order', { ascending: true })
+
+  if (difficultyLevel) {
+    query = query.eq('difficulty_level', difficultyLevel)
+  }
+
+  query = query.range(rangeStart - 1, rangeEnd - 1)
+
+  const { data: rangeItems, error } = await query
+  if (error || !rangeItems || rangeItems.length === 0) {
+    return { error: '指定範囲にデータがありません' }
+  }
+
+  // Wrong answer pool from same category
+  let poolQuery = supabase
+    .from('cs_terms')
+    .select('term_ko')
+    .eq('category', category)
+
+  const { data: poolData } = await poolQuery
+  const allAnswers = [...new Set(poolData?.map(p => p.term_ko) ?? [])]
+
+  const selected = shuffle(rangeItems).slice(0, questionCount)
+
+  const questions: QuizQuestion[] = selected.map(item => {
+    const wrongAnswers = shuffle(allAnswers.filter(a => a !== item.term_ko)).slice(0, 3)
+    const options = shuffle([
+      { label: item.term_ko, correct: true },
+      ...wrongAnswers.map(w => ({ label: w, correct: false })),
+    ])
+    return {
+      id: item.id,
+      question: item.term_ja,
+      reading: item.reading ?? undefined,
+      options,
+    }
+  })
+
+  return { questions }
+}
+
 export async function generateVocabQuiz({
   level,
   pos,
