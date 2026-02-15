@@ -34,9 +34,13 @@ export default async function AdminMentorsPage() {
     .eq('role', 'mentee')
     .order('full_name')
 
-  // Group assignments by mentor
-  const mentorAssignments: Record<string, typeof assignments> = {}
-  for (const a of assignments ?? []) {
+  // Group assignments by mentor (unwrap FK join arrays to single objects)
+  const assignmentList = (assignments ?? []).map(a => ({
+    ...a,
+    mentee: Array.isArray(a.mentee) ? a.mentee[0] ?? null : a.mentee,
+  }))
+  const mentorAssignments: Record<string, typeof assignmentList> = {}
+  for (const a of assignmentList) {
     if (!mentorAssignments[a.mentor_id]) mentorAssignments[a.mentor_id] = []
     mentorAssignments[a.mentor_id]!.push(a)
   }

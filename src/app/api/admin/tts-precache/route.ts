@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { createHash } from 'crypto'
+import { env } from '@/lib/env'
 
 const BUCKET = 'tts-cache'
 const BATCH_SIZE = 10
@@ -35,7 +36,7 @@ export async function GET() {
   const counts: Record<string, { total: number; label: string }> = {}
   for (const [table, config] of Object.entries(TABLE_CONFIG)) {
     const { count } = await supabase
-      .from(table)
+      .from(table as TableName)
       .select('*', { count: 'exact', head: true })
     counts[table] = { total: count ?? 0, label: config.label }
   }
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
     .single()
   if (profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const apiKey = process.env.GOOGLE_CLOUD_TTS_API_KEY
+  const apiKey = env.GOOGLE_CLOUD_TTS_API_KEY
   if (!apiKey) return NextResponse.json({ error: 'TTS API key not configured' }, { status: 500 })
 
   let body: { table?: string; offset?: number }
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
   let errors = 0
 
   for (const item of items) {
-    const text = (item as Record<string, string>)[config.column]
+    const text = String((item as unknown as Record<string, unknown>)[config.column] ?? '')
     if (!text) continue
 
     const hash = getCacheKey(text, 1.0)

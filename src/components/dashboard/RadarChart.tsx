@@ -84,11 +84,11 @@ export default function RadarChart({ scores, isJapanese = false }: RadarChartPro
             color: isDark ? '#fafafa' : '#09090b',
             fontSize: '0.875rem',
           }}
-          formatter={(value: number, name: string) => {
+          formatter={((value: number | undefined, name: string | undefined) => {
             if (name === '派遣基準 (B)') return ['70点 (B)', '派遣基準']
-            const grade = getGrade(value)
-            return [`${value}点 (${grade})`, 'スコア']
-          }}
+            const grade = getGrade(value ?? 0)
+            return [`${value ?? 0}点 (${grade})`, 'スコア']
+          }) as never}
         />
         <Legend
           wrapperStyle={{ fontSize: '0.75rem', color: labelFill }}

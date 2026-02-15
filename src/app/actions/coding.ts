@@ -1,16 +1,15 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { createSubmission, pollSubmissionResult, getLanguageId, mapJudge0Status } from '@/lib/judge0/client'
 import { analyzeCode } from '@/lib/code-review/analyzer'
 import { revalidatePath } from 'next/cache'
+import { requireAuth } from '@/lib/auth-helpers'
 import { recalculateUserScores } from './scores'
 
 export async function submitCode(problemId: string, sourceCode: string, language: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) return { error: '認証が必要です' }
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
 
   // Get all test cases for this problem
   const { data: testCases } = await supabase
@@ -95,7 +94,9 @@ export async function submitCode(problemId: string, sourceCode: string, language
     revalidatePath('/coding/problems')
 
     // Recalculate user scores after coding submission
-    recalculateUserScores(user.id).catch(() => {})
+    recalculateUserScores(user.id).catch((err) =>
+      console.error('[Score Recalculation Failed]', user.id, err)
+    )
 
     return {
       submissionId: submission.id,

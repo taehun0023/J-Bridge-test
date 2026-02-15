@@ -2,23 +2,14 @@
 
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { requireAuth, requireAdminOrMentor } from '@/lib/auth-helpers'
 import { ASSIGNMENT_CATEGORIES } from '@/lib/assignment-categories'
 import { createNotification } from './notifications'
 
 export async function createLearningAssignment(formData: FormData) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: '認証が必要です' }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile || (profile.role !== 'admin' && profile.role !== 'mentor')) {
-    return { error: '権限がありません' }
-  }
+  const auth = await requireAdminOrMentor()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
 
   const assignedTo = formData.get('assigned_to') as string
   const category = formData.get('category') as string
@@ -132,9 +123,9 @@ export async function getLearningAssignments(userId?: string) {
 }
 
 export async function getMyLearningAssignments() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { assignments: [] }
+  const auth = await requireAuth()
+  if ('error' in auth) return { assignments: [] }
+  const { supabase, user } = auth
 
   const { data, error } = await supabase
     .from('learning_assignments')
@@ -186,9 +177,9 @@ export async function checkAssignmentProgress(userId: string, quizId: string) {
 }
 
 export async function deleteLearningAssignment(assignmentId: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: '認証が必要です' }
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase } = auth
 
   const { error } = await supabase
     .from('learning_assignments')

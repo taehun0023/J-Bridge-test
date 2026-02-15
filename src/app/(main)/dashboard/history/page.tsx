@@ -38,8 +38,14 @@ export default async function HistoryPage() {
         <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">全てのテスト・総合試験の履歴</p>
       </div>
       <HistoryClient
-        quizAttempts={quizAttempts ?? []}
-        codingExamAttempts={codingExamAttempts ?? []}
+        quizAttempts={(quizAttempts ?? []).map(a => ({
+          ...a,
+          quizzes: Array.isArray(a.quizzes) ? a.quizzes[0] ?? null : a.quizzes,
+        }))}
+        codingExamAttempts={(codingExamAttempts ?? []).map(a => ({
+          ...a,
+          coding_skill_exams: Array.isArray(a.coding_skill_exams) ? a.coding_skill_exams[0] ?? null : a.coding_skill_exams,
+        }))}
         comprehensiveExams={comprehensiveExams ?? []}
       />
     </div>

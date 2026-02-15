@@ -1,13 +1,14 @@
 'use server'
 
-import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { requireAuth } from '@/lib/auth-helpers'
 import { createNotification } from '@/app/actions/notifications'
 
 export async function bulkDeleteFeedbacks() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: '認証が必要です' }
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -37,9 +38,9 @@ export async function bulkDeleteFeedbacks() {
 }
 
 export async function createFeedbackReply(feedbackId: string, content: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: '認証が必要です' }
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
   if (!content.trim()) return { error: '内容を入力してください' }
 
   const { error } = await supabase
@@ -76,9 +77,9 @@ export async function createFeedbackReply(feedbackId: string, content: string) {
 }
 
 export async function updateFeedbackReply(replyId: string, content: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: '認証が必要です' }
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
   if (!content.trim()) return { error: '内容を入力してください' }
 
   const { error } = await supabase
@@ -93,9 +94,9 @@ export async function updateFeedbackReply(replyId: string, content: string) {
 }
 
 export async function deleteFeedbackReply(replyId: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: '認証が必要です' }
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
 
   const { error } = await supabase
     .from('feedback_replies')

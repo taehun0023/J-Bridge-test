@@ -1,13 +1,13 @@
 'use server'
 
-import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { requireAuth } from '@/lib/auth-helpers'
 
 /**
  * avatarsバケットが存在しない場合に作成します。
- * Service role keyがあれば使用し、なければ通常のクライアントで試行します。
  */
-async function ensureAvatarsBucket(supabase: Awaited<ReturnType<typeof createClient>>) {
+async function ensureAvatarsBucket(supabase: Awaited<ReturnType<typeof import('@/lib/supabase/server').createClient>>) {
   // バケットの存在確認
   const { data: buckets } = await supabase.storage.listBuckets()
   const exists = buckets?.find((b) => b.name === 'avatars')
@@ -43,12 +43,9 @@ async function ensureAvatarsBucket(supabase: Awaited<ReturnType<typeof createCli
 }
 
 export async function uploadAvatar(formData: FormData) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { error: 'ログインが必要です' }
-  }
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
 
   const file = formData.get('avatar') as File | null
   if (!file) {
@@ -120,12 +117,9 @@ export async function uploadAvatar(formData: FormData) {
 }
 
 export async function removeAvatar() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { error: 'ログインが必要です' }
-  }
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
 
   const { data: profile } = await supabase
     .from('profiles')

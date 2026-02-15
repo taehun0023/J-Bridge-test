@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { createServiceRoleClient } from '@/lib/supabase/server'
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { createHash } from 'crypto'
+import { env } from '@/lib/env'
 
 const MAX_TEXT_LENGTH = 5000
 const BUCKET = 'tts-cache'
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const apiKey = process.env.GOOGLE_CLOUD_TTS_API_KEY
+  const apiKey = env.GOOGLE_CLOUD_TTS_API_KEY
   if (!apiKey) {
     return NextResponse.json({ error: 'TTS API key not configured' }, { status: 500 })
   }
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
   // キャッシュ確認
   const cached = await getFromCache(storageClient, cacheKey)
   if (cached) {
-    return new NextResponse(cached, {
+    return new NextResponse(new Uint8Array(cached), {
       headers: {
         'Content-Type': 'audio/mpeg',
         'Content-Length': String(cached.length),
@@ -216,9 +216,11 @@ export async function POST(request: NextRequest) {
     }
 
     // キャッシュに保存（失敗しても音声は返す）
-    saveToCache(storageClient, cacheKey, audioBuffer).catch(() => {})
+    saveToCache(storageClient, cacheKey, audioBuffer).catch((err) =>
+      console.error('[TTS Cache Save Failed]', cacheKey, err)
+    )
 
-    return new NextResponse(audioBuffer, {
+    return new NextResponse(new Uint8Array(audioBuffer), {
       headers: {
         'Content-Type': 'audio/mpeg',
         'Content-Length': String(audioBuffer.length),

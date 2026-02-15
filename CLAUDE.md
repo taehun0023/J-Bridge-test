@@ -14,30 +14,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Ranking System (3-month seasons, overall + per-category)
 - Admin Dashboard (account management, content CRUD, task assignment, feedback)
 - AI Code Review (Japan coding convention feedback)
+- TTS Audio (Google Cloud TTS, Supabase Storage caching)
 - Admin creates accounts for employees (invite-only, no self-signup)
 
 **등급 결과 활용:** 사내 인사 평가 + 파견처 매칭 참고용 (외부 취업 연계 없음)
 
 ## Tech Stack
 
-- **Framework:** Next.js 14 with App Router
+- **Framework:** Next.js 16 (App Router)
 - **Language:** TypeScript
-- **Styling:** Tailwind CSS
+- **Runtime:** React 19
+- **Styling:** Tailwind CSS 4
 - **Backend/DB:** Supabase (Auth, DB, Storage)
-- **Chart:** Chart.js + react-chartjs-2
+- **Chart:** Recharts 3
+- **Icons:** Lucide React
 - **Supabase SSR:** @supabase/ssr
-- **Validation:** zod
+- **Validation:** Zod 4
 - **Code Editor:** @monaco-editor/react
-- **Code Execution:** Judge0 (API)
+- **Code Execution:** Judge0 (self-hosted API)
 - **Data Fetching:** @tanstack/react-query
+- **TTS:** Google Cloud Text-to-Speech API
 
 ## Build & Dev Commands
 
 ```bash
 npm install        # install dependencies
 npm run dev        # start dev server (localhost:3000)
-npm run build      # production build
-npm run lint       # run linter
+npm run build      # production build (strict TypeScript checking enabled)
+npm run lint       # run linter (eslint 9)
 ```
 
 ## Architecture Guidelines
@@ -45,10 +49,33 @@ npm run lint       # run linter
 - Components should be small and separated
 - Use intuitive, descriptive variable names
 - DB naming: snake_case tables/columns, UUID PK, TIMESTAMPTZ timestamps
+- Server Actions in `src/app/actions/` (17 files)
 - Database schema details in DB_Schema.md, PRD in PRD.md
 - Content sourcing strategy in docs/content_strategy.md
+- Architecture analysis in docs/architecture/ (10-part series)
 
-## DB Schema Summary (29 tables)
+## Project Structure
+
+```
+src/
+  app/
+    (main)/          # 13 route groups (admin, dashboard, coding, japanese, exam, etc.)
+    actions/         # Server Actions (admin/, comprehensive-exam/ domain dirs + single files)
+    api/             # API routes (tts, admin/tts-precache, judge0 proxy)
+  components/        # Shared UI components
+  lib/
+    supabase/        # Supabase client (server/client)
+    judge0/          # Judge0 API client
+    code-review/     # Automated code review analyzer
+    auth-helpers.ts  # requireAuth, requireAdmin, requireAdminOrMentor
+    action-types.ts  # ActionResult, ERR constants
+    notification-helpers.ts  # notifyMentorsOf, notifyAdmins, etc.
+    env.ts           # Zod-validated server environment variables
+  modules/
+    scoring/         # 5-axis score calculation (pure functions + DB fetch/write)
+```
+
+## DB Schema Summary (49 migrations, 42 tables)
 
 | Category | Tables |
 |---|---|
@@ -56,10 +83,14 @@ npm run lint       # run linter
 | Content (7) | courses, lessons, lesson_resources, coding_problems, coding_test_cases, projects, project_requirements |
 | Quiz (5) | quizzes, quiz_questions, quiz_question_options, quiz_attempts, quiz_answers |
 | Code Submission (2) | code_submissions, code_reviews |
-| Japanese Content Bank (2) | jlpt_vocabulary, it_glossary |
-| Coding Rank Exams (2) | coding_skill_exams, coding_exam_attempts (+coding_exam_problems junction) |
+| Japanese Content (5) | jlpt_vocabulary, jlpt_grammar, jlpt_reading_passages, jlpt_listening_scripts, it_glossary |
+| CS Knowledge (1) | cs_terms |
+| Coding Rank Exams (3) | coding_skill_exams, coding_exam_problems (junction), coding_exam_attempts |
 | Ranking System (2) | ranking_seasons, user_rankings |
-| Admin Features (2) | task_assignments, admin_feedbacks |
+| Admin/Mentor (3) | task_assignments, admin_feedbacks, feedback_replies |
+| Mentor-Mentee & Notifications (2) | mentor_mentee_assignments, notifications |
+| Learning & Comprehensive Exam (3) | learning_assignments, comprehensive_exams, comprehensive_exam_answers |
+| Access & Interaction (3) | content_access_requests, question_claims, user_mastered_items |
 
 **5-Axis Radar Chart:** JLPT → IT Japanese → Core Programming → Framework → Attitude/Culture
 
@@ -73,6 +104,25 @@ npm run lint       # run linter
 | mentor | 학습 현황 조회, 코드 리뷰, 피드백 |
 | mentee | 학습, 시험 응시, 본인 점수/랭킹 확인 |
 
+## Known Technical Debt
+
+- Auth pattern uses `requireAuth`/`requireAdmin`/`requireAdminOrMentor` helpers (consolidated in Phase 1)
+
+## Testing
+
+```bash
+npm test           # run vitest unit tests
+npm run test:watch # watch mode
+npm run test:coverage # coverage report
+```
+
+- Vitest 4 configured (`vitest.config.ts`)
+- Unit tests in `src/modules/scoring/` (33 tests for axis calculators + utils)
+
 ## Project Status
 
-Pre-implementation phase — planning documents (PRD.md, DB_Schema.md, project_rules.md, docs/content_strategy.md). DB migrations written, no application code yet.
+Implementation phase — core features functional. Refactoring Phases 1-4 complete.
+- Phase 1 (Quick Wins): error logging, auth-helpers, CLAUDE.md — done
+- Phase 2 (Module Extraction): admin/ split, notification-helpers, scoring/ module, comprehensive-exam/ split — done
+- Phase 3 (Architecture): ActionResult types, DB indexes, tests, DB_Schema.md update — done
+- Phase 4 (Production Readiness): TypeScript strict build (0 errors), Zod env validation, auth type leak fix — done

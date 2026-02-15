@@ -1,13 +1,13 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { requireAuth } from '@/lib/auth-helpers'
 
 type ItemType = 'it_glossary' | 'jlpt_vocabulary' | 'jlpt_grammar' | 'cs_term'
 
 export async function toggleMastery(itemType: ItemType, itemId: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: '認証が必要です' }
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
 
   // Check if already mastered
   const { data: existing } = await supabase
@@ -36,9 +36,9 @@ export async function toggleMastery(itemType: ItemType, itemId: string) {
 }
 
 export async function getMasteredIds(itemType: ItemType): Promise<string[]> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return []
+  const auth = await requireAuth()
+  if ('error' in auth) return []
+  const { supabase, user } = auth
 
   const { data } = await supabase
     .from('user_mastered_items')

@@ -1,19 +1,19 @@
 'use server'
 
-import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { requireAuth } from '@/lib/auth-helpers'
 import { fetchRandomAssessmentQuestions, fetchAssessmentQuiz } from '@/lib/supabase/queries/assessments'
 import { recalculateUserScores } from './scores'
-import { createNotification } from './notifications'
 import { ASSESSMENT_QUIZ_IDS } from '@/lib/assessment-config'
+import { notifyMentorsAndAdmins, getUserDisplayName } from '@/lib/notification-helpers'
 
 /** Save onboarding preferences and mark as onboarded → dashboard */
 export async function savePreferences(formData: FormData) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) return { error: '認証が必要です' }
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
 
   const isJapanese = formData.get('is_japanese') === 'true'
   const targetCodingArea = formData.get('target_coding_area') as string
@@ -60,10 +60,9 @@ export async function submitAssessment(
   step: number,
   totalQuestions: number
 ) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) return { error: '認証が必要です' }
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
 
   const quizId = ASSESSMENT_QUIZ_IDS[step]
   if (!quizId) return { error: '無効なステップです' }
@@ -152,10 +151,9 @@ export async function submitAssessment(
 
 /** Request retake for a completed assessment step */
 export async function requestRetake(step: number) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) return { error: '認証が必要です' }
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
 
   const quizId = ASSESSMENT_QUIZ_IDS[step]
   if (!quizId) return { error: '無効なステップです' }
@@ -185,21 +183,9 @@ export async function requestRetake(step: number) {
 
   if (error) return { error: 'リクエスト送信に失敗しました' }
 
-  // Notify mentor(s) and admins
-  // Use serviceClient if available, otherwise fall back to regular client
-  const serviceClient = createServiceRoleClient()
-  const queryClient = serviceClient ?? supabase
-
-  const { data: mentorAssignments } = await queryClient
-    .from('mentor_mentee_assignments')
-    .select('mentor_id')
-    .eq('mentee_id', user.id)
-
-  const { data: userProfile } = await queryClient
-    .from('profiles')
-    .select('full_name')
-    .eq('id', user.id)
-    .single()
+  // Notify mentors and admins
+  const queryClient = createServiceRoleClient() ?? supabase
+  const userName = await getUserDisplayName(user.id, queryClient)
 
   const { data: quizData } = await queryClient
     .from('quizzes')
@@ -207,36 +193,17 @@ export async function requestRetake(step: number) {
     .eq('id', quizId)
     .single()
 
-  const userName = userProfile?.full_name ?? 'メンティー'
   const quizTitle = quizData?.title ?? '評価テスト'
 
-  for (const assignment of mentorAssignments ?? []) {
-    await createNotification(
-      assignment.mentor_id,
-      'retake_requested',
-      `${userName}さんが再試験をリクエスト`,
-      quizTitle,
-      '/admin/tasks',
-      attempt.id
-    )
-  }
-
-  // Also notify admins
-  const { data: admins } = await queryClient
-    .from('profiles')
-    .select('id')
-    .eq('role', 'admin')
-
-  for (const admin of admins ?? []) {
-    await createNotification(
-      admin.id,
-      'retake_requested',
-      `${userName}さんが再試験をリクエスト`,
-      quizTitle,
-      '/admin/tasks',
-      attempt.id
-    )
-  }
+  await notifyMentorsAndAdmins(
+    user.id,
+    'retake_requested',
+    `${userName}さんが再試験をリクエスト`,
+    quizTitle,
+    '/admin/tasks',
+    attempt.id,
+    queryClient
+  )
 
   revalidatePath('/dashboard')
   return { success: true }
@@ -244,10 +211,9 @@ export async function requestRetake(step: number) {
 
 /** Finalize onboarding: set is_onboarded=true and redirect to dashboard */
 export async function finalizeOnboarding() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) return { error: '認証が必要です' }
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
 
   await supabase
     .from('profiles')

@@ -2,6 +2,23 @@ import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import FeedbackClient from './FeedbackClient'
 
+interface FeedbackItem {
+  id: string
+  category: string
+  content: string
+  created_at: string
+  admin: { id: string; full_name: string | null } | null
+  user: { id: string; full_name: string | null } | null
+  feedback_replies: {
+    id: string
+    user_id: string
+    content: string
+    created_at: string
+    updated_at: string
+    user: { full_name: string | null } | null
+  }[]
+}
+
 export default async function FeedbackPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -79,7 +96,15 @@ export default async function FeedbackPage() {
         <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">フィードバック一覧</p>
       </div>
       <FeedbackClient
-        feedbacks={feedbacks ?? []}
+        feedbacks={(feedbacks ?? []).map(f => ({
+          ...f,
+          admin: Array.isArray(f.admin) ? f.admin[0] ?? null : f.admin,
+          user: Array.isArray(f.user) ? f.user[0] ?? null : f.user,
+          feedback_replies: (f.feedback_replies ?? []).map((r: Record<string, unknown>) => ({
+            ...r,
+            user: Array.isArray(r.user) ? (r.user as unknown[])[0] ?? null : r.user,
+          })),
+        })) as FeedbackItem[]}
         currentUserId={user.id}
         userRole={role}
       />

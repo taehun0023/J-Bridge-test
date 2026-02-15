@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { requireAuth } from '@/lib/auth-helpers'
 
 interface QuizQuestion {
   id: string
@@ -33,9 +33,9 @@ export async function generateGlossaryQuiz({
   rangeEnd: number
   questionCount?: number
 }): Promise<{ questions?: QuizQuestion[]; error?: string }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: '認証が必要です' }
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase } = auth
 
   // Build query matching page sort order
   let query = supabase
@@ -109,9 +109,9 @@ export async function generateCsTermQuiz({
   rangeEnd: number
   questionCount?: number
 }): Promise<{ questions?: QuizQuestion[]; error?: string }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: '認証が必要です' }
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase } = auth
 
   let query = supabase
     .from('cs_terms')
@@ -131,7 +131,7 @@ export async function generateCsTermQuiz({
   }
 
   // Wrong answer pool from same category
-  let poolQuery = supabase
+  const poolQuery = supabase
     .from('cs_terms')
     .select('term_ko')
     .eq('category', category)
@@ -171,9 +171,9 @@ export async function generateVocabQuiz({
   rangeEnd: number
   questionCount?: number
 }): Promise<{ questions?: QuizQuestion[]; error?: string }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: '認証が必要です' }
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase } = auth
 
   // Build query matching page sort order
   let query = supabase

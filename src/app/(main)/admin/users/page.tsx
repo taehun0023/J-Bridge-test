@@ -14,10 +14,10 @@ export default async function AdminUsersPage() {
     `)
     .order('created_at', { ascending: false })
 
-  const users = (rawUsers ?? []).map((u: Record<string, unknown>) => {
+  const users = (rawUsers ?? []).map((u) => {
     const jp = u.japanese_skills as { jlpt_normalized: number; it_japanese_normalized: number } | null
     const cs = u.coding_skills as { core_normalized: number; framework_normalized: number } | null
-    const jpScore = (u.is_japanese as boolean) ? 200 : ((jp?.jlpt_normalized ?? 0) + (jp?.it_japanese_normalized ?? 0))
+    const jpScore = u.is_japanese ? 200 : ((jp?.jlpt_normalized ?? 0) + (jp?.it_japanese_normalized ?? 0))
     const progScore = (cs?.core_normalized ?? 0) + (cs?.framework_normalized ?? 0)
     return { ...u, japanese_score: jpScore, programming_score: progScore }
   })

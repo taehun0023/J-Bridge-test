@@ -1,14 +1,14 @@
 'use server'
 
-import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { requireAuth } from '@/lib/auth-helpers'
 import type { NotificationType } from '@/lib/supabase/types'
 
 export async function getUnreadNotificationCount() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) return { count: 0 }
+  const auth = await requireAuth()
+  if ('error' in auth) return { count: 0 }
+  const { supabase, user } = auth
 
   const { count, error } = await supabase
     .from('notifications')
@@ -21,10 +21,9 @@ export async function getUnreadNotificationCount() {
 }
 
 export async function getNotifications(limit = 20) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) return { notifications: [] }
+  const auth = await requireAuth()
+  if ('error' in auth) return { notifications: [] }
+  const { supabase, user } = auth
 
   const { data, error } = await supabase
     .from('notifications')
@@ -38,9 +37,9 @@ export async function getNotifications(limit = 20) {
 }
 
 export async function markAsRead(notificationId: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: '認証が必要です' }
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
 
   const { error } = await supabase
     .from('notifications')
@@ -53,9 +52,9 @@ export async function markAsRead(notificationId: string) {
 }
 
 export async function markAllAsRead() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: '認証が必要です' }
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
 
   const { error } = await supabase
     .from('notifications')
@@ -96,7 +95,10 @@ export async function createNotification(
 
   // Fallback: use regular client (works if caller is admin/mentor via RLS INSERT policy)
   try {
-    const supabase = await createClient()
+    const auth = await requireAuth()
+    if ('error' in auth) return { error: auth.error } as const
+    const { supabase } = auth
+
     const { error } = await supabase
       .from('notifications')
       .insert({
@@ -112,25 +114,5 @@ export async function createNotification(
     return { success: true }
   } catch {
     return { error: 'Notification creation failed: no service role key and insufficient permissions' }
-  }
-}
-
-// Keep legacy functions for backward compatibility with existing Sidebar
-export async function getUnreadTaskCount() {
-  return getUnreadNotificationCount()
-}
-
-export async function getTaskNotifications() {
-  const result = await getNotifications(10)
-  return {
-    notifications: result.notifications.map(n => ({
-      id: n.id,
-      title: n.title,
-      description: n.message,
-      assignedBy: '',
-      status: n.is_read ? 'read' : 'unread',
-      dueDate: null,
-      createdAt: n.created_at,
-    })),
   }
 }

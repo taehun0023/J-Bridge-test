@@ -1,15 +1,14 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { requireAuth } from '@/lib/auth-helpers'
 import { recalculateUserScores } from './scores'
 import { checkAssignmentProgress } from './learning-assignments'
 
 export async function startQuizAttempt(quizId: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) return { error: '認証が必要です' }
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
 
   const { data, error } = await supabase
     .from('quiz_attempts')
@@ -26,10 +25,9 @@ export async function submitQuizAnswers(
   attemptId: string,
   answers: { questionId: string; selectedOptionId: string }[]
 ) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) return { error: '認証が必要です' }
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
 
   // Verify attempt belongs to user
   const { data: attempt } = await supabase
@@ -98,11 +96,15 @@ export async function submitQuizAnswers(
   revalidatePath('/japanese/jlpt/quiz')
 
   // Recalculate user scores after quiz completion
-  recalculateUserScores(user.id).catch(() => {})
+  recalculateUserScores(user.id).catch((err) =>
+    console.error('[Score Recalculation Failed]', user.id, err)
+  )
 
   // Update learning assignment progress on quiz pass
   if (passed) {
-    checkAssignmentProgress(user.id, attempt.quiz_id).catch(() => {})
+    checkAssignmentProgress(user.id, attempt.quiz_id).catch((err) =>
+      console.error('[Assignment Progress Check Failed]', user.id, attempt.quiz_id, err)
+    )
   }
 
   return {

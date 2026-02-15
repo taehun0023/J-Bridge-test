@@ -189,7 +189,7 @@ export default function AdminCoursesClient({
         // Radio behavior: only one correct
         next.forEach((o, i) => { o.is_correct = i === index })
       } else {
-        next[index] = { ...next[index], [field]: value }
+        next[index] = { ...next[index], [field as string]: value }
       }
       return next
     })

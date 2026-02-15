@@ -1,5 +1,7 @@
-const JUDGE0_API_URL = process.env.JUDGE0_API_URL ?? 'http://localhost:2358'
-const JUDGE0_API_KEY = process.env.JUDGE0_API_KEY ?? ''
+import { env } from '@/lib/env'
+
+const JUDGE0_API_URL = env.JUDGE0_API_URL
+const JUDGE0_API_KEY = env.JUDGE0_API_KEY
 const IS_RAPIDAPI = JUDGE0_API_URL.includes('rapidapi.com')
 
 // Judge0 language IDs

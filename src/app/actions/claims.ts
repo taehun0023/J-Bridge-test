@@ -1,12 +1,11 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { requireAuth } from '@/lib/auth-helpers'
 
 export async function submitQuestionClaim(questionId: string, reason?: string): Promise<{ success?: boolean; error?: string }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) return { error: '認証が必要です' }
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase } = auth
 
   // Verify the question exists
   const { data: question } = await supabase
@@ -22,7 +21,7 @@ export async function submitQuestionClaim(questionId: string, reason?: string): 
     .from('question_claims')
     .insert({
       question_id: questionId,
-      user_id: user.id,
+      user_id: auth.user.id,
       claim_reason: reason || null,
     })
 

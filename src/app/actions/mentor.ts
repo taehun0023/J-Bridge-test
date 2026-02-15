@@ -2,33 +2,19 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-
-async function getAdminContext() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Not authenticated' as const }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.role !== 'admin') return { error: 'Not authorized' as const }
-
-  return { supabase, adminId: user.id }
-}
+import { requireAdmin } from '@/lib/auth-helpers'
 
 export async function assignMenteeToMentor(mentorId: string, menteeId: string) {
-  const ctx = await getAdminContext()
-  if ('error' in ctx) return { error: ctx.error }
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
 
-  const { error } = await ctx.supabase
+  const { error } = await supabase
     .from('mentor_mentee_assignments')
     .insert({
       mentor_id: mentorId,
       mentee_id: menteeId,
-      assigned_by: ctx.adminId,
+      assigned_by: user.id,
     })
 
   if (error) return { error: error.message }
@@ -37,10 +23,11 @@ export async function assignMenteeToMentor(mentorId: string, menteeId: string) {
 }
 
 export async function removeMenteeFromMentor(mentorId: string, menteeId: string) {
-  const ctx = await getAdminContext()
-  if ('error' in ctx) return { error: ctx.error }
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase } = auth
 
-  const { error } = await ctx.supabase
+  const { error } = await supabase
     .from('mentor_mentee_assignments')
     .delete()
     .eq('mentor_id', mentorId)

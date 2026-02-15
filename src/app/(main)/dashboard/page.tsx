@@ -194,7 +194,10 @@ export default async function DashboardPage() {
       .select('id, course_id, courses(title, category)')
       .eq('user_id', user.id)
       .limit(5)
-    enrolledCourses = (data ?? []) as typeof enrolledCourses
+    enrolledCourses = (data ?? []).map(d => ({
+      ...d,
+      courses: Array.isArray(d.courses) ? d.courses[0] ?? null : d.courses,
+    })) as typeof enrolledCourses
   }
 
   // Fetch recent feedbacks
@@ -312,7 +315,10 @@ export default async function DashboardPage() {
       userRanking={userRanking}
       enrolledCourses={enrolledCourses}
       learningStats={learningStats}
-      recentFeedbacks={recentFeedbacks ?? []}
+      recentFeedbacks={(recentFeedbacks ?? []).map(f => ({
+        ...f,
+        admin: Array.isArray(f.admin) ? f.admin[0] ?? null : f.admin,
+      })) as { id: string; category: string; content: string; created_at: string; admin: { full_name: string | null } | null }[]}
       compExamRetakes={compExamRetakes}
     />
   )
