@@ -1,9 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import EnrollButton from './EnrollButton'
 import Link from 'next/link'
+import { getCoursesWithProgress } from '@/lib/course-progress'
 
 interface Params { id: string }
 
@@ -19,6 +20,23 @@ export default async function CoursePage({ params }: { params: Promise<Params> }
     .single()
 
   if (!course) notFound()
+
+  // Lock guard: redirect non-admin users away from locked courses
+  if (user && course.subcategory) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.role !== 'admin') {
+      const coursesWithProgress = await getCoursesWithProgress(supabase, user.id, course.subcategory, false)
+      const thisCourse = coursesWithProgress.find(c => c.id === id)
+      if (thisCourse?.isLocked) {
+        redirect(`/dev/${course.subcategory}`)
+      }
+    }
+  }
 
   const { data: lessons } = await supabase
     .from('lessons')
@@ -38,12 +56,12 @@ export default async function CoursePage({ params }: { params: Promise<Params> }
       .single()
     enrolled = !!enrollment
 
-    if (enrolled) {
+    if (enrollment) {
       const { data: progress } = await supabase
         .from('lesson_progress')
         .select('lesson_id')
-        .eq('user_id', user.id)
-        .eq('is_completed', true)
+        .eq('enrollment_id', enrollment.id)
+        .eq('status', 'completed')
       progress?.forEach(p => completedLessonIds.add(p.lesson_id))
     }
   }
@@ -97,11 +115,7 @@ export default async function CoursePage({ params }: { params: Promise<Params> }
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900 dark:text-white">{lesson.title}</p>
-                      <div className="flex gap-2 text-xs text-gray-500 dark:text-gray-400">
-                      <span>{contentTypeLabels[lesson.content_type] ?? lesson.content_type}</span>
-                      {lesson.duration_minutes && <span>{lesson.duration_minutes}分</span>}
                     </div>
-                  </div>
                 </Link>
               )
             })}

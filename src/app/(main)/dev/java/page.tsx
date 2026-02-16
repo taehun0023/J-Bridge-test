@@ -1,5 +1,11 @@
-import PlaceholderPage from '@/components/ui/PlaceholderPage'
+import SubcourseListPage from '@/components/ui/SubcourseListPage'
 
 export default function JavaPage() {
-  return <PlaceholderPage title="Java" category="dev-java" />
+  return (
+    <SubcourseListPage
+      title="Java"
+      description="エンタープライズ開発の基盤"
+      subcategory="java"
+    />
+  )
 }

@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "lesson_id": "JAVA-SILVER-04-02",
+  "questions": [
+    {
+      "id": "JAVA-SILVER-04-02-Q01",
+      "type": "single_choice",
+      "difficulty": 1,
+      "prompt": "例外変換（Exception Translation）の主な目的として最も適切なものはどれか。",
+      "choices": [
+        "例外を握りつぶしてプログラムを続行させる",
+        "低レベルの実装詳細をカプセル化し、上位レイヤーに適した例外に変換する",
+        "すべてのchecked例外をunchecked例外に変換する",
+        "例外を発生させないようにする"
+      ],
+      "answer": 1,
+      "explanation": "例外変換はレイヤードアーキテクチャにおいて、低レベルの実装詳細（SQLExceptionなど）が上位レイヤーに漏洩しないよう、適切な抽象度の例外に変換するパターンである。(Evidence: E1)"
+    },
+    {
+      "id": "JAVA-SILVER-04-02-Q02",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "例外変換時にcauseを保存する方法として推奨されるのはどれか。",
+      "choices": [
+        "initCause()メソッドを使用する",
+        "コンストラクタの引数にThrowableを渡す",
+        "e.getMessage()でメッセージを転記する",
+        "e.toString()をログに出力する"
+      ],
+      "answer": 1,
+      "explanation": "コンストラクタでcauseを直接渡す方法（例: new ServiceException(msg, e)）が推奨される。initCause()は一度しか呼べず、getMessage()ではスタックトレースが失われる。(Evidence: E2)"
+    },
+    {
+      "id": "JAVA-SILVER-04-02-Q03",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "causeチェーンについて正しい記述はどれか。",
+      "choices": [
+        "causeチェーンは最大2レベルまでしか保持できない",
+        "getCause()で直接原因を取得し、再帰的に辿ることでroot causeに到達できる",
+        "causeチェーンはunchecked例外では使用できない",
+        "causeチェーンはJava 17以降のみで利用可能である"
+      ],
+      "answer": 1,
+      "explanation": "causeチェーンに深さの制限はない。getCause()で直接の原因を取得でき、再帰的に辿ることで最初に発生した根本原因（root cause）に到達できる。(Evidence: E3)"
+    },
+    {
+      "id": "JAVA-SILVER-04-02-Q04",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "カスタム例外クラスを設計する際、最低限必要なコンストラクタの組み合わせとして最も適切なものはどれか。",
+      "choices": [
+        "引数なしコンストラクタのみ",
+        "(String message) と (String message, Throwable cause)",
+        "(Throwable cause) のみ",
+        "(String message) のみ"
+      ],
+      "answer": 1,
+      "explanation": "カスタム例外クラスには少なくとも(String message)と(String message, Throwable cause)の2つのコンストラクタを用意すべきである。cause付きコンストラクタがないと例外変換時にcauseを保存できない。(Evidence: E4)"
+    },
+    {
+      "id": "JAVA-SILVER-04-02-Q05",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "例外のログ出力として正しいのはどれか。",
+      "choices": [
+        "logger.error(\"エラー: \" + e.getMessage());",
+        "logger.error(\"処理失敗\", e);",
+        "System.out.println(e.getMessage());",
+        "logger.error(e.getClass().getName());"
+      ],
+      "answer": 1,
+      "explanation": "ロガーに例外オブジェクト自体を第2引数として渡すことで、スタックトレース全体（causeチェーンを含む）が記録される。getMessage()のみではスタックトレースが失われる。(Evidence: E5)"
+    },
+    {
+      "id": "JAVA-SILVER-04-02-Q06",
+      "type": "code_output",
+      "difficulty": 3,
+      "prompt": "以下のコードを実行した場合、出力される内容を答えよ。",
+      "code": "public class CauseChain {\n    public static void main(String[] args) {\n        try {\n            level1();\n        } catch (RuntimeException e) {\n            System.out.println(e.getMessage());\n            System.out.println(e.getCause().getMessage());\n            System.out.println(e.getCause().getCause().getMessage());\n        }\n    }\n\n    static void level1() {\n        try {\n            level2();\n        } catch (RuntimeException e) {\n            throw new RuntimeException(\"L1\", e);\n        }\n    }\n\n    static void level2() {\n        try {\n            level3();\n        } catch (RuntimeException e) {\n            throw new RuntimeException(\"L2\", e);\n        }\n    }\n\n    static void level3() {\n        throw new RuntimeException(\"L3\");\n    }\n}",
+      "answer": "L1\nL2\nL3",
+      "explanation": "level3()でRuntimeException(\"L3\")が発生し、level2()で\"L2\"に変換（causeにL3）、level1()で\"L1\"に変換（causeにL2）される。main()でe.getMessage()→\"L1\"、e.getCause().getMessage()→\"L2\"、e.getCause().getCause().getMessage()→\"L3\"が出力される。(Evidence: E2, E3)"
+    },
+    {
+      "id": "JAVA-SILVER-04-02-Q07",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "initCause()メソッドについて正しい記述はどれか。",
+      "choices": [
+        "何度でも呼び出してcauseを上書きできる",
+        "コンストラクタでcauseを設定済みの場合、呼び出すとIllegalStateExceptionが発生する",
+        "checked例外のみに対して使用可能である",
+        "causeにnullを渡すことはできない"
+      ],
+      "answer": 1,
+      "explanation": "initCause()は一度だけ呼び出し可能である。コンストラクタでcauseを設定済みの場合、2回目のinitCause()呼び出しでIllegalStateExceptionがスローされる。(Evidence: E2)"
+    },
+    {
+      "id": "JAVA-SILVER-04-02-Q08",
+      "type": "code_output",
+      "difficulty": 4,
+      "prompt": "以下のコードを実行した場合の結果を答えよ。例外が発生する場合はその例外クラス名を答えよ。",
+      "code": "public class InitCauseTest {\n    public static void main(String[] args) {\n        RuntimeException original = new RuntimeException(\"original\");\n        RuntimeException wrapper = new RuntimeException(\"wrapper\", original);\n        try {\n            wrapper.initCause(new RuntimeException(\"another\"));\n        } catch (Exception e) {\n            System.out.println(e.getClass().getSimpleName());\n        }\n    }\n}",
+      "answer": "IllegalStateException",
+      "explanation": "wrapperはコンストラクタで既にoriginalをcauseとして設定している。initCause()を再度呼び出すと、causeが既に設定済みであるためIllegalStateExceptionが発生する。(Evidence: E2)"
+    },
+    {
+      "id": "JAVA-SILVER-04-02-Q09",
+      "type": "short_answer",
+      "difficulty": 2,
+      "prompt": "例外オブジェクトから直接の原因（cause）を取得するために使用するThrowableクラスのメソッド名を答えよ。",
+      "answer": "getCause",
+      "explanation": "getCause()メソッドでThrowableの直接のcause（原因）を取得できる。causeが設定されていない場合はnullが返る。再帰的に辿ることでroot causeに到達できる。(Evidence: E3)"
+    },
+    {
+      "id": "JAVA-SILVER-04-02-Q10",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "例外変換を行うべきタイミングとして最も適切なものはどれか。",
+      "choices": [
+        "すべてのメソッドの境界で変換する",
+        "抽象度が変わるレイヤー境界でのみ変換する",
+        "catchブロックのたびに変換する",
+        "unchecked例外が発生した場合のみ変換する"
+      ],
+      "answer": 1,
+      "explanation": "例外変換は抽象度が変わるレイヤー境界（データ層→サービス層など）でのみ行うべきである。すべての箇所で変換するとcauseチェーンが深くなりすぎてスタックトレースが読みにくくなる。(Evidence: E1, E3)"
+    }
+  ]
+}

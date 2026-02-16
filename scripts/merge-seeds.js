@@ -28,6 +28,8 @@ const seedFiles = [
   { file: 'seed_sentence_patterns.sql', comment: '文章パターン (~35개)' },
   { file: 'seed_employee_vocabulary.sql', comment: '사내 스프레드시트 데이터' },
   { file: 'seed_it_passport_quizzes.sql', comment: 'IT 패스포트 퀴즈 (55문항)' },
+  { file: 'seed_business_literacy_quizzes.sql', comment: 'ビジネスリテラシー 퀴즈 (30문항)' },
+  { file: 'seed_java_content.sql', comment: 'Java 開発実務能力 (Bronze/Silver/Gold)' },
 ];
 
 let mergedContent = `-- ============================================

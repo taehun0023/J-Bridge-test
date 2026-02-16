@@ -36,7 +36,12 @@
       "Bash(python -m json.tool:*)",
       "Bash(node scripts/fix-quiz2.js:*)",
       "Bash(dir:*)",
-      "Bash(node scripts/deploy-listening.js:*)"
+      "Bash(node scripts/deploy-listening.js:*)",
+      "Bash(cat:*)",
+      "Bash(npx vitest run)",
+      "Bash(supabase status:*)",
+      "Bash(node:*)",
+      "Bash(git status:*)"
     ]
   }
 }

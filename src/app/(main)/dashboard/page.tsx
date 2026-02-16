@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { ASSESSMENT_QUIZ_IDS, ASSESSMENT_LABELS, getRelevantSteps } from '@/lib/assessment-config'
 import type { AxisKey } from '@/lib/assessment-config'
+import { getCoursesWithProgress } from '@/lib/course-progress'
 import DashboardClient from './DashboardClient'
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
@@ -130,49 +131,21 @@ export default async function DashboardPage() {
     }
   }
 
-  // Compute ranking from skill tables
-  const { data: allMentees } = await supabase
-    .from('profiles')
-    .select(`
-      id, full_name, avatar_url, is_japanese,
-      japanese_skills(jlpt_normalized, it_japanese_normalized, updated_at),
-      coding_skills(core_normalized, framework_normalized, updated_at)
-    `)
+  // Compute ranking via DB RPC (single-row response instead of fetching all profiles)
+  const { data: rankData } = await supabase.rpc('get_user_rank', { target_user_id: user.id })
 
-  let userRanking: {
+  const rankRow = Array.isArray(rankData) ? rankData[0] : rankData
+  const userRanking: {
     overall_score: number
     overall_rank: number
     japanese_score: number
     programming_score: number
-  } | null = null
-
-  if (allMentees && allMentees.length > 0) {
-    const scored = allMentees
-      .filter((m: Record<string, unknown>) => m.japanese_skills !== null || m.coding_skills !== null)
-      .map((m: Record<string, unknown>) => {
-      const jp = m.japanese_skills as { jlpt_normalized: number; it_japanese_normalized: number } | null
-      const cs = m.coding_skills as { core_normalized: number; framework_normalized: number } | null
-      const jpScore = (m.is_japanese as boolean) ? 200 : ((jp?.jlpt_normalized ?? 0) + (jp?.it_japanese_normalized ?? 0))
-      const progScore = (cs?.core_normalized ?? 0) + (cs?.framework_normalized ?? 0)
-      return {
-        id: m.id as string,
-        overall_score: jpScore + progScore,
-        japanese_score: jpScore,
-        programming_score: progScore,
-      }
-    }).sort((a, b) => b.overall_score - a.overall_score)
-
-    const myEntry = scored.find(s => s.id === user.id)
-    if (myEntry) {
-      const rank = scored.findIndex(s => s.id === user.id) + 1
-      userRanking = {
-        overall_score: myEntry.overall_score,
-        overall_rank: rank,
-        japanese_score: myEntry.japanese_score,
-        programming_score: myEntry.programming_score,
-      }
-    }
-  }
+  } | null = rankRow ? {
+    overall_score: rankRow.overall_score,
+    overall_rank: Number(rankRow.overall_rank),
+    japanese_score: rankRow.japanese_score,
+    programming_score: rankRow.programming_score,
+  } : null
 
   // Fetch learning assignments summary
   const { data: learningAssignments } = await supabase
@@ -245,6 +218,10 @@ export default async function DashboardPage() {
   }
 
   const compExamRetakes = Object.values(compExamRetakeMap)
+
+  // Fetch Java course badges
+  const isAdmin = profile?.role === 'admin'
+  const javaBadges = await getCoursesWithProgress(supabase, user.id, 'java', isAdmin ?? false)
 
   // Compute radar scores
   const radarScores: Record<AxisKey, number> = {
@@ -320,6 +297,7 @@ export default async function DashboardPage() {
         admin: Array.isArray(f.admin) ? f.admin[0] ?? null : f.admin,
       })) as { id: string; category: string; content: string; created_at: string; admin: { full_name: string | null } | null }[]}
       compExamRetakes={compExamRetakes}
+      javaBadges={javaBadges}
     />
   )
 }

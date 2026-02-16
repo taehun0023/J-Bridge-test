@@ -1,0 +1,375 @@
+---
+lesson_id: JAVA-SILVER-04-03
+title: "try-with-resourcesとAutoCloseable"
+module: JAVA-SILVER-04
+level: silver
+est_minutes: 30
+tags: [try-with-resources, AutoCloseable, Closeable, suppressed-exceptions, resource-management]
+---
+
+## 1) 요점 정리 (5줄)
+
+- **try-with-resources**는 Java 7에서 도입된 구문으로, `AutoCloseable`을 구현한 리소스를 스코프 종료 시 자동으로 close한다 (Evidence: E1)
+- **AutoCloseable**은 `close()` 메서드를 가진 인터페이스이며, `Closeable`은 그 서브인터페이스로 `IOException`만 throw한다 (Evidence: E2)
+- 복수 리소스는 세미콜론 구분으로 선언할 수 있으며, **선언의 역순**으로 close된다 (Evidence: E3)
+- try 본체와 close() 양쪽에서 예외가 발생한 경우, close()의 예외는 **억제된 예외(suppressed exception)** 로 기록되며 `getSuppressed()`로 가져올 수 있다 (Evidence: E4)
+- finally 블록에서의 수동 close에 비해 try-with-resources는 **간결성, 안전성, 예외 정보 보전**의 3가지 측면에서 우수하다 (Evidence: E5)
+
+---
+
+## 2) 개념
+
+### try-with-resources 구문
+
+try-with-resources는 리소스의 확보와 해제를 안전하게 수행하기 위한 구문이다. try 키워드 직후 괄호 안에서 리소스를 선언하면, try 블록 종료 시 자동으로 `close()`가 호출된다 (Evidence: E1).
+
+```java
+try (BufferedReader reader = Files.newBufferedReader(path)) {
+    String line = reader.readLine();
+    // reader는 이 스코프를 벗어나면 자동으로 close됨
+}
+// 여기에서는 reader가 이미 close된 상태
+```
+
+catch 블록이나 finally 블록은 생략 가능하며, 리소스의 close 처리만이 목적인 경우 try 블록만으로 기술할 수 있다.
+
+### AutoCloseable 인터페이스
+
+try-with-resources로 관리되는 리소스는 `AutoCloseable` 인터페이스를 구현해야 한다 (Evidence: E2).
+
+```java
+public interface AutoCloseable {
+    void close() throws Exception;
+}
+```
+
+### Closeable과 AutoCloseable의 차이
+
+`Closeable`은 `AutoCloseable`의 서브인터페이스이며, I/O 리소스에 특화되어 있다 (Evidence: E2).
+
+| 항목 | AutoCloseable | Closeable |
+|---|---|---|
+| 패키지 | `java.lang` | `java.io` |
+| close()의 throws | `Exception` | `IOException` |
+| 도입 버전 | Java 7 | Java 5 |
+| 멱등성 요구 | 권장되지만 필수가 아님 | close()는 멱등이어야 함 |
+| 용도 | 모든 리소스 | I/O 리소스 |
+
+`Closeable`은 I/O 리소스(InputStream, OutputStream, Reader, Writer 등)가 구현하고, `AutoCloseable`은 DB 연결이나 락 등 비I/O 리소스에서도 사용된다.
+
+### 복수 리소스 관리
+
+try-with-resources에서는 복수의 리소스를 세미콜론 구분으로 선언할 수 있다. close()는 **선언의 역순**으로 호출된다 (Evidence: E3).
+
+```java
+try (
+    FileInputStream fis = new FileInputStream("data.bin");
+    BufferedInputStream bis = new BufferedInputStream(fis)
+) {
+    // bis가 먼저 close → 다음에 fis가 close (선언의 역순)
+    int data = bis.read();
+}
+```
+
+이 역순 close에 의해 상위 래퍼가 먼저 close된 후 하위 리소스가 close되므로, 의존 관계가 올바르게 처리된다.
+
+### 억제된 예외 (Suppressed Exceptions)
+
+try 본체에서 예외가 발생하고, 추가로 close()에서도 예외가 발생한 경우, close()의 예외는 **억제된 예외**로서 본체의 예외에 부가된다 (Evidence: E4).
+
+```java
+try (ProblematicResource res = new ProblematicResource()) {
+    throw new RuntimeException("본체 예외");
+    // close()에서도 예외가 발생하는 경우:
+    // - 본체의 예외가 주 예외로 throw됨
+    // - close()의 예외는 suppressed exception으로 부가됨
+}
+
+// catch 블록에서 억제된 예외를 가져옴
+catch (RuntimeException e) {
+    System.out.println(e.getMessage());          // "본체 예외"
+    Throwable[] suppressed = e.getSuppressed();  // close()의 예외
+    for (Throwable s : suppressed) {
+        System.out.println(s.getMessage());
+    }
+}
+```
+
+finally 블록에서 수동 close하는 경우, close()의 예외가 본체의 예외를 덮어쓰는 문제가 있었지만, try-with-resources에서는 이 문제가 해결되어 있다.
+
+### finally vs try-with-resources 비교
+
+```java
+// === finally 방식 (Java 7 이전) ===
+BufferedReader reader = null;
+try {
+    reader = Files.newBufferedReader(path);
+    return reader.readLine();
+} catch (IOException e) {
+    throw new RuntimeException(e);
+} finally {
+    if (reader != null) {
+        try {
+            reader.close();  // close 자체가 IOException을 던질 수 있음
+        } catch (IOException e) {
+            // 원래 예외가 사라질 가능성
+        }
+    }
+}
+
+// === try-with-resources 방식 (Java 7 이후) ===
+try (BufferedReader reader = Files.newBufferedReader(path)) {
+    return reader.readLine();
+} catch (IOException e) {
+    throw new RuntimeException(e);
+}
+```
+
+try-with-resources는 (1) 코드량이 적고, (2) close의 예외 처리가 자동화되며, (3) 억제된 예외로 정보가 보전된다는 3가지 장점이 있다 (Evidence: E5).
+
+### 커스텀 AutoCloseable 구현
+
+독자적인 리소스 클래스를 작성하여, try-with-resources로 관리할 수 있도록 하는 예를 보여준다 (Evidence: E2).
+
+```java
+public class DatabaseConnection implements AutoCloseable {
+    private boolean closed = false;
+
+    public DatabaseConnection() {
+        System.out.println("연결 오픈");
+    }
+
+    public String query(String sql) {
+        if (closed) throw new IllegalStateException("이미 클로즈됨");
+        return "결과: " + sql;
+    }
+
+    @Override
+    public void close() {
+        if (!closed) {
+            closed = true;
+            System.out.println("연결 클로즈");
+        }
+    }
+}
+```
+
+---
+
+## 3) 예제 (2개)
+
+### 예제 1: 기본적인 try-with-resources와 finally 비교
+
+파일 읽기에서 try-with-resources와 finally 방식을 비교하여, try-with-resources의 간결함과 안전성을 보여준다 (Evidence: E1, E5).
+
+```java
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ResourceComparison {
+
+    // try-with-resources 방식 — 간결하고 안전
+    static List<String> readAllLinesTWR(Path path) throws IOException {
+        List<String> lines = new ArrayList<>();
+        try (BufferedReader reader = Files.newBufferedReader(path)) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lines.add(line);
+            }
+        }
+        // reader는 자동으로 close됨
+        return lines;
+    }
+
+    // finally 방식 — 장황하고 오류 위험 있음
+    static List<String> readAllLinesFinally(Path path) throws IOException {
+        List<String> lines = new ArrayList<>();
+        BufferedReader reader = null;
+        try {
+            reader = Files.newBufferedReader(path);
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lines.add(line);
+            }
+        } finally {
+            if (reader != null) {
+                reader.close();  // IOException을 던질 수 있음
+            }
+        }
+        return lines;
+    }
+}
+```
+
+`readAllLinesTWR`는 try-with-resources에 의해 4줄 분량의 finally 처리가 불필요해진다. 또한 try 본체와 close() 양쪽에서 예외가 발생한 경우, try-with-resources 방식에서는 억제된 예외로서 양쪽 정보가 모두 보전된다.
+
+### 예제 2: 복수 리소스와 억제된 예외
+
+복수 리소스의 관리와 억제된 예외의 가져오기 방법을 보여준다 (Evidence: E3, E4).
+
+```java
+public class MultiResourceExample {
+
+    // 커스텀 AutoCloseable — close()에서 예외를 발생시킴
+    static class LogResource implements AutoCloseable {
+        private final String name;
+
+        LogResource(String name) {
+            this.name = name;
+            System.out.println(name + " 오픈");
+        }
+
+        void write(String data) {
+            System.out.println(name + " 기록: " + data);
+        }
+
+        @Override
+        public void close() throws Exception {
+            System.out.println(name + " 클로즈");
+            throw new Exception(name + " 클로즈 실패");
+        }
+    }
+
+    public static void main(String[] args) {
+        try (
+            LogResource res1 = new LogResource("리소스1");
+            LogResource res2 = new LogResource("리소스2")
+        ) {
+            res1.write("데이터A");
+            res2.write("데이터B");
+            throw new RuntimeException("본체 처리 예외");
+        } catch (Exception e) {
+            // 주 예외
+            System.out.println("주 예외: " + e.getMessage());
+
+            // 억제된 예외 (close에서 발생한 예외)
+            for (Throwable s : e.getSuppressed()) {
+                System.out.println("억제된 예외: " + s.getMessage());
+            }
+        }
+        // 출력:
+        // 리소스1 오픈
+        // 리소스2 오픈
+        // 리소스1 기록: 데이터A
+        // 리소스2 기록: 데이터B
+        // 리소스2 클로즈       ← 선언의 역순
+        // 리소스1 클로즈
+        // 주 예외: 본체 처리 예외
+        // 억제된 예외: 리소스2 클로즈 실패
+        // 억제된 예외: 리소스1 클로즈 실패
+    }
+}
+```
+
+리소스는 선언의 역순(res2 -> res1)으로 close된다. close()에서 발생한 예외는 억제된 예외로서 본체의 예외에 부가되며, `getSuppressed()`로 가져올 수 있다.
+
+---
+
+## 4) 흔한 실수 / 함정 (5개)
+
+### 1. AutoCloseable을 구현하지 않은 클래스 사용
+
+```java
+// NG: StringBuilder는 AutoCloseable을 구현하지 않음
+try (StringBuilder sb = new StringBuilder()) {  // 컴파일 에러
+    sb.append("hello");
+}
+```
+
+try-with-resources로 관리할 수 있는 것은 `AutoCloseable`을 구현한 클래스뿐이다. 구현하지 않은 클래스를 선언하면 컴파일 에러가 된다 (Evidence: E2).
+
+### 2. try 괄호 밖에서 리소스 선언
+
+```java
+// NG: try 괄호 밖에서 선언 — 자동 close되지 않음
+BufferedReader reader = Files.newBufferedReader(path);
+try {
+    return reader.readLine();
+}
+// reader는 close되지 않는다!
+
+// OK: try 괄호 안에서 선언
+try (BufferedReader reader = Files.newBufferedReader(path)) {
+    return reader.readLine();
+}
+```
+
+리소스는 try의 괄호 안에서 선언해야 자동 close의 대상이 된다 (Evidence: E1). Java 9 이후에는 사전 선언한 실질적 final 변수도 사용 가능하지만, 괄호 안에 기술해야 한다.
+
+### 3. close()에서 무거운 처리 실행
+
+```java
+// NG: close()에서 DB 조작
+@Override
+public void close() {
+    executeCleanupQuery();  // 오래 걸릴 수 있음
+    sendNotification();     // 네트워크 통신
+}
+```
+
+close() 메서드는 경량이어야 한다. 무거운 처리는 close() 전에 명시적으로 호출해야 한다 (Evidence: E2).
+
+### 4. 억제된 예외 무시
+
+```java
+// NG: 억제된 예외를 확인하지 않음
+catch (Exception e) {
+    logger.error("에러", e);
+    // e.getSuppressed()의 close 예외가 간과됨
+}
+
+// OK: 억제된 예외도 로그에 기록
+catch (Exception e) {
+    logger.error("에러", e);
+    for (Throwable suppressed : e.getSuppressed()) {
+        logger.warn("억제된 예외", suppressed);
+    }
+}
+```
+
+close()에서 발생한 억제된 예외에도 리소스 누수 등 중요한 정보가 포함될 수 있다. 주 예외의 로그뿐만 아니라 억제된 예외도 확인해야 한다 (Evidence: E4).
+
+### 5. close()의 비멱등 구현
+
+```java
+// NG: 2회째 close에서 예외 발생
+@Override
+public void close() {
+    connection.disconnect();  // 이미 해제된 경우 예외
+}
+
+// OK: 멱등 구현
+private boolean closed = false;
+
+@Override
+public void close() {
+    if (!closed) {
+        closed = true;
+        connection.disconnect();
+    }
+}
+```
+
+close()는 여러 번 호출되어도 안전해야 한다(멱등성). 특히 `Closeable`을 구현하는 경우, close()의 멱등성은 사양으로 요구된다 (Evidence: E2).
+
+---
+
+## 5) 체크리스트
+
+- [ ] `AutoCloseable`/`Closeable`을 구현한 리소스는 try-with-resources로 관리하고 있는가
+- [ ] 리소스 선언이 try의 괄호 안에 있는가
+- [ ] 복수 리소스의 경우, 의존 관계에 기반한 선언 순서로 되어 있는가
+- [ ] 억제된 예외를 적절히 로그 출력/확인하고 있는가
+- [ ] 커스텀 AutoCloseable의 close()는 멱등으로 구현되어 있는가
+- [ ] close() 메서드가 경량인가
+- [ ] finally 블록에서의 수동 close 처리가 try-with-resources로 대체되어 있는가
+
+---
+
+## 6) 다음으로
+
+이 모듈(JAVA-SILVER-04: 예외 처리)의 레슨은 이것으로 완료이다. 다음 모듈 **JAVA-GOLD-01: 제네릭스와 컬렉션**에서는 타입 파라미터, 와일드카드, 컬렉션 프레임워크, Stream API에 대해 배운다.

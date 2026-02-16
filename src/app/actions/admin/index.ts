@@ -14,7 +14,6 @@ export { updateCoursePublished, deleteCourse } from './content'
 
 // Question Management
 export { createQuestion, updateQuestion, deleteQuestion, toggleQuestionPublished } from './questions'
-export type { QuestionOptionData, QuestionFormData } from './questions'
 
 // Retake Management
 export { approveRetakeRequest, denyRetakeRequest } from './retake'

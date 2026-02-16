@@ -32,7 +32,7 @@ export function calcCodingAxes(data: ScoringData): CodingAxisResult {
   const learningCoreScores = [javaScore, jsScore, algorithmScore, coreQuizAvg].filter(s => s > 0)
   const learningCore = avg(learningCoreScores)
 
-  const coreNormalized = Math.max(assessmentScores[3] ?? 0, learningCore)
+  const coreNormalized = assessmentScores[3] ?? 0
 
   // ─── Axis 4: 開発実務能力 (Framework) ───
   const springBootScore = Math.min(100, Math.round(highestRankScore * 0.8))
@@ -44,7 +44,7 @@ export function calcCodingAxes(data: ScoringData): CodingAxisResult {
     [springBootScore, reactScore, dbDesignScore, projectScore, fwQuizAvg].filter(s => s > 0)
   )
 
-  const frameworkNormalized = Math.max(assessmentScores[4] ?? 0, learningFramework)
+  const frameworkNormalized = assessmentScores[4] ?? 0
 
   return {
     javaScore,

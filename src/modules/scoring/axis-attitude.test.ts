@@ -19,28 +19,25 @@ describe('calcAttitudeAxis()', () => {
     expect(result.attitudeNormalized).toBe(0)
   })
 
-  it('calculates from attitude_culture quiz scores', () => {
+  it('uses assessment score', () => {
+    const data = makeScoringData({
+      assessmentScores: { 5: 95 },
+    })
+    const result = calcAttitudeAxis(data)
+    expect(result.attitudeNormalized).toBe(95)
+  })
+
+  it('ignores learning quiz scores — only assessment matters', () => {
     const data = makeScoringData({
       quizScoresByType: {
         attitude_culture: [80, 90],
       },
     })
     const result = calcAttitudeAxis(data)
-    expect(result.attitudeNormalized).toBe(85)
+    expect(result.attitudeNormalized).toBe(0)
   })
 
-  it('uses assessment score if higher than learning', () => {
-    const data = makeScoringData({
-      assessmentScores: { 5: 95 },
-      quizScoresByType: {
-        attitude_culture: [50],
-      },
-    })
-    const result = calcAttitudeAxis(data)
-    expect(result.attitudeNormalized).toBe(95)
-  })
-
-  it('uses learning score if higher than assessment', () => {
+  it('ignores learning quiz scores even when assessment is lower', () => {
     const data = makeScoringData({
       assessmentScores: { 5: 30 },
       quizScoresByType: {
@@ -48,16 +45,6 @@ describe('calcAttitudeAxis()', () => {
       },
     })
     const result = calcAttitudeAxis(data)
-    expect(result.attitudeNormalized).toBe(85)
-  })
-
-  it('handles single quiz score', () => {
-    const data = makeScoringData({
-      quizScoresByType: {
-        attitude_culture: [100],
-      },
-    })
-    const result = calcAttitudeAxis(data)
-    expect(result.attitudeNormalized).toBe(100)
+    expect(result.attitudeNormalized).toBe(30)
   })
 })

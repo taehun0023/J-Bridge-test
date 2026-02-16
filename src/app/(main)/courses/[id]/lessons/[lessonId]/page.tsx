@@ -4,6 +4,7 @@ import Card from '@/components/ui/Card'
 import LessonContentToggle from '@/components/ui/LessonContentToggle'
 import LessonComplete from './LessonComplete'
 import Link from 'next/link'
+import { ClipboardCheck } from 'lucide-react'
 
 interface Params { id: string; lessonId: string }
 
@@ -26,17 +27,35 @@ export default async function LessonPage({ params }: { params: Promise<Params> }
     .eq('id', courseId)
     .single()
 
-  // Check if already completed
+  // Check enrollment and lesson completion
   let isCompleted = false
+  let enrollmentId: string | null = null
   if (user) {
-    const { data: progress } = await supabase
-      .from('lesson_progress')
-      .select('is_completed')
+    const { data: enrollment } = await supabase
+      .from('enrollments')
+      .select('id')
       .eq('user_id', user.id)
-      .eq('lesson_id', lessonId)
+      .eq('course_id', courseId)
       .single()
-    isCompleted = progress?.is_completed ?? false
+
+    if (enrollment) {
+      enrollmentId = enrollment.id
+      const { data: progress } = await supabase
+        .from('lesson_progress')
+        .select('status')
+        .eq('enrollment_id', enrollment.id)
+        .eq('lesson_id', lessonId)
+        .single()
+      isCompleted = progress?.status === 'completed'
+    }
   }
+
+  // Fetch quiz linked to this lesson
+  const { data: quiz } = await supabase
+    .from('quizzes')
+    .select('id, title')
+    .eq('lesson_id', lessonId)
+    .single()
 
   // Get all lessons for nav
   const { data: allLessons } = await supabase
@@ -62,9 +81,6 @@ export default async function LessonPage({ params }: { params: Promise<Params> }
 
       <Card>
         <h1 className="text-xl font-bold text-gray-900 dark:text-white">{lesson.title}</h1>
-        <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          {lesson.duration_minutes && `${lesson.duration_minutes}分`}
-        </div>
 
         {/* Content */}
         <div className="mt-6">
@@ -88,22 +104,47 @@ export default async function LessonPage({ params }: { params: Promise<Params> }
         </div>
       </Card>
 
+      {/* Quiz section */}
+      {quiz && (
+        <div className="mt-4">
+          <Card>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <ClipboardCheck className="h-5 w-5 text-indigo-500" />
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">理解度テスト</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">このレッスンの内容を確認しましょう</p>
+                </div>
+              </div>
+              <Link
+                href={`/courses/${courseId}/lessons/${lessonId}/quiz/${quiz.id}`}
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+              >
+                テストを受ける
+              </Link>
+            </div>
+          </Card>
+        </div>
+      )}
+
       {/* Complete + Navigation */}
       <div className="mt-6 flex items-center justify-between">
         <div>
           {prevLesson && (
             <Link
               href={`/courses/${courseId}/lessons/${prevLesson.id}`}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
             >
-              &larr; {prevLesson.title}
+              &larr; 前へ
             </Link>
           )}
         </div>
 
         <LessonComplete
           lessonId={lessonId}
+          courseId={courseId}
           isCompleted={isCompleted}
+          enrollmentId={enrollmentId}
         />
 
         <div>
@@ -112,7 +153,7 @@ export default async function LessonPage({ params }: { params: Promise<Params> }
               href={`/courses/${courseId}/lessons/${nextLesson.id}`}
               className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
             >
-              {nextLesson.title} &rarr;
+              次へ &rarr;
             </Link>
           )}
         </div>

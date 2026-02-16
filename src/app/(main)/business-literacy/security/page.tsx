@@ -1,8 +1,29 @@
-export default function SecurityPage() {
+import { getMasteredIds } from '@/app/actions/mastery'
+import { SECURITY_MANUAL_SECTIONS, getAllSubsectionIds } from '@/lib/security-manual-data'
+import ManualClient from '@/components/business-literacy/ManualClient'
+
+export const metadata = {
+  title: 'セキュリティ | J-Bridge',
+  description: '情報セキュリティの基礎知識に関するチェックリスト',
+}
+
+export default async function SecurityPage() {
+  const allSubsectionIds = getAllSubsectionIds()
+  const masteredIds = await getMasteredIds('security_manual')
+
+  const progressPct = allSubsectionIds.length > 0
+    ? Math.round((allSubsectionIds.filter(id => masteredIds.includes(id)).length / allSubsectionIds.length) * 100)
+    : 0
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-      <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">セキュリティ</h1>
-      <p className="text-zinc-500 dark:text-zinc-400">コンテンツは準備中です</p>
-    </div>
+    <ManualClient
+      sections={SECURITY_MANUAL_SECTIONS}
+      masteredIds={masteredIds}
+      allSubsectionIds={allSubsectionIds}
+      title="セキュリティ"
+      subtitle="情報セキュリティの基礎知識"
+      quizUrl="/business-literacy/security/quiz"
+      quizLocked={progressPct < 100}
+    />
   )
 }

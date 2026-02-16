@@ -1,0 +1,217 @@
+sources:
+- id: JAVA_EXAM_1Z0_818_JPN
+  track: java
+  vendor: oracle
+  version: (current)
+  type: exam-objectives
+  location: sources/java/oracle/exams/JAVA_EXAM_1Z0-818_JPN.md
+  notes: Oracle Java SE Bronze exam page + checklist summary.
+  url: https://www.oracle.com/jp/education/certification/certification-exam-list/java-se-bronze-1z0-818-exam/
+- id: JAVA_EXAM_1Z0_825_JPN
+  track: java
+  vendor: oracle
+  version: '17'
+  type: exam-objectives
+  location: sources/java/oracle/exams/JAVA_EXAM_1Z0-825_JPN.md
+  notes: Oracle Java SE 17 Programmer I (Silver) exam page + checklist summary.
+  url: https://www.oracle.com/jp/education/certification/javase-17-programmer-1/
+- id: JAVA_JDK17_HOME
+  track: java
+  vendor: oracle
+  version: '17'
+  type: reference-hub
+  location: sources/java/oracle/docs/JAVA_JDK17_HOME.md
+  notes: JDK 17 documentation home.
+  url: https://docs.oracle.com/javase/jp/17/index.html
+- id: JAVA_API_17
+  track: java
+  vendor: oracle
+  version: '17'
+  type: api-doc
+  location: sources/java/oracle/docs/JAVA_API_17.md
+  notes: Java SE 17 API docs hub.
+  url: https://docs.oracle.com/en/java/javase/17/docs/api/index.html
+- id: JAVA_JLS17
+  track: java
+  vendor: oracle
+  version: '17'
+  type: spec
+  location: sources/java/oracle/docs/JAVA_JLS17.md
+  notes: Java Language Specification for Java SE 17.
+  url: https://docs.oracle.com/javase/specs/jls/se17/html/
+- id: JAVA_JVMS17
+  track: java
+  vendor: oracle
+  version: '17'
+  type: spec
+  location: sources/java/oracle/docs/JAVA_JVMS17.md
+  notes: Java Virtual Machine Spec for Java SE 17.
+  url: https://docs.oracle.com/javase/specs/jvms/se17/jvms17.pdf
+- id: JAVA_TUTORIALS_LP
+  track: java
+  vendor: oracle
+  version: (legacy)
+  type: tutorial-hub
+  location: sources/java/oracle/tutorials/JAVA_TUTORIALS_LEARNING_PATHS.md
+  notes: Oracle Java Tutorials learning paths hub.
+  url: https://docs.oracle.com/javase/tutorial/tutorialLearningPaths.html
+- id: JAVA_TUTORIAL_EXCEPTIONS
+  track: java
+  vendor: oracle
+  version: (legacy)
+  type: tutorial
+  location: sources/java/oracle/tutorials/JAVA_TUTORIAL_EXCEPTIONS.md
+  notes: Exceptions lesson.
+  url: https://docs.oracle.com/javase/tutorial/essential/exceptions/index.html
+- id: JAVA_TUTORIAL_GENERICS
+  track: java
+  vendor: oracle
+  version: (legacy)
+  type: tutorial
+  location: sources/java/oracle/tutorials/JAVA_TUTORIAL_GENERICS.md
+  notes: Generics lesson.
+  url: https://docs.oracle.com/javase/tutorial/java/generics/index.html
+- id: JAVA_TUTORIAL_COLLECTIONS
+  track: java
+  vendor: oracle
+  version: (legacy)
+  type: tutorial
+  location: sources/java/oracle/tutorials/JAVA_TUTORIAL_COLLECTIONS.md
+  notes: Collections trail.
+  url: https://docs.oracle.com/javase/tutorial/collections/
+- id: JAVA_TUTORIAL_STREAMS
+  track: java
+  vendor: oracle
+  version: (legacy)
+  type: tutorial
+  location: sources/java/oracle/tutorials/JAVA_TUTORIAL_STREAMS.md
+  notes: Streams/Aggregate Operations page.
+  url: https://docs.oracle.com/javase/tutorial/collections/streams/index.html
+- id: JAVA_TUTORIAL_LAMBDA
+  track: java
+  vendor: oracle
+  version: (legacy)
+  type: tutorial
+  location: sources/java/oracle/tutorials/JAVA_TUTORIAL_LAMBDA.md
+  notes: Lambda expressions + method references.
+  url: https://docs.oracle.com/javase/tutorial/java/javaOO/lambdaexpressions.html
+- id: JAVA_TUTORIAL_CONCURRENCY
+  track: java
+  vendor: oracle
+  version: (legacy)
+  type: tutorial
+  location: sources/java/oracle/tutorials/JAVA_TUTORIAL_CONCURRENCY.md
+  notes: Concurrency trail.
+  url: https://docs.oracle.com/javase/tutorial/essential/concurrency/index.html
+- id: SPRING_BOOT_SYSREQ
+  track: spring
+  vendor: spring
+  version: 4.0.2 / 3.5.10
+  type: reference
+  location: sources/spring/SPRING_BOOT_SYSTEM_REQUIREMENTS.md
+  notes: Spring Boot system requirements (stable versions).
+  url: https://docs.spring.io/spring-boot/system-requirements.html
+- id: SPRING_BOOT_REF_HUB
+  track: spring
+  vendor: spring
+  version: current
+  type: reference-hub
+  location: sources/spring/SPRING_BOOT_REFERENCE_HUB.md
+  notes: Spring Boot docs hub + overview + installing.
+  url: https://docs.spring.io/spring-boot/index.html
+- id: SPRING_FRAMEWORK_REF
+  track: spring
+  vendor: spring
+  version: current
+  type: reference
+  location: sources/spring/SPRING_FRAMEWORK_REFERENCE.md
+  notes: Spring Framework reference docs.
+  url: https://docs.spring.io/spring-framework/reference/index.html
+- id: SPRING_SECURITY_REF
+  track: spring
+  vendor: spring
+  version: current
+  type: reference
+  location: sources/spring/SPRING_SECURITY_REFERENCE.md
+  notes: Spring Security reference docs.
+  url: https://docs.spring.io/spring-security/reference/index.html
+- id: ORACLE_EXAM_1Z0_085_JPN
+  track: sql
+  vendor: oracle
+  version: (OM Bronze DBA 2019)
+  type: exam-objectives
+  location: sources/sql/oracle/exams/ORACLE_EXAM_1Z0-085_JPN_BRONZE_DBA.md
+  notes: ORACLE MASTER Bronze DBA 2019 exam page + checklist summary.
+  url: https://www.oracle.com/jp/education/certification/certification-exam-list/bronze-dba-fundamentals-1z0-085-exam/
+- id: ORACLE_EXAM_1Z0_071_JPN
+  track: sql
+  vendor: oracle
+  version: (OM Silver SQL 2019)
+  type: exam-objectives
+  location: sources/sql/oracle/exams/ORACLE_EXAM_1Z0-071_JPN_SILVER_SQL.md
+  notes: ORACLE MASTER Silver SQL 2019 exam page + checklist summary.
+  url: https://www.oracle.com/jp/education/certification/certification-exam-list/db-sql-1z0-071-exam/
+- id: ORACLE_EXAM_1Z0_082_JPN
+  track: sql
+  vendor: oracle
+  version: (OM Silver DBA 2019)
+  type: exam-objectives
+  location: sources/sql/oracle/exams/ORACLE_EXAM_1Z0-082_JPN_SILVER_DBA.md
+  notes: ORACLE MASTER Silver DBA 2019 exam page + checklist summary.
+  url: https://www.oracle.com/jp/education/certification/certification-exam-list/dba-i-1z0-082-exam/
+- id: ORACLE_SQL_REF_21C
+  track: sql
+  vendor: oracle
+  version: 21c
+  type: reference
+  location: sources/sql/oracle/docs/ORACLE_SQL_LANGUAGE_REFERENCE_21C.md
+  notes: Oracle Database SQL Language Reference 21c.
+  url: https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf
+- id: ORACLE_DB_CONCEPTS_21C
+  track: sql
+  vendor: oracle
+  version: 21c
+  type: reference
+  location: sources/sql/oracle/docs/ORACLE_DB_CONCEPTS_21C.md
+  notes: Oracle Database Concepts 21c.
+  url: https://docs.oracle.com/en/database/oracle/oracle-database/21/cncpt/index.html
+- id: ORACLE_DB_ADMIN_21C
+  track: sql
+  vendor: oracle
+  version: 21c
+  type: reference
+  location: sources/sql/oracle/docs/ORACLE_DB_ADMIN_GUIDE_21C.md
+  notes: Oracle Database Administrator’s Guide 21c.
+  url: https://docs.oracle.com/en/database/oracle/oracle-database/21/admin/index.html
+- id: ORACLE_SQL_TUNING_21C
+  track: sql
+  vendor: oracle
+  version: 21c
+  type: reference
+  location: sources/sql/oracle/docs/ORACLE_SQL_TUNING_GUIDE_21C.md
+  notes: Oracle SQL Tuning Guide 21c.
+  url: https://docs.oracle.com/en/database/oracle/oracle-database/21/tgsql/sql-tuning-guide.pdf
+- id: ORACLE_SQLPLUS_21C
+  track: sql
+  vendor: oracle
+  version: 21c
+  type: tool-reference
+  location: sources/sql/oracle/tools/ORACLE_SQLPLUS_21C.md
+  notes: SQL*Plus User's Guide 21c.
+  url: https://docs.oracle.com/en/database/oracle/oracle-database/21/sqpug/
+- id: ORACLE_SQLDEV_GUIDE
+  track: sql
+  vendor: oracle
+  version: '23.1'
+  type: tool-reference
+  location: sources/sql/oracle/tools/ORACLE_SQL_DEVELOPER_GUIDE.md
+  notes: SQL Developer user's guide.
+  url: https://docs.oracle.com/cd/F87164_01/rptug/index.html
+- id: ORACLE_LIVE_SQL
+  track: sql
+  vendor: oracle
+  version: (service)
+  type: practice-environment
+  location: sources/sql/oracle/tools/ORACLE_LIVE_SQL.md
+  notes: Oracle Live SQL practice environment.
+  url: https://www.oracle.com/database/technologies/oracle-live-sql/

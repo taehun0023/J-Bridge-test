@@ -207,14 +207,9 @@ function main() {
       const koContent = hasKo ? fs.readFileSync(koMdxPath, 'utf8') : null;
 
       lines.push(`-- Lesson: ${lessonMeta.id} (${lessonTitle})`);
-      if (koContent) {
-        lines.push(`INSERT INTO lessons (id, course_id, title, content_type, content_body, content_body_ko, duration_minutes, sort_order)`);
-        lines.push(`VALUES ('${lessonUUID}', '${courseUUID}', E'${esc(lessonTitle)}', 'text', E'${esc(mdxContent)}', E'${esc(koContent)}', ${estMinutes}, ${lessonOrder})`);
-      } else {
-        lines.push(`INSERT INTO lessons (id, course_id, title, content_type, content_body, duration_minutes, sort_order)`);
-        lines.push(`VALUES ('${lessonUUID}', '${courseUUID}', E'${esc(lessonTitle)}', 'text', E'${esc(mdxContent)}', ${estMinutes}, ${lessonOrder})`);
-      }
-      lines.push(`ON CONFLICT (id) DO NOTHING;`);
+      lines.push(`INSERT INTO lessons (id, course_id, title, content_type, content_body, content_body_ko, duration_minutes, sort_order)`);
+      lines.push(`VALUES ('${lessonUUID}', '${courseUUID}', E'${esc(lessonTitle)}', 'text', E'${esc(mdxContent)}', ${koContent ? `E'${esc(koContent)}'` : 'NULL'}, ${estMinutes}, ${lessonOrder})`);
+      lines.push(`ON CONFLICT (id) DO UPDATE SET title=EXCLUDED.title, content_body=EXCLUDED.content_body, content_body_ko=EXCLUDED.content_body_ko, duration_minutes=EXCLUDED.duration_minutes, sort_order=EXCLUDED.sort_order;`);
       lines.push('');
       stats.lessons++;
 
@@ -227,7 +222,7 @@ function main() {
         lines.push(`-- Quiz: ${lessonMeta.id}`);
         lines.push(`INSERT INTO quizzes (id, lesson_id, title, quiz_type, passing_score, time_limit_minutes)`);
         lines.push(`VALUES ('${quizUUID}', '${lessonUUID}', E'${esc(lessonTitle + ' 理解度テスト')}', 'core_programming', 70, 15)`);
-        lines.push(`ON CONFLICT (id) DO NOTHING;`);
+        lines.push(`ON CONFLICT (id) DO UPDATE SET title=EXCLUDED.title, lesson_id=EXCLUDED.lesson_id;`);
         lines.push('');
         stats.quizzes++;
 
@@ -289,7 +284,7 @@ function main() {
 
           lines.push(`INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty)`);
           lines.push(`VALUES ('${qUUID}', '${quizUUID}', 'multiple_choice', E'${esc(questionText)}', E'${esc(q.explanation)}', 10, ${qOrder}, '${diffEnum}')`);
-          lines.push(`ON CONFLICT (id) DO NOTHING;`);
+          lines.push(`ON CONFLICT (id) DO UPDATE SET question_text=EXCLUDED.question_text, explanation=EXCLUDED.explanation, sort_order=EXCLUDED.sort_order, difficulty=EXCLUDED.difficulty;`);
           lines.push('');
           stats.questions++;
 
@@ -302,7 +297,7 @@ function main() {
 
           lines.push(`INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES`);
           lines.push(optionValues.join(',\n'));
-          lines.push(`ON CONFLICT (id) DO NOTHING;`);
+          lines.push(`ON CONFLICT (id) DO UPDATE SET option_text=EXCLUDED.option_text, is_correct=EXCLUDED.is_correct, sort_order=EXCLUDED.sort_order;`);
           lines.push('');
         }
       }
@@ -317,7 +312,7 @@ function main() {
         lines.push(`-- Coding Problem: ${lessonMeta.id}`);
         lines.push(`INSERT INTO coding_problems (id, lesson_id, title, description, difficulty, language)`);
         lines.push(`VALUES ('${codingUUID}', '${lessonUUID}', E'${esc(labTitle)}', E'${esc(labContent)}', '${levelToCodingDifficulty(mod.level)}', 'java')`);
-        lines.push(`ON CONFLICT (id) DO NOTHING;`);
+        lines.push(`ON CONFLICT (id) DO UPDATE SET title=EXCLUDED.title, description=EXCLUDED.description, difficulty=EXCLUDED.difficulty;`);
         lines.push('');
         stats.codingProblems++;
       }

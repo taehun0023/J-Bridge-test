@@ -1,4 +1,4 @@
-import { ASSESSMENT_QUIZ_IDS } from '@/lib/assessment-config'
+import { ASSESSMENT_QUIZ_IDS, COMP_EXAM_CATEGORY_TO_STEP } from '@/lib/assessment-config'
 import { DIFFICULTY_MULTIPLIER, RANK_SCORES } from './utils'
 import type { ScoringClient, ScoringData, AssessmentScores, QuizScoresByType, BestSubmission } from './types'
 
@@ -16,7 +16,7 @@ export async function fetchScoringData(
   userId: string
 ): Promise<ScoringData> {
   // Run independent queries in parallel
-  const [profileResult, quizAttemptsResult, submissionsResult, examAttemptsResult] =
+  const [profileResult, quizAttemptsResult, submissionsResult, examAttemptsResult, compExamResult] =
     await Promise.all([
       client
         .from('profiles')
@@ -37,6 +37,12 @@ export async function fetchScoringData(
         .select('score, passed, coding_skill_exams(target_rank)')
         .eq('user_id', userId)
         .eq('passed', true),
+      client
+        .from('comprehensive_exams')
+        .select('category, score')
+        .eq('user_id', userId)
+        .in('status', ['completed', 'failed'])
+        .not('score', 'is', null),
     ])
 
   const isJapanese = profileResult.data?.is_japanese ?? false
@@ -61,6 +67,9 @@ export async function fetchScoringData(
       }
     }
   }
+
+  // Merge comprehensive exam scores (max strategy)
+  mergeCompExamScores(assessmentScores, compExamResult.data ?? [])
 
   // Organize regular quiz scores by type
   const quizScoresByType: QuizScoresByType = {}
@@ -95,5 +104,23 @@ export async function fetchScoringData(
     quizScoresByType,
     bestByProblem,
     highestRankScore,
+  }
+}
+
+/**
+ * Merge comprehensive exam scores into assessment scores using max strategy.
+ * For each category, keeps the higher score between onboarding assessment and comprehensive exam.
+ */
+export function mergeCompExamScores(
+  assessmentScores: AssessmentScores,
+  compExams: { category: string; score: number | null }[]
+): void {
+  for (const compExam of compExams) {
+    if (compExam.score == null) continue
+    const step = COMP_EXAM_CATEGORY_TO_STEP[compExam.category]
+    if (!step) continue
+    if (!assessmentScores[step] || compExam.score > assessmentScores[step]) {
+      assessmentScores[step] = compExam.score
+    }
   }
 }

@@ -93,19 +93,18 @@ const mdComponents: Components = {
     // eslint-disable-next-line @next/next/no-img-element
     <img src={src} alt={alt ?? ''} className="my-4 rounded-lg max-w-full" />
   ),
-  input: ({ checked, disabled, type, ...rest }) => {
+  input: ({ checked, disabled: _disabled, type, ...rest }) => {
     if (type === 'checkbox') {
       return (
         <input
           type="checkbox"
-          checked={checked}
-          disabled={disabled}
-          className="mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 accent-indigo-600"
+          defaultChecked={!!checked}
+          className="mr-2 h-4 w-4 cursor-pointer rounded border-gray-300 text-indigo-600 accent-indigo-600"
           {...rest}
         />
       )
     }
-    return <input type={type} checked={checked} disabled={disabled} {...rest} />
+    return <input type={type} checked={checked} {...rest} />
   },
   strong: ({ children }) => (
     <strong className="font-semibold text-gray-900 dark:text-gray-100">{children}</strong>

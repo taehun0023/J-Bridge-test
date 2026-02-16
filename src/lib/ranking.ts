@@ -65,6 +65,15 @@ export function sortByCategory(entries: ComputedRankingEntry[], category: Rankin
   return [...entries].sort((a, b) => b[key] - a[key])
 }
 
+export function filterUnscoredUsers(entries: ComputedRankingEntry[]): ComputedRankingEntry[] {
+  return entries.filter(e =>
+    e.jlpt_normalized > 0 ||
+    e.it_japanese_normalized > 0 ||
+    e.core_normalized > 0 ||
+    e.framework_normalized > 0
+  )
+}
+
 export function filterForCategory(entries: ComputedRankingEntry[], category: RankingCategory): ComputedRankingEntry[] {
   if (category === 'japanese') {
     return entries.filter(e => !e.is_japanese)

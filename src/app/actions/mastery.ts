@@ -2,7 +2,7 @@
 
 import { requireAuth } from '@/lib/auth-helpers'
 
-type ItemType = 'it_glossary' | 'jlpt_vocabulary' | 'jlpt_grammar' | 'cs_term'
+type ItemType = 'it_glossary' | 'jlpt_vocabulary' | 'jlpt_grammar' | 'cs_term' | 'security_manual' | 'attitude_manual' | 'culture_manual'
 
 export async function toggleMastery(itemType: ItemType, itemId: string) {
   const auth = await requireAuth()
@@ -45,6 +45,20 @@ export async function getMasteredIds(itemType: ItemType): Promise<string[]> {
     .select('item_id')
     .eq('user_id', user.id)
     .eq('item_type', itemType)
+
+  return data?.map(d => d.item_id) ?? []
+}
+
+export async function getMasteredIdsMultiple(itemTypes: ItemType[]): Promise<string[]> {
+  const auth = await requireAuth()
+  if ('error' in auth) return []
+  const { supabase, user } = auth
+
+  const { data } = await supabase
+    .from('user_mastered_items')
+    .select('item_id')
+    .eq('user_id', user.id)
+    .in('item_type', itemTypes)
 
   return data?.map(d => d.item_id) ?? []
 }

@@ -1,0 +1,21 @@
+TASK:
+Build curriculum skeleton for 3 tracks: Java, Spring Boot, Oracle SQL.
+
+INPUTS (read local files):
+- sources/_index.yaml (to understand which sources exist)
+- templates/*.md (for output format)
+
+OUTPUT (YAML only, no lesson bodies):
+- content/java/track.yaml + content/java/modules/*/module.yaml
+- content/spring/track.yaml + content/spring/modules/*/module.yaml
+- content/sql/track.yaml + content/sql/modules/*/module.yaml
+
+RULES:
+- Levels: bronze, silver, gold
+- Each module: 5–9 lessons
+- Each lesson must have: id, title, est_minutes, tags, outcomes(2–4 bullet)
+- Keep stable IDs. Use this pattern:
+  - JAVA-BRONZE-01-01, JAVA-SILVER-04-03, SPRING-BRONZE-02-01, SQL-SILVER-03-02
+
+IMPORTANT:
+- Curriculum must connect: Java + SQL => Spring Boot API + DB.

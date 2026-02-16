@@ -1,0 +1,29 @@
+TASK:
+Generate lesson package from evidence.
+
+INPUT:
+- evidence/<LESSON_ID>.md (single source of truth)
+- templates/lesson_template.mdx
+- templates/quiz_schema.json
+
+OUTPUTS:
+1) content/<track>/modules/<MODULE_ID>/lessons/<LESSON_ID>.mdx
+2) content/<track>/modules/<MODULE_ID>/lessons/<LESSON_ID>.quiz.json
+3) content/<track>/modules/<MODULE_ID>/lessons/<LESSON_ID>.lab.md
+
+MDX RULES:
+- Must include exactly the 6 sections defined in CLAUDE.md.
+- Include 2 examples (if Java/Spring) or 2 queries (if SQL).
+- Must be consistent with evidence.
+- If a claim is not supported, add TODO rather than invent.
+
+QUIZ RULES:
+- 10 questions default:
+  - 6 single_choice, 2 code_output, 2 short_answer
+- Every explanation must cite evidence tags: (Evidence: E3, E9)
+- All questions original.
+
+LAB RULES:
+- 30–45 min
+- Specify exact class/method (or SQL tables/expected result)
+- Designed for auto-grading

@@ -1,12 +1,14 @@
 module:
   id: JAVA-SILVER-01
-  title: クラスとオブジェクト
+  title: "オブジェクト指向と例外処理"
   level: silver
-  description: "クラス定義、インスタンス生成、継承、ポリモーフィズム、インタフェースの基本を理解し実務で使いこなす。"
+  description: "クラス定義、継承、ポリモーフィズム、インタフェース、例外処理の基本を理解し実務で使いこなす。"
   outcomes:
     - "クラスとインスタンスの関係を説明し、コンストラクタを正しく実装できる。"
     - "継承とオーバーライドの仕組みを理解し適切に設計できる。"
     - "ポリモーフィズムとインタフェースを使った柔軟な設計ができる。"
+    - "checked/unchecked例外を区分し、処理・宣言戦略を選択できる。"
+    - "try-with-resourcesでリソースを安全に解放できる。"
   lessons:
     - id: JAVA-SILVER-01-01
       title: "クラスとインスタンス"
@@ -42,3 +44,22 @@ module:
       outcomes:
         - "インタフェースの定義とimplementsの使い方を実装する。"
         - "デフォルトメソッドの導入理由と使い方を説明する。"
+    - id: JAVA-SILVER-04-01
+      title: "Checked vs Unchecked / throws vs try-catch"
+      est_minutes: 35
+      tags: [exceptions, checked, unchecked, throws, try-catch]
+      outcomes:
+        - "checked/unchecked差異を定義と例示で説明する。"
+        - "throwsとtry-catchの選択基準を説明する。"
+    - id: JAVA-SILVER-04-02
+      title: "例外変換(wrap)とcause保存"
+      est_minutes: 35
+      tags: [exceptions, wrap, cause]
+      outcomes:
+        - "ドメイン例外に変換する際にcauseを保存する。"
+    - id: JAVA-SILVER-04-03
+      title: "try-with-resourcesとAutoCloseable"
+      est_minutes: 30
+      tags: [exceptions, resources, autocloseable]
+      outcomes:
+        - "try-with-resourcesがclose呼び出しを保証する理由を説明する。"

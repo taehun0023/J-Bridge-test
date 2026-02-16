@@ -160,9 +160,14 @@ export async function fetchRandomAssessmentQuestions(
   }
 
   if (step === 5) {
-    // ビジネスリテラシー: 3 sub-categories x 10 = 30 questions
-    const categories = ['business_manner', 'communication', 'cross_culture']
-    const result = await fetchRandomByCategory(quizId, 10, categories)
+    // ビジネスリテラシー: 4 categories weighted selection (30 total)
+    const weights: Record<string, number> = {
+      business_manner: 8,
+      communication: 8,
+      cross_culture: 7,
+      security: 7,
+    }
+    const result = await fetchRandomByWeightedCategory(quizId, weights)
     // Fallback to difficulty-based if categories not yet tagged
     if (result.length > 0) return result
     return fetchRandomByDifficulty(quizId, 30)

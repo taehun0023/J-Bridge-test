@@ -1,0 +1,16 @@
+track:
+  id: SPRING
+  title: Spring Boot 실무 (Java+SQL 통합)
+  level_order: [bronze, silver, gold]
+  runtime:
+    java_version: "17"
+    spring_boot: "3.x"
+  modules:
+    - id: SPRING-BRONZE-01
+      title: 프로젝트 구조와 DI
+      level: bronze
+      order: 10
+    - id: SPRING-SILVER-02
+      title: JPA와 트랜잭션
+      level: silver
+      order: 30

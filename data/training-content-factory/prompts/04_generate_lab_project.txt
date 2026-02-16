@@ -1,0 +1,19 @@
+TASK:
+Generate runnable lab project (optional but recommended).
+
+INPUT:
+- Lab spec: content/<track>/modules/<MODULE_ID>/lessons/<LESSON_ID>.lab.md
+
+OUTPUT:
+- labs/<track>/<LESSON_ID>/
+
+REQUIREMENTS (Java/Spring):
+- Maven + JUnit5, Java 17
+- starter code in src/main/java with TODOs
+- strict tests in src/test/java
+- README.md: how to run + what to implement
+- run `mvn -q test` and fix until green with an internal reference implementation if needed
+
+REQUIREMENTS (SQL):
+- Provide docker-compose (optional) OR simple SQL runner instructions
+- Provide expected outputs and deterministic dataset

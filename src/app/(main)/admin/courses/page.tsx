@@ -29,14 +29,17 @@ export default async function AdminCoursesPage() {
     .order('sort_order')
 
   // Fetch claims with user info (needs service client to access all users)
+  // Use quiz_id filter via inner join to avoid URL length overflow (780+ UUIDs in IN clause)
   let claimsData: ClaimRow[] = []
-  if (serviceClient && allQuestions && allQuestions.length > 0) {
-    const questionIds = allQuestions.map(q => q.id)
-    const { data } = await serviceClient
+  if (serviceClient) {
+    const { data, error } = await serviceClient
       .from('question_claims')
-      .select('question_id, claim_reason, profiles:user_id(full_name), created_at')
-      .in('question_id', questionIds)
+      .select('question_id, claim_reason, profiles:user_id(full_name), created_at, quiz_questions!inner(quiz_id)')
+      .in('quiz_questions.quiz_id', quizIds)
 
+    if (error) {
+      console.error('Failed to fetch claims:', error.message)
+    }
     claimsData = (data ?? []) as unknown as ClaimRow[]
   }
 

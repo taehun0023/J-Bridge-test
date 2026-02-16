@@ -10,13 +10,9 @@ track:
       level: bronze
       order: 10
     - id: JAVA-SILVER-01
-      title: クラスとオブジェクト
+      title: "オブジェクト指向と例外処理"
       level: silver
       order: 20
-    - id: JAVA-SILVER-04
-      title: 例外処理
-      level: silver
-      order: 40
     - id: JAVA-GOLD-01
       title: ジェネリクスとコレクション
       level: gold

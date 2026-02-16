@@ -68,6 +68,7 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
   const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set())
   const [claimForms, setClaimForms] = useState<Set<string>>(new Set())
   const [claimReasons, setClaimReasons] = useState<Record<string, string>>({})
+  const [claimError, setClaimError] = useState<string | null>(null)
 
   // If server says already completed and client has no review state → redirect to dashboard
   useEffect(() => {
@@ -234,11 +235,14 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
 
   const handleClaim = async (questionId: string) => {
     setClaimingId(questionId)
+    setClaimError(null)
     const reason = claimReasons[questionId] || undefined
     const result = await submitQuestionClaim(questionId, reason)
     if (result.success) {
       setClaimedQuestions(prev => new Set(prev).add(questionId))
       setClaimForms(prev => { const next = new Set(prev); next.delete(questionId); return next })
+    } else if ('error' in result && result.error) {
+      setClaimError(result.error)
     }
     setClaimingId(null)
   }
@@ -333,7 +337,7 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
                 {isExpanded && (
                   <div className="mt-3 border-t border-zinc-200/60 dark:border-white/[0.06] pt-3">
                     <p className="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-line mb-3">
-                      {q.question_text}
+                      {q.question_text.replace(/\\n/g, '\n')}
                     </p>
                     <div className="space-y-2">
                       {q.options.map(opt => {
@@ -390,6 +394,9 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
                             rows={2}
                             className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-amber-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
                           />
+                          {claimError && claimingId === null && (
+                            <p className="mt-1 text-xs text-red-500">{claimError}</p>
+                          )}
                           <div className="mt-2 flex justify-end gap-2">
                             <button
                               onClick={() => toggleClaimForm(q.id)}

@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { computeRankingEntry, filterForCategory, sortByCategory } from '@/lib/ranking'
+import { computeRankingEntry, filterUnscoredUsers, filterForCategory, sortByCategory } from '@/lib/ranking'
 import type { RankingUserData, RankingCategory } from '@/lib/ranking'
 import RankingClient from './RankingClient'
 
@@ -20,6 +20,7 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
       japanese_skills(jlpt_normalized, it_japanese_normalized, updated_at),
       coding_skills(core_normalized, framework_normalized, updated_at)
     `)
+    .in('role', ['mentee', 'mentor'])
 
   const rankingUsers: RankingUserData[] = (users ?? [])
     .filter((u: Record<string, unknown>) => u.japanese_skills !== null || u.coding_skills !== null)
@@ -41,7 +42,8 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
   })
 
   const entries = rankingUsers.map(computeRankingEntry)
-  const filtered = filterForCategory(entries, category)
+  const nonZero = filterUnscoredUsers(entries)
+  const filtered = filterForCategory(nonZero, category)
   const sorted = sortByCategory(filtered, category)
 
   return (

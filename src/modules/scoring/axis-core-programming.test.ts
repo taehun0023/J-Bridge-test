@@ -55,27 +55,25 @@ describe('calcCodingAxes()', () => {
       expect(result.algorithmScore).toBe(65)
     })
 
-    it('includes core_programming quiz scores', () => {
+    it('uses assessment score only — ignores learning quiz scores', () => {
+      const data = makeScoringData({
+        assessmentScores: { 3: 60 },
+        quizScoresByType: {
+          core_programming: [90, 80],
+        },
+      })
+      const result = calcCodingAxes(data)
+      expect(result.coreNormalized).toBe(60)
+    })
+
+    it('returns 0 normalized when only learning quizzes exist (no assessment)', () => {
       const data = makeScoringData({
         quizScoresByType: {
           core_programming: [90, 80],
         },
       })
       const result = calcCodingAxes(data)
-
-      // core quiz avg = 85, only non-zero score → coreNormalized = 85
-      expect(result.coreNormalized).toBe(85)
-    })
-
-    it('uses assessment score if higher than learning', () => {
-      const data = makeScoringData({
-        assessmentScores: { 3: 95 },
-        quizScoresByType: {
-          core_programming: [50],
-        },
-      })
-      const result = calcCodingAxes(data)
-      expect(result.coreNormalized).toBe(95)
+      expect(result.coreNormalized).toBe(0)
     })
   })
 
@@ -112,13 +110,21 @@ describe('calcCodingAxes()', () => {
       expect(result.projectScore).toBe(60)     // 100 * 0.6
     })
 
-    it('uses assessment score if higher than learning', () => {
+    it('uses assessment score only — ignores learning scores', () => {
       const data = makeScoringData({
-        assessmentScores: { 4: 90 },
-        highestRankScore: 20, // D rank
+        assessmentScores: { 4: 40 },
+        highestRankScore: 80, // A rank
       })
       const result = calcCodingAxes(data)
-      expect(result.frameworkNormalized).toBe(90)
+      expect(result.frameworkNormalized).toBe(40)
+    })
+
+    it('returns 0 normalized when only learning data exists (no assessment)', () => {
+      const data = makeScoringData({
+        highestRankScore: 80,
+      })
+      const result = calcCodingAxes(data)
+      expect(result.frameworkNormalized).toBe(0)
     })
 
     it('calculates dbDesignScore from language scores', () => {

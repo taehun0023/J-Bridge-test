@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { requireAuth } from '@/lib/auth-helpers'
 import { ASSIGNMENT_CATEGORIES } from '@/lib/assignment-categories'
 import { notifyMentorsOf, getUserDisplayName } from '@/lib/notification-helpers'
+import { recalculateUserScores } from '@/modules/scoring'
 
 export async function startExam(examId: string) {
   const auth = await requireAuth()
@@ -145,6 +146,9 @@ export async function submitExam(
     })
     .eq('id', examId)
 
+  // Recalculate radar chart scores (merges with onboarding assessment via max strategy)
+  await recalculateUserScores(user.id)
+
   // Notify mentor(s) about result
   const userName = await getUserDisplayName(user.id)
   await notifyMentorsOf(
@@ -158,6 +162,7 @@ export async function submitExam(
 
   revalidatePath(`/exam/${examId}`)
   revalidatePath('/dashboard/assignments')
+  revalidatePath('/ranking')
 
   return { score, passed, correctCount, totalCount: answers.length }
 }

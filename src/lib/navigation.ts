@@ -91,8 +91,7 @@ export const categoryChildren: Record<string, {
     title: 'ビジネスリテラシー',
     description: 'ビジネスマナーと企業文化を学習しましょう',
     children: [
-      { href: '/business-literacy/attitude', label: '態度', description: '社会人としての姿勢と行動' },
-      { href: '/business-literacy/culture', label: '企業文化', description: '日本企業の文化と慣習' },
+      { href: '/business-literacy/attitude-culture', label: '態度・企業文化', description: '社会人としての姿勢と日本企業の文化' },
       { href: '/business-literacy/security', label: 'セキュリティ', description: '情報セキュリティの基礎知識' },
     ],
   },

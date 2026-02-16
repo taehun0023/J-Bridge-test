@@ -1,0 +1,15 @@
+track:
+  id: SQL
+  title: Oracle SQL 실무
+  level_order: [bronze, silver, gold]
+  runtime:
+    db: "Oracle 19c/21c"
+  modules:
+    - id: SQL-BRONZE-01
+      title: SELECT / WHERE / JOIN 기초
+      level: bronze
+      order: 10
+    - id: SQL-SILVER-02
+      title: 트랜잭션과 락
+      level: silver
+      order: 20

@@ -5,13 +5,15 @@ import { useState, useTransition } from 'react'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import Link from 'next/link'
-import { BarChart3, Trophy, BookOpen, MessageSquare } from 'lucide-react'
+import { BarChart3, Trophy, BookOpen } from 'lucide-react'
 import { getGrade, getGradeColor, DISPATCH_MINIMUM_SCORE, getRelevantAxes, AXIS_DISPLAY_LABELS } from '@/lib/assessment-config'
 import type { AxisKey } from '@/lib/assessment-config'
 import { requestRetake } from '@/app/actions/assessment'
 import { requestRetakeExam } from '@/app/actions/comprehensive-exam'
 import { CATEGORY_LABELS } from '@/lib/constants'
 import { getCategoryLabel, getSubcategoryLabel } from '@/lib/assignment-categories'
+import EarnedBadges from '@/components/dashboard/EarnedBadges'
+import type { CourseWithProgress } from '@/lib/course-progress'
 
 const RadarChart = dynamic(() => import('@/components/dashboard/RadarChart'), { ssr: false })
 
@@ -120,6 +122,7 @@ interface Props {
   learningStats?: LearningStats
   recentFeedbacks?: RecentFeedback[]
   compExamRetakes?: CompExamRetake[]
+  javaBadges?: CourseWithProgress[]
 }
 
 function getBadgeStyle(badge: BadgeType): string {
@@ -132,7 +135,7 @@ function getBadgeStyle(badge: BadgeType): string {
 
 export default function DashboardClient({
   profile, radarScores, recentResults, tasks, pendingAssessments, isJapanese, completedAssessments,
-  userRanking, enrolledCourses, learningStats, recentFeedbacks = [], compExamRetakes = [],
+  userRanking, enrolledCourses, learningStats, recentFeedbacks = [], compExamRetakes = [], javaBadges = [],
 }: Props) {
   const relevantAxes = getRelevantAxes(isJapanese)
   const hasScores = relevantAxes.some(key => radarScores[key] > 0)
@@ -307,22 +310,17 @@ export default function DashboardClient({
           )}
         </Card>
 
-        {/* Coding rank */}
-        <Card title="コーディング等級">
-          <div className="flex flex-col items-center py-4">
-            <Badge
-              label={profile?.coding_rank ?? 'D'}
-              variant="coding_rank"
-              className="text-4xl px-6 py-3"
-            />
-            <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">現在の等級</p>
-            <Link
-              href="/coding/exams"
-              className="mt-4 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
-            >
-              等級試験を受ける
-            </Link>
-          </div>
+        {/* Earned badges */}
+        <Card title="取得済み資格">
+          {javaBadges.length > 0 ? (
+            <div className="py-2">
+              <EarnedBadges language="Java" badges={javaBadges} />
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">コースがありません</p>
+            </div>
+          )}
 
           {(profile?.target_jlpt_level || profile?.target_coding_area) && (
             <div className="mt-4 border-t border-white/[0.06] dark:border-white/[0.06] border-gray-100 pt-4">

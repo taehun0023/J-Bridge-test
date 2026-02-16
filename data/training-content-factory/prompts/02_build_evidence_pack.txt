@@ -1,0 +1,17 @@
+TASK:
+Create evidence pack for ONE lesson.
+
+INPUT:
+- Lesson metadata from: content/<track>/modules/<MODULE_ID>/module.yaml
+- Raw sources under: sources/<track>/
+- Evidence template: templates/evidence_template.md
+
+OUTPUT:
+- evidence/<LESSON_ID>.md
+
+RULES:
+- 10–14 bullet facts, each tagged [E1]..[E14]
+- Facts must be precise and testable (avoid vague advice)
+- Optional: 1–2 short code snippets
+- End with Sources: list local file paths used
+- Do NOT paste long passages verbatim

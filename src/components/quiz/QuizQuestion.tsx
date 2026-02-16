@@ -20,6 +20,11 @@ interface QuizQuestionProps {
 
 const CODE_INDICATORS = ['{', 'class ', 'function ', 'console.', 'const ', 'import ', 'public ', 'static ', 'void ', 'System.', 'return ', 'int ', 'String ']
 
+/** Convert literal \n sequences (stored as two chars in DB) to actual newlines */
+function normalizeNewlines(text: string): string {
+  return text.replace(/\\n/g, '\n')
+}
+
 function splitQuestionText(text: string): { prompt: string; codeBlock: string | null } {
   const splitIndex = text.indexOf('\n\n')
   if (splitIndex === -1) return { prompt: text, codeBlock: null }
@@ -43,7 +48,7 @@ export default function QuizQuestion({
   showResult,
   isCorrect,
 }: QuizQuestionProps) {
-  const { prompt: promptText, codeBlock } = splitQuestionText(questionText)
+  const { prompt: promptText, codeBlock } = splitQuestionText(normalizeNewlines(questionText))
   function handleClick(optionId: string) {
     if (showResult) return
     if (selectedOptionId === optionId) {
@@ -106,7 +111,7 @@ export default function QuizQuestion({
                 }`}>
                   {option.sort_order}
                 </div>
-                <span className="text-sm text-zinc-800 dark:text-zinc-200 whitespace-pre-line">{option.option_text}</span>
+                <span className="text-sm text-zinc-800 dark:text-zinc-200 whitespace-pre-line">{normalizeNewlines(option.option_text)}</span>
               </button>
             )
           })}

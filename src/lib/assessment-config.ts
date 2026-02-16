@@ -22,6 +22,15 @@ export const ASSESSMENT_TIME_LIMITS: Record<number, number> = {
   5: 25,
 }
 
+/** comprehensive_exams.category → assessment step (radar axis) mapping */
+export const COMP_EXAM_CATEGORY_TO_STEP: Record<string, number> = {
+  seikatsu: 1,
+  'business-jp': 2,
+  cs: 3,
+  dev: 4,
+  'business-lit': 5,
+}
+
 // ── Grade system ──
 
 export type SkillGrade = 'S' | 'A' | 'B' | 'C' | 'D'
@@ -77,15 +86,18 @@ export function getMaxTotalScore(isJapanese: boolean): number {
 
 export type TargetCodingArea = 'java' | 'javascript'
 
-// Step 3 (CS知識): same categories for all users
-export const CS_KNOWLEDGE_CATEGORIES = ['data_structure', 'os', 'algorithm', 'network'] as const
+// Step 3 (CS知識): same categories for all users (7 categories)
+export const CS_KNOWLEDGE_CATEGORIES = ['algorithm', 'data_structure', 'os', 'network', 'basic_theory', 'database', 'security'] as const
 
 // Step 3 weighted distribution: 30 questions total
 export const CS_KNOWLEDGE_WEIGHTS: Record<string, number> = {
-  algorithm: 9,
-  data_structure: 9,
-  os: 6,
-  network: 6,
+  algorithm: 6,
+  data_structure: 6,
+  basic_theory: 4,
+  database: 4,
+  network: 4,
+  os: 3,
+  security: 3,
 }
 
 // Step 4 (開発実務能力): language-specific groups

@@ -42,7 +42,7 @@ export function calcJapaneseAxes(data: ScoringData): JapaneseAxisResult {
       )
     : 0
 
-  const jlptNormalized = Math.max(assessmentScores[1] ?? 0, learningJlpt)
+  const jlptNormalized = assessmentScores[1] ?? 0
 
   // ─── Axis 2: ビジネス日本語 ───
   const itTermScore = avg(quizScoresByType['it_terminology'] ?? [])
@@ -56,7 +56,7 @@ export function calcJapaneseAxes(data: ScoringData): JapaneseAxisResult {
       )
     : 0
 
-  const itJapaneseNormalized = Math.max(assessmentScores[2] ?? 0, learningItJapanese)
+  const itJapaneseNormalized = assessmentScores[2] ?? 0
 
   return {
     vocabMastery,
