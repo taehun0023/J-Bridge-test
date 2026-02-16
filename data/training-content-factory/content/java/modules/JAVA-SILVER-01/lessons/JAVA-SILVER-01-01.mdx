@@ -1,0 +1,206 @@
+---
+lesson_id: JAVA-SILVER-01-01
+title: "クラスとインスタンス"
+module: JAVA-SILVER-01
+level: silver
+est_minutes: 35
+tags: [class, instance, new, field, method, access-modifier, null, garbage-collection]
+---
+
+## 1) 要点まとめ（5行）
+
+- クラスはオブジェクトの設計図であり、フィールド（インスタンス変数）とメソッドを定義する。`new` キーワードでインスタンス（実体）を生成する。(Evidence: E1)
+- アクセス修飾子は `public`（すべて）、`protected`（同一パッケージ＋サブクラス）、デフォルト（同一パッケージのみ）、`private`（同一クラスのみ）の4種類である。(Evidence: E2)
+- `new` 演算子はヒープ領域にメモリを確保し、コンストラクタを呼び出してオブジェクトを初期化する。変数にはオブジェクトへの参照（アドレス）が格納される。(Evidence: E3)
+- 参照変数に `null` を代入するとオブジェクトへの参照が切れる。`null` 参照に対するメソッド呼び出しは `NullPointerException` を発生させる。(Evidence: E4)
+- どの変数からも参照されなくなったオブジェクトは、GC（ガベージコレクション）によって自動的にメモリが回収される。明示的な解放は不要である。(Evidence: E5)
+
+## 2) 概念
+
+### クラスとインスタンスの関係
+
+✅ 結論: クラスは設計図、インスタンスはその実体。
+
+クラスはオブジェクトの構造と振る舞いを定義するテンプレートである。クラスからインスタンスを生成することで、実際にメモリ上に存在するオブジェクトが作られる。1つのクラスから複数のインスタンスを生成でき、各インスタンスは独立したフィールド値を持つ。(Evidence: E1)
+
+```java
+// クラス定義 = 設計図
+public class Employee {
+    String name;        // インスタンス変数（フィールド）
+    int age;
+
+    void greet() {      // メソッド
+        System.out.println("私は" + name + "です。");
+    }
+}
+```
+
+### フィールド（インスタンス変数）とメソッド
+
+✅ 結論: フィールドは状態、メソッドは振る舞いを表す。
+
+フィールドはインスタンスごとに独立した値を保持する変数である。メソッドはオブジェクトの振る舞いを定義する。フィールドは宣言時に明示的に初期化しなくても、型に応じたデフォルト値が設定される。(Evidence: E1)
+
+| 型 | デフォルト値 |
+|---|---|
+| `int`, `long` 等の整数型 | `0` |
+| `double`, `float` 等の浮動小数点型 | `0.0` |
+| `boolean` | `false` |
+| 参照型（`String` 等） | `null` |
+
+💡 覚え方: ローカル変数にはデフォルト値がないが、フィールドには自動的に設定される
+
+### アクセス修飾子
+
+✅ 結論: 4段階のアクセス制御でカプセル化を実現する。
+
+アクセス修飾子はクラス、フィールド、メソッドの可視性を制御する仕組みである。(Evidence: E2)
+
+| 修飾子 | 同一クラス | 同一パッケージ | サブクラス | すべて |
+|---|---|---|---|---|
+| `public` | ○ | ○ | ○ | ○ |
+| `protected` | ○ | ○ | ○ | × |
+| デフォルト（無指定） | ○ | ○ | × | × |
+| `private` | ○ | × | × | × |
+
+実務ではフィールドを `private` にし、`public` なgetter/setterでアクセスする**カプセル化**が基本方針である。
+
+### new キーワードとインスタンス生成
+
+✅ 結論: new はメモリ確保 + コンストラクタ呼び出しを行う。
+
+`new` 演算子を使うと、ヒープ領域にオブジェクト用のメモリが確保され、コンストラクタが呼び出される。変数にはオブジェクトそのものではなく、オブジェクトへの**参照**（メモリアドレス）が格納される。(Evidence: E3)
+
+```java
+Employee emp = new Employee();
+// emp にはオブジェクトへの参照が格納される
+```
+
+### オブジェクト参照と null
+
+✅ 結論: 参照変数はオブジェクトのアドレスを保持し、null は「何も参照していない」を意味する。
+
+参照型の変数は、オブジェクトそのものではなく、ヒープ上のオブジェクトを指す参照を保持する。複数の変数が同一オブジェクトを参照することも可能であり、一方から変更すると他方にも影響する。(Evidence: E4)
+
+`null` は「どのオブジェクトも参照していない」ことを示す特別なリテラルである。`null` 参照に対してメソッドやフィールドにアクセスすると `NullPointerException` が発生する。
+
+### ガベージコレクション（GC）
+
+✅ 結論: 参照されなくなったオブジェクトはGCが自動回収する。
+
+JavaではC/C++のような明示的なメモリ解放（`free`/`delete`）は不要である。どの変数からも参照されなくなったオブジェクトは**GC対象**となり、JVMが適切なタイミングで自動的にメモリを回収する。ただしGCの実行タイミングは保証されない。(Evidence: E5)
+
+## 3) 例（2つ）
+
+### 例1: クラス定義とインスタンス生成
+
+社員情報を管理するクラスを定義し、複数のインスタンスを生成する例。
+
+```java
+public class Employee {
+    private String name;
+    private int age;
+
+    // publicメソッドでフィールドにアクセス（カプセル化）
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setAge(int age) {
+        if (age >= 0) {
+            this.age = age;
+        }
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void introduce() {
+        System.out.println(name + "（" + age + "歳）");
+    }
+}
+```
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Employee emp1 = new Employee();
+        emp1.setName("田中");
+        emp1.setAge(28);
+
+        Employee emp2 = new Employee();
+        emp2.setName("鈴木");
+        emp2.setAge(32);
+
+        emp1.introduce();  // 田中（28歳）
+        emp2.introduce();  // 鈴木（32歳）
+
+        // 同一オブジェクトへの参照
+        Employee emp3 = emp1;
+        emp3.setName("佐藤");
+        emp1.introduce();  // 佐藤（28歳） ← emp1とemp3は同一オブジェクト
+    }
+}
+```
+
+ポイント:
+- `emp1` と `emp2` は独立したインスタンスであり、それぞれ異なるフィールド値を持つ。
+- `emp3 = emp1` は参照のコピーであり、同一オブジェクトを指す。`emp3` 経由の変更は `emp1` からも見える。
+
+### 例2: null参照とNullPointerException
+
+```java
+public class NullDemo {
+    public static void main(String[] args) {
+        Employee emp = new Employee();
+        emp.setName("山田");
+        System.out.println(emp.getName());  // 山田
+
+        emp = null;  // 参照を切る → 元のオブジェクトはGC対象
+
+        // NullPointerException が発生する
+        try {
+            System.out.println(emp.getName());
+        } catch (NullPointerException e) {
+            System.out.println("NullPointerException が発生しました");
+        }
+    }
+}
+```
+
+ポイント:
+- `emp = null` により、変数 `emp` はどのオブジェクトも参照しなくなる。
+- 元の `Employee` オブジェクトは他の変数から参照されていなければGC対象となる。
+- `null` 参照に対する `.getName()` 呼び出しは `NullPointerException` を発生させる。
+
+## 4) よくあるミス／落とし穴（5つ）
+
+⚠️ ミス: フィールドとローカル変数のデフォルト値を混同する → 対策: フィールドには型のデフォルト値が設定されるが、ローカル変数は初期化必須（コンパイルエラーになる）(Evidence: E1)
+
+⚠️ ミス: 参照のコピーとオブジェクトのコピーを混同する → 対策: `Employee emp2 = emp1` は参照のコピーであり、オブジェクト自体は1つのまま。独立したコピーが必要ならコピーコンストラクタや `clone()` を使う(Evidence: E3)
+
+⚠️ ミス: `null` チェックを行わずにメソッドを呼び出す → 対策: メソッドの引数や戻り値が `null` の可能性がある場合は、必ず `null` チェックを行うか `Optional` を検討する(Evidence: E4)
+
+⚠️ ミス: アクセス修飾子を省略してデフォルト（パッケージプライベート）にしてしまう → 対策: 意図的にパッケージプライベートにする場合以外は、明示的に修飾子を付ける(Evidence: E2)
+
+⚠️ ミス: `private` フィールドに外部クラスから直接アクセスしようとする → 対策: getter/setterメソッドを経由する。IDE（IntelliJ等）の自動生成機能を活用する(Evidence: E2)
+
+## 5) チェックリスト
+
+- [ ] クラスとインスタンスの関係を「設計図と実体」として説明できるか
+- [ ] フィールドとローカル変数のデフォルト値の違いを述べられるか
+- [ ] 4つのアクセス修飾子の可視範囲を正確に説明できるか
+- [ ] `new` キーワードが行う処理（メモリ確保 + コンストラクタ呼び出し）を説明できるか
+- [ ] 参照変数の代入がオブジェクトのコピーではないことを理解しているか
+- [ ] `null` 参照に対するメソッド呼び出しで何が起きるか説明できるか
+- [ ] GCの基本的な仕組み（参照されなくなったオブジェクトの自動回収）を理解しているか
+- [ ] カプセル化（`private` フィールド + `public` getter/setter）の意義を説明できるか
+
+## 6) 次へ
+
+次のレッスンは **JAVA-SILVER-01-02: コンストラクタとthis** です。デフォルトコンストラクタ、パラメータ付きコンストラクタ、コンストラクタのオーバーロード、そして `this` キーワードの役割について学習します。

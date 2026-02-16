@@ -1,0 +1,309 @@
+---
+lesson_id: JAVA-GOLD-01-02
+title: "境界ワイルドカードとPECS原則"
+module: JAVA-GOLD-01
+level: gold
+est_minutes: 40
+tags: [wildcards, bounded, PECS, extends, super, generics]
+---
+
+# 境界ワイルドカードとPECS原則
+
+## 1) 要点まとめ（5行）
+
+- **非境界ワイルドカード `<?>`** は型が不明であることを示し、読み取り専用（Objectとして取得）で使用する (Evidence: E1)
+- **上限境界 `<? extends T>`** はTまたはTのサブクラスを受け入れ、**Producer（読み取り専用）** として機能する (Evidence: E2)
+- **下限境界 `<? super T>`** はTまたはTのスーパークラスを受け入れ、**Consumer（書き込み可能）** として機能する (Evidence: E3)
+- **PECS原則（Producer-Extends, Consumer-Super）** により、データの流れに応じてワイルドカードの種類を選択する (Evidence: E4)
+- ワイルドカードはメソッドの**引数やフィールドの型宣言**に使用し、戻り値型には通常使用しない (Evidence: E5)
+
+---
+
+## 2) 概念
+
+### 非境界ワイルドカード `<?>`
+
+`<?>` は「不明な型」を表す。コレクションの要素型に関係なく処理したい場合に使用する (Evidence: E1)。
+
+```java
+// どんなListでも受け取れる
+public static void printAll(List<?> list) {
+    for (Object item : list) {
+        System.out.println(item);
+    }
+}
+```
+
+`List<?>` から要素を取得すると `Object` 型になる。要素の追加は `null` 以外できない（型が不明なため）。
+
+### 上限境界ワイルドカード `<? extends T>`
+
+`<? extends T>` は「TまたはTのサブクラス」を意味する。コレクションから要素を**読み取る（produce）** 場合に使用する (Evidence: E2)。
+
+```java
+// Number またはそのサブクラス（Integer, Double等）のListを受け取れる
+public static double sum(List<? extends Number> numbers) {
+    double total = 0;
+    for (Number n : numbers) {
+        total += n.doubleValue();  // Number型として読み取り可能
+    }
+    return total;
+}
+```
+
+`<? extends Number>` のListに対して、要素を追加することはできない。コンパイラは実際の型が `Integer` なのか `Double` なのか確定できないためである。
+
+### 下限境界ワイルドカード `<? super T>`
+
+`<? super T>` は「TまたはTのスーパークラス」を意味する。コレクションに要素を**書き込む（consume）** 場合に使用する (Evidence: E3)。
+
+```java
+// Integer またはそのスーパークラス（Number, Object等）のListに書き込める
+public static void addIntegers(List<? super Integer> list) {
+    list.add(1);
+    list.add(2);
+    list.add(3);
+    // 読み取りはObject型になる
+}
+```
+
+`<? super Integer>` のListに `Integer` を追加することは安全である。ただし、要素を取得すると `Object` 型になる。
+
+### PECS原則
+
+**PECS（Producer-Extends, Consumer-Super）** は、ワイルドカードの選択基準を示す原則である (Evidence: E4)。
+
+| 方向 | ワイルドカード | 役割 | 操作 |
+|---|---|---|---|
+| 読み取り | `<? extends T>` | Producer | get可能、add不可 |
+| 書き込み | `<? super T>` | Consumer | add可能、get時はObject |
+| 両方 | 具体的な型 `<T>` | 両方 | get・add両方可能 |
+
+コレクションがデータを**提供（produce）** するなら `extends`、データを**受け入れ（consume）** するなら `super` を使用する。
+
+### Collections.copyの例
+
+標準ライブラリの `Collections.copy` はPECS原則の典型例である (Evidence: E4)。
+
+```java
+public static <T> void copy(List<? super T> dest, List<? extends T> src) {
+    // srcはProducer → extends
+    // destはConsumer → super
+    for (int i = 0; i < src.size(); i++) {
+        dest.set(i, src.get(i));
+    }
+}
+```
+
+`src` からデータを読み取り（produce）、`dest` にデータを書き込む（consume）ため、PECS原則に従って `src` に `extends`、`dest` に `super` を使用している。
+
+### API設計でのワイルドカード
+
+ワイルドカードはAPIの柔軟性を高めるために使用する。ただし、**戻り値型にワイルドカードは使用しない**のが原則である (Evidence: E5)。
+
+```java
+// OK: 引数にワイルドカードを使用 → 柔軟なAPI
+public static <T> void addAll(List<? super T> dest, List<? extends T> src) { ... }
+
+// NG: 戻り値にワイルドカードを使用 → 呼び出し側が扱いにくい
+public static List<?> getItems() { ... }  // 避けるべき
+```
+
+---
+
+## 3) 例（2つ）
+
+### 例1: PECS原則の実践 — フルーツ階層
+
+クラス階層を使ってPECS原則を実証する (Evidence: E2, E3, E4)。
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+// クラス階層: Fruit → Apple, Orange
+class Fruit {
+    private final String name;
+    Fruit(String name) { this.name = name; }
+    @Override public String toString() { return name; }
+}
+
+class Apple extends Fruit {
+    Apple() { super("Apple"); }
+}
+
+class Orange extends Fruit {
+    Orange() { super("Orange"); }
+}
+
+public class PecsExample {
+
+    // Producer — extends: コレクションからデータを読み取る
+    static void printFruits(List<? extends Fruit> fruits) {
+        for (Fruit f : fruits) {
+            System.out.println(f);  // Fruit型として安全に読み取れる
+        }
+        // fruits.add(new Apple());  // コンパイルエラー！ 追加は不可
+    }
+
+    // Consumer — super: コレクションにデータを書き込む
+    static void addApples(List<? super Apple> basket) {
+        basket.add(new Apple());  // Apple型を安全に追加できる
+        basket.add(new Apple());
+        // Apple a = basket.get(0);  // コンパイルエラー！ 読み取りはObject
+    }
+
+    public static void main(String[] args) {
+        // Producer: List<Apple> を List<? extends Fruit> で受け取る
+        List<Apple> apples = List.of(new Apple(), new Apple());
+        printFruits(apples);  // OK
+
+        // Consumer: List<Fruit> を List<? super Apple> で受け取る
+        List<Fruit> fruitBasket = new ArrayList<>();
+        addApples(fruitBasket);  // OK — FruitはAppleのスーパークラス
+        System.out.println(fruitBasket);  // [Apple, Apple]
+    }
+}
+```
+
+`printFruits` はコレクションからデータを**読み取る**のでProducer（extends）、`addApples` はコレクションにデータを**書き込む**のでConsumer（super）を使用する。
+
+### 例2: ジェネリクスユーティリティメソッド — copyIfGreater
+
+PECS原則を活用して、ソースリストから条件を満たす要素をターゲットリストにコピーするメソッドを実装する (Evidence: E2, E3, E4, E5)。
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+public class WildcardUtility {
+
+    // PECS原則: src=Producer(extends), dest=Consumer(super)
+    static <T extends Comparable<T>> void copyIfGreater(
+            List<? super T> dest,
+            List<? extends T> src,
+            T threshold
+    ) {
+        for (T item : src) {
+            if (item.compareTo(threshold) > 0) {
+                dest.add(item);
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        List<Integer> source = List.of(1, 5, 3, 8, 2, 7);
+        List<Number> target = new ArrayList<>();
+
+        // Integer extends Number なのでList<Number>をdestに指定可能
+        copyIfGreater(target, source, 4);
+        System.out.println(target);  // [5, 8, 7]
+
+        // 非境界ワイルドカードの使用例
+        printSize(source);
+        printSize(target);
+    }
+
+    // 非境界ワイルドカード: 要素の型に関係なくサイズを出力
+    static void printSize(List<?> list) {
+        System.out.println("サイズ: " + list.size());
+    }
+}
+```
+
+`copyIfGreater` メソッドは `src` からデータを読み取り（Producer → extends）、`dest` に書き込む（Consumer → super）ため、PECS原則に従っている。`printSize` は要素の型に無関係にサイズのみを出力するため非境界ワイルドカード `<?>` を使用する。
+
+---
+
+## 4) よくあるミス／落とし穴（5つ）
+
+### 1. extendsのListに要素を追加しようとする
+
+```java
+// NG: コンパイルエラー
+List<? extends Number> numbers = new ArrayList<Integer>();
+numbers.add(42);  // 追加不可！ 型が確定しない
+
+// OK: 読み取りのみ
+Number n = numbers.get(0);  // Number型として読み取り可能
+```
+
+`<? extends T>` はProducer（読み取り専用）であり、要素の追加はできない。追加が必要な場合は `<? super T>` を使用する (Evidence: E2)。
+
+### 2. superのListから型安全に読み取ろうとする
+
+```java
+// NG: 型安全に読み取れない
+List<? super Integer> list = new ArrayList<Number>();
+Integer i = list.get(0);  // コンパイルエラー！ Object型になる
+
+// OK: Objectとして読み取り
+Object obj = list.get(0);
+```
+
+`<? super T>` はConsumer（書き込み用）であり、読み取りは `Object` 型になる (Evidence: E3)。
+
+### 3. ワイルドカードの不必要な使用
+
+```java
+// NG: 単純なケースでワイルドカードは不要
+public static <T> void process(List<? extends T> list) { ... }
+
+// OK: 具体的な型パラメータで十分
+public static <T> void process(List<T> list) { ... }
+```
+
+読み取りと書き込みの両方が必要な場合、または型パラメータ1つで十分な場合にワイルドカードを使う必要はない (Evidence: E5)。
+
+### 4. 戻り値型にワイルドカードを使用
+
+```java
+// NG: 呼び出し側が型を扱えない
+public static List<?> getNames() {
+    return List.of("Alice", "Bob");
+}
+// String s = getNames().get(0);  // コンパイルエラー
+
+// OK: 具体的な型を返す
+public static List<String> getNames() {
+    return List.of("Alice", "Bob");
+}
+```
+
+戻り値にワイルドカードを使うと、呼び出し側で型情報が失われて使いにくくなる (Evidence: E5)。
+
+### 5. PECSの適用方向を逆にする
+
+```java
+// NG: Producer/Consumerが逆
+static <T> void wrongCopy(List<? extends T> dest, List<? super T> src) {
+    // dest.add(src.get(0));  // コンパイルエラー連発
+}
+
+// OK: PECS原則に従う
+static <T> void correctCopy(List<? super T> dest, List<? extends T> src) {
+    for (T item : src) {
+        dest.add(item);
+    }
+}
+```
+
+srcがProducer（extends）、destがConsumer（super）である。方向を間違えるとコンパイルエラーが多発する (Evidence: E4)。
+
+---
+
+## 5) チェックリスト
+
+- [ ] 非境界ワイルドカード `<?>` が「不明な型」を表し、読み取り時にObject型になることを理解している
+- [ ] `<? extends T>` がProducerとして機能し、読み取り専用であることを説明できる
+- [ ] `<? super T>` がConsumerとして機能し、書き込み可能であることを説明できる
+- [ ] PECS原則（Producer-Extends, Consumer-Super）を正しく適用できる
+- [ ] `Collections.copy` のシグネチャがPECS原則に従っていることを説明できる
+- [ ] 戻り値型にワイルドカードを使うべきでない理由を説明できる
+- [ ] クラス階層（extends関係）とワイルドカードの関係を理解している
+
+---
+
+## 6) 次へ
+
+次のレッスンでは **JAVA-GOLD-01-03: コレクション — List / Set / Map** を学ぶ。コレクションフレームワークの階層構造、各コレクション型の特性と使い分け、equals/hashCode契約、不変コレクション（List.of, Map.of）について扱う。

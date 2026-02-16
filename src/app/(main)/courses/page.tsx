@@ -11,9 +11,9 @@ interface SearchParams {
 import { CATEGORY_LABELS } from '@/lib/constants'
 
 const DIFFICULTY_LABELS: Record<string, string> = {
-  beginner: '初級',
-  intermediate: '中級',
-  advanced: '上級',
+  beginner: 'ブロンズ',
+  intermediate: 'シルバー',
+  advanced: 'ゴールド',
 }
 
 export default async function CoursesPage({ searchParams }: { searchParams: Promise<SearchParams> }) {

@@ -1,0 +1,276 @@
+---
+lesson_id: JAVA-BRONZE-01-02
+title: "基本型と変数のスコープ"
+module: JAVA-BRONZE-01
+level: bronze
+est_minutes: 35
+tags: [primitive, variable, scope, final, default-value]
+---
+
+## 1) 요점 정리 (5줄)
+
+- Java에는 8개의 프리미티브 타입(byte, short, int, long, float, double, char, boolean)이 있으며, 각각 크기와 범위가 다르다. (Evidence: E1)
+- 참조 타입(String, 배열, 클래스 등)은 객체에 대한 참조를 보유하며, 프리미티브 타입과는 메모리상의 취급이 근본적으로 다르다. (Evidence: E2)
+- 변수에는 3종류의 스코프가 있다 — 로컬 변수(메서드 내), 인스턴스 변수(객체 단위), 클래스 변수(`static`, 클래스 전체에서 공유). (Evidence: E3)
+- 로컬 변수는 명시적으로 초기화하지 않으면 사용할 수 없다(컴파일 에러). 인스턴스 변수·클래스 변수에는 타입에 따른 기본값이 자동 설정된다. (Evidence: E4)
+- `final` 키워드를 붙인 변수는 재대입 불가능하며, 상수로 취급된다. (Evidence: E5)
+
+## 2) 개념
+
+### 8개의 프리미티브 타입
+
+✅ 결론: Java의 프리미티브 타입은 8종류이며, 모두 값을 직접 보유한다.
+
+| 타입 | 크기 | 범위 | 기본값 |
+|---|---|---|---|
+| `byte` | 8비트 | -128 ~ 127 | `0` |
+| `short` | 16비트 | -32,768 ~ 32,767 | `0` |
+| `int` | 32비트 | -2^31 ~ 2^31 - 1 | `0` |
+| `long` | 64비트 | -2^63 ~ 2^63 - 1 | `0L` |
+| `float` | 32비트 | IEEE 754 단정밀도 | `0.0f` |
+| `double` | 64비트 | IEEE 754 배정밀도 | `0.0d` |
+| `char` | 16비트 | `\u0000` ~ `\uffff` (Unicode) | `\u0000` |
+| `boolean` | JVM 의존 | `true` / `false` | `false` |
+
+정수 리터럴은 기본적으로 `int` 타입, 부동 소수점 리터럴은 기본적으로 `double` 타입으로 취급된다. (Evidence: E1)
+
+`long` 타입의 리터럴에는 `L` 접미사(예: `100L`), `float` 타입의 리터럴에는 `F` 접미사(예: `3.14F`)가 필요하다.
+
+💡 암기법: 정수는 byte < short < int < long으로 크기가 배로 증가(8→16→32→64비트)
+
+### 참조 타입
+
+✅ 결론: 참조 타입은 객체의 주소(참조)를 보유한다.
+
+프리미티브 타입 이외는 모두 참조 타입이다. 주요 참조 타입은 다음과 같다.
+
+- **클래스 타입:** `String`, `Integer`, `Scanner` 등
+- **배열 타입:** `int[]`, `String[]` 등
+- **인터페이스 타입:** `List`, `Comparable` 등
+
+참조 타입 변수에는 객체 자체가 아닌 힙(heap) 위의 객체에 대한 **참조(주소)**가 저장된다.
+참조 타입 변수의 기본값은 `null`이다. (Evidence: E2)
+
+```java
+String name = "Alice";  // "Alice" 객체에 대한 참조를 보유
+int[] scores = {90, 85, 70}; // 배열 객체에 대한 참조를 보유
+```
+
+### 변수의 선언과 초기화
+
+✅ 결론: 변수는 "타입 변수명 = 초기값;" 형식으로 선언·초기화한다.
+
+```java
+int age = 25;              // 선언과 초기화를 동시에 수행
+double salary;             // 선언만
+salary = 350000.0;         // 나중에 초기화
+
+// Java 10 이후: var에 의한 로컬 변수 타입 추론
+var message = "Hello";     // String 타입으로 추론됨
+var count = 10;            // int 타입으로 추론됨
+```
+
+`var`는 로컬 변수에만 사용 가능하며, 인스턴스 변수나 클래스 변수에는 사용할 수 없다.
+또한 초기화식이 필수이다(`var x;`는 컴파일 에러). (Evidence: E6)
+
+### 스코프(변수의 유효 범위)
+
+✅ 결론: 변수는 선언된 위치에 따라 스코프가 다르다.
+
+| 종류 | 선언 위치 | 라이프사이클 | 기본값 |
+|---|---|---|---|
+| 로컬 변수 | 메서드 내·블록 내 | 메서드/블록 실행 중 | 없음(초기화 필수) |
+| 인스턴스 변수 | 클래스 내부(`static` 없음) | 객체의 생존 중 | 타입에 따른 값 |
+| 클래스 변수 | 클래스 내부(`static` 있음) | 클래스 로드 중 | 타입에 따른 값 |
+
+(Evidence: E3)
+
+```java
+public class ScopeExample {
+    static int classVar = 100;        // 클래스 변수
+    int instanceVar = 50;             // 인스턴스 변수
+
+    public void method() {
+        int localVar = 10;            // 로컬 변수
+        System.out.println(localVar); // OK
+    }
+    // localVar는 여기서는 사용 불가 (스코프 밖)
+}
+```
+
+### 로컬 변수의 초기화 의무
+
+✅ 결론: 로컬 변수는 반드시 초기화한 후 사용해야 한다.
+
+로컬 변수는 기본값이 설정되지 않으므로, 초기화하지 않고 사용하면 컴파일 에러가 발생한다.
+
+```java
+public void demo() {
+    int x;
+    // System.out.println(x); // 컴파일 에러: 변수 x가 초기화되지 않음
+    x = 5;
+    System.out.println(x);    // OK: 5
+}
+```
+
+한편, 인스턴스 변수나 클래스 변수는 기본값이 자동 설정되므로 명시적으로 초기화하지 않아도 사용할 수 있다. (Evidence: E4)
+
+### final 키워드
+
+✅ 결론: final 변수는 한 번만 대입 가능하며, 이후에는 변경 불가.
+
+```java
+final int MAX_SIZE = 100;
+// MAX_SIZE = 200; // 컴파일 에러: final 변수에 재대입 불가
+
+final String greeting;
+greeting = "Hello";        // 지연 초기화(blank final)는 가능
+// greeting = "Hi";        // 컴파일 에러: 이미 초기화됨
+```
+
+`final`은 상수 정의에 자주 사용된다. 클래스 상수의 관례는 `static final` + 대문자 스네이크 케이스이다. (Evidence: E5)
+
+```java
+public static final double TAX_RATE = 0.10;
+```
+
+### 블록 스코프
+
+✅ 결론: 블록 `{}` 내에서 선언한 변수는 블록 밖에서 사용할 수 없다.
+
+```java
+if (true) {
+    int temp = 42;
+    System.out.println(temp); // OK
+}
+// System.out.println(temp);  // 컴파일 에러: 스코프 밖
+```
+
+for문의 카운터 변수도 블록 스코프를 따른다.
+
+```java
+for (int i = 0; i < 5; i++) {
+    System.out.println(i); // OK
+}
+// System.out.println(i);  // 컴파일 에러: i는 for문 스코프 밖
+```
+
+## 3) 예제 (2개)
+
+### 예제 1: 각 프리미티브 타입의 선언과 표시
+
+8개의 프리미티브 타입 모두를 선언하고 값을 표시하는 예.
+
+```java
+public class PrimitiveDemo {
+    public static void main(String[] args) {
+        byte b = 127;
+        short s = 32000;
+        int i = 2_000_000_000;    // 언더스코어로 자릿수 구분 (Java 7 이후)
+        long l = 9_000_000_000L;  // L 접미사 필수
+        float f = 3.14F;          // F 접미사 필수
+        double d = 3.141592653589793;
+        char c = 'A';
+        boolean flag = true;
+
+        System.out.println("byte: " + b);
+        System.out.println("short: " + s);
+        System.out.println("int: " + i);
+        System.out.println("long: " + l);
+        System.out.println("float: " + f);
+        System.out.println("double: " + d);
+        System.out.println("char: " + c);
+        System.out.println("boolean: " + flag);
+    }
+}
+```
+
+출력 결과:
+
+```
+byte: 127
+short: 32000
+int: 2000000000
+long: 9000000000
+float: 3.14
+double: 3.141592653589793
+char: A
+boolean: true
+```
+
+포인트:
+- `int` 리터럴에서 언더스코어 `_`를 사용해 자릿수를 구분할 수 있다(가독성 향상, 컴파일 시 무시됨)
+- `long` 리터럴에는 `L`을, `float` 리터럴에는 `F`를 붙이지 않으면 컴파일 에러가 발생할 수 있다
+
+### 예제 2: 스코프 차이에 따른 기본값 확인
+
+인스턴스 변수에는 기본값이 설정되지만, 로컬 변수에는 설정되지 않음을 확인하는 예.
+
+```java
+public class DefaultValueDemo {
+    // 인스턴스 변수 (기본값이 자동 설정됨)
+    int num;           // 기본값: 0
+    boolean flag;      // 기본값: false
+    String text;       // 기본값: null
+
+    public void showDefaults() {
+        // 인스턴스 변수는 기본값이 있으므로 바로 사용 가능
+        System.out.println("num = " + num);
+        System.out.println("flag = " + flag);
+        System.out.println("text = " + text);
+    }
+
+    public void localVarDemo() {
+        int localNum;
+        // System.out.println(localNum); // 컴파일 에러!
+        localNum = 42;
+        System.out.println("localNum = " + localNum); // OK
+    }
+
+    public static void main(String[] args) {
+        DefaultValueDemo demo = new DefaultValueDemo();
+        demo.showDefaults();
+        demo.localVarDemo();
+    }
+}
+```
+
+출력 결과:
+
+```
+num = 0
+flag = false
+text = null
+localNum = 42
+```
+
+포인트:
+- 인스턴스 변수 `num`, `flag`, `text`는 초기화하지 않았지만, 기본값(`0`, `false`, `null`)이 자동 설정된다
+- 로컬 변수 `localNum`은 초기화 전에 접근하면 컴파일 에러가 되므로, 반드시 값을 대입한 후 사용해야 한다
+
+## 4) 흔한 실수 / 함정 (5개)
+
+⚠️ 실수: `long` 리터럴에 `L`을 빠뜨림(예: `long x = 9000000000;`) → 대책: int 범위를 넘는 정수에는 반드시 `L` 접미사를 붙인다
+
+⚠️ 실수: 로컬 변수를 초기화하지 않고 사용 → 대책: 선언과 동시에 초기화하는 습관을 들인다. 조건 분기가 있는 경우 모든 경로에서 초기화되는지 확인한다
+
+⚠️ 실수: `float`과 `double`의 정밀도 차이를 무시 → 대책: 금액 계산 등 정확성이 요구되는 상황에서는 `BigDecimal`을 사용한다. `float`은 유효 자릿수 약 7자리, `double`은 약 15자리
+
+⚠️ 실수: `final` 변수에 재대입하려고 함 → 대책: `final`을 붙인 변수는 상수로 취급하고, 재대입이 필요한 변수에는 `final`을 붙이지 않는다
+
+⚠️ 실수: 블록 밖에서 블록 내 변수를 참조 → 대책: 변수의 스코프를 항상 의식한다. 필요하면 바깥쪽 스코프에서 선언한다
+
+## 5) 체크리스트
+
+- [ ] 8개 프리미티브 타입의 이름·크기·범위를 나열할 수 있는가
+- [ ] 프리미티브 타입과 참조 타입의 차이(메모리 취급)를 설명할 수 있는가
+- [ ] 로컬 변수·인스턴스 변수·클래스 변수의 차이를 설명할 수 있는가
+- [ ] 로컬 변수에 기본값이 없는 이유와 컴파일 에러 발생 조건을 이해하고 있는가
+- [ ] `final` 키워드의 효과와 `static final`에 의한 상수 정의 방법을 이해하고 있는가
+- [ ] `long` 리터럴의 `L` 접미사와 `float` 리터럴의 `F` 접미사의 필요성을 이해하고 있는가
+- [ ] 블록 스코프의 규칙을 구체적 예로 설명할 수 있는가
+- [ ] `var`(Java 10 이후)의 사용 조건과 제약을 이해하고 있는가
+
+## 6) 다음으로
+
+다음 레슨은 **JAVA-BRONZE-01-03: 演算子と型変換** 입니다. 산술·비교·논리·비트 연산자, 연산자 우선순위, 암묵적 확대 변환과 명시적 축소 캐스트, 타입 승격 규칙에 대해 학습합니다.

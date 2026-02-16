@@ -1,0 +1,305 @@
+---
+lesson_id: JAVA-SILVER-01-03
+title: "継承とオーバーライド"
+module: JAVA-SILVER-01
+level: silver
+est_minutes: 40
+tags: [inheritance, extends, override, super, Object, final, toString, equals, hashCode]
+---
+
+## 1) 요점 정리 (5줄)
+
+- `extends` 키워드로 기존 클래스(슈퍼클래스)를 상속하여 필드와 메서드를 재사용할 수 있다. Java의 상속은 단일 상속만 가능하다. (Evidence: E1)
+- `super` 키워드는 슈퍼클래스의 생성자 호출(`super()`)과 메서드 호출(`super.method()`)에 사용한다. 서브클래스 생성자 선두에서 `super()`가 암묵적으로 호출된다. (Evidence: E2)
+- 메서드 오버라이딩 규칙: `@Override` 어노테이션 권장, 접근 제어자는 같거나 넓게, 반환 타입은 같거나 공변(서브타입), 예외는 같거나 좁게. (Evidence: E3)
+- 모든 클래스는 암묵적으로 `Object` 클래스를 상속한다. `toString()`, `equals()`, `hashCode()` 오버라이딩이 실무에서 중요하다. (Evidence: E4)
+- `final` 클래스는 상속 불가, `final` 메서드는 오버라이딩 불가. is-a 관계가 성립하는 경우에만 상속을 사용해야 한다. (Evidence: E5)
+
+## 2) 개념
+
+### extends에 의한 상속
+
+✅ 결론: 기존 클래스의 필드와 메서드를 물려받아 기능을 확장한다.
+
+`extends`로 슈퍼클래스(부모 클래스)를 지정하면, 그 필드와 메서드를 서브클래스(자식 클래스)가 물려받는다. Java에서는 클래스의 다중 상속이 금지되어 있어 하나의 클래스만 `extends`할 수 있다. (Evidence: E1)
+
+```java
+// 슈퍼클래스
+public class Animal {
+    protected String name;
+
+    public void eat() {
+        System.out.println(name + "이(가) 식사 중");
+    }
+}
+
+// 서브클래스
+public class Dog extends Animal {
+    public void bark() {
+        System.out.println(name + "이(가) 왕 하고 짖었다");
+    }
+}
+```
+
+💡 기억법: "Dog **is-a** Animal"(개는 동물의 일종) -> 상속이 적절
+
+### super 키워드
+
+✅ 결론: super로 슈퍼클래스의 생성자나 메서드를 호출한다.
+
+`super`는 2가지 용도가 있다. (Evidence: E2)
+
+**용도 1: 슈퍼클래스의 생성자 호출**
+
+서브클래스의 생성자에서 `super(인수)`로 슈퍼클래스의 생성자를 호출한다. 명시적으로 호출하지 않으면 컴파일러가 `super()`(인수 없음)를 선두에 자동 삽입한다.
+
+```java
+public class Dog extends Animal {
+    private String breed;
+
+    public Dog(String name, String breed) {
+        super();          // Animal()을 호출 (생략 가능)
+        this.breed = breed;
+        this.name = name; // protected 필드에 접근 가능
+    }
+}
+```
+
+**용도 2: 슈퍼클래스의 메서드 호출**
+
+오버라이딩한 메서드 내에서 `super.method()`로 슈퍼클래스의 구현을 호출할 수 있다.
+
+```java
+@Override
+public void eat() {
+    super.eat();  // Animal의 eat()을 실행
+    System.out.println("(사료를 먹었다)");
+}
+```
+
+### 생성자 체이닝 규칙
+
+✅ 결론: super()와 this()는 동시에 사용할 수 없으며, 첫 번째 줄에서만 호출 가능하다.
+
+- `super()`는 생성자의 **첫 번째 줄**에서만 호출 가능
+- `this()`와 `super()`를 동일 생성자 내에서 동시에 호출할 수 없음
+- 명시적으로 `super()`도 `this()`도 쓰지 않으면 컴파일러가 `super()`를 자동 삽입
+- 슈퍼클래스에 인수 없는 생성자가 없으면 명시적인 `super(인수)`가 필수
+
+### 메서드 오버라이딩 규칙
+
+✅ 결론: 시그니처 동일, 접근은 넓게, 예외는 좁게.
+
+메서드 오버라이딩에는 다음 규칙이 있다. (Evidence: E3)
+
+| 항목 | 규칙 |
+|---|---|
+| 메서드명/인수 리스트 | 완전히 동일 |
+| 접근 제어자 | 같거나 더 넓게 (예: `protected` -> `public` OK) |
+| 반환 타입 | 같거나 공변형(서브타입) OK |
+| 체크 예외 | 같거나 더 좁게 (새 예외 추가 불가) |
+| `@Override` | 선택이지만 권장 (타이핑 실수 감지에 유효) |
+
+```java
+public class Animal {
+    protected Animal create() {
+        return new Animal();
+    }
+}
+
+public class Dog extends Animal {
+    @Override
+    protected Dog create() {    // 공변 반환 타입 (Dog은 Animal의 서브타입)
+        return new Dog();
+    }
+}
+```
+
+⚠️ 주의: `static` 메서드는 오버라이딩 불가(은닉/hiding은 가능). `private` 메서드는 상속되지 않으므로 오버라이딩 대상 외.
+
+### Object 클래스의 메서드
+
+✅ 결론: toString(), equals(), hashCode()는 실무에서 자주 오버라이딩한다.
+
+모든 클래스는 `java.lang.Object`를 암묵적으로 상속한다. 다음 3개 메서드의 오버라이딩이 특히 중요하다. (Evidence: E4)
+
+| 메서드 | 기본 동작 | 오버라이딩 목적 |
+|---|---|---|
+| `toString()` | `클래스명@해시값` | 사람이 읽기 쉬운 문자열 표현 |
+| `equals(Object)` | 참조 비교(`==`) | 논리적 동등성 비교 |
+| `hashCode()` | 메모리 주소 기반 정수 | `equals`와 정합하는 해시값 |
+
+**중요:** `equals()`를 오버라이딩하면 `hashCode()`도 반드시 오버라이딩한다. `equals`에서 같은 객체는 같은 `hashCode`를 반환해야 한다(계약).
+
+### final 클래스와 final 메서드
+
+✅ 결론: final은 상속이나 오버라이딩을 금지하는 제어자이다.
+
+`final class`는 상속할 수 없는 클래스를 정의한다. `final method`는 오버라이딩할 수 없는 메서드를 정의한다. (Evidence: E5)
+
+```java
+public final class ImmutablePoint {
+    // 이 클래스는 상속 불가
+}
+
+public class Base {
+    public final void critical() {
+        // 이 메서드는 서브클래스에서 오버라이딩 불가
+    }
+}
+```
+
+대표적인 `final` 클래스: `String`, `Integer`, `Math`
+
+### is-a 관계
+
+✅ 결론: "B는 A의 일종이다"가 성립하는 경우에만 상속을 사용한다.
+
+상속은 is-a 관계("B is-a A")가 성립할 때 적절하다. "사원은 사람의 일종"은 is-a 관계가 성립하지만, "차는 엔진의 일종"은 성립하지 않는다(차는 엔진을 **가진다** = has-a 관계). has-a 관계에는 컴포지션(필드로 보유)을 사용한다. (Evidence: E5)
+
+## 3) 예제 (2개)
+
+### 예제 1: 상속, super, 오버라이딩 조합
+
+```java
+public class Employee {
+    protected String name;
+    protected int baseSalary;
+
+    public Employee(String name, int baseSalary) {
+        this.name = name;
+        this.baseSalary = baseSalary;
+    }
+
+    public int calculatePay() {
+        return baseSalary;
+    }
+
+    @Override
+    public String toString() {
+        return name + "(기본급:" + baseSalary + "원)";
+    }
+}
+```
+
+```java
+public class Manager extends Employee {
+    private int bonus;
+
+    public Manager(String name, int baseSalary, int bonus) {
+        super(name, baseSalary);  // Employee의 생성자를 호출
+        this.bonus = bonus;
+    }
+
+    @Override
+    public int calculatePay() {
+        return super.calculatePay() + bonus;  // 기본급 + 보너스
+    }
+
+    @Override
+    public String toString() {
+        return name + "(기본급:" + baseSalary + "원, 보너스:" + bonus + "원)";
+    }
+}
+```
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Employee emp = new Employee("田中", 300000);
+        Manager mgr = new Manager("鈴木", 400000, 100000);
+
+        System.out.println(emp);                  // 田中(기본급:300000원)
+        System.out.println(emp.calculatePay());   // 300000
+
+        System.out.println(mgr);                  // 鈴木(기본급:400000원, 보너스:100000원)
+        System.out.println(mgr.calculatePay());   // 500000
+    }
+}
+```
+
+포인트:
+- `super(name, baseSalary)`로 슈퍼클래스의 생성자를 호출한다.
+- `super.calculatePay()`로 슈퍼클래스의 구현을 재사용하면서 보너스를 가산한다.
+- `toString()`을 오버라이딩하여 `System.out.println`으로 읽기 쉬운 출력을 얻는다.
+
+### 예제 2: equals()와 hashCode() 오버라이딩
+
+```java
+import java.util.Objects;
+
+public class Point {
+    private final int x;
+    private final int y;
+
+    public Point(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;              // 동일 참조
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Point other = (Point) obj;
+        return this.x == other.x && this.y == other.y;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y);
+    }
+
+    @Override
+    public String toString() {
+        return "(" + x + ", " + y + ")";
+    }
+}
+```
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Point p1 = new Point(3, 5);
+        Point p2 = new Point(3, 5);
+        Point p3 = new Point(1, 2);
+
+        System.out.println(p1.equals(p2));  // true  (논리적으로 같음)
+        System.out.println(p1 == p2);       // false (참조는 다름)
+        System.out.println(p1.equals(p3));  // false
+        System.out.println(p1);             // (3, 5)
+    }
+}
+```
+
+포인트:
+- `equals()`를 오버라이딩하여 필드 값으로 동등성을 판정한다.
+- `hashCode()`도 `equals()`와 정합하도록 `Objects.hash()`로 구현한다.
+- `==`는 참조 비교, `equals()`는 논리적 동등성 비교라는 차이를 이해한다.
+
+## 4) 흔한 실수 / 함정 (5개)
+
+⚠️ 실수: `equals()`를 오버라이딩하고 `hashCode()`를 오버라이딩하지 않는다 → 대책: `equals`가 `true`를 반환하는 객체는 같은 `hashCode`를 반환해야 한다. `HashMap` 등의 올바른 동작에 필수 (Evidence: E4)
+
+⚠️ 실수: 슈퍼클래스에 인수 없는 생성자가 없는데 서브클래스에서 `super()`를 명시하지 않는다 → 대책: 슈퍼클래스에 파라미터 있는 생성자만 있으면 서브클래스에서 명시적으로 `super(인수)`를 호출한다 (Evidence: E2)
+
+⚠️ 실수: 오버라이딩 시 접근 제어자를 좁힌다 (예: `public` -> `protected`) → 대책: 오버라이딩에서는 접근 제어자를 같거나 더 넓게 한다. 좁히면 컴파일 에러 (Evidence: E3)
+
+⚠️ 실수: `@Override` 어노테이션을 붙이지 않고 메서드명을 오타하여 의도치 않게 새 메서드를 정의한다 → 대책: 항상 `@Override`를 붙인다. 오타가 있으면 컴파일 에러로 감지 가능 (Evidence: E3)
+
+⚠️ 실수: is-a 관계가 성립하지 않는 장면에서 상속을 사용한다 → 대책: "B는 A의 일종인가?"를 확인한다. has-a 관계라면 컴포지션(필드 보유)을 사용 (Evidence: E5)
+
+## 5) 체크리스트
+
+- [ ] `extends`에 의한 단일 상속의 구조를 설명할 수 있는가
+- [ ] `super`의 생성자 호출과 메서드 호출의 2가지 용도를 설명할 수 있는가
+- [ ] 메서드 오버라이딩의 4가지 규칙(시그니처, 접근 제어자, 반환 타입, 예외)을 말할 수 있는가
+- [ ] `@Override` 어노테이션의 이점을 설명할 수 있는가
+- [ ] `toString()`, `equals()`, `hashCode()` 오버라이딩을 구현할 수 있는가
+- [ ] `equals()`와 `hashCode()`의 계약을 이해하고 있는가
+- [ ] `final` 클래스와 `final` 메서드의 제약을 설명할 수 있는가
+- [ ] is-a 관계와 has-a 관계의 차이를 설명하고 적절히 선택할 수 있는가
+
+## 6) 다음으로
+
+다음 레슨은 **JAVA-SILVER-01-04: ポリモーフィズムと抽象クラス** 입니다. 업캐스팅/다운캐스팅, 동적 바인딩, `instanceof` 연산자, 그리고 추상 클래스의 설계에 대해 학습합니다.

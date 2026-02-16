@@ -1,0 +1,348 @@
+---
+lesson_id: JAVA-GOLD-01-03
+title: "コレクション — List / Set / Map"
+module: JAVA-GOLD-01
+level: gold
+est_minutes: 40
+tags: [collections, List, Set, Map, equals, hashCode, unmodifiable]
+---
+
+# コレクション — List / Set / Map
+
+## 1) 要点まとめ（5行）
+
+- **Collectionフレームワーク**は`Collection`と`Map`の2大インターフェースを頂点とし、List・Set・Mapの3カテゴリに分類される (Evidence: E1)
+- **List**は順序付き・重複許可のコレクションであり、`ArrayList`（ランダムアクセスO(1)）と`LinkedList`（挿入/削除O(1)）を使い分ける (Evidence: E2)
+- **Set**は重複を許可しないコレクションであり、`HashSet`（O(1)検索）、`TreeSet`（ソート済み）、`LinkedHashSet`（挿入順序保持）がある (Evidence: E3)
+- **Map**はキーと値のペアを格納し、`HashMap`（O(1)検索）、`TreeMap`（キーソート済み）、`LinkedHashMap`（挿入順序保持）がある (Evidence: E4)
+- Set・Mapのキーとして使用するオブジェクトは**equals/hashCode契約**を正しく実装しなければならない (Evidence: E5)
+
+---
+
+## 2) 概念
+
+### コレクションフレームワーク階層
+
+```
+Iterable
+└── Collection
+    ├── List       ← 順序あり、重複許可
+    │   ├── ArrayList
+    │   └── LinkedList
+    ├── Set        ← 重複なし
+    │   ├── HashSet
+    │   ├── LinkedHashSet
+    │   └── SortedSet
+    │       └── TreeSet
+    └── Queue / Deque
+        └── LinkedList (Deque実装)
+
+Map                ← キー-値ペア（Collectionを継承しない）
+├── HashMap
+├── LinkedHashMap
+└── SortedMap
+    └── TreeMap
+```
+
+`Map` は `Collection` インターフェースを継承していない点に注意。ただし `keySet()`、`values()`、`entrySet()` で `Collection` ビューを取得できる (Evidence: E1)。
+
+### List — ArrayList vs LinkedList
+
+| 特性 | ArrayList | LinkedList |
+|---|---|---|
+| 内部構造 | 可変長配列 | 双方向連結リスト |
+| ランダムアクセス (get) | O(1) | O(n) |
+| 先頭への挿入/削除 | O(n) | O(1) |
+| 末尾への追加 | 平均 O(1) | O(1) |
+| メモリ | 連続領域 | ノードごとにポインタ |
+
+ほとんどのケースで**ArrayList**が推奨される。LinkedListは先頭への頻繁な挿入/削除がある場合にのみ検討する (Evidence: E2)。
+
+### Set — HashSet / TreeSet / LinkedHashSet
+
+| 特性 | HashSet | TreeSet | LinkedHashSet |
+|---|---|---|---|
+| 順序 | なし | 自然順序/Comparator | 挿入順序 |
+| add/contains | O(1) | O(log n) | O(1) |
+| null要素 | 1つ許可 | 不可（Comparator次第） | 1つ許可 |
+| 用途 | 一般的な重複排除 | ソート済みセット | 挿入順序を保持した重複排除 |
+
+HashSetは内部でHashMapを使用するため、要素の`hashCode()`と`equals()`が正しく実装されている必要がある (Evidence: E3)。
+
+### Map — HashMap / TreeMap / LinkedHashMap
+
+| 特性 | HashMap | TreeMap | LinkedHashMap |
+|---|---|---|---|
+| 順序 | なし | キーの自然順序/Comparator | 挿入順序 |
+| get/put | O(1) | O(log n) | O(1) |
+| nullキー | 1つ許可 | 不可 | 1つ許可 |
+| 用途 | 一般的なキー-値格納 | ソート済みマップ | 挿入順序を保持したマップ |
+
+HashMapのキーには`hashCode()`と`equals()`が正しく実装されたオブジェクトを使用する (Evidence: E4)。
+
+### equals/hashCode契約
+
+HashSet・HashMapで要素やキーとして使用するオブジェクトは、以下の契約を満たす必要がある (Evidence: E5)。
+
+1. **`equals()` が `true` なら、`hashCode()` も同じ値を返す**（必須）
+2. `hashCode()` が同じでも `equals()` が `false` の場合はあり得る（衝突）
+3. `equals()` は反射的、対称的、推移的、一貫性がある
+
+```java
+public class Employee {
+    private final String id;
+    private final String name;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Employee e)) return false;
+        return id.equals(e.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+}
+```
+
+### Collections ユーティリティクラス
+
+`java.util.Collections` はコレクション操作のためのstaticメソッドを提供する (Evidence: E6)。
+
+```java
+Collections.sort(list);                    // ソート
+Collections.unmodifiableList(list);        // 不変ビュー
+Collections.synchronizedList(list);        // 同期化ラッパー
+Collections.emptyList();                   // 空の不変リスト
+Collections.singletonList(item);           // 1要素の不変リスト
+```
+
+### 不変コレクション（Java 9以降）
+
+Java 9以降、`List.of()`、`Set.of()`、`Map.of()` で不変コレクションを生成できる (Evidence: E7)。
+
+```java
+List<String> list = List.of("a", "b", "c");       // 不変List
+Set<Integer> set = Set.of(1, 2, 3);                // 不変Set
+Map<String, Integer> map = Map.of("a", 1, "b", 2); // 不変Map
+```
+
+不変コレクションに対する `add()`、`remove()` 等の変更操作は `UnsupportedOperationException` をスローする。
+
+---
+
+## 3) 例（2つ）
+
+### 例1: List・Set・Mapの基本操作
+
+各コレクション型の基本的な生成・追加・検索操作を示す (Evidence: E2, E3, E4)。
+
+```java
+import java.util.*;
+
+public class CollectionBasics {
+
+    public static void main(String[] args) {
+        // === List: 順序あり、重複許可 ===
+        List<String> names = new ArrayList<>();
+        names.add("Alice");
+        names.add("Bob");
+        names.add("Alice");  // 重複OK
+        System.out.println("List: " + names);       // [Alice, Bob, Alice]
+        System.out.println("get(1): " + names.get(1)); // Bob
+
+        // === Set: 重複なし ===
+        Set<String> uniqueNames = new LinkedHashSet<>(names);
+        System.out.println("Set: " + uniqueNames);  // [Alice, Bob]（挿入順序保持）
+
+        // TreeSetでソート済み
+        Set<String> sorted = new TreeSet<>(names);
+        System.out.println("TreeSet: " + sorted);   // [Alice, Bob]
+
+        // === Map: キー-値ペア ===
+        Map<String, Integer> scores = new HashMap<>();
+        scores.put("Alice", 90);
+        scores.put("Bob", 85);
+        scores.put("Alice", 95);  // キー重複 → 値が上書き
+        System.out.println("Map: " + scores);        // {Alice=95, Bob=85}
+        System.out.println("Alice: " + scores.get("Alice")); // 95
+
+        // === 不変コレクション ===
+        List<String> immutable = List.of("x", "y", "z");
+        // immutable.add("w");  // UnsupportedOperationException!
+    }
+}
+```
+
+Listは重複を許可し、Setは重複を排除する。Mapのputで同じキーを使うと値が上書きされる。`List.of()` で生成した不変コレクションは変更不可である。
+
+### 例2: equals/hashCode契約の重要性
+
+`hashCode()` を正しく実装しないとHashSet/HashMapで期待通りに動作しないことを示す (Evidence: E5)。
+
+```java
+import java.util.*;
+
+class Product {
+    private final String code;
+    private final String name;
+
+    Product(String code, String name) {
+        this.code = code;
+        this.name = name;
+    }
+
+    // equalsのみ実装、hashCodeを実装しない場合の問題を示す
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Product p)) return false;
+        return code.equals(p.code);
+    }
+
+    // hashCodeを実装しないと、HashSetで同じ要素が重複する
+    // @Override
+    // public int hashCode() { return code.hashCode(); }
+}
+
+class ProductFixed {
+    private final String code;
+    private final String name;
+
+    ProductFixed(String code, String name) {
+        this.code = code;
+        this.name = name;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ProductFixed p)) return false;
+        return code.equals(p.code);
+    }
+
+    @Override
+    public int hashCode() {
+        return code.hashCode();  // equals と整合的
+    }
+}
+
+public class EqualsHashCodeDemo {
+    public static void main(String[] args) {
+        // hashCode未実装 → 同じcodeなのにSetに2つ入る
+        Set<Product> broken = new HashSet<>();
+        broken.add(new Product("A001", "Widget"));
+        broken.add(new Product("A001", "Widget"));
+        System.out.println("壊れたSet size: " + broken.size()); // 2（期待は1）
+
+        // hashCode実装済み → 正しく重複排除
+        Set<ProductFixed> fixed = new HashSet<>();
+        fixed.add(new ProductFixed("A001", "Widget"));
+        fixed.add(new ProductFixed("A001", "Widget"));
+        System.out.println("正しいSet size: " + fixed.size());  // 1
+    }
+}
+```
+
+`Product` は `equals()` のみ実装し `hashCode()` を実装していないため、HashSetが同じオブジェクトを重複として検出できない。`ProductFixed` では両方を正しく実装しているため期待通り動作する。
+
+---
+
+## 4) よくあるミス／落とし穴（5つ）
+
+### 1. equals()だけ実装してhashCode()を実装しない
+
+```java
+// NG: hashCodeがObject.hashCode()のまま
+class Item {
+    String id;
+    @Override public boolean equals(Object o) { ... }
+    // hashCode()がない！
+}
+```
+
+HashSet・HashMapはまずhashCodeでバケットを決定し、次にequalsで比較する。hashCodeが異なるとequalsが呼ばれないため、重複検出が機能しない (Evidence: E5)。
+
+### 2. 不変コレクションへの変更操作
+
+```java
+// NG: UnsupportedOperationException
+List<String> list = List.of("a", "b");
+list.add("c");  // 実行時エラー!
+list.set(0, "x");  // 実行時エラー!
+
+// OK: 変更可能なリストに変換
+List<String> mutable = new ArrayList<>(List.of("a", "b"));
+mutable.add("c");  // OK
+```
+
+`List.of()` 等で生成した不変コレクションは変更操作で `UnsupportedOperationException` をスローする (Evidence: E7)。
+
+### 3. TreeSetにComparableでないオブジェクトを追加
+
+```java
+// NG: ClassCastException
+Set<Object> set = new TreeSet<>();
+set.add(new Object());  // ObjectはComparableを実装していない
+
+// OK: Comparatorを指定するか、Comparableを実装する
+Set<String> set = new TreeSet<>();  // StringはComparable
+set.add("hello");
+```
+
+TreeSetは要素の自然順序（Comparable）またはComparatorでソートするため、どちらも提供しないとClassCastExceptionが発生する (Evidence: E3)。
+
+### 4. イテレーション中のコレクション変更
+
+```java
+// NG: ConcurrentModificationException
+List<String> list = new ArrayList<>(List.of("a", "b", "c"));
+for (String s : list) {
+    if (s.equals("b")) {
+        list.remove(s);  // 実行時エラー!
+    }
+}
+
+// OK: Iteratorのremoveを使用
+Iterator<String> it = list.iterator();
+while (it.hasNext()) {
+    if (it.next().equals("b")) {
+        it.remove();  // 安全
+    }
+}
+```
+
+拡張for文でのイテレーション中にコレクションを直接変更すると `ConcurrentModificationException` が発生する (Evidence: E2)。
+
+### 5. Map.of()でキーの重複
+
+```java
+// NG: IllegalArgumentException — キー重複
+Map<String, Integer> map = Map.of("a", 1, "a", 2);
+
+// OK: 重複キーがない
+Map<String, Integer> map = Map.of("a", 1, "b", 2);
+```
+
+`Map.of()` でキーが重複するとコンパイル時ではなく実行時に `IllegalArgumentException` がスローされる (Evidence: E7)。
+
+---
+
+## 5) チェックリスト
+
+- [ ] ArrayList vs LinkedListの特性と使い分けを説明できる
+- [ ] HashSet / TreeSet / LinkedHashSetの違いを説明できる
+- [ ] HashMap / TreeMap / LinkedHashMapの違いを説明できる
+- [ ] equals/hashCode契約を理解し、正しく実装できる
+- [ ] `List.of()` / `Set.of()` / `Map.of()` で不変コレクションを生成できる
+- [ ] 不変コレクションに対する変更操作で何が起こるか説明できる
+- [ ] イテレーション中のコレクション変更でConcurrentModificationExceptionが発生する理由を説明できる
+- [ ] TreeSetに格納するオブジェクトの要件を説明できる
+
+---
+
+## 6) 次へ
+
+次のレッスンでは **JAVA-GOLD-01-04: Stream API — 中間操作と終端操作** を学ぶ。Streamの生成方法、中間操作（filter, map, flatMap, sorted）、終端操作（forEach, collect, reduce）、遅延評価の仕組みについて扱う。

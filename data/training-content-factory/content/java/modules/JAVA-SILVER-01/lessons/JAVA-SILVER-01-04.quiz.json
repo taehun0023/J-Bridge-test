@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "lesson_id": "JAVA-SILVER-01-04",
+  "questions": [
+    {
+      "id": "JAVA-SILVER-01-04-Q01",
+      "type": "single_choice",
+      "difficulty": 1,
+      "prompt": "ポリモーフィズムについて正しい記述はどれか。",
+      "choices": [
+        "スーパークラス型の変数にサブクラスのインスタンスを代入することはできない",
+        "スーパークラス型の変数を通じてメソッドを呼び出すと、常にスーパークラスのメソッドが実行される",
+        "スーパークラス型の変数を通じてメソッドを呼び出すと、実行時の型に応じたメソッドが実行される",
+        "ポリモーフィズムはstaticメソッドにのみ適用される"
+      ],
+      "answer": 2,
+      "explanation": "ポリモーフィズムにより、スーパークラス型の変数でサブクラスのインスタンスを扱える。呼び出されるメソッドは実行時の型で決定される（動的バインディング）。staticメソッドには適用されない。(Evidence: E1)"
+    },
+    {
+      "id": "JAVA-SILVER-01-04-Q02",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "アップキャストとダウンキャストについて正しい記述はどれか。",
+      "choices": [
+        "アップキャストは明示的なキャストが必要である",
+        "ダウンキャストは常に安全であり、ClassCastExceptionは発生しない",
+        "アップキャストは暗黙的に行われ、ダウンキャストは明示的なキャストが必要である",
+        "アップキャストもダウンキャストも明示的なキャストが必要である"
+      ],
+      "answer": 2,
+      "explanation": "アップキャスト（サブクラス→スーパークラス）は暗黙的に行われ常に安全である。ダウンキャスト（スーパークラス→サブクラス）は明示的なキャストが必要で、実行時の型が合わないとClassCastExceptionが発生する。(Evidence: E2)"
+    },
+    {
+      "id": "JAVA-SILVER-01-04-Q03",
+      "type": "code_output",
+      "difficulty": 2,
+      "prompt": "以下のコードの実行結果を答えよ。\n\n```java\nabstract class Vehicle {\n    public abstract String getType();\n    public String describe() {\n        return \"Vehicle: \" + getType();\n    }\n}\n\nclass Car extends Vehicle {\n    public String getType() { return \"Car\"; }\n}\n\nclass Truck extends Vehicle {\n    public String getType() { return \"Truck\"; }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Vehicle v = new Truck();\n        System.out.println(v.describe());\n    }\n}\n```",
+      "answer": "Vehicle: Truck",
+      "explanation": "v.describe()はVehicle.describe()を呼び出し、その中でgetType()が呼ばれる。動的バインディングにより、実行時の型であるTruckのgetType()が呼ばれ\"Truck\"が返る。結果は\"Vehicle: Truck\"。(Evidence: E1, E4)"
+    },
+    {
+      "id": "JAVA-SILVER-01-04-Q04",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "以下のコードの実行結果として正しいものはどれか。\n\n```java\nclass A {\n    int value = 10;\n    public int getValue() { return value; }\n}\n\nclass B extends A {\n    int value = 20;\n    public int getValue() { return value; }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        A obj = new B();\n        System.out.println(obj.value + \",\" + obj.getValue());\n    }\n}\n```",
+      "choices": [
+        "10,10",
+        "20,20",
+        "10,20",
+        "20,10"
+      ],
+      "answer": 2,
+      "explanation": "フィールドアクセスは動的バインディングされないため、obj.valueはコンパイル時の型Aのvalue=10となる。一方、メソッドは動的バインディングされるため、obj.getValue()は実行時の型BのgetValue()が呼ばれvalue=20を返す。結果は\"10,20\"。(Evidence: E1)"
+    },
+    {
+      "id": "JAVA-SILVER-01-04-Q05",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "abstractクラスについて正しい記述はどれか。",
+      "choices": [
+        "abstractクラスにはコンストラクタを定義できない",
+        "abstractクラスには具象メソッド（本体を持つメソッド）を定義できない",
+        "abstractクラスはnewキーワードでインスタンスを生成できない",
+        "abstractクラスにはフィールドを定義できない"
+      ],
+      "answer": 2,
+      "explanation": "abstractクラスはnewで直接インスタンス化できない。ただし、コンストラクタの定義（サブクラスから呼ぶため）、具象メソッドの定義、フィールドの定義はすべて可能である。(Evidence: E4)"
+    },
+    {
+      "id": "JAVA-SILVER-01-04-Q06",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "instanceof演算子について正しい記述はどれか。",
+      "choices": [
+        "null instanceof String は true を返す",
+        "コンパイル時の型チェックのみ行い、実行時には何も確認しない",
+        "nullに対するinstanceofは常にfalseを返す",
+        "instanceof はプリミティブ型にも使用できる"
+      ],
+      "answer": 2,
+      "explanation": "null instanceof 任意の型 は常にfalseを返す。instanceofは実行時にオブジェクトの実際の型を確認する演算子であり、参照型にのみ使用できる。プリミティブ型には使用できない。(Evidence: E3)"
+    },
+    {
+      "id": "JAVA-SILVER-01-04-Q07",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "以下のコードの実行結果として正しいものはどれか。\n\n```java\nabstract class Base {\n    public Base() {\n        print();\n    }\n    public abstract void print();\n}\n\nclass Derived extends Base {\n    private int x = 10;\n\n    public Derived() {\n        super();\n    }\n\n    @Override\n    public void print() {\n        System.out.println(x);\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Derived d = new Derived();\n        d.print();\n    }\n}\n```",
+      "choices": [
+        "10 10",
+        "0 10",
+        "10 0",
+        "コンパイルエラーが発生する"
+      ],
+      "answer": 1,
+      "explanation": "new Derived()→Derived()→super()→Base()コンストラクタ内でprint()を呼ぶ。動的バインディングでDerived.print()が呼ばれるが、この時点でxのフィールド初期化はまだ完了していないためx=0（デフォルト値）が出力される。その後Derived()に戻りx=10に初期化。d.print()でx=10が出力される。結果は\"0\"と\"10\"。(Evidence: E1, E4)"
+    },
+    {
+      "id": "JAVA-SILVER-01-04-Q08",
+      "type": "code_output",
+      "difficulty": 3,
+      "prompt": "以下のコードの実行結果を答えよ。\n\n```java\nabstract class Shape {\n    public abstract double area();\n    public String describe() {\n        return \"area=\" + area();\n    }\n}\n\nclass Square extends Shape {\n    private int side;\n    public Square(int side) { this.side = side; }\n    public double area() { return side * side; }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Shape s = new Square(5);\n        System.out.println(s.describe());\n    }\n}\n```",
+      "answer": "area=25.0",
+      "explanation": "s.describe()はShape.describe()を呼び出し、その中でarea()が動的バインディングにより実行時の型SquareのSqaure.area()を呼ぶ。side=5なので5*5=25。戻り値はdouble型なので25.0。文字列連結で\"area=25.0\"となる。(Evidence: E1, E4)"
+    },
+    {
+      "id": "JAVA-SILVER-01-04-Q09",
+      "type": "short_answer",
+      "difficulty": 1,
+      "prompt": "ダウンキャスト前に、オブジェクトの実行時の型を確認するために使用するJavaの演算子名を答えよ。",
+      "answer": "instanceof",
+      "explanation": "instanceof演算子は、左辺のオブジェクトが右辺の型（またはそのサブクラス）のインスタンスであるかを判定するブール演算子である。ダウンキャスト前の型チェックに使用する。(Evidence: E3)"
+    },
+    {
+      "id": "JAVA-SILVER-01-04-Q10",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "テンプレートメソッドパターンについて正しい記述はどれか。",
+      "choices": [
+        "テンプレートメソッドはabstractでなければならない",
+        "テンプレートメソッドは処理の流れを定義し、可変部分を抽象メソッドとしてサブクラスに委譲する",
+        "テンプレートメソッドパターンはインタフェースでのみ実現できる",
+        "テンプレートメソッドパターンでは、サブクラスが処理の流れ自体を自由に変更できる"
+      ],
+      "answer": 1,
+      "explanation": "テンプレートメソッドパターンは、処理のアルゴリズム骨格を具象メソッド（テンプレートメソッド）として定義し、可変部分を抽象メソッドとしてサブクラスに実装させる。テンプレートメソッド自体はfinalにして流れの変更を防ぐことが多い。(Evidence: E5)"
+    }
+  ]
+}

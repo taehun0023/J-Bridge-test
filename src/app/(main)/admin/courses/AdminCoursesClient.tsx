@@ -63,12 +63,15 @@ const categoryLabels: Record<string, string> = {
   business_manner: 'ビジネスマナー',
   communication: 'コミュニケーション',
   cross_culture: '異文化理解',
+  basic_theory: '基礎理論',
+  database: 'データベース',
+  security: 'セキュリティ',
 }
 
 const difficultyLabels: Record<string, string> = {
-  easy: '初級',
-  medium: '中級',
-  hard: '上級',
+  easy: 'ブロンズ',
+  medium: 'シルバー',
+  hard: 'ゴールド',
 }
 
 type FilterState = {

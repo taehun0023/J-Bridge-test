@@ -1,0 +1,309 @@
+---
+lesson_id: JAVA-GOLD-01-02
+title: "境界ワイルドカードとPECS原則"
+module: JAVA-GOLD-01
+level: gold
+est_minutes: 40
+tags: [wildcards, bounded, PECS, extends, super, generics]
+---
+
+# 경계 와일드카드와 PECS 원칙
+
+## 1) 요점 정리 (5줄)
+
+- **비경계 와일드카드 `<?>`** 는 타입이 불명임을 나타내며, 읽기 전용(Object로 가져옴)으로 사용한다 (Evidence: E1)
+- **상한 경계 `<? extends T>`** 는 T 또는 T의 서브클래스를 수용하며, **Producer(읽기 전용)** 로 기능한다 (Evidence: E2)
+- **하한 경계 `<? super T>`** 는 T 또는 T의 슈퍼클래스를 수용하며, **Consumer(쓰기 가능)** 로 기능한다 (Evidence: E3)
+- **PECS 원칙(Producer-Extends, Consumer-Super)** 에 의해, 데이터의 흐름에 따라 와일드카드 종류를 선택한다 (Evidence: E4)
+- 와일드카드는 메서드의 **인수나 필드의 타입 선언**에 사용하며, 리턴 타입에는 통상 사용하지 않는다 (Evidence: E5)
+
+---
+
+## 2) 개념
+
+### 비경계 와일드카드 `<?>`
+
+`<?>`는 "불명한 타입"을 나타낸다. 컬렉션의 요소 타입에 관계없이 처리하고 싶을 경우 사용한다 (Evidence: E1).
+
+```java
+// 어떤 List든 받을 수 있음
+public static void printAll(List<?> list) {
+    for (Object item : list) {
+        System.out.println(item);
+    }
+}
+```
+
+`List<?>`에서 요소를 가져오면 `Object` 타입이 된다. 요소 추가는 `null` 이외 불가능하다(타입이 불명하므로).
+
+### 상한 경계 와일드카드 `<? extends T>`
+
+`<? extends T>`는 "T 또는 T의 서브클래스"를 의미한다. 컬렉션에서 요소를 **읽어내는(produce)** 경우에 사용한다 (Evidence: E2).
+
+```java
+// Number 또는 그 서브클래스(Integer, Double 등)의 List를 받을 수 있음
+public static double sum(List<? extends Number> numbers) {
+    double total = 0;
+    for (Number n : numbers) {
+        total += n.doubleValue();  // Number 타입으로 읽기 가능
+    }
+    return total;
+}
+```
+
+`<? extends Number>`의 List에 대해 요소를 추가할 수 없다. 컴파일러가 실제 타입이 `Integer`인지 `Double`인지 확정할 수 없기 때문이다.
+
+### 하한 경계 와일드카드 `<? super T>`
+
+`<? super T>`는 "T 또는 T의 슈퍼클래스"를 의미한다. 컬렉션에 요소를 **쓰는(consume)** 경우에 사용한다 (Evidence: E3).
+
+```java
+// Integer 또는 그 슈퍼클래스(Number, Object 등)의 List에 쓸 수 있음
+public static void addIntegers(List<? super Integer> list) {
+    list.add(1);
+    list.add(2);
+    list.add(3);
+    // 읽기는 Object 타입이 됨
+}
+```
+
+`<? super Integer>`의 List에 `Integer`를 추가하는 것은 안전하다. 단, 요소를 가져오면 `Object` 타입이 된다.
+
+### PECS 원칙
+
+**PECS(Producer-Extends, Consumer-Super)** 는 와일드카드의 선택 기준을 나타내는 원칙이다 (Evidence: E4).
+
+| 방향 | 와일드카드 | 역할 | 조작 |
+|---|---|---|---|
+| 읽기 | `<? extends T>` | Producer | get 가능, add 불가 |
+| 쓰기 | `<? super T>` | Consumer | add 가능, get 시 Object |
+| 양쪽 | 구체적 타입 `<T>` | 양쪽 | get/add 모두 가능 |
+
+컬렉션이 데이터를 **제공(produce)** 하면 `extends`, 데이터를 **받아들이면(consume)** `super`를 사용한다.
+
+### Collections.copy의 예
+
+표준 라이브러리의 `Collections.copy`는 PECS 원칙의 전형적인 예이다 (Evidence: E4).
+
+```java
+public static <T> void copy(List<? super T> dest, List<? extends T> src) {
+    // src는 Producer → extends
+    // dest는 Consumer → super
+    for (int i = 0; i < src.size(); i++) {
+        dest.set(i, src.get(i));
+    }
+}
+```
+
+`src`에서 데이터를 읽고(produce), `dest`에 데이터를 쓰므로(consume), PECS 원칙에 따라 `src`에 `extends`, `dest`에 `super`를 사용하고 있다.
+
+### API 설계에서의 와일드카드
+
+와일드카드는 API의 유연성을 높이기 위해 사용한다. 단, **리턴 타입에 와일드카드는 사용하지 않는** 것이 원칙이다 (Evidence: E5).
+
+```java
+// OK: 인수에 와일드카드를 사용 → 유연한 API
+public static <T> void addAll(List<? super T> dest, List<? extends T> src) { ... }
+
+// NG: 리턴 타입에 와일드카드를 사용 → 호출측이 다루기 어려움
+public static List<?> getItems() { ... }  // 피해야 함
+```
+
+---
+
+## 3) 예제 (2개)
+
+### 예제 1: PECS 원칙의 실천 -- 과일 계층
+
+클래스 계층을 사용하여 PECS 원칙을 실증한다 (Evidence: E2, E3, E4).
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+// 클래스 계층: Fruit → Apple, Orange
+class Fruit {
+    private final String name;
+    Fruit(String name) { this.name = name; }
+    @Override public String toString() { return name; }
+}
+
+class Apple extends Fruit {
+    Apple() { super("Apple"); }
+}
+
+class Orange extends Fruit {
+    Orange() { super("Orange"); }
+}
+
+public class PecsExample {
+
+    // Producer — extends: 컬렉션에서 데이터를 읽어냄
+    static void printFruits(List<? extends Fruit> fruits) {
+        for (Fruit f : fruits) {
+            System.out.println(f);  // Fruit 타입으로 안전하게 읽을 수 있음
+        }
+        // fruits.add(new Apple());  // 컴파일 에러! 추가 불가
+    }
+
+    // Consumer — super: 컬렉션에 데이터를 씀
+    static void addApples(List<? super Apple> basket) {
+        basket.add(new Apple());  // Apple 타입을 안전하게 추가 가능
+        basket.add(new Apple());
+        // Apple a = basket.get(0);  // 컴파일 에러! 읽기는 Object
+    }
+
+    public static void main(String[] args) {
+        // Producer: List<Apple>을 List<? extends Fruit>로 받음
+        List<Apple> apples = List.of(new Apple(), new Apple());
+        printFruits(apples);  // OK
+
+        // Consumer: List<Fruit>을 List<? super Apple>로 받음
+        List<Fruit> fruitBasket = new ArrayList<>();
+        addApples(fruitBasket);  // OK — Fruit은 Apple의 슈퍼클래스
+        System.out.println(fruitBasket);  // [Apple, Apple]
+    }
+}
+```
+
+`printFruits`는 컬렉션에서 데이터를 **읽어내므로** Producer(extends), `addApples`는 컬렉션에 데이터를 **쓰므로** Consumer(super)를 사용한다.
+
+### 예제 2: 제네릭스 유틸리티 메서드 -- copyIfGreater
+
+PECS 원칙을 활용하여, 소스 리스트에서 조건을 만족하는 요소를 타겟 리스트에 복사하는 메서드를 구현한다 (Evidence: E2, E3, E4, E5).
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+public class WildcardUtility {
+
+    // PECS 원칙: src=Producer(extends), dest=Consumer(super)
+    static <T extends Comparable<T>> void copyIfGreater(
+            List<? super T> dest,
+            List<? extends T> src,
+            T threshold
+    ) {
+        for (T item : src) {
+            if (item.compareTo(threshold) > 0) {
+                dest.add(item);
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        List<Integer> source = List.of(1, 5, 3, 8, 2, 7);
+        List<Number> target = new ArrayList<>();
+
+        // Integer extends Number 이므로 List<Number>를 dest로 지정 가능
+        copyIfGreater(target, source, 4);
+        System.out.println(target);  // [5, 8, 7]
+
+        // 비경계 와일드카드의 사용 예
+        printSize(source);
+        printSize(target);
+    }
+
+    // 비경계 와일드카드: 요소 타입에 관계없이 사이즈를 출력
+    static void printSize(List<?> list) {
+        System.out.println("사이즈: " + list.size());
+    }
+}
+```
+
+`copyIfGreater` 메서드는 `src`에서 데이터를 읽고(Producer -> extends), `dest`에 쓰므로(Consumer -> super), PECS 원칙에 따르고 있다. `printSize`는 요소 타입과 무관하게 사이즈만 출력하므로 비경계 와일드카드 `<?>`를 사용한다.
+
+---
+
+## 4) 흔한 실수 / 함정 (5개)
+
+### 1. extends의 List에 요소를 추가하려 함
+
+```java
+// NG: 컴파일 에러
+List<? extends Number> numbers = new ArrayList<Integer>();
+numbers.add(42);  // 추가 불가! 타입이 확정되지 않음
+
+// OK: 읽기만
+Number n = numbers.get(0);  // Number 타입으로 읽기 가능
+```
+
+`<? extends T>`는 Producer(읽기 전용)이며, 요소 추가가 불가능하다. 추가가 필요하면 `<? super T>`를 사용한다 (Evidence: E2).
+
+### 2. super의 List에서 타입 안전하게 읽으려 함
+
+```java
+// NG: 타입 안전하게 읽을 수 없음
+List<? super Integer> list = new ArrayList<Number>();
+Integer i = list.get(0);  // 컴파일 에러! Object 타입이 됨
+
+// OK: Object로 읽기
+Object obj = list.get(0);
+```
+
+`<? super T>`는 Consumer(쓰기용)이며, 읽기는 `Object` 타입이 된다 (Evidence: E3).
+
+### 3. 와일드카드의 불필요한 사용
+
+```java
+// NG: 단순한 케이스에서 와일드카드는 불필요
+public static <T> void process(List<? extends T> list) { ... }
+
+// OK: 구체적 타입 파라미터로 충분
+public static <T> void process(List<T> list) { ... }
+```
+
+읽기와 쓰기 양쪽이 필요한 경우, 또는 타입 파라미터 하나로 충분한 경우 와일드카드를 사용할 필요가 없다 (Evidence: E5).
+
+### 4. 리턴 타입에 와일드카드 사용
+
+```java
+// NG: 호출측이 타입을 다룰 수 없음
+public static List<?> getNames() {
+    return List.of("Alice", "Bob");
+}
+// String s = getNames().get(0);  // 컴파일 에러
+
+// OK: 구체적 타입을 반환
+public static List<String> getNames() {
+    return List.of("Alice", "Bob");
+}
+```
+
+리턴값에 와일드카드를 사용하면 호출측에서 타입 정보가 소실되어 다루기 어려워진다 (Evidence: E5).
+
+### 5. PECS의 적용 방향을 뒤집음
+
+```java
+// NG: Producer/Consumer가 반대
+static <T> void wrongCopy(List<? extends T> dest, List<? super T> src) {
+    // dest.add(src.get(0));  // 컴파일 에러 연발
+}
+
+// OK: PECS 원칙에 따름
+static <T> void correctCopy(List<? super T> dest, List<? extends T> src) {
+    for (T item : src) {
+        dest.add(item);
+    }
+}
+```
+
+src가 Producer(extends), dest가 Consumer(super)이다. 방향을 잘못하면 컴파일 에러가 다발한다 (Evidence: E4).
+
+---
+
+## 5) 체크리스트
+
+- [ ] 비경계 와일드카드 `<?>`가 "불명 타입"을 나타내며, 읽기 시 Object 타입이 됨을 이해하고 있다
+- [ ] `<? extends T>`가 Producer로 기능하며, 읽기 전용임을 설명할 수 있다
+- [ ] `<? super T>`가 Consumer로 기능하며, 쓰기 가능함을 설명할 수 있다
+- [ ] PECS 원칙(Producer-Extends, Consumer-Super)을 올바르게 적용할 수 있다
+- [ ] `Collections.copy`의 시그니처가 PECS 원칙에 따르고 있음을 설명할 수 있다
+- [ ] 리턴 타입에 와일드카드를 사용해서는 안 되는 이유를 설명할 수 있다
+- [ ] 클래스 계층(extends 관계)과 와일드카드의 관계를 이해하고 있다
+
+---
+
+## 6) 다음으로
+
+다음 레슨에서는 **JAVA-GOLD-01-03: 컬렉션 -- List / Set / Map**을 배운다. 컬렉션 프레임워크의 계층 구조, 각 컬렉션 타입의 특성과 사용 구분, equals/hashCode 계약, 불변 컬렉션(List.of, Map.of)에 대해 다룬다.

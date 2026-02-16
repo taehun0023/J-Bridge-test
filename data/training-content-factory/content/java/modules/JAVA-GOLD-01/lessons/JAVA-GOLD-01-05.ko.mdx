@@ -1,0 +1,385 @@
+---
+lesson_id: JAVA-GOLD-01-05
+title: "Stream実践 — collect / reduce / groupingBy"
+module: JAVA-GOLD-01
+level: gold
+est_minutes: 40
+tags: [stream, Collectors, groupingBy, partitioningBy, reduce, parallel-stream]
+---
+
+# Stream 실전 -- collect / reduce / groupingBy
+
+## 1) 요점 정리 (5줄)
+
+- **Collectors.toList() / toSet() / toMap()** 은 Stream의 결과를 표준 컬렉션으로 집약하는 기본 Collector이다 (Evidence: E1)
+- **Collectors.groupingBy()** 는 요소를 분류 키로 그루핑하여 `Map<K, List<V>>`를 생성한다 (Evidence: E2)
+- **Collectors.partitioningBy()** 는 Predicate(참/거짓)로 요소를 2개의 그룹으로 분할한다 (Evidence: E3)
+- **reduce()** 는 초기값, 어큐뮬레이터, 컴바이너의 3인수로 완전히 제어할 수 있으며, 병렬 처리에도 대응한다 (Evidence: E4)
+- **병렬 스트림(parallel stream)** 은 멀티코어를 활용할 수 있지만, 부수 효과 없는 조작과 충분한 데이터량이 없으면 오히려 성능이 저하된다 (Evidence: E5)
+
+---
+
+## 2) 개념
+
+### Collectors의 기본
+
+`collect()` 종단 조작은 `Collector`를 받아 Stream 요소를 집약한다. `java.util.stream.Collectors` 클래스가 표준 Collector를 제공한다 (Evidence: E1).
+
+```java
+import java.util.stream.Collectors;
+
+// toList() — 가변 List (Java 16 이후 .toList()로 불변 List도 가능)
+List<String> list = stream.collect(Collectors.toList());
+
+// toSet() — 중복 없는 Set
+Set<String> set = stream.collect(Collectors.toSet());
+
+// toMap() — 키 함수와 값 함수를 지정
+Map<String, Integer> map = stream.collect(
+    Collectors.toMap(Employee::name, Employee::salary));
+
+// toUnmodifiableList() — 불변 List
+List<String> immutable = stream.collect(Collectors.toUnmodifiableList());
+```
+
+### toMap()의 키 중복 대응
+
+`toMap()`에서 키가 중복되면 `IllegalStateException`이 throw된다. 세 번째 인수의 머지 함수로 중복 시 동작을 제어할 수 있다 (Evidence: E1).
+
+```java
+// 키 중복 시 뒤의 값으로 덮어쓰기
+Map<String, Integer> map = employees.stream()
+    .collect(Collectors.toMap(
+        Employee::dept,
+        Employee::salary,
+        (existing, replacement) -> replacement  // 머지 함수
+    ));
+```
+
+### groupingBy -- 그루핑
+
+`groupingBy()`는 분류 함수(classifier)로 요소를 그룹화하여 `Map<K, List<V>>`를 반환한다 (Evidence: E2).
+
+```java
+// 부서별로 사원을 그룹화
+Map<String, List<Employee>> byDept = employees.stream()
+    .collect(Collectors.groupingBy(Employee::dept));
+
+// 2인수 버전: downstream Collector를 지정
+// 부서별 인원수
+Map<String, Long> countByDept = employees.stream()
+    .collect(Collectors.groupingBy(Employee::dept, Collectors.counting()));
+
+// 부서별 평균 급여
+Map<String, Double> avgByDept = employees.stream()
+    .collect(Collectors.groupingBy(
+        Employee::dept,
+        Collectors.averagingInt(Employee::salary)
+    ));
+
+// 부서별 사원명 리스트
+Map<String, List<String>> namesByDept = employees.stream()
+    .collect(Collectors.groupingBy(
+        Employee::dept,
+        Collectors.mapping(Employee::name, Collectors.toList())
+    ));
+```
+
+### partitioningBy -- 이분할
+
+`partitioningBy()`는 `Predicate`로 요소를 `true` / `false`의 2그룹으로 분할한다. 키가 `Boolean`인 `Map<Boolean, List<T>>`를 반환한다 (Evidence: E3).
+
+```java
+// 급여 50만 이상/미만으로 분할
+Map<Boolean, List<Employee>> partition = employees.stream()
+    .collect(Collectors.partitioningBy(e -> e.salary() >= 500_000));
+
+List<Employee> highPaid = partition.get(true);
+List<Employee> lowPaid = partition.get(false);
+```
+
+### joining -- 문자열 연결
+
+`Collectors.joining()`은 Stream의 문자열 요소를 연결한다 (Evidence: E1).
+
+```java
+// 구분자만
+String csv = names.stream().collect(Collectors.joining(", "));
+// → "Alice, Bob, Charlie"
+
+// 구분자 + 접두사 + 접미사
+String json = names.stream().collect(
+    Collectors.joining(", ", "[", "]"));
+// → "[Alice, Bob, Charlie]"
+```
+
+### reduce -- 접기의 상세
+
+`reduce()`는 3가지 오버로드를 갖는다 (Evidence: E4).
+
+```java
+// 1인수: BinaryOperator → Optional<T>
+Optional<Integer> max = numbers.stream().reduce(Integer::max);
+
+// 2인수: 초기값 + BinaryOperator → T
+int sum = numbers.stream().reduce(0, Integer::sum);
+
+// 3인수: 초기값 + BiFunction + BinaryOperator (병렬 처리 대응)
+List<String> words = List.of("hello", "world", "java", "stream");
+int totalLength = words.stream().reduce(
+    0,                                    // identity (초기값)
+    (acc, word) -> acc + word.length(),   // accumulator
+    Integer::sum                          // combiner (병렬 시 부분 결과 합성)
+);
+```
+
+3인수 버전은 병렬 스트림에서 사용된다. `combiner`는 병렬 처리 시 각 스레드의 부분 결과를 합성하는 역할을 한다.
+
+### 병렬 스트림 (Parallel Stream)
+
+`parallelStream()` 또는 `.parallel()`로 스트림을 병렬화할 수 있다 (Evidence: E5).
+
+```java
+// 병렬 스트림의 생성
+long count = largeList.parallelStream()
+    .filter(item -> item.isValid())
+    .count();
+```
+
+병렬화가 유효한 경우:
+- 데이터량이 충분히 큰 경우 (목안: 10,000건 이상)
+- 각 요소의 처리가 독립적인 경우 (부수 효과 없음)
+- CPU 집약적 처리인 경우
+
+병렬화가 역효과인 경우:
+- 데이터량이 적은 경우 (스레드 관리 오버헤드가 초과)
+- I/O 조작이 병목인 경우
+- 부수 효과가 있는 조작 (공유 변수 변경 등)
+
+### Stream vs Loop 비교
+
+```java
+// 루프 방식
+Map<String, List<Employee>> result = new HashMap<>();
+for (Employee e : employees) {
+    result.computeIfAbsent(e.dept(), k -> new ArrayList<>()).add(e);
+}
+
+// Stream 방식 — 선언적이고 의도가 명확
+Map<String, List<Employee>> result = employees.stream()
+    .collect(Collectors.groupingBy(Employee::dept));
+```
+
+Stream 방식은 "무엇을 하는가"를 선언적으로 기술하고, 루프 방식은 "어떻게 하는가"를 절차적으로 기술한다. Stream은 가독성과 유지보수성에서 우수하지만, 디버깅이 어려울 수 있다 (Evidence: E5).
+
+---
+
+## 3) 예제 (2개)
+
+### 예제 1: 매출 데이터 집계 -- groupingBy와 downstream
+
+매출 데이터를 카테고리별로 집계하는 비즈니스 실전 예를 보여준다 (Evidence: E1, E2, E3).
+
+```java
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class SalesAnalysis {
+
+    record Sale(String category, String product, int amount) {}
+
+    public static void main(String[] args) {
+        List<Sale> sales = List.of(
+            new Sale("食品", "りんご", 300),
+            new Sale("食品", "バナナ", 200),
+            new Sale("家電", "テレビ", 50000),
+            new Sale("食品", "りんご", 150),
+            new Sale("家電", "冷蔵庫", 80000),
+            new Sale("書籍", "Java入門", 3000)
+        );
+
+        // 카테고리별 매출 합계
+        Map<String, Integer> totalByCategory = sales.stream()
+            .collect(Collectors.groupingBy(
+                Sale::category,
+                Collectors.summingInt(Sale::amount)
+            ));
+        System.out.println("카테고리별 합계: " + totalByCategory);
+        // {食品=650, 家電=130000, 書籍=3000}
+
+        // 카테고리별 상품명 리스트 (중복 없음)
+        Map<String, Set<String>> productsByCategory = sales.stream()
+            .collect(Collectors.groupingBy(
+                Sale::category,
+                Collectors.mapping(Sale::product, Collectors.toSet())
+            ));
+        System.out.println("카테고리별 상품: " + productsByCategory);
+
+        // 1000엔 이상/미만으로 분할
+        Map<Boolean, List<Sale>> partition = sales.stream()
+            .collect(Collectors.partitioningBy(s -> s.amount() >= 1000));
+        System.out.println("1000엔 이상: " + partition.get(true).size() + "건");
+        System.out.println("1000엔 미만: " + partition.get(false).size() + "건");
+
+        // 전체 매출 CSV 출력
+        String csv = sales.stream()
+            .map(s -> s.category() + "," + s.product() + "," + s.amount())
+            .collect(Collectors.joining("\n"));
+        System.out.println("CSV:\n" + csv);
+    }
+}
+```
+
+`groupingBy`의 두 번째 인수(downstream collector)로 `summingInt`, `mapping`, `toSet`을 조합하여 다양한 집계를 실현할 수 있다. `partitioningBy`로 참/거짓에 의한 이분할도 수행하고 있다.
+
+### 예제 2: reduce의 실전 패턴
+
+reduce의 3가지 패턴과 Stream vs 루프의 비교를 보여준다 (Evidence: E4, E5).
+
+```java
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class ReducePatterns {
+
+    public static void main(String[] args) {
+        List<Integer> numbers = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+
+        // 패턴 1: 1인수 reduce (Optional 반환)
+        Optional<Integer> max = numbers.stream()
+            .reduce(Integer::max);
+        System.out.println("최대값: " + max.orElse(0));  // 10
+
+        // 패턴 2: 2인수 reduce (초기값 있음)
+        int sum = numbers.stream()
+            .reduce(0, Integer::sum);
+        System.out.println("합계: " + sum);  // 55
+
+        // 패턴 3: 3인수 reduce (타입 변환 + 병렬 대응)
+        List<String> words = List.of("hello", "world", "java", "stream");
+        int totalLength = words.stream()
+            .reduce(
+                0,
+                (acc, word) -> acc + word.length(),
+                Integer::sum
+            );
+        System.out.println("총 문자 수: " + totalLength);  // 20
+
+        // Stream 방식 vs 루프 방식 비교
+        // --- Stream 방식 ---
+        Map<Integer, List<Integer>> grouped = numbers.stream()
+            .collect(Collectors.groupingBy(n -> n % 3));
+        System.out.println("Stream groupBy: " + grouped);
+
+        // --- 루프 방식 ---
+        Map<Integer, List<Integer>> loopGrouped = new HashMap<>();
+        for (int n : numbers) {
+            loopGrouped.computeIfAbsent(n % 3, k -> new ArrayList<>()).add(n);
+        }
+        System.out.println("Loop groupBy: " + loopGrouped);
+
+        // 결과는 같지만, Stream 방식이 의도가 더 명확
+    }
+}
+```
+
+reduce의 3인수 버전에서는 첫 번째 인수가 초기값, 두 번째 인수가 각 요소의 처리(어큐뮬레이터), 세 번째 인수가 병렬 처리 시 부분 결과 합성(컴바이너)이다.
+
+---
+
+## 4) 흔한 실수 / 함정 (5개)
+
+### 1. toMap()에서 키 중복 시 예외
+
+```java
+// NG: 같은 부서 사원이 복수 → IllegalStateException
+Map<String, Integer> map = employees.stream()
+    .collect(Collectors.toMap(Employee::dept, Employee::salary));
+
+// OK: 머지 함수를 지정
+Map<String, Integer> map = employees.stream()
+    .collect(Collectors.toMap(
+        Employee::dept, Employee::salary,
+        Integer::sum  // 같은 키면 급여를 합산
+    ));
+```
+
+`toMap()`은 기본적으로 키 중복 시 `IllegalStateException`을 throw한다. 세 번째 인수의 머지 함수로 중복 시 동작을 제어한다 (Evidence: E1).
+
+### 2. 병렬 스트림에서의 부수 효과
+
+```java
+// NG: 공유 리스트에 추가는 비스레드 세이프
+List<String> result = new ArrayList<>();
+words.parallelStream()
+    .filter(w -> w.length() > 3)
+    .forEach(result::add);  // ConcurrentModificationException 가능성
+
+// OK: collect를 사용 (스레드 세이프)
+List<String> result = words.parallelStream()
+    .filter(w -> w.length() > 3)
+    .collect(Collectors.toList());
+```
+
+병렬 스트림에서 공유 가변 상태를 조작하면 스레드 세이프 문제가 발생한다. `collect`를 사용하여 결과를 집약해야 한다 (Evidence: E5).
+
+### 3. groupingBy의 null 키
+
+```java
+// NG: 분류 함수가 null을 반환하면 NullPointerException
+Map<String, List<Employee>> grouped = employees.stream()
+    .collect(Collectors.groupingBy(Employee::dept));
+// dept가 null인 사원이 있으면 NPE
+
+// OK: null을 안전하게 처리
+Map<String, List<Employee>> grouped = employees.stream()
+    .collect(Collectors.groupingBy(
+        e -> e.dept() != null ? e.dept() : "미소속"
+    ));
+```
+
+`groupingBy`의 분류 함수가 `null`을 반환하면 `NullPointerException`이 throw된다. null 가능성이 있는 경우 사전에 처리한다 (Evidence: E2).
+
+### 4. reduce의 identity가 항등원이 아님
+
+```java
+// NG: 곱셈의 identity가 0 → 결과가 항상 0
+int product = numbers.stream().reduce(0, (a, b) -> a * b);
+
+// OK: 곱셈의 identity는 1
+int product = numbers.stream().reduce(1, (a, b) -> a * b);
+```
+
+`reduce`의 초기값(identity)은 조작의 항등원이어야 한다. 덧셈이면 0, 곱셈이면 1, 문자열 결합이면 빈 문자열이다 (Evidence: E4).
+
+### 5. 작은 데이터셋에서의 병렬화
+
+```java
+// NG: 소량 데이터에서는 병렬화의 오버헤드가 초과
+List<String> small = List.of("a", "b", "c");
+small.parallelStream().map(String::toUpperCase).toList();
+
+// OK: 순차 스트림으로 충분
+small.stream().map(String::toUpperCase).toList();
+```
+
+병렬 스트림은 스레드 관리 오버헤드가 있다. 데이터량이 적은 경우(목안: 10,000건 미만)는 순차 스트림이 더 빠르다 (Evidence: E5).
+
+---
+
+## 5) 체크리스트
+
+- [ ] `Collectors.toList()` / `toSet()` / `toMap()`을 사용하여 Stream 결과를 집약할 수 있다
+- [ ] `toMap()`에서 키 중복 시 머지 함수를 지정할 수 있다
+- [ ] `Collectors.groupingBy()`로 요소를 그루핑할 수 있고, downstream collector도 활용할 수 있다
+- [ ] `Collectors.partitioningBy()`로 Predicate 기준의 이분할이 가능하다
+- [ ] `Collectors.joining()`으로 문자열을 구분자 첨부로 연결할 수 있다
+- [ ] `reduce()`의 3가지 패턴(1인수, 2인수, 3인수)을 구분하여 사용할 수 있다
+- [ ] 병렬 스트림의 적용 조건과 주의점을 이해하고 있다
+- [ ] Stream 방식과 루프 방식의 사용 구분 판단이 가능하다
+
+---
+
+## 6) 다음으로
+
+이 모듈(JAVA-GOLD-01: 제네릭스와 컬렉션)의 레슨은 이것으로 완료이다. 제네릭스의 기초부터 경계 와일드카드, 컬렉션 프레임워크, Stream API까지 일련의 지식을 습득했다. 다음 모듈에서는 더 고도의 Java 기능을 배운다.

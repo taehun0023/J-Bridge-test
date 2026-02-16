@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "lesson_id": "JAVA-SILVER-01-03",
+  "questions": [
+    {
+      "id": "JAVA-SILVER-01-03-Q01",
+      "type": "single_choice",
+      "difficulty": 1,
+      "prompt": "Javaの継承について正しい記述はどれか。",
+      "choices": [
+        "1つのクラスは複数のクラスをextendsできる",
+        "1つのクラスがextendsできるクラスは1つだけである",
+        "finalクラスを継承することができる",
+        "privateメソッドはサブクラスに継承される"
+      ],
+      "answer": 1,
+      "explanation": "Javaではクラスの多重継承は禁止されており、extendsで指定できるクラスは1つだけである。finalクラスは継承不可、privateメソッドは継承されない。(Evidence: E1, E5)"
+    },
+    {
+      "id": "JAVA-SILVER-01-03-Q02",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "superキーワードについて正しい記述はどれか。",
+      "choices": [
+        "super()はコンストラクタのどの位置でも呼び出せる",
+        "super()とthis()を同一コンストラクタ内で同時に呼び出せる",
+        "明示的にsuper()を書かない場合、コンパイラが自動的にsuper()を挿入する",
+        "super.method()はstaticメソッドからも呼び出せる"
+      ],
+      "answer": 2,
+      "explanation": "サブクラスのコンストラクタで明示的にsuper()もthis()も書かない場合、コンパイラが引数なしのsuper()をコンストラクタの先頭に自動挿入する。super()は先頭行でのみ呼び出し可能で、this()と同時には使えない。(Evidence: E2)"
+    },
+    {
+      "id": "JAVA-SILVER-01-03-Q03",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "以下のコードでコンパイルエラーが発生する箇所はどれか。\n\n```java\npublic class Parent {\n    public void display() {\n        System.out.println(\"Parent\");\n    }\n}\n\npublic class Child extends Parent {\n    @Override\n    protected void display() {\n        System.out.println(\"Child\");\n    }\n}\n```",
+      "choices": [
+        "Parent クラスの display() メソッド",
+        "Child クラスの @Override アノテーション",
+        "Child クラスの display() メソッド（アクセス修飾子が狭い）",
+        "コンパイルエラーは発生しない"
+      ],
+      "answer": 2,
+      "explanation": "オーバーライドではアクセス修飾子を同じかより広くしなければならない。親クラスのpublicメソッドをprotectedに狭めているため、コンパイルエラーが発生する。(Evidence: E3)"
+    },
+    {
+      "id": "JAVA-SILVER-01-03-Q04",
+      "type": "code_output",
+      "difficulty": 2,
+      "prompt": "以下のコードの実行結果を答えよ。\n\n```java\nclass A {\n    public A() {\n        System.out.print(\"A\");\n    }\n}\n\nclass B extends A {\n    public B() {\n        System.out.print(\"B\");\n    }\n}\n\nclass C extends B {\n    public C() {\n        System.out.print(\"C\");\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        C obj = new C();\n    }\n}\n```",
+      "answer": "ABC",
+      "explanation": "コンストラクタチェーンにより、最上位のスーパークラスから順に実行される。new C()→C()先頭で暗黙のsuper()→B()先頭で暗黙のsuper()→A()が\"A\"出力→B()が\"B\"出力→C()が\"C\"出力。結果は\"ABC\"。(Evidence: E2)"
+    },
+    {
+      "id": "JAVA-SILVER-01-03-Q05",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "equals()とhashCode()のオーバーライドについて正しい記述はどれか。",
+      "choices": [
+        "equals()だけオーバーライドすれば、hashCode()は自動的に更新される",
+        "equals()で等しいオブジェクトは、同じhashCode()を返さなければならない",
+        "hashCode()が同じオブジェクトは、equals()で必ず等しい",
+        "equals()とhashCode()は互いに独立しており、関連性はない"
+      ],
+      "answer": 1,
+      "explanation": "equals()で等しい（trueを返す）オブジェクトは必ず同じhashCode()を返さなければならない（契約）。逆は必須ではない（hashCodeが同じでもequalsがfalseの場合はありえる）。(Evidence: E4)"
+    },
+    {
+      "id": "JAVA-SILVER-01-03-Q06",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "以下のコードの実行結果として正しいものはどれか。\n\n```java\nclass Base {\n    public String greet() {\n        return \"Hello\";\n    }\n}\n\nclass Sub extends Base {\n    @Override\n    public String greet() {\n        return super.greet() + \" World\";\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Sub s = new Sub();\n        System.out.println(s.greet());\n    }\n}\n```",
+      "choices": [
+        "Hello",
+        "World",
+        "Hello World",
+        "コンパイルエラーが発生する"
+      ],
+      "answer": 2,
+      "explanation": "Sub.greet()内でsuper.greet()を呼び出しBase.greet()の戻り値\"Hello\"を取得し、\" World\"を連結して\"Hello World\"を返す。super.method()によりスーパークラスの実装を再利用できる。(Evidence: E2, E3)"
+    },
+    {
+      "id": "JAVA-SILVER-01-03-Q07",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "以下のコードについて正しい記述はどれか。\n\n```java\nclass Parent {\n    public Parent(int x) {\n        System.out.println(\"Parent:\" + x);\n    }\n}\n\nclass Child extends Parent {\n    public Child() {\n        System.out.println(\"Child\");\n    }\n}\n```",
+      "choices": [
+        "正常にコンパイルされ、new Child()で\"Child\"のみ出力される",
+        "コンパイルエラー: ParentクラスにChild()から呼び出せる引数なしコンストラクタがない",
+        "正常にコンパイルされ、new Child()で\"Parent:0\"と\"Child\"が出力される",
+        "実行時エラーが発生する"
+      ],
+      "answer": 1,
+      "explanation": "Child()内で明示的にsuper()もthis()も呼び出していないため、コンパイラがsuper()（引数なし）を自動挿入する。しかしParentにはParent(int)しかなく引数なしコンストラクタが存在しないため、コンパイルエラーとなる。(Evidence: E2)"
+    },
+    {
+      "id": "JAVA-SILVER-01-03-Q08",
+      "type": "code_output",
+      "difficulty": 3,
+      "prompt": "以下のコードの実行結果を答えよ。\n\n```java\nclass Animal {\n    public String speak() {\n        return \"...\";\n    }\n\n    @Override\n    public String toString() {\n        return \"Animal:\" + speak();\n    }\n}\n\nclass Cat extends Animal {\n    @Override\n    public String speak() {\n        return \"Meow\";\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Animal a = new Cat();\n        System.out.println(a);\n    }\n}\n```",
+      "answer": "Animal:Meow",
+      "explanation": "aの実行時の型はCatである。System.out.println(a)でtoString()が呼ばれ、Animal.toString()内でspeak()を呼ぶ。動的バインディングにより、実行時の型であるCat.speak()が呼ばれ\"Meow\"が返る。結果は\"Animal:Meow\"。(Evidence: E3, E4)"
+    },
+    {
+      "id": "JAVA-SILVER-01-03-Q09",
+      "type": "short_answer",
+      "difficulty": 1,
+      "prompt": "Javaで既存クラスを継承する際に使用するキーワードを答えよ。",
+      "answer": "extends",
+      "explanation": "extendsキーワードでスーパークラスを指定し、そのフィールドとメソッドをサブクラスが引き継ぐ。Javaではクラスの単一継承のみサポートしている。(Evidence: E1)"
+    },
+    {
+      "id": "JAVA-SILVER-01-03-Q10",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "finalキーワードについて正しい記述はどれか。",
+      "choices": [
+        "final変数は再代入可能だが、finalメソッドはオーバーライド不可",
+        "finalクラスは継承不可だが、finalメソッドはオーバーライド可能",
+        "finalクラスは継承不可であり、finalメソッドはオーバーライド不可である",
+        "Stringクラスはfinalではないため継承可能である"
+      ],
+      "answer": 2,
+      "explanation": "finalクラスは継承できない。finalメソッドはサブクラスでオーバーライドできない。final変数は再代入不可。Stringクラスはfinal classとして定義されており継承できない。(Evidence: E5)"
+    }
+  ]
+}

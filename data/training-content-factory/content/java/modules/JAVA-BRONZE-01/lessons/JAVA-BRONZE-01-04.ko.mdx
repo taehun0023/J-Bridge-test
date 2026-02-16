@@ -1,0 +1,329 @@
+---
+lesson_id: JAVA-BRONZE-01-04
+title: "条件分岐 — if / switch"
+module: JAVA-BRONZE-01
+level: bronze
+est_minutes: 30
+tags: [if, switch, ternary, pattern-matching, control-flow]
+---
+
+## 1) 요점 정리 (5줄)
+
+- `if/else if/else`는 가장 기본적인 조건 분기이며, boolean 식에 기반하여 실행 경로를 결정한다. (Evidence: E1)
+- 삼항 연산자 `조건 ? 값A : 값B`는 단순한 if/else를 한 줄로 쓸 수 있는 편리한 표기법이지만, 가독성을 해치지 않는 범위에서 사용해야 한다. (Evidence: E2)
+- `switch` 문은 하나의 값을 여러 상수와 비교할 때 적합하며, 사용 가능한 타입은 `byte`, `short`, `char`, `int`, `String`, `enum`이다. (Evidence: E3)
+- `switch` 문에서 `break`를 생략하면 폴스루(다음 case로 떨어짐)가 발생하므로 주의가 필요하다. (Evidence: E4)
+- Java 14 이후의 `switch` 식(화살표 구문 `->` + `yield`)은 폴스루가 발생하지 않으며, 값을 반환할 수 있다. (Evidence: E5)
+
+## 2) 개념
+
+### if / else if / else
+
+✅ 결론: boolean 조건에 기반하여 처리를 분기하는 가장 기본적인 제어 구문.
+
+```java
+if (조건1) {
+    // 조건1이 true인 경우
+} else if (조건2) {
+    // 조건1이 false이고 조건2가 true인 경우
+} else {
+    // 모든 조건이 false인 경우
+}
+```
+
+(Evidence: E1)
+
+```java
+int score = 85;
+if (score >= 90) {
+    System.out.println("우수");
+} else if (score >= 70) {
+    System.out.println("합격");   // ← 이것이 출력됨
+} else {
+    System.out.println("불합격");
+}
+```
+
+⚠️ 조건식의 평가는 위에서 아래로 순서대로 진행되며, 처음으로 true가 된 분기만 실행된다.
+
+### if문의 주의점: 중괄호 생략
+
+✅ 결론: 중괄호는 생략 가능하지만, 반드시 붙이는 것이 실무 권장 사항.
+
+```java
+// 중괄호 없이 (1문만 있는 경우 문법적으로 유효)
+if (x > 0)
+    System.out.println("positive");
+
+// 위험한 패턴: 두 번째 문장은 if에 속하지 않음
+if (x > 0)
+    System.out.println("positive");
+    System.out.println("always executed");  // 들여쓰기에 속지 말 것! 항상 실행됨
+```
+
+💡 실무 규칙: 비록 한 문장이라도 중괄호 `{}`를 붙인다. 버그 방지를 위한 모범 사례.
+
+### 삼항 연산자 (조건 연산자)
+
+✅ 결론: 단순한 if/else를 하나의 식으로 쓸 수 있다.
+
+```java
+// 구문: 조건 ? true인 경우의 값 : false인 경우의 값
+String result = (score >= 60) ? "합격" : "불합격";
+```
+
+(Evidence: E2)
+
+삼항 연산자는 **식**이므로 변수 초기화나 메서드 인수에 직접 사용할 수 있다.
+
+```java
+System.out.println("결과: " + ((score >= 60) ? "합격" : "불합격"));
+```
+
+⚠️ 중첩된 삼항 연산자는 가독성이 크게 떨어지므로 피한다.
+
+```java
+// 나쁜 예 (읽기 어려움)
+String grade = (s >= 90) ? "A" : (s >= 80) ? "B" : (s >= 70) ? "C" : "D";
+
+// 좋은 예: if/else if를 사용
+```
+
+### switch 문
+
+✅ 결론: 하나의 값을 여러 상수와 비교할 때 사용한다.
+
+```java
+switch (식) {
+    case 상수1:
+        // 처리1
+        break;
+    case 상수2:
+        // 처리2
+        break;
+    default:
+        // 어떤 case에도 일치하지 않는 경우
+        break;
+}
+```
+
+(Evidence: E3)
+
+사용 가능한 타입: `byte`, `short`, `char`, `int`, `String`(Java 7 이후), `enum`
+
+```java
+String day = "MON";
+switch (day) {
+    case "MON":
+    case "TUE":
+    case "WED":
+    case "THU":
+    case "FRI":
+        System.out.println("평일");
+        break;
+    case "SAT":
+    case "SUN":
+        System.out.println("휴일");
+        break;
+    default:
+        System.out.println("불명");
+        break;
+}
+```
+
+### 폴스루 (Fall-through)
+
+✅ 결론: break를 생략하면 다음 case로 "떨어져" 버린다.
+
+```java
+int num = 1;
+switch (num) {
+    case 1:
+        System.out.println("One");
+        // break가 없다! 폴스루 발생
+    case 2:
+        System.out.println("Two");
+        break;
+    case 3:
+        System.out.println("Three");
+        break;
+}
+```
+
+출력: `One`과 `Two` 모두 표시된다. (Evidence: E4)
+
+💡 암기법: `break` = 탈출. 없으면 아래로 떨어진다.
+
+### switch 식 (Java 14 이후)
+
+✅ 결론: 화살표 구문으로 폴스루를 방지하고, 값을 반환할 수 있다.
+
+```java
+String day = "MON";
+String type = switch (day) {
+    case "MON", "TUE", "WED", "THU", "FRI" -> "평일";
+    case "SAT", "SUN" -> "휴일";
+    default -> "불명";
+};
+System.out.println(type);  // 평일
+```
+
+(Evidence: E5)
+
+화살표 구문 `->`의 특징:
+- `break` 불필요 (폴스루가 발생하지 않음)
+- 쉼표 `,`로 여러 값을 묶을 수 있음
+- 식 전체가 **값을 반환**할 수 있음
+
+여러 줄의 처리가 필요한 경우 `yield`로 값을 반환한다:
+
+```java
+int score = 85;
+String grade = switch (score / 10) {
+    case 10, 9 -> "A";
+    case 8 -> "B";
+    case 7 -> "C";
+    default -> {
+        System.out.println("60점 미만도 포함");
+        yield "D";
+    }
+};
+```
+
+### 패턴 매칭 (프리뷰 기능)
+
+✅ 결론: Java 17 이후, switch에서의 타입 판정을 간결하게 쓸 수 있다(프리뷰).
+
+```java
+// Java 17+ (프리뷰 기능)
+Object obj = "Hello";
+String result = switch (obj) {
+    case Integer i -> "정수: " + i;
+    case String s  -> "문자열: " + s;
+    case null      -> "null";
+    default        -> "기타";
+};
+```
+
+⚠️ 프리뷰 기능은 Java 버전에 따라 이용 가능 여부가 다르다. Bronze 시험에서는 기존의 switch 문·switch 식이 중심이 된다.
+
+### if vs switch 사용 구분
+
+✅ 결론: 단일 값의 등가 비교에는 switch, 범위·복합 조건에는 if.
+
+| 상황 | 권장 |
+|---|---|
+| 단일 값과 여러 상수 비교 | `switch` |
+| 범위 조건 (`score >= 90`) | `if/else if` |
+| 복합 조건 (`&&`, `\|\|`) | `if/else if` |
+| 값을 반환하는 분기 | `switch` 식 (Java 14+) |
+
+## 3) 예제 (2개)
+
+### 예제 1: 월의 일수를 판정
+
+switch 문을 사용하여 월의 일수를 반환하는 예. 폴스루의 활용도 보여준다.
+
+```java
+public class MonthDays {
+    public static int getDays(int month, boolean isLeapYear) {
+        return switch (month) {
+            case 1, 3, 5, 7, 8, 10, 12 -> 31;
+            case 4, 6, 9, 11 -> 30;
+            case 2 -> isLeapYear ? 29 : 28;
+            default -> throw new IllegalArgumentException("무효한 월: " + month);
+        };
+    }
+
+    public static void main(String[] args) {
+        System.out.println("1월: " + getDays(1, false) + "일");
+        System.out.println("2월(평년): " + getDays(2, false) + "일");
+        System.out.println("2월(윤년): " + getDays(2, true) + "일");
+        System.out.println("4월: " + getDays(4, false) + "일");
+    }
+}
+```
+
+출력 결과:
+
+```
+1월: 31일
+2월(평년): 28일
+2월(윤년): 29일
+4월: 30일
+```
+
+포인트:
+- switch 식(Java 14+)의 화살표 구문으로 `break`가 불필요하고 폴스루도 발생하지 않는다
+- 쉼표 `,`로 여러 case 라벨을 묶어 코드가 간결해진다
+- 삼항 연산자와 조합하여 2월의 윤년 판정도 한 줄로 기술할 수 있다
+
+### 예제 2: 연령에 따른 요금 판정 (if/else if)
+
+여러 범위 조건으로 요금을 판정하는 예. switch 문이 아닌 if/else if가 적절한 케이스.
+
+```java
+public class FareCalculator {
+    public static String getFareCategory(int age) {
+        if (age < 0) {
+            return "에러: 무효한 나이";
+        } else if (age < 6) {
+            return "무료";
+        } else if (age < 12) {
+            return "어린이 요금";
+        } else if (age < 65) {
+            return "성인 요금";
+        } else {
+            return "시니어 요금";
+        }
+    }
+
+    public static void main(String[] args) {
+        int[] ages = {3, 8, 30, 70};
+        for (int age : ages) {
+            System.out.println(age + "세: " + getFareCategory(age));
+        }
+    }
+}
+```
+
+출력 결과:
+
+```
+3세: 무료
+8세: 어린이 요금
+30세: 성인 요금
+70세: 시니어 요금
+```
+
+포인트:
+- 범위 조건 판정에서는 `if/else if`가 적절하다(switch는 상수와의 등가 비교에 사용)
+- 조건은 위에서 아래로 평가되므로, `age < 12` 시점에서 `age < 6`은 이미 false임이 보장된다
+- `return`을 사용하여 `break`나 불필요한 중첩을 피할 수 있다(조기 반환 패턴)
+
+## 4) 흔한 실수 / 함정 (5개)
+
+⚠️ 실수: switch 문에서 `break`를 빠뜨려 폴스루 발생 → 대책: switch 식(화살표 구문)을 사용하거나, 각 case에 반드시 `break`를 쓴다
+
+⚠️ 실수: if 문의 중괄호를 생략하여 두 번째 문장이 if 밖이 됨 → 대책: 비록 한 문장이라도 반드시 중괄호 `{}`를 붙인다
+
+⚠️ 실수: `==`로 String을 비교(`if (str == "hello")`) → 대책: String 비교에는 `.equals()`를 사용한다. `if (str.equals("hello"))` 또는 `if ("hello".equals(str))`로 null 안전하게
+
+⚠️ 실수: switch 문에서 `long`이나 `boolean`을 사용하려 함 → 대책: switch 문에서 사용 가능한 타입은 `byte`, `short`, `char`, `int`, `String`, `enum`뿐
+
+⚠️ 실수: else if의 조건을 망라하지 못해 예상 밖의 입력에서 어떤 분기에도 들어가지 않음 → 대책: 마지막에 `else` / `default`를 반드시 쓴다. 방어적 프로그래밍을 습관화한다
+
+## 5) 체크리스트
+
+- [ ] `if/else if/else`의 구문과 평가 순서를 설명할 수 있는가
+- [ ] 삼항 연산자의 구문과 사용 장면을 이해하고 있는가
+- [ ] switch 문에서 사용 가능한 타입을 나열할 수 있는가
+- [ ] 폴스루의 메커니즘과 `break`의 필요성을 설명할 수 있는가
+- [ ] switch 식(Java 14+, 화살표 구문)의 사용법을 이해하고 있는가
+- [ ] `yield` 키워드의 역할을 설명할 수 있는가
+- [ ] if와 switch의 사용 구분 기준을 이해하고 있는가
+- [ ] 중괄호 생략의 위험성을 구체적 예로 설명할 수 있는가
+
+## 6) 다음으로
+
+다음 레슨은 **JAVA-BRONZE-01-05: 繰り返し — for / while / 拡張for** 입니다. for 문, while 문, do-while 문, 확장 for 문(for-each), break/continue, 라벨 붙은 break, 무한 루프 패턴에 대해 학습합니다.

@@ -1,0 +1,384 @@
+---
+lesson_id: JAVA-GOLD-01-05
+title: "Stream実践 — collect / reduce / groupingBy"
+module: JAVA-GOLD-01
+level: gold
+est_minutes: 40
+tags: [stream, Collectors, groupingBy, partitioningBy, reduce, parallel-stream]
+---
+
+# Stream実践 — collect / reduce / groupingBy
+
+## 1) 要点まとめ（5行）
+
+- **Collectors.toList() / toSet() / toMap()** はStreamの結果を標準コレクションに集約する基本Collectorである (Evidence: E1)
+- **Collectors.groupingBy()** は要素を分類キーでグルーピングし、`Map<K, List<V>>` を生成する (Evidence: E2)
+- **Collectors.partitioningBy()** はPredicate（真偽値）で要素を2つのグループに分割する (Evidence: E3)
+- **reduce()** は初期値・アキュムレータ・コンバイナの3引数で完全に制御でき、並列処理にも対応する (Evidence: E4)
+- **並列ストリーム（parallel stream）** はマルチコアを活用できるが、副作用のない操作・十分なデータ量がないと逆にパフォーマンスが低下する (Evidence: E5)
+
+---
+
+## 2) 概念
+
+### Collectors の基本
+
+`collect()` 終端操作は `Collector` を受け取り、Stream要素を集約する。`java.util.stream.Collectors` クラスが標準Collectorを提供する (Evidence: E1)。
+
+```java
+import java.util.stream.Collectors;
+
+// toList() — 可変List（Java 16以降は .toList() で不変Listも可能）
+List<String> list = stream.collect(Collectors.toList());
+
+// toSet() — 重複なしSet
+Set<String> set = stream.collect(Collectors.toSet());
+
+// toMap() — キー関数と値関数を指定
+Map<String, Integer> map = stream.collect(
+    Collectors.toMap(Employee::name, Employee::salary));
+
+// toUnmodifiableList() — 不変List
+List<String> immutable = stream.collect(Collectors.toUnmodifiableList());
+```
+
+### toMap()のキー重複対応
+
+`toMap()` でキーが重複すると `IllegalStateException` がスローされる。第3引数のマージ関数で重複時の挙動を制御できる (Evidence: E1)。
+
+```java
+// キー重複時に後の値で上書き
+Map<String, Integer> map = employees.stream()
+    .collect(Collectors.toMap(
+        Employee::dept,
+        Employee::salary,
+        (existing, replacement) -> replacement  // マージ関数
+    ));
+```
+
+### groupingBy — グルーピング
+
+`groupingBy()` は分類関数（classifier）で要素をグループ化し、`Map<K, List<V>>` を返す (Evidence: E2)。
+
+```java
+// 部署ごとに社員をグループ化
+Map<String, List<Employee>> byDept = employees.stream()
+    .collect(Collectors.groupingBy(Employee::dept));
+
+// 2引数版: downstream Collectorを指定
+// 部署ごとの人数
+Map<String, Long> countByDept = employees.stream()
+    .collect(Collectors.groupingBy(Employee::dept, Collectors.counting()));
+
+// 部署ごとの平均給与
+Map<String, Double> avgByDept = employees.stream()
+    .collect(Collectors.groupingBy(
+        Employee::dept,
+        Collectors.averagingInt(Employee::salary)
+    ));
+
+// 部署ごとの社員名リスト
+Map<String, List<String>> namesByDept = employees.stream()
+    .collect(Collectors.groupingBy(
+        Employee::dept,
+        Collectors.mapping(Employee::name, Collectors.toList())
+    ));
+```
+
+### partitioningBy — 二分割
+
+`partitioningBy()` は `Predicate` で要素を `true` / `false` の2グループに分割する。キーが `Boolean` の `Map<Boolean, List<T>>` を返す (Evidence: E3)。
+
+```java
+// 給与50万以上/未満で分割
+Map<Boolean, List<Employee>> partition = employees.stream()
+    .collect(Collectors.partitioningBy(e -> e.salary() >= 500_000));
+
+List<Employee> highPaid = partition.get(true);
+List<Employee> lowPaid = partition.get(false);
+```
+
+### joining — 文字列連結
+
+`Collectors.joining()` はStreamの文字列要素を連結する (Evidence: E1)。
+
+```java
+// 区切り文字のみ
+String csv = names.stream().collect(Collectors.joining(", "));
+// → "Alice, Bob, Charlie"
+
+// 区切り文字 + 接頭辞 + 接尾辞
+String json = names.stream().collect(
+    Collectors.joining(", ", "[", "]"));
+// → "[Alice, Bob, Charlie]"
+```
+
+### reduce — 畳み込みの詳細
+
+`reduce()` は3つのオーバーロードを持つ (Evidence: E4)。
+
+```java
+// 1引数: BinaryOperator → Optional<T>
+Optional<Integer> max = numbers.stream().reduce(Integer::max);
+
+// 2引数: 初期値 + BinaryOperator → T
+int sum = numbers.stream().reduce(0, Integer::sum);
+
+// 3引数: 初期値 + BiFunction + BinaryOperator（並列処理対応）
+int totalLength = words.stream().reduce(
+    0,                                    // identity（初期値）
+    (acc, word) -> acc + word.length(),   // accumulator
+    Integer::sum                          // combiner（並列時に部分結果を合成）
+);
+```
+
+3引数版は並列ストリームで使用される。`combiner` は並列処理時に各スレッドの部分結果を合成する役割を持つ。
+
+### 並列ストリーム（Parallel Stream）
+
+`parallelStream()` または `.parallel()` でストリームを並列化できる (Evidence: E5)。
+
+```java
+// 並列ストリームの生成
+long count = largeList.parallelStream()
+    .filter(item -> item.isValid())
+    .count();
+```
+
+並列化が有効なケース:
+- データ量が十分に大きい（目安: 10,000件以上）
+- 各要素の処理が独立している（副作用なし）
+- CPU集約的な処理である
+
+並列化が逆効果になるケース:
+- データ量が少ない（スレッド管理のオーバーヘッドが上回る）
+- I/O操作がボトルネックの場合
+- 副作用のある操作（共有変数の変更等）
+
+### Stream vs Loop 比較
+
+```java
+// ループ方式
+Map<String, List<Employee>> result = new HashMap<>();
+for (Employee e : employees) {
+    result.computeIfAbsent(e.dept(), k -> new ArrayList<>()).add(e);
+}
+
+// Stream方式 — 宣言的で意図が明確
+Map<String, List<Employee>> result = employees.stream()
+    .collect(Collectors.groupingBy(Employee::dept));
+```
+
+Stream方式は「何をするか」を宣言的に記述し、ループ方式は「どうやるか」を手続き的に記述する。Streamは読みやすさと保守性で優れるが、デバッグが難しい場合がある (Evidence: E5)。
+
+---
+
+## 3) 例（2つ）
+
+### 例1: 売上データの集計 — groupingByとdownstream
+
+売上データをカテゴリ別に集計するビジネス実践例を示す (Evidence: E1, E2, E3)。
+
+```java
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class SalesAnalysis {
+
+    record Sale(String category, String product, int amount) {}
+
+    public static void main(String[] args) {
+        List<Sale> sales = List.of(
+            new Sale("食品", "りんご", 300),
+            new Sale("食品", "バナナ", 200),
+            new Sale("家電", "テレビ", 50000),
+            new Sale("食品", "りんご", 150),
+            new Sale("家電", "冷蔵庫", 80000),
+            new Sale("書籍", "Java入門", 3000)
+        );
+
+        // カテゴリ別の売上合計
+        Map<String, Integer> totalByCategory = sales.stream()
+            .collect(Collectors.groupingBy(
+                Sale::category,
+                Collectors.summingInt(Sale::amount)
+            ));
+        System.out.println("カテゴリ別合計: " + totalByCategory);
+        // {食品=650, 家電=130000, 書籍=3000}
+
+        // カテゴリ別の商品名リスト（重複なし）
+        Map<String, Set<String>> productsByCategory = sales.stream()
+            .collect(Collectors.groupingBy(
+                Sale::category,
+                Collectors.mapping(Sale::product, Collectors.toSet())
+            ));
+        System.out.println("カテゴリ別商品: " + productsByCategory);
+
+        // 1000円以上/未満で分割
+        Map<Boolean, List<Sale>> partition = sales.stream()
+            .collect(Collectors.partitioningBy(s -> s.amount() >= 1000));
+        System.out.println("1000円以上: " + partition.get(true).size() + "件");
+        System.out.println("1000円未満: " + partition.get(false).size() + "件");
+
+        // 全売上のCSV出力
+        String csv = sales.stream()
+            .map(s -> s.category() + "," + s.product() + "," + s.amount())
+            .collect(Collectors.joining("\n"));
+        System.out.println("CSV:\n" + csv);
+    }
+}
+```
+
+`groupingBy` の第2引数（downstream collector）として `summingInt`, `mapping`, `toSet` を組み合わせることで、多様な集計が実現できる。`partitioningBy` で真偽値による二分割も行っている。
+
+### 例2: reduceの実践パターン
+
+reduceの3パターンと、Stream vs ループの比較を示す (Evidence: E4, E5)。
+
+```java
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class ReducePatterns {
+
+    public static void main(String[] args) {
+        List<Integer> numbers = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+
+        // パターン1: 1引数reduce（Optional返却）
+        Optional<Integer> max = numbers.stream()
+            .reduce(Integer::max);
+        System.out.println("最大値: " + max.orElse(0));  // 10
+
+        // パターン2: 2引数reduce（初期値あり）
+        int sum = numbers.stream()
+            .reduce(0, Integer::sum);
+        System.out.println("合計: " + sum);  // 55
+
+        // パターン3: 3引数reduce（型変換 + 並列対応）
+        List<String> words = List.of("hello", "world", "java", "stream");
+        int totalLength = words.stream()
+            .reduce(
+                0,
+                (acc, word) -> acc + word.length(),
+                Integer::sum
+            );
+        System.out.println("総文字数: " + totalLength);  // 20
+
+        // Stream方式 vs ループ方式の比較
+        // --- Stream方式 ---
+        Map<Integer, List<Integer>> grouped = numbers.stream()
+            .collect(Collectors.groupingBy(n -> n % 3));
+        System.out.println("Stream groupBy: " + grouped);
+
+        // --- ループ方式 ---
+        Map<Integer, List<Integer>> loopGrouped = new HashMap<>();
+        for (int n : numbers) {
+            loopGrouped.computeIfAbsent(n % 3, k -> new ArrayList<>()).add(n);
+        }
+        System.out.println("Loop groupBy: " + loopGrouped);
+
+        // 結果は同じだが、Stream方式の方が意図が明確
+    }
+}
+```
+
+reduceの3引数版では第1引数が初期値、第2引数が各要素の処理（アキュムレータ）、第3引数が並列処理時の部分結果合成（コンバイナ）である。
+
+---
+
+## 4) よくあるミス／落とし穴（5つ）
+
+### 1. toMap()でキー重複時の例外
+
+```java
+// NG: 同じ部署の社員が複数 → IllegalStateException
+Map<String, Integer> map = employees.stream()
+    .collect(Collectors.toMap(Employee::dept, Employee::salary));
+
+// OK: マージ関数を指定
+Map<String, Integer> map = employees.stream()
+    .collect(Collectors.toMap(
+        Employee::dept, Employee::salary,
+        Integer::sum  // 同じキーなら給与を合算
+    ));
+```
+
+`toMap()` はデフォルトでキー重複時に `IllegalStateException` をスローする。第3引数のマージ関数で重複時の挙動を制御する (Evidence: E1)。
+
+### 2. 並列ストリームでの副作用
+
+```java
+// NG: 共有リストへの追加は非スレッドセーフ
+List<String> result = new ArrayList<>();
+words.parallelStream()
+    .filter(w -> w.length() > 3)
+    .forEach(result::add);  // ConcurrentModificationException の可能性
+
+// OK: collectを使用（スレッドセーフ）
+List<String> result = words.parallelStream()
+    .filter(w -> w.length() > 3)
+    .collect(Collectors.toList());
+```
+
+並列ストリームで共有可変状態を操作するとスレッドセーフ性の問題が発生する。`collect` を使用して結果を集約すべきである (Evidence: E5)。
+
+### 3. groupingByのnullキー
+
+```java
+// NG: 分類関数がnullを返すとNullPointerException
+Map<String, List<Employee>> grouped = employees.stream()
+    .collect(Collectors.groupingBy(Employee::dept));
+// deptがnullの社員がいるとNPE
+
+// OK: nullを安全に処理
+Map<String, List<Employee>> grouped = employees.stream()
+    .collect(Collectors.groupingBy(
+        e -> e.dept() != null ? e.dept() : "未所属"
+    ));
+```
+
+`groupingBy` の分類関数が `null` を返すと `NullPointerException` がスローされる。nullの可能性がある場合は事前に処理する (Evidence: E2)。
+
+### 4. reduceのidentityが中立元でない
+
+```java
+// NG: 乗算のidentityが0 → 結果が常に0
+int product = numbers.stream().reduce(0, (a, b) -> a * b);
+
+// OK: 乗算のidentityは1
+int product = numbers.stream().reduce(1, (a, b) -> a * b);
+```
+
+`reduce` の初期値（identity）は操作の中立元でなければならない。加算なら0、乗算なら1、文字列結合なら空文字列である (Evidence: E4)。
+
+### 5. 小さなデータセットでの並列化
+
+```java
+// NG: 少量データでは並列化のオーバーヘッドが上回る
+List<String> small = List.of("a", "b", "c");
+small.parallelStream().map(String::toUpperCase).toList();
+
+// OK: 順次ストリームで十分
+small.stream().map(String::toUpperCase).toList();
+```
+
+並列ストリームはスレッド管理のオーバーヘッドがある。データ量が少ない場合（目安: 10,000件未満）は順次ストリームの方が高速である (Evidence: E5)。
+
+---
+
+## 5) チェックリスト
+
+- [ ] `Collectors.toList()` / `toSet()` / `toMap()` を使用してStreamの結果を集約できる
+- [ ] `toMap()` でキー重複時のマージ関数を指定できる
+- [ ] `Collectors.groupingBy()` で要素をグルーピングでき、downstream collectorも活用できる
+- [ ] `Collectors.partitioningBy()` でPredicate基準の二分割ができる
+- [ ] `Collectors.joining()` で文字列を区切り文字付きで連結できる
+- [ ] `reduce()` の3パターン（1引数、2引数、3引数）を使い分けられる
+- [ ] 並列ストリームの適用条件と注意点を理解している
+- [ ] Stream方式とループ方式の使い分け判断ができる
+
+---
+
+## 6) 次へ
+
+本モジュール（JAVA-GOLD-01: ジェネリクスとコレクション）のレッスンはこれで完了である。ジェネリクスの基礎から境界ワイルドカード、コレクションフレームワーク、Stream APIまでの一連の知識を習得した。次のモジュールではさらに高度なJavaの機能を学ぶ。

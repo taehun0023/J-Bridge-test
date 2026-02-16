@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "lesson_id": "JAVA-BRONZE-01-02",
+  "questions": [
+    {
+      "id": "JAVA-BRONZE-01-02-Q01",
+      "type": "single_choice",
+      "difficulty": 1,
+      "prompt": "Javaのプリミティブ型でないものはどれか。",
+      "choices": [
+        "int",
+        "boolean",
+        "String",
+        "char"
+      ],
+      "answer": 2,
+      "explanation": "Stringはクラス型（参照型）であり、プリミティブ型ではない。Javaのプリミティブ型は byte, short, int, long, float, double, char, boolean の8つである。(Evidence: E1, E2)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-02-Q02",
+      "type": "single_choice",
+      "difficulty": 1,
+      "prompt": "`byte` 型の値の範囲として正しいものはどれか。",
+      "choices": [
+        "0 ～ 255",
+        "-128 ～ 127",
+        "-256 ～ 255",
+        "-32768 ～ 32767"
+      ],
+      "answer": 1,
+      "explanation": "byte型は8ビットの符号付き整数で、範囲は -128 ～ 127 である。-32768 ～ 32767 は short 型の範囲である。(Evidence: E1)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-02-Q03",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "以下のコードについて正しい記述はどれか。\n\n```java\npublic class Test {\n    int instanceVar;\n    public void method() {\n        int localVar;\n        System.out.println(instanceVar);\n        System.out.println(localVar);\n    }\n}\n```",
+      "choices": [
+        "両方の変数とも正常に出力される",
+        "instanceVar の出力でコンパイルエラーが発生する",
+        "localVar の出力でコンパイルエラーが発生する",
+        "実行時に NullPointerException が発生する"
+      ],
+      "answer": 2,
+      "explanation": "インスタンス変数 instanceVar にはデフォルト値 0 が設定されるため出力可能だが、ローカル変数 localVar は初期化されていないためコンパイルエラーになる。(Evidence: E3, E4)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-02-Q04",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "`boolean` 型のインスタンス変数を初期化しなかった場合のデフォルト値はどれか。",
+      "choices": [
+        "null",
+        "0",
+        "true",
+        "false"
+      ],
+      "answer": 3,
+      "explanation": "boolean型のインスタンス変数のデフォルト値は false である。null はオブジェクト参照型のデフォルト値であり、0 は数値型のデフォルト値である。(Evidence: E4)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-02-Q05",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "以下のコードはコンパイルエラーになる。その理由として正しいものはどれか。\n\n```java\nfinal int MAX = 10;\nMAX = 20;\n```",
+      "choices": [
+        "final変数は宣言時に初期化できない",
+        "final変数には再代入できない",
+        "final変数にはint型を使用できない",
+        "finalは変数宣言に使用できないキーワードである"
+      ],
+      "answer": 1,
+      "explanation": "final キーワードを付けた変数は一度初期化すると再代入できない。MAX = 20 は再代入にあたるため、コンパイルエラーとなる。(Evidence: E5)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-02-Q06",
+      "type": "code_output",
+      "difficulty": 2,
+      "prompt": "以下のプログラムの出力結果を答えよ。\n\n```java\npublic class Quiz {\n    static int x = 10;\n    public static void main(String[] args) {\n        int x = 20;\n        System.out.println(x);\n    }\n}\n```",
+      "answer": "20",
+      "explanation": "ローカル変数 x がクラス変数 x を隠蔽（シャドウイング）する。main メソッド内では、ローカル変数の x = 20 が優先されるため出力は 20 となる。(Evidence: E3)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-02-Q07",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "以下のコードについて正しい記述はどれか。\n\n```java\nlong value = 3000000000;\n```",
+      "choices": [
+        "正常にコンパイルされ、value に 3000000000 が代入される",
+        "コンパイルエラー: 整数リテラルが int の範囲を超えている",
+        "実行時にオーバーフローが発生する",
+        "value に 0 が代入される"
+      ],
+      "answer": 1,
+      "explanation": "整数リテラルはデフォルトで int 型として扱われる。3000000000 は int の最大値（約21億）を超えるため、Lサフィックスを付けて long value = 3000000000L; とする必要がある。(Evidence: E1)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-02-Q08",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "Java 10 以降の `var` について正しい記述はどれか。",
+      "choices": [
+        "インスタンス変数にも使用できる",
+        "初期化式なしで宣言できる",
+        "ローカル変数にのみ使用でき、初期化式が必須である",
+        "var はプリミティブ型の変数には使用できない"
+      ],
+      "answer": 2,
+      "explanation": "var はローカル変数の型推論にのみ使用可能で、初期化式が必須である。インスタンス変数やクラス変数には使えず、var x; のように初期化式なしではコンパイルエラーになる。(Evidence: E6)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-02-Q09",
+      "type": "code_output",
+      "difficulty": 3,
+      "prompt": "以下のプログラムの出力結果を答えよ。\n\n```java\npublic class ScopeQuiz {\n    public static void main(String[] args) {\n        for (int i = 0; i < 3; i++) {\n            // loop body\n        }\n        int i = 99;\n        System.out.println(i);\n    }\n}\n```",
+      "answer": "99",
+      "explanation": "for文内で宣言された変数 i のスコープはfor文のブロック内に限定される。for文の後に新たな変数 i を宣言しても名前の衝突は起こらず、99 が出力される。(Evidence: E3)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-02-Q10",
+      "type": "short_answer",
+      "difficulty": 4,
+      "prompt": "クラス定数を定義する場合、変数宣言に付ける2つの修飾子をスペース区切りで答えよ（アルファベット順でなくてよい）。",
+      "answer": "static final",
+      "explanation": "クラス定数は static final の組み合わせで宣言する。static によりクラス全体で共有し、final により再代入を禁止する。例: public static final double PI = 3.14159; (Evidence: E5)"
+    }
+  ]
+}

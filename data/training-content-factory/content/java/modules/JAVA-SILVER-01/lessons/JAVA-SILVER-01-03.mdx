@@ -1,0 +1,305 @@
+---
+lesson_id: JAVA-SILVER-01-03
+title: "継承とオーバーライド"
+module: JAVA-SILVER-01
+level: silver
+est_minutes: 40
+tags: [inheritance, extends, override, super, Object, final, toString, equals, hashCode]
+---
+
+## 1) 要点まとめ（5行）
+
+- `extends` キーワードで既存クラス（スーパークラス）を継承し、フィールドやメソッドを再利用できる。Javaの継承は単一継承のみである。(Evidence: E1)
+- `super` キーワードはスーパークラスのコンストラクタ呼び出し（`super()`）やメソッド呼び出し（`super.method()`）に使用する。サブクラスのコンストラクタ先頭で `super()` が暗黙的に呼び出される。(Evidence: E2)
+- メソッドオーバーライドの規則: `@Override` アノテーション推奨、アクセス修飾子は同じか広くする、戻り値型は同じか共変（サブタイプ）、例外は同じか狭くする。(Evidence: E3)
+- すべてのクラスは暗黙的に `Object` クラスを継承する。`toString()`、`equals()`、`hashCode()` のオーバーライドが実務上重要である。(Evidence: E4)
+- `final` クラスは継承不可、`final` メソッドはオーバーライド不可。is-a関係が成り立つ場合のみ継承を使うべきである。(Evidence: E5)
+
+## 2) 概念
+
+### extends による継承
+
+✅ 結論: 既存クラスのフィールドとメソッドを引き継ぎ、機能を拡張する。
+
+`extends` でスーパークラス（親クラス）を指定すると、そのフィールドとメソッドをサブクラス（子クラス）が引き継ぐ。Javaではクラスの多重継承は禁止されており、1つのクラスしか `extends` できない。(Evidence: E1)
+
+```java
+// スーパークラス
+public class Animal {
+    protected String name;
+
+    public void eat() {
+        System.out.println(name + "が食事中");
+    }
+}
+
+// サブクラス
+public class Dog extends Animal {
+    public void bark() {
+        System.out.println(name + "がワンと鳴いた");
+    }
+}
+```
+
+💡 覚え方: "Dog **is-a** Animal"（犬は動物の一種） → 継承が適切
+
+### super キーワード
+
+✅ 結論: superでスーパークラスのコンストラクタやメソッドを呼び出す。
+
+`super` は2つの用途がある。(Evidence: E2)
+
+**用途1: スーパークラスのコンストラクタ呼び出し**
+
+サブクラスのコンストラクタから `super(引数)` でスーパークラスのコンストラクタを呼び出す。明示的に呼び出さない場合、コンパイラが `super()`（引数なし）を先頭に自動挿入する。
+
+```java
+public class Dog extends Animal {
+    private String breed;
+
+    public Dog(String name, String breed) {
+        super();          // Animal() を呼び出す（省略可能）
+        this.breed = breed;
+        this.name = name; // protectedフィールドにアクセス可能
+    }
+}
+```
+
+**用途2: スーパークラスのメソッド呼び出し**
+
+オーバーライドしたメソッド内から `super.method()` でスーパークラスの実装を呼び出せる。
+
+```java
+@Override
+public void eat() {
+    super.eat();  // Animal の eat() を実行
+    System.out.println("（ドッグフードを食べた）");
+}
+```
+
+### コンストラクタチェーンの規則
+
+✅ 結論: super() と this() は同時に使えず、先頭行でのみ呼び出し可能。
+
+- `super()` はコンストラクタの**先頭行**でのみ呼び出せる
+- `this()` と `super()` を同一コンストラクタ内で同時に呼び出すことはできない
+- 明示的に `super()` も `this()` も書かない場合、コンパイラが `super()` を自動挿入する
+- スーパークラスに引数なしコンストラクタがない場合、明示的な `super(引数)` が必須
+
+### メソッドオーバーライドの規則
+
+✅ 結論: シグネチャ同一で、アクセスは広く、例外は狭くする。
+
+メソッドオーバーライドには以下の規則がある。(Evidence: E3)
+
+| 項目 | 規則 |
+|---|---|
+| メソッド名・引数リスト | 完全に同一 |
+| アクセス修飾子 | 同じか、より広くする（例: `protected` → `public` OK） |
+| 戻り値型 | 同じか、共変型（サブタイプ）OK |
+| チェック例外 | 同じか、より狭くする（新しい例外の追加不可） |
+| `@Override` | 任意だが推奨（タイプミス検出に有効） |
+
+```java
+public class Animal {
+    protected Animal create() {
+        return new Animal();
+    }
+}
+
+public class Dog extends Animal {
+    @Override
+    protected Dog create() {    // 共変戻り値型（Dog は Animal のサブタイプ）
+        return new Dog();
+    }
+}
+```
+
+⚠️ 注意: `static` メソッドはオーバーライドできない（隠蔽/hiding は可能）。`private` メソッドは継承されないためオーバーライドの対象外。
+
+### Object クラスのメソッド
+
+✅ 結論: toString(), equals(), hashCode() は実務で頻繁にオーバーライドする。
+
+すべてのクラスは `java.lang.Object` を暗黙的に継承する。以下の3メソッドのオーバーライドが特に重要である。(Evidence: E4)
+
+| メソッド | デフォルト動作 | オーバーライド目的 |
+|---|---|---|
+| `toString()` | `クラス名@ハッシュ値` | 人間が読みやすい文字列表現 |
+| `equals(Object)` | 参照の比較（`==`） | 論理的な等価比較 |
+| `hashCode()` | メモリアドレスベースの整数 | `equals` と整合するハッシュ値 |
+
+**重要:** `equals()` をオーバーライドしたら `hashCode()` も必ずオーバーライドする。`equals` で等しいオブジェクトは同じ `hashCode` を返さなければならない（契約）。
+
+### final クラスと final メソッド
+
+✅ 結論: final は継承やオーバーライドを禁止する修飾子。
+
+`final class` は継承できないクラスを定義する。`final method` はオーバーライドできないメソッドを定義する。(Evidence: E5)
+
+```java
+public final class ImmutablePoint {
+    // このクラスは継承不可
+}
+
+public class Base {
+    public final void critical() {
+        // このメソッドはサブクラスでオーバーライド不可
+    }
+}
+```
+
+代表的な `final` クラス: `String`、`Integer`、`Math`
+
+### is-a 関係
+
+✅ 結論: 「BはAの一種である」が成り立つ場合のみ継承を使う。
+
+継承は is-a 関係（「B is-a A」）が成り立つときに適切である。「社員は人の一種」は is-a 関係が成り立つが、「車はエンジンの一種」は成り立たない（車はエンジンを**持つ** = has-a 関係）。has-a 関係にはコンポジション（フィールドとして保持）を使う。(Evidence: E5)
+
+## 3) 例（2つ）
+
+### 例1: 継承・super・オーバーライドの組み合わせ
+
+```java
+public class Employee {
+    protected String name;
+    protected int baseSalary;
+
+    public Employee(String name, int baseSalary) {
+        this.name = name;
+        this.baseSalary = baseSalary;
+    }
+
+    public int calculatePay() {
+        return baseSalary;
+    }
+
+    @Override
+    public String toString() {
+        return name + "(基本給:" + baseSalary + "円)";
+    }
+}
+```
+
+```java
+public class Manager extends Employee {
+    private int bonus;
+
+    public Manager(String name, int baseSalary, int bonus) {
+        super(name, baseSalary);  // Employee のコンストラクタを呼び出す
+        this.bonus = bonus;
+    }
+
+    @Override
+    public int calculatePay() {
+        return super.calculatePay() + bonus;  // 基本給 + ボーナス
+    }
+
+    @Override
+    public String toString() {
+        return name + "(基本給:" + baseSalary + "円, ボーナス:" + bonus + "円)";
+    }
+}
+```
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Employee emp = new Employee("田中", 300000);
+        Manager mgr = new Manager("鈴木", 400000, 100000);
+
+        System.out.println(emp);                  // 田中(基本給:300000円)
+        System.out.println(emp.calculatePay());   // 300000
+
+        System.out.println(mgr);                  // 鈴木(基本給:400000円, ボーナス:100000円)
+        System.out.println(mgr.calculatePay());   // 500000
+    }
+}
+```
+
+ポイント:
+- `super(name, baseSalary)` でスーパークラスのコンストラクタを呼び出す。
+- `super.calculatePay()` でスーパークラスの実装を再利用しつつ、ボーナスを加算する。
+- `toString()` をオーバーライドすることで、`System.out.println` で読みやすい出力が得られる。
+
+### 例2: equals() と hashCode() のオーバーライド
+
+```java
+import java.util.Objects;
+
+public class Point {
+    private final int x;
+    private final int y;
+
+    public Point(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;              // 同一参照
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Point other = (Point) obj;
+        return this.x == other.x && this.y == other.y;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y);
+    }
+
+    @Override
+    public String toString() {
+        return "(" + x + ", " + y + ")";
+    }
+}
+```
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Point p1 = new Point(3, 5);
+        Point p2 = new Point(3, 5);
+        Point p3 = new Point(1, 2);
+
+        System.out.println(p1.equals(p2));  // true  （論理的に等しい）
+        System.out.println(p1 == p2);       // false （参照は異なる）
+        System.out.println(p1.equals(p3));  // false
+        System.out.println(p1);             // (3, 5)
+    }
+}
+```
+
+ポイント:
+- `equals()` をオーバーライドし、フィールドの値で等価性を判定する。
+- `hashCode()` も `equals()` と整合するように `Objects.hash()` で実装する。
+- `==` は参照比較、`equals()` は論理的等価比較という違いを理解する。
+
+## 4) よくあるミス／落とし穴（5つ）
+
+⚠️ ミス: `equals()` をオーバーライドして `hashCode()` をオーバーライドしない → 対策: `equals` が `true` を返すオブジェクトは同じ `hashCode` を返す必要がある。`HashMap` 等の正しい動作に必須(Evidence: E4)
+
+⚠️ ミス: スーパークラスに引数なしコンストラクタがないのに、サブクラスで `super()` を明示しない → 対策: スーパークラスにパラメータ付きコンストラクタのみがある場合、サブクラスで明示的に `super(引数)` を呼び出す(Evidence: E2)
+
+⚠️ ミス: オーバーライド時にアクセス修飾子を狭くする（例: `public` → `protected`） → 対策: オーバーライドではアクセス修飾子を同じかより広くする。狭くするとコンパイルエラー(Evidence: E3)
+
+⚠️ ミス: `@Override` アノテーションを付けずにメソッド名をタイプミスし、意図せず新しいメソッドを定義してしまう → 対策: 常に `@Override` を付ける。タイプミスがあればコンパイルエラーで検出できる(Evidence: E3)
+
+⚠️ ミス: is-a関係が成り立たない場面で継承を使う → 対策: 「BはAの一種か？」を確認する。has-a関係ならコンポジション（フィールド保持）を使う(Evidence: E5)
+
+## 5) チェックリスト
+
+- [ ] `extends` による単一継承の仕組みを説明できるか
+- [ ] `super` のコンストラクタ呼び出しとメソッド呼び出しの2つの用途を説明できるか
+- [ ] メソッドオーバーライドの4つの規則（シグネチャ、アクセス修飾子、戻り値型、例外）を述べられるか
+- [ ] `@Override` アノテーションの利点を説明できるか
+- [ ] `toString()`、`equals()`、`hashCode()` のオーバーライドを実装できるか
+- [ ] `equals()` と `hashCode()` の契約を理解しているか
+- [ ] `final` クラスと `final` メソッドの制約を説明できるか
+- [ ] is-a 関係と has-a 関係の違いを説明し、適切に選択できるか
+
+## 6) 次へ
+
+次のレッスンは **JAVA-SILVER-01-04: ポリモーフィズムと抽象クラス** です。アップキャスト/ダウンキャスト、動的バインディング、`instanceof` 演算子、そして抽象クラスの設計について学習します。

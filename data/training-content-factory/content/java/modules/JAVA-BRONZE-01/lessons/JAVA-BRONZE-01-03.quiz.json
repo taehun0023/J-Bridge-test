@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "lesson_id": "JAVA-BRONZE-01-03",
+  "questions": [
+    {
+      "id": "JAVA-BRONZE-01-03-Q01",
+      "type": "single_choice",
+      "difficulty": 1,
+      "prompt": "`7 / 2` の結果として正しいものはどれか（両方ともint型）。",
+      "choices": [
+        "3.5",
+        "3",
+        "4",
+        "3.0"
+      ],
+      "answer": 1,
+      "explanation": "int同士の除算では小数点以下が切り捨てられる。7 / 2 = 3 となり、3.5 にはならない。浮動小数点の結果が必要な場合は少なくとも一方を double にする。(Evidence: E1)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-03-Q02",
+      "type": "single_choice",
+      "difficulty": 1,
+      "prompt": "`10 % 3` の結果はどれか。",
+      "choices": [
+        "3",
+        "0",
+        "1",
+        "3.33"
+      ],
+      "answer": 2,
+      "explanation": "% は剰余（余り）を返す演算子である。10 ÷ 3 = 3 余り 1 なので、10 % 3 = 1 となる。(Evidence: E1)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-03-Q03",
+      "type": "code_output",
+      "difficulty": 2,
+      "prompt": "以下のコードの出力結果を答えよ。\n\n```java\nint a = 5;\nint b = a++;\nSystem.out.println(a + \" \" + b);\n```",
+      "answer": "6 5",
+      "explanation": "a++ は後置インクリメントなので、まず a の現在値 5 が b に代入され、その後 a が 6 にインクリメントされる。したがって出力は \"6 5\" となる。(Evidence: E1)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-03-Q04",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "以下のコードについて正しい記述はどれか。\n\n```java\nbyte a = 10;\nbyte b = 20;\nbyte c = a + b;\n```",
+      "choices": [
+        "c に 30 が代入される",
+        "コンパイルエラー: a + b の結果は int 型であり byte に代入できない",
+        "実行時に ArithmeticException が発生する",
+        "c に 0 が代入される"
+      ],
+      "answer": 1,
+      "explanation": "byte同士の算術演算では、オペランドがintに自動昇格される。a + b の結果はint型(30)となるため、byteに直接代入するとコンパイルエラーになる。int c = a + b; または byte c = (byte)(a + b); とする必要がある。(Evidence: E5)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-03-Q05",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "暗黙の型変換（拡張変換）が行われる組み合わせはどれか。",
+      "choices": [
+        "double → int",
+        "long → int",
+        "int → double",
+        "float → int"
+      ],
+      "answer": 2,
+      "explanation": "拡張変換（widening）は小さい型から大きい型への変換で、自動的に行われる。int → double は拡張変換であり暗黙的に行われる。double → int や long → int は縮小変換であり、明示的なキャストが必要。(Evidence: E3)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-03-Q06",
+      "type": "code_output",
+      "difficulty": 3,
+      "prompt": "以下のコードの出力結果を答えよ。\n\n```java\ndouble d = 3.99;\nint i = (int) d;\nSystem.out.println(i);\n```",
+      "answer": "3",
+      "explanation": "(int) による縮小キャストでは小数部分が切り捨てられる（四捨五入ではない）。3.99 の小数部 .99 が切り捨てられ、結果は 3 となる。(Evidence: E4)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-03-Q07",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "以下のコードについて正しい記述はどれか。\n\n```java\nString s1 = new String(\"abc\");\nString s2 = new String(\"abc\");\nSystem.out.println(s1 == s2);\n```",
+      "choices": [
+        "true が出力される",
+        "false が出力される",
+        "コンパイルエラーが発生する",
+        "NullPointerException が発生する"
+      ],
+      "answer": 1,
+      "explanation": "== 演算子を参照型に使用すると、オブジェクトの値ではなく参照（メモリアドレス）を比較する。new で生成した2つの String オブジェクトは異なるインスタンスなので、s1 == s2 は false となる。値の比較には s1.equals(s2) を使う。(Evidence: E6)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-03-Q08",
+      "type": "code_output",
+      "difficulty": 3,
+      "prompt": "以下のコードの出力結果を答えよ。\n\n```java\nbyte b = (byte) 200;\nSystem.out.println(b);\n```",
+      "answer": "-56",
+      "explanation": "byte の範囲は -128 ～ 127 である。200 はこの範囲を超えるため、オーバーフローが発生する。200 - 256 = -56 となる。(Evidence: E4)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-03-Q09",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "論理演算子 `&&` の短絡評価について正しい記述はどれか。",
+      "choices": [
+        "左辺が true の場合、右辺は評価されない",
+        "左辺が false の場合、右辺は評価されない",
+        "常に両辺が評価される",
+        "右辺が false の場合、左辺は評価されない"
+      ],
+      "answer": 1,
+      "explanation": "&& は短絡評価を行う論理AND演算子である。左辺が false の場合、全体の結果は必ず false になるため、右辺は評価されない。これにより null チェック後にメソッド呼び出しを安全に行えるなどの利点がある。(Evidence: E1)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-03-Q10",
+      "type": "code_output",
+      "difficulty": 4,
+      "prompt": "以下のコードの出力結果を答えよ。\n\n```java\nchar c = 'A';\nint result = c + 1;\nSystem.out.println(result);\n```",
+      "answer": "66",
+      "explanation": "char型の 'A' は Unicode 値 65 である。算術演算時にcharはintに昇格されるため、65 + 1 = 66 がint型で計算される。結果は int 型の 66 が出力される。(Evidence: E5)"
+    }
+  ]
+}

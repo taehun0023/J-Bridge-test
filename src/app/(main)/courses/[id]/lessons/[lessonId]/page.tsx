@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Card from '@/components/ui/Card'
+import LessonContentToggle from '@/components/ui/LessonContentToggle'
 import LessonComplete from './LessonComplete'
 import Link from 'next/link'
 
@@ -66,9 +67,9 @@ export default async function LessonPage({ params }: { params: Promise<Params> }
         </div>
 
         {/* Content */}
-        <div className="mt-6 prose prose-sm max-w-none">
+        <div className="mt-6">
           {lesson.content_body ? (
-            <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300">{lesson.content_body}</div>
+            <LessonContentToggle contentJa={lesson.content_body} contentKo={lesson.content_body_ko} />
           ) : lesson.content_url ? (
             <div>
               {lesson.content_type === 'video' ? (

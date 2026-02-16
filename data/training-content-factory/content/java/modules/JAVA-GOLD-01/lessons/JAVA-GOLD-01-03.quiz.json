@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "lesson_id": "JAVA-GOLD-01-03",
+  "questions": [
+    {
+      "id": "JAVA-GOLD-01-03-Q01",
+      "type": "single_choice",
+      "difficulty": 1,
+      "prompt": "Listコレクションの特徴として正しいものはどれか。",
+      "choices": [
+        "重複を許可しない",
+        "順序があり、重複を許可する",
+        "キーと値のペアを格納する",
+        "要素が自動的にソートされる"
+      ],
+      "answer": 1,
+      "explanation": "Listは順序付き（indexed）のコレクションであり、重複した要素の格納を許可する。Setは重複を許可せず、Mapはキーと値のペアを格納する。(Evidence: E2)"
+    },
+    {
+      "id": "JAVA-GOLD-01-03-Q02",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "ArrayListとLinkedListの比較として正しいものはどれか。",
+      "choices": [
+        "ArrayListのget(index)はO(n)、LinkedListのget(index)はO(1)である",
+        "ArrayListのget(index)はO(1)、LinkedListのget(index)はO(n)である",
+        "両方ともget(index)はO(1)である",
+        "両方ともget(index)はO(n)である"
+      ],
+      "answer": 1,
+      "explanation": "ArrayListは内部が配列であるためインデックスによるランダムアクセスがO(1)、LinkedListは連結リストであるためインデックスによるアクセスはO(n)である。(Evidence: E2)"
+    },
+    {
+      "id": "JAVA-GOLD-01-03-Q03",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "HashSetに要素を格納する際に正しく動作するために必要な条件はどれか。",
+      "choices": [
+        "Comparableインターフェースの実装",
+        "toString()メソッドのオーバーライド",
+        "equals()とhashCode()の正しい実装",
+        "Serializableインターフェースの実装"
+      ],
+      "answer": 2,
+      "explanation": "HashSetは内部でHashMapを使用し、hashCode()でバケットを決定し、equals()で同一性を判定する。この2つが正しく実装されていないと重複検出が機能しない。(Evidence: E5)"
+    },
+    {
+      "id": "JAVA-GOLD-01-03-Q04",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "equals/hashCode契約について正しい記述はどれか。",
+      "choices": [
+        "hashCodeが等しければequalsも必ずtrueを返す",
+        "equalsがtrueならhashCodeも同じ値を返さなければならない",
+        "hashCodeとequalsは独立して実装してよい",
+        "hashCodeはオーバーライドする必要がない"
+      ],
+      "answer": 1,
+      "explanation": "equals/hashCode契約の必須条件は「equals()がtrueなら、hashCode()も同じ値を返す」ことである。逆は真ではない（hashCodeが同じでもequalsがfalseの場合は衝突として許容される）。(Evidence: E5)"
+    },
+    {
+      "id": "JAVA-GOLD-01-03-Q05",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "LinkedHashSetの特徴として正しいものはどれか。",
+      "choices": [
+        "要素を自然順序でソートする",
+        "要素の挿入順序を保持する",
+        "スレッドセーフである",
+        "重複要素を許可する"
+      ],
+      "answer": 1,
+      "explanation": "LinkedHashSetはHashSetの機能に加えて、要素の挿入順序を保持する。ソート順序を保持するのはTreeSetである。(Evidence: E3)"
+    },
+    {
+      "id": "JAVA-GOLD-01-03-Q06",
+      "type": "code_output",
+      "difficulty": 3,
+      "prompt": "以下のコードの実行結果を答えなさい。",
+      "code": "import java.util.*;\n\npublic class MapQuiz {\n    public static void main(String[] args) {\n        Map<String, Integer> map = new HashMap<>();\n        map.put(\"a\", 1);\n        map.put(\"b\", 2);\n        map.put(\"a\", 3);\n        System.out.println(map.size());\n        System.out.println(map.get(\"a\"));\n    }\n}",
+      "answer": "2\n3",
+      "explanation": "HashMapで同じキー\"a\"にputすると値が上書きされる。最終的にmap = {a=3, b=2}となるため、size()は2、get(\"a\")は3を返す。(Evidence: E4)"
+    },
+    {
+      "id": "JAVA-GOLD-01-03-Q07",
+      "type": "code_output",
+      "difficulty": 3,
+      "prompt": "以下のコードの実行結果を答えなさい。例外が発生する場合はその例外クラスの単純名を答えよ。",
+      "code": "import java.util.List;\n\npublic class ImmutableQuiz {\n    public static void main(String[] args) {\n        List<String> list = List.of(\"x\", \"y\");\n        list.add(\"z\");\n        System.out.println(list);\n    }\n}",
+      "answer": "UnsupportedOperationException",
+      "explanation": "List.of()で生成した不変コレクションに対してadd()を呼び出すと、UnsupportedOperationExceptionがスローされる。不変コレクションは変更操作を許可しない。(Evidence: E7)"
+    },
+    {
+      "id": "JAVA-GOLD-01-03-Q08",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "拡張for文でのイテレーション中にコレクションを直接変更（remove等）した場合に発生する例外はどれか。",
+      "choices": [
+        "UnsupportedOperationException",
+        "IllegalStateException",
+        "ConcurrentModificationException",
+        "IndexOutOfBoundsException"
+      ],
+      "answer": 2,
+      "explanation": "拡張for文はIteratorを内部的に使用するが、ループ中にコレクションを直接変更するとConcurrentModificationExceptionが発生する。安全に削除するにはIterator.remove()を使用する。(Evidence: E2)"
+    },
+    {
+      "id": "JAVA-GOLD-01-03-Q09",
+      "type": "short_answer",
+      "difficulty": 2,
+      "prompt": "Mapインターフェースのメソッドで、すべてのキーをSetとして取得するメソッド名を答えよ。",
+      "answer": "keySet",
+      "explanation": "Map.keySet()はMapに含まれるすべてのキーをSet<K>として返す。MapはCollectionを継承していないが、keySet()、values()、entrySet()でCollectionビューを取得できる。(Evidence: E1)"
+    },
+    {
+      "id": "JAVA-GOLD-01-03-Q10",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "TreeSetに要素を追加する際に、その要素クラスがComparableを実装しておらず、TreeSetのコンストラクタにもComparatorが指定されていない場合、何が発生するか。",
+      "choices": [
+        "コンパイルエラー",
+        "要素がランダムな順序で格納される",
+        "ClassCastExceptionが実行時に発生する",
+        "NullPointerExceptionが発生する"
+      ],
+      "answer": 2,
+      "explanation": "TreeSetは内部でComparableにキャストして比較を行う。Comparableを実装していないオブジェクトを追加するとClassCastExceptionが実行時に発生する。(Evidence: E3)"
+    }
+  ]
+}

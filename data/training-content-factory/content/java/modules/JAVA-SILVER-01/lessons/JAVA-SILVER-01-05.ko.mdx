@@ -1,0 +1,338 @@
+---
+lesson_id: JAVA-SILVER-01-05
+title: "インタフェースとデフォルトメソッド"
+module: JAVA-SILVER-01
+level: silver
+est_minutes: 35
+tags: [interface, default-method, implements, multiple-inheritance, functional-interface, static-method]
+---
+
+## 1) 요점 정리 (5줄)
+
+- 인터페이스는 `interface` 키워드로 선언하고, `implements`로 구현한다. 메서드의 시그니처(계약)를 정의하고, 구현 클래스에 구체적인 처리를 강제한다. (Evidence: E1)
+- 클래스는 복수의 인터페이스를 `implements`할 수 있다(다중 구현). 클래스의 단일 상속 제약을 보완하여 유연한 타입 시스템을 제공한다. (Evidence: E2)
+- Java 8 이후, 인터페이스에 `default` 메서드(기본 구현)를 정의할 수 있다. 기존 인터페이스에 하위 호환성을 유지하면서 메서드를 추가하기 위해 도입되었다. (Evidence: E3)
+- 인터페이스에 `static` 메서드를 정의할 수 있으며, `인터페이스명.메서드명()`으로 호출한다. 함수형 인터페이스(`@FunctionalInterface`)는 추상 메서드를 하나만 가지는 인터페이스이다. (Evidence: E4)
+- 인터페이스는 "무엇을 할 수 있는가"(능력/계약)를 정의하고, 추상 클래스는 "무엇인가"(is-a 관계 + 공통 구현)를 정의한다. 목적에 맞게 사용 구분한다. (Evidence: E5)
+
+## 2) 개념
+
+### 인터페이스의 기본
+
+✅ 결론: 인터페이스는 구현 클래스가 지켜야 할 계약을 정의한다.
+
+인터페이스는 추상 메서드의 집합이며, 구현 클래스에 "어떤 메서드를 제공해야 하는지"를 규정한다. 인터페이스의 메서드는 암묵적으로 `public abstract`이다(Java 8 이전). (Evidence: E1)
+
+```java
+public interface Printable {
+    void print();           // 암묵적으로 public abstract
+    String format();        // 암묵적으로 public abstract
+}
+
+public class Document implements Printable {
+    @Override
+    public void print() {
+        System.out.println(format());
+    }
+
+    @Override
+    public String format() {
+        return "Document content";
+    }
+}
+```
+
+인터페이스의 필드는 암묵적으로 `public static final`(상수)이다.
+
+```java
+public interface Constants {
+    int MAX_SIZE = 100;     // 암묵적으로 public static final
+}
+```
+
+### 복수 인터페이스 구현
+
+✅ 결론: 하나의 클래스가 복수의 인터페이스를 구현할 수 있어 유연한 타입 부여가 가능하다.
+
+Java에서는 클래스의 다중 상속이 금지되지만, 인터페이스의 다중 구현은 허용된다. 이를 통해 하나의 클래스에 복수의 "능력"을 부여할 수 있다. (Evidence: E2)
+
+```java
+public interface Printable {
+    void print();
+}
+
+public interface Savable {
+    void save(String path);
+}
+
+// 복수 인터페이스 구현
+public class Report implements Printable, Savable {
+    @Override
+    public void print() { /* 인쇄 처리 */ }
+
+    @Override
+    public void save(String path) { /* 저장 처리 */ }
+}
+```
+
+인터페이스는 클래스의 상속과 결합할 수도 있다.
+
+```java
+public class SpecialReport extends Report implements Exportable {
+    // Report를 상속하면서 Exportable도 구현
+}
+```
+
+### 디폴트 메서드 (Java 8+)
+
+✅ 결론: 인터페이스에 기본 구현을 제공하고, 하위 호환성을 유지한다.
+
+`default` 키워드를 붙인 메서드는 인터페이스에 직접 구현을 가질 수 있다. Java 8에서 도입된 주된 이유는 기존 인터페이스(예: `java.util.Collection`)에 새 메서드를 추가해도 기존 구현 클래스를 깨뜨리지 않기 위해서이다. (Evidence: E3)
+
+```java
+public interface Greeter {
+    String greet(String name);
+
+    // 디폴트 메서드 - 구현 클래스에서의 오버라이딩은 선택
+    default String greetAll(String[] names) {
+        StringBuilder sb = new StringBuilder();
+        for (String name : names) {
+            sb.append(greet(name)).append("\n");
+        }
+        return sb.toString().trim();
+    }
+}
+```
+
+**디폴트 메서드의 충돌 해결:**
+
+2개의 인터페이스가 같은 시그니처의 디폴트 메서드를 가진 경우, 구현 클래스에서 명시적으로 오버라이딩하지 않으면 컴파일 에러가 된다.
+
+```java
+public interface A {
+    default String hello() { return "A"; }
+}
+
+public interface B {
+    default String hello() { return "B"; }
+}
+
+public class C implements A, B {
+    @Override
+    public String hello() {
+        return A.super.hello();  // A의 디폴트 구현을 호출
+    }
+}
+```
+
+### static 메서드 (Java 8+)
+
+✅ 결론: 인터페이스에 static 메서드를 정의하여 유틸리티 메서드를 제공할 수 있다.
+
+인터페이스의 `static` 메서드는 `인터페이스명.메서드명()`으로 호출한다. 구현 클래스나 자식 인터페이스에는 상속되지 않는다. (Evidence: E4)
+
+```java
+public interface Validator {
+    boolean isValid(String input);
+
+    static Validator nonNull() {
+        return input -> input != null;
+    }
+}
+
+// 사용
+Validator v = Validator.nonNull();
+v.isValid("test");  // true
+```
+
+### 함수형 인터페이스 (@FunctionalInterface)
+
+✅ 결론: 추상 메서드를 하나만 가지는 인터페이스로, 람다식의 타입으로 사용한다.
+
+함수형 인터페이스는 추상 메서드가 정확히 1개인 인터페이스이다. `@FunctionalInterface` 어노테이션을 붙여 컴파일러에 의도를 전달하고, 추상 메서드가 2개 이상 정의되면 컴파일 에러가 된다. (Evidence: E4)
+
+```java
+@FunctionalInterface
+public interface Calculator {
+    int calculate(int a, int b);
+    // default 메서드나 static 메서드는 몇 개든 OK
+}
+```
+
+람다식으로 구현할 수 있다.
+
+```java
+Calculator add = (a, b) -> a + b;
+Calculator multiply = (a, b) -> a * b;
+
+System.out.println(add.calculate(3, 5));       // 8
+System.out.println(multiply.calculate(3, 5));  // 15
+```
+
+대표적인 표준 함수형 인터페이스:
+
+| 인터페이스 | 추상 메서드 | 용도 |
+|---|---|---|
+| `Predicate<T>` | `boolean test(T t)` | 조건 판정 |
+| `Function<T,R>` | `R apply(T t)` | 값의 변환 |
+| `Consumer<T>` | `void accept(T t)` | 값의 소비 |
+| `Supplier<T>` | `T get()` | 값의 공급 |
+
+### 인터페이스와 추상 클래스의 비교
+
+✅ 결론: 인터페이스는 "능력", 추상 클래스는 "종류"를 나타낸다.
+
+| 항목 | 인터페이스 | 추상 클래스 |
+|---|---|---|
+| 키워드 | `interface` / `implements` | `abstract class` / `extends` |
+| 다중 상속/구현 | 복수 OK | 1개만 |
+| 생성자 | 정의 불가 | 정의 가능 |
+| 필드 | `public static final`만 | 임의의 필드 |
+| 메서드 | `abstract` / `default` / `static` / `private` | 임의의 메서드 |
+| 설계 의도 | "무엇을 할 수 있는가" (능력/계약) | "무엇인가" (is-a + 공통 구현) |
+
+(Evidence: E5)
+
+선택 지침:
+- 복수의 클래스에 공통의 "능력"을 갖게 하고 싶다 -> **인터페이스**
+- 공통의 필드나 구현을 가진 "종류의 계층"을 만들고 싶다 -> **추상 클래스**
+- 양쪽 다 필요한 경우는 인터페이스와 추상 클래스를 조합한다
+
+## 3) 예제 (2개)
+
+### 예제 1: 복수 인터페이스 구현
+
+```java
+public interface Flyable {
+    String fly();
+}
+
+public interface Swimmable {
+    String swim();
+}
+
+public interface Describable {
+    default String describe() {
+        return "生物";
+    }
+}
+```
+
+```java
+public class Duck implements Flyable, Swimmable, Describable {
+    private String name;
+
+    public Duck(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String fly() {
+        return name + "이(가) 하늘을 날았다";
+    }
+
+    @Override
+    public String swim() {
+        return name + "이(가) 물에서 헤엄쳤다";
+    }
+
+    @Override
+    public String describe() {
+        return name + "은(는) 날 수 있고 헤엄칠 수 있는 새입니다";
+    }
+}
+```
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Duck duck = new Duck("アヒル");
+
+        // 각 인터페이스 타입으로 취급 가능
+        Flyable f = duck;
+        Swimmable s = duck;
+        Describable d = duck;
+
+        System.out.println(f.fly());       // アヒル이(가) 하늘을 날았다
+        System.out.println(s.swim());      // アヒル이(가) 물에서 헤엄쳤다
+        System.out.println(d.describe());  // アヒル은(는) 날 수 있고 헤엄칠 수 있는 새입니다
+    }
+}
+```
+
+포인트:
+- `Duck`은 3개의 인터페이스를 동시에 구현하고, 각각의 인터페이스 타입으로 취급할 수 있다.
+- `Describable`의 디폴트 메서드를 `Duck`이 오버라이딩하고 있다.
+- 각 인터페이스 타입의 변수를 통해 다형성이 기능한다.
+
+### 예제 2: 함수형 인터페이스와 디폴트 메서드
+
+```java
+@FunctionalInterface
+public interface StringProcessor {
+    String process(String input);
+
+    // 디폴트 메서드: 2개의 처리를 연결
+    default StringProcessor andThen(StringProcessor after) {
+        return input -> after.process(this.process(input));
+    }
+
+    // static 팩토리 메서드
+    static StringProcessor identity() {
+        return input -> input;
+    }
+}
+```
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        // 람다식으로 구현
+        StringProcessor trimmer = input -> input.trim();
+        StringProcessor upper = input -> input.toUpperCase();
+        StringProcessor exclaim = input -> input + "!";
+
+        // andThen으로 처리를 연결
+        StringProcessor pipeline = trimmer.andThen(upper).andThen(exclaim);
+
+        System.out.println(pipeline.process("  hello  "));  // HELLO!
+
+        // static 메서드 사용
+        StringProcessor id = StringProcessor.identity();
+        System.out.println(id.process("test"));             // test
+    }
+}
+```
+
+포인트:
+- `@FunctionalInterface`로 추상 메서드가 1개임을 보장하고 있다.
+- 람다식 `input -> input.trim()`으로 간결하게 구현할 수 있다.
+- `default` 메서드 `andThen`으로 처리의 연결(합성)을 실현하고 있다.
+- `static` 메서드 `identity()`로 팩토리 패턴을 제공하고 있다.
+
+## 4) 흔한 실수 / 함정 (5개)
+
+⚠️ 실수: 복수 인터페이스의 디폴트 메서드가 충돌했을 때 오버라이딩을 잊는다 → 대책: 같은 시그니처의 디폴트 메서드가 충돌하면 구현 클래스에서 반드시 오버라이딩한다. `InterfaceName.super.method()`로 특정 구현을 선택 가능 (Evidence: E3)
+
+⚠️ 실수: 인터페이스에 인스턴스 필드를 정의하려 한다 → 대책: 인터페이스의 필드는 암묵적으로 `public static final`(상수)이다. 상태를 가지는 필드가 필요하면 추상 클래스를 사용 (Evidence: E1, E5)
+
+⚠️ 실수: `@FunctionalInterface`의 인터페이스에 추상 메서드를 2개 정의한다 → 대책: 함수형 인터페이스는 추상 메서드가 1개만. `default`나 `static` 메서드는 수에 포함되지 않음 (Evidence: E4)
+
+⚠️ 실수: 인터페이스의 static 메서드를 구현 클래스에서 호출한다 → 대책: static 메서드는 `인터페이스명.메서드명()`으로 호출한다. 구현 클래스나 자식 인터페이스에는 상속되지 않음 (Evidence: E4)
+
+⚠️ 실수: 뭐든지 인터페이스로 정의하려 한다 → 대책: 공통 필드나 생성자가 필요한 경우는 추상 클래스가 적절하다. "능력의 부여"에는 인터페이스, "종류의 정의"에는 추상 클래스를 사용 구분 (Evidence: E5)
+
+## 5) 체크리스트
+
+- [ ] 인터페이스의 선언과 `implements`에 의한 구현을 올바르게 기술할 수 있는가
+- [ ] 인터페이스의 메서드가 암묵적으로 `public abstract`임을 이해하고 있는가
+- [ ] 복수 인터페이스의 구현 방법과 그 이점을 설명할 수 있는가
+- [ ] 디폴트 메서드의 목적(하위 호환성)과 정의 방법을 설명할 수 있는가
+- [ ] 디폴트 메서드 충돌 시의 해결 방법을 말할 수 있는가
+- [ ] 함수형 인터페이스의 조건과 람다식과의 관계를 설명할 수 있는가
+- [ ] 인터페이스와 abstract 클래스의 차이를 표로 비교할 수 있는가
+- [ ] 용도에 맞게 인터페이스와 추상 클래스를 올바르게 선택할 수 있는가
+
+## 6) 다음으로
+
+이것으로 **JAVA-SILVER-01: クラスとオブジェクト** 모듈이 완료되었습니다. 다음 모듈에서는 예외 처리나 문자열 조작 등 Java Silver 시험의 중요 토픽을 더 학습해 나갑니다.

@@ -1,0 +1,23 @@
+track:
+  id: JAVA
+  title: Java 開発実務能力
+  level_order: [bronze, silver, gold]
+  runtime:
+    java_version: "17"
+  modules:
+    - id: JAVA-BRONZE-01
+      title: Java 基本文法
+      level: bronze
+      order: 10
+    - id: JAVA-SILVER-01
+      title: クラスとオブジェクト
+      level: silver
+      order: 20
+    - id: JAVA-SILVER-04
+      title: 例外処理
+      level: silver
+      order: 40
+    - id: JAVA-GOLD-01
+      title: ジェネリクスとコレクション
+      level: gold
+      order: 50

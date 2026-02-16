@@ -1,0 +1,321 @@
+---
+lesson_id: JAVA-SILVER-01-04
+title: "ポリモーフィズムと抽象クラス"
+module: JAVA-SILVER-01
+level: silver
+est_minutes: 40
+tags: [polymorphism, abstract, dynamic-binding, upcasting, downcasting, instanceof, template-method]
+---
+
+## 1) 요점 정리 (5줄)
+
+- 다형성(폴리모피즘)으로 슈퍼클래스 타입의 변수로 서브클래스의 인스턴스를 다룰 수 있다. 호출되는 메서드는 실행 시의 타입으로 결정된다(동적 바인딩). (Evidence: E1)
+- 업캐스트(서브클래스->슈퍼클래스)는 암묵적으로 수행된다. 다운캐스트(슈퍼클래스->서브클래스)는 명시적 캐스트가 필요하며, 실패하면 `ClassCastException`이 발생한다. (Evidence: E2)
+- `instanceof` 연산자로 실행 시의 타입을 확인할 수 있다. 다운캐스트 전에 반드시 `instanceof`로 타입 체크를 해야 한다. Java 16 이후에는 패턴 매칭을 사용할 수 있다. (Evidence: E3)
+- `abstract` 클래스는 인스턴스화할 수 없는 클래스이며, `abstract` 메서드는 본문을 갖지 않고 서브클래스에서 구현을 강제한다. (Evidence: E4)
+- 템플릿 메서드 패턴은 추상 클래스에서 처리의 흐름을 정의하고, 구체적인 처리를 서브클래스에 위임하는 설계 패턴이다. (Evidence: E5)
+
+## 2) 개념
+
+### 다형성 (폴리모피즘)
+
+✅ 결론: 같은 메서드 호출이라도 실행 시의 타입에 따라 다른 동작을 한다.
+
+다형성으로 슈퍼클래스 타입의 변수를 통해 서로 다른 서브클래스의 메서드를 통일적으로 호출할 수 있다. 어떤 메서드가 실행되는지는 **컴파일 시의 타입이 아니라 실행 시의 타입**으로 결정된다. (Evidence: E1)
+
+```java
+Animal a = new Dog();    // 변수의 타입: Animal, 실행 시의 타입: Dog
+a.speak();               // Dog의 speak()이 실행됨 (동적 바인딩)
+```
+
+이를 통해 새로운 서브클래스를 추가해도 기존 코드를 변경하지 않고 확장할 수 있다(개방-폐쇄 원칙).
+
+### 동적 바인딩 (레이트 바인딩)
+
+✅ 결론: 인스턴스 메서드의 호출 대상은 실행 시에 결정된다.
+
+Java에서 인스턴스 메서드의 호출은 **동적 바인딩**으로 해결된다. 컴파일 시가 아니라 실행 시에 객체의 실제 타입을 기반으로 호출할 메서드가 결정된다. (Evidence: E1)
+
+| 항목 | 정적 바인딩 | 동적 바인딩 |
+|---|---|---|
+| 결정 타이밍 | 컴파일 시 | 실행 시 |
+| 대상 | `static` 메서드, `private` 메서드, `final` 메서드 | 인스턴스 메서드 |
+| 키워드 | - (자동) | - (자동) |
+
+⚠️ 주의: 필드 접근은 동적 바인딩되지 않는다. 필드는 컴파일 시의 타입으로 해결된다.
+
+### 업캐스트와 다운캐스트
+
+✅ 결론: 업캐스트는 안전하고 암묵적, 다운캐스트는 위험하고 명시적.
+
+**업캐스트 (서브클래스 -> 슈퍼클래스):**
+암묵적으로 수행되며 항상 안전하다. 단, 서브클래스 고유의 메서드는 호출할 수 없게 된다. (Evidence: E2)
+
+```java
+Dog dog = new Dog();
+Animal a = dog;           // 업캐스트 (암묵적, 안전)
+a.speak();                // OK (Animal에 정의가 있으면)
+// a.fetch();             // 컴파일 에러 (Animal에 fetch()가 없음)
+```
+
+**다운캐스트 (슈퍼클래스 -> 서브클래스):**
+명시적 캐스트가 필요하다. 실행 시의 타입이 맞지 않으면 `ClassCastException`이 발생한다. (Evidence: E2)
+
+```java
+Animal a = new Dog();
+Dog d = (Dog) a;          // 다운캐스트 (명시적, 성공)
+d.fetch();                // OK
+
+Animal a2 = new Cat();
+Dog d2 = (Dog) a2;        // ClassCastException! Cat은 Dog이 아님
+```
+
+### instanceof 연산자
+
+✅ 결론: 다운캐스트 전의 타입 체크에 사용한다.
+
+`instanceof`는 좌변의 객체가 우변의 타입(또는 그 서브클래스)의 인스턴스인지를 판정한다. 다운캐스트 전에 반드시 사용해야 한다. (Evidence: E3)
+
+```java
+Animal a = getAnimal();
+
+if (a instanceof Dog) {
+    Dog d = (Dog) a;    // 안전한 다운캐스트
+    d.fetch();
+}
+```
+
+**Java 16 이후: 패턴 매칭**
+
+```java
+if (a instanceof Dog d) {   // 타입 체크 + 캐스트 + 변수 선언을 한 줄로
+    d.fetch();
+}
+```
+
+💡 기억법: `null instanceof 임의의_타입`은 항상 `false`를 반환한다
+
+### 추상 클래스 (abstract class)
+
+✅ 결론: 인스턴스화할 수 없는 클래스로, 서브클래스에 구현을 강제한다.
+
+`abstract` 클래스는 인스턴스를 직접 생성할 수 없다. `abstract` 메서드는 본문(`{ }`)을 갖지 않으며, 서브클래스에서 반드시 오버라이딩해야 한다. (Evidence: E4)
+
+```java
+public abstract class Shape {
+    protected String color;
+
+    public Shape(String color) {
+        this.color = color;
+    }
+
+    // 추상 메서드 - 서브클래스에서의 구현을 강제
+    public abstract double getArea();
+
+    // 구상 메서드 - 공통 처리를 제공
+    public String getColor() {
+        return color;
+    }
+}
+```
+
+| 항목 | 추상 클래스 | 구상 클래스 |
+|---|---|---|
+| 인스턴스화 | 불가 | 가능 |
+| `abstract` 메서드 | 정의 가능 | 정의 불가 |
+| 구상 메서드 | 정의 가능 | 정의 가능 |
+| 생성자 | 정의 가능 (서브클래스에서 호출) | 정의 가능 |
+
+⚠️ 주의: 추상 클래스를 상속한 서브클래스가 추상 메서드를 모두 구현하지 않으면, 그 서브클래스도 `abstract`로 해야 한다.
+
+### 템플릿 메서드 패턴
+
+✅ 결론: 알고리즘의 골격을 추상 클래스에서 정의하고, 상세를 서브클래스에 위임한다.
+
+템플릿 메서드 패턴은 처리의 흐름(템플릿 메서드)을 추상 클래스에서 정의하고, 가변 부분을 추상 메서드로서 서브클래스에 구현시키는 디자인 패턴이다. (Evidence: E5)
+
+```java
+public abstract class DataProcessor {
+    // 템플릿 메서드 (처리의 흐름을 정의)
+    public final void process() {
+        readData();
+        transformData();
+        writeData();
+    }
+
+    protected abstract void readData();       // 서브클래스가 구현
+    protected abstract void transformData();  // 서브클래스가 구현
+    protected abstract void writeData();      // 서브클래스가 구현
+}
+```
+
+템플릿 메서드를 `final`로 하여 서브클래스가 처리의 흐름 자체를 변경하는 것을 방지한다.
+
+## 3) 예제 (2개)
+
+### 예제 1: 다형성과 instanceof
+
+```java
+public abstract class Animal {
+    protected String name;
+
+    public Animal(String name) {
+        this.name = name;
+    }
+
+    public abstract String speak();
+
+    @Override
+    public String toString() {
+        return name + ": " + speak();
+    }
+}
+```
+
+```java
+public class Dog extends Animal {
+    public Dog(String name) { super(name); }
+
+    @Override
+    public String speak() { return "ワン"; }
+
+    public String fetch() { return name + "이(가) 공을 가져왔다"; }
+}
+
+public class Cat extends Animal {
+    public Cat(String name) { super(name); }
+
+    @Override
+    public String speak() { return "ニャー"; }
+}
+```
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        // 다형성: Animal 타입의 배열에 서로 다른 서브클래스를 저장
+        Animal[] animals = {
+            new Dog("ポチ"),
+            new Cat("タマ"),
+            new Dog("ハチ")
+        };
+
+        for (Animal a : animals) {
+            System.out.println(a);  // 동적 바인딩으로 적절한 speak()이 호출됨
+        }
+        // 출력:
+        // ポチ: ワン
+        // タマ: ニャー
+        // ハチ: ワン
+
+        // instanceof + 다운캐스트
+        for (Animal a : animals) {
+            if (a instanceof Dog dog) {  // 패턴 매칭 (Java 16+)
+                System.out.println(dog.fetch());
+            }
+        }
+        // 출력:
+        // ポチ이(가) 공을 가져왔다
+        // ハチ이(가) 공을 가져왔다
+    }
+}
+```
+
+포인트:
+- `Animal` 타입의 배열에 `Dog`과 `Cat`을 혼재시키고, 다형성으로 통일적으로 처리한다.
+- `toString()` 내의 `speak()`은 동적 바인딩으로 실행 시의 타입의 메서드가 호출된다.
+- `instanceof`로 Dog인지 판정한 후 다운캐스트하여 Dog 고유의 `fetch()`를 호출한다.
+
+### 예제 2: 템플릿 메서드 패턴
+
+```java
+public abstract class Report {
+    // 템플릿 메서드
+    public final String generate() {
+        return formatHeader() + "\n" + formatBody() + "\n" + formatFooter();
+    }
+
+    protected abstract String formatHeader();
+    protected abstract String formatBody();
+
+    // 기본 구현을 가진 메서드 (필요에 따라 오버라이딩 가능)
+    protected String formatFooter() {
+        return "--- END ---";
+    }
+}
+```
+
+```java
+public class SalesReport extends Report {
+    private int total;
+
+    public SalesReport(int total) {
+        this.total = total;
+    }
+
+    @Override
+    protected String formatHeader() {
+        return "=== 매출 리포트 ===";
+    }
+
+    @Override
+    protected String formatBody() {
+        return "매출 합계: " + total + "원";
+    }
+}
+
+public class InventoryReport extends Report {
+    private int itemCount;
+
+    public InventoryReport(int itemCount) {
+        this.itemCount = itemCount;
+    }
+
+    @Override
+    protected String formatHeader() {
+        return "=== 재고 리포트 ===";
+    }
+
+    @Override
+    protected String formatBody() {
+        return "재고 수: " + itemCount + "건";
+    }
+
+    @Override
+    protected String formatFooter() {
+        return "--- 재고 확인 완료 ---";
+    }
+}
+```
+
+포인트:
+- `generate()`가 템플릿 메서드이며, 처리의 흐름(헤더->본문->푸터)을 정의한다.
+- `formatHeader()`와 `formatBody()`는 추상 메서드로서 서브클래스에 구현을 강제한다.
+- `formatFooter()`는 기본 구현을 제공하고, `InventoryReport`만 오버라이딩하고 있다.
+
+## 4) 흔한 실수 / 함정 (5개)
+
+⚠️ 실수: `instanceof` 체크 없이 다운캐스트하여 `ClassCastException`이 발생한다 → 대책: 다운캐스트 전에 반드시 `instanceof`로 타입을 확인한다 (Evidence: E2, E3)
+
+⚠️ 실수: 추상 클래스를 `new`로 인스턴스화하려고 하여 컴파일 에러 → 대책: 추상 클래스는 인스턴스화할 수 없다. 구상 서브클래스를 사용하여 `new` 한다 (Evidence: E4)
+
+⚠️ 실수: 업캐스트 후 서브클래스 고유의 메서드를 호출하여 컴파일 에러 → 대책: 컴파일 시의 타입에 그 메서드가 존재하지 않으면 호출할 수 없다. 다운캐스트가 필요 (Evidence: E2)
+
+⚠️ 실수: 필드 접근이 동적 바인딩된다고 오해한다 → 대책: 필드는 컴파일 시의 타입으로 해결된다. 메서드만이 동적 바인딩의 대상 (Evidence: E1)
+
+⚠️ 실수: 추상 메서드를 모두 구현하지 않고 서브클래스를 구상 클래스로 정의한다 → 대책: 추상 메서드를 하나라도 구현하지 않으면 서브클래스도 `abstract`로 해야 컴파일 에러가 발생하지 않음 (Evidence: E4)
+
+## 5) 체크리스트
+
+- [ ] 다형성의 구조를 구체적인 예를 들어 설명할 수 있는가
+- [ ] 동적 바인딩과 정적 바인딩의 차이를 설명할 수 있는가
+- [ ] 업캐스트와 다운캐스트의 차이와 주의점을 말할 수 있는가
+- [ ] `instanceof` 연산자의 사용법과 패턴 매칭(Java 16+)을 설명할 수 있는가
+- [ ] 추상 클래스와 구상 클래스의 차이를 설명할 수 있는가
+- [ ] 추상 메서드의 정의와 구현의 흐름을 설명할 수 있는가
+- [ ] 템플릿 메서드 패턴의 이점을 설명할 수 있는가
+- [ ] `ClassCastException`을 방지하는 방법을 말할 수 있는가
+
+## 6) 다음으로
+
+다음 레슨은 **JAVA-SILVER-01-05: インタフェースとデフォルトメソッド** 입니다. `interface`의 선언과 `implements`, 복수 인터페이스 구현, 디폴트 메서드, 함수형 인터페이스, 그리고 인터페이스와 추상 클래스의 사용 구분에 대해 학습합니다.

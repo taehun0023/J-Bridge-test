@@ -1,0 +1,250 @@
+---
+lesson_id: JAVA-SILVER-04-01
+title: "Checked vs Unchecked / throws vs try-catch"
+module: JAVA-SILVER-04
+level: silver
+est_minutes: 35
+tags: [exceptions, checked, unchecked, throws, try-catch]
+---
+
+## 1) 요점 정리 (5줄)
+
+- **checked 예외**는 컴파일러가 처리(try-catch) 또는 선언(throws)을 강제하는 예외이며, IOException, SQLException 등이 해당한다 (Evidence: E1)
+- **unchecked 예외**는 RuntimeException의 서브클래스이며, 컴파일 시에 처리/선언이 강제되지 않는다. NullPointerException, IllegalArgumentException 등이 해당한다 (Evidence: E2)
+- **throws**는 예외 처리의 책임을 호출측에 위임하는 설계 선택이며, 메서드 시그니처에 선언한다 (Evidence: E4)
+- **try-catch**는 현재 레이어에서 복구, 대체 처리, 로그 출력, 예외 변환 등 의미 있는 처리를 수행할 경우 사용한다 (Evidence: E5)
+- 예외를 변환(wrap)할 때는 **cause를 반드시 보존**해야 한다. 빈 catch 블록은 원인 규명을 어렵게 하는 안티패턴이다 (Evidence: E6, E7)
+
+---
+
+## 2) 개념
+
+### Throwable 계층
+
+Java의 예외는 모두 `Throwable`을 정점으로 하는 계층 구조를 가진다. 크게 3가지 계열로 나뉜다.
+
+```
+Throwable
+├── Error                    ← 애플리케이션에서 캐치하지 않음 (E3)
+│   ├── OutOfMemoryError
+│   └── StackOverflowError
+└── Exception                ← 애플리케이션에서 다루는 예외의 부모
+    ├── IOException          ← checked 예외 (E1)
+    ├── SQLException         ← checked 예외 (E1)
+    └── RuntimeException     ← unchecked 예외의 부모 (E2)
+        ├── NullPointerException
+        ├── IllegalArgumentException
+        └── ArithmeticException
+```
+
+**Error 계열**(OutOfMemoryError, StackOverflowError 등)은 JVM 자체의 심각한 문제를 나타낸다. 애플리케이션이 통상적으로 복구/처리의 대상으로 삼지 않으므로, catch해서는 안 된다 (Evidence: E3).
+
+### checked 예외 vs unchecked 예외
+
+| 항목 | checked 예외 | unchecked 예외 |
+|---|---|---|
+| 부모 클래스 | Exception (RuntimeException 제외) | RuntimeException |
+| 컴파일 시 강제 | 있음 (try-catch 또는 throws 필수) | 없음 |
+| 대표 예 | IOException, SQLException | NullPointerException, IllegalArgumentException |
+| 설계 의도 | 호출측에 복구 가능성을 전달 | 프로그래밍 오류를 나타냄 |
+
+checked 예외는 컴파일러가 처리 또는 선언을 강제하므로, 처리 누락을 방지하는 장치가 된다 (Evidence: E1). 반면 unchecked 예외는 컴파일 시에 체크되지 않으므로, 실행 시에 비로소 검출된다 (Evidence: E2).
+
+### throws 선언 vs try-catch
+
+예외에 대처하는 방법은 2가지이다.
+
+**throws 선언** -- 예외 처리의 책임을 호출측에 위임한다. 메서드 시그니처에 `throws` 키워드로 선언하여 "이 메서드는 이 예외를 던질 가능성이 있다"고 호출측에 통지한다 (Evidence: E4).
+
+**try-catch** -- 현재 메서드 내에서 예외를 캐치하여, 복구 처리, 대체값 반환, 로그 출력, 예외 변환 등의 **의미 있는 처리**를 수행할 경우 사용한다 (Evidence: E5).
+
+사용 구분의 판단 기준: 현재 레이어에서 복구 가능한지 여부. 복구할 수 있다면 try-catch, 할 수 없다면 throws로 상위에 위임한다.
+
+### 예외 변환과 cause 보존
+
+하위 레벨의 예외를 상위 레이어의 예외로 변환할 경우, **원래 예외를 cause로 반드시 보존**해야 한다. cause를 보존하지 않으면 스택 트레이스가 사라져 디버깅이 극히 어려워진다 (Evidence: E7).
+
+```java
+// 올바른 예외 변환 (cause를 보존)
+throw new IllegalStateException("READ_FAILED", e);
+
+// 잘못된 예외 변환 (cause가 사라짐)
+throw new IllegalStateException("READ_FAILED");  // NG: 원래 예외가 소멸
+```
+
+### try-with-resources
+
+`AutoCloseable`을 구현한 리소스는 try-with-resources 구문을 사용하면 스코프 종료 시 자동으로 close된다. finally 블록에서 수동으로 close하는 방법보다 안전하고 간결하다 (Evidence: E8, E9).
+
+### multi-catch
+
+Java 7 이후에는 여러 예외 타입을 `|`로 구분하여 하나의 catch 블록에서 캐치할 수 있다. 단, 공통 처리 로직이 동일한 경우에만 사용해야 한다 (Evidence: E10).
+
+```java
+catch (IOException | SQLException e) {
+    logger.error("데이터 액세스 실패", e);
+}
+```
+
+---
+
+## 3) 예제 (2개)
+
+### 예제 1: checked 예외 -- throws 미선언 시 컴파일 에러
+
+checked 예외인 IOException을 다룰 때, throws를 선언하지 않으면 컴파일 에러가 발생함을 보여준다 (Evidence: E1, E4).
+
+```java
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+public class CheckedExample {
+
+    // NG: throws 선언이 없으므로 컴파일 에러
+    // static String readFileNG(Path path) {
+    //     return Files.readString(path);  // 컴파일 에러!
+    // }
+
+    // OK: throws 선언 있음 -- 호출측에 예외 처리를 위임
+    static String readFile(Path path) throws IOException {
+        return Files.readString(path);
+    }
+
+    // OK: try-catch로 처리 -- 현재 레이어에서 복구
+    static String readFileSafe(Path path) {
+        try {
+            return Files.readString(path);
+        } catch (IOException e) {
+            System.err.println("파일 읽기 실패: " + e.getMessage());
+            return "";  // 기본값으로 복구
+        }
+    }
+}
+```
+
+`readFile` 메서드는 `throws IOException`을 선언하여 호출측에 처리를 위임한다. `readFileSafe` 메서드는 try-catch로 캐치하여 기본값으로 복구한다. 주석 처리된 `readFileNG` 메서드는 throws 선언도 try-catch도 없으므로 컴파일 에러가 된다.
+
+### 예제 2: unchecked 예외 -- 런타임 동작
+
+unchecked 예외는 컴파일 시에 체크되지 않으므로, 실행 시에 비로소 발생한다 (Evidence: E2).
+
+```java
+public class UncheckedExample {
+
+    // ArithmeticException -- 0으로 나누기 (실행 시 오류)
+    static int divide(int a, int b) {
+        return a / b;  // b==0 이면 ArithmeticException
+    }
+
+    // NullPointerException -- null 참조 (실행 시 오류)
+    static int getLength(String s) {
+        return s.length();  // s==null 이면 NullPointerException
+    }
+
+    public static void main(String[] args) {
+        // 컴파일은 통과하지만, 실행 시에 예외가 발생한다
+        try {
+            int result = divide(10, 0);
+        } catch (ArithmeticException e) {
+            System.err.println("0으로 나눌 수 없습니다: " + e.getMessage());
+        }
+
+        try {
+            int len = getLength(null);
+        } catch (NullPointerException e) {
+            System.err.println("null이 전달되었습니다: " + e.getMessage());
+        }
+    }
+}
+```
+
+`divide`와 `getLength`에는 throws 선언도 try-catch도 강제되지 않는다. 컴파일은 성공하지만, 부적절한 인수가 전달되면 실행 시에 ArithmeticException이나 NullPointerException이 발생한다.
+
+---
+
+## 4) 흔한 실수 / 함정 (5개)
+
+### 1. 빈 catch 블록 (예외 무시)
+
+```java
+// NG: 예외를 무시하고 있음
+try {
+    riskyOperation();
+} catch (IOException e) {
+    // 아무것도 하지 않음 ← 원인 규명이 불가능해짐
+}
+```
+
+catch 블록에서 아무것도 하지 않는 행위는, 장애 발생 시 원인 규명을 극히 어렵게 하는 안티패턴이다. 최소한 로그 출력을 해야 한다 (Evidence: E6).
+
+### 2. cause를 보존하지 않고 예외 변환
+
+```java
+// NG: cause가 사라짐
+catch (IOException e) {
+    throw new ServiceException("처리 실패");  // 원래 IOException의 스택 트레이스가 소멸
+}
+
+// OK: cause를 보존
+catch (IOException e) {
+    throw new ServiceException("처리 실패", e);  // 원래 예외를 유지
+}
+```
+
+예외 변환 시 cause를 전달하지 않으면, 원래 스택 트레이스가 완전히 사라진다 (Evidence: E7).
+
+### 3. Exception/Throwable을 광범위하게 catch
+
+```java
+// NG: 범위가 너무 넓음
+catch (Exception e) {  // NullPointerException 등의 버그도 숨겨버림
+    logger.error("에러", e);
+}
+```
+
+`Exception`이나 `Throwable`을 일괄적으로 catch하면, 본래 검출해야 할 프로그래밍 오류(unchecked 예외)까지 은폐해버린다. catch하는 예외는 가능한 한 구체적인 타입을 지정해야 한다 (Evidence: E1, E2).
+
+### 4. finally에서의 리소스 해제 누락
+
+```java
+// NG: close 시 예외로 원래 예외가 사라질 가능성
+BufferedReader reader = null;
+try {
+    reader = Files.newBufferedReader(path);
+    return reader.readLine();
+} finally {
+    if (reader != null) reader.close();  // close 자체가 IOException을 던질 수 있음
+}
+```
+
+finally에서의 리소스 해제는 장황하고 오류가 발생하기 쉽다. try-with-resources를 사용하면 자동으로 안전하게 close된다 (Evidence: E8, E9).
+
+### 5. multi-catch로 무관한 예외를 묶기
+
+```java
+// NG: 처리 로직이 다른데 묶고 있음
+catch (IOException | IllegalArgumentException e) {
+    retry();  // IllegalArgumentException에 retry는 무의미
+}
+```
+
+multi-catch는 공통 처리 로직이 동일한 경우에만 사용해야 한다. 다른 처리가 필요한 예외를 안이하게 묶으면, 부적절한 에러 처리로 이어진다 (Evidence: E10).
+
+---
+
+## 5) 체크리스트
+
+- [ ] checked 예외에 대해 try-catch 또는 throws 선언이 빠지지 않았는가
+- [ ] catch 블록에 의미 있는 처리(로그 출력, 복구, 재throw)가 포함되어 있는가
+- [ ] 예외 변환 시 cause(두 번째 인수)를 보존하고 있는가
+- [ ] `catch (Exception e)` 같은 광범위 catch를 사용하고 있지 않은가
+- [ ] 리소스 해제에 try-with-resources를 사용하고 있는가
+- [ ] multi-catch는 공통 처리 로직이 동일한 예외에 대해서만 사용하고 있는가
+- [ ] Error 계열(OutOfMemoryError 등)을 catch하고 있지 않은가
+
+---
+
+## 6) 다음으로
+
+다음 레슨 **JAVA-SILVER-04-02: 예외 변환(wrap)과 cause 보존**에서는 레이어 간 예외 변환 패턴, cause 체인 구축 방법, 커스텀 예외 클래스 설계에 대해 자세히 배운다.

@@ -1,0 +1,230 @@
+---
+lesson_id: JAVA-BRONZE-01-01
+title: "プログラムの構造とコンパイル"
+module: JAVA-BRONZE-01
+level: bronze
+est_minutes: 35
+tags: [main, compile, execute, jdk]
+---
+
+## 1) 要点まとめ（5行）
+
+- Javaプログラムのエントリーポイントは `public static void main(String[] args)` であり、JVMはこのシグネチャを探して実行を開始する。
+- `javac` コマンドでソースファイル (.java) をバイトコード (.class) にコンパイルし、`java` コマンドでJVM上で実行する。
+- JDKは開発ツール群（javac等）を含み、JREは実行環境、JVMはバイトコードを解釈・実行する仮想マシンである。
+- パッケージ宣言はソースファイルの先頭に記述し、クラスの名前空間を定義する。実務では省略しない。
+- コンパイルエラーは `javac` 実行時、実行時エラーは `java` 実行時に発生する。両者の区別が重要である。
+
+## 2) 概念
+
+### mainメソッドのシグネチャ
+
+✅ 結論: Javaの実行はmainメソッドから始まる。
+
+JVMが認識するエントリーポイントのシグネチャは以下の通りである。
+
+```java
+public static void main(String[] args)
+```
+
+各キーワードの意味は次の通りである。
+
+| キーワード | 役割 |
+|---|---|
+| `public` | JVMが外部からアクセスできるようにする |
+| `static` | インスタンス生成なしで呼び出し可能にする |
+| `void` | 戻り値がないことを示す |
+| `String[] args` | コマンドライン引数を受け取る配列 |
+
+`String... args`（可変長引数）も `String[] args` と等価であり、エントリーポイントとして有効である。
+
+### コマンドライン引数
+
+✅ 結論: args配列にコマンドライン引数が格納される。
+
+`String[] args` パラメータにはコマンドラインから渡された引数が格納される。
+
+例えば `java MyApp hello world` と実行した場合:
+- `args[0]` → `"hello"`
+- `args[1]` → `"world"`
+
+### javac / java のフロー
+
+✅ 結論: javacでコンパイル、javaで実行の2ステップ。
+
+```
+ソースコード (.java)  →  javac（コンパイル）  →  バイトコード (.class)  →  java（実行）  →  結果
+```
+
+1. **コンパイル:** `javac` コマンドが `.java` ファイルを読み込み、文法チェックや型チェックを行った上で `.class` ファイル（バイトコード）を生成する。
+2. **実行:** `java` コマンドがJVMを起動し、指定されたクラスの `main` メソッドからプログラムを実行する。
+
+| 項目 | `javac` | `java` |
+|------|---------|--------|
+| 役割 | コンパイラ | 実行環境（JVM起動） |
+| 入力 | `.java` ファイル | クラス名（完全修飾名） |
+| 出力 | `.class` ファイル | プログラムの実行結果 |
+| エラー | コンパイルエラー | 実行時エラー |
+
+💡 覚え方: javac の "c" = compile、java は "実行"と覚える
+
+### JDK / JRE / JVM の関係
+
+✅ 結論: JDK ⊃ JRE ⊃ JVM の包含関係。
+
+| 要素 | 含まれるもの | 用途 |
+|------|-------------|------|
+| JDK | JRE + 開発ツール（javac, javadoc, jar等） | 開発時に必要 |
+| JRE | JVM + 標準クラスライブラリ | 実行のみなら十分 |
+| JVM | バイトコード解釈・実行エンジン | すべての基盤 |
+
+💡 覚え方: "D=開発(Development)" "R=実行(Runtime)" "M=マシン(Machine)"
+
+開発時にはJDKが必要であり、実行のみであればJREで十分である。
+
+### パッケージとソースファイル
+
+✅ 結論: package宣言で名前空間を定義する。
+
+パッケージ宣言（`package com.example;`）はソースファイルの先頭に記述する。
+これによりクラスの名前空間が定義され、名前の衝突を回避できる。
+パッケージ宣言は省略可能だが、実務では必ず宣言する。
+
+`import` 文はパッケージ宣言の後、クラス定義の前に記述する。
+他パッケージのクラスを完全修飾名なしで使用可能にする。
+
+### ソースファイルとクラスファイルの関係
+
+✅ 結論: publicクラスは1ファイルに1つ、ファイル名と一致必須。
+
+- 1つのソースファイルに `public` クラスは最大1つしか定義できない
+- ファイル名は `public` クラス名と一致しなければならない
+- 例: `public class HelloWorld` → ファイル名は `HelloWorld.java`
+
+### クラスパス
+
+✅ 結論: -cpオプションでクラスファイルの検索パスを指定する。
+
+クラスパスはJVMがクラスファイルを検索するパスを指定する仕組みである。
+`-cp` または `-classpath` オプションで明示的に設定できる。
+
+```bash
+java -cp out com.example.HelloWorld
+```
+
+### コンパイルエラーと実行時エラー
+
+✅ 結論: javac時=コンパイルエラー、java時=実行時エラー。
+
+| 種類 | 発生タイミング | 例 |
+|---|---|---|
+| コンパイルエラー | `javac` 実行時 | 文法エラー、型の不一致、セミコロンの欠落 |
+| 実行時エラー | `java` 実行時 | NullPointerException、mainメソッドが見つからない |
+
+💡 覚え方: javac で怒られる → コンパイルエラー、java で怒られる → 実行時エラー
+
+### ソースファイルモード（Java 11以降）
+
+✅ 結論: 単一ファイルならjavaコマンドだけで直接実行可能。
+
+Java 11以降では、単一ソースファイルであれば `javac` を使わずに `java MyApp.java` で直接実行できる。
+ただし、複数ファイルで構成されるプロジェクトでは従来通り `javac` によるコンパイルが必要である。
+
+## 3) 例（2つ）
+
+### 例1: 正しいmainメソッドによるコンパイル・実行
+
+パッケージ付きのHelloWorldプログラムを作成し、コンパイル・実行する例。
+
+```java
+// ファイル: com/example/HelloWorld.java
+package com.example;
+
+public class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+    }
+}
+```
+
+ターミナルでの操作:
+
+```bash
+# コンパイル（-d out でクラスファイルの出力先を指定）
+javac -d out com/example/HelloWorld.java
+
+# 実行（クラスパスを指定し、完全修飾クラス名で実行）
+java -cp out com.example.HelloWorld
+```
+
+出力結果:
+
+```
+Hello, World!
+```
+
+ポイント:
+- `javac -d out` により、パッケージ構造に合わせたディレクトリ `out/com/example/` が自動的に作られ、その中に `HelloWorld.class` が配置される。
+- `java` コマンドではクラスパス（`-cp out`）と完全修飾クラス名（`com.example.HelloWorld`）を指定する。拡張子は付けない。
+
+### 例2: mainシグネチャの誤り（staticがない）
+
+`static` を付け忘れた場合、コンパイルは成功するが実行時にエラーが発生する。
+
+```java
+// ファイル: Bad.java
+public class Bad {
+    // static がない → コンパイルは通るが、JVMがエントリーポイントとして認識しない
+    public void main(String[] args) {
+        System.out.println("This won't run");
+    }
+}
+```
+
+ターミナルでの操作:
+
+```bash
+# コンパイルは成功する
+javac Bad.java
+
+# 実行するとエラーが発生する
+java Bad
+```
+
+実行結果（エラー）:
+
+```
+Error: Main method is not static in class Bad, please define the main method as:
+   public static void main(String[] args)
+```
+
+このエラーは**コンパイルエラーではなく実行時エラー**である。
+`javac` は文法的に問題がないため正常にコンパイルするが、`java` コマンドで実行した際にJVMが正しいシグネチャの `main` メソッドを見つけられずエラーとなる。
+
+## 4) よくあるミス／落とし穴（5つ）
+
+⚠️ ミス: mainメソッドの `static` を忘れる → 対策: `public static void main(String[] args)` を丸暗記する
+
+⚠️ ミス: ファイル名とpublicクラス名が不一致 → 対策: ファイル名 = publicクラス名.java を徹底する
+
+⚠️ ミス: `java` コマンドで拡張子(.class)を付ける → 対策: `java クラス名` — 拡張子なし・ドット区切り
+
+⚠️ ミス: パッケージ宣言とディレクトリ構造が不一致 → 対策: package a.b → ディレクトリ a/b/ に配置
+
+⚠️ ミス: コンパイルエラーと実行時エラーを混同 → 対策: 「javacで怒られるか、javaで怒られるか」で判別
+
+## 5) チェックリスト
+
+- [ ] `public static void main(String[] args)` のシグネチャを正確に書けるか
+- [ ] `javac` と `java` の役割の違いを説明できるか
+- [ ] JDK、JRE、JVMの包含関係を図示できるか
+- [ ] パッケージ宣言・import文・クラス定義の記述順序を正しく述べられるか
+- [ ] ファイル名とpublicクラス名の一致ルールを理解しているか
+- [ ] コンパイルエラーと実行時エラーの違いを具体例を挙げて説明できるか
+- [ ] クラスパス (`-cp`) の指定方法を理解しているか
+- [ ] コマンドライン引数 (`args`) の仕組みを説明できるか
+- [ ] ソースファイルモード（Java 11以降）の制約を理解しているか
+
+## 6) 次へ
+
+次のレッスンは **JAVA-BRONZE-01-02: 基本型と変数のスコープ** です。Javaの8つの基本データ型（プリミティブ型）、変数の宣言と初期化、そしてスコープの規則について学習します。

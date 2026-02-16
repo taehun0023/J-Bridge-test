@@ -1,0 +1,338 @@
+---
+lesson_id: JAVA-SILVER-01-05
+title: "インタフェースとデフォルトメソッド"
+module: JAVA-SILVER-01
+level: silver
+est_minutes: 35
+tags: [interface, default-method, implements, multiple-inheritance, functional-interface, static-method]
+---
+
+## 1) 要点まとめ（5行）
+
+- インタフェースは `interface` キーワードで宣言し、`implements` で実装する。メソッドのシグネチャ（契約）を定義し、実装クラスに具体的な処理を強制する。(Evidence: E1)
+- クラスは複数のインタフェースを `implements` できる（多重実装）。クラスの単一継承の制約を補い、柔軟な型システムを提供する。(Evidence: E2)
+- Java 8以降、インタフェースに `default` メソッド（デフォルト実装）を定義できる。既存のインタフェースに後方互換性を保ちつつメソッドを追加する目的で導入された。(Evidence: E3)
+- インタフェースに `static` メソッドを定義でき、`インタフェース名.メソッド名()` で呼び出す。関数型インタフェース（`@FunctionalInterface`）は抽象メソッドを1つだけ持つインタフェースである。(Evidence: E4)
+- インタフェースは「何ができるか」（能力/契約）を定義し、抽象クラスは「何であるか」（is-a関係 + 共通実装）を定義する。目的に応じて使い分ける。(Evidence: E5)
+
+## 2) 概念
+
+### インタフェースの基本
+
+✅ 結論: インタフェースは実装クラスが守るべき契約を定義する。
+
+インタフェースは抽象メソッドの集合であり、実装クラスに「どのメソッドを提供しなければならないか」を規定する。インタフェースのメソッドは暗黙的に `public abstract` である（Java 8以前）。(Evidence: E1)
+
+```java
+public interface Printable {
+    void print();           // 暗黙的に public abstract
+    String format();        // 暗黙的に public abstract
+}
+
+public class Document implements Printable {
+    @Override
+    public void print() {
+        System.out.println(format());
+    }
+
+    @Override
+    public String format() {
+        return "Document content";
+    }
+}
+```
+
+インタフェースのフィールドは暗黙的に `public static final`（定数）である。
+
+```java
+public interface Constants {
+    int MAX_SIZE = 100;     // 暗黙的に public static final
+}
+```
+
+### 複数インタフェースの実装
+
+✅ 結論: 1つのクラスが複数のインタフェースを実装でき、柔軟な型付けが可能。
+
+Javaではクラスの多重継承は禁止だが、インタフェースの多重実装は許可されている。これにより、1つのクラスに複数の「能力」を付与できる。(Evidence: E2)
+
+```java
+public interface Printable {
+    void print();
+}
+
+public interface Savable {
+    void save(String path);
+}
+
+// 複数インタフェースの実装
+public class Report implements Printable, Savable {
+    @Override
+    public void print() { /* 印刷処理 */ }
+
+    @Override
+    public void save(String path) { /* 保存処理 */ }
+}
+```
+
+インタフェースはクラスの継承と組み合わせることもできる。
+
+```java
+public class SpecialReport extends Report implements Exportable {
+    // Report を継承しつつ Exportable も実装
+}
+```
+
+### デフォルトメソッド（Java 8+）
+
+✅ 結論: インタフェースにデフォルト実装を提供し、後方互換性を維持する。
+
+`default` キーワードを付けたメソッドは、インタフェースに直接実装を持てる。Java 8で導入された主な理由は、既存のインタフェース（例: `java.util.Collection`）に新メソッドを追加しても、既存の実装クラスを壊さないためである。(Evidence: E3)
+
+```java
+public interface Greeter {
+    String greet(String name);
+
+    // デフォルトメソッド — 実装クラスでのオーバーライドは任意
+    default String greetAll(String[] names) {
+        StringBuilder sb = new StringBuilder();
+        for (String name : names) {
+            sb.append(greet(name)).append("\n");
+        }
+        return sb.toString().trim();
+    }
+}
+```
+
+**デフォルトメソッドの衝突解決:**
+
+2つのインタフェースが同じシグネチャのデフォルトメソッドを持つ場合、実装クラスで明示的にオーバーライドしなければコンパイルエラーになる。
+
+```java
+public interface A {
+    default String hello() { return "A"; }
+}
+
+public interface B {
+    default String hello() { return "B"; }
+}
+
+public class C implements A, B {
+    @Override
+    public String hello() {
+        return A.super.hello();  // A のデフォルト実装を呼び出す
+    }
+}
+```
+
+### static メソッド（Java 8+）
+
+✅ 結論: インタフェースにstaticメソッドを定義でき、ユーティリティメソッドの提供に使う。
+
+インタフェースの `static` メソッドは `インタフェース名.メソッド名()` で呼び出す。実装クラスや子インタフェースには継承されない。(Evidence: E4)
+
+```java
+public interface Validator {
+    boolean isValid(String input);
+
+    static Validator nonNull() {
+        return input -> input != null;
+    }
+}
+
+// 使用
+Validator v = Validator.nonNull();
+v.isValid("test");  // true
+```
+
+### 関数型インタフェース（@FunctionalInterface）
+
+✅ 結論: 抽象メソッドを1つだけ持つインタフェースで、ラムダ式の型として使用する。
+
+関数型インタフェースは抽象メソッドがちょうど1つのインタフェースである。`@FunctionalInterface` アノテーションを付けることで、コンパイラに意図を伝え、抽象メソッドが2つ以上定義されるとコンパイルエラーになる。(Evidence: E4)
+
+```java
+@FunctionalInterface
+public interface Calculator {
+    int calculate(int a, int b);
+    // default メソッドや static メソッドはいくつあってもOK
+}
+```
+
+ラムダ式で実装できる。
+
+```java
+Calculator add = (a, b) -> a + b;
+Calculator multiply = (a, b) -> a * b;
+
+System.out.println(add.calculate(3, 5));       // 8
+System.out.println(multiply.calculate(3, 5));  // 15
+```
+
+代表的な標準関数型インタフェース:
+
+| インタフェース | 抽象メソッド | 用途 |
+|---|---|---|
+| `Predicate<T>` | `boolean test(T t)` | 条件判定 |
+| `Function<T,R>` | `R apply(T t)` | 値の変換 |
+| `Consumer<T>` | `void accept(T t)` | 値の消費 |
+| `Supplier<T>` | `T get()` | 値の供給 |
+
+### インタフェースと抽象クラスの比較
+
+✅ 結論: インタフェースは「能力」、抽象クラスは「種類」を表す。
+
+| 項目 | インタフェース | 抽象クラス |
+|---|---|---|
+| キーワード | `interface` / `implements` | `abstract class` / `extends` |
+| 多重継承/実装 | 複数OK | 1つのみ |
+| コンストラクタ | 定義不可 | 定義可能 |
+| フィールド | `public static final` のみ | 任意のフィールド |
+| メソッド | `abstract` / `default` / `static` / `private` | 任意のメソッド |
+| 設計意図 | 「何ができるか」（能力/契約） | 「何であるか」（is-a + 共通実装） |
+
+(Evidence: E5)
+
+選択の指針:
+- 複数のクラスに共通の「能力」を持たせたい → **インタフェース**
+- 共通のフィールドや実装を持つ「種類の階層」を作りたい → **抽象クラス**
+- 両方必要な場合は、インタフェースと抽象クラスを組み合わせる
+
+## 3) 例（2つ）
+
+### 例1: 複数インタフェースの実装
+
+```java
+public interface Flyable {
+    String fly();
+}
+
+public interface Swimmable {
+    String swim();
+}
+
+public interface Describable {
+    default String describe() {
+        return "生物";
+    }
+}
+```
+
+```java
+public class Duck implements Flyable, Swimmable, Describable {
+    private String name;
+
+    public Duck(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String fly() {
+        return name + "が空を飛んだ";
+    }
+
+    @Override
+    public String swim() {
+        return name + "が水を泳いだ";
+    }
+
+    @Override
+    public String describe() {
+        return name + "は飛べて泳げる鳥です";
+    }
+}
+```
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Duck duck = new Duck("アヒル");
+
+        // 各インタフェース型として扱える
+        Flyable f = duck;
+        Swimmable s = duck;
+        Describable d = duck;
+
+        System.out.println(f.fly());       // アヒルが空を飛んだ
+        System.out.println(s.swim());      // アヒルが水を泳いだ
+        System.out.println(d.describe());  // アヒルは飛べて泳げる鳥です
+    }
+}
+```
+
+ポイント:
+- `Duck` は3つのインタフェースを同時に実装し、それぞれのインタフェース型として扱える。
+- `Describable` のデフォルトメソッドを `Duck` がオーバーライドしている。
+- 各インタフェース型の変数を通じて、ポリモーフィズムが機能する。
+
+### 例2: 関数型インタフェースとデフォルトメソッド
+
+```java
+@FunctionalInterface
+public interface StringProcessor {
+    String process(String input);
+
+    // デフォルトメソッド: 2つの処理を連結する
+    default StringProcessor andThen(StringProcessor after) {
+        return input -> after.process(this.process(input));
+    }
+
+    // staticファクトリメソッド
+    static StringProcessor identity() {
+        return input -> input;
+    }
+}
+```
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        // ラムダ式で実装
+        StringProcessor trimmer = input -> input.trim();
+        StringProcessor upper = input -> input.toUpperCase();
+        StringProcessor exclaim = input -> input + "!";
+
+        // andThen で処理を連結
+        StringProcessor pipeline = trimmer.andThen(upper).andThen(exclaim);
+
+        System.out.println(pipeline.process("  hello  "));  // HELLO!
+
+        // staticメソッドの使用
+        StringProcessor id = StringProcessor.identity();
+        System.out.println(id.process("test"));             // test
+    }
+}
+```
+
+ポイント:
+- `@FunctionalInterface` により抽象メソッドが1つであることを保証している。
+- ラムダ式 `input -> input.trim()` で簡潔に実装できる。
+- `default` メソッド `andThen` で処理の連結（合成）を実現している。
+- `static` メソッド `identity()` でファクトリパターンを提供している。
+
+## 4) よくあるミス／落とし穴（5つ）
+
+⚠️ ミス: 複数インタフェースのデフォルトメソッドが衝突した場合にオーバーライドを忘れる → 対策: 同じシグネチャのデフォルトメソッドが衝突したら、実装クラスで必ずオーバーライドする。`InterfaceName.super.method()` で特定の実装を選択できる(Evidence: E3)
+
+⚠️ ミス: インタフェースにインスタンスフィールドを定義しようとする → 対策: インタフェースのフィールドは暗黙的に `public static final`（定数）である。状態を持つフィールドが必要なら抽象クラスを使う(Evidence: E1, E5)
+
+⚠️ ミス: `@FunctionalInterface` のインタフェースに抽象メソッドを2つ定義する → 対策: 関数型インタフェースは抽象メソッドが1つだけ。`default` や `static` メソッドは数に含まれない(Evidence: E4)
+
+⚠️ ミス: インタフェースのstaticメソッドを実装クラスから呼び出す → 対策: staticメソッドは `インタフェース名.メソッド名()` で呼び出す。実装クラスやサブインタフェースには継承されない(Evidence: E4)
+
+⚠️ ミス: 何でもインタフェースで定義しようとする → 対策: 共通のフィールドやコンストラクタが必要な場合は抽象クラスが適切。「能力の付与」にはインタフェース、「種類の定義」には抽象クラスを使い分ける(Evidence: E5)
+
+## 5) チェックリスト
+
+- [ ] インタフェースの宣言と `implements` による実装を正しく記述できるか
+- [ ] インタフェースのメソッドが暗黙的に `public abstract` であることを理解しているか
+- [ ] 複数インタフェースの実装方法とその利点を説明できるか
+- [ ] デフォルトメソッドの目的（後方互換性）と定義方法を説明できるか
+- [ ] デフォルトメソッドの衝突時の解決方法を述べられるか
+- [ ] 関数型インタフェースの条件とラムダ式との関係を説明できるか
+- [ ] インタフェースとabstractクラスの違いを表にして比較できるか
+- [ ] 用途に応じてインタフェースと抽象クラスを正しく選択できるか
+
+## 6) 次へ
+
+これで **JAVA-SILVER-01: クラスとオブジェクト** モジュールは完了です。次のモジュールでは、例外処理や文字列操作などJava Silver試験の重要トピックをさらに学習していきます。

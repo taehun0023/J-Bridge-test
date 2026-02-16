@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "lesson_id": "JAVA-GOLD-01-02",
+  "questions": [
+    {
+      "id": "JAVA-GOLD-01-02-Q01",
+      "type": "single_choice",
+      "difficulty": 1,
+      "prompt": "非境界ワイルドカード `List<?>` から要素を取得した場合、その型は何か。",
+      "choices": [
+        "String",
+        "T",
+        "Object",
+        "void"
+      ],
+      "answer": 2,
+      "explanation": "非境界ワイルドカード <?> は型が不明であるため、要素を取得すると Object 型になる。要素の追加は null 以外できない。(Evidence: E1)"
+    },
+    {
+      "id": "JAVA-GOLD-01-02-Q02",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "`List<? extends Number>` に対して可能な操作はどれか。",
+      "choices": [
+        "Integer型の要素を追加する",
+        "Number型として要素を読み取る",
+        "Double型の要素を追加する",
+        "要素を削除して別の型の要素を追加する"
+      ],
+      "answer": 1,
+      "explanation": "<? extends Number> はProducer（読み取り専用）として機能する。要素をNumber型として読み取れるが、追加はできない。コンパイラは実際の型がIntegerかDoubleか確定できないためである。(Evidence: E2)"
+    },
+    {
+      "id": "JAVA-GOLD-01-02-Q03",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "PECS原則において、コレクションにデータを書き込む場合に使用すべきワイルドカードはどれか。",
+      "choices": [
+        "<? extends T>",
+        "<? super T>",
+        "<?>",
+        "<T>"
+      ],
+      "answer": 1,
+      "explanation": "PECS原則（Producer-Extends, Consumer-Super）により、コレクションにデータを書き込む（Consumer）場合は <? super T> を使用する。(Evidence: E3, E4)"
+    },
+    {
+      "id": "JAVA-GOLD-01-02-Q04",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "`Collections.copy(List<? super T> dest, List<? extends T> src)` のシグネチャについて正しい説明はどれか。",
+      "choices": [
+        "destがProducer、srcがConsumerである",
+        "destがConsumer、srcがProducerである",
+        "destとsrcの両方がProducerである",
+        "destとsrcの両方がConsumerである"
+      ],
+      "answer": 1,
+      "explanation": "srcからデータを読み取る（Producer → extends）ため <? extends T>、destにデータを書き込む（Consumer → super）ため <? super T> が使用されている。PECS原則の典型例である。(Evidence: E4)"
+    },
+    {
+      "id": "JAVA-GOLD-01-02-Q05",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "以下のコードでコンパイルエラーになるものはどれか。\n\n```java\nList<? extends Number> list = new ArrayList<Integer>();\n```\n\nA) `list.add(42);`\nB) `Number n = list.get(0);`\nC) `Object o = list.get(0);`\nD) `list.size();`",
+      "choices": [
+        "A のみ",
+        "B のみ",
+        "A と B",
+        "C と D"
+      ],
+      "answer": 0,
+      "explanation": "Aのみがコンパイルエラーになる。<? extends Number> はProducerであり要素の追加は不可（null以外）。B（Number型で読み取り）、C（Object型で読み取り）、D（サイズ取得）はいずれも可能。(Evidence: E2)"
+    },
+    {
+      "id": "JAVA-GOLD-01-02-Q06",
+      "type": "code_output",
+      "difficulty": 3,
+      "prompt": "以下のコードの実行結果を答えなさい。",
+      "code": "import java.util.ArrayList;\nimport java.util.List;\n\npublic class PecsQuiz {\n    static <T> void transfer(\n        List<? super T> dest, List<? extends T> src\n    ) {\n        for (T item : src) {\n            dest.add(item);\n        }\n    }\n\n    public static void main(String[] args) {\n        List<Integer> src = List.of(10, 20, 30);\n        List<Number> dest = new ArrayList<>();\n        transfer(dest, src);\n        System.out.println(dest.size());\n    }\n}",
+      "answer": "3",
+      "explanation": "transfer メソッドはPECS原則に従い、src（Producer: extends）から要素を読み取り、dest（Consumer: super）に書き込む。Integer は Number のサブクラスなので、List<Integer> → List<Number> への転送が成功し、3要素が追加される。(Evidence: E4)"
+    },
+    {
+      "id": "JAVA-GOLD-01-02-Q07",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "戻り値型にワイルドカードを使用すべきでない理由として最も適切なものはどれか。",
+      "choices": [
+        "コンパイルエラーになるため",
+        "実行時のパフォーマンスが低下するため",
+        "呼び出し側で型情報が失われ、使いにくくなるため",
+        "型消去と互換性がないため"
+      ],
+      "answer": 2,
+      "explanation": "戻り値にワイルドカードを使うと、呼び出し側で具体的な型を知ることができず、使いにくいAPIになる。ワイルドカードは引数の型宣言に使用するのが適切である。(Evidence: E5)"
+    },
+    {
+      "id": "JAVA-GOLD-01-02-Q08",
+      "type": "code_output",
+      "difficulty": 4,
+      "prompt": "以下のコードについて、コンパイルエラーになる行番号をすべて答えなさい（カンマ区切り）。エラーがない場合は「なし」と答えよ。",
+      "code": "import java.util.ArrayList;\nimport java.util.List;\n\npublic class WildcardQuiz {\n    public static void main(String[] args) {\n        List<? super Integer> list = new ArrayList<Number>();\n        list.add(42);              // 行1\n        list.add(null);            // 行2\n        Integer i = list.get(0);   // 行3\n        Object o = list.get(0);    // 行4\n    }\n}",
+      "answer": "行3",
+      "explanation": "行1: <? super Integer> にInteger型を追加するのは安全なのでOK。行2: nullの追加は常に可能。行3: <? super Integer> から読み取るとObject型になるため、Integer型の変数に直接代入はコンパイルエラー。行4: Object型で読み取るのはOK。(Evidence: E3)"
+    },
+    {
+      "id": "JAVA-GOLD-01-02-Q09",
+      "type": "short_answer",
+      "difficulty": 2,
+      "prompt": "PECS原則の略語を正式に展開した場合の英語名を答えよ。",
+      "answer": "Producer-Extends, Consumer-Super",
+      "explanation": "PECS は Producer-Extends, Consumer-Super の略である。コレクションがデータを提供（Producer）する場合は extends、データを受け入れる（Consumer）場合は super を使用する。(Evidence: E4)"
+    },
+    {
+      "id": "JAVA-GOLD-01-02-Q10",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "以下のメソッドシグネチャのうち、PECS原則に正しく従っているものはどれか。",
+      "choices": [
+        "static <T> void merge(List<? extends T> dest, List<? extends T> src)",
+        "static <T> void merge(List<? super T> dest, List<? super T> src)",
+        "static <T> void merge(List<? super T> dest, List<? extends T> src)",
+        "static <T> void merge(List<? extends T> dest, List<? super T> src)"
+      ],
+      "answer": 2,
+      "explanation": "mergeメソッドではsrcからデータを読み取り（Producer → extends）、destにデータを書き込む（Consumer → super）。したがって dest に <? super T>、src に <? extends T> が正しい。(Evidence: E4)"
+    }
+  ]
+}

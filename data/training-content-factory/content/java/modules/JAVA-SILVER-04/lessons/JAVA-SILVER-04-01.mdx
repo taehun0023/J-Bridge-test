@@ -1,0 +1,250 @@
+---
+lesson_id: JAVA-SILVER-04-01
+title: "Checked vs Unchecked / throws vs try-catch"
+module: JAVA-SILVER-04
+level: silver
+est_minutes: 35
+tags: [exceptions, checked, unchecked, throws, try-catch]
+---
+
+## 1) 要点まとめ（5行）
+
+- **checked例外**はコンパイラが処理（try-catch）または宣言（throws）を強制する例外であり、IOException・SQLExceptionなどが該当する (Evidence: E1)
+- **unchecked例外**はRuntimeExceptionのサブクラスであり、コンパイル時に処理・宣言が強制されない。NullPointerException・IllegalArgumentExceptionなどが該当する (Evidence: E2)
+- **throws**は例外処理の責任を呼び出し元に委譲する設計選択であり、メソッドシグネチャに宣言する (Evidence: E4)
+- **try-catch**は現在のレイヤーで回復・代替処理・ログ出力・例外変換など意味のある処理を行う場合に使用する (Evidence: E5)
+- 例外を変換（wrap）する際は**causeを必ず保存**しなければならない。空のcatchブロックは原因究明を困難にするアンチパターンである (Evidence: E6, E7)
+
+---
+
+## 2) 概念
+
+### Throwable階層
+
+Javaの例外はすべて`Throwable`を頂点とする階層構造を持つ。大きく3つの系統に分かれる。
+
+```
+Throwable
+├── Error                    ← アプリで捕捉しない (E3)
+│   ├── OutOfMemoryError
+│   └── StackOverflowError
+└── Exception                ← アプリで扱う例外の親
+    ├── IOException          ← checked例外 (E1)
+    ├── SQLException         ← checked例外 (E1)
+    └── RuntimeException     ← unchecked例外の親 (E2)
+        ├── NullPointerException
+        ├── IllegalArgumentException
+        └── ArithmeticException
+```
+
+**Error系列**（OutOfMemoryError, StackOverflowErrorなど）はJVM自体の深刻な問題を示す。アプリケーションが通常回復・処理の対象としないため、catchすべきではない (Evidence: E3)。
+
+### checked例外 vs unchecked例外
+
+| 項目 | checked例外 | unchecked例外 |
+|---|---|---|
+| 親クラス | Exception（RuntimeException以外） | RuntimeException |
+| コンパイル時強制 | あり（try-catchまたはthrows必須） | なし |
+| 代表例 | IOException, SQLException | NullPointerException, IllegalArgumentException |
+| 設計意図 | 呼び出し元に回復可能性を伝える | プログラミングエラーを示す |
+
+checked例外はコンパイラが処理または宣言を強制するため、処理漏れを防ぐ仕組みになっている (Evidence: E1)。一方、unchecked例外はコンパイル時にはチェックされないため、実行時に初めて検出される (Evidence: E2)。
+
+### throws宣言 vs try-catch
+
+例外に対処する方法は2つある。
+
+**throws宣言** — 例外処理の責任を呼び出し元に委譲する。メソッドシグネチャに`throws`キーワードで宣言し、「このメソッドはこの例外を投げる可能性がある」と呼び出し元に通知する (Evidence: E4)。
+
+**try-catch** — 現在のメソッド内で例外を捕捉し、回復処理・代替値の返却・ログ出力・例外変換などの**意味のある処理**を行う場合に使用する (Evidence: E5)。
+
+使い分けの判断基準：現在のレイヤーで回復可能かどうか。回復できるならtry-catch、できないならthrowsで上位に委譲する。
+
+### 例外変換とcause保存
+
+低レベルの例外を上位レイヤーの例外に変換する場合、**元の例外をcauseとして必ず保存**しなければならない。causeを保存しないとスタックトレースが失われ、デバッグが極めて困難になる (Evidence: E7)。
+
+```java
+// 正しい例外変換（causeを保存）
+throw new IllegalStateException("READ_FAILED", e);
+
+// 誤った例外変換（causeが失われる）
+throw new IllegalStateException("READ_FAILED");  // NG: 元の例外が消える
+```
+
+### try-with-resources
+
+`AutoCloseable`を実装したリソースは、try-with-resources構文を使えばスコープ終了時に自動的にcloseされる。finallyブロックで手動closeする方法より安全かつ簡潔である (Evidence: E8, E9)。
+
+### multi-catch
+
+Java 7以降では、複数の例外型を`|`で区切って一つのcatchブロックで捕捉できる。ただし共通の処理ロジックが同一の場合にのみ使用すべきである (Evidence: E10)。
+
+```java
+catch (IOException | SQLException e) {
+    logger.error("データアクセス失敗", e);
+}
+```
+
+---
+
+## 3) 例（2つ）
+
+### 例1: checked例外 — throws未宣言時のコンパイルエラー
+
+checked例外であるIOExceptionを扱う場合、throwsを宣言しないとコンパイルエラーになることを示す (Evidence: E1, E4)。
+
+```java
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+public class CheckedExample {
+
+    // NG: throws宣言がないためコンパイルエラー
+    // static String readFileNG(Path path) {
+    //     return Files.readString(path);  // コンパイルエラー!
+    // }
+
+    // OK: throws宣言あり — 呼び出し元に例外処理を委譲
+    static String readFile(Path path) throws IOException {
+        return Files.readString(path);
+    }
+
+    // OK: try-catchで処理 — 現在のレイヤーで回復
+    static String readFileSafe(Path path) {
+        try {
+            return Files.readString(path);
+        } catch (IOException e) {
+            System.err.println("ファイル読み込み失敗: " + e.getMessage());
+            return "";  // デフォルト値で回復
+        }
+    }
+}
+```
+
+`readFile`メソッドは`throws IOException`を宣言することで呼び出し元に処理を委譲する。`readFileSafe`メソッドはtry-catchで捕捉し、デフォルト値で回復する。コメントアウトされた`readFileNG`メソッドはthrows宣言もtry-catchもないためコンパイルエラーとなる。
+
+### 例2: unchecked例外 — ランタイム動作
+
+unchecked例外はコンパイル時にチェックされないため、実行時に初めて発生する (Evidence: E2)。
+
+```java
+public class UncheckedExample {
+
+    // ArithmeticException — 0除算（実行時エラー）
+    static int divide(int a, int b) {
+        return a / b;  // b==0 なら ArithmeticException
+    }
+
+    // NullPointerException — null参照（実行時エラー）
+    static int getLength(String s) {
+        return s.length();  // s==null なら NullPointerException
+    }
+
+    public static void main(String[] args) {
+        // コンパイルは通るが、実行時に例外が発生する
+        try {
+            int result = divide(10, 0);
+        } catch (ArithmeticException e) {
+            System.err.println("0で割ることはできません: " + e.getMessage());
+        }
+
+        try {
+            int len = getLength(null);
+        } catch (NullPointerException e) {
+            System.err.println("nullが渡されました: " + e.getMessage());
+        }
+    }
+}
+```
+
+`divide`と`getLength`にはthrows宣言もtry-catchも強制されない。コンパイルは成功するが、不正な引数が渡されると実行時にArithmeticExceptionやNullPointerExceptionが発生する。
+
+---
+
+## 4) よくあるミス／落とし穴（5つ）
+
+### 1. 空のcatchブロック（例外の握りつぶし）
+
+```java
+// NG: 例外を握りつぶしている
+try {
+    riskyOperation();
+} catch (IOException e) {
+    // 何もしない ← 原因究明が不可能になる
+}
+```
+
+catchブロックで何もしない行為は、障害発生時の原因究明を極めて困難にするアンチパターンである。最低限ログ出力を行うべきである (Evidence: E6)。
+
+### 2. causeを保存せずに例外変換
+
+```java
+// NG: causeが失われる
+catch (IOException e) {
+    throw new ServiceException("処理失敗");  // 元のIOExceptionのスタックトレースが消える
+}
+
+// OK: causeを保存
+catch (IOException e) {
+    throw new ServiceException("処理失敗", e);  // 元の例外を保持
+}
+```
+
+例外変換時にcauseを渡さないと、元のスタックトレースが完全に失われる (Evidence: E7)。
+
+### 3. Exception/Throwableを広範囲にcatch
+
+```java
+// NG: 範囲が広すぎる
+catch (Exception e) {  // NullPointerExceptionなどのバグも隠してしまう
+    logger.error("エラー", e);
+}
+```
+
+`Exception`や`Throwable`を一括でcatchすると、本来検出すべきプログラミングエラー（unchecked例外）まで隠蔽してしまう。catchする例外は可能な限り具体的な型を指定すべきである (Evidence: E1, E2)。
+
+### 4. finallyでのリソース解放漏れ
+
+```java
+// NG: close時の例外で元の例外が失われる可能性
+BufferedReader reader = null;
+try {
+    reader = Files.newBufferedReader(path);
+    return reader.readLine();
+} finally {
+    if (reader != null) reader.close();  // close自体がIOExceptionを投げうる
+}
+```
+
+finallyでのリソース解放は冗長かつエラーを起こしやすい。try-with-resourcesを使えば自動的かつ安全にcloseされる (Evidence: E8, E9)。
+
+### 5. multi-catchで無関係な例外をまとめる
+
+```java
+// NG: 処理ロジックが異なるのにまとめている
+catch (IOException | IllegalArgumentException e) {
+    retry();  // IllegalArgumentExceptionにretryは意味がない
+}
+```
+
+multi-catchは共通の処理ロジックが同一の場合にのみ使用すべきである。異なる処理が必要な例外を安易にまとめると、不適切なエラー処理につながる (Evidence: E10)。
+
+---
+
+## 5) チェックリスト
+
+- [ ] checked例外に対してtry-catchまたはthrows宣言が漏れていないか
+- [ ] catchブロックに意味のある処理（ログ出力・回復・再throw）が含まれているか
+- [ ] 例外変換時にcause（第2引数）を保存しているか
+- [ ] `catch (Exception e)` のような広範囲catchを使っていないか
+- [ ] リソースの解放にtry-with-resourcesを使用しているか
+- [ ] multi-catchは共通処理ロジックが同一の例外に対してのみ使用しているか
+- [ ] Error系列（OutOfMemoryErrorなど）をcatchしていないか
+
+---
+
+## 6) 次へ
+
+次のレッスン **JAVA-SILVER-04-02: 例外変換とcause保存** では、レイヤー間での例外変換パターン、causeチェーンの構築方法、カスタム例外クラスの設計について詳しく学ぶ。

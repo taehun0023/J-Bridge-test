@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "lesson_id": "JAVA-BRONZE-01-04",
+  "questions": [
+    {
+      "id": "JAVA-BRONZE-01-04-Q01",
+      "type": "single_choice",
+      "difficulty": 1,
+      "prompt": "以下のコードの出力結果はどれか。\n\n```java\nint x = 15;\nif (x > 20) {\n    System.out.println(\"A\");\n} else if (x > 10) {\n    System.out.println(\"B\");\n} else {\n    System.out.println(\"C\");\n}\n```",
+      "choices": [
+        "A",
+        "B",
+        "C",
+        "B と C の両方"
+      ],
+      "answer": 1,
+      "explanation": "x = 15 のとき、最初の条件 x > 20 は false、次の条件 x > 10 は true となる。最初に true になった分岐のみ実行されるため、\"B\" のみ出力される。(Evidence: E1)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-04-Q02",
+      "type": "single_choice",
+      "difficulty": 1,
+      "prompt": "三項演算子 `(score >= 60) ? \"合格\" : \"不合格\"` について、score が 50 の場合の結果はどれか。",
+      "choices": [
+        "\"合格\"",
+        "\"不合格\"",
+        "コンパイルエラー",
+        "null"
+      ],
+      "answer": 1,
+      "explanation": "三項演算子は「条件 ? trueの場合 : falseの場合」の形式である。score = 50 のとき条件 score >= 60 は false なので、\"不合格\" が返される。(Evidence: E2)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-04-Q03",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "switch文で使用できない型はどれか。",
+      "choices": [
+        "int",
+        "String",
+        "long",
+        "char"
+      ],
+      "answer": 2,
+      "explanation": "switch文で使用可能な型は byte, short, char, int, String, enum である。long型はswitch文で使用できないためコンパイルエラーになる。(Evidence: E3)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-04-Q04",
+      "type": "code_output",
+      "difficulty": 2,
+      "prompt": "以下のコードの出力結果を答えよ。\n\n```java\nint n = 2;\nswitch (n) {\n    case 1:\n        System.out.println(\"ONE\");\n    case 2:\n        System.out.println(\"TWO\");\n    case 3:\n        System.out.println(\"THREE\");\n        break;\n    default:\n        System.out.println(\"OTHER\");\n}\n```",
+      "answer": "TWO\nTHREE",
+      "explanation": "n = 2 なので case 2 にマッチする。しかし case 2 に break がないため、フォールスルーが発生して case 3 の処理も実行される。case 3 に break があるのでそこで停止する。結果として \"TWO\" と \"THREE\" が出力される。(Evidence: E4)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-04-Q05",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "以下のコードについて正しい記述はどれか。\n\n```java\nif (x > 0)\n    System.out.println(\"A\");\n    System.out.println(\"B\");\n```",
+      "choices": [
+        "x > 0 の場合のみ \"A\" と \"B\" が出力される",
+        "\"A\" は x > 0 の場合のみ、\"B\" は常に出力される",
+        "コンパイルエラーが発生する",
+        "x > 0 の場合のみ \"A\" が出力され、\"B\" は出力されない"
+      ],
+      "answer": 1,
+      "explanation": "ブレースを省略した場合、if文に属するのは直後の1文のみである。2行目の println(\"B\") はif文に属さず、インデントに関係なく常に実行される。(Evidence: E1)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-04-Q06",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "Java 14以降のswitch式について正しい記述はどれか。",
+      "choices": [
+        "アロー構文 (->) を使う場合もbreakが必要である",
+        "アロー構文 (->) ではフォールスルーが発生しない",
+        "switch式では値を返すことができない",
+        "switch式はint型のみに使用できる"
+      ],
+      "answer": 1,
+      "explanation": "Java 14以降のswitch式でアロー構文（->）を使用する場合、フォールスルーは発生しない。また、switch全体が値を返す式として機能する。break は不要であり、複数行の場合は yield で値を返す。(Evidence: E5)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-04-Q07",
+      "type": "code_output",
+      "difficulty": 3,
+      "prompt": "以下のコードの出力結果を答えよ。\n\n```java\nint score = 85;\nString result = switch (score / 10) {\n    case 10, 9 -> \"A\";\n    case 8 -> \"B\";\n    case 7 -> \"C\";\n    default -> \"D\";\n};\nSystem.out.println(result);\n```",
+      "answer": "B",
+      "explanation": "score / 10 = 85 / 10 = 8（整数除算で切り捨て）。case 8 にマッチし、\"B\" が返される。switch式なので変数 result に \"B\" が代入され、出力は \"B\" となる。(Evidence: E5)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-04-Q08",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "以下のコードの出力結果はどれか。\n\n```java\nint a = 5;\nint b = (a > 3) ? a * 2 : a + 1;\nSystem.out.println(b);\n```",
+      "choices": [
+        "5",
+        "6",
+        "10",
+        "11"
+      ],
+      "answer": 2,
+      "explanation": "a = 5 のとき、条件 a > 3 は true なので、三項演算子の true 側 a * 2 = 10 が評価される。b = 10 となり、出力は 10 である。(Evidence: E2)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-04-Q09",
+      "type": "code_output",
+      "difficulty": 4,
+      "prompt": "以下のコードの出力結果を答えよ。\n\n```java\nint x = 3;\nswitch (x) {\n    case 1:\n    case 2:\n    case 3:\n        System.out.println(\"Low\");\n    case 4:\n    case 5:\n        System.out.println(\"Mid\");\n        break;\n    default:\n        System.out.println(\"High\");\n}\n```",
+      "answer": "Low\nMid",
+      "explanation": "x = 3 なので case 3 にマッチする。case 3 に break がないためフォールスルーが発生し、case 4, case 5 の処理も実行される。case 5 で \"Mid\" が出力された後、break でswitch文を抜ける。結果として \"Low\" と \"Mid\" が出力される。(Evidence: E4)"
+    },
+    {
+      "id": "JAVA-BRONZE-01-04-Q10",
+      "type": "short_answer",
+      "difficulty": 2,
+      "prompt": "Java 14以降のswitch式で、複数行のブロック処理から値を返すために使用するキーワードを答えよ。",
+      "answer": "yield",
+      "explanation": "switch式のアロー構文で複数行の処理が必要な場合、ブロック {} 内で yield キーワードを使って値を返す。例: default -> { yield \"D\"; } (Evidence: E5)"
+    }
+  ]
+}

@@ -1,0 +1,331 @@
+---
+lesson_id: JAVA-GOLD-01-04
+title: "Stream API — 中間操作と終端操作"
+module: JAVA-GOLD-01
+level: gold
+est_minutes: 40
+tags: [stream, intermediate, terminal, lazy-evaluation, pipeline, Optional]
+---
+
+# Stream API — 中間操作と終端操作
+
+## 1) 要点まとめ（5行）
+
+- **Stream**はデータ処理パイプラインを宣言的に記述するAPIであり、コレクション自体を変更しない (Evidence: E1)
+- **中間操作**（filter, map, flatMap, sorted, distinct, peek）は遅延評価され、新しいStreamを返す (Evidence: E2)
+- **終端操作**（forEach, collect, count, reduce, findFirst, anyMatch）がパイプラインを起動し、結果を生成する (Evidence: E3)
+- **遅延評価（Lazy Evaluation）** により、終端操作が呼ばれるまで中間操作は実行されない。不要な計算を回避できる (Evidence: E4)
+- **Optional**はnullの代わりに「値が存在しない可能性」を型で表現するコンテナである (Evidence: E5)
+
+---
+
+## 2) 概念
+
+### Streamとは
+
+Streamはコレクションの要素を処理するための抽象化であり、SQLのSELECT文のようなパイプライン処理を提供する。Streamはデータを格納しない（コレクションとは異なる）、ソースを変更しない、遅延評価される (Evidence: E1)。
+
+### Streamの生成方法
+
+```java
+// コレクションから
+List<String> list = List.of("a", "b", "c");
+Stream<String> s1 = list.stream();
+
+// 配列から
+String[] arr = {"x", "y", "z"};
+Stream<String> s2 = Arrays.stream(arr);
+
+// 直接生成
+Stream<String> s3 = Stream.of("p", "q", "r");
+
+// 範囲の整数
+IntStream range = IntStream.rangeClosed(1, 10);
+```
+
+### 中間操作（Intermediate Operations）
+
+中間操作は新しいStreamを返し、遅延評価される (Evidence: E2)。
+
+| 操作 | 説明 | 例 |
+|---|---|---|
+| `filter(Predicate)` | 条件に合う要素のみ通す | `.filter(s -> s.length() > 3)` |
+| `map(Function)` | 各要素を変換する | `.map(String::toUpperCase)` |
+| `flatMap(Function)` | 各要素をStreamに変換して平坦化 | `.flatMap(list -> list.stream())` |
+| `sorted()` | 自然順序でソート | `.sorted()` |
+| `sorted(Comparator)` | 指定順序でソート | `.sorted(Comparator.reverseOrder())` |
+| `distinct()` | 重複を除去 | `.distinct()` |
+| `peek(Consumer)` | 各要素に対して副作用を実行（デバッグ用） | `.peek(System.out::println)` |
+| `limit(long)` | 先頭からn件に制限 | `.limit(5)` |
+| `skip(long)` | 先頭からn件をスキップ | `.skip(2)` |
+
+### 終端操作（Terminal Operations）
+
+終端操作はパイプラインを実行し、結果を生成する。一度終端操作を呼ぶとStreamは消費される (Evidence: E3)。
+
+| 操作 | 説明 | 戻り値 |
+|---|---|---|
+| `forEach(Consumer)` | 各要素に処理を適用 | void |
+| `collect(Collector)` | 結果を集約 | R |
+| `count()` | 要素数を返す | long |
+| `reduce(BinaryOperator)` | 要素を畳み込み | Optional<T> |
+| `findFirst()` | 最初の要素を返す | Optional<T> |
+| `findAny()` | 任意の要素を返す | Optional<T> |
+| `anyMatch(Predicate)` | いずれかの要素が条件に合うか | boolean |
+| `allMatch(Predicate)` | すべての要素が条件に合うか | boolean |
+| `noneMatch(Predicate)` | どの要素も条件に合わないか | boolean |
+| `toList()` | 不変Listに集約（Java 16以降） | List<T> |
+
+### 遅延評価（Lazy Evaluation）
+
+中間操作は終端操作が呼ばれるまで実行されない。この仕組みにより、不要な計算が回避される (Evidence: E4)。
+
+```java
+List<String> names = List.of("Alice", "Bob", "Charlie", "David");
+
+// 終端操作(findFirst)が結果を見つけた時点でパイプラインが停止する
+Optional<String> result = names.stream()
+    .filter(name -> {
+        System.out.println("filter: " + name);
+        return name.startsWith("C");
+    })
+    .findFirst();
+// 出力: filter: Alice, filter: Bob, filter: Charlie
+// → Davidのfilterは実行されない
+```
+
+### パイプラインの概念
+
+Streamパイプラインは「ソース → 中間操作の連鎖 → 終端操作」の構造を持つ (Evidence: E1, E2, E3)。
+
+```java
+long count = employees.stream()         // ソース
+    .filter(e -> e.getAge() >= 30)      // 中間操作1
+    .map(Employee::getName)              // 中間操作2
+    .sorted()                            // 中間操作3
+    .count();                            // 終端操作
+```
+
+### Optional
+
+`Optional<T>` は値が存在するかしないかを型で表現するコンテナである。Stream APIの `findFirst()` や `reduce()` が返す (Evidence: E5)。
+
+```java
+Optional<String> opt = Optional.of("hello");
+opt.isPresent();                       // true
+opt.get();                             // "hello"
+opt.orElse("default");                 // "hello"
+
+Optional<String> empty = Optional.empty();
+empty.isPresent();                     // false
+empty.orElse("default");              // "default"
+empty.orElseThrow();                   // NoSuchElementException
+```
+
+---
+
+## 3) 例（2つ）
+
+### 例1: 基本的なStreamパイプライン
+
+filter, map, sortedを使った基本的なデータ処理パイプラインを示す (Evidence: E1, E2, E3)。
+
+```java
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class StreamBasics {
+
+    record Employee(String name, String dept, int salary) {}
+
+    public static void main(String[] args) {
+        List<Employee> employees = List.of(
+            new Employee("田中", "開発", 500_000),
+            new Employee("佐藤", "営業", 400_000),
+            new Employee("鈴木", "開発", 600_000),
+            new Employee("高橋", "営業", 450_000),
+            new Employee("伊藤", "開発", 550_000)
+        );
+
+        // 開発部の社員名を給与降順で取得
+        List<String> devNames = employees.stream()
+            .filter(e -> e.dept().equals("開発"))          // 開発部のみ
+            .sorted((a, b) -> b.salary() - a.salary())    // 給与降順
+            .map(Employee::name)                           // 名前を抽出
+            .toList();                                     // 不変Listに集約
+
+        System.out.println(devNames);  // [鈴木, 伊藤, 田中]
+
+        // 全社員の平均給与
+        double avgSalary = employees.stream()
+            .mapToInt(Employee::salary)
+            .average()
+            .orElse(0.0);
+
+        System.out.println("平均給与: " + avgSalary);  // 500000.0
+
+        // anyMatch: 給与60万以上の社員が存在するか
+        boolean hasHighEarner = employees.stream()
+            .anyMatch(e -> e.salary() >= 600_000);
+        System.out.println("高給取り存在: " + hasHighEarner);  // true
+    }
+}
+```
+
+`filter` で条件絞り込み、`sorted` でソート、`map` で変換、`toList` でListに集約するパイプラインの基本形を示している。`mapToInt` で `IntStream` に変換し、`average()` で平均値を求めている。
+
+### 例2: flatMap・distinct・reduce
+
+flatMapによるネストの平坦化と、reduceによる畳み込みを示す (Evidence: E2, E3, E5)。
+
+```java
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+public class StreamAdvanced {
+
+    public static void main(String[] args) {
+        // flatMap: ネストされたリストの平坦化
+        List<List<String>> nested = List.of(
+            List.of("Java", "Kotlin"),
+            List.of("Python", "Go"),
+            List.of("Java", "Rust")
+        );
+
+        List<String> unique = nested.stream()
+            .flatMap(List::stream)    // List<List<String>> → Stream<String>
+            .distinct()                // 重複除去
+            .sorted()                  // アルファベット順
+            .toList();
+
+        System.out.println(unique);  // [Go, Java, Kotlin, Python, Rust]
+
+        // reduce: 要素の畳み込み
+        List<Integer> numbers = List.of(1, 2, 3, 4, 5);
+
+        // 初期値なしのreduce → Optional
+        Optional<Integer> sum = numbers.stream()
+            .reduce(Integer::sum);
+        System.out.println("合計: " + sum.orElse(0));  // 15
+
+        // 初期値ありのreduce → 直接値
+        int product = numbers.stream()
+            .reduce(1, (a, b) -> a * b);
+        System.out.println("積: " + product);  // 120
+
+        // findFirst + Optional
+        Optional<String> first = Stream.of("alpha", "beta", "gamma")
+            .filter(s -> s.contains("a"))
+            .findFirst();
+        first.ifPresent(s -> System.out.println("最初の一致: " + s));  // alpha
+    }
+}
+```
+
+`flatMap` はネストされた構造を平坦化し、`distinct` で重複を除去する。`reduce` は初期値なし（Optional返却）と初期値あり（直接値返却）の2パターンがある。
+
+---
+
+## 4) よくあるミス／落とし穴（5つ）
+
+### 1. Streamの再利用
+
+```java
+// NG: 一度消費したStreamは再利用不可
+Stream<String> stream = List.of("a", "b").stream();
+stream.count();     // OK: 2
+stream.forEach(System.out::println);  // IllegalStateException!
+
+// OK: 毎回新しいStreamを生成
+List.of("a", "b").stream().count();
+List.of("a", "b").stream().forEach(System.out::println);
+```
+
+Streamは一度終端操作を実行すると消費される。再利用するには新しいStreamを生成する必要がある (Evidence: E3)。
+
+### 2. 中間操作だけで終端操作がない
+
+```java
+// NG: 何も実行されない（遅延評価）
+List.of(1, 2, 3).stream()
+    .filter(n -> n > 1)
+    .map(n -> n * 2);
+// 終端操作がないためパイプラインは実行されない
+
+// OK: 終端操作を追加
+List<Integer> result = List.of(1, 2, 3).stream()
+    .filter(n -> n > 1)
+    .map(n -> n * 2)
+    .toList();
+```
+
+中間操作のみでは遅延評価により何も実行されない。必ず終端操作を呼び出す必要がある (Evidence: E4)。
+
+### 3. peekを本番ロジックに使用
+
+```java
+// NG: peekは副作用目的であり、結果に依存するロジックに使うべきでない
+List<StringBuilder> result = Stream.of(new StringBuilder("a"))
+    .peek(sb -> sb.append("b"))  // 副作用でオブジェクトを変更
+    .toList();
+// 動作はするが、peekはデバッグ用途に限定すべき
+
+// OK: mapを使用して変換を明示
+List<String> result = Stream.of("a")
+    .map(s -> s + "b")
+    .toList();
+```
+
+`peek` はデバッグ・ロギング用途であり、ビジネスロジックに使用すべきではない (Evidence: E2)。
+
+### 4. Optional.get()の無条件呼び出し
+
+```java
+// NG: 値がない場合にNoSuchElementException
+Optional<String> opt = someStream.findFirst();
+String value = opt.get();  // 危険！ 空の場合に例外
+
+// OK: orElseやifPresentを使用
+String value = opt.orElse("デフォルト");
+opt.ifPresent(v -> System.out.println(v));
+```
+
+`Optional.get()` は値が存在しない場合に `NoSuchElementException` をスローする。`orElse()` や `ifPresent()` を使用すべきである (Evidence: E5)。
+
+### 5. Streamの中でコレクションを変更
+
+```java
+// NG: ストリーム処理中にソースを変更
+List<String> list = new ArrayList<>(List.of("a", "b", "c"));
+list.stream()
+    .forEach(s -> {
+        if (s.equals("b")) list.remove(s);  // ConcurrentModificationException
+    });
+
+// OK: filterで除外してから収集
+List<String> result = list.stream()
+    .filter(s -> !s.equals("b"))
+    .toList();
+```
+
+Streamのソースをストリーム処理中に変更するとConcurrentModificationExceptionが発生する (Evidence: E1)。
+
+---
+
+## 5) チェックリスト
+
+- [ ] Streamの3つの構成要素（ソース・中間操作・終端操作）を説明できる
+- [ ] filter, map, flatMap, sorted, distinctの動作を説明できる
+- [ ] forEach, collect, count, reduce, findFirstの動作を説明できる
+- [ ] 遅延評価の仕組みを理解し、なぜ終端操作が必要かを説明できる
+- [ ] Streamが一度しか消費できない理由を説明できる
+- [ ] Optionalの正しい使い方（orElse, ifPresent）を実践できる
+- [ ] peekがデバッグ用途であることを理解している
+- [ ] flatMapを使ってネスト構造を平坦化できる
+
+---
+
+## 6) 次へ
+
+次のレッスンでは **JAVA-GOLD-01-05: Stream実践 — collect / reduce / groupingBy** を学ぶ。Collectorsの各種メソッド（toList, groupingBy, partitioningBy, joining）、reduceの詳細、並列ストリームの基礎について扱う。

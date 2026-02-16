@@ -1,0 +1,44 @@
+module:
+  id: JAVA-SILVER-01
+  title: クラスとオブジェクト
+  level: silver
+  description: "クラス定義、インスタンス生成、継承、ポリモーフィズム、インタフェースの基本を理解し実務で使いこなす。"
+  outcomes:
+    - "クラスとインスタンスの関係を説明し、コンストラクタを正しく実装できる。"
+    - "継承とオーバーライドの仕組みを理解し適切に設計できる。"
+    - "ポリモーフィズムとインタフェースを使った柔軟な設計ができる。"
+  lessons:
+    - id: JAVA-SILVER-01-01
+      title: "クラスとインスタンス"
+      est_minutes: 35
+      tags: [class, instance, new, field, method]
+      outcomes:
+        - "クラスとインスタンスの関係を説明する。"
+        - "フィールドとメソッドを定義しインスタンスを生成できる。"
+    - id: JAVA-SILVER-01-02
+      title: "コンストラクタとthis"
+      est_minutes: 35
+      tags: [constructor, this, overload, initialization]
+      outcomes:
+        - "コンストラクタのオーバーロードとthisキーワードの役割を説明する。"
+    - id: JAVA-SILVER-01-03
+      title: "継承とオーバーライド"
+      est_minutes: 40
+      tags: [inheritance, extends, override, super]
+      outcomes:
+        - "extendsによる継承とsuperの使い方を実装する。"
+        - "メソッドオーバーライドの規則を説明する。"
+    - id: JAVA-SILVER-01-04
+      title: "ポリモーフィズムと抽象クラス"
+      est_minutes: 40
+      tags: [polymorphism, abstract, dynamic-binding]
+      outcomes:
+        - "動的バインディングの仕組みを説明する。"
+        - "抽象クラスを使った設計ができる。"
+    - id: JAVA-SILVER-01-05
+      title: "インタフェースとデフォルトメソッド"
+      est_minutes: 35
+      tags: [interface, default-method, implements, multiple-inheritance]
+      outcomes:
+        - "インタフェースの定義とimplementsの使い方を実装する。"
+        - "デフォルトメソッドの導入理由と使い方を説明する。"

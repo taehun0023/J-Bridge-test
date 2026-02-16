@@ -1,0 +1,278 @@
+---
+lesson_id: JAVA-SILVER-01-02
+title: "コンストラクタとthis"
+module: JAVA-SILVER-01
+level: silver
+est_minutes: 35
+tags: [constructor, this, overload, initialization, default-constructor, copy-constructor]
+---
+
+## 1) 要点まとめ（5行）
+
+- コンストラクタはクラス名と同名のメソッドであり、戻り値の型を持たない。`new` 時に自動的に呼び出され、オブジェクトの初期化を行う。(Evidence: E1)
+- 明示的にコンストラクタを1つも定義しない場合、コンパイラが引数なしの**デフォルトコンストラクタ**を自動生成する。1つでも定義すると自動生成されない。(Evidence: E2)
+- コンストラクタのオーバーロードにより、異なる引数パターンで柔軟な初期化を提供できる。(Evidence: E3)
+- `this` キーワードは「自分自身のインスタンス」への参照である。フィールドとパラメータの名前が同じ場合の区別や、コンストラクタチェーンに使用する。(Evidence: E4)
+- `this()` によるコンストラクタチェーンは**コンストラクタの先頭行**でのみ呼び出し可能である。初期化ブロックはコンストラクタより前に実行される。(Evidence: E5)
+
+## 2) 概念
+
+### コンストラクタの基本
+
+✅ 結論: コンストラクタはオブジェクト生成時に自動呼び出しされる初期化処理。
+
+コンストラクタはクラス名と同名であり、戻り値の型（`void` も含む）を記述しない。`new` 演算子によるインスタンス生成時に自動的に呼び出される。(Evidence: E1)
+
+```java
+public class Employee {
+    private String name;
+    private int age;
+
+    // コンストラクタ（クラス名と同名、戻り値型なし）
+    public Employee(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+}
+```
+
+⚠️ 注意: コンストラクタに戻り値型を書くと**通常のメソッド**として扱われる。`void Employee()` はコンストラクタではなくメソッドである。
+
+### デフォルトコンストラクタ
+
+✅ 結論: 明示的なコンストラクタがゼロの場合のみ自動生成される。
+
+クラスにコンストラクタを1つも定義しなかった場合、コンパイラが引数なし・処理なしのデフォルトコンストラクタを自動生成する。ただし、1つでもコンストラクタを明示的に定義すると、デフォルトコンストラクタは生成されなくなる。(Evidence: E2)
+
+```java
+// デフォルトコンストラクタが自動生成される
+public class A {
+    // コンストラクタなし → コンパイラが A() を生成
+}
+
+// デフォルトコンストラクタは生成されない
+public class B {
+    public B(String s) { }
+    // new B() はコンパイルエラー
+}
+```
+
+### コンストラクタのオーバーロード
+
+✅ 結論: 引数リストが異なる複数のコンストラクタを定義できる。
+
+メソッドのオーバーロードと同様に、引数の数や型が異なるコンストラクタを複数定義できる。用途に応じた柔軟な初期化が可能になる。(Evidence: E3)
+
+```java
+public class Employee {
+    private String name;
+    private int age;
+    private String department;
+
+    // 全引数コンストラクタ
+    public Employee(String name, int age, String department) {
+        this.name = name;
+        this.age = age;
+        this.department = department;
+    }
+
+    // 名前のみのコンストラクタ
+    public Employee(String name) {
+        this(name, 0, "未配属");  // コンストラクタチェーン
+    }
+
+    // 引数なしコンストラクタ
+    public Employee() {
+        this("未設定");  // コンストラクタチェーン
+    }
+}
+```
+
+### this キーワード
+
+✅ 結論: this は「現在のインスタンス」への参照である。
+
+`this` は主に以下の2つの用途で使用する。(Evidence: E4)
+
+**用途1: フィールドとパラメータの区別**
+
+パラメータ名がフィールド名と同じ場合、`this.フィールド名` でフィールドを参照する。
+
+```java
+public void setName(String name) {
+    this.name = name;  // this.name = フィールド、name = パラメータ
+}
+```
+
+**用途2: コンストラクタチェーン**
+
+`this(引数)` で同一クラスの別のコンストラクタを呼び出す。初期化ロジックの重複を避けるために使う。
+
+```java
+public Employee(String name) {
+    this(name, 0, "未配属");  // 3引数コンストラクタを呼び出す
+}
+```
+
+### this() の制約
+
+✅ 結論: this() はコンストラクタの先頭行でのみ使用可能。
+
+`this()` 呼び出しはコンストラクタの**最初のステートメント**でなければならない。先頭行以外で呼び出すとコンパイルエラーになる。また、`this()` と `super()` を同一コンストラクタ内で同時に呼び出すことはできない。(Evidence: E5)
+
+### 初期化ブロック
+
+✅ 結論: インスタンス初期化ブロックはコンストラクタよりも前に実行される。
+
+インスタンス初期化ブロック（`{ }` で囲まれたブロック）は、コンストラクタが呼び出される前に実行される。複数のコンストラクタで共通の初期化処理を記述するのに使える。(Evidence: E5)
+
+```java
+public class Config {
+    private List<String> settings;
+
+    // インスタンス初期化ブロック
+    {
+        settings = new ArrayList<>();
+        settings.add("default");
+    }
+
+    public Config() {
+        // settingsは既に初期化済み
+    }
+}
+```
+
+実行順序: ① フィールドの初期化式 → ② インスタンス初期化ブロック（記述順） → ③ コンストラクタ
+
+### コピーコンストラクタパターン
+
+✅ 結論: 既存インスタンスのフィールド値を複製する専用コンストラクタ。
+
+コピーコンストラクタは、同じクラスのインスタンスを引数として受け取り、そのフィールド値をコピーして新しいインスタンスを生成するパターンである。(Evidence: E3)
+
+```java
+public class Employee {
+    private String name;
+    private int age;
+
+    // コピーコンストラクタ
+    public Employee(Employee other) {
+        this.name = other.name;
+        this.age = other.age;
+    }
+}
+```
+
+## 3) 例（2つ）
+
+### 例1: コンストラクタオーバーロードとthisチェーン
+
+```java
+public class Book {
+    private String title;
+    private String author;
+    private int price;
+    private String isbn;
+
+    // メインコンストラクタ（全フィールドを初期化）
+    public Book(String title, String author, int price, String isbn) {
+        this.title = title;
+        this.author = author;
+        this.price = price;
+        this.isbn = isbn;
+    }
+
+    // タイトルと著者のみ（価格0、ISBNなし）
+    public Book(String title, String author) {
+        this(title, author, 0, "N/A");
+    }
+
+    // タイトルのみ
+    public Book(String title) {
+        this(title, "不明");
+    }
+
+    public String getInfo() {
+        return title + " / " + author + " / " + price + "円";
+    }
+}
+```
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Book b1 = new Book("Java入門", "山田太郎", 2800, "978-4-xxx");
+        Book b2 = new Book("Python入門", "鈴木花子");
+        Book b3 = new Book("C言語の基礎");
+
+        System.out.println(b1.getInfo());  // Java入門 / 山田太郎 / 2800円
+        System.out.println(b2.getInfo());  // Python入門 / 鈴木花子 / 0円
+        System.out.println(b3.getInfo());  // C言語の基礎 / 不明 / 0円
+    }
+}
+```
+
+ポイント:
+- `this()` を使ったチェーンにより、初期化ロジックがメインコンストラクタに集約される。
+- オーバーロードにより、必要な引数の数に応じた柔軟なインスタンス生成が可能。
+
+### 例2: デフォルトコンストラクタが生成されないケース
+
+```java
+public class Sensor {
+    private String type;
+    private double value;
+
+    // パラメータ付きコンストラクタのみ定義
+    public Sensor(String type) {
+        this.type = type;
+        this.value = 0.0;
+    }
+
+    public String getType() { return type; }
+    public double getValue() { return value; }
+}
+```
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Sensor s1 = new Sensor("温度");   // OK
+        // Sensor s2 = new Sensor();      // コンパイルエラー！
+
+        // デフォルトコンストラクタは自動生成されていない
+        // 引数なしでもインスタンス化したい場合は、明示的に定義が必要:
+        // public Sensor() { this("不明"); }
+    }
+}
+```
+
+ポイント:
+- `Sensor(String type)` を定義したことで、コンパイラはデフォルトコンストラクタを生成しない。
+- `new Sensor()` と呼び出すとコンパイルエラーになる。引数なしのコンストラクタが必要な場合は明示的に定義する。
+
+## 4) よくあるミス／落とし穴（5つ）
+
+⚠️ ミス: コンストラクタに戻り値型（`void` 含む）を記述し、通常のメソッドになってしまう → 対策: コンストラクタは戻り値型を一切書かない。`void Employee()` はコンストラクタではない(Evidence: E1)
+
+⚠️ ミス: パラメータ付きコンストラクタを定義した後、`new ClassName()` が使えなくなることに気づかない → 対策: 引数なしコンストラクタが必要なら明示的に定義する(Evidence: E2)
+
+⚠️ ミス: `this()` をコンストラクタの先頭行以外で呼び出す → 対策: `this()` は必ずコンストラクタの最初のステートメントに記述する(Evidence: E5)
+
+⚠️ ミス: `this` を付けずにフィールドとパラメータの同名変数を使い、パラメータが優先されて意図しない動作になる → 対策: 同名の場合は必ず `this.フィールド名` で明示的にフィールドを参照する(Evidence: E4)
+
+⚠️ ミス: コンストラクタチェーンで循環呼び出しを作る → 対策: `this()` の呼び出しが循環しないよう、最終的に `this()` を含まないコンストラクタに到達するようにする（循環はコンパイルエラー）(Evidence: E5)
+
+## 5) チェックリスト
+
+- [ ] コンストラクタの定義ルール（クラス名と同名、戻り値型なし）を説明できるか
+- [ ] デフォルトコンストラクタが自動生成される条件を述べられるか
+- [ ] コンストラクタのオーバーロードを正しく実装できるか
+- [ ] `this` キーワードの2つの用途（フィールド参照、コンストラクタチェーン）を説明できるか
+- [ ] `this()` の先頭行制約を理解しているか
+- [ ] インスタンス初期化ブロックの実行タイミングを説明できるか
+- [ ] コピーコンストラクタパターンを実装できるか
+
+## 6) 次へ
+
+次のレッスンは **JAVA-SILVER-01-03: 継承とオーバーライド** です。`extends` による継承、`super` キーワード、メソッドオーバーライドの規則、そして `Object` クラスのメソッドについて学習します。

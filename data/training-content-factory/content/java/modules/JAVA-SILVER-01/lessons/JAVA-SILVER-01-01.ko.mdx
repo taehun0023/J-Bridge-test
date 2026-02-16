@@ -1,0 +1,206 @@
+---
+lesson_id: JAVA-SILVER-01-01
+title: "クラスとインスタンス"
+module: JAVA-SILVER-01
+level: silver
+est_minutes: 35
+tags: [class, instance, new, field, method, access-modifier, null, garbage-collection]
+---
+
+## 1) 요점 정리 (5줄)
+
+- 클래스는 객체의 설계도이며, 필드(인스턴스 변수)와 메서드를 정의한다. `new` 키워드로 인스턴스(실체)를 생성한다. (Evidence: E1)
+- 접근 제어자는 `public`(전체), `protected`(동일 패키지 + 서브클래스), 디폴트(동일 패키지만), `private`(동일 클래스만)의 4가지이다. (Evidence: E2)
+- `new` 연산자는 힙 영역에 메모리를 확보하고 생성자를 호출하여 객체를 초기화한다. 변수에는 객체의 참조(주소)가 저장된다. (Evidence: E3)
+- 참조 변수에 `null`을 대입하면 객체에 대한 참조가 끊어진다. `null` 참조에 대한 메서드 호출은 `NullPointerException`을 발생시킨다. (Evidence: E4)
+- 어떤 변수에서도 참조되지 않는 객체는 GC(가비지 컬렉션)에 의해 자동으로 메모리가 회수된다. 명시적 해제는 불필요하다. (Evidence: E5)
+
+## 2) 개념
+
+### 클래스와 인스턴스의 관계
+
+✅ 결론: 클래스는 설계도, 인스턴스는 그 실체이다.
+
+클래스는 객체의 구조와 동작을 정의하는 템플릿이다. 클래스에서 인스턴스를 생성하면 실제로 메모리상에 존재하는 객체가 만들어진다. 하나의 클래스에서 여러 인스턴스를 생성할 수 있으며, 각 인스턴스는 독립된 필드 값을 가진다. (Evidence: E1)
+
+```java
+// 클래스 정의 = 설계도
+public class Employee {
+    String name;        // 인스턴스 변수 (필드)
+    int age;
+
+    void greet() {      // 메서드
+        System.out.println("저는 " + name + "입니다.");
+    }
+}
+```
+
+### 필드(인스턴스 변수)와 메서드
+
+✅ 결론: 필드는 상태, 메서드는 동작을 나타낸다.
+
+필드는 인스턴스마다 독립된 값을 보유하는 변수이다. 메서드는 객체의 동작을 정의한다. 필드는 선언 시 명시적으로 초기화하지 않아도 타입에 맞는 기본값이 설정된다. (Evidence: E1)
+
+| 타입 | 기본값 |
+|---|---|
+| `int`, `long` 등 정수형 | `0` |
+| `double`, `float` 등 부동소수점형 | `0.0` |
+| `boolean` | `false` |
+| 참조형 (`String` 등) | `null` |
+
+💡 기억법: 지역 변수에는 기본값이 없지만, 필드에는 자동으로 설정된다
+
+### 접근 제어자
+
+✅ 결론: 4단계의 접근 제어로 캡슐화를 실현한다.
+
+접근 제어자는 클래스, 필드, 메서드의 가시성을 제어하는 메커니즘이다. (Evidence: E2)
+
+| 제어자 | 동일 클래스 | 동일 패키지 | 서브클래스 | 전체 |
+|---|---|---|---|---|
+| `public` | O | O | O | O |
+| `protected` | O | O | O | X |
+| 디폴트 (무지정) | O | O | X | X |
+| `private` | O | X | X | X |
+
+실무에서는 필드를 `private`로 하고 `public` getter/setter로 접근하는 **캡슐화**가 기본 방침이다.
+
+### new 키워드와 인스턴스 생성
+
+✅ 결론: new는 메모리 확보 + 생성자 호출을 수행한다.
+
+`new` 연산자를 사용하면 힙 영역에 객체용 메모리가 확보되고 생성자가 호출된다. 변수에는 객체 자체가 아니라 객체에 대한 **참조**(메모리 주소)가 저장된다. (Evidence: E3)
+
+```java
+Employee emp = new Employee();
+// emp에는 객체에 대한 참조가 저장된다
+```
+
+### 객체 참조와 null
+
+✅ 결론: 참조 변수는 객체의 주소를 보유하며, null은 "아무것도 참조하지 않음"을 의미한다.
+
+참조형 변수는 객체 자체가 아니라 힙상의 객체를 가리키는 참조를 보유한다. 여러 변수가 동일 객체를 참조할 수 있으며, 한쪽에서 변경하면 다른 쪽에도 영향을 미친다. (Evidence: E4)
+
+`null`은 "어떤 객체도 참조하지 않음"을 나타내는 특별한 리터럴이다. `null` 참조에 대해 메서드나 필드에 접근하면 `NullPointerException`이 발생한다.
+
+### 가비지 컬렉션 (GC)
+
+✅ 결론: 참조되지 않는 객체는 GC가 자동 회수한다.
+
+Java에서는 C/C++과 같은 명시적 메모리 해제(`free`/`delete`)가 불필요하다. 어떤 변수에서도 참조되지 않는 객체는 **GC 대상**이 되며, JVM이 적절한 타이밍에 자동으로 메모리를 회수한다. 단, GC 실행 타이밍은 보장되지 않는다. (Evidence: E5)
+
+## 3) 예제 (2개)
+
+### 예제 1: 클래스 정의와 인스턴스 생성
+
+사원 정보를 관리하는 클래스를 정의하고 여러 인스턴스를 생성하는 예제.
+
+```java
+public class Employee {
+    private String name;
+    private int age;
+
+    // public 메서드로 필드에 접근 (캡슐화)
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setAge(int age) {
+        if (age >= 0) {
+            this.age = age;
+        }
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void introduce() {
+        System.out.println(name + " (" + age + "세)");
+    }
+}
+```
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Employee emp1 = new Employee();
+        emp1.setName("田中");
+        emp1.setAge(28);
+
+        Employee emp2 = new Employee();
+        emp2.setName("鈴木");
+        emp2.setAge(32);
+
+        emp1.introduce();  // 田中 (28세)
+        emp2.introduce();  // 鈴木 (32세)
+
+        // 동일 객체에 대한 참조
+        Employee emp3 = emp1;
+        emp3.setName("佐藤");
+        emp1.introduce();  // 佐藤 (28세) <- emp1과 emp3은 동일 객체
+    }
+}
+```
+
+포인트:
+- `emp1`과 `emp2`는 독립된 인스턴스이며, 각각 다른 필드 값을 가진다.
+- `emp3 = emp1`은 참조의 복사이며 동일 객체를 가리킨다. `emp3`을 통한 변경은 `emp1`에서도 보인다.
+
+### 예제 2: null 참조와 NullPointerException
+
+```java
+public class NullDemo {
+    public static void main(String[] args) {
+        Employee emp = new Employee();
+        emp.setName("山田");
+        System.out.println(emp.getName());  // 山田
+
+        emp = null;  // 참조를 끊음 -> 원래 객체는 GC 대상
+
+        // NullPointerException 발생
+        try {
+            System.out.println(emp.getName());
+        } catch (NullPointerException e) {
+            System.out.println("NullPointerException이 발생했습니다");
+        }
+    }
+}
+```
+
+포인트:
+- `emp = null`에 의해 변수 `emp`는 어떤 객체도 참조하지 않게 된다.
+- 원래의 `Employee` 객체는 다른 변수에서 참조되지 않으면 GC 대상이 된다.
+- `null` 참조에 대한 `.getName()` 호출은 `NullPointerException`을 발생시킨다.
+
+## 4) 흔한 실수 / 함정 (5개)
+
+⚠️ 실수: 필드와 지역 변수의 기본값을 혼동한다 → 대책: 필드에는 타입의 기본값이 설정되지만, 지역 변수는 초기화 필수 (컴파일 에러 발생) (Evidence: E1)
+
+⚠️ 실수: 참조의 복사와 객체의 복사를 혼동한다 → 대책: `Employee emp2 = emp1`은 참조의 복사이며 객체 자체는 하나 그대로. 독립된 복사가 필요하면 복사 생성자나 `clone()`을 사용 (Evidence: E3)
+
+⚠️ 실수: `null` 체크 없이 메서드를 호출한다 → 대책: 메서드의 인수나 반환값이 `null`일 가능성이 있으면 반드시 `null` 체크를 하거나 `Optional`을 검토 (Evidence: E4)
+
+⚠️ 실수: 접근 제어자를 생략하여 디폴트(패키지 프라이빗)로 만든다 → 대책: 의도적으로 패키지 프라이빗으로 하는 경우 외에는 명시적으로 제어자를 붙인다 (Evidence: E2)
+
+⚠️ 실수: `private` 필드에 외부 클래스에서 직접 접근하려 한다 → 대책: getter/setter 메서드를 경유한다. IDE(IntelliJ 등)의 자동 생성 기능을 활용 (Evidence: E2)
+
+## 5) 체크리스트
+
+- [ ] 클래스와 인스턴스의 관계를 "설계도와 실체"로 설명할 수 있는가
+- [ ] 필드와 지역 변수의 기본값 차이를 말할 수 있는가
+- [ ] 4가지 접근 제어자의 가시 범위를 정확히 설명할 수 있는가
+- [ ] `new` 키워드가 수행하는 처리(메모리 확보 + 생성자 호출)를 설명할 수 있는가
+- [ ] 참조 변수의 대입이 객체의 복사가 아님을 이해하고 있는가
+- [ ] `null` 참조에 대한 메서드 호출에서 무엇이 일어나는지 설명할 수 있는가
+- [ ] GC의 기본적인 구조(참조되지 않는 객체의 자동 회수)를 이해하고 있는가
+- [ ] 캡슐화(`private` 필드 + `public` getter/setter)의 의의를 설명할 수 있는가
+
+## 6) 다음으로
+
+다음 레슨은 **JAVA-SILVER-01-02: コンストラクタとthis** 입니다. 디폴트 생성자, 매개변수 있는 생성자, 생성자 오버로딩, 그리고 `this` 키워드의 역할에 대해 학습합니다.

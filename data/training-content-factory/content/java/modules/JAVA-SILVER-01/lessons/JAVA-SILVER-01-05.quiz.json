@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "lesson_id": "JAVA-SILVER-01-05",
+  "questions": [
+    {
+      "id": "JAVA-SILVER-01-05-Q01",
+      "type": "single_choice",
+      "difficulty": 1,
+      "prompt": "Javaのインタフェースについて正しい記述はどれか。",
+      "choices": [
+        "インタフェースのメソッドはデフォルトでprotectedである",
+        "インタフェースのメソッドはデフォルトでpublic abstractである",
+        "インタフェースはインスタンスフィールドを持てる",
+        "1つのクラスは1つのインタフェースしか実装できない"
+      ],
+      "answer": 1,
+      "explanation": "インタフェースの抽象メソッドは暗黙的にpublic abstractである。フィールドはpublic static final（定数）のみ。クラスは複数のインタフェースをimplementsできる。(Evidence: E1, E2)"
+    },
+    {
+      "id": "JAVA-SILVER-01-05-Q02",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "デフォルトメソッドについて正しい記述はどれか。",
+      "choices": [
+        "デフォルトメソッドはJava 7で導入された",
+        "デフォルトメソッドを持つインタフェースは関数型インタフェースになれない",
+        "デフォルトメソッドにより、既存のインタフェースに後方互換性を保ちつつメソッドを追加できる",
+        "デフォルトメソッドは実装クラスでオーバーライドできない"
+      ],
+      "answer": 2,
+      "explanation": "デフォルトメソッドはJava 8で導入された。既存のインタフェースにメソッドを追加しても実装クラスが壊れないという後方互換性を提供する。実装クラスでオーバーライド可能。関数型インタフェースはデフォルトメソッドがあっても抽象メソッドが1つなら成立する。(Evidence: E3)"
+    },
+    {
+      "id": "JAVA-SILVER-01-05-Q03",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "以下のコードの実行結果として正しいものはどれか。\n\n```java\ninterface A {\n    default String hello() { return \"A\"; }\n}\n\ninterface B {\n    default String hello() { return \"B\"; }\n}\n\nclass C implements A, B {\n    @Override\n    public String hello() {\n        return A.super.hello() + B.super.hello();\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        C c = new C();\n        System.out.println(c.hello());\n    }\n}\n```",
+      "choices": [
+        "A",
+        "B",
+        "AB",
+        "コンパイルエラーが発生する"
+      ],
+      "answer": 2,
+      "explanation": "AとBに同じシグネチャのデフォルトメソッドがあるため、Cでオーバーライドが必須。C.hello()内でA.super.hello()が\"A\"を返し、B.super.hello()が\"B\"を返す。連結して\"AB\"が出力される。(Evidence: E3)"
+    },
+    {
+      "id": "JAVA-SILVER-01-05-Q04",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "関数型インタフェース（@FunctionalInterface）について正しい記述はどれか。",
+      "choices": [
+        "抽象メソッドを0個持つインタフェースである",
+        "抽象メソッドをちょうど1つ持つインタフェースであり、ラムダ式の型として使用できる",
+        "defaultメソッドを持つことができない",
+        "staticメソッドを持つことができない"
+      ],
+      "answer": 1,
+      "explanation": "関数型インタフェースは抽象メソッドをちょうど1つ持つインタフェースであり、ラムダ式の対象型（target type）として使用できる。defaultメソッドやstaticメソッドはいくつ持っていても良い。(Evidence: E4)"
+    },
+    {
+      "id": "JAVA-SILVER-01-05-Q05",
+      "type": "code_output",
+      "difficulty": 2,
+      "prompt": "以下のコードの実行結果を答えよ。\n\n```java\ninterface Greeter {\n    String greet(String name);\n\n    default String greetWithTitle(String name) {\n        return greet(\"様 \" + name);\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Greeter g = name -> \"こんにちは、\" + name;\n        System.out.println(g.greetWithTitle(\"田中\"));\n    }\n}\n```",
+      "answer": "こんにちは、様 田中",
+      "explanation": "ラムダ式でgreet(name)を\"こんにちは、\"+nameとして実装。greetWithTitle(\"田中\")はgreet(\"様 田中\")を呼び出す。greet(\"様 田中\")は\"こんにちは、様 田中\"を返す。(Evidence: E3, E4)"
+    },
+    {
+      "id": "JAVA-SILVER-01-05-Q06",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "インタフェースのstaticメソッドについて正しい記述はどれか。",
+      "choices": [
+        "実装クラスからインタフェース名を省略して呼び出せる",
+        "サブインタフェースに継承される",
+        "インタフェース名.メソッド名()の形式でのみ呼び出せる",
+        "staticメソッドはオーバーライドできる"
+      ],
+      "answer": 2,
+      "explanation": "インタフェースのstaticメソッドはインタフェース名.メソッド名()で呼び出す。実装クラスやサブインタフェースには継承されない。クラスのstaticメソッドとは異なり、実装クラス名では呼び出せない。(Evidence: E4)"
+    },
+    {
+      "id": "JAVA-SILVER-01-05-Q07",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "インタフェースと抽象クラスの違いについて正しい記述はどれか。",
+      "choices": [
+        "インタフェースにはコンストラクタを定義できるが、抽象クラスにはできない",
+        "抽象クラスは複数継承できるが、インタフェースは1つしか実装できない",
+        "インタフェースのフィールドはpublic static finalのみだが、抽象クラスは任意のフィールドを持てる",
+        "抽象クラスにはdefaultメソッドを定義でき、インタフェースにはできない"
+      ],
+      "answer": 2,
+      "explanation": "インタフェースのフィールドは暗黙的にpublic static final（定数）のみ。抽象クラスはprivateやprotectedなど任意のフィールドを持てる。コンストラクタは抽象クラスに定義可能。インタフェースは複数実装可能。(Evidence: E5)"
+    },
+    {
+      "id": "JAVA-SILVER-01-05-Q08",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "以下のコードでコンパイルエラーが発生するものはどれか。\n\n```java\n@FunctionalInterface\ninterface Converter {\n    String convert(String s);\n    default String reverse(String s) {\n        return new StringBuilder(s).reverse().toString();\n    }\n    static Converter identity() {\n        return s -> s;\n    }\n}\n```",
+      "choices": [
+        "抽象メソッドが1つなのでコンパイルエラーは発生しない",
+        "@FunctionalInterfaceなのにdefaultメソッドがあるためコンパイルエラー",
+        "@FunctionalInterfaceなのにstaticメソッドがあるためコンパイルエラー",
+        "staticメソッドがラムダ式を返しているためコンパイルエラー"
+      ],
+      "answer": 0,
+      "explanation": "関数型インタフェースは「抽象メソッドが1つ」であることが条件。defaultメソッドやstaticメソッドは抽象メソッドのカウントに含まれない。抽象メソッドはconvert(String)の1つだけなので、@FunctionalInterfaceの条件を満たす。(Evidence: E4)"
+    },
+    {
+      "id": "JAVA-SILVER-01-05-Q09",
+      "type": "short_answer",
+      "difficulty": 1,
+      "prompt": "Javaでクラスがインタフェースを実装する際に使用するキーワードを答えよ。",
+      "answer": "implements",
+      "explanation": "implementsキーワードでインタフェースを実装する。クラスはカンマ区切りで複数のインタフェースを同時にimplementsできる。(Evidence: E1, E2)"
+    },
+    {
+      "id": "JAVA-SILVER-01-05-Q10",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "以下のうち、インタフェースを使うべき場面として最も適切なものはどれか。",
+      "choices": [
+        "共通のフィールドとコンストラクタを持つクラス群を定義したい",
+        "複数の無関係なクラスに共通の「能力」（メソッド群）を付与したい",
+        "状態（インスタンスフィールド）を持つ基底クラスを定義したい",
+        "サブクラスで共通の初期化処理を共有したい"
+      ],
+      "answer": 1,
+      "explanation": "インタフェースは「何ができるか（能力/契約）」を定義するのに適している。複数の無関係なクラスに共通のメソッド群を実装させたい場合はインタフェースが適切。共通のフィールドや初期化処理が必要な場合は抽象クラスを使う。(Evidence: E5)"
+    }
+  ]
+}

@@ -1,0 +1,230 @@
+---
+lesson_id: JAVA-BRONZE-01-01
+title: "プログラムの構造とコンパイル"
+module: JAVA-BRONZE-01
+level: bronze
+est_minutes: 35
+tags: [main, compile, execute, jdk]
+---
+
+## 1) 요점 정리 (5줄)
+
+- Java 프로그램의 진입점은 `public static void main(String[] args)`이며, JVM은 이 시그니처를 찾아 실행을 시작한다.
+- `javac` 명령어로 소스 파일(.java)을 바이트코드(.class)로 컴파일하고, `java` 명령어로 JVM 위에서 실행한다.
+- JDK는 개발 도구(javac 등)를 포함하고, JRE는 실행 환경, JVM은 바이트코드를 해석·실행하는 가상 머신이다.
+- 패키지 선언은 소스 파일의 맨 처음에 기술하며, 클래스의 이름 공간(namespace)을 정의한다. 실무에서는 생략하지 않는다.
+- 컴파일 에러는 `javac` 실행 시, 런타임 에러는 `java` 실행 시 발생한다. 둘의 구분이 중요하다.
+
+## 2) 개념
+
+### main 메서드의 시그니처
+
+✅ 결론: Java의 실행은 main 메서드에서 시작된다.
+
+JVM이 인식하는 진입점의 시그니처는 다음과 같다.
+
+```java
+public static void main(String[] args)
+```
+
+각 키워드의 의미는 다음과 같다.
+
+| 키워드 | 역할 |
+|---|---|
+| `public` | JVM이 외부에서 접근할 수 있도록 한다 |
+| `static` | 인스턴스 생성 없이 호출 가능하게 한다 |
+| `void` | 반환값이 없음을 나타낸다 |
+| `String[] args` | 커맨드라인 인수를 받는 배열 |
+
+`String... args`(가변 인수)도 `String[] args`와 동일하며, 진입점으로 유효하다.
+
+### 커맨드라인 인수
+
+✅ 결론: args 배열에 커맨드라인 인수가 저장된다.
+
+`String[] args` 매개변수에는 커맨드라인에서 전달된 인수가 저장된다.
+
+예를 들어 `java MyApp hello world`로 실행한 경우:
+- `args[0]` → `"hello"`
+- `args[1]` → `"world"`
+
+### javac / java의 흐름
+
+✅ 결론: javac로 컴파일, java로 실행의 2단계.
+
+```
+소스코드 (.java)  →  javac(컴파일)  →  바이트코드 (.class)  →  java(실행)  →  결과
+```
+
+1. **컴파일:** `javac` 명령어가 `.java` 파일을 읽어들여 문법 검사와 타입 검사를 수행한 후 `.class` 파일(바이트코드)을 생성한다.
+2. **실행:** `java` 명령어가 JVM을 기동하고, 지정된 클래스의 `main` 메서드부터 프로그램을 실행한다.
+
+| 항목 | `javac` | `java` |
+|------|---------|--------|
+| 역할 | 컴파일러 | 실행 환경(JVM 기동) |
+| 입력 | `.java` 파일 | 클래스 이름(완전 수식 이름) |
+| 출력 | `.class` 파일 | 프로그램 실행 결과 |
+| 에러 | 컴파일 에러 | 런타임 에러 |
+
+💡 암기법: javac의 "c" = compile, java는 "실행"으로 기억한다
+
+### JDK / JRE / JVM의 관계
+
+✅ 결론: JDK ⊃ JRE ⊃ JVM의 포함 관계.
+
+| 요소 | 포함하는 것 | 용도 |
+|------|-------------|------|
+| JDK | JRE + 개발 도구(javac, javadoc, jar 등) | 개발 시 필요 |
+| JRE | JVM + 표준 클래스 라이브러리 | 실행만 한다면 충분 |
+| JVM | 바이트코드 해석·실행 엔진 | 모든 것의 기반 |
+
+💡 암기법: "D=개발(Development)" "R=실행(Runtime)" "M=머신(Machine)"
+
+개발 시에는 JDK가 필요하며, 실행만 한다면 JRE로 충분하다.
+
+### 패키지와 소스 파일
+
+✅ 결론: package 선언으로 이름 공간을 정의한다.
+
+패키지 선언(`package com.example;`)은 소스 파일의 맨 처음에 기술한다.
+이를 통해 클래스의 이름 공간이 정의되며, 이름 충돌을 회피할 수 있다.
+패키지 선언은 생략 가능하지만, 실무에서는 반드시 선언한다.
+
+`import` 문은 패키지 선언 뒤, 클래스 정의 앞에 기술한다.
+다른 패키지의 클래스를 완전 수식 이름 없이 사용할 수 있게 한다.
+
+### 소스 파일과 클래스 파일의 관계
+
+✅ 결론: public 클래스는 1파일에 1개, 파일 이름과 일치 필수.
+
+- 하나의 소스 파일에 `public` 클래스는 최대 1개만 정의할 수 있다
+- 파일 이름은 `public` 클래스 이름과 일치해야 한다
+- 예: `public class HelloWorld` → 파일 이름은 `HelloWorld.java`
+
+### 클래스패스
+
+✅ 결론: -cp 옵션으로 클래스 파일의 검색 경로를 지정한다.
+
+클래스패스는 JVM이 클래스 파일을 검색하는 경로를 지정하는 메커니즘이다.
+`-cp` 또는 `-classpath` 옵션으로 명시적으로 설정할 수 있다.
+
+```bash
+java -cp out com.example.HelloWorld
+```
+
+### 컴파일 에러와 런타임 에러
+
+✅ 결론: javac 시=컴파일 에러, java 시=런타임 에러.
+
+| 종류 | 발생 시점 | 예 |
+|---|---|---|
+| 컴파일 에러 | `javac` 실행 시 | 문법 에러, 타입 불일치, 세미콜론 누락 |
+| 런타임 에러 | `java` 실행 시 | NullPointerException, main 메서드를 찾지 못함 |
+
+💡 암기법: javac에서 에러 → 컴파일 에러, java에서 에러 → 런타임 에러
+
+### 소스 파일 모드 (Java 11 이후)
+
+✅ 결론: 단일 파일이라면 java 명령어만으로 직접 실행 가능.
+
+Java 11 이후에는 단일 소스 파일이라면 `javac`를 사용하지 않고 `java MyApp.java`로 직접 실행할 수 있다.
+단, 여러 파일로 구성된 프로젝트에서는 기존과 같이 `javac`에 의한 컴파일이 필요하다.
+
+## 3) 예제 (2개)
+
+### 예제 1: 올바른 main 메서드를 이용한 컴파일·실행
+
+패키지가 포함된 HelloWorld 프로그램을 작성하고, 컴파일·실행하는 예.
+
+```java
+// 파일: com/example/HelloWorld.java
+package com.example;
+
+public class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+    }
+}
+```
+
+터미널에서의 조작:
+
+```bash
+# 컴파일(-d out으로 클래스 파일의 출력 위치를 지정)
+javac -d out com/example/HelloWorld.java
+
+# 실행(클래스패스를 지정하고, 완전 수식 클래스 이름으로 실행)
+java -cp out com.example.HelloWorld
+```
+
+출력 결과:
+
+```
+Hello, World!
+```
+
+포인트:
+- `javac -d out`에 의해 패키지 구조에 맞춘 디렉터리 `out/com/example/`가 자동으로 만들어지고, 그 안에 `HelloWorld.class`가 배치된다.
+- `java` 명령어에서는 클래스패스(`-cp out`)와 완전 수식 클래스 이름(`com.example.HelloWorld`)을 지정한다. 확장자는 붙이지 않는다.
+
+### 예제 2: main 시그니처 오류(static이 없음)
+
+`static`을 빠뜨린 경우, 컴파일은 성공하지만 실행 시 에러가 발생한다.
+
+```java
+// 파일: Bad.java
+public class Bad {
+    // static이 없음 → 컴파일은 통과하지만, JVM이 진입점으로 인식하지 않음
+    public void main(String[] args) {
+        System.out.println("This won't run");
+    }
+}
+```
+
+터미널에서의 조작:
+
+```bash
+# 컴파일은 성공한다
+javac Bad.java
+
+# 실행하면 에러가 발생한다
+java Bad
+```
+
+실행 결과(에러):
+
+```
+Error: Main method is not static in class Bad, please define the main method as:
+   public static void main(String[] args)
+```
+
+이 에러는 **컴파일 에러가 아닌 런타임 에러**이다.
+`javac`는 문법적으로 문제가 없기 때문에 정상적으로 컴파일하지만, `java` 명령어로 실행할 때 JVM이 올바른 시그니처의 `main` 메서드를 찾지 못해 에러가 된다.
+
+## 4) 흔한 실수 / 함정 (5개)
+
+⚠️ 실수: main 메서드의 `static`을 빠뜨림 → 대책: `public static void main(String[] args)`을 통째로 암기한다
+
+⚠️ 실수: 파일 이름과 public 클래스 이름이 불일치 → 대책: 파일 이름 = public 클래스 이름.java를 철저히 지킨다
+
+⚠️ 실수: `java` 명령어에서 확장자(.class)를 붙임 → 대책: `java 클래스이름` — 확장자 없이, 점(.)으로 구분
+
+⚠️ 실수: 패키지 선언과 디렉터리 구조가 불일치 → 대책: package a.b → 디렉터리 a/b/에 배치
+
+⚠️ 실수: 컴파일 에러와 런타임 에러를 혼동 → 대책: "javac에서 에러인가, java에서 에러인가"로 판별
+
+## 5) 체크리스트
+
+- [ ] `public static void main(String[] args)` 시그니처를 정확히 쓸 수 있는가
+- [ ] `javac`와 `java`의 역할 차이를 설명할 수 있는가
+- [ ] JDK, JRE, JVM의 포함 관계를 그림으로 나타낼 수 있는가
+- [ ] 패키지 선언·import 문·클래스 정의의 기술 순서를 올바르게 말할 수 있는가
+- [ ] 파일 이름과 public 클래스 이름의 일치 규칙을 이해하고 있는가
+- [ ] 컴파일 에러와 런타임 에러의 차이를 구체적 예를 들어 설명할 수 있는가
+- [ ] 클래스패스(`-cp`)의 지정 방법을 이해하고 있는가
+- [ ] 커맨드라인 인수(`args`)의 구조를 설명할 수 있는가
+- [ ] 소스 파일 모드(Java 11 이후)의 제약을 이해하고 있는가
+
+## 6) 다음으로
+
+다음 레슨은 **JAVA-BRONZE-01-02: 基本型と変数のスコープ** 입니다. Java의 8가지 기본 데이터 타입(프리미티브 타입), 변수의 선언과 초기화, 그리고 스코프 규칙에 대해 학습합니다.

@@ -1,0 +1,33 @@
+module:
+  id: JAVA-GOLD-01
+  title: ジェネリクスとコレクション
+  level: gold
+  description: "ジェネリクス、コレクションフレームワーク、Stream APIを理解し実務で使いこなす。"
+  outcomes:
+    - "型パラメータと境界ワイルドカードを正しく使い分けられる。"
+    - "List/Set/Mapの特性を比較し適切な実装を選べる。"
+    - "Stream APIで中間操作と終端操作を組み立てられる。"
+  lessons:
+    - id: JAVA-GOLD-01-01
+      title: "ジェネリクスの基礎 — 型パラメータと型安全"
+      est_minutes: 40
+      tags: [generics, type-parameter, type-safety, erasure]
+      outcomes:
+        - "ジェネリクス導入前のキャスト問題を説明する。"
+        - "型パラメータの宣言と使用方法を実装できる。"
+    - id: JAVA-GOLD-01-02
+      title: "境界ワイルドカードとPECS原則"
+      est_minutes: 40
+      tags: [generics, wildcard, pecs, bounds]
+    - id: JAVA-GOLD-01-03
+      title: "コレクション — List / Set / Map"
+      est_minutes: 40
+      tags: [collections, list, set, map, hashmap]
+    - id: JAVA-GOLD-01-04
+      title: "Stream API — 中間操作と終端操作"
+      est_minutes: 40
+      tags: [streams, intermediate, terminal, pipeline]
+    - id: JAVA-GOLD-01-05
+      title: "Stream実践 — collect / reduce / groupingBy"
+      est_minutes: 40
+      tags: [streams, collectors, reduce, grouping]

@@ -1,0 +1,313 @@
+---
+lesson_id: JAVA-SILVER-04-02
+title: "例外変換(wrap)とcause保存"
+module: JAVA-SILVER-04
+level: silver
+est_minutes: 35
+tags: [exception-translation, wrapping, cause-chain, custom-exception, logging]
+---
+
+## 1) 요점 정리 (5줄)
+
+- **예외 변환(Exception Translation)** 이란, 하위 레벨의 구현 세부사항을 캡슐화하기 위해 하위 레이어의 예외를 상위 레이어의 예외로 변환하는 패턴이다 (Evidence: E1)
+- 예외 변환 시에는 반드시 **cause를 보존**해야 한다. `new HighLevelException(message, cause)` 형태로 생성자에 원래 예외를 전달한다 (Evidence: E2)
+- **cause 체인**을 통해 예외의 연쇄를 추적하여 근본 원인(root cause)을 특정할 수 있다. `getCause()`로 직접 원인을, 재귀적으로 추적하여 root cause를 얻는다 (Evidence: E3)
+- **커스텀 예외 클래스**는 도메인 고유의 오류를 표현하기 위해 사용하며, `Throwable cause`를 받는 생성자를 반드시 준비한다 (Evidence: E4)
+- 예외 로그 출력에서는 예외 객체 자체를 로거에 전달하며, `e.getMessage()`만의 로그는 정보 부족이 되는 안티패턴이다 (Evidence: E5)
+
+---
+
+## 2) 개념
+
+### 예외 변환 패턴 (Exception Translation)
+
+레이어드 아키텍처에서는 각 레이어가 적절한 추상도의 예외를 반환해야 한다. 데이터 액세스 층의 `SQLException`이 그대로 UI 층에 노출되면 구현 세부사항의 누출이 되어 유지보수성이 저하된다 (Evidence: E1).
+
+```
+UI 층         ← ServiceException
+서비스 층     ← DataAccessException 으로 변환
+데이터 층     ← SQLException 발생
+```
+
+예외 변환은 하위 레벨의 예외를 캐치하여, 상위 레이어에 적합한 예외로 **랩(wrap)** 하여 재throw하는 패턴이다.
+
+### cause의 보존
+
+예외 변환 시 원래 예외를 `cause`로 전달하는 것은 **필수**이다. Java의 `Throwable` 클래스는 2가지 생성자 패턴으로 cause 전달을 지원한다 (Evidence: E2).
+
+```java
+// 패턴 1: 생성자에서 직접 전달 (권장)
+throw new ServiceException("USER_NOT_FOUND", originalException);
+
+// 패턴 2: initCause()로 나중에 설정
+ServiceException se = new ServiceException("USER_NOT_FOUND");
+se.initCause(originalException);
+throw se;
+```
+
+`initCause()`는 한 번만 호출 가능하며, 2회째 이후는 `IllegalStateException`이 throw된다. 생성자에서 직접 전달하는 패턴 1을 우선해야 한다.
+
+### cause 체인과 root cause
+
+예외가 여러 번 변환되면, cause 체인(예외의 연쇄)이 형성된다. `getCause()` 메서드로 직접 원인을 가져올 수 있고, 재귀적으로 추적하여 최초 발생한 근본 원인(root cause)에 도달할 수 있다 (Evidence: E3).
+
+```java
+// cause 체인의 예
+// ServiceException → DataAccessException → SQLException
+ServiceException se = ...;
+Throwable direct = se.getCause();           // DataAccessException
+Throwable root   = direct.getCause();       // SQLException
+```
+
+### Throwable의 생성자
+
+`Throwable`은 4가지 주요 생성자를 가지며, 서브클래스에서도 이를 활용한다 (Evidence: E2).
+
+| 생성자 | 용도 |
+|---|---|
+| `Throwable()` | 메시지 없음 |
+| `Throwable(String message)` | 메시지 지정 |
+| `Throwable(String message, Throwable cause)` | 메시지 + cause (권장) |
+| `Throwable(Throwable cause)` | cause만 |
+
+### 커스텀 예외 클래스 설계
+
+도메인 고유의 오류를 표현하기 위해 커스텀 예외 클래스를 정의한다. 설계 포인트는 다음과 같다 (Evidence: E4).
+
+1. **checked/unchecked 선택** -- 호출측이 복구 가능하면 checked(`extends Exception`), 프로그래밍 오류이면 unchecked(`extends RuntimeException`)
+2. **생성자** -- 최소한 `(String message)`와 `(String message, Throwable cause)` 2개를 준비
+3. **에러 코드** -- 문자열 상수나 enum으로 오류 종류를 식별 가능하게 함
+4. **시리얼 버전 UID** -- `Serializable`이므로 `serialVersionUID`를 정의
+
+### 로그 출력 모범 사례
+
+예외 로그 출력에서는 로거의 인수에 예외 객체 자체를 전달하여, 스택 트레이스 전체가 기록되도록 한다 (Evidence: E5).
+
+```java
+// OK: 예외 객체를 전달 → 스택 트레이스 전체가 기록됨
+logger.error("사용자 조회 실패", e);
+
+// NG: getMessage()만 → 스택 트레이스가 소실됨
+logger.error("에러: " + e.getMessage());
+```
+
+---
+
+## 3) 예제 (2개)
+
+### 예제 1: 레이어 간 예외 변환
+
+데이터 액세스 층에서 발생한 `SQLException`을 서비스 층의 `DataAccessException`으로 변환하고, 나아가 애플리케이션 층의 `ServiceException`으로 변환하는 예를 보여준다 (Evidence: E1, E2, E3).
+
+```java
+import java.sql.SQLException;
+
+// 도메인 예외 클래스
+class DataAccessException extends RuntimeException {
+    public DataAccessException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
+
+class ServiceException extends RuntimeException {
+    private final String errorCode;
+
+    public ServiceException(String errorCode, String message, Throwable cause) {
+        super(message, cause);
+        this.errorCode = errorCode;
+    }
+
+    public String getErrorCode() { return errorCode; }
+}
+
+// 데이터 액세스 층
+class UserRepository {
+    User findById(long id) {
+        try {
+            // JDBC로 데이터베이스 액세스 (실제 코드 생략)
+            throw new SQLException("Connection refused");
+        } catch (SQLException e) {
+            // SQLException → DataAccessException 으로 변환 (cause 보존)
+            throw new DataAccessException("USER_QUERY_FAILED", e);
+        }
+    }
+}
+
+// 서비스 층
+class UserService {
+    private final UserRepository repo = new UserRepository();
+
+    User getUser(long id) {
+        try {
+            return repo.findById(id);
+        } catch (DataAccessException e) {
+            // DataAccessException → ServiceException 으로 변환 (cause 보존)
+            throw new ServiceException("E001", "사용자 조회 실패", e);
+        }
+    }
+}
+```
+
+`findById`에서는 `SQLException`을 `DataAccessException`으로 변환하고, `getUser`에서는 다시 `ServiceException`으로 변환한다. 각 단계에서 원래 예외가 `cause`로 보존되므로, 스택 트레이스를 추적하여 근본 원인인 `SQLException`까지 도달할 수 있다.
+
+### 예제 2: 커스텀 예외 클래스의 완전한 구현
+
+4개의 생성자를 갖는 커스텀 예외 클래스와, 에러 코드를 enum으로 관리하는 설계 패턴을 보여준다 (Evidence: E4, E5).
+
+```java
+import java.io.Serial;
+import java.util.logging.Logger;
+
+// 에러 코드 enum
+enum OrderErrorCode {
+    ITEM_NOT_FOUND("주문 상품을 찾을 수 없음"),
+    STOCK_INSUFFICIENT("재고 부족"),
+    PAYMENT_FAILED("결제 실패");
+
+    private final String description;
+    OrderErrorCode(String description) { this.description = description; }
+    public String getDescription() { return description; }
+}
+
+// 커스텀 예외 클래스
+class OrderException extends RuntimeException {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    private final OrderErrorCode errorCode;
+
+    public OrderException(OrderErrorCode errorCode) {
+        super(errorCode.getDescription());
+        this.errorCode = errorCode;
+    }
+
+    public OrderException(OrderErrorCode errorCode, Throwable cause) {
+        super(errorCode.getDescription(), cause);  // cause 보존
+        this.errorCode = errorCode;
+    }
+
+    public OrderErrorCode getErrorCode() { return errorCode; }
+}
+
+// 사용 예
+class OrderService {
+    private static final Logger logger = Logger.getLogger(OrderService.class.getName());
+
+    void placeOrder(long itemId, int quantity) {
+        try {
+            // 재고 확인 처리 (생략)
+            throw new RuntimeException("DB connection timeout");
+        } catch (RuntimeException e) {
+            // OK: 예외 객체를 로그에 전달
+            logger.severe("주문 처리 실패: " + e.getMessage());
+
+            // 예외 변환 + cause 보존
+            throw new OrderException(OrderErrorCode.STOCK_INSUFFICIENT, e);
+        }
+    }
+}
+```
+
+`OrderException`은 에러 코드를 enum으로 관리하며, 2가지 생성자(cause 없음, cause 있음)를 준비하고 있다. `OrderService.placeOrder`에서는 예외 변환 시 `cause`를 전달하고, 로그에도 예외 정보를 기록하고 있다.
+
+---
+
+## 4) 흔한 실수 / 함정 (5개)
+
+### 1. cause 없는 생성자만으로 예외 변환
+
+```java
+// NG: cause가 사라짐
+catch (SQLException e) {
+    throw new DataAccessException("QUERY_FAILED");
+    // 원래 SQLException의 스택 트레이스가 완전히 소멸
+}
+
+// OK: cause를 전달
+catch (SQLException e) {
+    throw new DataAccessException("QUERY_FAILED", e);
+}
+```
+
+cause 없이 예외를 변환하면 근본 원인 특정이 불가능해진다. 운영 환경에서 장애 조사가 극히 어려워지므로, 반드시 cause를 전달해야 한다 (Evidence: E2).
+
+### 2. initCause()의 이중 호출
+
+```java
+// NG: initCause()는 한 번만 호출 가능
+DataAccessException dae = new DataAccessException("FAILED", originalCause);
+dae.initCause(anotherCause);  // IllegalStateException 발생!
+```
+
+생성자에서 `cause`를 전달한 경우, `initCause()`는 이미 cause가 설정되어 있으므로 `IllegalStateException`이 throw된다. 생성자에서의 전달을 우선해야 한다 (Evidence: E2).
+
+### 3. getMessage()만의 로그 출력
+
+```java
+// NG: 스택 트레이스가 기록되지 않음
+catch (DataAccessException e) {
+    logger.error("에러: " + e.getMessage());
+    throw new ServiceException("FAILED", e);
+}
+
+// OK: 예외 객체 자체를 전달
+catch (DataAccessException e) {
+    logger.error("데이터 액세스 실패", e);
+    throw new ServiceException("FAILED", e);
+}
+```
+
+`e.getMessage()`만으로는 예외 메시지만 기록된다. 로거에 예외 객체를 전달해야 cause 체인 전체의 스택 트레이스가 기록된다 (Evidence: E5).
+
+### 4. 커스텀 예외에 cause 생성자가 없음
+
+```java
+// NG: cause를 받을 수 없는 설계
+class AppException extends RuntimeException {
+    public AppException(String message) {
+        super(message);
+    }
+    // cause 생성자가 없다!
+}
+
+// OK: cause 생성자를 반드시 준비
+class AppException extends RuntimeException {
+    public AppException(String message) {
+        super(message);
+    }
+    public AppException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
+```
+
+커스텀 예외 클래스에 `(String, Throwable)` 생성자가 없으면, 예외 변환 시 cause를 보존할 수 없다. 반드시 준비해야 한다 (Evidence: E4).
+
+### 5. 과도한 예외 변환
+
+```java
+// NG: 무의미한 변환의 연쇄
+catch (IOException e) {
+    throw new Level1Exception("L1", e);  // → Level2Exception → Level3Exception...
+}
+```
+
+모든 레이어에서 예외를 변환하면 cause 체인이 너무 깊어져 스택 트레이스가 읽기 어려워진다. 변환은 **추상도가 바뀌는 레이어 경계**에서만 수행해야 한다 (Evidence: E1, E3).
+
+---
+
+## 5) 체크리스트
+
+- [ ] 예외 변환 시 cause(두 번째 인수)를 반드시 전달하고 있는가
+- [ ] 커스텀 예외 클래스에 `(String message, Throwable cause)` 생성자가 있는가
+- [ ] `initCause()` 대신 생성자로 cause를 전달하고 있는가
+- [ ] 로그 출력에서 예외 객체 자체를 로거에 전달하고 있는가 (`getMessage()`만 되어 있지 않은가)
+- [ ] 예외 변환은 추상도가 바뀌는 레이어 경계에서만 수행하고 있는가
+- [ ] 커스텀 예외에 `serialVersionUID`를 정의하고 있는가
+- [ ] 에러 코드(문자열 상수 또는 enum)로 예외 종류를 식별 가능한가
+
+---
+
+## 6) 다음으로
+
+다음 레슨 **JAVA-SILVER-04-03: try-with-resources와 AutoCloseable**에서는 AutoCloseable 인터페이스, try-with-resources 구문의 상세, 억제된 예외(suppressed exceptions), 커스텀 AutoCloseable 구현에 대해 자세히 배운다.

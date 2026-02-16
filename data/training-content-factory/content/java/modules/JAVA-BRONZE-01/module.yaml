@@ -1,0 +1,33 @@
+module:
+  id: JAVA-BRONZE-01
+  title: Java 基本文法
+  level: bronze
+  description: "Javaプログラムの構造、データ型、演算子、制御構造、配列の基礎を理解する。"
+  outcomes:
+    - "Javaプログラムのコンパイルと実行の流れを説明できる。"
+    - "基本型と参照型の違いを区別できる。"
+    - "if/switch/for/whileを使い分けられる。"
+  lessons:
+    - id: JAVA-BRONZE-01-01
+      title: "プログラムの構造とコンパイル"
+      est_minutes: 35
+      tags: [main, compile, execute, jdk]
+      outcomes:
+        - "mainメソッドのシグネチャとJVMの起動手順を説明する。"
+        - "javac/javaコマンドでコンパイル・実行できる。"
+    - id: JAVA-BRONZE-01-02
+      title: "基本型と変数のスコープ"
+      est_minutes: 35
+      tags: [primitive, reference, scope, variable]
+    - id: JAVA-BRONZE-01-03
+      title: "演算子と型変換"
+      est_minutes: 30
+      tags: [operators, casting, promotion]
+    - id: JAVA-BRONZE-01-04
+      title: "条件分岐 — if / switch"
+      est_minutes: 30
+      tags: [if, switch, branch]
+    - id: JAVA-BRONZE-01-05
+      title: "繰り返し — for / while / 拡張for"
+      est_minutes: 30
+      tags: [for, while, enhanced-for, loop]

@@ -1,0 +1,331 @@
+---
+lesson_id: JAVA-GOLD-01-04
+title: "Stream API — 中間操作と終端操作"
+module: JAVA-GOLD-01
+level: gold
+est_minutes: 40
+tags: [stream, intermediate, terminal, lazy-evaluation, pipeline, Optional]
+---
+
+# Stream API -- 중간 조작과 종단 조작
+
+## 1) 요점 정리 (5줄)
+
+- **Stream**은 데이터 처리 파이프라인을 선언적으로 기술하는 API이며, 컬렉션 자체를 변경하지 않는다 (Evidence: E1)
+- **중간 조작**(filter, map, flatMap, sorted, distinct, peek)은 지연 평가되며, 새로운 Stream을 반환한다 (Evidence: E2)
+- **종단 조작**(forEach, collect, count, reduce, findFirst, anyMatch)이 파이프라인을 기동하여 결과를 생성한다 (Evidence: E3)
+- **지연 평가(Lazy Evaluation)** 에 의해, 종단 조작이 호출될 때까지 중간 조작은 실행되지 않는다. 불필요한 계산을 회피할 수 있다 (Evidence: E4)
+- **Optional**은 null 대신 "값이 존재하지 않을 가능성"을 타입으로 표현하는 컨테이너이다 (Evidence: E5)
+
+---
+
+## 2) 개념
+
+### Stream이란
+
+Stream은 컬렉션의 요소를 처리하기 위한 추상화이며, SQL의 SELECT문과 같은 파이프라인 처리를 제공한다. Stream은 데이터를 저장하지 않고(컬렉션과 다름), 소스를 변경하지 않으며, 지연 평가된다 (Evidence: E1).
+
+### Stream의 생성 방법
+
+```java
+// 컬렉션에서
+List<String> list = List.of("a", "b", "c");
+Stream<String> s1 = list.stream();
+
+// 배열에서
+String[] arr = {"x", "y", "z"};
+Stream<String> s2 = Arrays.stream(arr);
+
+// 직접 생성
+Stream<String> s3 = Stream.of("p", "q", "r");
+
+// 범위 정수
+IntStream range = IntStream.rangeClosed(1, 10);
+```
+
+### 중간 조작 (Intermediate Operations)
+
+중간 조작은 새로운 Stream을 반환하며, 지연 평가된다 (Evidence: E2).
+
+| 조작 | 설명 | 예 |
+|---|---|---|
+| `filter(Predicate)` | 조건에 맞는 요소만 통과 | `.filter(s -> s.length() > 3)` |
+| `map(Function)` | 각 요소를 변환 | `.map(String::toUpperCase)` |
+| `flatMap(Function)` | 각 요소를 Stream으로 변환 후 평탄화 | `.flatMap(list -> list.stream())` |
+| `sorted()` | 자연 순서로 정렬 | `.sorted()` |
+| `sorted(Comparator)` | 지정 순서로 정렬 | `.sorted(Comparator.reverseOrder())` |
+| `distinct()` | 중복 제거 | `.distinct()` |
+| `peek(Consumer)` | 각 요소에 부수 효과 실행 (디버그용) | `.peek(System.out::println)` |
+| `limit(long)` | 선두부터 n건으로 제한 | `.limit(5)` |
+| `skip(long)` | 선두부터 n건 건너뛰기 | `.skip(2)` |
+
+### 종단 조작 (Terminal Operations)
+
+종단 조작은 파이프라인을 실행하고 결과를 생성한다. 한 번 종단 조작을 호출하면 Stream은 소비된다 (Evidence: E3).
+
+| 조작 | 설명 | 반환값 |
+|---|---|---|
+| `forEach(Consumer)` | 각 요소에 처리 적용 | void |
+| `collect(Collector)` | 결과를 집약 | R |
+| `count()` | 요소 수 반환 | long |
+| `reduce(BinaryOperator)` | 요소를 접기 | Optional<T> |
+| `findFirst()` | 첫 번째 요소 반환 | Optional<T> |
+| `findAny()` | 임의의 요소 반환 | Optional<T> |
+| `anyMatch(Predicate)` | 어느 요소라도 조건에 맞는가 | boolean |
+| `allMatch(Predicate)` | 모든 요소가 조건에 맞는가 | boolean |
+| `noneMatch(Predicate)` | 어떤 요소도 조건에 맞지 않는가 | boolean |
+| `toList()` | 불변 List로 집약 (Java 16 이후) | List<T> |
+
+### 지연 평가 (Lazy Evaluation)
+
+중간 조작은 종단 조작이 호출될 때까지 실행되지 않는다. 이 구조에 의해 불필요한 계산이 회피된다 (Evidence: E4).
+
+```java
+List<String> names = List.of("Alice", "Bob", "Charlie", "David");
+
+// 종단 조작(findFirst)이 결과를 찾은 시점에 파이프라인이 정지
+Optional<String> result = names.stream()
+    .filter(name -> {
+        System.out.println("filter: " + name);
+        return name.startsWith("C");
+    })
+    .findFirst();
+// 출력: filter: Alice, filter: Bob, filter: Charlie
+// → David의 filter는 실행되지 않음
+```
+
+### 파이프라인의 개념
+
+Stream 파이프라인은 "소스 -> 중간 조작의 연쇄 -> 종단 조작"의 구조를 갖는다 (Evidence: E1, E2, E3).
+
+```java
+long count = employees.stream()         // 소스
+    .filter(e -> e.getAge() >= 30)      // 중간 조작 1
+    .map(Employee::getName)              // 중간 조작 2
+    .sorted()                            // 중간 조작 3
+    .count();                            // 종단 조작
+```
+
+### Optional
+
+`Optional<T>`는 값이 존재하는지 여부를 타입으로 표현하는 컨테이너이다. Stream API의 `findFirst()`나 `reduce()`가 반환한다 (Evidence: E5).
+
+```java
+Optional<String> opt = Optional.of("hello");
+opt.isPresent();                       // true
+opt.get();                             // "hello"
+opt.orElse("default");                 // "hello"
+
+Optional<String> empty = Optional.empty();
+empty.isPresent();                     // false
+empty.orElse("default");              // "default"
+empty.orElseThrow();                   // NoSuchElementException
+```
+
+---
+
+## 3) 예제 (2개)
+
+### 예제 1: 기본적인 Stream 파이프라인
+
+filter, map, sorted를 사용한 기본적인 데이터 처리 파이프라인을 보여준다 (Evidence: E1, E2, E3).
+
+```java
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class StreamBasics {
+
+    record Employee(String name, String dept, int salary) {}
+
+    public static void main(String[] args) {
+        List<Employee> employees = List.of(
+            new Employee("田中", "開発", 500_000),
+            new Employee("佐藤", "営業", 400_000),
+            new Employee("鈴木", "開発", 600_000),
+            new Employee("高橋", "営業", 450_000),
+            new Employee("伊藤", "開発", 550_000)
+        );
+
+        // 개발부 사원명을 급여 내림차순으로 가져옴
+        List<String> devNames = employees.stream()
+            .filter(e -> e.dept().equals("開発"))          // 개발부만
+            .sorted((a, b) -> b.salary() - a.salary())    // 급여 내림차순
+            .map(Employee::name)                           // 이름 추출
+            .toList();                                     // 불변 List로 집약
+
+        System.out.println(devNames);  // [鈴木, 伊藤, 田中]
+
+        // 전 사원의 평균 급여
+        double avgSalary = employees.stream()
+            .mapToInt(Employee::salary)
+            .average()
+            .orElse(0.0);
+
+        System.out.println("평균 급여: " + avgSalary);  // 500000.0
+
+        // anyMatch: 급여 60만 이상 사원이 존재하는가
+        boolean hasHighEarner = employees.stream()
+            .anyMatch(e -> e.salary() >= 600_000);
+        System.out.println("고수입자 존재: " + hasHighEarner);  // true
+    }
+}
+```
+
+`filter`로 조건 필터링, `sorted`로 정렬, `map`으로 변환, `toList`로 List에 집약하는 파이프라인의 기본형을 보여준다. `mapToInt`로 `IntStream`으로 변환하여 `average()`로 평균값을 구하고 있다.
+
+### 예제 2: flatMap, distinct, reduce
+
+flatMap에 의한 중첩의 평탄화와, reduce에 의한 접기를 보여준다 (Evidence: E2, E3, E5).
+
+```java
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+public class StreamAdvanced {
+
+    public static void main(String[] args) {
+        // flatMap: 중첩된 리스트의 평탄화
+        List<List<String>> nested = List.of(
+            List.of("Java", "Kotlin"),
+            List.of("Python", "Go"),
+            List.of("Java", "Rust")
+        );
+
+        List<String> unique = nested.stream()
+            .flatMap(List::stream)    // List<List<String>> → Stream<String>
+            .distinct()                // 중복 제거
+            .sorted()                  // 알파벳순
+            .toList();
+
+        System.out.println(unique);  // [Go, Java, Kotlin, Python, Rust]
+
+        // reduce: 요소의 접기
+        List<Integer> numbers = List.of(1, 2, 3, 4, 5);
+
+        // 초기값 없는 reduce → Optional
+        Optional<Integer> sum = numbers.stream()
+            .reduce(Integer::sum);
+        System.out.println("합계: " + sum.orElse(0));  // 15
+
+        // 초기값 있는 reduce → 직접 값
+        int product = numbers.stream()
+            .reduce(1, (a, b) -> a * b);
+        System.out.println("곱: " + product);  // 120
+
+        // findFirst + Optional
+        Optional<String> first = Stream.of("alpha", "beta", "gamma")
+            .filter(s -> s.contains("a"))
+            .findFirst();
+        first.ifPresent(s -> System.out.println("첫 번째 일치: " + s));  // alpha
+    }
+}
+```
+
+`flatMap`은 중첩된 구조를 평탄화하고, `distinct`로 중복을 제거한다. `reduce`는 초기값 없음(Optional 반환)과 초기값 있음(직접 값 반환)의 2가지 패턴이 있다.
+
+---
+
+## 4) 흔한 실수 / 함정 (5개)
+
+### 1. Stream의 재사용
+
+```java
+// NG: 한 번 소비한 Stream은 재사용 불가
+Stream<String> stream = List.of("a", "b").stream();
+stream.count();     // OK: 2
+stream.forEach(System.out::println);  // IllegalStateException!
+
+// OK: 매번 새로운 Stream을 생성
+List.of("a", "b").stream().count();
+List.of("a", "b").stream().forEach(System.out::println);
+```
+
+Stream은 한 번 종단 조작을 실행하면 소비된다. 재사용하려면 새로운 Stream을 생성해야 한다 (Evidence: E3).
+
+### 2. 중간 조작만 있고 종단 조작이 없음
+
+```java
+// NG: 아무것도 실행되지 않음 (지연 평가)
+List.of(1, 2, 3).stream()
+    .filter(n -> n > 1)
+    .map(n -> n * 2);
+// 종단 조작이 없으므로 파이프라인이 실행되지 않음
+
+// OK: 종단 조작을 추가
+List<Integer> result = List.of(1, 2, 3).stream()
+    .filter(n -> n > 1)
+    .map(n -> n * 2)
+    .toList();
+```
+
+중간 조작만으로는 지연 평가에 의해 아무것도 실행되지 않는다. 반드시 종단 조작을 호출해야 한다 (Evidence: E4).
+
+### 3. peek을 프로덕션 로직에 사용
+
+```java
+// NG: peek은 부수 효과 목적이므로, 결과에 의존하는 로직에 쓰면 안 됨
+List<StringBuilder> result = Stream.of(new StringBuilder("a"))
+    .peek(sb -> sb.append("b"))  // 부수 효과로 객체 변경
+    .toList();
+// 동작은 하지만, peek은 디버그 용도로 한정해야 함
+
+// OK: map을 사용하여 변환을 명시
+List<String> result = Stream.of("a")
+    .map(s -> s + "b")
+    .toList();
+```
+
+`peek`은 디버그/로깅 용도이며, 비즈니스 로직에 사용해서는 안 된다 (Evidence: E2).
+
+### 4. Optional.get()의 무조건 호출
+
+```java
+// NG: 값이 없을 경우 NoSuchElementException
+Optional<String> opt = someStream.findFirst();
+String value = opt.get();  // 위험! 비어 있을 경우 예외
+
+// OK: orElse나 ifPresent를 사용
+String value = opt.orElse("기본값");
+opt.ifPresent(v -> System.out.println(v));
+```
+
+`Optional.get()`은 값이 존재하지 않을 경우 `NoSuchElementException`을 throw한다. `orElse()`나 `ifPresent()`를 사용해야 한다 (Evidence: E5).
+
+### 5. Stream 안에서 컬렉션을 변경
+
+```java
+// NG: 스트림 처리 중에 소스를 변경
+List<String> list = new ArrayList<>(List.of("a", "b", "c"));
+list.stream()
+    .forEach(s -> {
+        if (s.equals("b")) list.remove(s);  // ConcurrentModificationException
+    });
+
+// OK: filter로 제외한 후 수집
+List<String> result = list.stream()
+    .filter(s -> !s.equals("b"))
+    .toList();
+```
+
+Stream의 소스를 스트림 처리 중에 변경하면 ConcurrentModificationException이 발생한다 (Evidence: E1).
+
+---
+
+## 5) 체크리스트
+
+- [ ] Stream의 3가지 구성 요소(소스, 중간 조작, 종단 조작)를 설명할 수 있다
+- [ ] filter, map, flatMap, sorted, distinct의 동작을 설명할 수 있다
+- [ ] forEach, collect, count, reduce, findFirst의 동작을 설명할 수 있다
+- [ ] 지연 평가의 구조를 이해하고, 왜 종단 조작이 필요한지 설명할 수 있다
+- [ ] Stream이 한 번만 소비될 수 있는 이유를 설명할 수 있다
+- [ ] Optional의 올바른 사용법(orElse, ifPresent)을 실천할 수 있다
+- [ ] peek이 디버그 용도임을 이해하고 있다
+- [ ] flatMap을 사용하여 중첩 구조를 평탄화할 수 있다
+
+---
+
+## 6) 다음으로
+
+다음 레슨에서는 **JAVA-GOLD-01-05: Stream 실전 -- collect / reduce / groupingBy**를 배운다. Collectors의 각종 메서드(toList, groupingBy, partitioningBy, joining), reduce의 상세, 병렬 스트림의 기초에 대해 다룬다.

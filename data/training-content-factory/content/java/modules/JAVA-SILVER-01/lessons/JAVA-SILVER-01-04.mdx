@@ -1,0 +1,340 @@
+---
+lesson_id: JAVA-SILVER-01-04
+title: "ポリモーフィズムと抽象クラス"
+module: JAVA-SILVER-01
+level: silver
+est_minutes: 40
+tags: [polymorphism, abstract, dynamic-binding, upcasting, downcasting, instanceof, template-method]
+---
+
+## 1) 要点まとめ（5行）
+
+- ポリモーフィズム（多態性）により、スーパークラス型の変数でサブクラスのインスタンスを扱える。呼び出されるメソッドは実行時の型で決定される（動的バインディング）。(Evidence: E1)
+- アップキャスト（サブクラス→スーパークラス）は暗黙的に行われる。ダウンキャスト（スーパークラス→サブクラス）は明示的なキャストが必要で、失敗すると `ClassCastException` が発生する。(Evidence: E2)
+- `instanceof` 演算子で実行時の型を確認できる。ダウンキャスト前に必ず `instanceof` で型チェックを行うべきである。Java 16以降はパターンマッチングが使える。(Evidence: E3)
+- `abstract` クラスはインスタンス化できないクラスであり、`abstract` メソッドは本体を持たず、サブクラスで実装を強制する。(Evidence: E4)
+- テンプレートメソッドパターンは、抽象クラスで処理の流れを定義し、具体的な処理をサブクラスに委譲する設計パターンである。(Evidence: E5)
+
+## 2) 概念
+
+### ポリモーフィズム（多態性）
+
+✅ 結論: 同じメソッド呼び出しでも、実行時の型に応じて異なる動作をする。
+
+ポリモーフィズムにより、スーパークラス型の変数を通じて異なるサブクラスのメソッドを統一的に呼び出せる。どのメソッドが実行されるかは**コンパイル時の型ではなく実行時の型**で決定される。(Evidence: E1)
+
+```java
+Animal a = new Dog();    // 変数の型: Animal、実行時の型: Dog
+a.speak();               // Dog の speak() が実行される（動的バインディング）
+```
+
+これにより、新しいサブクラスを追加しても既存のコードを変更せずに拡張できる（開放閉鎖の原則）。
+
+### 動的バインディング（レイトバインディング）
+
+✅ 結論: インスタンスメソッドの呼び出し先は実行時に決定される。
+
+Javaではインスタンスメソッドの呼び出しは**動的バインディング**で解決される。コンパイル時ではなく実行時に、オブジェクトの実際の型に基づいて呼び出すメソッドが決まる。(Evidence: E1)
+
+| 項目 | 静的バインディング | 動的バインディング |
+|---|---|---|
+| 決定タイミング | コンパイル時 | 実行時 |
+| 対象 | `static` メソッド、`private` メソッド、`final` メソッド | インスタンスメソッド |
+| キーワード | ―（自動） | ―（自動） |
+
+⚠️ 注意: フィールドアクセスは動的バインディングされない。フィールドはコンパイル時の型で解決される。
+
+### アップキャストとダウンキャスト
+
+✅ 結論: アップキャストは安全で暗黙的、ダウンキャストは危険で明示的。
+
+**アップキャスト（サブクラス → スーパークラス）:**
+暗黙的に行われ、常に安全。ただしサブクラス固有のメソッドは呼び出せなくなる。(Evidence: E2)
+
+```java
+Dog dog = new Dog();
+Animal a = dog;           // アップキャスト（暗黙的、安全）
+a.speak();                // OK（Animal に定義があれば）
+// a.fetch();             // コンパイルエラー（Animal に fetch() がない）
+```
+
+**ダウンキャスト（スーパークラス → サブクラス）:**
+明示的なキャストが必要。実行時の型が合わないと `ClassCastException` が発生する。(Evidence: E2)
+
+```java
+Animal a = new Dog();
+Dog d = (Dog) a;          // ダウンキャスト（明示的、成功）
+d.fetch();                // OK
+
+Animal a2 = new Cat();
+Dog d2 = (Dog) a2;        // ClassCastException! Cat は Dog ではない
+```
+
+### instanceof 演算子
+
+✅ 結論: ダウンキャスト前の型チェックに使用する。
+
+`instanceof` は左辺のオブジェクトが右辺の型（またはそのサブクラス）のインスタンスであるかを判定する。ダウンキャスト前に必ず使用すべきである。(Evidence: E3)
+
+```java
+Animal a = getAnimal();
+
+if (a instanceof Dog) {
+    Dog d = (Dog) a;    // 安全なダウンキャスト
+    d.fetch();
+}
+```
+
+**Java 16以降: パターンマッチング**
+
+```java
+if (a instanceof Dog d) {   // 型チェック + キャスト + 変数宣言を1行で
+    d.fetch();
+}
+```
+
+💡 覚え方: `null instanceof 任意の型` は常に `false` を返す
+
+### 抽象クラス（abstract class）
+
+✅ 結論: インスタンス化できないクラスで、サブクラスに実装を強制する。
+
+`abstract` クラスはインスタンスを直接生成できない。`abstract` メソッドは本体（`{ }`）を持たず、サブクラスで必ずオーバーライドしなければならない。(Evidence: E4)
+
+```java
+public abstract class Shape {
+    protected String color;
+
+    public Shape(String color) {
+        this.color = color;
+    }
+
+    // 抽象メソッド — サブクラスでの実装を強制
+    public abstract double getArea();
+
+    // 具象メソッド — 共通処理を提供
+    public String getColor() {
+        return color;
+    }
+}
+```
+
+| 項目 | 抽象クラス | 具象クラス |
+|---|---|---|
+| インスタンス化 | 不可 | 可能 |
+| `abstract` メソッド | 定義可能 | 定義不可 |
+| 具象メソッド | 定義可能 | 定義可能 |
+| コンストラクタ | 定義可能（サブクラスから呼ぶ） | 定義可能 |
+
+⚠️ 注意: 抽象クラスを継承したサブクラスが抽象メソッドをすべて実装しない場合、そのサブクラスも `abstract` にしなければならない。
+
+### テンプレートメソッドパターン
+
+✅ 結論: アルゴリズムの骨格を抽象クラスで定義し、詳細をサブクラスに委譲する。
+
+テンプレートメソッドパターンは、処理の流れ（テンプレートメソッド）を抽象クラスで定義し、可変部分を抽象メソッドとしてサブクラスに実装させるデザインパターンである。(Evidence: E5)
+
+```java
+public abstract class DataProcessor {
+    // テンプレートメソッド（処理の流れを定義）
+    public final void process() {
+        readData();
+        transformData();
+        writeData();
+    }
+
+    protected abstract void readData();       // サブクラスが実装
+    protected abstract void transformData();  // サブクラスが実装
+    protected abstract void writeData();      // サブクラスが実装
+}
+```
+
+テンプレートメソッドを `final` にすることで、サブクラスが処理の流れ自体を変更することを防ぐ。
+
+## 3) 例（2つ）
+
+### 例1: ポリモーフィズムとinstanceof
+
+```java
+public abstract class Animal {
+    protected String name;
+
+    public Animal(String name) {
+        this.name = name;
+    }
+
+    public abstract String speak();
+
+    @Override
+    public String toString() {
+        return name + ": " + speak();
+    }
+}
+```
+
+```java
+public class Dog extends Animal {
+    public Dog(String name) { super(name); }
+
+    @Override
+    public String speak() { return "ワン"; }
+
+    public String fetch() { return name + "がボールを持ってきた"; }
+}
+
+public class Cat extends Animal {
+    public Cat(String name) { super(name); }
+
+    @Override
+    public String speak() { return "ニャー"; }
+}
+```
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        // ポリモーフィズム: Animal 型の配列に異なるサブクラスを格納
+        Animal[] animals = {
+            new Dog("ポチ"),
+            new Cat("タマ"),
+            new Dog("ハチ")
+        };
+
+        for (Animal a : animals) {
+            System.out.println(a);  // 動的バインディングで適切な speak() が呼ばれる
+        }
+        // 出力:
+        // ポチ: ワン
+        // タマ: ニャー
+        // ハチ: ワン
+
+        // instanceof + ダウンキャスト
+        for (Animal a : animals) {
+            if (a instanceof Dog dog) {  // パターンマッチング（Java 16+）
+                System.out.println(dog.fetch());
+            }
+        }
+        // 出力:
+        // ポチがボールを持ってきた
+        // ハチがボールを持ってきた
+    }
+}
+```
+
+ポイント:
+- `Animal` 型の配列に `Dog` と `Cat` を混在させ、ポリモーフィズムにより統一的に処理する。
+- `toString()` 内の `speak()` は動的バインディングで実行時の型のメソッドが呼ばれる。
+- `instanceof` でDogかどうか判定してからダウンキャストし、Dog固有の `fetch()` を呼ぶ。
+
+### 例2: テンプレートメソッドパターン
+
+```java
+public abstract class Report {
+    // テンプレートメソッド
+    public final String generate() {
+        return formatHeader() + "\n" + formatBody() + "\n" + formatFooter();
+    }
+
+    protected abstract String formatHeader();
+    protected abstract String formatBody();
+
+    // デフォルト実装を持つメソッド（必要に応じてオーバーライド可能）
+    protected String formatFooter() {
+        return "--- END ---";
+    }
+}
+```
+
+```java
+public class SalesReport extends Report {
+    private int total;
+
+    public SalesReport(int total) {
+        this.total = total;
+    }
+
+    @Override
+    protected String formatHeader() {
+        return "=== 売上レポート ===";
+    }
+
+    @Override
+    protected String formatBody() {
+        return "売上合計: " + total + "円";
+    }
+}
+
+public class InventoryReport extends Report {
+    private int itemCount;
+
+    public InventoryReport(int itemCount) {
+        this.itemCount = itemCount;
+    }
+
+    @Override
+    protected String formatHeader() {
+        return "=== 在庫レポート ===";
+    }
+
+    @Override
+    protected String formatBody() {
+        return "在庫数: " + itemCount + "件";
+    }
+
+    @Override
+    protected String formatFooter() {
+        return "--- 在庫確認完了 ---";
+    }
+}
+```
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Report r1 = new SalesReport(500000);
+        Report r2 = new InventoryReport(120);
+
+        System.out.println(r1.generate());
+        // === 売上レポート ===
+        // 売上合計: 500000円
+        // --- END ---
+
+        System.out.println(r2.generate());
+        // === 在庫レポート ===
+        // 在庫数: 120件
+        // --- 在庫確認完了 ---
+    }
+}
+```
+
+ポイント:
+- `generate()` がテンプレートメソッドであり、処理の流れ（ヘッダ→ボディ→フッタ）を定義する。
+- `formatHeader()` と `formatBody()` は抽象メソッドとしてサブクラスに実装を強制する。
+- `formatFooter()` はデフォルト実装を提供し、`InventoryReport` のみオーバーライドしている。
+
+## 4) よくあるミス／落とし穴（5つ）
+
+⚠️ ミス: `instanceof` チェックなしにダウンキャストして `ClassCastException` が発生する → 対策: ダウンキャスト前に必ず `instanceof` で型を確認する(Evidence: E2, E3)
+
+⚠️ ミス: 抽象クラスを `new` でインスタンス化しようとしてコンパイルエラー → 対策: 抽象クラスはインスタンス化できない。具象サブクラスを使って `new` する(Evidence: E4)
+
+⚠️ ミス: アップキャスト後にサブクラス固有のメソッドを呼び出してコンパイルエラー → 対策: コンパイル時の型にそのメソッドが存在しなければ呼び出せない。ダウンキャストが必要(Evidence: E2)
+
+⚠️ ミス: フィールドアクセスが動的バインディングされると誤解する → 対策: フィールドはコンパイル時の型で解決される。メソッドのみが動的バインディングの対象(Evidence: E1)
+
+⚠️ ミス: 抽象メソッドをすべて実装せずにサブクラスを具象クラスとして定義する → 対策: 抽象メソッドを1つでも実装しない場合、サブクラスも `abstract` にしなければコンパイルエラー(Evidence: E4)
+
+## 5) チェックリスト
+
+- [ ] ポリモーフィズムの仕組みを具体例を挙げて説明できるか
+- [ ] 動的バインディングと静的バインディングの違いを説明できるか
+- [ ] アップキャストとダウンキャストの違いと注意点を述べられるか
+- [ ] `instanceof` 演算子の使い方とパターンマッチング（Java 16+）を説明できるか
+- [ ] 抽象クラスと具象クラスの違いを説明できるか
+- [ ] 抽象メソッドの定義と実装の流れを説明できるか
+- [ ] テンプレートメソッドパターンの利点を説明できるか
+- [ ] `ClassCastException` を防ぐための方法を述べられるか
+
+## 6) 次へ
+
+次のレッスンは **JAVA-SILVER-01-05: インタフェースとデフォルトメソッド** です。`interface` の宣言と `implements`、複数インタフェースの実装、デフォルトメソッド、関数型インタフェース、そしてインタフェースと抽象クラスの使い分けについて学習します。

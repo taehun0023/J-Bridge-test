@@ -1,0 +1,233 @@
+---
+lesson_id: JAVA-GOLD-01-01
+title: "ジェネリクスの基礎 — 型パラメータと型安全"
+module: JAVA-GOLD-01
+level: gold
+est_minutes: 40
+tags: [generics, type-parameter, type-safety, erasure]
+---
+
+# ジェネリクスの基礎 — 型パラメータと型安全
+
+## 1) 要点まとめ（5行）
+
+- **型パラメータ `<T>`** をクラスやメソッドに宣言することで、コンパイル時に型安全を保証できる (Evidence: E2)
+- **型消去（Type Erasure）** により、ジェネリクスの型情報はコンパイル後に消去され、実行時には区別されない (Evidence: E3)
+- **raw type** を使用すると型安全が失われ、実行時に `ClassCastException` が発生するリスクがある (Evidence: E1, E4)
+- 型パラメータには**参照型のみ**指定可能で、プリミティブ型は使用できない。ラッパー型を使う (Evidence: E7)
+- **ダイヤモンド演算子 `<>`** により、右辺の型パラメータをコンパイラが推論してくれる (Evidence: E6)
+
+## 2) 概念
+
+### ジェネリクス導入前の問題
+
+Java 5 より前のコレクションは `Object` 型で要素を格納していた。取り出し時にはキャストが必要であり、型を間違えると実行時に `ClassCastException` が発生していた (Evidence: E1)。この問題は、コンパイル時に検出できないため、バグの発見が遅れる原因となっていた。
+
+### 型パラメータ `<T>`
+
+ジェネリクスでは、クラスやインターフェースに型パラメータを宣言して、コンパイル時に型安全を保証する (Evidence: E2)。
+
+```java
+public class Box<T> {
+    private T value;
+
+    public Box(T value) { this.value = value; }
+    public T getValue() { return value; }
+}
+```
+
+`Box<String>` と記述すれば、`String` 以外の型を格納しようとするとコンパイルエラーになる。取り出し時のキャストも不要となる。
+
+### 型パラメータの命名慣例
+
+型パラメータには慣例的に以下の1文字が使われる (Evidence: E8)。
+
+| パラメータ | 意味 |
+|---|---|
+| `T` | Type（汎用型） |
+| `E` | Element（コレクション要素） |
+| `K` | Key（マップのキー） |
+| `V` | Value（マップの値） |
+| `N` | Number（数値） |
+
+### 型消去（Type Erasure）
+
+コンパイル後、ジェネリクスの型情報は消去される (Evidence: E3)。実行時には `Box<String>` と `Box<Integer>` は同じ `Box` クラスとして扱われる。これにより、後方互換性は保たれるが、実行時に型パラメータを取得することはできない。
+
+### raw type の危険性
+
+型パラメータを省略した raw type（例: `Box box = new Box();`）を使うと、コンパイラが警告を出し、型安全が失われる (Evidence: E4)。既存コードとの互換性のために許容されているが、新しいコードでは使用すべきではない。
+
+### ジェネリクスメソッド
+
+メソッド単位で型パラメータを宣言することも可能である。型パラメータはメソッドの戻り値型の前に記述する (Evidence: E5)。
+
+```java
+public static <T> T firstOrNull(List<T> list) {
+    return list.isEmpty() ? null : list.get(0);
+}
+```
+
+この形式を使えば、クラス全体をジェネリクス化しなくても、特定のメソッドだけを型安全にできる。
+
+### ダイヤモンド演算子 `<>`
+
+Java 7 以降、右辺の型パラメータをコンパイラが推論するダイヤモンド演算子が使用可能である (Evidence: E6)。
+
+```java
+// Java 7 以前
+Box<String> box = new Box<String>("hello");
+
+// Java 7 以降 — ダイヤモンド演算子
+Box<String> box = new Box<>("hello");
+```
+
+### 複数の型パラメータ
+
+クラスやインターフェースには複数の型パラメータを定義できる (Evidence: E11)。
+
+```java
+public interface Pair<K, V> {
+    K getKey();
+    V getValue();
+}
+```
+
+## 3) 例（2つ）
+
+### 例1: ジェネリクス未使用 — Object キャスト + ClassCastException
+
+ジェネリクスを使わない場合、`Object` 型で格納されるため、取り出し時に型を間違えると実行時エラーが発生する (Evidence: E1)。
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+public class WithoutGenerics {
+    public static void main(String[] args) {
+        // raw type の List — 何でも格納できてしまう
+        List list = new ArrayList();
+        list.add("hello");
+        list.add(42);  // コンパイルエラーにならない！
+
+        // 取り出し時にキャストが必要
+        String s = (String) list.get(0);  // OK
+        String t = (String) list.get(1);  // ClassCastException!
+    }
+}
+```
+
+このコードはコンパイルは通るが、`list.get(1)` の行で `Integer` を `String` にキャストしようとして `ClassCastException` が発生する。問題は実行するまでバグに気付けない点にある。
+
+### 例2: ジェネリクス使用 — コンパイル時型安全
+
+ジェネリクスを使用すれば、型の不整合をコンパイル時に検出できる (Evidence: E2)。
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+public class WithGenerics {
+    public static void main(String[] args) {
+        // ジェネリクス付き List — String のみ格納可能
+        List<String> list = new ArrayList<>();  // ダイヤモンド演算子 (Evidence: E6)
+        list.add("hello");
+        // list.add(42);  // コンパイルエラー！ 型安全が保証される
+
+        // 取り出し時にキャスト不要
+        String s = list.get(0);  // 安全に取得
+
+        // ジェネリクスメソッドの使用例 (Evidence: E5)
+        String first = firstOrNull(list);
+        System.out.println(first);  // "hello"
+    }
+
+    public static <T> T firstOrNull(List<T> list) {
+        return list.isEmpty() ? null : list.get(0);
+    }
+}
+```
+
+型パラメータにより、格納と取得の型が一致することがコンパイル時に保証される。キャスト不要で安全なコードとなる。
+
+## 4) よくあるミス／落とし穴（5つ）
+
+### 1. raw type の使用
+
+```java
+// NG: raw type — 型安全が失われる
+Box box = new Box("hello");  // コンパイラ警告発生
+
+// OK: 型パラメータを指定する
+Box<String> box = new Box<>("hello");
+```
+
+raw type はジェネリクスの型チェックを無効にする。既存の pre-Java 5 コードとの互換性のためだけに存在するものであり、新しいコードでは使用しないこと (Evidence: E4)。
+
+### 2. プリミティブ型の指定
+
+```java
+// NG: プリミティブ型はコンパイルエラー
+Box<int> box = new Box<>(42);
+
+// OK: ラッパー型を使用する
+Box<Integer> box = new Box<>(42);  // オートボクシング
+```
+
+型パラメータには参照型のみ指定可能である。プリミティブ型を使用したい場合はラッパー型を使う (Evidence: E7)。
+
+### 3. ジェネリクス配列の直接生成
+
+```java
+// NG: コンパイルエラー — ジェネリクス配列は生成不可
+Box<String>[] boxes = new Box<String>[10];
+T[] array = new T[10];
+
+// OK: Collection を使う、またはワイルドカードで回避
+List<Box<String>> boxes = new ArrayList<>();
+```
+
+型消去により実行時に型パラメータの情報が失われるため、型安全を保証できず、コンパイラがジェネリクス配列の直接生成を禁止する (Evidence: E10)。
+
+### 4. instanceof でのジェネリクス型の使用
+
+```java
+// NG: コンパイルエラー
+if (obj instanceof Box<String>) { ... }
+
+// OK: 非境界ワイルドカード (Box<?>) で判定してからキャスト
+if (obj instanceof Box<?>) { ... }
+```
+
+型消去により実行時に型パラメータの情報が存在しないため、`instanceof` でジェネリクス型を直接指定できない (Evidence: E9)。ワイルドカード `<?>` は使用可能。
+
+### 5. 型パラメータの推論に頼りすぎる
+
+```java
+// 曖昧な場合、コンパイラが Object に推論する可能性がある
+var result = firstOrNull(List.of());  // T が Object になる
+
+// 型を明示する
+String result = GenericUtil.<String>firstOrNull(List.of());
+```
+
+ダイヤモンド演算子やメソッドの型推論は便利だが、引数が空や `null` の場合に意図しない型に推論されることがある。必要に応じて型を明示すること。
+
+## 5) チェックリスト
+
+学習後、以下の項目を確認しよう。
+
+- [ ] ジェネリクスを使わないコードで `ClassCastException` が発生するケースを説明できる
+- [ ] `<T>` を用いたジェネリクスクラスを自分で定義できる
+- [ ] 型消去（Type Erasure）の仕組みとその影響を説明できる
+- [ ] raw type を使うべきでない理由を説明できる
+- [ ] ジェネリクスメソッドの構文（戻り値型の前に `<T>` を宣言）を書ける
+- [ ] ダイヤモンド演算子 `<>` がどのように型推論するか説明できる
+- [ ] プリミティブ型が型パラメータに使えない理由を説明できる
+- [ ] ジェネリクス配列を直接生成できない理由を説明できる
+- [ ] `instanceof` にジェネリクス型を使えない理由を説明できる
+- [ ] 複数の型パラメータを持つクラス/インターフェースを定義できる
+
+## 6) 次へ
+
+次のレッスンでは **JAVA-GOLD-01-02: 境界ワイルドカードとPECS原則** を学ぶ。`<? extends T>` と `<? super T>` の使い分け、Producer-Extends / Consumer-Super（PECS）の原則、そして柔軟なAPIを設計するためのワイルドカードの活用方法を扱う。

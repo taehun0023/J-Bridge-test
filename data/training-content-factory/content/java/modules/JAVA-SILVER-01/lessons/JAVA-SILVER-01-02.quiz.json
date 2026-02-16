@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "lesson_id": "JAVA-SILVER-01-02",
+  "questions": [
+    {
+      "id": "JAVA-SILVER-01-02-Q01",
+      "type": "single_choice",
+      "difficulty": 1,
+      "prompt": "Javaのコンストラクタについて正しい記述はどれか。",
+      "choices": [
+        "コンストラクタは戻り値型としてvoidを指定する",
+        "コンストラクタはクラス名と同名であり、戻り値型を持たない",
+        "コンストラクタはstaticメソッドとして定義する",
+        "コンストラクタは1つのクラスに1つしか定義できない"
+      ],
+      "answer": 1,
+      "explanation": "コンストラクタはクラス名と同名であり、戻り値型（voidも含む）を一切記述しない。voidを付けると通常のメソッドとして扱われる。オーバーロードにより複数定義可能。(Evidence: E1)"
+    },
+    {
+      "id": "JAVA-SILVER-01-02-Q02",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "以下のコードについて正しい記述はどれか。\n\n```java\npublic class Dog {\n    private String name;\n    public Dog(String name) {\n        this.name = name;\n    }\n}\n```",
+      "choices": [
+        "new Dog() で引数なしのインスタンス生成が可能である",
+        "コンパイラがデフォルトコンストラクタを追加するので new Dog() が使える",
+        "new Dog() はコンパイルエラーになる",
+        "new Dog(null) はコンパイルエラーになる"
+      ],
+      "answer": 2,
+      "explanation": "パラメータ付きコンストラクタ Dog(String) を明示的に定義しているため、コンパイラはデフォルトコンストラクタを自動生成しない。したがって new Dog() はコンパイルエラーとなる。(Evidence: E2)"
+    },
+    {
+      "id": "JAVA-SILVER-01-02-Q03",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "thisキーワードの用途として正しくないものはどれか。",
+      "choices": [
+        "フィールドとパラメータの同名変数を区別するために使う",
+        "同一クラスの別のコンストラクタを呼び出すために使う",
+        "現在のインスタンスへの参照を戻り値として返すために使う",
+        "staticメソッド内で現在のインスタンスを参照するために使う"
+      ],
+      "answer": 3,
+      "explanation": "thisは「現在のインスタンスへの参照」であるため、staticメソッド（クラスメソッド）の中ではインスタンスが存在しないので使用できない。コンパイルエラーとなる。(Evidence: E4)"
+    },
+    {
+      "id": "JAVA-SILVER-01-02-Q04",
+      "type": "code_output",
+      "difficulty": 3,
+      "prompt": "以下のコードの実行結果を答えよ。\n\n```java\npublic class Counter {\n    private int count;\n    { count = 10; }\n    public Counter() { count += 5; }\n    public Counter(int c) { count = c; }\n    public int getCount() { return count; }\n\n    public static void main(String[] args) {\n        Counter c1 = new Counter();\n        Counter c2 = new Counter(3);\n        System.out.println(c1.getCount() + \",\" + c2.getCount());\n    }\n}\n```",
+      "answer": "15,3",
+      "explanation": "c1: 初期化ブロックでcount=10、その後Counter()でcount+=5により15。c2: 初期化ブロックでcount=10、その後Counter(3)でcount=3に上書きされ3。初期化ブロックはコンストラクタより先に実行される。(Evidence: E5)"
+    },
+    {
+      "id": "JAVA-SILVER-01-02-Q05",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "以下のコードでコンパイルエラーが発生する箇所はどこか。\n\n```java\npublic class Item {\n    private String name;\n    private int price;\n\n    public Item(String name, int price) {\n        this.name = name;\n        this.price = price;\n    }\n\n    public Item(String name) {\n        this.name = name;\n        this(name, 0);  // ← ここに注目\n    }\n}\n```",
+      "choices": [
+        "コンパイルエラーは発生しない",
+        "this(name, 0) が先頭行ではないためコンパイルエラー",
+        "this.name = name が不正なためコンパイルエラー",
+        "コンストラクタのオーバーロードが不正なためコンパイルエラー"
+      ],
+      "answer": 1,
+      "explanation": "this()によるコンストラクタチェーンは、コンストラクタの最初のステートメントでなければならない。this.name = name が先に実行されているため、this(name, 0) の位置でコンパイルエラーとなる。(Evidence: E5)"
+    },
+    {
+      "id": "JAVA-SILVER-01-02-Q06",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "コピーコンストラクタについて正しい記述はどれか。",
+      "choices": [
+        "Javaが自動的に生成する特別なコンストラクタである",
+        "同じクラスのインスタンスを引数に取り、フィールド値をコピーして新しいインスタンスを作るパターンである",
+        "clone()メソッドと全く同じ動作をする",
+        "コピーコンストラクタはprivateにしなければならない"
+      ],
+      "answer": 1,
+      "explanation": "コピーコンストラクタはプログラマが明示的に定義するパターンであり、同じクラスのインスタンスを引数として受け取り、そのフィールド値をコピーして新しい独立したインスタンスを生成する。(Evidence: E3)"
+    },
+    {
+      "id": "JAVA-SILVER-01-02-Q07",
+      "type": "code_output",
+      "difficulty": 2,
+      "prompt": "以下のコードの実行結果を答えよ。\n\n```java\npublic class Greeting {\n    private String message;\n\n    public Greeting() {\n        this(\"Hello\");\n    }\n\n    public Greeting(String message) {\n        this.message = message;\n    }\n\n    public String getMessage() { return message; }\n\n    public static void main(String[] args) {\n        Greeting g = new Greeting();\n        System.out.println(g.getMessage());\n    }\n}\n```",
+      "answer": "Hello",
+      "explanation": "new Greeting() は引数なしコンストラクタを呼び出す。その中で this(\"Hello\") により Greeting(String) が呼ばれ、message に \"Hello\" が設定される。(Evidence: E4, E5)"
+    },
+    {
+      "id": "JAVA-SILVER-01-02-Q08",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "以下のコードの実行結果として正しいものはどれか。\n\n```java\npublic class Init {\n    private String log = \"A\";\n    { log += \"B\"; }\n    public Init() { log += \"C\"; }\n    public Init(String s) { log += s; }\n    { log += \"D\"; }\n    public String getLog() { return log; }\n\n    public static void main(String[] args) {\n        Init i = new Init(\"X\");\n        System.out.println(i.getLog());\n    }\n}\n```",
+      "choices": [
+        "AX",
+        "ABDX",
+        "ABXD",
+        "ABDC"
+      ],
+      "answer": 1,
+      "explanation": "実行順序は①フィールド初期化(log=\"A\")→②初期化ブロック(記述順にlog+=\"B\"、log+=\"D\")→③コンストラクタ(log+=\"X\")。初期化ブロックは全てコンストラクタより前に記述順で実行される。結果は\"ABDX\"。(Evidence: E5)"
+    },
+    {
+      "id": "JAVA-SILVER-01-02-Q09",
+      "type": "short_answer",
+      "difficulty": 1,
+      "prompt": "コンストラクタ内で同一クラスの別のコンストラクタを呼び出すために使用するキーワードを答えよ。",
+      "answer": "this",
+      "explanation": "this()の形式で同一クラスの別のコンストラクタを呼び出せる。コンストラクタチェーンと呼ばれ、初期化ロジックの重複を避けるために使用する。(Evidence: E4, E5)"
+    },
+    {
+      "id": "JAVA-SILVER-01-02-Q10",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "以下のコードについて正しい記述はどれか。\n\n```java\npublic class Sample {\n    private int value;\n\n    public void Sample(int v) {\n        this.value = v;\n    }\n\n    public int getValue() { return value; }\n\n    public static void main(String[] args) {\n        Sample s = new Sample();\n        System.out.println(s.getValue());\n    }\n}\n```",
+      "choices": [
+        "コンパイルエラーが発生する",
+        "実行時エラーが発生する",
+        "0 が出力される",
+        "null が出力される"
+      ],
+      "answer": 2,
+      "explanation": "void Sample(int v) は戻り値型 void が付いているため、コンストラクタではなく通常のメソッドである。コンストラクタが1つもないためデフォルトコンストラクタが自動生成され、new Sample() は成功する。valueはint型フィールドのデフォルト値0のまま。(Evidence: E1, E2)"
+    }
+  ]
+}

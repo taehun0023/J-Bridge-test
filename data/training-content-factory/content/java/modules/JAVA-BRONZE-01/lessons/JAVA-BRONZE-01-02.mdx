@@ -1,0 +1,276 @@
+---
+lesson_id: JAVA-BRONZE-01-02
+title: "基本型と変数のスコープ"
+module: JAVA-BRONZE-01
+level: bronze
+est_minutes: 35
+tags: [primitive, variable, scope, final, default-value]
+---
+
+## 1) 要点まとめ（5行）
+
+- Javaには8つのプリミティブ型（byte, short, int, long, float, double, char, boolean）があり、それぞれサイズと範囲が異なる。(Evidence: E1)
+- 参照型（String, 配列, クラス等）はオブジェクトへの参照を保持し、プリミティブ型とはメモリ上の扱いが根本的に異なる。(Evidence: E2)
+- 変数には3種類のスコープがある — ローカル変数（メソッド内）、インスタンス変数（オブジェクト単位）、クラス変数（`static`、クラス全体で共有）。(Evidence: E3)
+- ローカル変数は明示的に初期化しないと使用できない（コンパイルエラー）。インスタンス変数・クラス変数には型に応じたデフォルト値が自動設定される。(Evidence: E4)
+- `final` キーワードを付けた変数は再代入不可となり、定数として扱われる。(Evidence: E5)
+
+## 2) 概念
+
+### 8つのプリミティブ型
+
+✅ 結論: Javaのプリミティブ型は8種類で、すべて値を直接保持する。
+
+| 型 | サイズ | 範囲 | デフォルト値 |
+|---|---|---|---|
+| `byte` | 8ビット | -128 ～ 127 | `0` |
+| `short` | 16ビット | -32,768 ～ 32,767 | `0` |
+| `int` | 32ビット | -2^31 ～ 2^31 - 1 | `0` |
+| `long` | 64ビット | -2^63 ～ 2^63 - 1 | `0L` |
+| `float` | 32ビット | IEEE 754 単精度 | `0.0f` |
+| `double` | 64ビット | IEEE 754 倍精度 | `0.0d` |
+| `char` | 16ビット | `\u0000` ～ `\uffff` (Unicode) | `\u0000` |
+| `boolean` | JVM依存 | `true` / `false` | `false` |
+
+整数リテラルはデフォルトで `int` 型、浮動小数点リテラルはデフォルトで `double` 型として扱われる。(Evidence: E1)
+
+`long` 型のリテラルには `L` サフィックス（例: `100L`）、`float` 型のリテラルには `F` サフィックス（例: `3.14F`）が必要である。
+
+💡 覚え方: 整数は byte < short < int < long でサイズが倍々（8→16→32→64ビット）
+
+### 参照型
+
+✅ 結論: 参照型はオブジェクトのアドレス（参照）を保持する。
+
+プリミティブ型以外はすべて参照型である。主な参照型は以下の通りである。
+
+- **クラス型:** `String`, `Integer`, `Scanner` など
+- **配列型:** `int[]`, `String[]` など
+- **インタフェース型:** `List`, `Comparable` など
+
+参照型変数にはオブジェクトそのものではなく、ヒープ上のオブジェクトへの**参照（アドレス）**が格納される。
+参照型変数のデフォルト値は `null` である。(Evidence: E2)
+
+```java
+String name = "Alice";  // "Alice" オブジェクトへの参照を保持
+int[] scores = {90, 85, 70}; // 配列オブジェクトへの参照を保持
+```
+
+### 変数の宣言と初期化
+
+✅ 結論: 変数は「型 変数名 = 初期値;」の形式で宣言・初期化する。
+
+```java
+int age = 25;              // 宣言と初期化を同時に行う
+double salary;             // 宣言のみ
+salary = 350000.0;         // 後から初期化
+
+// Java 10以降: var によるローカル変数の型推論
+var message = "Hello";     // String 型と推論される
+var count = 10;            // int 型と推論される
+```
+
+`var` はローカル変数にのみ使用可能であり、インスタンス変数やクラス変数には使えない。
+また、初期化式が必須である（`var x;` はコンパイルエラー）。(Evidence: E6)
+
+### スコープ（変数の有効範囲）
+
+✅ 結論: 変数は宣言された場所に応じてスコープが異なる。
+
+| 種類 | 宣言場所 | ライフサイクル | デフォルト値 |
+|---|---|---|---|
+| ローカル変数 | メソッド内・ブロック内 | メソッド/ブロックの実行中 | なし（初期化必須） |
+| インスタンス変数 | クラス直下（`static` なし） | オブジェクトの生存中 | 型に応じた値 |
+| クラス変数 | クラス直下（`static` 付き） | クラスのロード中 | 型に応じた値 |
+
+(Evidence: E3)
+
+```java
+public class ScopeExample {
+    static int classVar = 100;        // クラス変数
+    int instanceVar = 50;             // インスタンス変数
+
+    public void method() {
+        int localVar = 10;            // ローカル変数
+        System.out.println(localVar); // OK
+    }
+    // localVar はここでは使えない（スコープ外）
+}
+```
+
+### ローカル変数の初期化義務
+
+✅ 結論: ローカル変数は必ず初期化してから使用する。
+
+ローカル変数はデフォルト値が設定されないため、初期化せずに使用するとコンパイルエラーになる。
+
+```java
+public void demo() {
+    int x;
+    // System.out.println(x); // コンパイルエラー: 変数xが初期化されていない
+    x = 5;
+    System.out.println(x);    // OK: 5
+}
+```
+
+一方、インスタンス変数やクラス変数はデフォルト値が自動設定されるため、明示的に初期化しなくても使用可能である。(Evidence: E4)
+
+### finalキーワード
+
+✅ 結論: final変数は一度だけ代入可能で、以降は変更不可。
+
+```java
+final int MAX_SIZE = 100;
+// MAX_SIZE = 200; // コンパイルエラー: final変数に再代入不可
+
+final String greeting;
+greeting = "Hello";        // 遅延初期化（blank final）は可能
+// greeting = "Hi";        // コンパイルエラー: 既に初期化済み
+```
+
+`final` は定数の定義によく使用される。クラス定数の慣例は `static final` + 大文字スネークケースである。(Evidence: E5)
+
+```java
+public static final double TAX_RATE = 0.10;
+```
+
+### ブロックスコープ
+
+✅ 結論: ブロック `{}` 内で宣言した変数はブロック外では使えない。
+
+```java
+if (true) {
+    int temp = 42;
+    System.out.println(temp); // OK
+}
+// System.out.println(temp);  // コンパイルエラー: スコープ外
+```
+
+for文のカウンタ変数もブロックスコープに従う。
+
+```java
+for (int i = 0; i < 5; i++) {
+    System.out.println(i); // OK
+}
+// System.out.println(i);  // コンパイルエラー: iはfor文のスコープ外
+```
+
+## 3) 例（2つ）
+
+### 例1: 各プリミティブ型の宣言と表示
+
+8つのプリミティブ型すべてを宣言し、値を表示する例。
+
+```java
+public class PrimitiveDemo {
+    public static void main(String[] args) {
+        byte b = 127;
+        short s = 32000;
+        int i = 2_000_000_000;    // アンダースコアで桁区切り（Java 7以降）
+        long l = 9_000_000_000L;  // Lサフィックス必須
+        float f = 3.14F;          // Fサフィックス必須
+        double d = 3.141592653589793;
+        char c = 'A';
+        boolean flag = true;
+
+        System.out.println("byte: " + b);
+        System.out.println("short: " + s);
+        System.out.println("int: " + i);
+        System.out.println("long: " + l);
+        System.out.println("float: " + f);
+        System.out.println("double: " + d);
+        System.out.println("char: " + c);
+        System.out.println("boolean: " + flag);
+    }
+}
+```
+
+出力結果:
+
+```
+byte: 127
+short: 32000
+int: 2000000000
+long: 9000000000
+float: 3.14
+double: 3.141592653589793
+char: A
+boolean: true
+```
+
+ポイント:
+- `int` リテラルでアンダースコア `_` を使って桁区切りができる（可読性向上、コンパイル時に無視される）
+- `long` リテラルには `L` を、`float` リテラルには `F` を付けないとコンパイルエラーになる場合がある
+
+### 例2: スコープの違いによるデフォルト値の確認
+
+インスタンス変数にはデフォルト値が設定されるが、ローカル変数には設定されないことを確認する例。
+
+```java
+public class DefaultValueDemo {
+    // インスタンス変数（デフォルト値が自動設定される）
+    int num;           // デフォルト: 0
+    boolean flag;      // デフォルト: false
+    String text;       // デフォルト: null
+
+    public void showDefaults() {
+        // インスタンス変数はデフォルト値があるためそのまま使える
+        System.out.println("num = " + num);
+        System.out.println("flag = " + flag);
+        System.out.println("text = " + text);
+    }
+
+    public void localVarDemo() {
+        int localNum;
+        // System.out.println(localNum); // コンパイルエラー！
+        localNum = 42;
+        System.out.println("localNum = " + localNum); // OK
+    }
+
+    public static void main(String[] args) {
+        DefaultValueDemo demo = new DefaultValueDemo();
+        demo.showDefaults();
+        demo.localVarDemo();
+    }
+}
+```
+
+出力結果:
+
+```
+num = 0
+flag = false
+text = null
+localNum = 42
+```
+
+ポイント:
+- インスタンス変数 `num`, `flag`, `text` は初期化していないが、デフォルト値（`0`, `false`, `null`）が自動設定される
+- ローカル変数 `localNum` は初期化前にアクセスするとコンパイルエラーになるため、必ず値を代入してから使用する
+
+## 4) よくあるミス／落とし穴（5つ）
+
+⚠️ ミス: `long` リテラルに `L` を付け忘れる（例: `long x = 9000000000;`） → 対策: int範囲を超える整数には必ず `L` サフィックスを付ける
+
+⚠️ ミス: ローカル変数を初期化せずに使用する → 対策: 宣言と同時に初期化する習慣を付ける。条件分岐がある場合はすべてのパスで初期化されることを確認する
+
+⚠️ ミス: `float` と `double` の精度の違いを無視する → 対策: 金額計算など正確さが求められる場面では `BigDecimal` を使う。`float` は有効桁数約7桁、`double` は約15桁
+
+⚠️ ミス: `final` 変数に再代入しようとする → 対策: `final` を付けた変数は定数として扱い、再代入が必要な変数には `final` を付けない
+
+⚠️ ミス: ブロック外でブロック内変数を参照する → 対策: 変数のスコープを常に意識する。必要なら外側のスコープで宣言する
+
+## 5) チェックリスト
+
+- [ ] 8つのプリミティブ型の名前・サイズ・範囲を列挙できるか
+- [ ] プリミティブ型と参照型の違い（メモリの扱い）を説明できるか
+- [ ] ローカル変数・インスタンス変数・クラス変数の違いを説明できるか
+- [ ] ローカル変数にデフォルト値がない理由とコンパイルエラーの発生条件を理解しているか
+- [ ] `final` キーワードの効果と `static final` による定数の定義方法を理解しているか
+- [ ] `long` リテラルの `L` サフィックスと `float` リテラルの `F` サフィックスの必要性を理解しているか
+- [ ] ブロックスコープのルールを具体例で説明できるか
+- [ ] `var`（Java 10以降）の使用条件と制約を理解しているか
+
+## 6) 次へ
+
+次のレッスンは **JAVA-BRONZE-01-03: 演算子と型変換** です。算術・比較・論理・ビット演算子、演算子の優先順位、暗黙の拡張変換と明示的なナロイングキャスト、型昇格ルールについて学習します。

@@ -1,0 +1,313 @@
+---
+lesson_id: JAVA-SILVER-04-02
+title: "例外変換(wrap)とcause保存"
+module: JAVA-SILVER-04
+level: silver
+est_minutes: 35
+tags: [exception-translation, wrapping, cause-chain, custom-exception, logging]
+---
+
+## 1) 要点まとめ（5行）
+
+- **例外変換（Exception Translation）** とは、低レベルの実装詳細をカプセル化するために、下位レイヤーの例外を上位レイヤーの例外に変換するパターンである (Evidence: E1)
+- 例外変換時は必ず**causeを保存**しなければならない。`new HighLevelException(message, cause)` の形でコンストラクタに元の例外を渡す (Evidence: E2)
+- **causeチェーン**により、例外の連鎖を辿って根本原因（root cause）を特定できる。`getCause()` で直接原因、再帰的に辿ってroot causeを取得する (Evidence: E3)
+- **カスタム例外クラス**はドメイン固有のエラーを表現するために使用し、`Throwable cause` を受け取るコンストラクタを必ず用意する (Evidence: E4)
+- 例外のログ出力では例外オブジェクト自体をロガーに渡し、`e.getMessage()` のみのログは情報不足になるアンチパターンである (Evidence: E5)
+
+---
+
+## 2) 概念
+
+### 例外変換パターン（Exception Translation）
+
+レイヤードアーキテクチャでは、各レイヤーが適切な抽象度の例外を返すべきである。データアクセス層の `SQLException` がそのままUI層に漏れると、実装詳細の漏洩になり、保守性が低下する (Evidence: E1)。
+
+```
+UI層        ← ServiceException
+サービス層  ← DataAccessException に変換
+データ層    ← SQLException が発生
+```
+
+例外変換は低レベルの例外を捕捉し、上位レイヤーに適した例外に**ラップ（wrap）** して再throwするパターンである。
+
+### causeの保存
+
+例外変換の際、元の例外を `cause` として渡すことは**必須**である。Javaの `Throwable` クラスは2つのコンストラクタパターンでcauseの受け渡しをサポートする (Evidence: E2)。
+
+```java
+// パターン1: コンストラクタで直接渡す（推奨）
+throw new ServiceException("USER_NOT_FOUND", originalException);
+
+// パターン2: initCause() で後から設定する
+ServiceException se = new ServiceException("USER_NOT_FOUND");
+se.initCause(originalException);
+throw se;
+```
+
+`initCause()` は一度だけ呼び出し可能であり、2回目以降は `IllegalStateException` がスローされる。コンストラクタで直接渡すパターン1を優先すべきである。
+
+### causeチェーンとroot cause
+
+例外が複数回変換されると、causeチェーン（例外の連鎖）が形成される。`getCause()` メソッドで直接の原因を取得でき、再帰的に辿ることで最初に発生した根本原因（root cause）に到達できる (Evidence: E3)。
+
+```java
+// causeチェーンの例
+// ServiceException → DataAccessException → SQLException
+ServiceException se = ...;
+Throwable direct = se.getCause();           // DataAccessException
+Throwable root   = direct.getCause();       // SQLException
+```
+
+### Throwableのコンストラクタ
+
+`Throwable` は4つの主要コンストラクタを持ち、サブクラスでもこれらを活用する (Evidence: E2)。
+
+| コンストラクタ | 用途 |
+|---|---|
+| `Throwable()` | メッセージなし |
+| `Throwable(String message)` | メッセージ指定 |
+| `Throwable(String message, Throwable cause)` | メッセージ + cause（推奨） |
+| `Throwable(Throwable cause)` | causeのみ |
+
+### カスタム例外クラスの設計
+
+ドメイン固有のエラーを表現するために、カスタム例外クラスを定義する。設計のポイントは以下の通りである (Evidence: E4)。
+
+1. **checked/uncheckedの選択** — 呼び出し元が回復可能ならchecked（`extends Exception`）、プログラミングエラーならunchecked（`extends RuntimeException`）
+2. **コンストラクタ** — 少なくとも `(String message)` と `(String message, Throwable cause)` の2つを用意する
+3. **エラーコード** — 文字列定数やenumでエラーの種類を識別可能にする
+4. **シリアルバージョンUID** — `Serializable` であるため `serialVersionUID` を定義する
+
+### ログ出力のベストプラクティス
+
+例外のログ出力では、ロガーの引数に例外オブジェクト自体を渡すことで、スタックトレース全体が記録される (Evidence: E5)。
+
+```java
+// OK: 例外オブジェクトを渡す → スタックトレース全体が記録される
+logger.error("ユーザー取得に失敗", e);
+
+// NG: getMessage()のみ → スタックトレースが失われる
+logger.error("エラー: " + e.getMessage());
+```
+
+---
+
+## 3) 例（2つ）
+
+### 例1: レイヤー間の例外変換
+
+データアクセス層で発生した `SQLException` をサービス層の `DataAccessException` に変換し、さらにアプリケーション層の `ServiceException` に変換する例を示す (Evidence: E1, E2, E3)。
+
+```java
+import java.sql.SQLException;
+
+// ドメイン例外クラス
+class DataAccessException extends RuntimeException {
+    public DataAccessException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
+
+class ServiceException extends RuntimeException {
+    private final String errorCode;
+
+    public ServiceException(String errorCode, String message, Throwable cause) {
+        super(message, cause);
+        this.errorCode = errorCode;
+    }
+
+    public String getErrorCode() { return errorCode; }
+}
+
+// データアクセス層
+class UserRepository {
+    User findById(long id) {
+        try {
+            // JDBCでデータベースアクセス（実際のコードは省略）
+            throw new SQLException("Connection refused");
+        } catch (SQLException e) {
+            // SQLException → DataAccessException に変換（causeを保存）
+            throw new DataAccessException("USER_QUERY_FAILED", e);
+        }
+    }
+}
+
+// サービス層
+class UserService {
+    private final UserRepository repo = new UserRepository();
+
+    User getUser(long id) {
+        try {
+            return repo.findById(id);
+        } catch (DataAccessException e) {
+            // DataAccessException → ServiceException に変換（causeを保存）
+            throw new ServiceException("E001", "ユーザー取得失敗", e);
+        }
+    }
+}
+```
+
+`findById` では `SQLException` を `DataAccessException` に変換し、`getUser` ではさらに `ServiceException` に変換する。各段階で元の例外が `cause` として保存されるため、スタックトレースを辿って根本原因の `SQLException` まで到達できる。
+
+### 例2: カスタム例外クラスの完全な実装
+
+4つのコンストラクタを持つカスタム例外クラスと、エラーコードをenumで管理する設計パターンを示す (Evidence: E4, E5)。
+
+```java
+import java.io.Serial;
+import java.util.logging.Logger;
+
+// エラーコードenum
+enum OrderErrorCode {
+    ITEM_NOT_FOUND("注文商品が見つからない"),
+    STOCK_INSUFFICIENT("在庫不足"),
+    PAYMENT_FAILED("決済失敗");
+
+    private final String description;
+    OrderErrorCode(String description) { this.description = description; }
+    public String getDescription() { return description; }
+}
+
+// カスタム例外クラス
+class OrderException extends RuntimeException {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    private final OrderErrorCode errorCode;
+
+    public OrderException(OrderErrorCode errorCode) {
+        super(errorCode.getDescription());
+        this.errorCode = errorCode;
+    }
+
+    public OrderException(OrderErrorCode errorCode, Throwable cause) {
+        super(errorCode.getDescription(), cause);  // cause保存
+        this.errorCode = errorCode;
+    }
+
+    public OrderErrorCode getErrorCode() { return errorCode; }
+}
+
+// 使用例
+class OrderService {
+    private static final Logger logger = Logger.getLogger(OrderService.class.getName());
+
+    void placeOrder(long itemId, int quantity) {
+        try {
+            // 在庫確認処理（省略）
+            throw new RuntimeException("DB connection timeout");
+        } catch (RuntimeException e) {
+            // OK: 例外オブジェクトをログに渡す
+            logger.severe("注文処理失敗: " + e.getMessage());
+
+            // 例外変換 + cause保存
+            throw new OrderException(OrderErrorCode.STOCK_INSUFFICIENT, e);
+        }
+    }
+}
+```
+
+`OrderException` はエラーコードをenumで管理し、2つのコンストラクタ（causeなし・causeあり）を用意している。`OrderService.placeOrder` では例外を変換する際に `cause` を渡し、ログにも例外情報を記録している。
+
+---
+
+## 4) よくあるミス／落とし穴（5つ）
+
+### 1. causeなしコンストラクタのみの例外変換
+
+```java
+// NG: causeが失われる
+catch (SQLException e) {
+    throw new DataAccessException("QUERY_FAILED");
+    // 元のSQLExceptionのスタックトレースが完全に消える
+}
+
+// OK: causeを渡す
+catch (SQLException e) {
+    throw new DataAccessException("QUERY_FAILED", e);
+}
+```
+
+causeなしで例外を変換すると、根本原因の特定が不可能になる。本番環境での障害調査が極めて困難になるため、必ずcauseを渡す (Evidence: E2)。
+
+### 2. initCause()の二重呼び出し
+
+```java
+// NG: initCause()は一度しか呼べない
+DataAccessException dae = new DataAccessException("FAILED", originalCause);
+dae.initCause(anotherCause);  // IllegalStateException発生！
+```
+
+コンストラクタで `cause` を渡した場合、`initCause()` は既にcauseが設定済みとなるため `IllegalStateException` がスローされる。コンストラクタでの受け渡しを優先すべきである (Evidence: E2)。
+
+### 3. getMessage()のみのログ出力
+
+```java
+// NG: スタックトレースが記録されない
+catch (DataAccessException e) {
+    logger.error("エラー: " + e.getMessage());
+    throw new ServiceException("FAILED", e);
+}
+
+// OK: 例外オブジェクト自体を渡す
+catch (DataAccessException e) {
+    logger.error("データアクセス失敗", e);
+    throw new ServiceException("FAILED", e);
+}
+```
+
+`e.getMessage()` だけでは例外メッセージしか記録されない。ロガーに例外オブジェクトを渡すことで、causeチェーン全体のスタックトレースが記録される (Evidence: E5)。
+
+### 4. カスタム例外にcauseコンストラクタがない
+
+```java
+// NG: causeを受け取れない設計
+class AppException extends RuntimeException {
+    public AppException(String message) {
+        super(message);
+    }
+    // cause付きコンストラクタがない！
+}
+
+// OK: cause付きコンストラクタを必ず用意する
+class AppException extends RuntimeException {
+    public AppException(String message) {
+        super(message);
+    }
+    public AppException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
+```
+
+カスタム例外クラスに `(String, Throwable)` コンストラクタがないと、例外変換時にcauseを保存できない。必ず用意すること (Evidence: E4)。
+
+### 5. 過剰な例外変換
+
+```java
+// NG: 意味のない変換の連鎖
+catch (IOException e) {
+    throw new Level1Exception("L1", e);  // → Level2Exception → Level3Exception...
+}
+```
+
+すべてのレイヤーで例外を変換すると、causeチェーンが深くなりすぎてスタックトレースが読みにくくなる。変換は**抽象度が変わるレイヤー境界**でのみ行うべきである (Evidence: E1, E3)。
+
+---
+
+## 5) チェックリスト
+
+- [ ] 例外変換時にcause（第2引数）を必ず渡しているか
+- [ ] カスタム例外クラスに `(String message, Throwable cause)` コンストラクタがあるか
+- [ ] `initCause()` ではなくコンストラクタでcauseを渡しているか
+- [ ] ログ出力で例外オブジェクト自体をロガーに渡しているか（`getMessage()` のみになっていないか）
+- [ ] 例外変換は抽象度が変わるレイヤー境界でのみ行っているか
+- [ ] カスタム例外に `serialVersionUID` を定義しているか
+- [ ] エラーコード（文字列定数またはenum）で例外の種類を識別可能か
+
+---
+
+## 6) 次へ
+
+次のレッスン **JAVA-SILVER-04-03: try-with-resourcesとAutoCloseable** では、AutoCloseableインターフェース、try-with-resources構文の詳細、抑制例外（suppressed exceptions）、カスタムAutoCloseableの実装について詳しく学ぶ。
