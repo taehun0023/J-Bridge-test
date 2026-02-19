@@ -5,7 +5,7 @@ import { useState, useTransition } from 'react'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import Link from 'next/link'
-import { BarChart3, Trophy, BookOpen } from 'lucide-react'
+import { BarChart3, Trophy, BookOpen, Eye } from 'lucide-react'
 import { getGrade, getGradeColor, DISPATCH_MINIMUM_SCORE, getRelevantAxes, AXIS_DISPLAY_LABELS } from '@/lib/assessment-config'
 import type { AxisKey } from '@/lib/assessment-config'
 import { requestRetake } from '@/app/actions/assessment'
@@ -67,7 +67,7 @@ interface UserRanking {
 interface EnrolledCourse {
   id: string
   course_id: string
-  courses: { title: string; category: string } | null
+  courses: { title: string; category: string; subcategory: string | null } | null
 }
 
 interface LearningStats {
@@ -93,6 +93,11 @@ interface CompExamRetake {
   retakeStatus: 'failed' | 'requested' | 'approved'
 }
 
+const CATEGORY_ROUTE_PREFIX: Record<string, string> = {
+  core_programming: '/dev',
+  framework: '/dev',
+}
+
 const feedbackCategoryLabels: Record<string, string> = {
   seikatsu: '生活日本語',
   business_jp: 'ビジネス日本語',
@@ -109,6 +114,13 @@ const AXIS_TO_STEP: Record<AxisKey, number> = {
   attitudeCulture: 5,
 }
 
+interface TopRankingEntry {
+  user_id: string
+  full_name: string | null
+  avatar_url: string | null
+  overall_score: number
+}
+
 interface Props {
   profile: Profile | null
   radarScores: Record<AxisKey, number>
@@ -118,6 +130,7 @@ interface Props {
   isJapanese: boolean
   completedAssessments: CompletedAssessment[]
   userRanking: UserRanking | null
+  topRanking?: TopRankingEntry[] | null
   enrolledCourses: EnrolledCourse[]
   learningStats?: LearningStats
   recentFeedbacks?: RecentFeedback[]
@@ -135,7 +148,7 @@ function getBadgeStyle(badge: BadgeType): string {
 
 export default function DashboardClient({
   profile, radarScores, recentResults, tasks, pendingAssessments, isJapanese, completedAssessments,
-  userRanking, enrolledCourses, learningStats, recentFeedbacks = [], compExamRetakes = [], javaBadges = [],
+  userRanking, topRanking, enrolledCourses, learningStats, recentFeedbacks = [], compExamRetakes = [], javaBadges = [],
 }: Props) {
   const relevantAxes = getRelevantAxes(isJapanese)
   const hasScores = relevantAxes.some(key => radarScores[key] > 0)
@@ -343,28 +356,49 @@ export default function DashboardClient({
             <p className="py-4 text-center text-sm text-zinc-500">まだ試験を受けていません</p>
           ) : (
             <div className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">
-              {recentResults.map((r) => (
-                <div key={r.id} className="flex items-center justify-between py-3">
-                  <div>
-                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                      {r.title}
-                    </p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                      {new Date(r.completed_at).toLocaleDateString('ja-JP')}
-                      {r.type === 'comprehensive' && (
-                        <span className="ml-1.5 inline-flex rounded-full bg-indigo-500/10 px-1.5 py-0.5 text-[10px] font-medium text-indigo-400 ring-1 ring-indigo-500/20">
-                          総合
-                        </span>
+              {recentResults.map((r) => {
+                const isReviewable = Date.now() - new Date(r.completed_at).getTime() < 7 * 24 * 60 * 60 * 1000
+                const reviewUrl = `/dashboard/history/${r.id}?type=${r.type}`
+                const content = (
+                  <>
+                    <div>
+                      <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                        {r.title}
+                      </p>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                        {new Date(r.completed_at).toLocaleDateString('ja-JP')}
+                        {r.type === 'comprehensive' && (
+                          <span className="ml-1.5 inline-flex rounded-full bg-indigo-500/10 px-1.5 py-0.5 text-[10px] font-medium text-indigo-400 ring-1 ring-indigo-500/20">
+                            総合
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isReviewable && (
+                        <Eye className="h-3.5 w-3.5 text-indigo-400" />
                       )}
-                    </p>
+                      <span className={`text-sm font-mono font-bold ${r.passed ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {r.score}点
+                      </span>
+                    </div>
+                  </>
+                )
+
+                return isReviewable ? (
+                  <Link
+                    key={r.id}
+                    href={reviewUrl}
+                    className="flex items-center justify-between py-3 hover:bg-white/5 dark:hover:bg-white/5 hover:bg-zinc-50 -mx-3 px-3 rounded-lg transition-colors"
+                  >
+                    {content}
+                  </Link>
+                ) : (
+                  <div key={r.id} className="flex items-center justify-between py-3">
+                    {content}
                   </div>
-                  <div className="text-right">
-                    <span className={`text-sm font-mono font-bold ${r.passed ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {r.score}点
-                    </span>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
           <Link
@@ -526,6 +560,38 @@ export default function DashboardClient({
                 ランキングを見る
               </Link>
             </div>
+          ) : topRanking && topRanking.length > 0 ? (
+            <div>
+              <div className="space-y-2">
+                {topRanking.map((entry, i) => (
+                  <div
+                    key={entry.user_id}
+                    className="flex items-center gap-3 rounded-lg p-2 border border-white/[0.06] bg-white/[0.02] dark:border-white/[0.06] dark:bg-white/[0.02] border-gray-100 bg-gray-50/50"
+                  >
+                    <span className={`w-6 text-center text-sm font-bold ${
+                      i === 0 ? 'text-amber-400' : i === 1 ? 'text-zinc-300' : i === 2 ? 'text-amber-600' : 'text-zinc-500'
+                    }`}>
+                      {i + 1}
+                    </span>
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-500/10 text-xs font-bold text-indigo-400 ring-1 ring-indigo-500/20">
+                      {entry.full_name?.charAt(0) ?? '?'}
+                    </div>
+                    <span className="text-sm text-zinc-900 dark:text-zinc-100 truncate flex-1">
+                      {entry.full_name ?? 'ユーザー'}
+                    </span>
+                    <span className="ml-auto text-sm font-mono font-bold text-zinc-900 dark:text-zinc-100">
+                      {entry.overall_score}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <Link
+                href="/ranking"
+                className="mt-4 block rounded-xl bg-indigo-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+              >
+                ランキングを見る
+              </Link>
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <Trophy className="h-10 w-10 text-zinc-500" />
@@ -538,25 +604,31 @@ export default function DashboardClient({
         {hasEnrolledCourses && (
           <Card title="受講中コース">
             <div className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">
-              {enrolledCourses.map((enrollment) => (
-                <div key={enrollment.id} className="py-3">
-                  <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                    {enrollment.courses?.title ?? 'コース'}
-                  </p>
-                  {enrollment.courses?.category && (
-                    <span className="mt-1 inline-block rounded-full bg-indigo-500/10 px-2 py-0.5 text-xs font-medium text-indigo-400 ring-1 ring-indigo-500/20">
-                      {CATEGORY_LABELS[enrollment.courses.category] ?? enrollment.courses.category}
-                    </span>
-                  )}
-                </div>
-              ))}
+              {enrolledCourses.map((enrollment) => {
+                const routePrefix = enrollment.courses?.category
+                  ? CATEGORY_ROUTE_PREFIX[enrollment.courses.category]
+                  : undefined
+                const href = routePrefix && enrollment.courses?.subcategory
+                  ? `${routePrefix}/${enrollment.courses.subcategory}`
+                  : `/courses/${enrollment.course_id}`
+                return (
+                  <Link
+                    key={enrollment.id}
+                    href={href}
+                    className="block py-3 -mx-3 px-3 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 hover:bg-zinc-50 transition-colors"
+                  >
+                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                      {enrollment.courses?.title ?? 'コース'}
+                    </p>
+                    {enrollment.courses?.category && (
+                      <span className="mt-1 inline-block rounded-full bg-indigo-500/10 px-2 py-0.5 text-xs font-medium text-indigo-400 ring-1 ring-indigo-500/20">
+                        {CATEGORY_LABELS[enrollment.courses.category] ?? enrollment.courses.category}
+                      </span>
+                    )}
+                  </Link>
+                )
+              })}
             </div>
-            <Link
-              href="/courses"
-              className="mt-4 block rounded-xl bg-indigo-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
-            >
-              全てのコースを見る
-            </Link>
           </Card>
         )}
       </div>

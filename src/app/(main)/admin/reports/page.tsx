@@ -23,11 +23,11 @@ export default async function AdminReportsPage() {
     // Use serviceClient to bypass RLS/schema cache issues (same pattern as tasks page)
     const { data: menteeAssignments } = await serviceClient
       .from('mentor_mentee_assignments')
-      .select('mentee:profiles!mentor_mentee_assignments_mentee_id_fkey(id, full_name, email, role, coding_rank, jlpt_level, is_japanese)')
+      .select('mentee:profiles!mentor_mentee_assignments_mentee_id_fkey(id, full_name, email, role, coding_rank, jlpt_level, is_japanese, avatar_url)')
       .eq('mentor_id', user.id)
 
     users = (menteeAssignments ?? [])
-      .map(a => a.mentee as unknown as { id: string; full_name: string | null; email: string; role: string; coding_rank: string; jlpt_level: string | null; is_japanese: boolean })
+      .map(a => a.mentee as unknown as { id: string; full_name: string | null; email: string; role: string; coding_rank: string; jlpt_level: string | null; is_japanese: boolean; avatar_url: string | null })
       .filter(Boolean)
   } else {
     const { data } = await supabase.from('profiles').select('*').in('role', ['mentee', 'mentor']).order('full_name')
@@ -45,12 +45,12 @@ export default async function AdminReportsPage() {
   // Get all japanese skills
   const { data: japaneseSkills } = await supabase
     .from('japanese_skills')
-    .select('user_id, jlpt_normalized, it_japanese_normalized')
+    .select('user_id, jlpt_normalized, it_japanese_normalized, updated_at')
 
   // Get all coding skills
   const { data: codingSkills } = await supabase
     .from('coding_skills')
-    .select('user_id, core_normalized, framework_normalized')
+    .select('user_id, core_normalized, framework_normalized, updated_at')
 
   // Get all attitude skills
   const { data: attitudeSkills } = await supabase

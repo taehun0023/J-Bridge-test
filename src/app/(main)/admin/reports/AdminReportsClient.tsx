@@ -62,7 +62,6 @@ export default function AdminReportsClient({
   const [showFeedbackForm, setShowFeedbackForm] = useState(false)
   const [pending, startTransition] = useTransition()
   const [message, setMessage] = useState<string | null>(null)
-
   const selectedUser = users.find(u => u.id === selectedUserId)
   const selectedSkills = selectedUserId ? skillMap[selectedUserId] : null
   const userFeedbacks = feedbacks.filter(f => f.user_id === selectedUserId)
@@ -242,6 +241,7 @@ export default function AdminReportsClient({
           )}
         </div>
       </div>
+
     </div>
   )
 }

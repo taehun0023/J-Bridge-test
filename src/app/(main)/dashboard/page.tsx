@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import { ASSESSMENT_QUIZ_IDS, ASSESSMENT_LABELS, getRelevantSteps } from '@/lib/assessment-config'
 import type { AxisKey } from '@/lib/assessment-config'
 import { getCoursesWithProgress } from '@/lib/course-progress'
+import { computeRankingEntry, filterUnscoredUsers, sortByCategory } from '@/lib/ranking'
+import type { RankingUserData } from '@/lib/ranking'
 import DashboardClient from './DashboardClient'
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
@@ -131,21 +133,66 @@ export default async function DashboardPage() {
     }
   }
 
-  // Compute ranking via DB RPC (single-row response instead of fetching all profiles)
-  const { data: rankData } = await supabase.rpc('get_user_rank', { target_user_id: user.id })
-
-  const rankRow = Array.isArray(rankData) ? rankData[0] : rankData
-  const userRanking: {
+  // Compute ranking: admin sees top-5 leaderboard, others see personal rank
+  // Use raw-data JOIN (same as /ranking page) for all roles — no RPC dependency
+  let userRanking: {
     overall_score: number
     overall_rank: number
     japanese_score: number
     programming_score: number
-  } | null = rankRow ? {
-    overall_score: rankRow.overall_score,
-    overall_rank: Number(rankRow.overall_rank),
-    japanese_score: rankRow.japanese_score,
-    programming_score: rankRow.programming_score,
-  } : null
+  } | null = null
+  let topRanking: { user_id: string; full_name: string | null; avatar_url: string | null; overall_score: number }[] | null = null
+
+  const { data: rankProfiles } = await supabase
+    .from('profiles')
+    .select(`
+      id, full_name, avatar_url, is_japanese,
+      japanese_skills(jlpt_normalized, it_japanese_normalized, updated_at),
+      coding_skills(core_normalized, framework_normalized, updated_at)
+    `)
+    .in('role', ['mentee', 'mentor'])
+
+  const rankingUsers: RankingUserData[] = (rankProfiles ?? [])
+    .filter((u: Record<string, unknown>) => u.japanese_skills !== null || u.coding_skills !== null)
+    .map((u: Record<string, unknown>) => {
+      const jp = u.japanese_skills as { jlpt_normalized: number; it_japanese_normalized: number; updated_at: string } | null
+      const cs = u.coding_skills as { core_normalized: number; framework_normalized: number; updated_at: string } | null
+      return {
+        user_id: u.id as string,
+        full_name: u.full_name as string | null,
+        avatar_url: u.avatar_url as string | null,
+        is_japanese: u.is_japanese as boolean,
+        jlpt_normalized: jp?.jlpt_normalized ?? 0,
+        it_japanese_normalized: jp?.it_japanese_normalized ?? 0,
+        core_normalized: cs?.core_normalized ?? 0,
+        framework_normalized: cs?.framework_normalized ?? 0,
+        japanese_skills_updated_at: jp?.updated_at ?? null,
+        coding_skills_updated_at: cs?.updated_at ?? null,
+      }
+    })
+
+  const entries = rankingUsers.map(computeRankingEntry)
+  const sorted = sortByCategory(filterUnscoredUsers(entries), 'overall')
+
+  if (profile?.role === 'admin') {
+    topRanking = sorted.slice(0, 5).map(e => ({
+      user_id: e.user_id,
+      full_name: e.full_name,
+      avatar_url: e.avatar_url,
+      overall_score: e.overall_score,
+    }))
+  } else {
+    const myIndex = sorted.findIndex(e => e.user_id === user.id)
+    if (myIndex !== -1) {
+      const me = sorted[myIndex]
+      userRanking = {
+        overall_score: me.overall_score,
+        overall_rank: myIndex + 1,
+        japanese_score: me.japanese_score,
+        programming_score: me.programming_score,
+      }
+    }
+  }
 
   // Fetch learning assignments summary
   const { data: learningAssignments } = await supabase
@@ -160,11 +207,11 @@ export default async function DashboardPage() {
   }
 
   // Fetch enrolled courses (mentee only)
-  let enrolledCourses: { id: string; course_id: string; courses: { title: string; category: string } | null }[] = []
-  if (profile?.role === 'mentee') {
+  let enrolledCourses: { id: string; course_id: string; courses: { title: string; category: string; subcategory: string | null } | null }[] = []
+  if (profile?.role === 'mentee' || profile?.role === 'mentor') {
     const { data } = await supabase
       .from('enrollments')
-      .select('id, course_id, courses(title, category)')
+      .select('id, course_id, courses(title, category, subcategory)')
       .eq('user_id', user.id)
       .limit(5)
     enrolledCourses = (data ?? []).map(d => ({
@@ -290,6 +337,7 @@ export default async function DashboardPage() {
       isJapanese={isJapanese}
       completedAssessments={completedAssessmentInfo}
       userRanking={userRanking}
+      topRanking={topRanking}
       enrolledCourses={enrolledCourses}
       learningStats={learningStats}
       recentFeedbacks={(recentFeedbacks ?? []).map(f => ({

@@ -21,6 +21,10 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
   const [isJapanese, setIsJapanese] = useState(profile?.is_japanese ?? false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordSaving, setPasswordSaving] = useState(false)
+  const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
@@ -45,7 +49,35 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
     setTimeout(() => setSaved(false), 2000)
   }
 
+  async function handlePasswordChange(e: React.FormEvent) {
+    e.preventDefault()
+    setPasswordMessage(null)
+
+    if (newPassword.length < 6) {
+      setPasswordMessage({ type: 'error', text: 'パスワードは6文字以上必要です' })
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage({ type: 'error', text: 'パスワードが一致しません' })
+      return
+    }
+
+    setPasswordSaving(true)
+    const supabase = createClient()
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+
+    if (error) {
+      setPasswordMessage({ type: 'error', text: error.message })
+    } else {
+      setPasswordMessage({ type: 'success', text: 'パスワードを変更しました' })
+      setNewPassword('')
+      setConfirmPassword('')
+    }
+    setPasswordSaving(false)
+  }
+
   return (
+    <div className="space-y-6">
     <Card title="個人情報">
       <form onSubmit={handleSave} className="space-y-4">
         <div>
@@ -138,5 +170,52 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
         </div>
       </form>
     </Card>
+
+    <Card title="パスワード変更">
+      <form onSubmit={handlePasswordChange} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">新しいパスワード</label>
+          <input
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            minLength={6}
+            required
+            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">パスワード確認</label>
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            minLength={6}
+            required
+            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
+          />
+        </div>
+
+        {passwordMessage && (
+          <div className={`rounded-xl px-3 py-2 text-sm ${
+            passwordMessage.type === 'success'
+              ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20'
+              : 'bg-red-500/10 text-red-400 ring-1 ring-red-500/20'
+          }`}>
+            {passwordMessage.text}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={passwordSaving}
+          className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+        >
+          {passwordSaving ? '変更中...' : 'パスワード変更'}
+        </button>
+      </form>
+    </Card>
+    </div>
   )
 }
