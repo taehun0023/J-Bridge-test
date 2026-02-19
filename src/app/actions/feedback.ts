@@ -16,24 +16,29 @@ export async function bulkDeleteFeedbacks() {
     .eq('id', user.id)
     .single()
 
-  if (!profile) return { error: '権限がありません' }
+  if (profile?.role !== 'admin') return { error: '権限がありません' }
 
-  if (profile.role === 'admin') {
-    const serviceClient = createServiceRoleClient()
-    if (!serviceClient) return { error: 'Service role key not configured' }
-    const { error } = await serviceClient.from('admin_feedbacks').delete().gte('id', '00000000-0000-0000-0000-000000000000')
-    if (error) return { error: error.message }
-  } else if (profile.role === 'mentee') {
-    const { error } = await supabase
-      .from('admin_feedbacks')
-      .delete()
-      .eq('user_id', user.id)
-    if (error) return { error: error.message }
-  } else {
-    return { error: '権限がありません' }
-  }
+  const serviceClient = createServiceRoleClient()
+  if (!serviceClient) return { error: 'Service role key not configured' }
+
+  // Fetch all feedback IDs then delete
+  const { data: allFeedbacks } = await serviceClient
+    .from('admin_feedbacks')
+    .select('id')
+
+  if (!allFeedbacks?.length) return { success: true }
+
+  const ids = allFeedbacks.map(f => f.id)
+  const { error } = await serviceClient
+    .from('admin_feedbacks')
+    .delete()
+    .in('id', ids)
+
+  if (error) return { error: error.message }
 
   revalidatePath('/feedback')
+  revalidatePath('/admin/reports')
+  revalidatePath('/dashboard')
   return { success: true }
 }
 

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import Badge from '@/components/ui/Badge'
-import { createQuestion, updateQuestion, deleteQuestion, toggleQuestionPublished } from '@/app/actions/admin'
+import { createQuestion, updateQuestion, deleteQuestion, toggleQuestionPublished } from '@/app/actions/admin/questions'
 
 interface QuestionOption {
   id: string

@@ -1,7 +1,7 @@
 'use client'
 
 import { Fragment, useState, useTransition } from 'react'
-import { approveRetakeRequest, denyRetakeRequest } from '@/app/actions/admin'
+import { approveRetakeRequest, denyRetakeRequest } from '@/app/actions/admin/retake'
 import { createLearningAssignment, deleteLearningAssignment, confirmAssignment, reassignAssignment, cancelAssignment, getAssigneeUnlockedLevels } from '@/app/actions/learning-assignments'
 import { approveExam, denyExam } from '@/app/actions/comprehensive-exam'
 import { ASSIGNMENT_CATEGORIES, JLPT_LEVELS, DEV_LEVELS, getCategoryLabel, getSubcategoryLabel, getContentLevelLabel } from '@/lib/assignment-categories'

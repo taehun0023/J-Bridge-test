@@ -30,7 +30,12 @@ export async function createFeedback(formData: FormData) {
     .select('id')
     .single()
 
-  if (error) return { error: error.message }
+  if (error) {
+    console.error('[createFeedback] DB insert failed:', error.message)
+    return { error: error.message }
+  }
+
+  console.log('[createFeedback] Feedback created:', data.id)
 
   // 受信者に通知
   await createNotification(
@@ -44,6 +49,7 @@ export async function createFeedback(formData: FormData) {
 
   revalidatePath('/admin/reports')
   revalidatePath('/feedback')
+  revalidatePath('/dashboard')
   return { success: true }
 }
 

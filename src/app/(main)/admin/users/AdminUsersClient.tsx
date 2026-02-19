@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { updateUserRole, createUserAccount } from '@/app/actions/admin'
+import { updateUserRole, createUserAccount } from '@/app/actions/admin/users'
 
 interface User {
   id: string

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import Card from '@/components/ui/Card'
-import { updateFeedback, deleteFeedback } from '@/app/actions/admin'
+import { updateFeedback, deleteFeedback } from '@/app/actions/admin/feedback'
 import { createFeedbackReply, updateFeedbackReply, deleteFeedbackReply, bulkDeleteFeedbacks } from '@/app/actions/feedback'
 
 const categoryLabels: Record<string, string> = {
@@ -47,7 +47,7 @@ interface Props {
 }
 
 export default function FeedbackClient({ feedbacks, currentUserId, userRole }: Props) {
-  const canBulkDelete = userRole === 'admin' || userRole === 'mentee'
+  const canBulkDelete = userRole === 'admin'
   const [message, setMessage] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
 

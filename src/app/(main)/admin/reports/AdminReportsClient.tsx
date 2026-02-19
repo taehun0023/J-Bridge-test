@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import dynamic from 'next/dynamic'
 import Badge from '@/components/ui/Badge'
 import Card from '@/components/ui/Card'
-import { createFeedback } from '@/app/actions/admin'
+import { createFeedback } from '@/app/actions/admin/feedback'
 import { recalculateAllScores } from '@/app/actions/scores'
 import { getRelevantAxes, AXIS_DISPLAY_LABELS } from '@/lib/assessment-config'
 import type { AxisKey } from '@/lib/assessment-config'
@@ -72,13 +72,18 @@ export default function AdminReportsClient({
 
   function handleFeedback(formData: FormData) {
     startTransition(async () => {
-      const result = await createFeedback(formData)
-      if (result.error) setMessage(result.error)
-      else {
-        setMessage('フィードバックが登録されました')
-        setShowFeedbackForm(false)
+      try {
+        const result = await createFeedback(formData)
+        if ('error' in result) setMessage(result.error ?? 'エラーが発生しました')
+        else {
+          setMessage('フィードバックが登録されました')
+          setShowFeedbackForm(false)
+        }
+      } catch (e) {
+        console.error('[handleFeedback] Error:', e)
+        setMessage('フィードバック登録中にエラーが発生しました')
       }
-      setTimeout(() => setMessage(null), 3000)
+      setTimeout(() => setMessage(null), 5000)
     })
   }
 
