@@ -1,4 +1,4 @@
-import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import Card from '@/components/ui/Card'
 import AdminCoursesClient from './AdminCoursesClient'
 import { ASSESSMENT_QUIZ_IDS, ASSESSMENT_LABELS } from '@/lib/assessment-config'
@@ -18,7 +18,6 @@ interface ClaimDetail {
 
 export default async function AdminCoursesPage() {
   const supabase = await createClient()
-  const serviceClient = createServiceRoleClient()
 
   // Fetch all quiz questions for the 5 assessment quizzes
   const quizIds = Object.values(ASSESSMENT_QUIZ_IDS)
@@ -28,19 +27,22 @@ export default async function AdminCoursesPage() {
     .in('quiz_id', quizIds)
     .order('sort_order')
 
-  // Fetch claims with user info (needs service client to access all users)
-  // Use quiz_id filter via inner join to avoid URL length overflow (780+ UUIDs in IN clause)
+  // Fetch claims by question IDs (batched to avoid URL length overflow)
+  const questionIds = (allQuestions ?? []).map(q => q.id as string)
   let claimsData: ClaimRow[] = []
-  if (serviceClient) {
-    const { data, error } = await serviceClient
+  const BATCH_SIZE = 100
+  for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
+    const batch = questionIds.slice(i, i + BATCH_SIZE)
+    const { data, error } = await supabase
       .from('question_claims')
-      .select('question_id, claim_reason, profiles:user_id(full_name), created_at, quiz_questions!inner(quiz_id)')
-      .in('quiz_questions.quiz_id', quizIds)
+      .select('question_id, claim_reason, profiles:user_id(full_name), created_at')
+      .in('question_id', batch)
 
     if (error) {
       console.error('Failed to fetch claims:', error.message)
+    } else {
+      claimsData = claimsData.concat((data ?? []) as unknown as ClaimRow[])
     }
-    claimsData = (data ?? []) as unknown as ClaimRow[]
   }
 
   // Aggregate claims by question

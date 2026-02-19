@@ -98,8 +98,8 @@ export interface JlptListeningScript {
 
 export type AccessRequestStatus = 'pending' | 'approved' | 'denied'
 
-export type NotificationType = 'task_assigned' | 'exam_requested' | 'exam_approved' | 'exam_denied' | 'exam_completed' | 'retake_requested' | 'feedback_received' | 'feedback_reply'
-export type LearningAssignmentStatus = 'pending' | 'in_progress' | 'completed'
+export type NotificationType = 'task_assigned' | 'exam_requested' | 'exam_approved' | 'exam_denied' | 'exam_completed' | 'retake_requested' | 'feedback_received' | 'feedback_reply' | 'assignment_completed' | 'assignment_confirmed' | 'assignment_overdue' | 'assignment_reassigned' | 'assignment_cancelled'
+export type LearningAssignmentStatus = 'pending' | 'in_progress' | 'awaiting_confirmation' | 'completed' | 'overdue'
 export type ComprehensiveExamStatus = 'requested' | 'approved' | 'denied' | 'in_progress' | 'completed' | 'failed'
 
 export interface Notification {
@@ -129,6 +129,10 @@ export interface LearningAssignment {
   passed_quiz_ids: string[]
   created_at: string
   completed_at: string | null
+  confirmed_by: string | null
+  confirmed_at: string | null
+  overdue_reason: string | null
+  overdue_reason_at: string | null
 }
 
 export interface ComprehensiveExam {

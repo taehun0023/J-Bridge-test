@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { Fragment, useState, useTransition } from 'react'
 import { approveRetakeRequest, denyRetakeRequest } from '@/app/actions/admin'
-import { createLearningAssignment, deleteLearningAssignment } from '@/app/actions/learning-assignments'
+import { createLearningAssignment, deleteLearningAssignment, confirmAssignment, reassignAssignment, cancelAssignment, getAssigneeUnlockedLevels } from '@/app/actions/learning-assignments'
 import { approveExam, denyExam } from '@/app/actions/comprehensive-exam'
-import { ASSIGNMENT_CATEGORIES, JLPT_LEVELS, getCategoryLabel, getSubcategoryLabel } from '@/lib/assignment-categories'
+import { ASSIGNMENT_CATEGORIES, JLPT_LEVELS, DEV_LEVELS, getCategoryLabel, getSubcategoryLabel, getContentLevelLabel } from '@/lib/assignment-categories'
 
 interface RetakeRequest {
   attempt_id: string
@@ -28,6 +28,8 @@ interface LearningAssignmentRow {
   passed_quiz_ids: string[]
   created_at: string
   assignee: { full_name: string | null; email: string } | null
+  overdue_reason: string | null
+  overdue_reason_at: string | null
 }
 
 interface ExamRequest {
@@ -53,6 +55,7 @@ const statusColors: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
   in_progress: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   completed: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+  awaiting_confirmation: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
   overdue: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
   requested: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
   approved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
@@ -64,6 +67,7 @@ const statusLabels: Record<string, string> = {
   pending: '待機',
   in_progress: '進行中',
   completed: '完了',
+  awaiting_confirmation: '確認待ち',
   overdue: '期限超過',
   requested: 'リクエスト中',
   approved: '承認済',
@@ -88,6 +92,14 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
   // Cascade form state
   const [selectedCategory, setSelectedCategory] = useState('')
   const [selectedSubcategory, setSelectedSubcategory] = useState('')
+  const [selectedAssignee, setSelectedAssignee] = useState('')
+
+  // Overdue handling state
+  const [reassignDate, setReassignDate] = useState<Record<string, string>>({})
+
+  // Dev level unlock state
+  const [devLevelLocks, setDevLevelLocks] = useState<Record<string, boolean>>({})
+  const [loadingLevels, setLoadingLevels] = useState(false)
 
   function showMsg(msg: string) {
     setMessage(msg)
@@ -101,11 +113,15 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
     ? catConfig?.subcategories ?? {}
     : {}
 
+  const subcatConfig = selectedCategory && selectedSubcategory
+    ? ASSIGNMENT_CATEGORIES[selectedCategory]?.subcategories[selectedSubcategory]
+    : null
+
   const hasLevel = isLevelOnly
     ? true
-    : (selectedCategory && selectedSubcategory
-      ? ASSIGNMENT_CATEGORIES[selectedCategory]?.subcategories[selectedSubcategory]?.hasLevel ?? false
-      : false)
+    : (subcatConfig?.hasLevel ?? false)
+
+  const isDevLevel = subcatConfig?.courseSubcategory != null
 
   async function handleCreateLearning(formData: FormData) {
     startTransition(async () => {
@@ -116,6 +132,8 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
         setShowForm(false)
         setSelectedCategory('')
         setSelectedSubcategory('')
+        setSelectedAssignee('')
+        setDevLevelLocks({})
       }
     })
   }
@@ -137,6 +155,14 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
     })
   }
 
+  function handleConfirmAssignment(id: string) {
+    startTransition(async () => {
+      const result = await confirmAssignment(id)
+      if (result.error) showMsg(result.error)
+      else showMsg('確認完了しました')
+    })
+  }
+
   function handleDeleteLearning(id: string) {
     if (!confirm('学習課題を削除しますか？')) return
     startTransition(async () => {
@@ -144,6 +170,42 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
       if (result.error) showMsg(result.error)
       else showMsg('削除されました')
     })
+  }
+
+  function handleReassign(id: string) {
+    const newDate = reassignDate[id]
+    if (!newDate) { showMsg('新しい期限を入力してください'); return }
+    startTransition(async () => {
+      const result = await reassignAssignment(id, newDate)
+      if (result.error) showMsg(result.error)
+      else {
+        showMsg('再配信しました')
+        setReassignDate(prev => { const n = { ...prev }; delete n[id]; return n })
+      }
+    })
+  }
+
+  function handleCancel(id: string) {
+    if (!confirm('この課題をキャンセルしますか？')) return
+    startTransition(async () => {
+      const result = await cancelAssignment(id)
+      if (result.error) showMsg(result.error)
+      else showMsg('キャンセルしました')
+    })
+  }
+
+  async function loadDevLevels(assigneeId: string, courseSubcategory: string) {
+    setLoadingLevels(true)
+    try {
+      const result = await getAssigneeUnlockedLevels(assigneeId, courseSubcategory)
+      const locks: Record<string, boolean> = {}
+      for (const l of result.levels) {
+        locks[l.difficulty] = l.isLocked
+      }
+      setDevLevelLocks(locks)
+    } finally {
+      setLoadingLevels(false)
+    }
   }
 
   function handleApproveExam(examId: string) {
@@ -222,6 +284,13 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">配分対象 *</label>
                   <select name="assigned_to" required
+                    value={selectedAssignee}
+                    onChange={e => {
+                      setSelectedAssignee(e.target.value)
+                      if (e.target.value && isDevLevel && subcatConfig?.courseSubcategory) {
+                        loadDevLevels(e.target.value, subcatConfig.courseSubcategory)
+                      }
+                    }}
                     className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                     <option value="">選択...</option>
                     {users.map(u => (
@@ -235,7 +304,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
                     name="category"
                     required
                     value={selectedCategory}
-                    onChange={e => { setSelectedCategory(e.target.value); setSelectedSubcategory('') }}
+                    onChange={e => { setSelectedCategory(e.target.value); setSelectedSubcategory(''); setDevLevelLocks({}) }}
                     className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   >
                     <option value="">選択...</option>
@@ -253,7 +322,14 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
                       name="subcategory"
                       required
                       value={selectedSubcategory}
-                      onChange={e => setSelectedSubcategory(e.target.value)}
+                      onChange={e => {
+                        setSelectedSubcategory(e.target.value)
+                        setDevLevelLocks({})
+                        const newSubcatConfig = ASSIGNMENT_CATEGORIES[selectedCategory]?.subcategories[e.target.value]
+                        if (selectedAssignee && newSubcatConfig?.courseSubcategory) {
+                          loadDevLevels(selectedAssignee, newSubcatConfig.courseSubcategory)
+                        }
+                      }}
                       disabled={!selectedCategory}
                       className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     >
@@ -266,13 +342,22 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
                 )}
                 {hasLevel && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">レベル{isLevelOnly ? ' *' : ''}</label>
-                    <select name="content_level" required={isLevelOnly}
-                      className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white">
-                      <option value="">{isLevelOnly ? '選択...' : '全レベル'}</option>
-                      {JLPT_LEVELS.map(level => (
-                        <option key={level} value={level}>{level}</option>
-                      ))}
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">レベル{isLevelOnly || isDevLevel ? ' *' : ''}</label>
+                    <select name="content_level" required={isLevelOnly || isDevLevel}
+                      disabled={isDevLevel && loadingLevels}
+                      className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                      <option value="">{isLevelOnly || isDevLevel ? '選択...' : '全レベル'}</option>
+                      {isDevLevel ? (
+                        DEV_LEVELS.map(level => (
+                          <option key={level.value} value={level.value} disabled={devLevelLocks[level.value] === true}>
+                            {level.label}{devLevelLocks[level.value] === true ? ' (ロック)' : ''}
+                          </option>
+                        ))
+                      ) : (
+                        JLPT_LEVELS.map(level => (
+                          <option key={level} value={level}>{level}</option>
+                        ))
+                      )}
                     </select>
                   </div>
                 )}
@@ -318,44 +403,97 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
                   {learningAssignments.map(la => {
                     const progress = getProgressPercent(la)
                     return (
-                      <tr key={la.id}>
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{la.title}</td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                          {(la.assignee as { full_name: string | null } | null)?.full_name ?? '-'}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                          {getCategoryLabel(la.category)} &gt; {getSubcategoryLabel(la.category, la.subcategory)}
-                          {la.content_level && ` (${la.content_level})`}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="h-2 w-16 rounded-full bg-gray-200 dark:bg-gray-600">
-                              <div
-                                className="h-2 rounded-full bg-indigo-500 transition-all"
-                                style={{ width: `${progress}%` }}
-                              />
+                      <Fragment key={la.id}>
+                        <tr>
+                          <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{la.title}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                            {(la.assignee as { full_name: string | null } | null)?.full_name ?? '-'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                            {getCategoryLabel(la.category)} &gt; {getSubcategoryLabel(la.category, la.subcategory)}
+                            {la.content_level && ` (${getContentLevelLabel(la.category, la.content_level)})`}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <div className="h-2 w-16 rounded-full bg-gray-200 dark:bg-gray-600">
+                                <div
+                                  className="h-2 rounded-full bg-indigo-500 transition-all"
+                                  style={{ width: `${progress}%` }}
+                                />
+                              </div>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">{progress}%</span>
                             </div>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">{progress}%</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[la.status] ?? 'bg-gray-100 text-gray-600'}`}>
-                            {statusLabels[la.status] ?? la.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-                          {la.due_date ? new Date(la.due_date).toLocaleDateString('ja-JP') : '-'}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <button
-                            onClick={() => handleDeleteLearning(la.id)}
-                            disabled={pending}
-                            className="text-xs text-red-600 hover:underline disabled:opacity-50 dark:text-red-400"
-                          >
-                            削除
-                          </button>
-                        </td>
-                      </tr>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[la.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                              {statusLabels[la.status] ?? la.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                            {la.due_date ? new Date(la.due_date).toLocaleDateString('ja-JP') : '-'}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex flex-col items-end gap-2">
+                              <div className="flex justify-end gap-2">
+                                {la.status === 'awaiting_confirmation' && (
+                                  <button
+                                    onClick={() => handleConfirmAssignment(la.id)}
+                                    disabled={pending}
+                                    className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                                  >
+                                    確認完了
+                                  </button>
+                                )}
+                                {la.status === 'overdue' && (
+                                  <button
+                                    onClick={() => handleCancel(la.id)}
+                                    disabled={pending}
+                                    className="rounded-md bg-gray-600 px-3 py-1 text-xs font-medium text-white hover:bg-gray-700 disabled:opacity-50"
+                                  >
+                                    キャンセル
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => handleDeleteLearning(la.id)}
+                                  disabled={pending}
+                                  className="text-xs text-red-600 hover:underline disabled:opacity-50 dark:text-red-400"
+                                >
+                                  削除
+                                </button>
+                              </div>
+                              {la.status === 'overdue' && (
+                                <div className="flex items-center gap-1">
+                                  <input
+                                    type="date"
+                                    value={reassignDate[la.id] ?? ''}
+                                    onChange={e => setReassignDate(prev => ({ ...prev, [la.id]: e.target.value }))}
+                                    className="rounded border border-gray-300 px-2 py-1 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                  />
+                                  <button
+                                    onClick={() => handleReassign(la.id)}
+                                    disabled={pending}
+                                    className="rounded-md bg-indigo-600 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                                  >
+                                    再配信
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                        {la.status === 'overdue' && la.overdue_reason && (
+                          <tr>
+                            <td colSpan={7} className="px-4 py-2">
+                              <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
+                                <span className="font-medium">遅延理由:</span> {la.overdue_reason}
+                                <span className="ml-2 text-xs text-red-400">
+                                  ({la.overdue_reason_at ? new Date(la.overdue_reason_at).toLocaleDateString('ja-JP') : ''})
+                                </span>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
                     )
                   })}
                 </tbody>

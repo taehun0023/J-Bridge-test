@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useTransition } from 'react'
 import { startExam, submitExam, requestRetakeExam } from '@/app/actions/comprehensive-exam'
+import { submitQuestionClaim } from '@/app/actions/claims'
 import { useRouter } from 'next/navigation'
 import Card from '@/components/ui/Card'
 
@@ -20,6 +21,13 @@ interface Question {
   options: { id: string; option_text: string }[]
 }
 
+interface ReviewResult {
+  questionId: string
+  selectedOptionId: string
+  correctOptionId: string
+  isCorrect: boolean
+}
+
 interface Props {
   exam: ExamData
   mode: 'start' | 'exam' | 'retake'
@@ -32,8 +40,21 @@ export default function ExamClient({ exam, mode }: Props) {
   const [timeLeft, setTimeLeft] = useState(exam.time_limit_minutes * 60)
   const [started, setStarted] = useState(mode === 'exam')
   const [submitted, setSubmitted] = useState(false)
-  const [result, setResult] = useState<{ score: number; passed: boolean } | null>(null)
+  const [result, setResult] = useState<{
+    score: number
+    passed: boolean
+    correctCount?: number
+    totalCount?: number
+    results?: ReviewResult[]
+  } | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showReview, setShowReview] = useState(false)
+  const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set())
+  const [claimedQuestions, setClaimedQuestions] = useState<Set<string>>(new Set())
+  const [claimingId, setClaimingId] = useState<string | null>(null)
+  const [claimForms, setClaimForms] = useState<Set<string>>(new Set())
+  const [claimReasons, setClaimReasons] = useState<Record<string, string>>({})
+  const [claimError, setClaimError] = useState<string | null>(null)
   const router = useRouter()
 
   // Calculate time left if exam is already in progress
@@ -59,7 +80,13 @@ export default function ExamClient({ exam, mode }: Props) {
         setError(res.error)
         setSubmitted(false)
       } else {
-        setResult({ score: res.score!, passed: res.passed! })
+        setResult({
+          score: res.score!,
+          passed: res.passed!,
+          correctCount: res.correctCount,
+          totalCount: res.totalCount,
+          results: res.results,
+        })
       }
     })
   }, [submitted, questions, answers, exam.id])
@@ -83,6 +110,7 @@ export default function ExamClient({ exam, mode }: Props) {
   }, [started, submitted, questions.length, handleSubmit])
 
   function handleStart() {
+    if (!window.confirm('응시하시겠습니까？')) return
     startTransition(async () => {
       const res = await startExam(exam.id)
       if (res.error) {
@@ -104,6 +132,42 @@ export default function ExamClient({ exam, mode }: Props) {
         router.push('/dashboard/assignments')
       }
     })
+  }
+
+  function toggleExpanded(qId: string) {
+    setExpandedQuestions(prev => {
+      const next = new Set(prev)
+      if (next.has(qId)) next.delete(qId)
+      else next.add(qId)
+      return next
+    })
+  }
+
+  function toggleClaimForm(qId: string) {
+    setClaimForms(prev => {
+      const next = new Set(prev)
+      if (next.has(qId)) next.delete(qId)
+      else next.add(qId)
+      return next
+    })
+    setClaimError(null)
+  }
+
+  async function handleClaim(qId: string) {
+    setClaimingId(qId)
+    setClaimError(null)
+    const res = await submitQuestionClaim(qId, claimReasons[qId] || undefined)
+    if (res.error) {
+      setClaimError(res.error)
+    } else {
+      setClaimedQuestions(prev => new Set(prev).add(qId))
+      setClaimForms(prev => {
+        const next = new Set(prev)
+        next.delete(qId)
+        return next
+      })
+    }
+    setClaimingId(null)
   }
 
   // Retake button mode
@@ -138,6 +202,181 @@ export default function ExamClient({ exam, mode }: Props) {
     )
   }
 
+  // Review mode
+  if (result && showReview && result.results) {
+    const resultMap = new Map(result.results.map(r => [r.questionId, r]))
+
+    return (
+      <div className="mx-auto max-w-3xl py-8">
+        {/* Review Header */}
+        <div className="mb-6">
+          <p className="text-sm font-medium text-indigo-400">総合試験 — 結果レビュー</p>
+          <div className="mt-3 flex items-center gap-4">
+            <div className="rounded-xl bg-white/[0.03] border border-white/[0.08] px-4 py-2 dark:bg-white/[0.03] dark:border-white/[0.08] bg-zinc-100 border-gray-200">
+              <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{result.score}</span>
+              <span className="text-sm text-zinc-500 dark:text-zinc-400">点</span>
+            </div>
+            <div className="text-sm text-zinc-500 dark:text-zinc-400">
+              {result.correctCount}/{result.totalCount} 正解
+            </div>
+          </div>
+        </div>
+
+        {/* Question Review List */}
+        <div className="space-y-3">
+          {questions.map((q, i) => {
+            const r = resultMap.get(q.id)
+            const isCorrect = r?.isCorrect ?? false
+            const wasAnswered = !!r
+            const isExpanded = expandedQuestions.has(q.id)
+            const isClaimed = claimedQuestions.has(q.id)
+
+            return (
+              <div
+                key={q.id}
+                className={`rounded-xl border p-4 transition-colors ${
+                  isCorrect
+                    ? 'border-emerald-500/20 bg-emerald-500/5'
+                    : wasAnswered
+                    ? 'border-red-500/20 bg-red-500/5'
+                    : 'border-zinc-200/60 bg-zinc-50 dark:border-white/[0.08] dark:bg-white/[0.02]'
+                }`}
+              >
+                <button
+                  onClick={() => toggleExpanded(q.id)}
+                  className="flex w-full items-center justify-between text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={`flex h-7 w-7 items-center justify-center rounded text-xs font-bold ${
+                      isCorrect
+                        ? 'bg-emerald-500/20 text-emerald-500'
+                        : wasAnswered
+                        ? 'bg-red-500/20 text-red-500'
+                        : 'bg-zinc-200 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400'
+                    }`}>
+                      {isCorrect ? '✓' : wasAnswered ? '✗' : '-'}
+                    </span>
+                    <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                      問{i + 1}
+                    </span>
+                  </div>
+                  <svg
+                    className={`h-4 w-4 text-zinc-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {isExpanded && (
+                  <div className="mt-3 border-t border-zinc-200/60 dark:border-white/[0.06] pt-3">
+                    <p className="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-line mb-3">
+                      {q.question_text.replace(/\\n/g, '\n')}
+                    </p>
+                    <div className="space-y-2">
+                      {q.options.map(opt => {
+                        const isSelected = r?.selectedOptionId === opt.id
+                        const isCorrectOption = r?.correctOptionId === opt.id
+                        let optionClass = 'border-zinc-200/60 bg-white dark:border-white/[0.08] dark:bg-white/[0.02]'
+                        if (isCorrectOption) {
+                          optionClass = 'border-emerald-500/40 bg-emerald-500/10'
+                        } else if (isSelected && !isCorrect) {
+                          optionClass = 'border-red-500/40 bg-red-500/10'
+                        }
+
+                        return (
+                          <div key={opt.id} className={`rounded-lg border px-3 py-2 text-sm ${optionClass}`}>
+                            <div className="flex items-center gap-2">
+                              {isCorrectOption && <span className="text-emerald-500 font-bold text-xs">✓</span>}
+                              {isSelected && !isCorrect && <span className="text-red-500 font-bold text-xs">✗</span>}
+                              <span className={`${
+                                isCorrectOption
+                                  ? 'text-emerald-700 dark:text-emerald-300 font-medium'
+                                  : isSelected && !isCorrect
+                                  ? 'text-red-700 dark:text-red-300'
+                                  : 'text-zinc-600 dark:text-zinc-400'
+                              }`}>
+                                {opt.option_text}
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    {/* Claim section */}
+                    <div className="mt-3">
+                      {isClaimed ? (
+                        <div className="flex justify-end">
+                          <span className="rounded-lg bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500">
+                            クレーム送信済み
+                          </span>
+                        </div>
+                      ) : claimForms.has(q.id) ? (
+                        <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+                          <textarea
+                            placeholder="クレーム理由（任意）"
+                            value={claimReasons[q.id] ?? ''}
+                            onChange={e => setClaimReasons(prev => ({ ...prev, [q.id]: e.target.value }))}
+                            rows={2}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-amber-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                          />
+                          {claimError && claimingId === null && (
+                            <p className="mt-1 text-xs text-red-500">{claimError}</p>
+                          )}
+                          <div className="mt-2 flex justify-end gap-2">
+                            <button
+                              onClick={() => toggleClaimForm(q.id)}
+                              className="rounded-lg px-3 py-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+                            >
+                              キャンセル
+                            </button>
+                            <button
+                              onClick={() => handleClaim(q.id)}
+                              disabled={claimingId === q.id}
+                              className="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-600 disabled:opacity-50"
+                            >
+                              {claimingId === q.id ? '送信中...' : '送信'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => toggleClaimForm(q.id)}
+                            className="rounded-lg bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-600 hover:bg-amber-500/20 dark:text-amber-400"
+                          >
+                            問題にクレーム
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="mt-6 flex justify-center gap-3">
+          <button
+            onClick={() => setShowReview(false)}
+            className="rounded-xl bg-gray-100 px-6 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
+          >
+            結果に戻る
+          </button>
+          <button
+            onClick={() => router.push('/dashboard/assignments')}
+            className="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors"
+          >
+            課題一覧へ
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   // Result display
   if (result) {
     return (
@@ -159,6 +398,14 @@ export default function ExamClient({ exam, mode }: Props) {
               合格点: {exam.passing_score}点
             </p>
             <div className="mt-6 flex justify-center gap-3">
+              {result.results && result.results.length > 0 && (
+                <button
+                  onClick={() => setShowReview(true)}
+                  className="rounded-lg bg-amber-100 px-4 py-2 text-sm font-medium text-amber-700 hover:bg-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:hover:bg-amber-500/20"
+                >
+                  結果レビュー
+                </button>
+              )}
               <button
                 onClick={() => router.push('/dashboard/assignments')}
                 className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"

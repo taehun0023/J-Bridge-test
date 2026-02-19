@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Bell } from 'lucide-react'
+import { Bell, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { getUnreadNotificationCount, getNotifications, markAsRead, markAllAsRead } from '@/app/actions/notifications'
+import { getUnreadNotificationCount, getNotifications, markAsRead, markAllAsRead, deleteNotification, deleteAllNotifications } from '@/app/actions/notifications'
 
 interface NotificationItem {
   id: string
@@ -76,6 +76,20 @@ export default function NotificationBell() {
     setUnreadCount(0)
   }
 
+  async function handleDelete(notificationId: string, wasUnread: boolean) {
+    await deleteNotification(notificationId)
+    setNotifications(prev => prev.filter(n => n.id !== notificationId))
+    if (wasUnread) {
+      setUnreadCount(prev => Math.max(0, prev - 1))
+    }
+  }
+
+  async function handleDeleteAll() {
+    await deleteAllNotifications()
+    setNotifications([])
+    setUnreadCount(0)
+  }
+
   function formatTime(dateStr: string) {
     const diff = Date.now() - new Date(dateStr).getTime()
     const minutes = Math.floor(diff / 60000)
@@ -106,14 +120,24 @@ export default function NotificationBell() {
         <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-xl border border-gray-200 bg-white shadow-lg dark:border-white/[0.08] dark:bg-zinc-900">
           <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-white/[0.06]">
             <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">通知</h3>
-            {unreadCount > 0 && (
-              <button
-                onClick={handleMarkAllRead}
-                className="text-xs text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
-              >
-                すべて既読
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {notifications.length > 0 && (
+                <button
+                  onClick={handleDeleteAll}
+                  className="text-xs text-red-500 hover:text-red-400"
+                >
+                  すべて削除
+                </button>
+              )}
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllRead}
+                  className="text-xs text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+                >
+                  すべて既読
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="max-h-80 overflow-y-auto">
@@ -123,32 +147,42 @@ export default function NotificationBell() {
               <div className="py-8 text-center text-sm text-zinc-400">通知はありません</div>
             ) : (
               notifications.map(notification => (
-                <button
+                <div
                   key={notification.id}
-                  onClick={() => handleNotificationClick(notification)}
-                  className={`w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors border-b border-gray-50 dark:border-white/[0.03] last:border-0 ${
+                  className={`group relative flex items-start px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors border-b border-gray-50 dark:border-white/[0.03] last:border-0 ${
                     !notification.is_read ? 'bg-indigo-50/50 dark:bg-indigo-500/5' : ''
                   }`}
                 >
-                  <div className="flex items-start gap-2">
-                    {!notification.is_read && (
-                      <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-indigo-500" />
-                    )}
-                    <div className={!notification.is_read ? '' : 'pl-4'}>
-                      <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 line-clamp-2">
-                        {notification.title}
-                      </p>
-                      {notification.message && (
-                        <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400 line-clamp-1">
-                          {notification.message}
-                        </p>
+                  <button
+                    onClick={() => handleNotificationClick(notification)}
+                    className="flex-1 text-left"
+                  >
+                    <div className="flex items-start gap-2">
+                      {!notification.is_read && (
+                        <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-indigo-500" />
                       )}
-                      <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
-                        {formatTime(notification.created_at)}
-                      </p>
+                      <div className={!notification.is_read ? '' : 'pl-4'}>
+                        <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 line-clamp-2">
+                          {notification.title}
+                        </p>
+                        {notification.message && (
+                          <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400 line-clamp-1">
+                            {notification.message}
+                          </p>
+                        )}
+                        <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
+                          {formatTime(notification.created_at)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </button>
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDelete(notification.id, !notification.is_read) }}
+                    className="opacity-0 group-hover:opacity-100 ml-1 mt-1 shrink-0 rounded p-1 text-zinc-400 hover:text-red-500 transition-all"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               ))
             )}
           </div>

@@ -1,8 +1,11 @@
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import Card from '@/components/ui/Card'
 import AdminTasksClient from './AdminTasksClient'
+import { detectAndMarkOverdue } from '@/app/actions/learning-assignments'
 
 export default async function AdminTasksPage() {
+  await detectAndMarkOverdue()
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -66,12 +69,14 @@ export default async function AdminTasksPage() {
     users = data ?? []
   }
 
+  const awaitingConfirmation = learningAssignments?.filter(t => t.status === 'awaiting_confirmation').length ?? 0
   const taskStats = {
     total: learningAssignments?.length ?? 0,
     pending: learningAssignments?.filter(t => t.status === 'pending').length ?? 0,
     inProgress: learningAssignments?.filter(t => t.status === 'in_progress').length ?? 0,
     completed: learningAssignments?.filter(t => t.status === 'completed').length ?? 0,
-    approvals: retakeRequests.length + (examRequests?.filter(e => e.status === 'requested').length ?? 0),
+    overdue: learningAssignments?.filter(t => t.status === 'overdue').length ?? 0,
+    approvals: retakeRequests.length + (examRequests?.filter(e => e.status === 'requested').length ?? 0) + awaitingConfirmation,
   }
 
   return (
@@ -79,7 +84,7 @@ export default async function AdminTasksPage() {
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white">課題配分</h1>
       <p className="mt-1 text-gray-500 dark:text-gray-400">課題作成及び進捗状況管理</p>
 
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-5">
+      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-6">
         <Card>
           <p className="text-sm text-gray-500 dark:text-gray-400">全体</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">{taskStats.total}</p>
@@ -97,8 +102,12 @@ export default async function AdminTasksPage() {
           <p className="text-2xl font-bold text-green-600">{taskStats.completed}</p>
         </Card>
         <Card>
+          <p className="text-sm text-gray-500 dark:text-gray-400">期限超過</p>
+          <p className="text-2xl font-bold text-red-600">{taskStats.overdue}</p>
+        </Card>
+        <Card>
           <p className="text-sm text-gray-500 dark:text-gray-400">承認待ち</p>
-          <p className="text-2xl font-bold text-red-600">{taskStats.approvals}</p>
+          <p className="text-2xl font-bold text-orange-600">{taskStats.approvals}</p>
         </Card>
       </div>
 

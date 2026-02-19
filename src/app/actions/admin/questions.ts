@@ -18,8 +18,6 @@ interface QuestionFormData {
   options: QuestionOptionData[]
 }
 
-export type { QuestionOptionData, QuestionFormData }
-
 export async function createQuestion(quizId: string, data: QuestionFormData) {
   const auth = await requireAdmin()
   if ('error' in auth) return { error: auth.error } as const

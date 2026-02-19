@@ -2,6 +2,10 @@
 
 import { useState } from 'react'
 import Card from '@/components/ui/Card'
+import Link from 'next/link'
+import { Eye } from 'lucide-react'
+
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
 
 const CATEGORY_LABELS: Record<string, string> = {
   seikatsu: '生活日本語',
@@ -93,6 +97,15 @@ export default function HistoryClient({
         ))}
       </div>
 
+      {/* 7日間レビュー期限の案内 */}
+      <div className="mb-4 flex items-start gap-2 rounded-xl bg-indigo-500/5 px-4 py-3 text-sm text-indigo-400 ring-1 ring-indigo-500/10">
+        <Eye className="mt-0.5 h-4 w-4 shrink-0" />
+        <p>
+          試験完了後<span className="font-semibold">7日間</span>のみ、解答内容の振り返り（レビュー）が可能です。
+          期間内は<Eye className="inline h-3.5 w-3.5 mx-0.5" />アイコンが表示されます。
+        </p>
+      </div>
+
       {/* Mock exam results (is_assessment=false) */}
       {activeTab === 'mock' && (
         <Card>
@@ -110,26 +123,38 @@ export default function HistoryClient({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/[0.06]">
-                  {mockExamAttempts.map((q) => (
-                    <tr key={q.id}>
-                      <td className="py-3 pr-4 text-zinc-900 dark:text-zinc-100">
-                        {(q.quizzes as { title: string } | null)?.title ?? 'クイズ'}
-                      </td>
-                      <td className="py-3 px-4 text-center font-mono font-bold text-zinc-900 dark:text-zinc-100">{q.score}点</td>
-                      <td className="py-3 px-4 text-center">
-                        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                          q.passed
-                            ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20'
-                            : 'bg-red-500/10 text-red-400 ring-1 ring-red-500/20'
-                        }`}>
-                          {q.passed ? '合格' : '不合格'}
-                        </span>
-                      </td>
-                      <td className="py-3 pl-4 text-right text-zinc-500 dark:text-zinc-400">
-                        {new Date(q.completed_at).toLocaleDateString('ja-JP')}
-                      </td>
-                    </tr>
-                  ))}
+                  {mockExamAttempts.map((q) => {
+                    const isReviewable = Date.now() - new Date(q.completed_at).getTime() < SEVEN_DAYS_MS
+                    return (
+                      <tr key={q.id}>
+                        <td className="py-3 pr-4 text-zinc-900 dark:text-zinc-100">
+                          <div className="flex items-center gap-2">
+                            {isReviewable ? (
+                              <Link href={`/dashboard/history/${q.id}?type=quiz`} className="hover:text-indigo-400 transition-colors flex items-center gap-1.5">
+                                {(q.quizzes as { title: string } | null)?.title ?? 'クイズ'}
+                                <Eye className="h-3.5 w-3.5 text-indigo-400" />
+                              </Link>
+                            ) : (
+                              <span>{(q.quizzes as { title: string } | null)?.title ?? 'クイズ'}</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-center font-mono font-bold text-zinc-900 dark:text-zinc-100">{q.score}点</td>
+                        <td className="py-3 px-4 text-center">
+                          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                            q.passed
+                              ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20'
+                              : 'bg-red-500/10 text-red-400 ring-1 ring-red-500/20'
+                          }`}>
+                            {q.passed ? '合格' : '不合格'}
+                          </span>
+                        </td>
+                        <td className="py-3 pl-4 text-right text-zinc-500 dark:text-zinc-400">
+                          {new Date(q.completed_at).toLocaleDateString('ja-JP')}
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
@@ -208,32 +233,44 @@ export default function HistoryClient({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-white/[0.06]">
-                    {assessmentAttempts.map((q) => (
-                      <tr key={q.id}>
-                        <td className="py-3 pr-4 text-zinc-900 dark:text-zinc-100">
-                          {(q.quizzes as { title: string } | null)?.title ?? '総合試験'}
-                        </td>
-                        <td className="py-3 px-4 text-center font-mono font-bold text-zinc-900 dark:text-zinc-100">{q.score}点</td>
-                        <td className="py-3 px-4 text-center">
-                          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                            q.passed
-                              ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20'
-                              : 'bg-red-500/10 text-red-400 ring-1 ring-red-500/20'
-                          }`}>
-                            {q.passed ? '合格' : '不合格'}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-center text-xs">
-                          {q.retake_request_status === 'requested' && <span className="text-amber-400">リクエスト中</span>}
-                          {q.retake_request_status === 'approved' && <span className="text-emerald-400">承認済</span>}
-                          {q.retake_request_status === 'denied' && <span className="text-red-400">拒否</span>}
-                          {!q.retake_request_status && <span className="text-zinc-400">—</span>}
-                        </td>
-                        <td className="py-3 pl-4 text-right text-zinc-500 dark:text-zinc-400">
-                          {new Date(q.completed_at).toLocaleDateString('ja-JP')}
-                        </td>
-                      </tr>
-                    ))}
+                    {assessmentAttempts.map((q) => {
+                      const isReviewable = Date.now() - new Date(q.completed_at).getTime() < SEVEN_DAYS_MS
+                      return (
+                        <tr key={q.id}>
+                          <td className="py-3 pr-4 text-zinc-900 dark:text-zinc-100">
+                            <div className="flex items-center gap-2">
+                              {isReviewable ? (
+                                <Link href={`/dashboard/history/${q.id}?type=quiz`} className="hover:text-indigo-400 transition-colors flex items-center gap-1.5">
+                                  {(q.quizzes as { title: string } | null)?.title ?? '総合試験'}
+                                  <Eye className="h-3.5 w-3.5 text-indigo-400" />
+                                </Link>
+                              ) : (
+                                <span>{(q.quizzes as { title: string } | null)?.title ?? '総合試験'}</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-center font-mono font-bold text-zinc-900 dark:text-zinc-100">{q.score}点</td>
+                          <td className="py-3 px-4 text-center">
+                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                              q.passed
+                                ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20'
+                                : 'bg-red-500/10 text-red-400 ring-1 ring-red-500/20'
+                            }`}>
+                              {q.passed ? '合格' : '不合格'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-center text-xs">
+                            {q.retake_request_status === 'requested' && <span className="text-amber-400">リクエスト中</span>}
+                            {q.retake_request_status === 'approved' && <span className="text-emerald-400">承認済</span>}
+                            {q.retake_request_status === 'denied' && <span className="text-red-400">拒否</span>}
+                            {!q.retake_request_status && <span className="text-zinc-400">—</span>}
+                          </td>
+                          <td className="py-3 pl-4 text-right text-zinc-500 dark:text-zinc-400">
+                            {new Date(q.completed_at).toLocaleDateString('ja-JP')}
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -263,10 +300,21 @@ export default function HistoryClient({
                   <tbody className="divide-y divide-gray-100 dark:divide-white/[0.06]">
                     {comprehensiveExams.map((ce) => {
                       const statusInfo = EXAM_STATUS_LABELS[ce.status] ?? { label: ce.status, color: 'text-zinc-400' }
+                      const isFinished = ce.status === 'completed' || ce.status === 'failed'
+                      const isReviewable = isFinished && ce.completed_at && Date.now() - new Date(ce.completed_at).getTime() < SEVEN_DAYS_MS
                       return (
                         <tr key={ce.id}>
                           <td className="py-3 pr-4 text-zinc-900 dark:text-zinc-100">
-                            <div>{CATEGORY_LABELS[ce.category] ?? ce.category}</div>
+                            <div className="flex items-center gap-2">
+                              {isReviewable ? (
+                                <Link href={`/dashboard/history/${ce.id}?type=comprehensive`} className="hover:text-indigo-400 transition-colors flex items-center gap-1.5">
+                                  {CATEGORY_LABELS[ce.category] ?? ce.category}
+                                  <Eye className="h-3.5 w-3.5 text-indigo-400" />
+                                </Link>
+                              ) : (
+                                <span>{CATEGORY_LABELS[ce.category] ?? ce.category}</span>
+                              )}
+                            </div>
                             <div className="text-xs text-zinc-500 dark:text-zinc-400">{ce.subcategory}{ce.content_level ? ` (${ce.content_level})` : ''}</div>
                           </td>
                           <td className="py-3 px-4 text-center">

@@ -164,5 +164,12 @@ export async function submitExam(
   revalidatePath('/dashboard/assignments')
   revalidatePath('/ranking')
 
-  return { score, passed, correctCount, totalCount: answers.length }
+  const results = answers.map(a => ({
+    questionId: a.questionId,
+    selectedOptionId: a.selectedOptionId,
+    correctOptionId: correctMap.get(a.questionId) ?? '',
+    isCorrect: correctMap.get(a.questionId) === a.selectedOptionId,
+  }))
+
+  return { score, passed, correctCount, totalCount: answers.length, results }
 }

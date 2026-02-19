@@ -2,23 +2,31 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Card from '@/components/ui/Card'
-import { getCategoryLabel, getSubcategoryLabel } from '@/lib/assignment-categories'
-import { ArrowLeft, BookOpen, CheckCircle2, Clock, GraduationCap } from 'lucide-react'
+import { ASSIGNMENT_CATEGORIES, getCategoryLabel, getSubcategoryLabel, getContentUrl, getReadingTotalCount, getContentLevelLabel } from '@/lib/assignment-categories'
+import { AlertTriangle, ArrowLeft, BookOpen, CheckCircle2, Clock, GraduationCap } from 'lucide-react'
 import ExamRequestButton from './ExamRequestButton'
+import OverdueReasonForm from './OverdueReasonForm'
+import { detectAndMarkOverdue } from '@/app/actions/learning-assignments'
 
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
   in_progress: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  awaiting_confirmation: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
   completed: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+  overdue: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
 }
 
 const statusLabels: Record<string, string> = {
   pending: '待機',
   in_progress: '進行中',
+  awaiting_confirmation: '確認待ち',
   completed: '完了',
+  overdue: '期限超過',
 }
 
 export default async function AssignmentsPage() {
+  await detectAndMarkOverdue()
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -63,11 +71,32 @@ export default async function AssignmentsPage() {
     }
   }
 
+  // Fetch reading progress for business-lit assignments
+  const businessLitAssignments = (assignments ?? []).filter(a => a.category === 'business-lit')
+  const readingItemTypes = businessLitAssignments.flatMap(a => {
+    const config = ASSIGNMENT_CATEGORIES['business-lit']?.subcategories[a.subcategory]
+    return config?.readingItemTypes ?? []
+  })
+
+  let masteredMap: Record<string, number> = {}
+  if (readingItemTypes.length > 0) {
+    const { data: mastered } = await supabase
+      .from('user_mastered_items')
+      .select('item_type')
+      .eq('user_id', user.id)
+      .in('item_type', [...new Set(readingItemTypes)])
+
+    for (const m of mastered ?? []) {
+      masteredMap[m.item_type] = (masteredMap[m.item_type] ?? 0) + 1
+    }
+  }
+
   const stats = {
     total: assignments?.length ?? 0,
     pending: assignments?.filter(a => a.status === 'pending').length ?? 0,
     inProgress: assignments?.filter(a => a.status === 'in_progress').length ?? 0,
     completed: assignments?.filter(a => a.status === 'completed').length ?? 0,
+    overdue: assignments?.filter(a => a.status === 'overdue').length ?? 0,
   }
 
   return (
@@ -78,12 +107,12 @@ export default async function AssignmentsPage() {
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">学習課題</h1>
-          <p className="mt-1 text-zinc-500 dark:text-zinc-400">配信された学習課題とクイズ進捗</p>
+          <p className="mt-1 text-zinc-500 dark:text-zinc-400">配信された学習課題とテスト進捗</p>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-6">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-5 mb-6">
         <Card>
           <div className="flex items-center gap-2">
             <BookOpen className="h-4 w-4 text-zinc-400" />
@@ -112,6 +141,13 @@ export default async function AssignmentsPage() {
           </div>
           <p className="mt-1 text-2xl font-bold text-green-600">{stats.completed}</p>
         </Card>
+        <Card>
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-red-500" />
+            <p className="text-sm text-gray-500 dark:text-gray-400">期限超過</p>
+          </div>
+          <p className="mt-1 text-2xl font-bold text-red-600">{stats.overdue}</p>
+        </Card>
       </div>
 
       {/* Assignment cards */}
@@ -139,8 +175,13 @@ export default async function AssignmentsPage() {
               <Card key={assignment.id}>
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-                      {assignment.title}
+                    <h3 className="text-base font-semibold">
+                      <Link
+                        href={getContentUrl(assignment.category, assignment.subcategory)}
+                        className="text-zinc-900 dark:text-zinc-100 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
+                      >
+                        {assignment.title} →
+                      </Link>
                     </h3>
                     <div className="mt-1 flex flex-wrap items-center gap-2">
                       <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400">
@@ -151,7 +192,7 @@ export default async function AssignmentsPage() {
                       </span>
                       {assignment.content_level && (
                         <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                          {assignment.content_level}
+                          {getContentLevelLabel(assignment.category, assignment.content_level)}
                         </span>
                       )}
                     </div>
@@ -165,11 +206,47 @@ export default async function AssignmentsPage() {
                   <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">{assignment.description}</p>
                 )}
 
-                {/* Progress bar */}
+                {/* Overdue section */}
+                {assignment.status === 'overdue' && (
+                  <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/20">
+                    <div className="flex items-center gap-2 text-sm font-medium text-red-700 dark:text-red-300">
+                      <AlertTriangle className="h-4 w-4" />
+                      期限を超過しました
+                    </div>
+                    <OverdueReasonForm
+                      assignmentId={assignment.id}
+                      existingReason={assignment.overdue_reason}
+                    />
+                  </div>
+                )}
+
+                {/* Reading progress (business-lit only) */}
+                {(() => {
+                  const readingTotal = getReadingTotalCount(assignment.category, assignment.subcategory)
+                  const subcatConfig = ASSIGNMENT_CATEGORIES[assignment.category]?.subcategories[assignment.subcategory]
+                  const readingPassed = (subcatConfig?.readingItemTypes ?? []).reduce(
+                    (sum, t) => sum + (masteredMap[t] ?? 0), 0
+                  )
+                  const readingProgress = readingTotal > 0 ? Math.round((readingPassed / readingTotal) * 100) : 0
+
+                  return assignment.category === 'business-lit' && readingTotal > 0 ? (
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-zinc-500 dark:text-zinc-400">読了進捗: {readingPassed}/{readingTotal}</span>
+                        <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300">{readingProgress}%</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-600">
+                        <div className="h-2 rounded-full bg-amber-500 transition-all" style={{ width: `${readingProgress}%` }} />
+                      </div>
+                    </div>
+                  ) : null
+                })()}
+
+                {/* Test progress bar */}
                 <div className="mt-4">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                      クイズ進捗: {passed}/{total}
+                      テスト進捗: {passed}/{total}
                     </span>
                     <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300">{progress}%</span>
                   </div>

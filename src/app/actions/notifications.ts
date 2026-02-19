@@ -67,6 +67,36 @@ export async function markAllAsRead() {
   return { success: true }
 }
 
+export async function deleteNotification(notificationId: string) {
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
+
+  const { error } = await supabase
+    .from('notifications')
+    .delete()
+    .eq('id', notificationId)
+    .eq('user_id', user.id)
+
+  if (error) return { error: error.message }
+  return { success: true }
+}
+
+export async function deleteAllNotifications() {
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
+
+  const { error } = await supabase
+    .from('notifications')
+    .delete()
+    .eq('user_id', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/')
+  return { success: true }
+}
+
 export async function createNotification(
   userId: string,
   type: NotificationType,

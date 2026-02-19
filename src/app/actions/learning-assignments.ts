@@ -5,6 +5,9 @@ import { revalidatePath } from 'next/cache'
 import { requireAuth, requireAdminOrMentor } from '@/lib/auth-helpers'
 import { ASSIGNMENT_CATEGORIES } from '@/lib/assignment-categories'
 import { createNotification } from './notifications'
+import { getUserDisplayName } from '@/lib/notification-helpers'
+import { ERR } from '@/lib/action-types'
+import { getCoursesWithProgress } from '@/lib/course-progress'
 
 export async function createLearningAssignment(formData: FormData) {
   const auth = await requireAdminOrMentor()
@@ -54,7 +57,34 @@ export async function createLearningAssignment(formData: FormData) {
       const subcatConfig = catConfig?.subcategories[subcategory]
       const quizType = subcatConfig?.quizType
 
-      if (quizType) {
+      if (subcatConfig?.courseSubcategory && contentLevel) {
+        // Course-based quiz resolution: find quizzes via courses → lessons → quizzes
+        const { data: courses } = await serviceClient
+          .from('courses')
+          .select('id')
+          .eq('subcategory', subcatConfig.courseSubcategory)
+          .eq('difficulty', contentLevel)
+          .eq('is_published', true)
+
+        if (courses?.length) {
+          const courseIds = courses.map(c => c.id)
+          const { data: lessons } = await serviceClient
+            .from('lessons')
+            .select('id')
+            .in('course_id', courseIds)
+
+          if (lessons?.length) {
+            const lessonIds = lessons.map(l => l.id)
+            const { data: quizzes } = await serviceClient
+              .from('quizzes')
+              .select('id')
+              .in('lesson_id', lessonIds)
+              .order('created_at')
+
+            requiredQuizIds = (quizzes ?? []).map(q => q.id)
+          }
+        }
+      } else if (quizType) {
         let query = serviceClient
           .from('quizzes')
           .select('id')
@@ -62,6 +92,13 @@ export async function createLearningAssignment(formData: FormData) {
 
         if (contentLevel) {
           query = query.eq('content_level', contentLevel)
+        }
+
+        if (subcatConfig?.titlePatterns?.length) {
+          const orFilter = subcatConfig.titlePatterns
+            .map(p => `title.ilike.${p}`)
+            .join(',')
+          query = query.or(orFilter)
         }
 
         const { data: quizzes } = await query.order('created_at')
@@ -146,7 +183,7 @@ export async function checkAssignmentProgress(userId: string, quizId: string) {
     .from('learning_assignments')
     .select('*')
     .eq('assigned_to', userId)
-    .neq('status', 'completed')
+    .in('status', ['pending', 'in_progress'])
     .contains('required_quiz_ids', [quizId])
 
   if (!assignments || assignments.length === 0) return
@@ -162,18 +199,68 @@ export async function checkAssignmentProgress(userId: string, quizId: string) {
 
     const updateData: Record<string, unknown> = {
       passed_quiz_ids: newPassedIds,
-      status: allCompleted ? 'completed' : 'in_progress',
-    }
-
-    if (allCompleted) {
-      updateData.completed_at = new Date().toISOString()
+      status: allCompleted ? 'awaiting_confirmation' : 'in_progress',
     }
 
     await serviceClient
       .from('learning_assignments')
       .update(updateData)
       .eq('id', assignment.id)
+
+    if (allCompleted) {
+      // Notify the assigner that all quizzes are completed
+      const userName = await getUserDisplayName(userId)
+      await createNotification(
+        assignment.assigned_by,
+        'assignment_completed',
+        `${userName}さんが学習課題を完了: ${assignment.title}`,
+        '確認完了ボタンを押してください',
+        '/admin/tasks',
+        assignment.id
+      )
+    }
   }
+}
+
+export async function confirmAssignment(assignmentId: string) {
+  const auth = await requireAdminOrMentor()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
+
+  const { data: assignment } = await supabase
+    .from('learning_assignments')
+    .select('assigned_to, title, status')
+    .eq('id', assignmentId)
+    .single()
+
+  if (!assignment) return { error: '課題が見つかりません' }
+  if (assignment.status !== 'awaiting_confirmation') return { error: 'この課題は確認待ち状態ではありません' }
+
+  const { error } = await supabase
+    .from('learning_assignments')
+    .update({
+      status: 'completed',
+      confirmed_by: user.id,
+      confirmed_at: new Date().toISOString(),
+      completed_at: new Date().toISOString(),
+    })
+    .eq('id', assignmentId)
+
+  if (error) return { error: error.message }
+
+  // Notify the mentee that the assignment has been confirmed
+  await createNotification(
+    assignment.assigned_to,
+    'assignment_confirmed',
+    `学習課題「${assignment.title}」の完了が確認されました`,
+    undefined,
+    '/dashboard/assignments',
+    assignmentId
+  )
+
+  revalidatePath('/admin/tasks')
+  revalidatePath('/dashboard/assignments')
+  return { success: true }
 }
 
 export async function deleteLearningAssignment(assignmentId: string) {
@@ -190,4 +277,182 @@ export async function deleteLearningAssignment(assignmentId: string) {
   revalidatePath('/admin/tasks')
   revalidatePath('/dashboard/assignments')
   return { success: true }
+}
+
+// ─── Overdue detection & actions ───
+
+export async function detectAndMarkOverdue() {
+  const serviceClient = createServiceRoleClient()
+  if (!serviceClient) return
+
+  const now = new Date().toISOString()
+
+  const { data: overdueAssignments } = await serviceClient
+    .from('learning_assignments')
+    .select('id, assigned_by, assigned_to, title')
+    .in('status', ['pending', 'in_progress', 'awaiting_confirmation'])
+    .lt('due_date', now)
+    .not('due_date', 'is', null)
+
+  if (!overdueAssignments?.length) return
+
+  for (const assignment of overdueAssignments) {
+    await serviceClient
+      .from('learning_assignments')
+      .update({ status: 'overdue' })
+      .eq('id', assignment.id)
+
+    const menteeName = await getUserDisplayName(assignment.assigned_to)
+
+    // Notify assigner
+    await createNotification(
+      assignment.assigned_by,
+      'assignment_overdue',
+      `${menteeName}さんの課題「${assignment.title}」が期限超過`,
+      undefined,
+      '/admin/tasks',
+      assignment.id
+    )
+
+    // Notify mentee
+    await createNotification(
+      assignment.assigned_to,
+      'assignment_overdue',
+      `学習課題「${assignment.title}」が期限を超過しました`,
+      '遅延理由を提出してください',
+      '/dashboard/assignments',
+      assignment.id
+    )
+  }
+}
+
+export async function submitOverdueReason(assignmentId: string, reason: string) {
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user } = auth
+
+  if (!reason.trim()) return { error: ERR.REQUIRED_FIELDS }
+
+  const { data: assignment } = await supabase
+    .from('learning_assignments')
+    .select('assigned_to, assigned_by, title, status')
+    .eq('id', assignmentId)
+    .single()
+
+  if (!assignment) return { error: ERR.NOT_FOUND }
+  if (assignment.assigned_to !== user.id) return { error: ERR.FORBIDDEN }
+  if (assignment.status !== 'overdue') return { error: 'この課題は期限超過状態ではありません' }
+
+  const { error } = await supabase
+    .from('learning_assignments')
+    .update({
+      overdue_reason: reason.trim(),
+      overdue_reason_at: new Date().toISOString(),
+    })
+    .eq('id', assignmentId)
+
+  if (error) return { error: error.message }
+
+  const userName = await getUserDisplayName(user.id)
+  await createNotification(
+    assignment.assigned_by,
+    'assignment_overdue',
+    `${userName}さんが遅延理由を提出: ${assignment.title}`,
+    reason.trim(),
+    '/admin/tasks',
+    assignmentId
+  )
+
+  revalidatePath('/dashboard/assignments')
+  return { success: true }
+}
+
+export async function reassignAssignment(assignmentId: string, newDueDate: string) {
+  const auth = await requireAdminOrMentor()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase } = auth
+
+  if (!newDueDate) return { error: ERR.REQUIRED_FIELDS }
+
+  const { data: assignment } = await supabase
+    .from('learning_assignments')
+    .select('assigned_to, title')
+    .eq('id', assignmentId)
+    .single()
+
+  if (!assignment) return { error: ERR.NOT_FOUND }
+
+  const { error } = await supabase
+    .from('learning_assignments')
+    .update({
+      status: 'in_progress',
+      due_date: new Date(newDueDate).toISOString(),
+      overdue_reason: null,
+      overdue_reason_at: null,
+    })
+    .eq('id', assignmentId)
+
+  if (error) return { error: error.message }
+
+  await createNotification(
+    assignment.assigned_to,
+    'assignment_reassigned',
+    `学習課題「${assignment.title}」が再配信されました`,
+    `新しい期限: ${new Date(newDueDate).toLocaleDateString('ja-JP')}`,
+    '/dashboard/assignments',
+    assignmentId
+  )
+
+  revalidatePath('/admin/tasks')
+  revalidatePath('/dashboard/assignments')
+  return { success: true }
+}
+
+export async function cancelAssignment(assignmentId: string) {
+  const auth = await requireAdminOrMentor()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase } = auth
+
+  const { data: assignment } = await supabase
+    .from('learning_assignments')
+    .select('assigned_to, title')
+    .eq('id', assignmentId)
+    .single()
+
+  if (!assignment) return { error: ERR.NOT_FOUND }
+
+  const { error } = await supabase
+    .from('learning_assignments')
+    .delete()
+    .eq('id', assignmentId)
+
+  if (error) return { error: error.message }
+
+  await createNotification(
+    assignment.assigned_to,
+    'assignment_cancelled',
+    `学習課題「${assignment.title}」がキャンセルされました`,
+    undefined,
+    '/dashboard/assignments'
+  )
+
+  revalidatePath('/admin/tasks')
+  revalidatePath('/dashboard/assignments')
+  return { success: true }
+}
+
+// ─── Dev level unlock check ───
+
+export async function getAssigneeUnlockedLevels(assigneeId: string, courseSubcategory: string) {
+  const serviceClient = createServiceRoleClient()
+  if (!serviceClient) return { levels: [] }
+
+  const courses = await getCoursesWithProgress(serviceClient, assigneeId, courseSubcategory, false)
+
+  return {
+    levels: courses.map(c => ({
+      difficulty: c.difficulty,
+      isLocked: c.isLocked,
+    })),
+  }
 }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { submitAssessment } from '@/app/actions/assessment'
 import { submitQuestionClaim } from '@/app/actions/claims'
 import QuizQuestion from '@/components/quiz/QuizQuestion'
+import Card from '@/components/ui/Card'
 
 interface Question {
   id: string
@@ -56,6 +57,7 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [remainingSeconds, setRemainingSeconds] = useState(timeLimit * 60)
+  const [started, setStarted] = useState(false)
   const hasSubmittedRef = useRef(false)
   const answersRef = useRef(answers)
 
@@ -142,7 +144,7 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
   }, [answers, stableQuestions, step, totalQuestions, router])
 
   useEffect(() => {
-    if (reviewMode) return // Don't count down in review mode
+    if (reviewMode || !started) return // Don't count down in review mode or before start
     const timer = setInterval(() => {
       setRemainingSeconds(prev => {
         if (prev <= 1) {
@@ -154,10 +156,10 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
       })
     }, 1000)
     return () => clearInterval(timer)
-  }, [handleSubmit, reviewMode])
+  }, [handleSubmit, reviewMode, started])
 
   useEffect(() => {
-    if (reviewMode) return
+    if (reviewMode || !started) return
     const handleClick = (e: MouseEvent) => {
       if (hasSubmittedRef.current) return
       const anchor = (e.target as HTMLElement).closest('a')
@@ -181,10 +183,10 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
 
     document.addEventListener('click', handleClick, true)
     return () => document.removeEventListener('click', handleClick, true)
-  }, [doSubmit, reviewMode])
+  }, [doSubmit, reviewMode, started])
 
   useEffect(() => {
-    if (reviewMode) return
+    if (reviewMode || !started) return
     const handlePopState = () => {
       if (hasSubmittedRef.current) return
       const leave = window.confirm(
@@ -202,10 +204,10 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
     window.history.pushState(null, '', window.location.href)
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
-  }, [doSubmit, router, reviewMode])
+  }, [doSubmit, router, reviewMode, started])
 
   useEffect(() => {
-    if (reviewMode) return
+    if (reviewMode || !started) return
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (hasSubmittedRef.current) return
       e.preventDefault()
@@ -213,7 +215,7 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
 
     window.addEventListener('beforeunload', handleBeforeUnload)
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-  }, [reviewMode])
+  }, [reviewMode, started])
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60)
@@ -265,6 +267,39 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
     })
   }
 
+  function handleStartExam() {
+    if (!window.confirm('시험에 응시하시겠습니까？')) return
+    setStarted(true)
+  }
+
+  // ==================== PRE-START SCREEN ====================
+  if (!started && !reviewMode) {
+    return (
+      <div className="mx-auto max-w-2xl">
+        <Card>
+          <div className="py-8 text-center">
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+              総合試験 {displayStep}/{totalSteps}
+            </h1>
+            <p className="mt-2 text-zinc-600 dark:text-zinc-400">{label}</p>
+            <div className="mt-6 space-y-2 text-sm text-zinc-500 dark:text-zinc-400">
+              <p>問題数: {totalQuestions}問</p>
+              <p>制限時間: {timeLimit}分</p>
+            </div>
+            <div className="mt-6">
+              <button
+                onClick={handleStartExam}
+                className="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors"
+              >
+                試験を開始する
+              </button>
+            </div>
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
   // ==================== REVIEW MODE ====================
   if (reviewMode && reviewResults && reviewScore) {
     const resultMap = new Map(reviewResults.map(r => [r.questionId, r]))
@@ -274,7 +309,7 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
         {/* Review Header */}
         <div className="mb-6">
           <p className="text-sm font-medium text-indigo-400">
-            等級テスト {displayStep}/{totalSteps} — 結果レビュー
+            総合試験 {displayStep}/{totalSteps} — 結果レビュー
           </p>
           <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">{label}</h1>
           <div className="mt-3 flex items-center gap-4">
@@ -453,7 +488,7 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
       <div className="mb-6 flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-indigo-400">
-            等級テスト {displayStep}/{totalSteps}
+            総合試験 {displayStep}/{totalSteps}
           </p>
           <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">{label}</h1>
         </div>
