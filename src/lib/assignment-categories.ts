@@ -115,6 +115,41 @@ export function getContentLevelLabel(category: string, contentLevel: string | nu
   return contentLevel
 }
 
+export function getQuizUrl(
+  quizType: string,
+  quizId: string,
+  lessonId?: string | null,
+  courseId?: string | null,
+  title?: string,
+): string {
+  switch (quizType) {
+    case 'jlpt_vocab':
+    case 'jlpt_grammar':
+    case 'jlpt_reading':
+    case 'jlpt_listening':
+      return `/japanese/jlpt/quiz/${quizId}`
+    case 'it_terminology':
+    case 'sentence_pattern':
+    case 'business_expression':
+      return `/japanese/business/quiz/${quizId}`
+    case 'cs_knowledge':
+      return `/cs/quiz/${quizId}`
+    case 'core_programming':
+    case 'framework':
+      if (courseId && lessonId) {
+        return `/courses/${courseId}/lessons/${lessonId}/quiz/${quizId}`
+      }
+      return '/dev'
+    case 'attitude_culture':
+      if (title && title.includes('セキュリティ')) {
+        return `/business-literacy/security/quiz/${quizId}`
+      }
+      return `/business-literacy/attitude-culture/quiz/${quizId}`
+    default:
+      return '/dashboard/assignments'
+  }
+}
+
 export function getReadingTotalCount(category: string, subcategory: string): number {
   if (category !== 'business-lit') return 0
   switch (subcategory) {
