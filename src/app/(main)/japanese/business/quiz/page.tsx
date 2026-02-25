@@ -105,7 +105,7 @@ export default async function BusinessQuizListPage({ searchParams }: { searchPar
         <div className="space-y-8">
           {itTermQuizzes.length > 0 && (
             <div>
-              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">IT語彙テスト</h2>
+              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">ビジネス語彙テスト</h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {itTermQuizzes.map(renderQuizCard)}
               </div>

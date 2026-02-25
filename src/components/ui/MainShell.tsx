@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Sidebar from './Sidebar'
 import Header from './Header'
 import MobileNav from './MobileNav'
+import VocabContextMenu from '@/components/personal-vocab/VocabContextMenu'
 import type { UserRole } from '@/lib/supabase/types'
 
 export default function MainShell({
@@ -40,6 +41,7 @@ export default function MainShell({
           {children}
         </main>
       </div>
+      <VocabContextMenu />
     </div>
   )
 }

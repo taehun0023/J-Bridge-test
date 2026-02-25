@@ -6,6 +6,8 @@ import { getCoursesWithProgress } from '@/lib/course-progress'
 import { computeRankingEntry, filterUnscoredUsers, sortByCategory } from '@/lib/ranking'
 import type { RankingUserData } from '@/lib/ranking'
 import DashboardClient from './DashboardClient'
+import MentorDashboardClient from '@/components/dashboard/MentorDashboardClient'
+import { getMentorDashboardData } from '@/app/actions/mentor'
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
 
@@ -270,6 +272,15 @@ export default async function DashboardPage() {
   const isAdmin = profile?.role === 'admin'
   const javaBadges = await getCoursesWithProgress(supabase, user.id, 'java', isAdmin ?? false)
 
+  // Mentor dashboard: show mentor-specific view above the regular dashboard
+  let mentorData: { mentees: Awaited<ReturnType<typeof getMentorDashboardData>>['mentees']; pendingVocabCount: number } | null = null
+  if (profile?.role === 'mentor') {
+    const result = await getMentorDashboardData()
+    if (!('error' in result) || result.mentees) {
+      mentorData = { mentees: result.mentees, pendingVocabCount: result.pendingVocabCount }
+    }
+  }
+
   // Compute radar scores
   const radarScores: Record<AxisKey, number> = {
     jlpt: japaneseSkills?.jlpt_normalized ?? 0,
@@ -326,6 +337,40 @@ export default async function DashboardPage() {
         retakeStatus: latest.retake_request_status,
       }
     })
+
+  if (mentorData) {
+    return (
+      <div className="space-y-8">
+        <MentorDashboardClient
+          mentees={mentorData.mentees}
+          pendingVocabCount={mentorData.pendingVocabCount}
+          mentorSpecialty={profile?.mentor_specialty ?? null}
+        />
+        <div>
+          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">自分のダッシュボード</h2>
+          <DashboardClient
+            profile={profile}
+            radarScores={radarScores}
+            recentResults={recentResults}
+            tasks={tasks ?? []}
+            pendingAssessments={pendingAssessments}
+            isJapanese={isJapanese}
+            completedAssessments={completedAssessmentInfo}
+            userRanking={userRanking}
+            topRanking={topRanking}
+            enrolledCourses={enrolledCourses}
+            learningStats={learningStats}
+            recentFeedbacks={(recentFeedbacks ?? []).map(f => ({
+              ...f,
+              admin: Array.isArray(f.admin) ? f.admin[0] ?? null : f.admin,
+            })) as { id: string; category: string; content: string; created_at: string; admin: { full_name: string | null } | null }[]}
+            compExamRetakes={compExamRetakes}
+            javaBadges={javaBadges}
+          />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <DashboardClient

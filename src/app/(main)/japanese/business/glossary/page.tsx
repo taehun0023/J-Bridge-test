@@ -13,15 +13,12 @@ const ITEMS_PER_PAGE = 30
 
 const CATEGORIES = [
   { key: '', label: '全て' },
-  { key: 'development', label: '開発' },
-  { key: 'testing', label: 'テスト' },
-  { key: 'design_doc', label: '設計書' },
-  { key: 'infrastructure', label: 'インフラ' },
-  { key: 'project_management', label: 'プロジェクト管理' },
   { key: 'business', label: 'ビジネス' },
+  { key: 'it', label: 'IT語彙' },
+  { key: 'dev', label: '開発' },
 ]
 
-const ALL_GLOSSARY_CATEGORIES = ['development', 'testing', 'design_doc', 'infrastructure', 'project_management', 'business']
+const ALL_GLOSSARY_CATEGORIES = ['business', 'it', 'dev']
 
 export default async function GlossaryPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams
@@ -64,8 +61,8 @@ export default async function GlossaryPage({ searchParams }: { searchParams: Pro
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">IT語彙</h1>
-        <p className="mt-1 text-gray-500 dark:text-gray-400">IT現場の専門用語を学習しましょう</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ビジネス語彙</h1>
+        <p className="mt-1 text-gray-500 dark:text-gray-400">ビジネス・IT現場の専門用語を学習しましょう</p>
       </div>
 
       <BusinessGlossaryClient

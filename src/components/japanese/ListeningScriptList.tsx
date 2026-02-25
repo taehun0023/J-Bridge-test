@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import Badge from '@/components/ui/Badge'
 import type { JlptLevel, JlptListeningScript, ListeningScriptType } from '@/lib/supabase/types'
 
 interface Props {
   items: JlptListeningScript[]
   level: JlptLevel
+  masteredIds?: string[]
+  onToggleMastery?: (id: string) => void
 }
 
 const typeLabels: Record<ListeningScriptType, string> = {
@@ -20,7 +22,7 @@ const typeLabels: Record<ListeningScriptType, string> = {
 
 type PlayState = 'idle' | 'loading' | 'playing' | 'paused'
 
-export default function ListeningScriptList({ items, level }: Props) {
+export default function ListeningScriptList({ items, level, masteredIds = [], onToggleMastery }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [showTranslation, setShowTranslation] = useState<Record<string, boolean>>({})
   const [playingId, setPlayingId] = useState<string | null>(null)
@@ -29,6 +31,24 @@ export default function ListeningScriptList({ items, level }: Props) {
   const [errorId, setErrorId] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const audioBlobUrlRef = useRef<string | null>(null)
+  const [localMastered, setLocalMastered] = useState<Set<string>>(new Set(masteredIds))
+
+  useEffect(() => {
+    setLocalMastered(new Set(masteredIds))
+  }, [masteredIds])
+
+  function handleToggle(e: React.MouseEvent, itemId: string) {
+    e.stopPropagation()
+    e.preventDefault()
+    const next = new Set(localMastered)
+    if (next.has(itemId)) {
+      next.delete(itemId)
+    } else {
+      next.add(itemId)
+    }
+    setLocalMastered(next)
+    onToggleMastery?.(itemId)
+  }
 
   function toggleTranslation(id: string) {
     setShowTranslation(prev => ({ ...prev, [id]: !prev[id] }))
@@ -117,10 +137,30 @@ export default function ListeningScriptList({ items, level }: Props) {
     <div className="divide-y divide-gray-100 dark:divide-gray-700">
       {items.map((item) => (
         <div key={item.id} className="py-3">
-          <button
+          <div
+            role="button"
+            tabIndex={0}
             onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
-            className="flex w-full items-center gap-4 text-left"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setExpandedId(expandedId === item.id ? null : item.id) }}
+            className="flex w-full cursor-pointer items-center gap-4 text-left"
           >
+            {onToggleMastery && (
+              <button
+                onClick={(e) => handleToggle(e, item.id)}
+                title={localMastered.has(item.id) ? '学習完了' : '未完了'}
+                className="shrink-0"
+              >
+                {localMastered.has(item.id) ? (
+                  <svg className="h-5 w-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                ) : (
+                  <svg className="h-5 w-5 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 20 20" stroke="currentColor">
+                    <circle cx="10" cy="10" r="7" strokeWidth="2" />
+                  </svg>
+                )}
+              </button>
+            )}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-lg font-semibold text-gray-900 dark:text-white">{item.title}</span>
@@ -139,7 +179,7 @@ export default function ListeningScriptList({ items, level }: Props) {
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
-          </button>
+          </div>
 
           {expandedId === item.id && (
             <div className="mt-3 space-y-3 rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
@@ -249,10 +289,10 @@ export default function ListeningScriptList({ items, level }: Props) {
                 </div>
               )}
 
-              {/* Script text */}
+              {/* Script text — fix \n literal bug */}
               <div>
                 <p className="text-xs font-medium uppercase text-gray-500 dark:text-gray-400">スクリプト</p>
-                <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-gray-900 dark:text-white">{item.script}</p>
+                <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-gray-900 dark:text-white">{item.script.replace(/\\n/g, '\n')}</p>
               </div>
 
               {/* Vocabulary notes */}
@@ -275,7 +315,7 @@ export default function ListeningScriptList({ items, level }: Props) {
                 </div>
               )}
 
-              {/* Korean translation toggle */}
+              {/* Korean translation toggle — fix \n literal bug */}
               {item.translation_ko && (
                 <div>
                   <button
@@ -285,7 +325,7 @@ export default function ListeningScriptList({ items, level }: Props) {
                     {showTranslation[item.id] ? '翻訳を隠す' : '韓国語翻訳を見る'}
                   </button>
                   {showTranslation[item.id] && (
-                    <p className="mt-1 whitespace-pre-line text-sm text-gray-600 dark:text-gray-300">{item.translation_ko}</p>
+                    <p className="mt-1 whitespace-pre-line text-sm text-gray-600 dark:text-gray-300">{item.translation_ko.replace(/\\n/g, '\n')}</p>
                   )}
                 </div>
               )}

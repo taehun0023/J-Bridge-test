@@ -180,16 +180,6 @@ export default function JlptVocabularyClient({
         </div>
       </div>
 
-      {/* Quiz link */}
-      <div className="mt-3">
-        <a
-          href={`/japanese/jlpt/quiz?level=${level}&type=jlpt_vocab`}
-          className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-        >
-          {level} 語彙テストに挑戦 &rarr;
-        </a>
-      </div>
-
       {/* Vocabulary list */}
       <div className="mt-4 rounded-xl border border-gray-200 bg-white px-4 dark:border-gray-700 dark:bg-gray-800">
         {items.length === 0 ? (

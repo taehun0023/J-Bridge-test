@@ -184,6 +184,90 @@ export default async function AssignmentsPage() {
     }
   }
 
+  // Fetch JLPT mastery progress for seikatsu assignments
+  const seikatsuAssignments = (assignments ?? []).filter(a => a.category === 'seikatsu')
+  const jlptLevels = [...new Set(seikatsuAssignments.map(a => a.content_level).filter(Boolean))] as string[]
+
+  const jlptProgressMap: Record<string, { mastered: number; total: number; pct: number }> = {}
+
+  if (jlptLevels.length > 0) {
+    const JLPT_ITEM_TYPES = ['jlpt_vocabulary', 'jlpt_grammar', 'jlpt_kanji', 'jlpt_reading', 'jlpt_listening']
+
+    const { data: jlptMastered } = await supabase
+      .from('user_mastered_items')
+      .select('item_type, item_id')
+      .eq('user_id', user.id)
+      .in('item_type', JLPT_ITEM_TYPES)
+
+    for (const level of jlptLevels) {
+      const [vocabIds, grammarIds, kanjiIds, readingIds, listeningIds] = await Promise.all([
+        supabase.from('jlpt_vocabulary').select('id').eq('jlpt_level', level),
+        supabase.from('jlpt_grammar').select('id').eq('jlpt_level', level),
+        supabase.from('jlpt_kanji').select('id').eq('jlpt_level', level),
+        supabase.from('jlpt_reading_passages').select('id').eq('jlpt_level', level),
+        supabase.from('jlpt_listening_scripts').select('id').eq('jlpt_level', level),
+      ])
+
+      const vocabIdSet = new Set(vocabIds.data?.map(v => v.id) ?? [])
+      const grammarIdSet = new Set(grammarIds.data?.map(g => g.id) ?? [])
+      const kanjiIdSet = new Set(kanjiIds.data?.map(k => k.id) ?? [])
+      const readingIdSet = new Set(readingIds.data?.map(r => r.id) ?? [])
+      const listeningIdSet = new Set(listeningIds.data?.map(l => l.id) ?? [])
+
+      const total = vocabIdSet.size + grammarIdSet.size + kanjiIdSet.size + readingIdSet.size + listeningIdSet.size
+
+      const mastered = (jlptMastered ?? []).filter(m =>
+        (m.item_type === 'jlpt_vocabulary' && vocabIdSet.has(m.item_id)) ||
+        (m.item_type === 'jlpt_grammar' && grammarIdSet.has(m.item_id)) ||
+        (m.item_type === 'jlpt_kanji' && kanjiIdSet.has(m.item_id)) ||
+        (m.item_type === 'jlpt_reading' && readingIdSet.has(m.item_id)) ||
+        (m.item_type === 'jlpt_listening' && listeningIdSet.has(m.item_id))
+      ).length
+
+      jlptProgressMap[level] = {
+        mastered,
+        total,
+        pct: total > 0 ? Math.round((mastered / total) * 100) : 0,
+      }
+    }
+  }
+
+  // Fetch business-jp mastery progress
+  const bizJpAssignments = (assignments ?? []).filter(a => a.category === 'business-jp')
+  const bizJpProgressMap: Record<string, { mastered: number; total: number; pct: number }> = {}
+
+  if (bizJpAssignments.length > 0) {
+    const { data: bizMastered } = await supabase
+      .from('user_mastered_items')
+      .select('item_id')
+      .eq('user_id', user.id)
+      .eq('item_type', 'it_glossary')
+
+    const masteredIdSet = new Set((bizMastered ?? []).map(m => m.item_id))
+
+    const subcatDbMap: Record<string, string[]> = {
+      glossary: ['business', 'it', 'dev'],
+      'sentence-patterns': ['sentence_pattern'],
+      expressions: ['expression'],
+    }
+
+    const neededSubcats = [...new Set(bizJpAssignments.map(a => a.subcategory))]
+    for (const subcat of neededSubcats) {
+      const dbCategories = subcatDbMap[subcat]
+      if (!dbCategories) continue
+      const { data: items } = await supabase
+        .from('it_glossary')
+        .select('id')
+        .in('category', dbCategories)
+      const total = items?.length ?? 0
+      const mastered = items?.filter(i => masteredIdSet.has(i.id)).length ?? 0
+      bizJpProgressMap[subcat] = {
+        mastered, total,
+        pct: total > 0 ? Math.round((mastered / total) * 100) : 0,
+      }
+    }
+  }
+
   const stats = {
     total: assignments?.length ?? 0,
     pending: assignments?.filter(a => a.status === 'pending').length ?? 0,
@@ -268,7 +352,14 @@ export default async function AssignmentsPage() {
             )
             const readingProgress = readingTotal > 0 ? Math.round((readingPassed / readingTotal) * 100) : 0
             const isOverdue = assignment.status === 'overdue'
-            const isQuizLocked = isOverdue || (assignment.category === 'business-lit' && readingTotal > 0 && readingProgress < 100)
+            const jlptProgress = assignment.category === 'seikatsu' && assignment.content_level
+              ? jlptProgressMap[assignment.content_level] : null
+            const bizJpProgress = assignment.category === 'business-jp'
+              ? bizJpProgressMap[assignment.subcategory] : null
+            const isQuizLocked = isOverdue
+              || (assignment.category === 'business-lit' && readingTotal > 0 && readingProgress < 100)
+              || (assignment.category === 'seikatsu' && (jlptProgress?.pct ?? 0) < 80)
+              || (assignment.category === 'business-jp' && (bizJpProgress?.pct ?? 0) < 80)
 
             return (
               <Card key={assignment.id}>
@@ -332,6 +423,32 @@ export default async function AssignmentsPage() {
                   </div>
                 )}
 
+                {/* JLPT learning progress (seikatsu only) */}
+                {assignment.category === 'seikatsu' && jlptProgress && jlptProgress.total > 0 && (
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400">学習進捗: {jlptProgress.mastered}/{jlptProgress.total}</span>
+                      <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300">{jlptProgress.pct}%</span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-600">
+                      <div className="h-2 rounded-full bg-amber-500 transition-all" style={{ width: `${jlptProgress.pct}%` }} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Business JP learning progress */}
+                {assignment.category === 'business-jp' && bizJpProgress && bizJpProgress.total > 0 && (
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400">学習進捗: {bizJpProgress.mastered}/{bizJpProgress.total}</span>
+                      <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300">{bizJpProgress.pct}%</span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-600">
+                      <div className="h-2 rounded-full bg-amber-500 transition-all" style={{ width: `${bizJpProgress.pct}%` }} />
+                    </div>
+                  </div>
+                )}
+
                 {/* Test progress bar */}
                 <div className="mt-4">
                   <div className="flex items-center justify-between mb-1">
@@ -391,7 +508,9 @@ export default async function AssignmentsPage() {
                       <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
                         {isOverdue
                           ? '期限超過のため、テストは受けられません'
-                          : '全項目を読了するとテストを受けられます'}
+                          : assignment.category === 'seikatsu' || assignment.category === 'business-jp'
+                            ? '進行率80%以上でテストが解放されます'
+                            : '全項目を読了するとテストを受けられます'}
                       </p>
                     )}
                   </div>

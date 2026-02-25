@@ -2,13 +2,14 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { updateUserRole, createUserAccount } from '@/app/actions/admin/users'
+import { updateUserRole, createUserAccount, updateMentorSpecialty } from '@/app/actions/admin/users'
 
 interface User {
   id: string
   email: string
   full_name: string | null
   role: string
+  mentor_specialty: string | null
   is_onboarded: boolean
   is_japanese: boolean
   japanese_score: number
@@ -40,6 +41,20 @@ export default function AdminUsersClient({ users }: Props) {
         setTimeout(() => setMessage(null), 3000)
       } else {
         setMessage({ type: 'success', text: '役割が変更されました' })
+        setTimeout(() => setMessage(null), 3000)
+        router.refresh()
+      }
+    })
+  }
+
+  function handleSpecialtyChange(userId: string, specialty: string) {
+    startTransition(async () => {
+      const result = await updateMentorSpecialty(userId, specialty || null)
+      if (result.error) {
+        setMessage({ type: 'error', text: result.error })
+        setTimeout(() => setMessage(null), 3000)
+      } else {
+        setMessage({ type: 'success', text: '専門分野が変更されました' })
         setTimeout(() => setMessage(null), 3000)
         router.refresh()
       }
@@ -133,6 +148,7 @@ export default function AdminUsersClient({ users }: Props) {
                 <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">名前</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">メール</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">役割</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">専門分野</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">日本語力</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">プログラミング技術力</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">登録日</th>
@@ -162,6 +178,22 @@ export default function AdminUsersClient({ users }: Props) {
                       <option value="mentor">メンター</option>
                       <option value="admin">管理者</option>
                     </select>
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3">
+                    {user.role === 'mentor' ? (
+                      <select
+                        value={user.mentor_specialty ?? ''}
+                        onChange={e => handleSpecialtyChange(user.id, e.target.value)}
+                        disabled={pending}
+                        className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
+                      >
+                        <option value="">未設定</option>
+                        <option value="japanese">日本語</option>
+                        <option value="technical">技術</option>
+                      </select>
+                    ) : (
+                      <span className="text-xs text-zinc-400">—</span>
+                    )}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3">
                     <span className="text-sm font-mono text-zinc-900 dark:text-zinc-100">

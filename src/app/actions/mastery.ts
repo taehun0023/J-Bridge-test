@@ -2,7 +2,7 @@
 
 import { requireAuth } from '@/lib/auth-helpers'
 
-type ItemType = 'it_glossary' | 'jlpt_vocabulary' | 'jlpt_grammar' | 'cs_term' | 'security_manual' | 'attitude_manual' | 'culture_manual'
+type ItemType = 'it_glossary' | 'jlpt_vocabulary' | 'jlpt_grammar' | 'cs_term' | 'security_manual' | 'attitude_manual' | 'culture_manual' | 'jlpt_kanji' | 'shared_vocab' | 'jlpt_reading' | 'jlpt_listening'
 
 export async function toggleMastery(itemType: ItemType, itemId: string) {
   const auth = await requireAuth()

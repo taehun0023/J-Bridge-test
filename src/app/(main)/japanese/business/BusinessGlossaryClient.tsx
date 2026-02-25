@@ -91,7 +91,7 @@ export default function BusinessGlossaryClient({
       })
     } else {
       // glossary page
-      const glossaryCategories = ['development', 'testing', 'design_doc', 'infrastructure', 'project_management', 'business']
+      const glossaryCategories = ['business', 'it', 'dev']
       return generateGlossaryQuiz({
         category: activeCategory || undefined,
         categories: activeCategory ? undefined : glossaryCategories,
@@ -168,7 +168,7 @@ export default function BusinessGlossaryClient({
         >
           {basePath.includes('expressions') ? 'ビジネス表現'
            : basePath.includes('sentence-patterns') ? '文章パターン'
-           : 'IT語彙'}テストに挑戦 &rarr;
+           : 'ビジネス語彙'}テストに挑戦 &rarr;
         </a>
       </div>
 

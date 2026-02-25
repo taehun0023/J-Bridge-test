@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import type { JlptLevel } from '@/lib/supabase/types'
+import { getMasteredIds } from '@/app/actions/mastery'
 import JlptReadingClient from '../JlptReadingClient'
 
 interface SearchParams {
@@ -36,7 +37,10 @@ export default async function JlptReadingPage({ searchParams }: { searchParams: 
 
   query = query.range(offset, offset + ITEMS_PER_PAGE - 1)
 
-  const { data: items, count } = await query
+  const [{ data: items, count }, masteredIds] = await Promise.all([
+    query,
+    getMasteredIds('jlpt_reading'),
+  ])
   const totalPages = Math.ceil((count ?? 0) / ITEMS_PER_PAGE)
 
   // Get distinct passage_type values for filter
@@ -63,6 +67,7 @@ export default async function JlptReadingPage({ searchParams }: { searchParams: 
         passageType={passageType}
         typeOptions={typeOptions as string[]}
         totalCount={count ?? 0}
+        masteredIds={masteredIds}
       />
     </div>
   )

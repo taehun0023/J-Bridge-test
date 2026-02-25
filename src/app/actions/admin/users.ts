@@ -7,9 +7,33 @@ export async function updateUserRole(userId: string, role: string) {
   const auth = await requireAdmin()
   if ('error' in auth) return { error: auth.error } as const
 
+  // Clear mentor_specialty when role is not mentor
+  const updateData: Record<string, unknown> = { role, updated_at: new Date().toISOString() }
+  if (role !== 'mentor') {
+    updateData.mentor_specialty = null
+  }
+
   const { error } = await auth.serviceClient
     .from('profiles')
-    .update({ role, updated_at: new Date().toISOString() })
+    .update(updateData)
+    .eq('id', userId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/users')
+  return { success: true }
+}
+
+export async function updateMentorSpecialty(userId: string, specialty: string | null) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error } as const
+
+  if (specialty !== null && specialty !== 'japanese' && specialty !== 'technical') {
+    return { error: '無効な専門分野です' }
+  }
+
+  const { error } = await auth.serviceClient
+    .from('profiles')
+    .update({ mentor_specialty: specialty, updated_at: new Date().toISOString() })
     .eq('id', userId)
 
   if (error) return { error: error.message }

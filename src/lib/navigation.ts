@@ -13,6 +13,8 @@ import {
   BarChart3,
   UserCog,
   Volume2,
+  BookOpen,
+  ScrollText,
   type LucideIcon,
 } from 'lucide-react'
 import type { UserRole } from '@/lib/supabase/types'
@@ -44,21 +46,23 @@ export const categoryChildren: Record<string, {
 }> = {
   seikatsu: {
     title: '生活日本語',
-    description: 'JLPT対策の語彙・文法・読解・聴解を学習しましょう',
+    description: 'JLPT対策の語彙・文法・読解・聴解・漢字を学習しましょう',
     children: [
       { href: '/japanese/jlpt/vocabulary', label: '語彙', description: 'JLPT級別の単語学習とフラッシュカード' },
       { href: '/japanese/jlpt/grammar', label: '文法', description: 'JLPT級別の文法パターン' },
       { href: '/japanese/jlpt/reading', label: '読解', description: '読解問題で読む力を鍛える' },
       { href: '/japanese/jlpt/listening', label: '聴解', description: 'リスニング問題で聞く力を鍛える' },
+      { href: '/japanese/jlpt/kanji', label: '漢字', description: 'JLPT級別の漢字学習' },
     ],
   },
   'business-jp': {
     title: 'ビジネス日本語',
-    description: 'IT語彙、文章パターン、ビジネス表現を学習しましょう',
+    description: 'ビジネス語彙、文章パターン、ビジネス表現を学習しましょう',
     children: [
-      { href: '/japanese/business/glossary', label: 'IT語彙', description: 'IT現場の専門用語' },
+      { href: '/japanese/business/glossary', label: 'ビジネス語彙', description: 'ビジネス・IT現場の専門用語' },
       { href: '/japanese/business/sentence-patterns', label: '文章パターン', description: '日本語の文章パターン' },
       { href: '/japanese/business/expressions', label: 'ビジネス表現', description: 'ビジネスで使える表現' },
+      { href: '/japanese/business/shared-vocab', label: 'みんなの単語帳', description: 'みんなで作る共有単語帳' },
     ],
   },
   cs: {
@@ -104,6 +108,7 @@ export const mainNavItems: NavItem[] = [
   { key: 'cs', href: '/cs', label: 'CS知識', icon: Cpu },
   { key: 'dev', href: '/dev', label: '開発実務能力', icon: Code2 },
   { key: 'business-lit', href: '/business-literacy', label: 'ビジネスリテラシー', icon: Handshake },
+  { key: 'personal-vocab', href: '/personal-vocab', label: '個人単語帳', icon: BookOpen },
   { key: 'feedback', href: '/feedback', label: 'フィードバック', icon: MessageSquare },
   { key: 'profile', href: '/profile', label: 'プロフィール', icon: User },
 ]
@@ -115,6 +120,7 @@ export const adminNavItems: AdminNavItem[] = [
   { href: '/admin/tasks', label: '課題配信', icon: ClipboardList, allowedRoles: ['admin', 'mentor'] },
   { href: '/admin/reports', label: 'レポート', icon: BarChart3, allowedRoles: ['admin', 'mentor'] },
   { href: '/admin/tts-cache', label: 'TTSキャッシュ', icon: Volume2, allowedRoles: ['admin'] },
+  { href: '/admin/audit-log', label: '監査ログ', icon: ScrollText, allowedRoles: ['admin'] },
 ]
 
 export function getAdminNavForRole(role: UserRole): AdminNavItem[] {

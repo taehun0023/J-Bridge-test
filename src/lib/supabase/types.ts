@@ -98,7 +98,7 @@ export interface JlptListeningScript {
 
 export type AccessRequestStatus = 'pending' | 'approved' | 'denied'
 
-export type NotificationType = 'task_assigned' | 'exam_requested' | 'exam_approved' | 'exam_denied' | 'exam_completed' | 'retake_requested' | 'feedback_received' | 'feedback_reply' | 'assignment_completed' | 'assignment_confirmed' | 'assignment_overdue' | 'assignment_reassigned' | 'assignment_cancelled'
+export type NotificationType = 'task_assigned' | 'exam_requested' | 'exam_approved' | 'exam_denied' | 'exam_completed' | 'retake_requested' | 'feedback_received' | 'feedback_reply' | 'assignment_completed' | 'assignment_confirmed' | 'assignment_overdue' | 'assignment_reassigned' | 'assignment_cancelled' | 'vocab_submitted' | 'vocab_approved' | 'vocab_rejected'
 export type LearningAssignmentStatus = 'pending' | 'in_progress' | 'awaiting_confirmation' | 'completed' | 'overdue'
 export type ComprehensiveExamStatus = 'requested' | 'approved' | 'denied' | 'in_progress' | 'completed' | 'failed'
 
@@ -162,12 +162,15 @@ export interface MentorMenteeAssignment {
   created_at: string
 }
 
+export type MentorSpecialty = 'japanese' | 'technical'
+
 export interface Profile {
   id: string
   email: string
   full_name: string | null
   avatar_url: string | null
   role: UserRole
+  mentor_specialty: MentorSpecialty | null
   jlpt_level: JlptLevel | null
   years_of_experience: number
   target_dispatch_date: string | null

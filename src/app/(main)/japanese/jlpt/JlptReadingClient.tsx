@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import TabBar from '@/components/ui/TabBar'
 import Pagination from '@/components/ui/Pagination'
 import EmptyState from '@/components/ui/EmptyState'
 import ReadingPassageList from '@/components/japanese/ReadingPassageList'
+import { toggleMastery } from '@/app/actions/mastery'
 import type { JlptLevel, JlptReadingPassage, ReadingPassageType } from '@/lib/supabase/types'
 
 interface Props {
@@ -17,6 +18,7 @@ interface Props {
   passageType: string
   typeOptions: string[]
   totalCount: number
+  masteredIds: string[]
 }
 
 const levelTabs = [
@@ -39,7 +41,7 @@ const typeLabels: Record<ReadingPassageType, string> = {
 }
 
 export default function JlptReadingClient({
-  items, level, totalPages, currentPage, search, passageType, typeOptions, totalCount
+  items, level, totalPages, currentPage, search, passageType, typeOptions, totalCount, masteredIds
 }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -59,6 +61,10 @@ export default function JlptReadingClient({
     e.preventDefault()
     updateParams({ search: searchInput })
   }
+
+  const handleToggleMastery = useCallback(async (itemId: string) => {
+    await toggleMastery('jlpt_reading', itemId)
+  }, [])
 
   return (
     <div>
@@ -103,22 +109,12 @@ export default function JlptReadingClient({
         </div>
       </div>
 
-      {/* Quiz link */}
-      <div className="mt-3">
-        <a
-          href={`/japanese/jlpt/quiz?level=${level}&type=jlpt_reading`}
-          className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-        >
-          {level} 読解テストに挑戦 &rarr;
-        </a>
-      </div>
-
       {/* Reading list */}
       <div className="mt-4 rounded-xl border border-gray-200 bg-white px-4 dark:border-gray-700 dark:bg-gray-800">
         {items.length === 0 ? (
           <EmptyState title="読解項目がありません" description="検索条件を変更してください" icon="📖" />
         ) : (
-          <ReadingPassageList items={items} level={level} />
+          <ReadingPassageList items={items} level={level} masteredIds={masteredIds} onToggleMastery={handleToggleMastery} />
         )}
       </div>
 

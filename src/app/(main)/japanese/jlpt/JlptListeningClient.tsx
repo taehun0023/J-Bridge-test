@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import TabBar from '@/components/ui/TabBar'
 import Pagination from '@/components/ui/Pagination'
 import EmptyState from '@/components/ui/EmptyState'
 import ListeningScriptList from '@/components/japanese/ListeningScriptList'
+import { toggleMastery } from '@/app/actions/mastery'
 import type { JlptLevel, JlptListeningScript, ListeningScriptType } from '@/lib/supabase/types'
 
 interface Props {
@@ -17,6 +18,7 @@ interface Props {
   scriptType: string
   typeOptions: string[]
   totalCount: number
+  masteredIds: string[]
 }
 
 const levelTabs = [
@@ -37,7 +39,7 @@ const typeLabels: Record<ListeningScriptType, string> = {
 }
 
 export default function JlptListeningClient({
-  items, level, totalPages, currentPage, search, scriptType, typeOptions, totalCount
+  items, level, totalPages, currentPage, search, scriptType, typeOptions, totalCount, masteredIds
 }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -57,6 +59,10 @@ export default function JlptListeningClient({
     e.preventDefault()
     updateParams({ search: searchInput })
   }
+
+  const handleToggleMastery = useCallback(async (itemId: string) => {
+    await toggleMastery('jlpt_listening', itemId)
+  }, [])
 
   return (
     <div>
@@ -101,22 +107,12 @@ export default function JlptListeningClient({
         </div>
       </div>
 
-      {/* Quiz link */}
-      <div className="mt-3">
-        <a
-          href={`/japanese/jlpt/quiz?level=${level}&type=jlpt_listening`}
-          className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-        >
-          {level} 聴解テストに挑戦 &rarr;
-        </a>
-      </div>
-
       {/* Listening list */}
       <div className="mt-4 rounded-xl border border-gray-200 bg-white px-4 dark:border-gray-700 dark:bg-gray-800">
         {items.length === 0 ? (
           <EmptyState title="聴解項目がありません" description="検索条件を変更してください" icon="🎧" />
         ) : (
-          <ListeningScriptList items={items} level={level} />
+          <ListeningScriptList items={items} level={level} masteredIds={masteredIds} onToggleMastery={handleToggleMastery} />
         )}
       </div>
 
