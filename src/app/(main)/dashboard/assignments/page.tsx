@@ -1,10 +1,9 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Card from '@/components/ui/Card'
-import { ASSIGNMENT_CATEGORIES, getCategoryLabel, getSubcategoryLabel, getContentUrl, getReadingTotalCount, getContentLevelLabel } from '@/lib/assignment-categories'
-import { AlertTriangle, ArrowLeft, BookOpen, CheckCircle2, Clock, GraduationCap } from 'lucide-react'
-import ExamRequestButton from './ExamRequestButton'
+import { ASSIGNMENT_CATEGORIES, getCategoryLabel, getSubcategoryLabel, getContentUrl, getReadingTotalCount, getContentLevelLabel, getQuizUrl } from '@/lib/assignment-categories'
+import { AlertTriangle, ArrowLeft, BookOpen, CheckCircle2, Clock, GraduationCap, Lock } from 'lucide-react'
 import OverdueReasonForm from './OverdueReasonForm'
 import { detectAndMarkOverdue } from '@/app/actions/learning-assignments'
 
@@ -38,36 +37,130 @@ export default async function AssignmentsPage() {
     .eq('assigned_to', user.id)
     .order('created_at', { ascending: false })
 
-  // Fetch quiz titles for display
-  const allQuizIds = (assignments ?? []).flatMap(a => [
-    ...(a.required_quiz_ids ?? []),
-  ]).filter(Boolean)
+  // Resolve quizzes for assignments with empty required_quiz_ids (backfill)
+  const resolvedQuizIdsMap: Record<string, string[]> = {}
+  const emptyAssignments = (assignments ?? []).filter(a =>
+    (a.required_quiz_ids ?? []).length === 0
+  )
 
-  let quizMap: Record<string, { title: string }> = {}
-  if (allQuizIds.length > 0) {
-    const { data: quizzes } = await supabase
-      .from('quizzes')
-      .select('id, title')
-      .in('id', [...new Set(allQuizIds)])
+  for (const a of emptyAssignments) {
+    const catConfig = ASSIGNMENT_CATEGORIES[a.category]
+    if (!catConfig) continue
 
-    for (const q of quizzes ?? []) {
-      quizMap[q.id] = { title: q.title }
+    const isLevelOnly = catConfig.levelOnly === true
+    let resolvedIds: string[] = []
+
+    if (isLevelOnly && catConfig.quizTypes) {
+      let query = supabase
+        .from('quizzes')
+        .select('id')
+        .in('quiz_type', catConfig.quizTypes)
+
+      if (a.content_level) {
+        query = query.eq('content_level', a.content_level)
+      }
+
+      const { data: quizzes } = await query.order('created_at')
+      resolvedIds = (quizzes ?? []).map(q => q.id)
+    } else {
+      const subcatConfig = catConfig.subcategories[a.subcategory]
+      if (!subcatConfig) continue
+
+      if (subcatConfig.courseSubcategory && a.content_level) {
+        const { data: courses } = await supabase
+          .from('courses')
+          .select('id')
+          .eq('subcategory', subcatConfig.courseSubcategory)
+          .eq('difficulty', a.content_level)
+          .eq('is_published', true)
+
+        if (courses?.length) {
+          const courseIds = courses.map(c => c.id)
+          const { data: lessons } = await supabase
+            .from('lessons')
+            .select('id')
+            .in('course_id', courseIds)
+
+          if (lessons?.length) {
+            const lessonIds = lessons.map(l => l.id)
+            const { data: quizzes } = await supabase
+              .from('quizzes')
+              .select('id')
+              .in('lesson_id', lessonIds)
+              .order('created_at')
+
+            resolvedIds = (quizzes ?? []).map(q => q.id)
+          }
+        }
+      } else if (subcatConfig.quizType) {
+        let query = supabase
+          .from('quizzes')
+          .select('id')
+          .eq('quiz_type', subcatConfig.quizType)
+
+        if (a.content_level) {
+          query = query.eq('content_level', a.content_level)
+        }
+
+        if (subcatConfig.titlePatterns?.length) {
+          const orFilter = subcatConfig.titlePatterns
+            .map(p => `title.ilike.${p}`)
+            .join(',')
+          query = query.or(orFilter)
+        }
+
+        const { data: quizzes } = await query.order('created_at')
+        resolvedIds = (quizzes ?? []).map(q => q.id)
+      }
+    }
+
+    if (resolvedIds.length > 0) {
+      resolvedQuizIdsMap[a.id] = resolvedIds
+
+      // Backfill the DB record so progress tracking works
+      const serviceClient = createServiceRoleClient()
+      if (serviceClient) {
+        await serviceClient
+          .from('learning_assignments')
+          .update({ required_quiz_ids: resolvedIds })
+          .eq('id', a.id)
+      }
     }
   }
 
-  // Fetch existing exam requests to check status
-  const { data: exams } = await supabase
-    .from('comprehensive_exams')
-    .select('id, category, subcategory, content_level, status, score, passed')
-    .eq('user_id', user.id)
-    .order('requested_at', { ascending: false })
+  // Fetch quiz titles for display
+  const allQuizIds = (assignments ?? []).flatMap(a => [
+    ...(resolvedQuizIdsMap[a.id] ?? a.required_quiz_ids ?? []),
+  ]).filter(Boolean)
 
-  // Build exam status map keyed by category+subcategory+level
-  const examStatusMap: Record<string, { id: string; status: string; score: number | null; passed: boolean | null }> = {}
-  for (const exam of exams ?? []) {
-    const key = `${exam.category}|${exam.subcategory}|${exam.content_level ?? ''}`
-    if (!examStatusMap[key]) {
-      examStatusMap[key] = { id: exam.id, status: exam.status, score: exam.score, passed: exam.passed }
+  let quizMap: Record<string, { title: string; quiz_type: string; lesson_id: string | null; course_id: string | null }> = {}
+  if (allQuizIds.length > 0) {
+    const { data: quizzes } = await supabase
+      .from('quizzes')
+      .select('id, title, quiz_type, lesson_id')
+      .in('id', [...new Set(allQuizIds)])
+
+    // Resolve course_id for lesson-based quizzes
+    const lessonIds = (quizzes ?? []).map(q => q.lesson_id).filter(Boolean) as string[]
+    let lessonCourseMap: Record<string, string> = {}
+    if (lessonIds.length > 0) {
+      const { data: lessons } = await supabase
+        .from('lessons')
+        .select('id, course_id')
+        .in('id', [...new Set(lessonIds)])
+
+      for (const l of lessons ?? []) {
+        lessonCourseMap[l.id] = l.course_id
+      }
+    }
+
+    for (const q of quizzes ?? []) {
+      quizMap[q.id] = {
+        title: q.title,
+        quiz_type: q.quiz_type,
+        lesson_id: q.lesson_id,
+        course_id: q.lesson_id ? lessonCourseMap[q.lesson_id] ?? null : null,
+      }
     }
   }
 
@@ -161,15 +254,21 @@ export default async function AssignmentsPage() {
       ) : (
         <div className="space-y-4">
           {assignments.map(assignment => {
-            const requiredIds = assignment.required_quiz_ids ?? []
+            const requiredIds = resolvedQuizIdsMap[assignment.id] ?? assignment.required_quiz_ids ?? []
             const passedIds = new Set(assignment.passed_quiz_ids ?? [])
             const total = requiredIds.length
             const passed = passedIds.size
             const progress = total > 0 ? Math.round((passed / total) * 100) : 0
-            const allComplete = total > 0 && passed >= total
 
-            const examKey = `${assignment.category}|${assignment.subcategory}|${assignment.content_level ?? ''}`
-            const examStatus = examStatusMap[examKey]
+            // Reading progress (used for business-lit quiz gate)
+            const readingTotal = getReadingTotalCount(assignment.category, assignment.subcategory)
+            const subcatConfig = ASSIGNMENT_CATEGORIES[assignment.category]?.subcategories[assignment.subcategory]
+            const readingPassed = (subcatConfig?.readingItemTypes ?? []).reduce(
+              (sum: number, t: string) => sum + (masteredMap[t] ?? 0), 0
+            )
+            const readingProgress = readingTotal > 0 ? Math.round((readingPassed / readingTotal) * 100) : 0
+            const isOverdue = assignment.status === 'overdue'
+            const isQuizLocked = isOverdue || (assignment.category === 'business-lit' && readingTotal > 0 && readingProgress < 100)
 
             return (
               <Card key={assignment.id}>
@@ -221,26 +320,17 @@ export default async function AssignmentsPage() {
                 )}
 
                 {/* Reading progress (business-lit only) */}
-                {(() => {
-                  const readingTotal = getReadingTotalCount(assignment.category, assignment.subcategory)
-                  const subcatConfig = ASSIGNMENT_CATEGORIES[assignment.category]?.subcategories[assignment.subcategory]
-                  const readingPassed = (subcatConfig?.readingItemTypes ?? []).reduce(
-                    (sum, t) => sum + (masteredMap[t] ?? 0), 0
-                  )
-                  const readingProgress = readingTotal > 0 ? Math.round((readingPassed / readingTotal) * 100) : 0
-
-                  return assignment.category === 'business-lit' && readingTotal > 0 ? (
-                    <div className="mt-4">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-zinc-500 dark:text-zinc-400">読了進捗: {readingPassed}/{readingTotal}</span>
-                        <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300">{readingProgress}%</span>
-                      </div>
-                      <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-600">
-                        <div className="h-2 rounded-full bg-amber-500 transition-all" style={{ width: `${readingProgress}%` }} />
-                      </div>
+                {assignment.category === 'business-lit' && readingTotal > 0 && (
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400">読了進捗: {readingPassed}/{readingTotal}</span>
+                      <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300">{readingProgress}%</span>
                     </div>
-                  ) : null
-                })()}
+                    <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-600">
+                      <div className="h-2 rounded-full bg-amber-500 transition-all" style={{ width: `${readingProgress}%` }} />
+                    </div>
+                  </div>
+                )}
 
                 {/* Test progress bar */}
                 <div className="mt-4">
@@ -252,31 +342,65 @@ export default async function AssignmentsPage() {
                   </div>
                   <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-600">
                     <div
-                      className={`h-2 rounded-full transition-all ${allComplete ? 'bg-emerald-500' : 'bg-indigo-500'}`}
+                      className={`h-2 rounded-full transition-all ${total > 0 && passed >= total ? 'bg-emerald-500' : 'bg-indigo-500'}`}
                       style={{ width: `${progress}%` }}
                     />
                   </div>
                 </div>
 
                 {/* Quiz list */}
-                {requiredIds.length > 0 && (
+                {requiredIds.length > 0 ? (
                   <div className="mt-3 space-y-1">
                     {requiredIds.map((quizId: string) => {
                       const isPassed = passedIds.has(quizId)
-                      const quizTitle = quizMap[quizId]?.title ?? 'クイズ'
+                      const quiz = quizMap[quizId]
+                      const quizTitle = quiz?.title ?? 'クイズ'
+                      const baseQuizUrl = quiz ? getQuizUrl(quiz.quiz_type, quizId, quiz.lesson_id, quiz.course_id, quiz.title) : null
+                      const quizUrl = baseQuizUrl ? `${baseQuizUrl}?from=assignments` : null
                       return (
                         <div key={quizId} className="flex items-center gap-2 text-sm">
                           {isPassed ? (
                             <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                          ) : isQuizLocked ? (
+                            <Lock className="h-4 w-4 text-zinc-400 shrink-0" />
                           ) : (
                             <div className="h-4 w-4 rounded-full border-2 border-gray-300 dark:border-gray-500 shrink-0" />
                           )}
-                          <span className={isPassed ? 'text-zinc-500 dark:text-zinc-400 line-through' : 'text-zinc-700 dark:text-zinc-300'}>
-                            {quizTitle}
-                          </span>
+                          {isQuizLocked && !isPassed ? (
+                            <span className="text-zinc-400 dark:text-zinc-500">
+                              {quizTitle}
+                            </span>
+                          ) : quizUrl ? (
+                            <Link
+                              href={quizUrl}
+                              className={isPassed
+                                ? 'text-zinc-500 dark:text-zinc-400 line-through hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors'
+                                : 'text-indigo-600 dark:text-indigo-400 hover:underline'}
+                            >
+                              {quizTitle}
+                            </Link>
+                          ) : (
+                            <span className={isPassed ? 'text-zinc-500 dark:text-zinc-400 line-through' : 'text-zinc-700 dark:text-zinc-300'}>
+                              {quizTitle}
+                            </span>
+                          )}
                         </div>
                       )
                     })}
+                    {isQuizLocked && (
+                      <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                        {isOverdue
+                          ? '期限超過のため、テストは受けられません'
+                          : '全項目を読了するとテストを受けられます'}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
+                    対象テストが見つかりません。
+                    <Link href={getContentUrl(assignment.category, assignment.subcategory)} className="ml-1 underline hover:text-amber-800 dark:hover:text-amber-200">
+                      コンテンツページへ →
+                    </Link>
                   </div>
                 )}
 
@@ -287,38 +411,6 @@ export default async function AssignmentsPage() {
                   </p>
                 )}
 
-                {/* Exam request button - show when all quizzes are complete */}
-                {allComplete && assignment.status === 'completed' && (
-                  <div className="mt-4 border-t border-gray-100 pt-4 dark:border-white/[0.06]">
-                    {examStatus ? (
-                      <div className="flex items-center gap-2">
-                        <GraduationCap className="h-4 w-4 text-indigo-500" />
-                        <span className="text-sm text-zinc-700 dark:text-zinc-300">
-                          {examStatus.status === 'requested' && '総合試験リクエスト中'}
-                          {examStatus.status === 'approved' && (
-                            <Link href={`/exam/${examStatus.id}`} className="text-indigo-600 hover:underline dark:text-indigo-400">
-                              総合試験を開始する
-                            </Link>
-                          )}
-                          {examStatus.status === 'denied' && '試験リクエストが拒否されました'}
-                          {examStatus.status === 'in_progress' && (
-                            <Link href={`/exam/${examStatus.id}`} className="text-indigo-600 hover:underline dark:text-indigo-400">
-                              試験を続ける
-                            </Link>
-                          )}
-                          {examStatus.status === 'completed' && `合格 (${examStatus.score}点)`}
-                          {examStatus.status === 'failed' && `不合格 (${examStatus.score}点)`}
-                        </span>
-                      </div>
-                    ) : (
-                      <ExamRequestButton
-                        category={assignment.category}
-                        subcategory={assignment.subcategory}
-                        contentLevel={assignment.content_level}
-                      />
-                    )}
-                  </div>
-                )}
               </Card>
             )
           })}

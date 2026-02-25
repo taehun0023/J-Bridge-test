@@ -8,6 +8,7 @@ interface QuizResultsProps {
   quizTitle: string
   onRetry: () => void
   onBack: () => void
+  backLabel?: string
 }
 
 export default function QuizResults({
@@ -18,6 +19,7 @@ export default function QuizResults({
   quizTitle,
   onRetry,
   onBack,
+  backLabel = 'テスト一覧',
 }: QuizResultsProps) {
   return (
     <div className="mx-auto max-w-lg text-center">
@@ -48,7 +50,7 @@ export default function QuizResults({
           onClick={onBack}
           className="flex-1 rounded-xl border border-gray-300 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
         >
-          テスト一覧
+          {backLabel}
         </button>
         <button
           onClick={onRetry}
