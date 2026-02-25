@@ -37,11 +37,11 @@ export async function createLearningAssignment(formData: FormData) {
 
   // Find matching quizzes based on category/subcategory/level
   let requiredQuizIds: string[] = []
-  const serviceClient = createServiceRoleClient()
-  if (serviceClient) {
+  const queryClient = createServiceRoleClient() ?? supabase
+  {
     if (isLevelOnly && catConfig?.quizTypes) {
       // levelOnly: search all quiz types for this category
-      let query = serviceClient
+      let query = queryClient
         .from('quizzes')
         .select('id')
         .in('quiz_type', catConfig.quizTypes)
@@ -59,7 +59,7 @@ export async function createLearningAssignment(formData: FormData) {
 
       if (subcatConfig?.courseSubcategory && contentLevel) {
         // Course-based quiz resolution: find quizzes via courses → lessons → quizzes
-        const { data: courses } = await serviceClient
+        const { data: courses } = await queryClient
           .from('courses')
           .select('id')
           .eq('subcategory', subcatConfig.courseSubcategory)
@@ -68,14 +68,14 @@ export async function createLearningAssignment(formData: FormData) {
 
         if (courses?.length) {
           const courseIds = courses.map(c => c.id)
-          const { data: lessons } = await serviceClient
+          const { data: lessons } = await queryClient
             .from('lessons')
             .select('id')
             .in('course_id', courseIds)
 
           if (lessons?.length) {
             const lessonIds = lessons.map(l => l.id)
-            const { data: quizzes } = await serviceClient
+            const { data: quizzes } = await queryClient
               .from('quizzes')
               .select('id')
               .in('lesson_id', lessonIds)
@@ -85,7 +85,7 @@ export async function createLearningAssignment(formData: FormData) {
           }
         }
       } else if (quizType) {
-        let query = serviceClient
+        let query = queryClient
           .from('quizzes')
           .select('id')
           .eq('quiz_type', quizType)
@@ -176,7 +176,10 @@ export async function getMyLearningAssignments() {
 
 export async function checkAssignmentProgress(userId: string, quizId: string) {
   const serviceClient = createServiceRoleClient()
-  if (!serviceClient) return
+  if (!serviceClient) {
+    console.warn('[checkAssignmentProgress] Service role client unavailable — assignment status will not be updated')
+    return
+  }
 
   // Find assignments that include this quiz in required_quiz_ids
   const { data: assignments } = await serviceClient
@@ -343,7 +346,9 @@ export async function submitOverdueReason(assignmentId: string, reason: string) 
   if (assignment.assigned_to !== user.id) return { error: ERR.FORBIDDEN }
   if (assignment.status !== 'overdue') return { error: 'この課題は期限超過状態ではありません' }
 
-  const { error } = await supabase
+  // Use service role for UPDATE since mentee may lack UPDATE RLS policy
+  const updateClient = createServiceRoleClient() ?? supabase
+  const { error } = await updateClient
     .from('learning_assignments')
     .update({
       overdue_reason: reason.trim(),
@@ -364,6 +369,7 @@ export async function submitOverdueReason(assignmentId: string, reason: string) 
   )
 
   revalidatePath('/dashboard/assignments')
+  revalidatePath('/admin/tasks')
   return { success: true }
 }
 

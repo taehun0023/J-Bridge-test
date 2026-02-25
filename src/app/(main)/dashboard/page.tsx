@@ -226,7 +226,7 @@ export default async function DashboardPage() {
     .select('id, category, content, created_at, admin:profiles!admin_feedbacks_admin_id_fkey(full_name)')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
-    .limit(5)
+    .limit(3)
 
   // Fetch comprehensive exam retake info (failed + active retakes)
   const { data: userCompExams } = await supabase

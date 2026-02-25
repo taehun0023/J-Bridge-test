@@ -1,15 +1,19 @@
 track:
   id: SQL
-  title: Oracle SQL 실무
+  title: SQL 開発実務能力
   level_order: [bronze, silver, gold]
   runtime:
-    db: "Oracle 19c/21c"
+    db: "ANSI SQL (標準SQL)"
   modules:
     - id: SQL-BRONZE-01
-      title: SELECT / WHERE / JOIN 기초
+      title: "SQL 基礎 — SELECT・WHERE・JOIN 入門"
       level: bronze
       order: 10
-    - id: SQL-SILVER-02
-      title: 트랜잭션과 락
+    - id: SQL-SILVER-01
+      title: "SQL 中級 — サブクエリ・結合・CTE"
       level: silver
       order: 20
+    - id: SQL-GOLD-01
+      title: "SQL 上級 — ウィンドウ関数・DDL・パフォーマンス"
+      level: gold
+      order: 50

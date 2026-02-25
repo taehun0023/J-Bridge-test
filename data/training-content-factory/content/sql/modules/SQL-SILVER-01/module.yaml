@@ -1,0 +1,30 @@
+module:
+  id: SQL-SILVER-01
+  title: "SQL 中級 — サブクエリ・結合・CTE"
+  level: silver
+  description: "GROUP BY応用、サブクエリ、外部結合、CTE、CASE式など中級SQLを使いこなせるようになる。"
+  outcomes:
+    - "GROUP BYとHAVINGを使った複雑な集計ができる。"
+    - "サブクエリとCTEを使って可読性の高いクエリを書ける。"
+    - "CASE式とNULL処理を活用した条件ロジックを実装できる。"
+  lessons:
+    - id: SQL-SILVER-01-01
+      title: "GROUP BY と HAVING — グループ化と条件絞り込み"
+      est_minutes: 30
+      tags: [group-by, having, aggregate-join]
+    - id: SQL-SILVER-01-02
+      title: "サブクエリ — スカラー・行・テーブルサブクエリ"
+      est_minutes: 35
+      tags: [subquery, exists, in-subquery, correlated]
+    - id: SQL-SILVER-01-03
+      title: "結合の応用 — OUTER / CROSS / 自己結合"
+      est_minutes: 30
+      tags: [right-join, full-outer, cross-join, self-join]
+    - id: SQL-SILVER-01-04
+      title: "CTE と WITH句 — 可読性の高いクエリ設計"
+      est_minutes: 30
+      tags: [cte, with, recursive-cte]
+    - id: SQL-SILVER-01-05
+      title: "CASE式とNULL処理 — 条件ロジックの実装"
+      est_minutes: 30
+      tags: [case, coalesce, nullif, conditional]

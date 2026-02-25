@@ -1,0 +1,239 @@
+---
+lesson_id: SQL-BRONZE-01-02
+title: "WHERE와 연산자 — 조건으로 데이터를 필터링하기"
+module: SQL-BRONZE-01
+level: bronze
+est_minutes: 30
+tags: [SQL, WHERE, 비교연산자, 논리연산자, LIKE, NULL, 기초]
+---
+
+## 1) 요점 정리 (5줄)
+
+- **WHERE** 절은 FROM 절 뒤에 기술하며, 조건이 TRUE인 행만 결과 세트에 포함시킨다.
+- 비교 연산자(=, <>, >, <, >=, <=), **BETWEEN**, **IN**으로 다양한 조건을 지정할 수 있다.
+- **LIKE** 연산자로 패턴 매칭이 가능하다. `%`는 0자 이상, `_`는 1자를 나타낸다.
+- NULL 판정에는 **IS NULL** / **IS NOT NULL**을 사용한다. `= NULL`은 올바르지 않다.
+- 논리 연산자 **AND**, **OR**, **NOT**으로 복합 조건을 구성한다. 우선순위는 NOT > AND > OR이다.
+
+## 2) 개념
+
+### WHERE 절의 기본
+
+✅ 결론: WHERE 절은 행 수준의 필터이며, 조건이 TRUE인 행만 결과에 포함된다.
+
+```sql
+SELECT 열이름
+FROM 테이블이름
+WHERE 조건식;
+```
+
+FROM 절에서 테이블을 지정하고, WHERE 절에서 조건을 기술한다. 데이터베이스 엔진은 각 행에 대해 조건식을 평가하여, TRUE가 되는 행만 결과 세트에 반환한다.
+
+### 비교 연산자
+
+✅ 결론: 기본 6가지 비교 연산자를 구분하여 사용하면, 대부분의 단순 조건을 표현할 수 있다.
+
+| 연산자 | 의미 | 예 |
+|---|---|---|
+| `=` | 같음 | `salary = 400000` |
+| `<>` | 같지 않음 | `department_id <> 1` |
+| `>` | 보다 큼 | `salary > 300000` |
+| `<` | 보다 작음 | `salary < 500000` |
+| `>=` | 이상 | `salary >= 350000` |
+| `<=` | 이하 | `salary <= 600000` |
+
+```sql
+-- 급여가 400000 이상인 사원
+SELECT name, salary
+FROM employees
+WHERE salary >= 400000;
+```
+
+주의: `!=`도 많은 DBMS에서 사용할 수 있지만, ANSI SQL 표준의 부등 연산자는 `<>`이다.
+
+### BETWEEN — 범위 검색
+
+✅ 결론: BETWEEN은 경계값을 **포함하는** 범위 검색이며, `>=`와 `<=`의 조합과 동일하다.
+
+```sql
+-- 급여가 300000 이상 500000 이하
+SELECT name, salary
+FROM employees
+WHERE salary BETWEEN 300000 AND 500000;
+```
+
+위 쿼리는 다음과 같은 의미이다.
+
+```sql
+SELECT name, salary
+FROM employees
+WHERE salary >= 300000 AND salary <= 500000;
+```
+
+BETWEEN은 숫자뿐만 아니라, 날짜나 문자열에도 사용할 수 있다.
+
+```sql
+-- 2023년에 입사한 사원
+SELECT name, hire_date
+FROM employees
+WHERE hire_date BETWEEN '2023-01-01' AND '2023-12-31';
+```
+
+### IN — 복수 값 일치
+
+✅ 결론: IN은 여러 등가 비교를 간결하게 작성할 수 있는 연산자로, OR 나열과 동일하다.
+
+```sql
+-- 부서 1, 2, 3 중 하나에 소속
+SELECT name, department_id
+FROM employees
+WHERE department_id IN (1, 2, 3);
+```
+
+위 쿼리는 다음과 동일하다.
+
+```sql
+WHERE department_id = 1 OR department_id = 2 OR department_id = 3
+```
+
+`NOT IN`을 사용하면 "포함하지 않는" 조건을 표현할 수 있다.
+
+```sql
+WHERE department_id NOT IN (4, 5)
+```
+
+### LIKE — 패턴 매칭
+
+✅ 결론: LIKE는 문자열의 패턴 검색에 사용하며, `%`와 `_` 두 가지 와일드카드를 조합한다.
+
+| 와일드카드 | 의미 | 예 |
+|---|---|---|
+| `%` | 0자 이상의 임의 문자열 | `'田%'` → 田中, 田村 |
+| `_` | 정확히 1자 | `'_藤'` → 佐藤, 伊藤 |
+
+```sql
+-- 이름이 '田'로 시작하는 사원
+SELECT name FROM employees WHERE name LIKE '田%';
+
+-- 이메일 주소에 'example'을 포함
+SELECT name, email FROM employees WHERE email LIKE '%example%';
+
+-- 이름이 3자인 사원
+SELECT name FROM employees WHERE name LIKE '___';
+```
+
+`NOT LIKE`로 패턴에 일치하지 않는 행을 검색할 수 있다.
+
+### IS NULL / IS NOT NULL
+
+✅ 결론: NULL 값의 판정에는 `IS NULL` / `IS NOT NULL`을 사용하며, `= NULL`을 사용해서는 안 된다.
+
+SQL에서 NULL은 "값이 불명"을 의미하는 특수한 마커이다. NULL에 대한 `=` 비교는 TRUE도 FALSE도 아닌 **UNKNOWN**을 반환한다. 이를 "3값 논리"라고 부른다.
+
+```sql
+-- NG: = NULL은 항상 UNKNOWN (결과에 행이 포함되지 않음)
+SELECT * FROM employees WHERE email = NULL;
+
+-- OK: IS NULL로 올바르게 판정
+SELECT * FROM employees WHERE email IS NULL;
+
+-- OK: IS NOT NULL
+SELECT * FROM employees WHERE email IS NOT NULL;
+```
+
+### 논리 연산자 AND / OR / NOT
+
+✅ 결론: 여러 조건을 조합하려면 AND, OR, NOT을 사용하지만, 괄호로 우선순위를 명시해야 한다.
+
+| 연산자 | 의미 | 우선순위 |
+|---|---|---|
+| NOT | 부정 | 높음 |
+| AND | 양쪽 모두 TRUE | 중간 |
+| OR | 어느 한쪽이 TRUE | 낮음 |
+
+```sql
+-- AND: 부서 1이고 급여 400000 이상
+SELECT name, department_id, salary
+FROM employees
+WHERE department_id = 1 AND salary >= 400000;
+
+-- OR: 부서 1 또는 부서 2
+SELECT name, department_id
+FROM employees
+WHERE department_id = 1 OR department_id = 2;
+```
+
+**괄호의 중요성**: 우선순위가 AND > OR이므로, 괄호 없이는 의도와 다른 결과가 나올 수 있다.
+
+```sql
+-- 의도: (부서1 OR 부서2) 그리고 급여 40만 이상
+-- NG (괄호 없음): 부서1 전원 OR (부서2이면서 급여 40만 이상)
+SELECT * FROM employees
+WHERE department_id = 1 OR department_id = 2 AND salary >= 400000;
+
+-- OK (괄호 있음): 부서1 또는 부서2이면서 급여 40만 이상
+SELECT * FROM employees
+WHERE (department_id = 1 OR department_id = 2) AND salary >= 400000;
+```
+
+## 3) 예제 (2개)
+
+### 예제 1: 복합 조건을 활용한 사원 검색
+
+```sql
+SELECT name, department_id, salary, hire_date
+FROM employees
+WHERE department_id IN (1, 2)
+  AND salary BETWEEN 350000 AND 500000
+  AND hire_date >= '2022-01-01';
+```
+
+| name | department_id | salary | hire_date |
+|---|---|---|---|
+| 田中太郎 | 1 | 450000 | 2023-04-01 |
+| 佐藤花子 | 2 | 380000 | 2022-07-15 |
+
+이 예제에서는 IN, BETWEEN, 비교 연산자를 AND로 조합하고 있다. 부서 1 또는 2에 소속되어 있고, 급여가 35만~50만 범위이며, 2022년 이후에 입사한 사원을 조회한다.
+
+### 예제 2: NULL과 LIKE를 조합한 검색
+
+```sql
+SELECT name, email
+FROM employees
+WHERE email IS NOT NULL
+  AND email LIKE '%@company.co.jp';
+```
+
+| name | email |
+|---|---|
+| 鈴木一郎 | suzuki@company.co.jp |
+| 山田次郎 | yamada@company.co.jp |
+
+이메일 주소가 설정되어 있고(IS NOT NULL), 회사 도메인의 이메일 주소를 가진 사원을 추출한다. LIKE 패턴 `'%@company.co.jp'`는 "@company.co.jp로 끝나는 문자열"을 의미한다.
+
+## 4) 흔한 실수 / 함정 (5개)
+
+⚠️ **실수 1**: NULL을 `= NULL`로 비교 → **대책**: 반드시 `IS NULL` / `IS NOT NULL`을 사용한다. `= NULL`은 항상 UNKNOWN이 된다.
+
+⚠️ **실수 2**: AND와 OR의 우선순위를 잘못 이해 → **대책**: 복합 조건에서는 항상 괄호를 사용하여 의도를 명시한다.
+
+⚠️ **실수 3**: BETWEEN이 경계값을 포함한다는 것을 잊음 → **대책**: BETWEEN A AND B는 `A <= x <= B`이다. 포함하고 싶지 않은 경우 `>`와 `<`를 사용한다.
+
+⚠️ **실수 4**: LIKE에서 와일드카드 위치를 잘못 지정 → **대책**: `'%田'`는 "田로 끝나는", `'田%'`는 "田로 시작하는", `'%田%'`는 "田를 포함하는"이다.
+
+⚠️ **실수 5**: NOT IN에 서브쿼리를 사용할 때, NULL이 포함되면 모든 행이 반환되지 않음 → **대책**: NOT IN의 값 리스트에 NULL이 포함되지 않도록 주의한다. 서브쿼리의 경우 NOT EXISTS를 검토한다.
+
+## 5) 체크리스트
+
+- [ ] WHERE 절의 역할과 기술 위치를 설명할 수 있다
+- [ ] 6가지 비교 연산자를 올바르게 구분하여 사용할 수 있다
+- [ ] BETWEEN의 경계값 처리를 이해하고 있다
+- [ ] IN을 사용하여 복수 값 조건을 작성할 수 있다
+- [ ] LIKE의 %와 _의 차이를 설명할 수 있다
+- [ ] IS NULL / IS NOT NULL을 사용하여 NULL을 올바르게 판정할 수 있다
+- [ ] AND, OR, NOT의 우선순위를 이해하고 괄호로 제어할 수 있다
+- [ ] 3값 논리의 개념(TRUE, FALSE, UNKNOWN)을 알고 있다
+
+## 6) 다음으로
+
+다음 레슨은 **SQL-BRONZE-01-03: ORDER BY, LIMIT, OFFSET — 정렬과 페이징** 입니다. 조회한 데이터의 정렬 순서를 제어하고, 페이지네이션을 구현하기 위한 구문을 배웁니다.

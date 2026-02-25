@@ -1,0 +1,261 @@
+---
+lesson_id: SQL-BRONZE-01-04
+title: "집계 함수 — COUNT / SUM / AVG / MIN / MAX"
+module: SQL-BRONZE-01
+level: bronze
+est_minutes: 30
+tags: [SQL, 집계함수, COUNT, SUM, AVG, MIN, MAX, GROUP BY, HAVING, 기초]
+---
+
+## 1) 요점 정리 (5줄)
+
+- 집계 함수(**COUNT**, **SUM**, **AVG**, **MIN**, **MAX**)는 여러 행의 값을 하나의 결과로 집약한다.
+- **COUNT(*)** 는 NULL을 포함한 전체 행을 세고, **COUNT(열이름)** 은 NULL을 제외한 행 수를 반환한다.
+- **GROUP BY**로 지정한 열의 값별로 그룹을 만들고, 각 그룹에 집계 함수를 적용한다.
+- **HAVING**은 GROUP BY로 만든 그룹에 대한 조건 필터이며, 집계 결과에 조건을 부여한다.
+- SQL의 논리적 처리 순서는 FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY이다.
+
+## 2) 개념
+
+### 집계 함수란
+
+✅ 결론: 집계 함수는 여러 행을 입력으로 받아, 하나의 값을 반환하는 함수이다.
+
+관계형 데이터베이스의 장점 중 하나는 대량의 데이터에서 통계 정보를 즉시 얻을 수 있다는 것이다. 집계 함수(aggregate functions)를 사용하면, 합계/평균/최댓값/최솟값/건수를 쿼리 하나로 계산할 수 있다.
+
+| 함수 | 설명 | NULL 처리 |
+|---|---|---|
+| `COUNT(*)` | 전체 행 수 | NULL 포함 |
+| `COUNT(열)` | 지정 열이 NULL이 아닌 행 수 | NULL 제외 |
+| `SUM(열)` | 합계 | NULL 무시 |
+| `AVG(열)` | 평균 | NULL 무시 |
+| `MIN(열)` | 최솟값 | NULL 무시 |
+| `MAX(열)` | 최댓값 | NULL 무시 |
+
+### COUNT — 행 수 세기
+
+✅ 결론: COUNT(*)와 COUNT(열이름)은 NULL 처리가 다르므로, 목적에 맞게 구분하여 사용한다.
+
+```sql
+-- 전체 사원 수 (NULL과 관계없이 전체 행 카운트)
+SELECT COUNT(*) AS total_employees
+FROM employees;
+
+-- 이메일 주소가 설정된 사원 수
+SELECT COUNT(email) AS has_email
+FROM employees;
+```
+
+`COUNT(*)`는 테이블의 전체 행 수를 반환한다. 반면, `COUNT(email)`은 email 열이 NULL이 아닌 행만 카운트한다.
+
+```sql
+-- 둘을 나란히 비교
+SELECT
+    COUNT(*)     AS total_rows,
+    COUNT(email) AS non_null_email
+FROM employees;
+```
+
+| total_rows | non_null_email |
+|---|---|
+| 10 | 8 |
+
+위의 경우, 2명의 사원 이메일 주소가 NULL임을 알 수 있다.
+
+### SUM과 AVG — 합계와 평균
+
+✅ 결론: SUM과 AVG는 숫자형 열에 대해 사용하며, NULL 값은 계산에서 제외된다.
+
+```sql
+SELECT
+    SUM(salary) AS total_salary,
+    AVG(salary) AS avg_salary
+FROM employees;
+```
+
+| total_salary | avg_salary |
+|---|---|
+| 4200000 | 420000 |
+
+**AVG와 NULL 주의사항**: AVG는 NULL을 분모에도 분자에도 포함하지 않는다. 예를 들어 10행 중 2행이 NULL인 경우, AVG는 8행의 합계를 8로 나눈다(10으로 나누는 것이 아님).
+
+```sql
+-- 예: salary가 [300000, 400000, NULL, 500000]인 경우
+-- AVG = (300000 + 400000 + 500000) / 3 = 400000
+-- NULL 행은 분모에서도 제외됨
+```
+
+### MIN과 MAX — 최솟값과 최댓값
+
+✅ 결론: MIN과 MAX는 숫자뿐만 아니라, 문자열이나 날짜에도 사용할 수 있다.
+
+```sql
+-- 숫자의 MIN / MAX
+SELECT
+    MIN(salary) AS min_salary,
+    MAX(salary) AS max_salary
+FROM employees;
+
+-- 날짜의 MIN / MAX
+SELECT
+    MIN(hire_date) AS earliest_hire,
+    MAX(hire_date) AS latest_hire
+FROM employees;
+```
+
+문자열의 경우 알파벳 순서(정렬 순서에 의존)로 비교된다.
+
+### GROUP BY — 그룹화
+
+✅ 결론: GROUP BY는 지정한 열의 값이 같은 행을 그룹화하고, 그룹별로 집계 함수를 적용한다.
+
+```sql
+SELECT department_id, COUNT(*) AS emp_count, AVG(salary) AS avg_salary
+FROM employees
+GROUP BY department_id;
+```
+
+| department_id | emp_count | avg_salary |
+|---|---|---|
+| 1 | 3 | 456667 |
+| 2 | 4 | 387500 |
+| 3 | 3 | 410000 |
+
+**중요한 규칙**: GROUP BY를 사용할 경우, SELECT 절에는 다음 중 하나만 기술할 수 있다.
+
+1. GROUP BY에서 지정한 열
+2. 집계 함수
+
+```sql
+-- NG: name은 GROUP BY에 포함되지 않고, 집계 함수도 아님
+SELECT department_id, name, COUNT(*)
+FROM employees
+GROUP BY department_id;
+-- → 에러 (DBMS에 따라 불확정 값을 반환하는 경우도 있음)
+
+-- OK: GROUP BY의 열과 집계 함수만
+SELECT department_id, COUNT(*), MAX(name)
+FROM employees
+GROUP BY department_id;
+```
+
+### HAVING — 그룹에 대한 조건 필터
+
+✅ 결론: HAVING은 집계 결과에 대한 필터이며, WHERE(행 수준)와는 대상이 다르다.
+
+```sql
+-- 사원 수가 3명 이상인 부서만
+SELECT department_id, COUNT(*) AS emp_count
+FROM employees
+GROUP BY department_id
+HAVING COUNT(*) >= 3;
+```
+
+| WHERE와 HAVING의 차이 |
+|---|
+
+| 절 | 필터 대상 | 집계 함수 사용 | 평가 시점 |
+|---|---|---|---|
+| WHERE | 개별 행 | 불가 | GROUP BY 이전 |
+| HAVING | 그룹 | 가능 | GROUP BY 이후 |
+
+```sql
+-- WHERE + GROUP BY + HAVING 조합
+SELECT department_id, COUNT(*) AS emp_count, AVG(salary) AS avg_salary
+FROM employees
+WHERE hire_date >= '2022-01-01'     -- (1) 행 수준 필터
+GROUP BY department_id              -- (2) 그룹화
+HAVING AVG(salary) >= 400000        -- (3) 그룹 필터
+ORDER BY avg_salary DESC;           -- (4) 정렬
+```
+
+위 처리 순서:
+1. FROM: employees 테이블을 읽어들임
+2. WHERE: 2022년 이후 입사 사원으로 좁힘
+3. GROUP BY: 부서별로 그룹화
+4. HAVING: 평균 급여 40만 이상의 그룹으로 좁힘
+5. SELECT: 열과 집계 결과를 계산
+6. ORDER BY: 평균 급여 내림차순으로 정렬
+
+### COUNT(DISTINCT)
+
+✅ 결론: 집계 함수 내에서 DISTINCT를 사용하면, 중복을 제거한 값에 대해 집계가 수행된다.
+
+```sql
+-- 몇 종류의 부서가 있는지
+SELECT COUNT(DISTINCT department_id) AS dept_count
+FROM employees;
+```
+
+## 3) 예제 (2개)
+
+### 예제 1: 부서별 통계 정보 조회하기
+
+```sql
+SELECT
+    department_id,
+    COUNT(*)       AS emp_count,
+    SUM(salary)    AS total_salary,
+    AVG(salary)    AS avg_salary,
+    MIN(salary)    AS min_salary,
+    MAX(salary)    AS max_salary
+FROM employees
+GROUP BY department_id
+ORDER BY avg_salary DESC;
+```
+
+| department_id | emp_count | total_salary | avg_salary | min_salary | max_salary |
+|---|---|---|---|---|---|
+| 1 | 3 | 1370000 | 456667 | 350000 | 520000 |
+| 3 | 3 | 1230000 | 410000 | 370000 | 450000 |
+| 2 | 4 | 1550000 | 387500 | 300000 | 480000 |
+
+5가지 집계 함수를 모두 부서별로 적용한 예제. GROUP BY로 부서별 그룹화하고, ORDER BY로 평균 급여 내림차순으로 정렬하고 있다.
+
+### 예제 2: HAVING으로 조건을 부여한 집계
+
+```sql
+SELECT
+    department_id,
+    COUNT(*) AS emp_count,
+    AVG(salary) AS avg_salary
+FROM employees
+WHERE salary >= 300000
+GROUP BY department_id
+HAVING COUNT(*) >= 2
+ORDER BY emp_count DESC;
+```
+
+| department_id | emp_count | avg_salary |
+|---|---|---|
+| 2 | 3 | 420000 |
+| 1 | 3 | 456667 |
+
+WHERE로 급여 30만 이상의 사원으로 좁힌 후, 부서별로 그룹화하고, HAVING으로 2명 이상인 부서만 남기고 있다.
+
+## 4) 흔한 실수 / 함정 (5개)
+
+⚠️ **실수 1**: COUNT(*)와 COUNT(열이름)의 차이를 이해하지 못함 → **대책**: COUNT(*)는 전체 행, COUNT(열이름)은 NULL을 제외한 행 수이다. 목적에 맞게 구분하여 사용한다.
+
+⚠️ **실수 2**: GROUP BY에 포함되지 않은 비집계 열을 SELECT에 작성 → **대책**: SELECT 절에는 GROUP BY의 열이나 집계 함수만 작성한다.
+
+⚠️ **실수 3**: WHERE 절에서 집계 함수를 사용하려고 함 → **대책**: 집계 결과에 조건을 부여하려면 HAVING을 사용한다. WHERE는 GROUP BY 이전에 평가된다.
+
+⚠️ **실수 4**: AVG의 NULL 제외를 잊어 평균값이 어긋남 → **대책**: NULL을 0으로 계산하고 싶은 경우 COALESCE(열, 0)를 사용한 후 AVG를 적용한다.
+
+⚠️ **실수 5**: GROUP BY의 처리 순서를 잘못 이해 → **대책**: FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY의 순서를 기억한다.
+
+## 5) 체크리스트
+
+- [ ] 5가지 집계 함수(COUNT, SUM, AVG, MIN, MAX)를 구분하여 사용할 수 있다
+- [ ] COUNT(*)와 COUNT(열이름)의 차이를 설명할 수 있다
+- [ ] SUM, AVG가 NULL을 어떻게 처리하는지 이해하고 있다
+- [ ] GROUP BY로 그룹화하여 집계할 수 있다
+- [ ] GROUP BY 사용 시 SELECT 절의 규칙을 알고 있다
+- [ ] HAVING으로 집계 결과에 필터를 적용할 수 있다
+- [ ] WHERE와 HAVING의 차이를 설명할 수 있다
+- [ ] SQL의 논리적 처리 순서를 올바르게 이해하고 있다
+
+## 6) 다음으로
+
+다음 레슨은 **SQL-BRONZE-01-05: JOIN 기초 — INNER JOIN과 LEFT JOIN** 입니다. 여러 테이블을 결합하여 데이터를 가져오는 방법을 배우고, 관계형 데이터베이스의 진가를 발휘하는 기법을 습득합니다.

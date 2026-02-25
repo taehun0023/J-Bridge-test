@@ -1,0 +1,204 @@
+---
+lesson_id: SQL-GOLD-01-01
+title: "ウィンドウ関数 — ROW_NUMBER / RANK / LAG / LEAD"
+module: SQL-GOLD-01
+level: gold
+est_minutes: 35
+tags: [window-function, ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD, OVER, PARTITION-BY, frame-clause]
+---
+
+## 1) 要点まとめ（5行）
+
+1. **ウィンドウ関数は行を潰さない集約**である。GROUP BY が行をまとめるのに対し、ウィンドウ関数は元の行を保持したまま計算結果を付加する。
+2. **OVER 句**が分割（PARTITION BY）と順序（ORDER BY）を定義し、全ウィンドウ関数に必須である。
+3. **ROW_NUMBER / RANK / DENSE_RANK** は順位付けの三兄弟で、同値の扱いだけが違う。
+4. **LAG / LEAD** は「前の行」「次の行」の値を参照でき、時系列の差分・前月比に不可欠である。
+5. **フレーム句（ROWS BETWEEN）**を使えば累積合計・移動平均など、柔軟な範囲集約が可能になる。
+
+---
+
+## 2) 概念
+
+### ウィンドウ関数とは何か
+
+標準 SQL（SQL:2003）で導入されたウィンドウ関数は、`SELECT` 句の中で **OVER()** キーワードを伴って使用する特殊な関数群である。通常の集約関数（`SUM`, `AVG` など）は `GROUP BY` と組み合わせると行が集約されてしまうが、ウィンドウ関数では**各行がそのまま残り、計算結果が新しい列として追加**される。
+
+```sql
+-- GROUP BY: 部署ごとの平均給与（行が潰れる）
+SELECT department_id, AVG(salary) FROM employees GROUP BY department_id;
+
+-- ウィンドウ関数: 各行に部署平均を付加（行はそのまま）
+SELECT name, department_id, salary,
+       AVG(salary) OVER (PARTITION BY department_id) AS dept_avg
+FROM employees;
+```
+
+### OVER 句の構造
+
+OVER 句は 3 つの要素から構成される。
+
+| 要素 | 役割 | 省略時の動作 |
+|---|---|---|
+| `PARTITION BY` | ウィンドウの分割キー | テーブル全体が 1 つのパーティション |
+| `ORDER BY` | パーティション内の並び順 | 順序なし（順位関数では必須） |
+| フレーム句 | 計算対象の行範囲 | `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW` |
+
+### 順位付け関数の比較
+
+部門 A の従業員の給与が 500, 400, 400, 300 の場合：
+
+| 関数 | 結果 | 特徴 |
+|---|---|---|
+| `ROW_NUMBER()` | 1, 2, 3, 4 | 常に一意。同値でも連番（非決定的） |
+| `RANK()` | 1, 2, 2, 4 | 同値に同順位、次をスキップ |
+| `DENSE_RANK()` | 1, 2, 2, 3 | 同値に同順位、スキップなし |
+
+`ROW_NUMBER()` は同値がある場合にどちらが先になるか保証されないため、一意性を担保したいときは `ORDER BY` に追加のタイブレーカー列を加えるべきである。
+
+### LAG と LEAD
+
+`LAG(column, offset, default)` は現在行から **offset 行前**の値を取得する。`LEAD` はその逆で **offset 行後**を取得する。`offset` のデフォルトは 1、`default` は NULL になる行に代わりに返す値を指定できる。
+
+```sql
+SELECT
+    employee_id,
+    sale_date,
+    amount,
+    LAG(amount, 1, 0)  OVER (PARTITION BY employee_id ORDER BY sale_date) AS prev_amount,
+    amount - LAG(amount, 1, 0) OVER (PARTITION BY employee_id ORDER BY sale_date) AS month_diff
+FROM sales;
+```
+
+時系列データの前期比・成長率の計算に極めて有用である。
+
+### 集約ウィンドウ関数とフレーム句
+
+`SUM()`, `AVG()`, `COUNT()` などの集約関数も OVER 句と組み合わせることができる。フレーム句を指定することで、累積合計や移動平均を実現する。
+
+```sql
+-- 累積合計
+SUM(amount) OVER (ORDER BY sale_date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+
+-- 直近 3 行の移動平均
+AVG(amount) OVER (ORDER BY sale_date ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING)
+
+-- パーティション全体の合計
+SUM(amount) OVER (PARTITION BY region)
+```
+
+**ROWS** は物理的な行数で範囲を決め、**RANGE** は値の論理範囲で決める。明示しない場合のデフォルトは `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW` であり、意図しない結果を招くことがあるため、**ROWS を明示的に指定する習慣**を推奨する。
+
+### WINDOW 句による再利用
+
+同じウィンドウ定義を複数回使うとき、`WINDOW` 句で名前を付けて再利用できる。
+
+```sql
+SELECT
+    name,
+    salary,
+    ROW_NUMBER() OVER w AS row_num,
+    RANK()       OVER w AS rnk,
+    SUM(salary)  OVER w AS running_sum
+FROM employees
+WINDOW w AS (PARTITION BY department_id ORDER BY salary DESC);
+```
+
+---
+
+## 3) 例
+
+### 例1: 部門別の給与ランキングと全社比率
+
+各部門で給与が高い順にランキングし、全社の給与合計に対する比率を計算する。
+
+```sql
+SELECT
+    e.name,
+    d.name AS dept_name,
+    e.salary,
+    RANK() OVER (PARTITION BY e.department_id ORDER BY e.salary DESC) AS dept_rank,
+    ROUND(
+        e.salary * 100.0 / SUM(e.salary) OVER (), 2
+    ) AS pct_of_total
+FROM employees e
+JOIN departments d ON e.department_id = d.id;
+```
+
+`SUM(e.salary) OVER ()` は PARTITION BY を省略しているため、全従業員の給与合計を各行に返す。RANK は部門ごとの順位、比率は全社ベースとなる。
+
+### 例2: 月別売上の前月比と累積合計
+
+月次売上レポートで、前月比の増減額と年初からの累積合計を 1 つのクエリで取得する。
+
+```sql
+SELECT
+    DATE_TRUNC('month', sale_date) AS month,
+    SUM(amount) AS monthly_total,
+    LAG(SUM(amount), 1) OVER (ORDER BY DATE_TRUNC('month', sale_date)) AS prev_month,
+    SUM(amount) - LAG(SUM(amount), 1) OVER (ORDER BY DATE_TRUNC('month', sale_date)) AS diff,
+    SUM(SUM(amount)) OVER (
+        ORDER BY DATE_TRUNC('month', sale_date)
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS ytd_total
+FROM sales
+WHERE sale_date >= '2025-01-01'
+GROUP BY DATE_TRUNC('month', sale_date)
+ORDER BY month;
+```
+
+ここで `SUM(SUM(amount)) OVER (...)` という二重集約に注目してほしい。内側の `SUM(amount)` は GROUP BY による月次集約で、外側の `SUM(...) OVER` はウィンドウ関数による累積合計である。この組み合わせは実務で頻出する。
+
+---
+
+## 4) よくあるミス／落とし穴（5つ）
+
+### 落とし穴 1: WHERE 句でウィンドウ関数を使おうとする
+
+ウィンドウ関数は論理実行順序で WHERE / HAVING の**後**に評価される。したがって `WHERE ROW_NUMBER() OVER (...) <= 3` は構文エラーになる。サブクエリまたは CTE でラップする必要がある。
+
+```sql
+-- NG: 構文エラー
+SELECT * FROM employees WHERE ROW_NUMBER() OVER (ORDER BY salary DESC) <= 3;
+
+-- OK: CTE でラップ
+WITH ranked AS (
+    SELECT *, ROW_NUMBER() OVER (ORDER BY salary DESC) AS rn
+    FROM employees
+)
+SELECT * FROM ranked WHERE rn <= 3;
+```
+
+### 落とし穴 2: LAST_VALUE() のデフォルトフレーム
+
+`LAST_VALUE()` はデフォルトフレームが `CURRENT ROW` までのため、常に現在行の値を返してしまう。パーティション全体の最後の値を取得するには `ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING` を明示する。
+
+### 落とし穴 3: ROW_NUMBER の非決定性
+
+`ORDER BY` で指定した列に重複値がある場合、`ROW_NUMBER()` の結果は実行のたびに変わる可能性がある。一意のタイブレーカー列（例: `id`）を追加して決定性を保つべきである。
+
+### 落とし穴 4: ROWS と RANGE の混同
+
+`RANGE` はデフォルトであり、同じ値を持つ行をすべてフレームに含める。意図せず広い範囲で集約してしまうことがある。数値的な行数で制御したい場合は `ROWS` を使う。
+
+### 落とし穴 5: パフォーマンスへの無配慮
+
+ウィンドウ関数は内部的にソートを伴うため、大量データに対して複数の異なる PARTITION BY / ORDER BY を使うとソート回数が増加する。同じウィンドウ定義を使い回す、またはインデックスを活用してソートコストを下げることが重要である。
+
+---
+
+## 5) チェックリスト
+
+- [ ] OVER 句の PARTITION BY と ORDER BY の役割を説明できる
+- [ ] ROW_NUMBER / RANK / DENSE_RANK の違いを具体例で示せる
+- [ ] LAG / LEAD を使って前期比・差分を計算できる
+- [ ] SUM() OVER とフレーム句で累積合計・移動平均を書ける
+- [ ] ウィンドウ関数を WHERE 句で使えない理由と回避策を知っている
+- [ ] ROWS と RANGE の違いを説明できる
+- [ ] LAST_VALUE() のデフォルトフレーム問題を把握している
+- [ ] WINDOW 句でウィンドウ定義を再利用できる
+
+---
+
+## 6) 次へ
+
+ウィンドウ関数でデータを「読む」力を磨いた。次の **SQL-GOLD-01-02: DDL — CREATE TABLE / ALTER / 制約** では、テーブルの「作る」側に進む。データベースの骨格を定義する DDL と制約を深く理解しよう。

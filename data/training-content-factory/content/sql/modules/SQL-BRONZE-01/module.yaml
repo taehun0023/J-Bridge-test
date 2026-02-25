@@ -1,0 +1,30 @@
+module:
+  id: SQL-BRONZE-01
+  title: "SQL 基礎 — SELECT・WHERE・JOIN 入門"
+  level: bronze
+  description: "SQLの基本構文（SELECT, WHERE, JOIN）を理解し、テーブルからデータを取得・絞り込み・結合できるようになる。"
+  outcomes:
+    - "SELECT文を使ってテーブルからデータを取得できる。"
+    - "WHERE句で条件を指定してデータを絞り込める。"
+    - "INNER JOINとLEFT JOINでテーブルを結合できる。"
+  lessons:
+    - id: SQL-BRONZE-01-01
+      title: "SELECT と FROM — テーブルからデータを取得する"
+      est_minutes: 30
+      tags: [select, from, distinct, alias]
+    - id: SQL-BRONZE-01-02
+      title: "WHERE と演算子 — 条件でデータを絞り込む"
+      est_minutes: 30
+      tags: [where, operators, between, in, like, null]
+    - id: SQL-BRONZE-01-03
+      title: "ORDER BY・LIMIT・OFFSET — ソートとページング"
+      est_minutes: 25
+      tags: [order-by, limit, offset, sort]
+    - id: SQL-BRONZE-01-04
+      title: "集約関数 — COUNT / SUM / AVG / MIN / MAX"
+      est_minutes: 30
+      tags: [count, sum, avg, min, max, group-by]
+    - id: SQL-BRONZE-01-05
+      title: "JOIN 基礎 — INNER JOIN と LEFT JOIN"
+      est_minutes: 35
+      tags: [inner-join, left-join, on, multi-table]

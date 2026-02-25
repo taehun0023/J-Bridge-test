@@ -1,0 +1,230 @@
+---
+lesson_id: SQL-BRONZE-01-03
+title: "ORDER BY・LIMIT・OFFSET — ソートとページング"
+module: SQL-BRONZE-01
+level: bronze
+est_minutes: 30
+tags: [SQL, ORDER BY, LIMIT, OFFSET, FETCH, ソート, ページング, 基礎]
+---
+
+## 1) 要点まとめ（5行）
+
+- **ORDER BY** 句は結果セットを指定列で並び替える。**ASC**（昇順、デフォルト）と **DESC**（降順）を選べる。
+- 複数列でソートする場合、第 1 キーが同値のときに第 2 キーで並び替える。
+- **LIMIT** は返す行数を制限し、**OFFSET** は先頭から指定行数をスキップする。
+- ANSI SQL 標準のページング構文は `OFFSET M ROWS FETCH FIRST N ROWS ONLY` である。
+- ORDER BY なしでは結果の順序が保証されないため、ページングには必ず ORDER BY が必要。
+
+## 2) 概念
+
+### ORDER BY の基本
+
+✅ 結論: ORDER BY を指定しない SELECT の結果順序は不定であり、並び順を保証するには必ず ORDER BY を使う。
+
+リレーショナルデータベースでは、テーブルのデータに「固有の順序」は存在しない。SELECT 文の結果を特定の順序で取得するには、ORDER BY 句を使う。
+
+```sql
+SELECT 列名
+FROM テーブル名
+ORDER BY ソート列 [ASC | DESC];
+```
+
+ORDER BY は SQL の論理処理順序において最後に評価される。つまり FROM → WHERE → GROUP BY → HAVING → SELECT の後に実行される。
+
+### ASC と DESC
+
+✅ 結論: 昇順には ASC（デフォルト・省略可能）、降順には DESC を指定する。
+
+```sql
+-- 給与の昇順（ASC は省略可能）
+SELECT name, salary FROM employees ORDER BY salary;
+
+-- 給与の降順
+SELECT name, salary FROM employees ORDER BY salary DESC;
+```
+
+| キーワード | 方向 | 数値の例 | 日付の例 |
+|---|---|---|---|
+| ASC | 昇順 | 100 → 200 → 300 | 古い → 新しい |
+| DESC | 降順 | 300 → 200 → 100 | 新しい → 古い |
+
+### 複数列ソート
+
+✅ 結論: カンマ区切りで複数列を指定すると、左から優先的にソートされる。
+
+```sql
+-- 部署ID昇順、同じ部署内では給与降順
+SELECT name, department_id, salary
+FROM employees
+ORDER BY department_id ASC, salary DESC;
+```
+
+| name | department_id | salary |
+|---|---|---|
+| 鈴木一郎 | 1 | 520000 |
+| 田中太郎 | 1 | 450000 |
+| 佐藤花子 | 2 | 380000 |
+| 高橋三郎 | 2 | 350000 |
+
+第 1 ソートキー `department_id ASC` が同じ値の場合に、第 2 ソートキー `salary DESC` で並び替える。各列に対して ASC / DESC を個別に指定できる。
+
+### ORDER BY の指定方法
+
+ORDER BY には列名だけでなく、列の位置番号や列別名も使える。
+
+```sql
+-- 列名（推奨）
+ORDER BY salary DESC;
+
+-- 列の位置番号（SELECT 句の何番目か、1 始まり）
+ORDER BY 2 DESC;
+
+-- 列別名
+SELECT name, salary AS monthly_pay
+FROM employees
+ORDER BY monthly_pay DESC;
+```
+
+位置番号（`ORDER BY 2`）は SELECT 句の列順に依存するため、列を追加・削除した際にバグの原因になりやすい。保守性の観点から列名指定が推奨される。
+
+### NULL のソート順
+
+✅ 結論: NULL のソート位置は DBMS により異なるが、ANSI SQL では NULLS FIRST / NULLS LAST で制御できる。
+
+```sql
+-- NULL を最後に配置
+SELECT name, email
+FROM employees
+ORDER BY email ASC NULLS LAST;
+
+-- NULL を先頭に配置
+SELECT name, email
+FROM employees
+ORDER BY email ASC NULLS FIRST;
+```
+
+NULLS FIRST / NULLS LAST をサポートしない DBMS もあるため、環境に応じて CASE 式で代替する場合もある。
+
+### LIMIT — 行数制限
+
+✅ 結論: LIMIT は返す最大行数を指定する。広く使われるが ANSI SQL 標準ではない。
+
+```sql
+-- 上位 5 件のみ取得
+SELECT name, salary
+FROM employees
+ORDER BY salary DESC
+LIMIT 5;
+```
+
+LIMIT はほとんどの DBMS（PostgreSQL, MySQL, SQLite 等）で使えるが、ANSI SQL 標準の構文ではない。
+
+### OFFSET — 行スキップ
+
+✅ 結論: OFFSET は先頭から指定行数をスキップし、LIMIT と組み合わせてページングを実現する。
+
+```sql
+-- 6 件目から 10 件目（2 ページ目、1 ページ 5 件）
+SELECT name, salary
+FROM employees
+ORDER BY salary DESC
+LIMIT 5 OFFSET 5;
+```
+
+ページング計算の公式:
+- **OFFSET** = (ページ番号 - 1) × 1 ページあたりの行数
+- **LIMIT** = 1 ページあたりの行数
+
+| ページ | OFFSET | LIMIT |
+|---|---|---|
+| 1 | 0 | 5 |
+| 2 | 5 | 5 |
+| 3 | 10 | 5 |
+
+### ANSI SQL 標準のページング構文
+
+✅ 結論: 標準 SQL では `OFFSET M ROWS FETCH FIRST N ROWS ONLY` を使う。
+
+```sql
+-- ANSI SQL 標準
+SELECT name, salary
+FROM employees
+ORDER BY salary DESC
+OFFSET 10 ROWS
+FETCH FIRST 5 ROWS ONLY;
+```
+
+この構文は Oracle、PostgreSQL、DB2、SQL Server などで使える。LIMIT / OFFSET と同等の機能だが、ANSI SQL 標準に準拠しているため移植性が高い。
+
+| 構文 | 標準 | 対応 DBMS |
+|---|---|---|
+| `LIMIT N` | 非標準 | MySQL, PostgreSQL, SQLite |
+| `FETCH FIRST N ROWS ONLY` | ANSI SQL | Oracle, PostgreSQL, DB2, SQL Server |
+
+### パフォーマンス上の注意
+
+OFFSET が大きくなるほどパフォーマンスが低下する傾向がある。データベースは内部的に `OFFSET + LIMIT` 行分のデータを処理し、先頭の OFFSET 行を捨てる仕組みだからである。大量データのページングでは、キーセットページング（WHERE id > last_seen_id）などの代替手法を検討する。
+
+## 3) 例（2つ）
+
+### 例1: 給与トップ 3 を取得する
+
+```sql
+SELECT name, salary
+FROM employees
+ORDER BY salary DESC
+LIMIT 3;
+```
+
+| name | salary |
+|---|---|
+| 鈴木一郎 | 520000 |
+| 田中太郎 | 450000 |
+| 山田次郎 | 420000 |
+
+給与の降順で並べて LIMIT 3 で上位 3 名を取得する。ORDER BY なしでは「上位」が定義されないため、ランキング取得には ORDER BY が必須である。
+
+### 例2: 入社日が新しい順にページングする
+
+```sql
+-- 1 ページ目（最新 5 名）
+SELECT name, hire_date
+FROM employees
+ORDER BY hire_date DESC
+OFFSET 0 ROWS FETCH FIRST 5 ROWS ONLY;
+
+-- 2 ページ目
+SELECT name, hire_date
+FROM employees
+ORDER BY hire_date DESC
+OFFSET 5 ROWS FETCH FIRST 5 ROWS ONLY;
+```
+
+ANSI SQL 標準構文を使ったページングの例。1 ページ 5 件として、OFFSET を 5 ずつ増やすことで次のページを取得する。
+
+## 4) よくあるミス／落とし穴（5つ）
+
+⚠️ **ミス1**: ORDER BY なしで LIMIT/OFFSET を使う → **対策**: 結果順序が不定になり、ページごとにデータが重複・欠落する。必ず ORDER BY と併用する。
+
+⚠️ **ミス2**: ORDER BY に列の位置番号を使って、後から SELECT 句を変更する → **対策**: 列名を明記してソート対象を明確にする。
+
+⚠️ **ミス3**: OFFSET のパフォーマンス問題を無視する → **対策**: 数千件を超えるページングではキーセットページングを検討する。
+
+⚠️ **ミス4**: LIMIT が ANSI SQL 標準だと思い込む → **対策**: 移植性が必要な場合は FETCH FIRST N ROWS ONLY を使う。
+
+⚠️ **ミス5**: NULL のソート位置を考慮しない → **対策**: NULLS FIRST / NULLS LAST を使うか、NULL を含む可能性がある列のソート結果を確認する。
+
+## 5) チェックリスト
+
+- [ ] ORDER BY の役割と記述位置を説明できる
+- [ ] ASC と DESC を正しく使い分けられる
+- [ ] 複数列ソートの動作を理解している
+- [ ] LIMIT で行数制限ができる
+- [ ] OFFSET でページングを実装できる
+- [ ] ANSI SQL 標準の FETCH FIRST N ROWS ONLY 構文を書ける
+- [ ] ORDER BY なしで LIMIT/OFFSET を使うリスクを説明できる
+- [ ] NULLS FIRST / NULLS LAST の使い方を知っている
+
+## 6) 次へ
+
+次のレッスンは **SQL-BRONZE-01-04: 集約関数 — COUNT / SUM / AVG / MIN / MAX** です。テーブル全体やグループ単位でデータを集計する方法を学び、GROUP BY と HAVING を使ったグループ化を習得します。

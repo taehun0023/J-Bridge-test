@@ -1,0 +1,204 @@
+---
+lesson_id: SQL-GOLD-01-01
+title: "윈도우 함수 — ROW_NUMBER / RANK / LAG / LEAD"
+module: SQL-GOLD-01
+level: gold
+est_minutes: 35
+tags: [window-function, ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD, OVER, PARTITION-BY, frame-clause]
+---
+
+## 1) 핵심 요약 (5줄)
+
+1. **윈도우 함수는 행을 합치지 않는 집계**이다. GROUP BY가 행을 합치는 것과 달리, 윈도우 함수는 원래 행을 유지한 채 계산 결과를 추가한다.
+2. **OVER 절**이 분할(PARTITION BY)과 순서(ORDER BY)를 정의하며, 모든 윈도우 함수에 필수이다.
+3. **ROW_NUMBER / RANK / DENSE_RANK**는 순위 매기기 삼형제로, 동일 값 처리 방식만 다르다.
+4. **LAG / LEAD**는 "이전 행"과 "다음 행"의 값을 참조할 수 있어, 시계열 차분과 전월 대비에 필수적이다.
+5. **프레임 절(ROWS BETWEEN)**을 사용하면 누적 합계, 이동 평균 등 유연한 범위 집계가 가능해진다.
+
+---
+
+## 2) 개념
+
+### 윈도우 함수란 무엇인가
+
+표준 SQL(SQL:2003)에서 도입된 윈도우 함수는 `SELECT` 절에서 **OVER()** 키워드와 함께 사용하는 특수한 함수 그룹이다. 일반 집계 함수(`SUM`, `AVG` 등)는 `GROUP BY`와 조합하면 행이 집계되어 사라지지만, 윈도우 함수에서는 **각 행이 그대로 남고, 계산 결과가 새로운 열로 추가**된다.
+
+```sql
+-- GROUP BY: 부서별 평균 급여 (행이 합쳐짐)
+SELECT department_id, AVG(salary) FROM employees GROUP BY department_id;
+
+-- 윈도우 함수: 각 행에 부서 평균을 추가 (행은 그대로)
+SELECT name, department_id, salary,
+       AVG(salary) OVER (PARTITION BY department_id) AS dept_avg
+FROM employees;
+```
+
+### OVER 절의 구조
+
+OVER 절은 3가지 요소로 구성된다.
+
+| 요소 | 역할 | 생략 시 동작 |
+|---|---|---|
+| `PARTITION BY` | 윈도우 분할 키 | 테이블 전체가 하나의 파티션 |
+| `ORDER BY` | 파티션 내 정렬 순서 | 순서 없음 (순위 함수에서는 필수) |
+| 프레임 절 | 계산 대상 행 범위 | `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW` |
+
+### 순위 부여 함수 비교
+
+부서 A의 직원 급여가 500, 400, 400, 300인 경우:
+
+| 함수 | 결과 | 특징 |
+|---|---|---|
+| `ROW_NUMBER()` | 1, 2, 3, 4 | 항상 고유. 동일 값이어도 연번 (비결정적) |
+| `RANK()` | 1, 2, 2, 4 | 동일 값에 같은 순위, 다음을 건너뜀 |
+| `DENSE_RANK()` | 1, 2, 2, 3 | 동일 값에 같은 순위, 건너뛰지 않음 |
+
+`ROW_NUMBER()`는 동일 값이 있을 때 어느 쪽이 먼저 오는지 보장되지 않으므로, 고유성을 담보하려면 `ORDER BY`에 타이브레이커 열(예: `id`)을 추가해야 한다.
+
+### LAG와 LEAD
+
+`LAG(column, offset, default)`는 현재 행에서 **offset 행 전**의 값을 가져온다. `LEAD`는 반대로 **offset 행 후**를 가져온다. `offset`의 기본값은 1이며, `default`는 NULL이 되는 행에 대신 반환할 값을 지정할 수 있다.
+
+```sql
+SELECT
+    employee_id,
+    sale_date,
+    amount,
+    LAG(amount, 1, 0)  OVER (PARTITION BY employee_id ORDER BY sale_date) AS prev_amount,
+    amount - LAG(amount, 1, 0) OVER (PARTITION BY employee_id ORDER BY sale_date) AS month_diff
+FROM sales;
+```
+
+시계열 데이터의 전기 대비, 성장률 계산에 매우 유용하다.
+
+### 집계 윈도우 함수와 프레임 절
+
+`SUM()`, `AVG()`, `COUNT()` 등의 집계 함수도 OVER 절과 조합할 수 있다. 프레임 절을 지정하여 누적 합계나 이동 평균을 구현한다.
+
+```sql
+-- 누적 합계
+SUM(amount) OVER (ORDER BY sale_date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+
+-- 최근 3행 이동 평균
+AVG(amount) OVER (ORDER BY sale_date ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING)
+
+-- 파티션 전체 합계
+SUM(amount) OVER (PARTITION BY region)
+```
+
+**ROWS**는 물리적인 행 수로 범위를 결정하고, **RANGE**는 값의 논리적 범위로 결정한다. 명시하지 않으면 기본값은 `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`이며, 의도하지 않은 결과를 초래할 수 있으므로 **ROWS를 명시적으로 지정하는 습관**을 권장한다.
+
+### WINDOW 절을 통한 재사용
+
+같은 윈도우 정의를 여러 번 사용할 때, `WINDOW` 절로 이름을 붙여 재사용할 수 있다.
+
+```sql
+SELECT
+    name,
+    salary,
+    ROW_NUMBER() OVER w AS row_num,
+    RANK()       OVER w AS rnk,
+    SUM(salary)  OVER w AS running_sum
+FROM employees
+WINDOW w AS (PARTITION BY department_id ORDER BY salary DESC);
+```
+
+---
+
+## 3) 예제
+
+### 예제 1: 부서별 급여 랭킹과 전사 비율
+
+각 부서에서 급여가 높은 순으로 랭킹하고, 전사 급여 합계에 대한 비율을 계산한다.
+
+```sql
+SELECT
+    e.name,
+    d.name AS dept_name,
+    e.salary,
+    RANK() OVER (PARTITION BY e.department_id ORDER BY e.salary DESC) AS dept_rank,
+    ROUND(
+        e.salary * 100.0 / SUM(e.salary) OVER (), 2
+    ) AS pct_of_total
+FROM employees e
+JOIN departments d ON e.department_id = d.id;
+```
+
+`SUM(e.salary) OVER ()`는 PARTITION BY를 생략했으므로 전 직원의 급여 합계를 각 행에 반환한다. RANK는 부서별 순위, 비율은 전사 기준이 된다.
+
+### 예제 2: 월별 매출의 전월 대비와 누적 합계
+
+월간 매출 리포트에서 전월 대비 증감액과 연초부터의 누적 합계를 하나의 쿼리로 조회한다.
+
+```sql
+SELECT
+    DATE_TRUNC('month', sale_date) AS month,
+    SUM(amount) AS monthly_total,
+    LAG(SUM(amount), 1) OVER (ORDER BY DATE_TRUNC('month', sale_date)) AS prev_month,
+    SUM(amount) - LAG(SUM(amount), 1) OVER (ORDER BY DATE_TRUNC('month', sale_date)) AS diff,
+    SUM(SUM(amount)) OVER (
+        ORDER BY DATE_TRUNC('month', sale_date)
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS ytd_total
+FROM sales
+WHERE sale_date >= '2025-01-01'
+GROUP BY DATE_TRUNC('month', sale_date)
+ORDER BY month;
+```
+
+여기서 `SUM(SUM(amount)) OVER (...)`라는 이중 집계에 주목하자. 안쪽의 `SUM(amount)`는 GROUP BY에 의한 월간 집계이고, 바깥쪽의 `SUM(...) OVER`는 윈도우 함수에 의한 누적 합계이다. 이 조합은 실무에서 자주 사용된다.
+
+---
+
+## 4) 자주 하는 실수 / 함정 (5가지)
+
+### 함정 1: WHERE 절에서 윈도우 함수를 사용하려는 시도
+
+윈도우 함수는 논리적 실행 순서에서 WHERE / HAVING **이후**에 평가된다. 따라서 `WHERE ROW_NUMBER() OVER (...) <= 3`은 문법 오류가 된다. 서브쿼리 또는 CTE로 감싸야 한다.
+
+```sql
+-- NG: 문법 오류
+SELECT * FROM employees WHERE ROW_NUMBER() OVER (ORDER BY salary DESC) <= 3;
+
+-- OK: CTE로 감싸기
+WITH ranked AS (
+    SELECT *, ROW_NUMBER() OVER (ORDER BY salary DESC) AS rn
+    FROM employees
+)
+SELECT * FROM ranked WHERE rn <= 3;
+```
+
+### 함정 2: LAST_VALUE()의 기본 프레임
+
+`LAST_VALUE()`는 기본 프레임이 `CURRENT ROW`까지이므로, 항상 현재 행의 값을 반환해 버린다. 파티션 전체의 마지막 값을 가져오려면 `ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING`을 명시해야 한다.
+
+### 함정 3: ROW_NUMBER의 비결정성
+
+`ORDER BY`로 지정한 열에 중복 값이 있는 경우, `ROW_NUMBER()`의 결과는 실행할 때마다 달라질 수 있다. 고유한 타이브레이커 열(예: `id`)을 추가하여 결정성을 확보해야 한다.
+
+### 함정 4: ROWS와 RANGE의 혼동
+
+`RANGE`가 기본값이며, 같은 값을 가진 행을 모두 프레임에 포함시킨다. 의도치 않게 넓은 범위에서 집계해 버릴 수 있다. 숫자적인 행 수로 제어하고 싶다면 `ROWS`를 사용한다.
+
+### 함정 5: 성능에 대한 무관심
+
+윈도우 함수는 내부적으로 정렬을 수반하므로, 대량 데이터에 대해 여러 개의 다른 PARTITION BY / ORDER BY를 사용하면 정렬 횟수가 증가한다. 같은 윈도우 정의를 재사용하거나, 인덱스를 활용하여 정렬 비용을 줄이는 것이 중요하다.
+
+---
+
+## 5) 체크리스트
+
+- [ ] OVER 절의 PARTITION BY와 ORDER BY의 역할을 설명할 수 있다
+- [ ] ROW_NUMBER / RANK / DENSE_RANK의 차이를 구체적인 예로 보여줄 수 있다
+- [ ] LAG / LEAD를 사용하여 전기 대비, 차분을 계산할 수 있다
+- [ ] SUM() OVER와 프레임 절로 누적 합계, 이동 평균을 작성할 수 있다
+- [ ] 윈도우 함수를 WHERE 절에서 사용할 수 없는 이유와 우회 방법을 알고 있다
+- [ ] ROWS와 RANGE의 차이를 설명할 수 있다
+- [ ] LAST_VALUE()의 기본 프레임 문제를 파악하고 있다
+- [ ] WINDOW 절로 윈도우 정의를 재사용할 수 있다
+
+---
+
+## 6) 다음으로
+
+윈도우 함수로 데이터를 "읽는" 역량을 키웠다. 다음 **SQL-GOLD-01-02: DDL — CREATE TABLE / ALTER / 제약 조건**에서는 테이블을 "만드는" 쪽으로 나아간다. 데이터베이스의 골격을 정의하는 DDL과 제약 조건을 깊이 이해하자.

@@ -1,0 +1,204 @@
+---
+lesson_id: SQL-SILVER-01-02
+title: "サブクエリ — スカラー・行・テーブルサブクエリ"
+module: SQL-SILVER-01
+level: silver
+est_minutes: 35
+tags: [subquery, exists, in-subquery, correlated]
+---
+
+## 1) 要点まとめ（5行）
+
+- サブクエリとは SQL 文の内部に入れ子として記述する SELECT 文であり、WHERE / FROM / SELECT / HAVING で使用できる。
+- スカラーサブクエリは1行1列を返し、テーブルサブクエリ（導出テーブル）は複数行・複数列を返す。
+- 相関サブクエリは外側クエリの値を参照し、外側の各行ごとに評価される。非相関サブクエリは1度だけ評価される。
+- EXISTS は相関サブクエリと組み合わせて「存在するか」を判定し、NOT IN より NULL 安全である。
+- IN のサブクエリ結果に NULL が含まれると NOT IN で予期しない結果になるため、NOT EXISTS を推奨する。
+
+## 2) 概念
+
+### サブクエリの分類
+
+✅ 結論: サブクエリは返す結果の形状により3種類に分類できる。
+
+| 種類 | 返す結果 | 主な使用場所 |
+|---|---|---|
+| スカラーサブクエリ | 1行1列（単一値） | SELECT 句、WHERE 句の比較演算子右辺 |
+| 行サブクエリ | 1行・複数列 | WHERE 句の行コンストラクタ比較 |
+| テーブルサブクエリ | 複数行・複数列 | FROM 句（導出テーブル）、IN / EXISTS |
+
+### スカラーサブクエリ
+
+スカラーサブクエリは **単一の値** を返す。WHERE 句や SELECT 句で、あたかも定数のように使える。
+
+```sql
+-- 全社平均より給与が高い従業員
+SELECT name, salary
+FROM employees
+WHERE salary > (SELECT AVG(salary) FROM employees);
+```
+
+```sql
+-- SELECT 句での使用：平均との差を表示
+SELECT name, salary,
+       salary - (SELECT AVG(salary) FROM employees) AS diff_from_avg
+FROM employees;
+```
+
+**注意:** スカラーサブクエリが複数行を返すとランタイムエラーになる。必ず1行のみ返すことを保証する必要がある。
+
+### テーブルサブクエリ（導出テーブル）
+
+✅ 結論: FROM 句にサブクエリを書くと「仮想テーブル」として扱える。**必ず別名（AS）を付ける**のが ANSI SQL のルールである。
+
+```sql
+SELECT dept_avg.department_id, dept_avg.avg_salary
+FROM (
+  SELECT department_id, AVG(salary) AS avg_salary
+  FROM employees
+  GROUP BY department_id
+) AS dept_avg
+WHERE dept_avg.avg_salary > 50000;
+```
+
+導出テーブルは複雑な集計結果をさらにフィルタしたい場合に有効である。
+
+### IN サブクエリ
+
+IN は「サブクエリの結果セットに値が含まれるか」を判定する。
+
+```sql
+-- 東京にある部署の従業員
+SELECT name FROM employees
+WHERE department_id IN (
+  SELECT id FROM departments WHERE location = 'Tokyo'
+);
+```
+
+### NOT IN の NULL 問題
+
+⚠️ NOT IN のサブクエリ結果に **NULL が1つでも含まれる** と、比較結果がすべて UNKNOWN となり **行が一切返されない**。
+
+```sql
+-- 危険: departments.id に NULL があると結果が0件になる
+SELECT name FROM employees
+WHERE department_id NOT IN (SELECT id FROM departments);
+```
+
+### EXISTS と NOT EXISTS
+
+✅ 結論: EXISTS は相関サブクエリと組み合わせて使用し、「条件を満たす行が存在するか」を判定する。NOT IN より NULL 安全である。
+
+```sql
+-- 従業員がいる部署のみ取得
+SELECT d.name
+FROM departments d
+WHERE EXISTS (
+  SELECT 1 FROM employees e WHERE e.department_id = d.id
+);
+```
+
+```sql
+-- 従業員がいない部署を取得（NOT EXISTS）
+SELECT d.name
+FROM departments d
+WHERE NOT EXISTS (
+  SELECT 1 FROM employees e WHERE e.department_id = d.id
+);
+```
+
+EXISTS の SELECT 句には慣例として `SELECT 1` を書く。実際には何を書いても動作に影響しない。
+
+### 相関サブクエリ vs 非相関サブクエリ
+
+| 種類 | 特徴 | 評価回数 |
+|---|---|---|
+| 非相関サブクエリ | 外側のクエリに依存しない | 1回 |
+| 相関サブクエリ | 外側の行の値を参照する | 外側の行数分 |
+
+```sql
+-- 相関サブクエリ: 自部署の平均より給与が高い従業員
+SELECT e1.name, e1.salary, e1.department_id
+FROM employees e1
+WHERE e1.salary > (
+  SELECT AVG(e2.salary)
+  FROM employees e2
+  WHERE e2.department_id = e1.department_id
+);
+```
+
+この例では外側の `e1.department_id` をサブクエリ内で参照しているため、外側の各行ごとにサブクエリが評価される。
+
+### ANY / ALL 演算子
+
+```sql
+-- 部署2の全員より給与が高い従業員
+SELECT name, salary FROM employees
+WHERE salary > ALL (SELECT salary FROM employees WHERE department_id = 2);
+
+-- 部署2の誰かより給与が高い従業員
+SELECT name, salary FROM employees
+WHERE salary > ANY (SELECT salary FROM employees WHERE department_id = 2);
+```
+
+## 3) 例（2つ）
+
+### 例1: 注文がある顧客の一覧（EXISTS）
+
+```sql
+SELECT c.name, c.city
+FROM customers c
+WHERE EXISTS (
+  SELECT 1
+  FROM orders o
+  WHERE o.customer_id = c.id
+    AND o.order_date >= '2024-01-01'
+);
+```
+
+2024年以降に注文がある顧客だけを抽出する。EXISTS を使うことで、NOT IN の NULL 問題を回避しつつ、関連テーブルの条件で絞り込める。
+
+### 例2: 部署平均を上回る給与の従業員（相関サブクエリ + 導出テーブル比較）
+
+```sql
+SELECT e.name, e.salary, e.department_id, dept_avg.avg_salary
+FROM employees e
+JOIN (
+  SELECT department_id, AVG(salary) AS avg_salary
+  FROM employees
+  GROUP BY department_id
+) AS dept_avg ON e.department_id = dept_avg.department_id
+WHERE e.salary > dept_avg.avg_salary;
+```
+
+この例では相関サブクエリの代わりに導出テーブルを JOIN で結合するアプローチを使用している。各部署の平均給与をサブクエリで求め、それを元テーブルと結合して比較する。パフォーマンス面でも有利な場合が多い。
+
+## 4) よくあるミス／落とし穴（5つ）
+
+⚠️ ミス1: NOT IN のサブクエリ結果に NULL が含まれ、結果が0件になる
+→ 対策: NOT IN の代わりに NOT EXISTS を使用する。
+
+⚠️ ミス2: スカラーサブクエリが複数行を返しランタイムエラーになる
+→ 対策: スカラーサブクエリには必ず1行のみ返すクエリを書く。必要に応じて LIMIT 1 や集約関数を使用する。
+
+⚠️ ミス3: FROM 句の導出テーブルに別名を付け忘れてエラーになる
+→ 対策: FROM 句のサブクエリには必ず AS alias を付ける。
+
+⚠️ ミス4: 相関サブクエリの外側テーブルの別名を間違え、意図しない結合条件になる
+→ 対策: 外側・内側のテーブルに明確な別名を付け、どの列がどのテーブルに属するか明示する。
+
+⚠️ ミス5: パフォーマンスを考えずに SELECT 句でスカラーサブクエリを多用する
+→ 対策: SELECT 句のスカラーサブクエリは行ごとに実行されるため、行数が多い場合は JOIN や CTE に書き換えることを検討する。
+
+## 5) チェックリスト
+
+- [ ] NOT IN の代わりに NOT EXISTS の使用を検討した
+- [ ] スカラーサブクエリが確実に1行のみ返すことを確認した
+- [ ] FROM 句のサブクエリに別名を付けた
+- [ ] 相関サブクエリの外側テーブル参照が正しいことを確認した
+- [ ] サブクエリの種類（スカラー / テーブル / 相関）を正しく選択した
+- [ ] パフォーマンスを考慮し、必要に応じて JOIN への書き換えを検討した
+
+## 6) 次へ
+
+次のレッスン **SQL-SILVER-01-03「結合の応用 — OUTER / CROSS / 自己結合」** では、INNER JOIN / LEFT JOIN 以外の結合パターンを学ぶ。RIGHT JOIN、FULL OUTER JOIN、CROSS JOIN、そして自己結合の使い方を習得する。

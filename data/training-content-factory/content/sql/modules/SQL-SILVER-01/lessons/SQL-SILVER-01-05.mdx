@@ -1,0 +1,258 @@
+---
+lesson_id: SQL-SILVER-01-05
+title: "CASE式とNULL処理 — 条件ロジックの実装"
+module: SQL-SILVER-01
+level: silver
+est_minutes: 30
+tags: [case, coalesce, nullif, conditional]
+---
+
+## 1) 要点まとめ（5行）
+
+- CASE 式は SQL における条件分岐であり、SELECT / WHERE / ORDER BY / UPDATE SET など様々な場所で使用できる。
+- 検索 CASE 式（CASE WHEN condition THEN ...）は最初に TRUE となった WHEN の値を返し、ELSE を省略すると NULL が返る。
+- COALESCE は引数を左から評価し最初の非 NULL 値を返す関数であり、NULL のデフォルト値設定に使う。
+- NULLIF(a, b) は a = b の場合に NULL を返し、ゼロ除算回避などに活用される。
+- 条件付き集約は CASE 式を集約関数内に入れることで、1回のクエリで複数条件の集計を実現するテクニックである。
+
+## 2) 概念
+
+### 検索 CASE 式
+
+✅ 結論: 検索 CASE 式は複数の条件を上から順に評価し、最初に TRUE になった WHEN の THEN 値を返す。
+
+```sql
+SELECT name, salary,
+  CASE
+    WHEN salary >= 80000 THEN 'High'
+    WHEN salary >= 50000 THEN 'Mid'
+    ELSE 'Low'
+  END AS salary_grade
+FROM employees;
+```
+
+| name | salary | salary_grade |
+|---|---|---|
+| Tanaka | 90000 | High |
+| Suzuki | 55000 | Mid |
+| Sato | 40000 | Low |
+
+WHEN 句は **上から順に** 評価され、最初にマッチした時点で残りは評価されない。そのため、条件の順序が重要である。
+
+### 単純 CASE 式
+
+単純 CASE 式は1つの式の値を各 WHEN 値と比較する。等価比較のみが可能で、不等号は使えない。
+
+```sql
+SELECT name, status,
+  CASE status
+    WHEN 'shipped' THEN '発送済'
+    WHEN 'pending' THEN '保留中'
+    WHEN 'cancelled' THEN 'キャンセル'
+    ELSE '不明'
+  END AS status_jp
+FROM orders;
+```
+
+### ELSE の省略と NULL
+
+⚠️ CASE 式で **ELSE を省略** すると、どの WHEN にも一致しない場合に **NULL** が返される。意図しない NULL を防ぐため、**ELSE を明示的に書く**ことが推奨される。
+
+```sql
+-- ELSE 省略 → 一致しない行は NULL
+SELECT name,
+  CASE department_id
+    WHEN 1 THEN 'Engineering'
+    WHEN 2 THEN 'Sales'
+  END AS dept_label  -- department_id=3 の行は NULL
+FROM employees;
+```
+
+### COALESCE 関数
+
+✅ 結論: COALESCE は引数を左から順に評価し、最初の非 NULL 値を返す。すべて NULL なら NULL を返す。
+
+```sql
+-- NULL のメールをデフォルト値で置換
+SELECT name, COALESCE(email, 'no-email@example.com') AS contact
+FROM employees;
+```
+
+COALESCE は内部的に以下の CASE 式と等価である。
+
+```sql
+-- COALESCE(a, b, c) は以下と等価
+CASE
+  WHEN a IS NOT NULL THEN a
+  WHEN b IS NOT NULL THEN b
+  ELSE c
+END
+```
+
+**複数引数の活用:**
+
+```sql
+-- 優先順位付きの連絡先
+SELECT name,
+       COALESCE(mobile_phone, office_phone, email, '連絡先なし') AS contact
+FROM employees;
+```
+
+### NULLIF 関数
+
+✅ 結論: NULLIF(expr1, expr2) は2つの式が等しい場合に NULL を返し、異なる場合に expr1 を返す。
+
+```sql
+-- ゼロ除算の回避
+SELECT name,
+       revenue / NULLIF(cost, 0) AS profit_ratio
+FROM products;
+```
+
+cost が 0 の場合、NULLIF(cost, 0) は NULL を返すため、division by zero エラーが発生せず結果は NULL になる。
+
+### NULL の比較ルール
+
+NULL に関する重要なルールを確認する。
+
+- `col = NULL` は常に **UNKNOWN** になる（TRUE にはならない）。
+- NULL の判定には `IS NULL` / `IS NOT NULL` を使用する。
+- 集約関数（SUM, AVG, COUNT(列名)）は **NULL を無視** して計算する。
+- `COUNT(*)` のみ NULL を含む全行をカウントする。
+
+```sql
+-- 誤り: col = NULL は常に UNKNOWN
+SELECT * FROM employees WHERE email = NULL;     -- 結果は常に0件
+
+-- 正しい: IS NULL を使用
+SELECT * FROM employees WHERE email IS NULL;
+```
+
+### 条件付き集約（Conditional Aggregation）
+
+✅ 結論: CASE 式を集約関数の中に入れることで、WHERE で分割せずに1回のクエリで複数条件の集計ができる。
+
+```sql
+SELECT department_id,
+  COUNT(*) AS total,
+  SUM(CASE WHEN salary >= 60000 THEN 1 ELSE 0 END) AS high_earners,
+  SUM(CASE WHEN salary < 60000 THEN 1 ELSE 0 END) AS low_earners,
+  AVG(CASE WHEN hire_date >= '2023-01-01' THEN salary END) AS new_hire_avg
+FROM employees
+GROUP BY department_id;
+```
+
+| department_id | total | high_earners | low_earners | new_hire_avg |
+|---|---|---|---|---|
+| 1 | 5 | 3 | 2 | 65000 |
+| 2 | 3 | 1 | 2 | 48000 |
+
+**ピボットテーブルの実現:**
+
+```sql
+-- 月別注文数をピボット形式で表示
+SELECT
+  EXTRACT(YEAR FROM order_date) AS year,
+  SUM(CASE WHEN EXTRACT(MONTH FROM order_date) = 1 THEN 1 ELSE 0 END) AS jan,
+  SUM(CASE WHEN EXTRACT(MONTH FROM order_date) = 2 THEN 1 ELSE 0 END) AS feb,
+  SUM(CASE WHEN EXTRACT(MONTH FROM order_date) = 3 THEN 1 ELSE 0 END) AS mar
+FROM orders
+GROUP BY EXTRACT(YEAR FROM order_date);
+```
+
+### CASE 式のデータ型
+
+CASE 式の各 THEN / ELSE の戻り値は **互換性のあるデータ型** である必要がある。文字型と数値型を混在させるとエラーまたは暗黙の型変換が発生する。
+
+```sql
+-- エラー: 型の不一致
+SELECT CASE WHEN salary > 50000 THEN 'High' ELSE 0 END FROM employees;
+-- 'High' は文字型、0 は数値型 → 型不一致
+
+-- 正しい: 型を統一する
+SELECT CASE WHEN salary > 50000 THEN 'High' ELSE 'Low' END FROM employees;
+```
+
+## 3) 例（2つ）
+
+### 例1: 顧客ランク分類と集計
+
+顧客を注文総額に基づいてランク分けし、ランクごとの人数と平均注文額を集計する。
+
+```sql
+WITH customer_totals AS (
+  SELECT c.id, c.name,
+         SUM(o.total_amount) AS total_spent
+  FROM customers c
+  JOIN orders o ON c.id = o.customer_id
+  GROUP BY c.id, c.name
+)
+SELECT
+  CASE
+    WHEN total_spent >= 100000 THEN 'Platinum'
+    WHEN total_spent >= 50000  THEN 'Gold'
+    WHEN total_spent >= 10000  THEN 'Silver'
+    ELSE 'Bronze'
+  END AS rank,
+  COUNT(*) AS customer_count,
+  AVG(total_spent) AS avg_spent
+FROM customer_totals
+GROUP BY
+  CASE
+    WHEN total_spent >= 100000 THEN 'Platinum'
+    WHEN total_spent >= 50000  THEN 'Gold'
+    WHEN total_spent >= 10000  THEN 'Silver'
+    ELSE 'Bronze'
+  END
+ORDER BY avg_spent DESC;
+```
+
+ポイント: GROUP BY にも CASE 式を書くことで、計算した分類でグループ化できる。
+
+### 例2: NULL を考慮した従業員レポート
+
+```sql
+SELECT
+  d.name AS dept_name,
+  COUNT(e.id) AS total_emp,
+  COUNT(e.email) AS has_email,
+  COUNT(e.id) - COUNT(e.email) AS missing_email,
+  COALESCE(AVG(e.salary), 0) AS avg_salary,
+  SUM(CASE WHEN e.manager_id IS NULL THEN 1 ELSE 0 END) AS top_managers
+FROM departments d
+LEFT JOIN employees e ON d.id = e.department_id
+GROUP BY d.name
+ORDER BY total_emp DESC;
+```
+
+ポイント: LEFT JOIN で従業員がいない部署も含め、COALESCE で AVG の NULL を 0 に置換し、CASE 式で manager_id が NULL（= トップマネージャー）の人数をカウントしている。
+
+## 4) よくあるミス／落とし穴（5つ）
+
+⚠️ ミス1: CASE 式の ELSE を省略し、意図しない NULL が返される
+→ 対策: ELSE を省略せず明示的にデフォルト値を指定する。
+
+⚠️ ミス2: CASE WHEN の条件順序を間違え、意図した分岐に到達しない
+→ 対策: 条件は厳しいもの（範囲が狭いもの）から順に記述する。例: `>= 80000` → `>= 50000` → ELSE。
+
+⚠️ ミス3: col = NULL と書いて条件が常に UNKNOWN になる
+→ 対策: NULL の判定には必ず IS NULL / IS NOT NULL を使用する。
+
+⚠️ ミス4: CASE 式の THEN / ELSE で異なるデータ型を返してエラーになる
+→ 対策: すべての THEN と ELSE の戻り値を同じデータ型（または互換型）に統一する。
+
+⚠️ ミス5: NULLIF の引数順序を間違える
+→ 対策: NULLIF(a, b) は「a = b なら NULL、そうでなければ a」である。ゼロ除算回避なら NULLIF(divisor, 0) と書く。
+
+## 5) チェックリスト
+
+- [ ] CASE 式に ELSE を明示的に書いている
+- [ ] WHEN 条件を正しい順序（厳しい条件から）で並べている
+- [ ] NULL の比較に IS NULL / IS NOT NULL を使っている
+- [ ] COALESCE で NULL のデフォルト値を適切に設定している
+- [ ] 条件付き集約で CASE 式の型が統一されている
+- [ ] NULLIF の引数順序が正しいことを確認した
+
+## 6) 次へ
+
+このレッスンで **SQL Silver モジュール（SQL-SILVER-01）** のすべてのレッスンが完了した。GROUP BY 応用、サブクエリ、結合の応用、CTE、CASE 式と NULL 処理を習得し、中級 SQL を使いこなすための土台が整った。次は Gold レベルに進み、ウィンドウ関数やパフォーマンスチューニングなど、より高度なトピックに取り組む。

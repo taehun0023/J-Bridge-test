@@ -1,0 +1,30 @@
+module:
+  id: SQL-GOLD-01
+  title: "SQL 上級 — ウィンドウ関数・DDL・パフォーマンス"
+  level: gold
+  description: "ウィンドウ関数、DDL/DML、トランザクション、インデックスと実行計画など上級SQLを理解し、パフォーマンスを意識したクエリ設計ができるようになる。"
+  outcomes:
+    - "ウィンドウ関数を使った分析クエリを書ける。"
+    - "DDL/DMLの基本操作とトランザクション制御を理解している。"
+    - "インデックスと実行計画を読み解き、パフォーマンスチューニングができる。"
+  lessons:
+    - id: SQL-GOLD-01-01
+      title: "ウィンドウ関数 — ROW_NUMBER / RANK / LAG / LEAD"
+      est_minutes: 35
+      tags: [window, over, partition-by, row-number, rank, lag, lead]
+    - id: SQL-GOLD-01-02
+      title: "DDL — CREATE TABLE / ALTER / 制約"
+      est_minutes: 30
+      tags: [create-table, alter, primary-key, foreign-key, unique, check]
+    - id: SQL-GOLD-01-03
+      title: "DML — INSERT / UPDATE / DELETE / MERGE"
+      est_minutes: 30
+      tags: [insert, update, delete, merge, upsert]
+    - id: SQL-GOLD-01-04
+      title: "トランザクション — BEGIN / COMMIT / ROLLBACK"
+      est_minutes: 35
+      tags: [transaction, acid, isolation, deadlock]
+    - id: SQL-GOLD-01-05
+      title: "インデックスと実行計画 — パフォーマンスチューニング"
+      est_minutes: 35
+      tags: [index, explain, btree, full-scan, performance]

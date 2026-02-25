@@ -1,5 +1,11 @@
-import PlaceholderPage from '@/components/ui/PlaceholderPage'
+import SubcourseListPage from '@/components/ui/SubcourseListPage'
 
 export default function SqlPage() {
-  return <PlaceholderPage title="SQL" category="dev-sql" />
+  return (
+    <SubcourseListPage
+      title="SQL"
+      description="データベース操作言語"
+      subcategory="sql"
+    />
+  )
 }

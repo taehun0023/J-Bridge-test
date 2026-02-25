@@ -2,7 +2,7 @@
 
 import { Fragment, useState, useTransition } from 'react'
 import { approveRetakeRequest, denyRetakeRequest } from '@/app/actions/admin/retake'
-import { createLearningAssignment, deleteLearningAssignment, confirmAssignment, reassignAssignment, cancelAssignment, getAssigneeUnlockedLevels } from '@/app/actions/learning-assignments'
+import { createLearningAssignment, deleteLearningAssignment, confirmAssignment, reassignAssignment, getAssigneeUnlockedLevels } from '@/app/actions/learning-assignments'
 import { approveExam, denyExam } from '@/app/actions/comprehensive-exam'
 import { ASSIGNMENT_CATEGORIES, JLPT_LEVELS, DEV_LEVELS, getCategoryLabel, getSubcategoryLabel, getContentLevelLabel } from '@/lib/assignment-categories'
 
@@ -96,6 +96,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
 
   // Overdue handling state
   const [reassignDate, setReassignDate] = useState<Record<string, string>>({})
+  const [expandedReassign, setExpandedReassign] = useState<Record<string, boolean>>({})
 
   // Dev level unlock state
   const [devLevelLocks, setDevLevelLocks] = useState<Record<string, boolean>>({})
@@ -181,16 +182,8 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
       else {
         showMsg('再配信しました')
         setReassignDate(prev => { const n = { ...prev }; delete n[id]; return n })
+        setExpandedReassign(prev => { const n = { ...prev }; delete n[id]; return n })
       }
-    })
-  }
-
-  function handleCancel(id: string) {
-    if (!confirm('この課題をキャンセルしますか？')) return
-    startTransition(async () => {
-      const result = await cancelAssignment(id)
-      if (result.error) showMsg(result.error)
-      else showMsg('キャンセルしました')
     })
   }
 
@@ -402,6 +395,8 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {learningAssignments.map(la => {
                     const progress = getProgressPercent(la)
+                    const totalQuizzes = la.required_quiz_ids?.length ?? 0
+                    const passedQuizzes = la.passed_quiz_ids?.length ?? 0
                     return (
                       <Fragment key={la.id}>
                         <tr>
@@ -421,7 +416,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
                                   style={{ width: `${progress}%` }}
                                 />
                               </div>
-                              <span className="text-xs text-gray-500 dark:text-gray-400">{progress}%</span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">{passedQuizzes}/{totalQuizzes}</span>
                             </div>
                           </td>
                           <td className="px-4 py-3">
@@ -444,13 +439,13 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
                                     確認完了
                                   </button>
                                 )}
-                                {la.status === 'overdue' && (
+                                {la.status === 'overdue' && !expandedReassign[la.id] && (
                                   <button
-                                    onClick={() => handleCancel(la.id)}
+                                    onClick={() => setExpandedReassign(prev => ({ ...prev, [la.id]: true }))}
                                     disabled={pending}
-                                    className="rounded-md bg-gray-600 px-3 py-1 text-xs font-medium text-white hover:bg-gray-700 disabled:opacity-50"
+                                    className="rounded-md bg-indigo-600 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
                                   >
-                                    キャンセル
+                                    再配信
                                   </button>
                                 )}
                                 <button
@@ -461,7 +456,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
                                   削除
                                 </button>
                               </div>
-                              {la.status === 'overdue' && (
+                              {la.status === 'overdue' && expandedReassign[la.id] && (
                                 <div className="flex items-center gap-1">
                                   <input
                                     type="date"
@@ -474,22 +469,37 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
                                     disabled={pending}
                                     className="rounded-md bg-indigo-600 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
                                   >
-                                    再配信
+                                    確定
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setExpandedReassign(prev => { const n = { ...prev }; delete n[la.id]; return n })
+                                      setReassignDate(prev => { const n = { ...prev }; delete n[la.id]; return n })
+                                    }}
+                                    className="rounded-md bg-gray-200 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
+                                  >
+                                    取消
                                   </button>
                                 </div>
                               )}
                             </div>
                           </td>
                         </tr>
-                        {la.status === 'overdue' && la.overdue_reason && (
+                        {la.status === 'overdue' && (
                           <tr>
                             <td colSpan={7} className="px-4 py-2">
-                              <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
-                                <span className="font-medium">遅延理由:</span> {la.overdue_reason}
-                                <span className="ml-2 text-xs text-red-400">
-                                  ({la.overdue_reason_at ? new Date(la.overdue_reason_at).toLocaleDateString('ja-JP') : ''})
-                                </span>
-                              </div>
+                              {la.overdue_reason ? (
+                                <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
+                                  <span className="font-medium">遅延理由:</span> {la.overdue_reason}
+                                  <span className="ml-2 text-xs text-red-400">
+                                    ({la.overdue_reason_at ? new Date(la.overdue_reason_at).toLocaleDateString('ja-JP') : ''})
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="rounded-lg bg-yellow-50 px-3 py-2 text-sm text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300">
+                                  <span className="font-medium">遅延理由:</span> 未提出
+                                </div>
+                              )}
                             </td>
                           </tr>
                         )}

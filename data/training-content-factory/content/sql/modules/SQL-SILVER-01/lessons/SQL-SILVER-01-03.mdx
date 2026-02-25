@@ -1,0 +1,199 @@
+---
+lesson_id: SQL-SILVER-01-03
+title: "結合の応用 — OUTER / CROSS / 自己結合"
+module: SQL-SILVER-01
+level: silver
+est_minutes: 30
+tags: [right-join, full-outer, cross-join, self-join]
+---
+
+## 1) 要点まとめ（5行）
+
+- RIGHT JOIN は右テーブルの全行を保持し、LEFT JOIN のテーブル順序を逆にしたものと等価である。
+- FULL OUTER JOIN は左右両方の全行を保持し、一致しない側を NULL で埋める。
+- CROSS JOIN は2テーブルの直積を生成し、結果行数は左行数 × 右行数となる。
+- 自己結合（self-join）は同じテーブルに異なる別名を付けて結合し、階層データや行間比較に使う。
+- USING 句は両テーブルに同名列がある場合に ON の代わりに使え、結果セットに列が1回だけ出現する。
+
+## 2) 概念
+
+### 結合の全体像
+
+Bronze レッスンで学んだ INNER JOIN と LEFT JOIN に加え、SQL にはさらに多くの結合パターンがある。
+
+| 結合タイプ | 保持する行 |
+|---|---|
+| INNER JOIN | 両テーブルで一致する行のみ |
+| LEFT JOIN | 左テーブルの全行 + 右テーブルの一致行 |
+| RIGHT JOIN | 右テーブルの全行 + 左テーブルの一致行 |
+| FULL OUTER JOIN | 両テーブルの全行 |
+| CROSS JOIN | 直積（全組み合わせ） |
+
+### RIGHT JOIN
+
+✅ 結論: RIGHT JOIN は右テーブル（JOIN の右側）の全行を保持する。左テーブルに一致がない場合は NULL となる。
+
+```sql
+SELECT e.name, d.name AS dept_name
+FROM employees e
+RIGHT JOIN departments d ON e.department_id = d.id;
+```
+
+この結果では、従業員がいない部署も表示される（e.name が NULL）。
+
+**実務的な注意:** RIGHT JOIN は LEFT JOIN のテーブル順序を入れ替えるだけで同じ結果が得られるため、**可読性のために LEFT JOIN に統一する**チームが多い。
+
+```sql
+-- 上記と等価な LEFT JOIN
+SELECT e.name, d.name AS dept_name
+FROM departments d
+LEFT JOIN employees e ON d.id = e.department_id;
+```
+
+### FULL OUTER JOIN
+
+✅ 結論: FULL OUTER JOIN は左右両テーブルの全行を返し、一致しない側を NULL で補填する。
+
+```sql
+SELECT e.name AS emp_name, d.name AS dept_name
+FROM employees e
+FULL OUTER JOIN departments d ON e.department_id = d.id;
+```
+
+| emp_name | dept_name |
+|---|---|
+| Tanaka | Engineering |
+| Suzuki | Sales |
+| NULL | Marketing |
+| Yamada | NULL |
+
+この例では、所属部署のない従業員（Yamada）と従業員のいない部署（Marketing）の両方が結果に含まれる。
+
+**不一致行だけを取得するテクニック:**
+
+```sql
+SELECT e.name, d.name AS dept_name
+FROM employees e
+FULL OUTER JOIN departments d ON e.department_id = d.id
+WHERE e.id IS NULL OR d.id IS NULL;
+```
+
+### CROSS JOIN（直積）
+
+✅ 結論: CROSS JOIN は結合条件を指定せず、2テーブルの全行の組み合わせを生成する。
+
+```sql
+SELECT e.name, d.name AS dept_name
+FROM employees e
+CROSS JOIN departments d;
+```
+
+従業員が5名、部署が3つの場合、結果は 5 × 3 = 15行となる。
+
+**活用例:** テストデータ生成やカレンダー表の作成に使える。
+
+```sql
+-- 年月のカレンダー生成
+WITH years AS (SELECT 2024 AS y UNION ALL SELECT 2025),
+     months AS (SELECT 1 AS m UNION ALL SELECT 2 UNION ALL SELECT 3)
+SELECT y, m FROM years CROSS JOIN months ORDER BY y, m;
+```
+
+### 自己結合（Self-Join）
+
+✅ 結論: 自己結合は同じテーブルに異なる別名を付けて結合する手法であり、階層構造の探索や同一テーブル内の行間比較に使用する。
+
+```sql
+-- 従業員とその上司を取得
+SELECT e.name AS employee, m.name AS manager
+FROM employees e
+LEFT JOIN employees m ON e.manager_id = m.id;
+```
+
+| employee | manager |
+|---|---|
+| Tanaka | NULL |
+| Suzuki | Tanaka |
+| Sato | Tanaka |
+| Yamada | Suzuki |
+
+manager_id が NULL の Tanaka はトップ（上司なし）である。LEFT JOIN を使うことで、トップの従業員も結果に含まれる。
+
+### USING 句
+
+✅ 結論: 両テーブルに同名の結合列がある場合、ON の代わりに USING 句で簡潔に書ける。
+
+```sql
+-- ON を使った場合
+SELECT * FROM orders o JOIN customers c ON o.customer_id = c.id;
+
+-- USING を使った場合（列名が同じなら）
+SELECT * FROM orders JOIN customers USING(customer_id);
+```
+
+USING で指定した列は結果セットに **1回だけ** 出現し、テーブル修飾子なしで参照できる。ただし、USING が使えるのは両テーブルに同名列がある場合に限られる。
+
+### NATURAL JOIN の注意
+
+NATURAL JOIN は両テーブルの同名列すべてで自動結合する。しかし、意図しない列で結合されるリスクがあるため、本番コードでは **USING か ON を明示する** のが推奨される。
+
+## 3) 例（2つ）
+
+### 例1: 注文のない顧客と顧客のいない都市を同時に検出
+
+```sql
+SELECT c.name AS customer_name,
+       c.city,
+       o.id AS order_id,
+       o.total_amount
+FROM customers c
+FULL OUTER JOIN orders o ON c.id = o.customer_id
+WHERE c.id IS NULL OR o.id IS NULL;
+```
+
+FULL OUTER JOIN と IS NULL 条件を組み合わせることで、「注文はあるが顧客マスタに存在しないデータ」と「注文のない顧客」の両方を一度に検出できる。データ品質チェックに有用なパターンである。
+
+### 例2: 自己結合で同じ部署の従業員ペアを生成
+
+```sql
+SELECT e1.name AS employee_1,
+       e2.name AS employee_2,
+       e1.department_id
+FROM employees e1
+JOIN employees e2
+  ON e1.department_id = e2.department_id
+ AND e1.id < e2.id
+ORDER BY e1.department_id, e1.name;
+```
+
+`e1.id < e2.id` の条件により、(A, B) と (B, A) の重複を排除し、一意のペアのみを取得する。チーム編成やペアプログラミングの組み合わせ生成などに活用できる。
+
+## 4) よくあるミス／落とし穴（5つ）
+
+⚠️ ミス1: OUTER JOIN で WHERE 句に右テーブルの非 NULL 条件を書き、実質 INNER JOIN になる
+→ 対策: 外部結合の条件は ON 句に書くか、WHERE で IS NULL チェックと組み合わせる。
+
+⚠️ ミス2: CROSS JOIN で大量行のテーブルを結合し、結果が膨大になる
+→ 対策: CROSS JOIN の前に行数を確認する。片方10万行ずつなら100億行になり得る。
+
+⚠️ ミス3: 自己結合でテーブルの別名を付け忘れ、列の参照が曖昧になる
+→ 対策: 自己結合では必ず明確な別名（e, m など）を付け、すべての列にテーブル修飾子を付ける。
+
+⚠️ ミス4: RIGHT JOIN を多用してクエリの可読性を下げる
+→ 対策: 可読性のため LEFT JOIN に統一する慣習を採用する。
+
+⚠️ ミス5: NATURAL JOIN で意図しない列による結合が発生する
+→ 対策: NATURAL JOIN を避け、ON または USING で結合条件を明示する。
+
+## 5) チェックリスト
+
+- [ ] OUTER JOIN の条件を ON 句に正しく配置している
+- [ ] CROSS JOIN の結果行数が許容範囲か確認した
+- [ ] 自己結合のテーブル別名が明確で、列の帰属が曖昧でない
+- [ ] RIGHT JOIN より LEFT JOIN で書き換えられないか検討した
+- [ ] FULL OUTER JOIN が本当に必要な場面か確認した
+- [ ] USING の使用条件（同名列の存在）を満たしている
+
+## 6) 次へ
+
+次のレッスン **SQL-SILVER-01-04「CTE と WITH 句 — 可読性の高いクエリ設計」** では、WITH 句を使った共通テーブル式（CTE）を学ぶ。サブクエリの代替として可読性を向上させる方法と、再帰 CTE による階層データの探索を習得する。

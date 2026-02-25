@@ -1,0 +1,230 @@
+---
+lesson_id: SQL-BRONZE-01-03
+title: "ORDER BY, LIMIT, OFFSET — 정렬과 페이징"
+module: SQL-BRONZE-01
+level: bronze
+est_minutes: 30
+tags: [SQL, ORDER BY, LIMIT, OFFSET, FETCH, 정렬, 페이징, 기초]
+---
+
+## 1) 요점 정리 (5줄)
+
+- **ORDER BY** 절은 결과 세트를 지정한 열로 정렬한다. **ASC**(오름차순, 기본값)와 **DESC**(내림차순)를 선택할 수 있다.
+- 여러 열로 정렬하는 경우, 첫 번째 키가 같은 값일 때 두 번째 키로 정렬한다.
+- **LIMIT**는 반환하는 행 수를 제한하고, **OFFSET**은 처음부터 지정한 행 수를 건너뛴다.
+- ANSI SQL 표준의 페이징 구문은 `OFFSET M ROWS FETCH FIRST N ROWS ONLY`이다.
+- ORDER BY 없이는 결과의 순서가 보장되지 않으므로, 페이징에는 반드시 ORDER BY가 필요하다.
+
+## 2) 개념
+
+### ORDER BY의 기본
+
+✅ 결론: ORDER BY를 지정하지 않은 SELECT의 결과 순서는 불확정이며, 정렬 순서를 보장하려면 반드시 ORDER BY를 사용해야 한다.
+
+관계형 데이터베이스에서는 테이블의 데이터에 "고유한 순서"가 존재하지 않는다. SELECT 문의 결과를 특정 순서로 가져오려면, ORDER BY 절을 사용한다.
+
+```sql
+SELECT 열이름
+FROM 테이블이름
+ORDER BY 정렬열 [ASC | DESC];
+```
+
+ORDER BY는 SQL의 논리적 처리 순서에서 마지막에 평가된다. 즉, FROM → WHERE → GROUP BY → HAVING → SELECT 이후에 실행된다.
+
+### ASC와 DESC
+
+✅ 결론: 오름차순에는 ASC(기본값, 생략 가능), 내림차순에는 DESC를 지정한다.
+
+```sql
+-- 급여의 오름차순 (ASC는 생략 가능)
+SELECT name, salary FROM employees ORDER BY salary;
+
+-- 급여의 내림차순
+SELECT name, salary FROM employees ORDER BY salary DESC;
+```
+
+| 키워드 | 방향 | 숫자 예 | 날짜 예 |
+|---|---|---|---|
+| ASC | 오름차순 | 100 → 200 → 300 | 과거 → 최근 |
+| DESC | 내림차순 | 300 → 200 → 100 | 최근 → 과거 |
+
+### 다중 열 정렬
+
+✅ 결론: 쉼표로 구분하여 여러 열을 지정하면, 왼쪽부터 우선적으로 정렬된다.
+
+```sql
+-- 부서 ID 오름차순, 같은 부서 내에서는 급여 내림차순
+SELECT name, department_id, salary
+FROM employees
+ORDER BY department_id ASC, salary DESC;
+```
+
+| name | department_id | salary |
+|---|---|---|
+| 鈴木一郎 | 1 | 520000 |
+| 田中太郎 | 1 | 450000 |
+| 佐藤花子 | 2 | 380000 |
+| 高橋三郎 | 2 | 350000 |
+
+첫 번째 정렬 키 `department_id ASC`가 같은 값인 경우, 두 번째 정렬 키 `salary DESC`로 정렬한다. 각 열에 대해 ASC / DESC를 개별적으로 지정할 수 있다.
+
+### ORDER BY의 지정 방법
+
+ORDER BY에는 열 이름뿐만 아니라, 열의 위치 번호나 열 별칭도 사용할 수 있다.
+
+```sql
+-- 열 이름 (권장)
+ORDER BY salary DESC;
+
+-- 열의 위치 번호 (SELECT 절의 몇 번째인지, 1부터 시작)
+ORDER BY 2 DESC;
+
+-- 열 별칭
+SELECT name, salary AS monthly_pay
+FROM employees
+ORDER BY monthly_pay DESC;
+```
+
+위치 번호(`ORDER BY 2`)는 SELECT 절의 열 순서에 의존하므로, 열을 추가/삭제할 때 버그의 원인이 되기 쉽다. 유지보수 관점에서 열 이름 지정이 권장된다.
+
+### NULL의 정렬 순서
+
+✅ 결론: NULL의 정렬 위치는 DBMS마다 다르지만, ANSI SQL에서는 NULLS FIRST / NULLS LAST로 제어할 수 있다.
+
+```sql
+-- NULL을 마지막에 배치
+SELECT name, email
+FROM employees
+ORDER BY email ASC NULLS LAST;
+
+-- NULL을 처음에 배치
+SELECT name, email
+FROM employees
+ORDER BY email ASC NULLS FIRST;
+```
+
+NULLS FIRST / NULLS LAST를 지원하지 않는 DBMS도 있으므로, 환경에 따라 CASE 식으로 대체하는 경우도 있다.
+
+### LIMIT — 행 수 제한
+
+✅ 결론: LIMIT는 반환하는 최대 행 수를 지정한다. 널리 사용되지만 ANSI SQL 표준은 아니다.
+
+```sql
+-- 상위 5건만 조회
+SELECT name, salary
+FROM employees
+ORDER BY salary DESC
+LIMIT 5;
+```
+
+LIMIT는 대부분의 DBMS(PostgreSQL, MySQL, SQLite 등)에서 사용할 수 있지만, ANSI SQL 표준 구문은 아니다.
+
+### OFFSET — 행 건너뛰기
+
+✅ 결론: OFFSET은 처음부터 지정한 행 수를 건너뛰고, LIMIT와 조합하여 페이징을 구현한다.
+
+```sql
+-- 6번째부터 10번째 (2페이지, 1페이지당 5건)
+SELECT name, salary
+FROM employees
+ORDER BY salary DESC
+LIMIT 5 OFFSET 5;
+```
+
+페이징 계산 공식:
+- **OFFSET** = (페이지 번호 - 1) x 1페이지당 행 수
+- **LIMIT** = 1페이지당 행 수
+
+| 페이지 | OFFSET | LIMIT |
+|---|---|---|
+| 1 | 0 | 5 |
+| 2 | 5 | 5 |
+| 3 | 10 | 5 |
+
+### ANSI SQL 표준 페이징 구문
+
+✅ 결론: 표준 SQL에서는 `OFFSET M ROWS FETCH FIRST N ROWS ONLY`를 사용한다.
+
+```sql
+-- ANSI SQL 표준
+SELECT name, salary
+FROM employees
+ORDER BY salary DESC
+OFFSET 10 ROWS
+FETCH FIRST 5 ROWS ONLY;
+```
+
+이 구문은 Oracle, PostgreSQL, DB2, SQL Server 등에서 사용할 수 있다. LIMIT / OFFSET과 동등한 기능이지만, ANSI SQL 표준을 준수하므로 이식성이 높다.
+
+| 구문 | 표준 | 대응 DBMS |
+|---|---|---|
+| `LIMIT N` | 비표준 | MySQL, PostgreSQL, SQLite |
+| `FETCH FIRST N ROWS ONLY` | ANSI SQL | Oracle, PostgreSQL, DB2, SQL Server |
+
+### 성능상의 주의사항
+
+OFFSET이 커질수록 성능이 저하되는 경향이 있다. 데이터베이스는 내부적으로 `OFFSET + LIMIT` 행만큼의 데이터를 처리하고, 처음의 OFFSET 행을 버리는 구조이기 때문이다. 대량 데이터의 페이징에서는 키셋 페이징(WHERE id > last_seen_id) 등의 대안 기법을 검토해야 한다.
+
+## 3) 예제 (2개)
+
+### 예제 1: 급여 상위 3명 조회하기
+
+```sql
+SELECT name, salary
+FROM employees
+ORDER BY salary DESC
+LIMIT 3;
+```
+
+| name | salary |
+|---|---|
+| 鈴木一郎 | 520000 |
+| 田中太郎 | 450000 |
+| 山田次郎 | 420000 |
+
+급여 내림차순으로 정렬하고 LIMIT 3으로 상위 3명을 조회한다. ORDER BY 없이는 "상위"가 정의되지 않으므로, 랭킹 조회에는 ORDER BY가 필수이다.
+
+### 예제 2: 입사일이 최근인 순으로 페이징하기
+
+```sql
+-- 1페이지 (최근 5명)
+SELECT name, hire_date
+FROM employees
+ORDER BY hire_date DESC
+OFFSET 0 ROWS FETCH FIRST 5 ROWS ONLY;
+
+-- 2페이지
+SELECT name, hire_date
+FROM employees
+ORDER BY hire_date DESC
+OFFSET 5 ROWS FETCH FIRST 5 ROWS ONLY;
+```
+
+ANSI SQL 표준 구문을 사용한 페이징 예제. 1페이지당 5건으로 하여, OFFSET을 5씩 증가시켜 다음 페이지를 조회한다.
+
+## 4) 흔한 실수 / 함정 (5개)
+
+⚠️ **실수 1**: ORDER BY 없이 LIMIT/OFFSET 사용 → **대책**: 결과 순서가 불확정이 되어 페이지마다 데이터가 중복/누락된다. 반드시 ORDER BY와 함께 사용한다.
+
+⚠️ **실수 2**: ORDER BY에 열 위치 번호를 사용한 후, SELECT 절을 변경 → **대책**: 열 이름을 명시하여 정렬 대상을 명확히 한다.
+
+⚠️ **실수 3**: OFFSET의 성능 문제를 무시 → **대책**: 수천 건을 초과하는 페이징에서는 키셋 페이징을 검토한다.
+
+⚠️ **실수 4**: LIMIT가 ANSI SQL 표준이라고 잘못 인식 → **대책**: 이식성이 필요한 경우 FETCH FIRST N ROWS ONLY를 사용한다.
+
+⚠️ **실수 5**: NULL의 정렬 위치를 고려하지 않음 → **대책**: NULLS FIRST / NULLS LAST를 사용하거나, NULL을 포함할 가능성이 있는 열의 정렬 결과를 확인한다.
+
+## 5) 체크리스트
+
+- [ ] ORDER BY의 역할과 기술 위치를 설명할 수 있다
+- [ ] ASC와 DESC를 올바르게 구분하여 사용할 수 있다
+- [ ] 다중 열 정렬의 동작을 이해하고 있다
+- [ ] LIMIT로 행 수 제한을 할 수 있다
+- [ ] OFFSET으로 페이징을 구현할 수 있다
+- [ ] ANSI SQL 표준의 FETCH FIRST N ROWS ONLY 구문을 작성할 수 있다
+- [ ] ORDER BY 없이 LIMIT/OFFSET을 사용하는 위험을 설명할 수 있다
+- [ ] NULLS FIRST / NULLS LAST의 사용법을 알고 있다
+
+## 6) 다음으로
+
+다음 레슨은 **SQL-BRONZE-01-04: 집계 함수 — COUNT / SUM / AVG / MIN / MAX** 입니다. 테이블 전체나 그룹 단위로 데이터를 집계하는 방법을 배우고, GROUP BY와 HAVING을 사용한 그룹화를 습득합니다.

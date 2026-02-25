@@ -1,0 +1,179 @@
+---
+lesson_id: SQL-SILVER-01-01
+title: "GROUP BY と HAVING — グループ化と条件絞り込み"
+module: SQL-SILVER-01
+level: silver
+est_minutes: 30
+tags: [group-by, having, aggregate-join]
+---
+
+## 1) 要点まとめ（5行）
+
+- GROUP BY は指定列の値が同じ行をグループにまとめ、集約関数と組み合わせて集計を行う。
+- 複数列を GROUP BY に指定すると、全列の値の組み合わせ単位でグループが作られる。
+- HAVING は GROUP BY 後のグループに対する条件絞り込みであり、WHERE とは評価タイミングが異なる。
+- WHERE は行レベル、HAVING はグループレベルのフィルタである。WHERE に集約関数は書けない。
+- GROUP BY と JOIN を組み合わせることで、結合後のデータに対する集計分析が可能になる。
+
+## 2) 概念
+
+### GROUP BY の基本
+
+✅ 結論: GROUP BY は「同じ値を持つ行をまとめて1行にする」ための句である。
+
+GROUP BY を使用する場合、SELECT 句には **GROUP BY に指定した列** か **集約関数（COUNT, SUM, AVG, MIN, MAX）** のみを記述できる。これは ANSI SQL の規則であり、違反するとエラーとなる。
+
+```sql
+-- 部署ごとの従業員数
+SELECT department_id, COUNT(*) AS emp_count
+FROM employees
+GROUP BY department_id;
+```
+
+| department_id | emp_count |
+|---|---|
+| 1 | 5 |
+| 2 | 3 |
+| 3 | 7 |
+
+### 複数列の GROUP BY
+
+2つ以上の列を GROUP BY に指定すると、**すべての列の値の組み合わせ**ごとにグループが形成される。
+
+```sql
+SELECT department_id, city, COUNT(*) AS cnt
+FROM employees
+GROUP BY department_id, city;
+```
+
+この場合、`department_id = 1, city = 'Tokyo'` と `department_id = 1, city = 'Osaka'` は別グループとなる。
+
+### HAVING 句 — グループへの条件
+
+✅ 結論: HAVING はグループ化後の結果に対して条件を指定する句であり、集約関数を条件に使える唯一の場所である。
+
+```sql
+SELECT department_id, AVG(salary) AS avg_salary
+FROM employees
+GROUP BY department_id
+HAVING AVG(salary) > 50000;
+```
+
+### WHERE と HAVING の違い
+
+SQL の**論理的な評価順序**を理解すれば、両者の違いは明確になる。
+
+```
+FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY
+```
+
+| 項目 | WHERE | HAVING |
+|---|---|---|
+| 対象 | 個々の行 | グループ |
+| 評価タイミング | GROUP BY の前 | GROUP BY の後 |
+| 集約関数 | 使用不可 | 使用可能 |
+
+```sql
+-- WHERE と HAVING の併用
+SELECT department_id, SUM(salary) AS total_salary
+FROM employees
+WHERE hire_date >= '2023-01-01'     -- 行フィルタ
+GROUP BY department_id
+HAVING SUM(salary) > 100000;        -- グループフィルタ
+```
+
+この例では、まず WHERE で 2023年以降入社の従業員だけに絞り込み、その後 GROUP BY でグループ化し、HAVING で合計給与が10万を超える部署のみを残す。
+
+### GROUP BY と JOIN の組み合わせ
+
+✅ 結論: JOIN でテーブルを結合してから GROUP BY で集計すれば、他テーブルの列名を表示しながら集計結果を得られる。
+
+```sql
+SELECT d.name AS dept_name, COUNT(e.id) AS emp_count, AVG(e.salary) AS avg_salary
+FROM departments d
+JOIN employees e ON d.id = e.department_id
+GROUP BY d.name;
+```
+
+JOIN + GROUP BY は実務で最も頻繁に使われるパターンの一つである。
+
+### COUNT(*) と COUNT(列名) の違い
+
+- `COUNT(*)` はグループ内の**全行数**を返す（NULL を含む）。
+- `COUNT(列名)` はその列が **NULL でない行の数**を返す。
+
+```sql
+SELECT department_id,
+       COUNT(*) AS total_rows,
+       COUNT(email) AS has_email
+FROM employees
+GROUP BY department_id;
+```
+
+## 3) 例（2つ）
+
+### 例1: 顧客ごとの注文分析
+
+都市別に顧客数と平均注文額を求め、顧客数が2人以上の都市だけを表示する。
+
+```sql
+SELECT c.city,
+       COUNT(DISTINCT c.id) AS customer_count,
+       AVG(o.total_amount) AS avg_order_amount
+FROM customers c
+JOIN orders o ON c.id = o.customer_id
+GROUP BY c.city
+HAVING COUNT(DISTINCT c.id) >= 2
+ORDER BY avg_order_amount DESC;
+```
+
+ポイント: `COUNT(DISTINCT c.id)` により、同じ顧客が複数回注文しても重複カウントされない。
+
+### 例2: 商品カテゴリ別の売上集計
+
+カテゴリごとの総売上額と平均単価を求め、総売上額が上位のカテゴリを表示する。
+
+```sql
+SELECT p.category,
+       SUM(oi.quantity * oi.unit_price) AS total_revenue,
+       AVG(p.price) AS avg_price,
+       COUNT(DISTINCT o.id) AS order_count
+FROM products p
+JOIN order_items oi ON p.id = oi.product_id
+JOIN orders o ON oi.order_id = o.id
+GROUP BY p.category
+HAVING SUM(oi.quantity * oi.unit_price) > 10000
+ORDER BY total_revenue DESC;
+```
+
+ポイント: 3テーブルを結合し、GROUP BY と HAVING で集計とフィルタを同時に行っている。
+
+## 4) よくあるミス／落とし穴（5つ）
+
+⚠️ ミス1: SELECT に GROUP BY 対象外の非集約列を書く
+→ 対策: SELECT 句には GROUP BY に含めた列か集約関数のみ記述する。
+
+⚠️ ミス2: WHERE 句に集約関数を書いてエラーになる（例: `WHERE COUNT(*) > 3`）
+→ 対策: 集約関数の条件は HAVING 句に書く。WHERE は GROUP BY より前に評価されるため集約関数を使えない。
+
+⚠️ ミス3: COUNT(*) と COUNT(列名) を混同し、NULL を含む行のカウントがずれる
+→ 対策: NULL を含めたい場合は `COUNT(*)`、NULL を除外したい場合は `COUNT(列名)` を使い分ける。
+
+⚠️ ミス4: HAVING と WHERE の使い分けを間違え、パフォーマンスが低下する
+→ 対策: 行レベルで絞り込める条件は WHERE に書き、早い段階でデータを減らすことでグループ化の負荷を下げる。
+
+⚠️ ミス5: JOIN + GROUP BY で意図しない行の増加（重複）に気づかない
+→ 対策: JOIN の結果行数を事前に確認し、必要に応じて `COUNT(DISTINCT ...)` を使用する。
+
+## 5) チェックリスト
+
+- [ ] GROUP BY に指定した列以外が SELECT に含まれていないか確認した
+- [ ] 集約関数の条件は WHERE ではなく HAVING に書いている
+- [ ] COUNT(*) と COUNT(列名) の違いを理解し、用途に合わせて使い分けている
+- [ ] WHERE と HAVING の評価順序を理解している
+- [ ] JOIN + GROUP BY で重複行が発生していないか確認した
+- [ ] ORDER BY で集計結果のソートを指定している
+
+## 6) 次へ
+
+次のレッスン **SQL-SILVER-01-02「サブクエリ — スカラー・行・テーブルサブクエリ」** では、クエリの中にクエリを入れ子にする手法を学ぶ。WHERE 句、FROM 句、SELECT 句で使うサブクエリの種類と、EXISTS / IN の使い分けを習得する。

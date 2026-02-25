@@ -268,7 +268,7 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
   }
 
   function handleStartExam() {
-    if (!window.confirm('시험에 응시하시겠습니까？')) return
+    if (!window.confirm('試験を受けますか？')) return
     setStarted(true)
   }
 

@@ -1,0 +1,263 @@
+---
+lesson_id: SQL-GOLD-01-02
+title: "DDL — CREATE TABLE / ALTER / 制約"
+module: SQL-GOLD-01
+level: gold
+est_minutes: 35
+tags: [DDL, CREATE-TABLE, ALTER-TABLE, PRIMARY-KEY, FOREIGN-KEY, UNIQUE, CHECK, NOT-NULL, DEFAULT, DROP-TABLE]
+---
+
+## 1) 要点まとめ（5行）
+
+1. **DDL（Data Definition Language）**はデータベースの構造を定義・変更・削除する SQL 文であり、多くの RDBMS で自動コミットされる。
+2. **CREATE TABLE** でテーブルの骨格を作り、各列にデータ型と制約を指定する。設計品質がシステム全体に影響する。
+3. **制約（Constraints）**は PRIMARY KEY / FOREIGN KEY / UNIQUE / CHECK / NOT NULL / DEFAULT の 6 種で、データの整合性をデータベースレベルで保証する。
+4. **ALTER TABLE** は既存テーブルの列追加・削除・型変更・制約の追加と削除を行う。本番運用中のスキーマ変更は慎重に。
+5. **DROP TABLE** と **TRUNCATE TABLE** はデータ削除の手段だが、取り消し不可の場合が多い。IF EXISTS / CASCADE を理解して安全に使う。
+
+---
+
+## 2) 概念
+
+### DDL とは何か
+
+DDL は SQL の中でデータベースオブジェクト（テーブル、ビュー、インデックスなど）の**構造を定義する文**の総称である。DML（INSERT / UPDATE / DELETE / SELECT）がデータの操作であるのに対し、DDL は器（うつわ）そのものを作り変える。
+
+重要な特徴として、多くの RDBMS では DDL 文は**暗黙的にコミットされる**（自動コミット）。つまり、DDL を実行した時点で変更が確定し、`ROLLBACK` で元に戻せないことが多い。これは DML とは大きく異なる点である。
+
+### CREATE TABLE — テーブルの作成
+
+CREATE TABLE 文はテーブルの名前、列名、データ型、制約を一度に定義する。
+
+```sql
+CREATE TABLE employees (
+    id          INTEGER       PRIMARY KEY,
+    name        VARCHAR(100)  NOT NULL,
+    department_id INTEGER     REFERENCES departments(id) ON DELETE SET NULL,
+    salary      DECIMAL(10,2) NOT NULL CHECK (salary >= 0),
+    hire_date   DATE          NOT NULL DEFAULT CURRENT_DATE,
+    email       VARCHAR(200)  UNIQUE,
+    manager_id  INTEGER       REFERENCES employees(id),
+    job_title   VARCHAR(100)
+);
+```
+
+### 標準 SQL のデータ型
+
+| カテゴリ | データ型 | 説明 |
+|---|---|---|
+| 整数 | INTEGER, SMALLINT, BIGINT | 整数値。サイズはカテゴリ順に大きくなる |
+| 小数 | DECIMAL(p,s), NUMERIC(p,s) | 固定精度小数。p=全桁数, s=小数桁数 |
+| 浮動小数点 | REAL, DOUBLE PRECISION | 近似値の浮動小数点数 |
+| 文字列 | CHAR(n), VARCHAR(n) | 固定長 / 可変長文字列 |
+| 日時 | DATE, TIME, TIMESTAMP | 日付、時刻、日時 |
+| 論理 | BOOLEAN | TRUE / FALSE / NULL |
+
+金額には `DECIMAL` を使い、`REAL` / `DOUBLE PRECISION` は避ける。浮動小数点の丸め誤差が金融計算で問題になるためだ。
+
+### 6 つの制約
+
+#### PRIMARY KEY（主キー）
+
+テーブルの各行を一意に識別する列（または列の組み合わせ）。一意性と NOT NULL を暗黙的に保証する。テーブルごとに 1 つだけ定義可能。
+
+```sql
+-- 単一列主キー
+CREATE TABLE products (
+    id INTEGER PRIMARY KEY,
+    name VARCHAR(100)
+);
+
+-- 複合主キー
+CREATE TABLE order_items (
+    order_id INTEGER,
+    product_id INTEGER,
+    quantity INTEGER NOT NULL,
+    PRIMARY KEY (order_id, product_id)
+);
+```
+
+#### FOREIGN KEY（外部キー）
+
+他のテーブルの主キー（または UNIQUE 列）を参照し、**参照整合性**を保証する。存在しない値の INSERT や、参照されている値の DELETE を防ぐ。
+
+```sql
+CREATE TABLE employees (
+    id INTEGER PRIMARY KEY,
+    department_id INTEGER,
+    FOREIGN KEY (department_id) REFERENCES departments(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+);
+```
+
+ON DELETE / ON UPDATE のアクション：
+
+| アクション | 動作 |
+|---|---|
+| CASCADE | 親の変更を子に伝播 |
+| SET NULL | 子の外部キーを NULL に設定 |
+| SET DEFAULT | 子の外部キーを DEFAULT 値に設定 |
+| RESTRICT | 子が存在する場合、親の変更を拒否（即時） |
+| NO ACTION | RESTRICT と同様だが、チェックは文末（デフォルト） |
+
+#### UNIQUE
+
+列の値が重複しないことを保証する。PRIMARY KEY と異なり、NULL を許容し、テーブルに複数定義可能。
+
+#### CHECK
+
+列の値が指定した条件を満たすことを保証する。ビジネスルールをデータベースレベルで強制できる。
+
+```sql
+salary DECIMAL(10,2) CHECK (salary >= 0),
+status VARCHAR(20) CHECK (status IN ('active', 'inactive', 'suspended'))
+```
+
+#### NOT NULL
+
+NULL 値の挿入を禁止する。必須項目に必ず指定すべきである。
+
+#### DEFAULT
+
+値が省略されたときに自動設定される値。`DEFAULT CURRENT_TIMESTAMP` で作成日時の自動記録などに使う。
+
+### ALTER TABLE — テーブルの変更
+
+```sql
+-- 列の追加
+ALTER TABLE employees ADD COLUMN phone VARCHAR(20);
+
+-- 列の削除
+ALTER TABLE employees DROP COLUMN phone;
+
+-- 制約の追加
+ALTER TABLE employees ADD CONSTRAINT chk_salary CHECK (salary >= 0);
+
+-- 制約の削除
+ALTER TABLE employees DROP CONSTRAINT chk_salary;
+```
+
+本番環境での ALTER TABLE は特に慎重に行う必要がある。列の追加は比較的安全だが、列の削除や型変更はデータ損失やアプリケーションの不具合を招く可能性がある。
+
+### DROP TABLE と TRUNCATE TABLE
+
+```sql
+-- テーブルの削除（存在しない場合もエラーにしない）
+DROP TABLE IF EXISTS temp_data;
+
+-- 依存オブジェクトも含めて削除
+DROP TABLE IF EXISTS departments CASCADE;
+
+-- データのみ削除（構造は保持）
+TRUNCATE TABLE temp_data;
+```
+
+`TRUNCATE` は `DELETE FROM table` と似ているが、ログを最小限にして高速に全行を削除する。ただし、多くの RDBMS でロールバック不可であり、トリガーも発火しない。
+
+---
+
+## 3) 例
+
+### 例1: ECサイトの受注テーブル設計
+
+EC サイトの受注管理に必要なテーブルを制約付きで設計する。
+
+```sql
+CREATE TABLE customers (
+    id          INTEGER       PRIMARY KEY,
+    name        VARCHAR(100)  NOT NULL,
+    email       VARCHAR(200)  NOT NULL UNIQUE,
+    created_at  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE orders (
+    id          INTEGER       PRIMARY KEY,
+    customer_id INTEGER       NOT NULL REFERENCES customers(id) ON DELETE RESTRICT,
+    order_date  DATE          NOT NULL DEFAULT CURRENT_DATE,
+    status      VARCHAR(20)   NOT NULL DEFAULT 'pending'
+                              CHECK (status IN ('pending', 'confirmed', 'shipped', 'delivered', 'cancelled')),
+    total_amount DECIMAL(12,2) NOT NULL CHECK (total_amount >= 0)
+);
+
+CREATE TABLE order_items (
+    order_id    INTEGER       NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    product_id  INTEGER       NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
+    quantity    INTEGER       NOT NULL CHECK (quantity > 0),
+    unit_price  DECIMAL(10,2) NOT NULL CHECK (unit_price >= 0),
+    PRIMARY KEY (order_id, product_id)
+);
+```
+
+ポイント:
+- `orders.customer_id` は `ON DELETE RESTRICT` で顧客の誤削除を防ぐ
+- `order_items` は `ON DELETE CASCADE` で受注削除時に明細も自動削除
+- `status` は CHECK 制約で有効な値のみ許可
+- `order_items` は複合主キー
+
+### 例2: 既存テーブルへの列追加と制約変更
+
+運用中のシステムに電話番号列と監査列を追加する。
+
+```sql
+-- 電話番号列を追加（NULL 許容で安全に追加）
+ALTER TABLE customers ADD COLUMN phone VARCHAR(20);
+
+-- 監査列を追加
+ALTER TABLE customers ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+-- 後から UNIQUE 制約を追加
+ALTER TABLE customers ADD CONSTRAINT uq_phone UNIQUE (phone);
+
+-- 不要になった制約を削除
+ALTER TABLE orders DROP CONSTRAINT chk_status;
+
+-- 新しい CHECK 制約で状態値を拡張
+ALTER TABLE orders ADD CONSTRAINT chk_status
+    CHECK (status IN ('pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'returned'));
+```
+
+既存テーブルへの列追加は `NULL` 許容で始め、データ移行後に `NOT NULL` を追加するのが安全なパターンである。
+
+---
+
+## 4) よくあるミス／落とし穴（5つ）
+
+### 落とし穴 1: FOREIGN KEY の ON DELETE を考慮しない
+
+デフォルトの `NO ACTION` では、子レコードが存在する親レコードを削除できない。運用時に「削除できない」問題が発生する。設計段階で CASCADE / SET NULL / RESTRICT を適切に選択すべきである。
+
+### 落とし穴 2: 金額に FLOAT / DOUBLE を使う
+
+浮動小数点型は近似値であり、`0.1 + 0.2 ≠ 0.3` のような丸め誤差が発生する。金額には必ず `DECIMAL(p,s)` を使う。
+
+### 落とし穴 3: NOT NULL を付け忘れる
+
+必須であるべき列に NOT NULL を付けないと、NULL が混入してアプリケーション側で予期しないバグが発生する。「この列は NULL でよいのか？」を常に意識する。
+
+### 落とし穴 4: ALTER TABLE の本番適用を軽視する
+
+大規模テーブルへの ALTER TABLE（特に列の型変更やインデックス追加）は長時間のロックを引き起こす可能性がある。本番では計画的に実行し、メンテナンスウィンドウを確保すべきである。
+
+### 落とし穴 5: DROP TABLE CASCADE の影響範囲を把握しない
+
+CASCADE を付けて DROP すると、そのテーブルを参照するビュー・外部キー制約がすべて削除される。影響範囲を事前に確認せずに実行すると、他のテーブルの制約が失われる。
+
+---
+
+## 5) チェックリスト
+
+- [ ] CREATE TABLE で各列にデータ型と適切な制約を指定できる
+- [ ] PRIMARY KEY と FOREIGN KEY の役割と違いを説明できる
+- [ ] FOREIGN KEY の ON DELETE アクション（CASCADE, SET NULL, RESTRICT, NO ACTION）を使い分けられる
+- [ ] CHECK 制約でビジネスルールを定義できる
+- [ ] ALTER TABLE で列の追加・削除・制約の変更ができる
+- [ ] DROP TABLE IF EXISTS と CASCADE の意味を理解している
+- [ ] 金額には DECIMAL を使い、FLOAT/DOUBLE を避ける理由を知っている
+- [ ] 列レベル制約とテーブルレベル制約の使い分けができる
+
+---
+
+## 6) 次へ
+
+テーブルの「器」を作る DDL を学んだ。次の **SQL-GOLD-01-03: DML — INSERT / UPDATE / DELETE / MERGE** では、その器にデータを「入れる・変える・消す」操作を深く掘り下げる。

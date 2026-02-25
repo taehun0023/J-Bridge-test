@@ -1,0 +1,238 @@
+---
+lesson_id: SQL-SILVER-01-04
+title: "CTE と WITH句 — 可読性の高いクエリ設計"
+module: SQL-SILVER-01
+level: silver
+est_minutes: 30
+tags: [cte, with, recursive-cte]
+---
+
+## 1) 要点まとめ（5行）
+
+- CTE（Common Table Expression）は WITH 句で定義する名前付き一時結果セットであり、直後の SQL 文で参照できる。
+- CTE を使うとサブクエリをトップダウンで記述でき、クエリの可読性が大幅に向上する。
+- 1つの WITH 句に複数の CTE をカンマ区切りで定義でき、後続の CTE が前の CTE を参照できる。
+- 再帰 CTE（WITH RECURSIVE）はアンカーメンバーとリカーシブメンバーの UNION ALL で構成し、階層探索に使用する。
+- CTE のスコープは直後の1文のみであり、データベースに保存されない点でビューとは異なる。
+
+## 2) 概念
+
+### CTE の基本構文
+
+✅ 結論: CTE は WITH 句で名前を付けた一時結果セットであり、クエリの可読性と保守性を高める。
+
+```sql
+WITH cte_name AS (
+  SELECT ...
+)
+SELECT ... FROM cte_name;
+```
+
+FROM 句のサブクエリ（導出テーブル）と論理的には等価だが、CTE はクエリの先頭に定義を書くため、上から下へ読める「トップダウン」のスタイルになる。
+
+### 基本的な CTE の使用例
+
+```sql
+WITH dept_salary AS (
+  SELECT department_id, AVG(salary) AS avg_salary
+  FROM employees
+  GROUP BY department_id
+)
+SELECT d.name, ds.avg_salary
+FROM departments d
+JOIN dept_salary ds ON d.id = ds.department_id
+WHERE ds.avg_salary > 50000;
+```
+
+同じ内容をサブクエリで書くと、FROM 句の中にネストされて読みにくくなる。
+
+### 複数 CTE の定義
+
+✅ 結論: カンマ区切りで複数の CTE を定義でき、後の CTE が前の CTE を参照できる。WITH キーワードは最初に1回だけ書く。
+
+```sql
+WITH
+  dept_count AS (
+    SELECT department_id, COUNT(*) AS emp_count
+    FROM employees
+    GROUP BY department_id
+  ),
+  high_count_dept AS (
+    SELECT department_id, emp_count
+    FROM dept_count
+    WHERE emp_count >= 5
+  )
+SELECT d.name, hc.emp_count
+FROM departments d
+JOIN high_count_dept hc ON d.id = hc.department_id;
+```
+
+この例では `high_count_dept` が `dept_count` を参照している。処理をステップごとに分割できるため、ロジックが明確になる。
+
+### CTE vs サブクエリの比較
+
+| 項目 | CTE | サブクエリ |
+|---|---|---|
+| 記述位置 | クエリの先頭（WITH 句） | 使用箇所にインライン |
+| 可読性 | 高い（トップダウン） | ネストが深いと低下 |
+| 再利用性 | 同一クエリ内で複数回参照可能 | 使用するたびに記述が必要 |
+| スコープ | 直後の1文のみ | 記述箇所のみ |
+| パフォーマンス | DBMS 依存（多くの場合同等） | DBMS 依存 |
+
+**同一クエリ内での複数回参照:**
+
+```sql
+WITH dept_stats AS (
+  SELECT department_id, AVG(salary) AS avg_salary, COUNT(*) AS emp_count
+  FROM employees
+  GROUP BY department_id
+)
+SELECT
+  (SELECT SUM(emp_count) FROM dept_stats) AS total_employees,
+  (SELECT AVG(avg_salary) FROM dept_stats) AS overall_avg;
+```
+
+CTE は一度定義すれば何度でも参照できる。サブクエリなら同じ SELECT を2回書く必要がある。
+
+### 再帰 CTE（WITH RECURSIVE）
+
+✅ 結論: 再帰 CTE はアンカーメンバー（初期行）とリカーシブメンバー（再帰部分）を UNION ALL で結合し、階層データの探索に使用する。
+
+```sql
+WITH RECURSIVE org_tree AS (
+  -- アンカーメンバー: トップ（manager_id が NULL）
+  SELECT id, name, manager_id, 1 AS level
+  FROM employees
+  WHERE manager_id IS NULL
+
+  UNION ALL
+
+  -- リカーシブメンバー: 子を再帰的に探索
+  SELECT e.id, e.name, e.manager_id, ot.level + 1
+  FROM employees e
+  JOIN org_tree ot ON e.manager_id = ot.id
+)
+SELECT id, name, level
+FROM org_tree
+ORDER BY level, name;
+```
+
+| id | name | level |
+|---|---|---|
+| 1 | Tanaka | 1 |
+| 2 | Sato | 2 |
+| 3 | Suzuki | 2 |
+| 4 | Yamada | 3 |
+
+### 再帰 CTE の動作フロー
+
+1. **アンカーメンバー**が実行され、初期結果セットが生成される。
+2. **リカーシブメンバー**が直前の結果セットを入力として実行される。
+3. リカーシブメンバーが空の結果を返すまで、ステップ2が繰り返される。
+4. すべてのイテレーションの結果が UNION ALL で結合される。
+
+### 再帰 CTE の終了条件
+
+⚠️ **再帰が終了しない場合、無限ループになる。** リカーシブメンバーの JOIN 条件や WHERE 条件で、必ず結果が収束するようにする。
+
+```sql
+-- 連番生成（1〜10）
+WITH RECURSIVE seq AS (
+  SELECT 1 AS n
+  UNION ALL
+  SELECT n + 1 FROM seq WHERE n < 10  -- 終了条件
+)
+SELECT n FROM seq;
+```
+
+### CTE とビューの違い
+
+| 項目 | CTE | ビュー |
+|---|---|---|
+| 保存 | されない（クエリ実行時のみ） | データベースオブジェクトとして保存 |
+| スコープ | 直後の1文 | 任意のクエリから参照可能 |
+| 権限管理 | 不要 | GRANT / REVOKE で制御可能 |
+| 用途 | 一時的な可読性向上 | 再利用可能なクエリの抽象化 |
+
+## 3) 例（2つ）
+
+### 例1: 複数 CTE を使った売上分析
+
+カテゴリ別売上と全体平均を比較し、平均以上のカテゴリのみ表示する。
+
+```sql
+WITH
+  category_sales AS (
+    SELECT p.category,
+           SUM(oi.quantity * oi.unit_price) AS total_sales
+    FROM products p
+    JOIN order_items oi ON p.id = oi.product_id
+    GROUP BY p.category
+  ),
+  overall_avg AS (
+    SELECT AVG(total_sales) AS avg_sales
+    FROM category_sales
+  )
+SELECT cs.category, cs.total_sales, oa.avg_sales
+FROM category_sales cs
+CROSS JOIN overall_avg oa
+WHERE cs.total_sales > oa.avg_sales
+ORDER BY cs.total_sales DESC;
+```
+
+`category_sales` → `overall_avg` → 最終 SELECT と、ロジックが上から下へ流れている。
+
+### 例2: 再帰 CTE で部下一覧を取得
+
+特定のマネージャー配下の全従業員（直属だけでなく間接的な部下も含む）を取得する。
+
+```sql
+WITH RECURSIVE subordinates AS (
+  SELECT id, name, manager_id, 1 AS depth
+  FROM employees
+  WHERE id = 2  -- マネージャーID=2 の部下を探索
+
+  UNION ALL
+
+  SELECT e.id, e.name, e.manager_id, s.depth + 1
+  FROM employees e
+  JOIN subordinates s ON e.manager_id = s.id
+  WHERE s.depth < 10  -- 安全のため深さ制限
+)
+SELECT id, name, depth
+FROM subordinates
+WHERE id != 2  -- 起点のマネージャー自身を除外
+ORDER BY depth, name;
+```
+
+`WHERE s.depth < 10` により無限ループを防止している。
+
+## 4) よくあるミス／落とし穴（5つ）
+
+⚠️ ミス1: 複数 CTE で WITH を繰り返し書いてエラーになる
+→ 対策: WITH は最初に1回だけ書き、以降の CTE はカンマ区切りで追加する。
+
+⚠️ ミス2: 再帰 CTE に終了条件を入れ忘れ、無限ループになる
+→ 対策: リカーシブメンバーに WHERE 条件や JOIN 条件で必ず収束するロジックを入れる。
+
+⚠️ ミス3: CTE のスコープを超えて参照しようとしてエラーになる
+→ 対策: CTE は直後の1文のみ有効。複数の文で使いたい場合はビューの作成を検討する。
+
+⚠️ ミス4: CTE と一時テーブルを混同する
+→ 対策: CTE はメモリ上の一時結果であり、テーブルとして INSERT / UPDATE はできない。
+
+⚠️ ミス5: 再帰 CTE で UNION を使い、意図せず重複が排除される
+→ 対策: 再帰 CTE では UNION ALL を使用する。UNION（重複排除）は再帰の動作に影響する場合がある。
+
+## 5) チェックリスト
+
+- [ ] WITH は1回だけ書き、複数 CTE はカンマ区切りにしている
+- [ ] 再帰 CTE に終了条件が含まれている
+- [ ] CTE のスコープ（直後の1文のみ）を理解している
+- [ ] サブクエリと CTE のどちらが適切か検討した
+- [ ] 再帰 CTE では UNION ALL を使用している
+- [ ] CTE に意味のある名前を付けている
+
+## 6) 次へ
+
+次のレッスン **SQL-SILVER-01-05「CASE 式と NULL 処理 — 条件ロジックの実装」** では、SQL の条件分岐（CASE WHEN）と NULL を安全に扱う関数（COALESCE, NULLIF）を学ぶ。条件付き集約によるピボット的な集計も習得する。

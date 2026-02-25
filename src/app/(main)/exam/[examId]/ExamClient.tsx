@@ -109,8 +109,30 @@ export default function ExamClient({ exam, mode }: Props) {
     return () => clearInterval(interval)
   }, [started, submitted, questions.length, handleSubmit])
 
+  // Anti-cheat: prevent drag, copy, select, right-click during exam
+  useEffect(() => {
+    if (!started || submitted) return
+
+    const prevent = (e: Event) => e.preventDefault()
+    document.addEventListener('dragstart', prevent)
+    document.addEventListener('drop', prevent)
+    document.addEventListener('copy', prevent)
+    document.addEventListener('cut', prevent)
+    document.addEventListener('selectstart', prevent)
+    document.addEventListener('contextmenu', prevent)
+
+    return () => {
+      document.removeEventListener('dragstart', prevent)
+      document.removeEventListener('drop', prevent)
+      document.removeEventListener('copy', prevent)
+      document.removeEventListener('cut', prevent)
+      document.removeEventListener('selectstart', prevent)
+      document.removeEventListener('contextmenu', prevent)
+    }
+  }, [started, submitted])
+
   function handleStart() {
-    if (!window.confirm('응시하시겠습니까？')) return
+    if (!window.confirm('試験を受けますか？')) return
     startTransition(async () => {
       const res = await startExam(exam.id)
       if (res.error) {

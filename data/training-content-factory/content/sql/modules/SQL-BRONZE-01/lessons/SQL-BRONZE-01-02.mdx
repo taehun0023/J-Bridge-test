@@ -1,0 +1,239 @@
+---
+lesson_id: SQL-BRONZE-01-02
+title: "WHERE と演算子 — 条件でデータを絞り込む"
+module: SQL-BRONZE-01
+level: bronze
+est_minutes: 30
+tags: [SQL, WHERE, 比較演算子, 論理演算子, LIKE, NULL, 基礎]
+---
+
+## 1) 要点まとめ（5行）
+
+- **WHERE** 句は FROM 句の後に記述し、条件が TRUE の行のみ結果セットに含める。
+- 比較演算子（=, <>, >, <, >=, <=）、**BETWEEN**、**IN** でさまざまな条件を指定できる。
+- **LIKE** 演算子でパターンマッチングが可能。`%` は 0 文字以上、`_` は 1 文字を表す。
+- NULL の判定には **IS NULL** / **IS NOT NULL** を使う。`= NULL` は正しくない。
+- 論理演算子 **AND**, **OR**, **NOT** で複合条件を組み立てる。優先順位は NOT > AND > OR。
+
+## 2) 概念
+
+### WHERE 句の基本
+
+✅ 結論: WHERE 句は行レベルのフィルタであり、条件が TRUE の行だけが結果に含まれる。
+
+```sql
+SELECT 列名
+FROM テーブル名
+WHERE 条件式;
+```
+
+FROM 句でテーブルを指定し、WHERE 句で条件を記述する。データベースエンジンは各行に対して条件式を評価し、TRUE となる行のみ結果セットに返す。
+
+### 比較演算子
+
+✅ 結論: 基本の 6 つの比較演算子を使い分ければ、ほとんどの単純条件を表現できる。
+
+| 演算子 | 意味 | 例 |
+|---|---|---|
+| `=` | 等しい | `salary = 400000` |
+| `<>` | 等しくない | `department_id <> 1` |
+| `>` | より大きい | `salary > 300000` |
+| `<` | より小さい | `salary < 500000` |
+| `>=` | 以上 | `salary >= 350000` |
+| `<=` | 以下 | `salary <= 600000` |
+
+```sql
+-- 給与が 400000 以上の社員
+SELECT name, salary
+FROM employees
+WHERE salary >= 400000;
+```
+
+注意: `!=` も多くの DBMS で使えるが、ANSI SQL 標準の非等値演算子は `<>` である。
+
+### BETWEEN — 範囲検索
+
+✅ 結論: BETWEEN は境界値を**含む**範囲検索であり、`>=` と `<=` の組み合わせと等価。
+
+```sql
+-- 給与が 300000 以上 500000 以下
+SELECT name, salary
+FROM employees
+WHERE salary BETWEEN 300000 AND 500000;
+```
+
+上記は以下と同じ意味である。
+
+```sql
+SELECT name, salary
+FROM employees
+WHERE salary >= 300000 AND salary <= 500000;
+```
+
+BETWEEN は数値だけでなく、日付や文字列にも使える。
+
+```sql
+-- 2023年に入社した社員
+SELECT name, hire_date
+FROM employees
+WHERE hire_date BETWEEN '2023-01-01' AND '2023-12-31';
+```
+
+### IN — 複数値の一致
+
+✅ 結論: IN は複数の等値比較を簡潔に書ける演算子で、OR の列挙と等価。
+
+```sql
+-- 部署 1, 2, 3 のいずれかに所属
+SELECT name, department_id
+FROM employees
+WHERE department_id IN (1, 2, 3);
+```
+
+上記は以下と等価。
+
+```sql
+WHERE department_id = 1 OR department_id = 2 OR department_id = 3
+```
+
+`NOT IN` を使うと「含まない」条件を表現できる。
+
+```sql
+WHERE department_id NOT IN (4, 5)
+```
+
+### LIKE — パターンマッチング
+
+✅ 結論: LIKE は文字列のパターン検索に使い、`%` と `_` の 2 つのワイルドカードを組み合わせる。
+
+| ワイルドカード | 意味 | 例 |
+|---|---|---|
+| `%` | 0 文字以上の任意文字列 | `'田%'` → 田中、田村 |
+| `_` | 正確に 1 文字 | `'_藤'` → 佐藤、伊藤 |
+
+```sql
+-- 名前が「田」で始まる社員
+SELECT name FROM employees WHERE name LIKE '田%';
+
+-- メールアドレスに「example」を含む
+SELECT name, email FROM employees WHERE email LIKE '%example%';
+
+-- 名前が 3 文字の社員
+SELECT name FROM employees WHERE name LIKE '___';
+```
+
+`NOT LIKE` でパターンに一致しない行を検索できる。
+
+### IS NULL / IS NOT NULL
+
+✅ 結論: NULL 値の判定には `IS NULL` / `IS NOT NULL` を使い、`= NULL` を使ってはいけない。
+
+SQL における NULL は「値が不明」を意味する特殊なマーカーである。NULL に対する `=` 比較は TRUE でも FALSE でもなく **UNKNOWN** を返す。これを「三値論理」と呼ぶ。
+
+```sql
+-- NG: = NULL は常に UNKNOWN（結果に行が含まれない）
+SELECT * FROM employees WHERE email = NULL;
+
+-- OK: IS NULL で正しく判定
+SELECT * FROM employees WHERE email IS NULL;
+
+-- OK: IS NOT NULL
+SELECT * FROM employees WHERE email IS NOT NULL;
+```
+
+### 論理演算子 AND / OR / NOT
+
+✅ 結論: 複数の条件を組み合わせるには AND, OR, NOT を使うが、括弧で優先順位を明示するべき。
+
+| 演算子 | 意味 | 優先順位 |
+|---|---|---|
+| NOT | 否定 | 高 |
+| AND | 両方 TRUE | 中 |
+| OR | いずれか TRUE | 低 |
+
+```sql
+-- AND: 部署 1 かつ 給与 400000 以上
+SELECT name, department_id, salary
+FROM employees
+WHERE department_id = 1 AND salary >= 400000;
+
+-- OR: 部署 1 または 部署 2
+SELECT name, department_id
+FROM employees
+WHERE department_id = 1 OR department_id = 2;
+```
+
+**括弧の重要性**: 優先順位が AND > OR であるため、括弧なしでは意図と異なる結果になることがある。
+
+```sql
+-- 意図: (部署1 OR 部署2) かつ 給与40万以上
+-- NG（括弧なし）: 部署1 の全員 OR (部署2 かつ 給与40万以上)
+SELECT * FROM employees
+WHERE department_id = 1 OR department_id = 2 AND salary >= 400000;
+
+-- OK（括弧あり）: 部署1 または 部署2 かつ 給与40万以上
+SELECT * FROM employees
+WHERE (department_id = 1 OR department_id = 2) AND salary >= 400000;
+```
+
+## 3) 例（2つ）
+
+### 例1: 複数条件を組み合わせた社員検索
+
+```sql
+SELECT name, department_id, salary, hire_date
+FROM employees
+WHERE department_id IN (1, 2)
+  AND salary BETWEEN 350000 AND 500000
+  AND hire_date >= '2022-01-01';
+```
+
+| name | department_id | salary | hire_date |
+|---|---|---|---|
+| 田中太郎 | 1 | 450000 | 2023-04-01 |
+| 佐藤花子 | 2 | 380000 | 2022-07-15 |
+
+この例では、IN、BETWEEN、比較演算子を AND で組み合わせている。部署 1 または 2 に所属し、給与が 35 万～50 万の範囲で、2022 年以降に入社した社員を取得する。
+
+### 例2: NULL と LIKE を組み合わせた検索
+
+```sql
+SELECT name, email
+FROM employees
+WHERE email IS NOT NULL
+  AND email LIKE '%@company.co.jp';
+```
+
+| name | email |
+|---|---|
+| 鈴木一郎 | suzuki@company.co.jp |
+| 山田次郎 | yamada@company.co.jp |
+
+メールアドレスが設定されている（IS NOT NULL）かつ会社ドメインのメールアドレスを持つ社員を抽出する。LIKE のパターン `'%@company.co.jp'` は「@company.co.jp で終わる文字列」を意味する。
+
+## 4) よくあるミス／落とし穴（5つ）
+
+⚠️ **ミス1**: NULL を `= NULL` で比較する → **対策**: 必ず `IS NULL` / `IS NOT NULL` を使う。`= NULL` は常に UNKNOWN になる。
+
+⚠️ **ミス2**: AND と OR の優先順位を誤る → **対策**: 複合条件では常に括弧を使い、意図を明示する。
+
+⚠️ **ミス3**: BETWEEN が境界値を含むことを忘れる → **対策**: BETWEEN A AND B は `A <= x <= B`。含みたくない場合は `>` と `<` を使う。
+
+⚠️ **ミス4**: LIKE でワイルドカードの位置を間違える → **対策**: `'%田'` は「田で終わる」、`'田%'` は「田で始まる」、`'%田%'` は「田を含む」。
+
+⚠️ **ミス5**: NOT IN にサブクエリを使う際、NULL が含まれると全行が返らない → **対策**: NOT IN の値リストに NULL が含まれないよう注意する。サブクエリの場合は NOT EXISTS を検討する。
+
+## 5) チェックリスト
+
+- [ ] WHERE 句の役割と記述位置を説明できる
+- [ ] 6 つの比較演算子を正しく使い分けられる
+- [ ] BETWEEN の境界値の扱いを理解している
+- [ ] IN を使って複数値の条件を書ける
+- [ ] LIKE の % と _ の違いを説明できる
+- [ ] IS NULL / IS NOT NULL を使って NULL を正しく判定できる
+- [ ] AND, OR, NOT の優先順位を理解し、括弧で制御できる
+- [ ] 三値論理の概念（TRUE, FALSE, UNKNOWN）を知っている
+
+## 6) 次へ
+
+次のレッスンは **SQL-BRONZE-01-03: ORDER BY・LIMIT・OFFSET — ソートとページング** です。取得したデータの並び順を制御し、ページネーションを実装するための構文を学びます。
