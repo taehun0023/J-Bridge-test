@@ -7,7 +7,7 @@ import FlashcardMode from '@/components/japanese/FlashcardMode'
 import RangeQuizModal from '@/components/japanese/RangeQuizModal'
 import {
   getSharedVocab, getMySubmissions, updateSharedVocab, deleteSharedVocab,
-  getPendingVocab, approveVocab, rejectVocab,
+  getPendingVocab, approveVocab, rejectVocab, deleteMySubmission,
 } from '@/app/actions/shared-vocab'
 import { toggleMastery, getMasteredIds } from '@/app/actions/mastery'
 import { generateSharedVocabQuiz } from '@/app/actions/range-quiz'
@@ -33,6 +33,7 @@ interface MySubmission {
   example_sentence: string | null
   category: string
   status: string
+  rejection_reason: string | null
   created_at: string
 }
 
@@ -245,6 +246,18 @@ export default function SharedVocabClient({ role }: Props) {
     })
   }
 
+  // Delete rejected submission (mentee)
+  function handleDeleteMySubmission(id: string) {
+    startTransition(async () => {
+      const result = await deleteMySubmission(id)
+      if ('error' in result && result.error) {
+        showMsg('error', result.error)
+      } else {
+        setMySubmissions(prev => prev.filter(s => s.id !== id))
+      }
+    })
+  }
+
   // Apply mastery filter
   const filteredItems = items.filter(item => {
     if (masteryFilter === 'mastered') return localMastered.has(item.id)
@@ -453,14 +466,33 @@ export default function SharedVocabClient({ role }: Props) {
           ) : (
             <div className="divide-y divide-gray-100 dark:divide-gray-700">
               {mySubmissions.filter(s => s.status !== 'approved').map(s => (
-                <div key={s.id} className="flex items-center justify-between py-2">
-                  <div>
-                    <span className="font-medium text-gray-900 dark:text-white">{s.term_ja}</span>
-                    {s.term_ko && <span className="ml-2 text-sm text-gray-500">— {s.term_ko}</span>}
+                <div key={s.id} className="py-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-medium text-gray-900 dark:text-white">{s.term_ja}</span>
+                      {s.term_ko && <span className="ml-2 text-sm text-gray-500">— {s.term_ko}</span>}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${statusColor(s.status)}`}>
+                        {statusLabel(s.status)}
+                      </span>
+                      {s.status === 'rejected' && (
+                        <button
+                          onClick={() => handleDeleteMySubmission(s.id)}
+                          disabled={pending}
+                          className="rounded-lg p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                          title="削除"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${statusColor(s.status)}`}>
-                    {statusLabel(s.status)}
-                  </span>
+                  {s.status === 'rejected' && s.rejection_reason && (
+                    <p className="mt-1 text-xs text-red-500 dark:text-red-400">理由: {s.rejection_reason}</p>
+                  )}
                 </div>
               ))}
             </div>

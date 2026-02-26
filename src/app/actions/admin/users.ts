@@ -2,10 +2,18 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/auth-helpers'
+import { logAuditEvent } from '@/app/actions/audit'
 
 export async function updateUserRole(userId: string, role: string) {
   const auth = await requireAdmin()
   if ('error' in auth) return { error: auth.error } as const
+
+  // Fetch old data for audit
+  const { data: oldData } = await auth.serviceClient
+    .from('profiles')
+    .select('role, mentor_specialty')
+    .eq('id', userId)
+    .single()
 
   // Clear mentor_specialty when role is not mentor
   const updateData: Record<string, unknown> = { role, updated_at: new Date().toISOString() }
@@ -19,6 +27,9 @@ export async function updateUserRole(userId: string, role: string) {
     .eq('id', userId)
 
   if (error) return { error: error.message }
+
+  await logAuditEvent(auth.user.id, 'update', 'profiles', userId, oldData, { ...oldData, ...updateData })
+
   revalidatePath('/admin/users')
   return { success: true }
 }
@@ -31,12 +42,22 @@ export async function updateMentorSpecialty(userId: string, specialty: string | 
     return { error: '無効な専門分野です' }
   }
 
+  // Fetch old data for audit
+  const { data: oldData } = await auth.serviceClient
+    .from('profiles')
+    .select('mentor_specialty')
+    .eq('id', userId)
+    .single()
+
   const { error } = await auth.serviceClient
     .from('profiles')
     .update({ mentor_specialty: specialty, updated_at: new Date().toISOString() })
     .eq('id', userId)
 
   if (error) return { error: error.message }
+
+  await logAuditEvent(auth.user.id, 'update', 'profiles', userId, oldData, { mentor_specialty: specialty })
+
   revalidatePath('/admin/users')
   return { success: true }
 }
@@ -74,6 +95,10 @@ export async function createUserAccount(formData: FormData) {
     if (updateError) {
       return { error: `ユーザーは作成されましたが、ロール設定に失敗しました: ${updateError.message}` }
     }
+  }
+
+  if (authData.user) {
+    await logAuditEvent(auth.user.id, 'create', 'profiles', authData.user.id, null, { email, full_name: fullName, role })
   }
 
   revalidatePath('/admin/users')

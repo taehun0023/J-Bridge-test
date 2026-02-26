@@ -158,14 +158,20 @@ export default function AuditLogClient() {
               className="mt-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
             >
               <option value="all">全て</option>
+              <option value="courses">コース</option>
+              <option value="quizzes">クイズ</option>
+              <option value="quiz_questions">クイズ問題</option>
+              <option value="profiles">プロフィール</option>
+              <option value="task_assignments">課題配信</option>
+              <option value="learning_assignments">学習課題</option>
+              <option value="admin_feedbacks">フィードバック</option>
+              <option value="quiz_attempts">クイズ再受験</option>
+              <option value="shared_vocab_submissions">みんなの単語帳</option>
               <option value="jlpt_vocabulary">JLPT語彙</option>
               <option value="jlpt_grammar">JLPT文法</option>
               <option value="jlpt_kanji">JLPT漢字</option>
               <option value="it_glossary">IT語彙</option>
               <option value="cs_terms">CS用語</option>
-              <option value="shared_vocab_submissions">モ全の単語帳</option>
-              <option value="courses">コース</option>
-              <option value="quizzes">クイズ</option>
             </select>
           </div>
           <button

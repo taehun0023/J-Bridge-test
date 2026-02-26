@@ -6,6 +6,7 @@ import { requireAuth, requireAdminOrMentor } from '@/lib/auth-helpers'
 import { ASSIGNMENT_CATEGORIES } from '@/lib/assignment-categories'
 import { createNotification } from './notifications'
 import { getUserDisplayName } from '@/lib/notification-helpers'
+import { logAuditEvent } from '@/app/actions/audit'
 import { ERR } from '@/lib/action-types'
 import { getCoursesWithProgress } from '@/lib/course-progress'
 
@@ -124,6 +125,8 @@ export async function createLearningAssignment(formData: FormData) {
     .single()
 
   if (error) return { error: error.message }
+
+  await logAuditEvent(user.id, 'create', 'learning_assignments', data.id, null, { assigned_to: assignedTo, title, category })
 
   // Send notification to assignee
   await createNotification(
@@ -251,6 +254,8 @@ export async function confirmAssignment(assignmentId: string) {
 
   if (error) return { error: error.message }
 
+  await logAuditEvent(user.id, 'approve', 'learning_assignments', assignmentId, { status: assignment.status }, { status: 'completed' })
+
   // Notify the mentee that the assignment has been confirmed
   await createNotification(
     assignment.assigned_to,
@@ -269,7 +274,14 @@ export async function confirmAssignment(assignmentId: string) {
 export async function deleteLearningAssignment(assignmentId: string) {
   const auth = await requireAuth()
   if ('error' in auth) return { error: auth.error } as const
-  const { supabase } = auth
+  const { supabase, user } = auth
+
+  // Fetch old data for audit
+  const { data: oldData } = await supabase
+    .from('learning_assignments')
+    .select('*')
+    .eq('id', assignmentId)
+    .single()
 
   const { error } = await supabase
     .from('learning_assignments')
@@ -277,6 +289,9 @@ export async function deleteLearningAssignment(assignmentId: string) {
     .eq('id', assignmentId)
 
   if (error) return { error: error.message }
+
+  await logAuditEvent(user.id, 'delete', 'learning_assignments', assignmentId, oldData, null)
+
   revalidatePath('/admin/tasks')
   revalidatePath('/dashboard/assignments')
   return { success: true }
@@ -376,13 +391,13 @@ export async function submitOverdueReason(assignmentId: string, reason: string) 
 export async function reassignAssignment(assignmentId: string, newDueDate: string) {
   const auth = await requireAdminOrMentor()
   if ('error' in auth) return { error: auth.error } as const
-  const { supabase } = auth
+  const { supabase, user } = auth
 
   if (!newDueDate) return { error: ERR.REQUIRED_FIELDS }
 
   const { data: assignment } = await supabase
     .from('learning_assignments')
-    .select('assigned_to, title')
+    .select('assigned_to, title, status, due_date')
     .eq('id', assignmentId)
     .single()
 
@@ -399,6 +414,8 @@ export async function reassignAssignment(assignmentId: string, newDueDate: strin
     .eq('id', assignmentId)
 
   if (error) return { error: error.message }
+
+  await logAuditEvent(user.id, 'update', 'learning_assignments', assignmentId, { status: assignment.status, due_date: assignment.due_date }, { status: 'in_progress', due_date: newDueDate })
 
   await createNotification(
     assignment.assigned_to,
@@ -417,7 +434,7 @@ export async function reassignAssignment(assignmentId: string, newDueDate: strin
 export async function cancelAssignment(assignmentId: string) {
   const auth = await requireAdminOrMentor()
   if ('error' in auth) return { error: auth.error } as const
-  const { supabase } = auth
+  const { supabase, user } = auth
 
   const { data: assignment } = await supabase
     .from('learning_assignments')
@@ -433,6 +450,8 @@ export async function cancelAssignment(assignmentId: string) {
     .eq('id', assignmentId)
 
   if (error) return { error: error.message }
+
+  await logAuditEvent(user.id, 'delete', 'learning_assignments', assignmentId, { title: assignment.title, assigned_to: assignment.assigned_to }, null)
 
   await createNotification(
     assignment.assigned_to,

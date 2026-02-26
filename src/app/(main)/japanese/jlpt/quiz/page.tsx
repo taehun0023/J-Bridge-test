@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Badge from '@/components/ui/Badge'
 import EmptyState from '@/components/ui/EmptyState'
@@ -16,11 +17,50 @@ interface Quiz {
   time_limit_minutes: number | null
 }
 
+const MASTERY_THRESHOLD = 80
+
 export default async function QuizListPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
+
+  // Server-side mastery progress gate: if a specific level is requested, verify 80% mastery
+  if (user && params.level) {
+    const level = params.level
+    const [vocabIds, grammarIds, kanjiIds, readingIds, listeningIds] = await Promise.all([
+      supabase.from('jlpt_vocabulary').select('id').eq('jlpt_level', level),
+      supabase.from('jlpt_grammar').select('id').eq('jlpt_level', level),
+      supabase.from('jlpt_kanji').select('id').eq('jlpt_level', level),
+      supabase.from('jlpt_reading_passages').select('id').eq('jlpt_level', level),
+      supabase.from('jlpt_listening_scripts').select('id').eq('jlpt_level', level),
+    ])
+
+    const allIds = [
+      ...(vocabIds.data ?? []).map(v => v.id),
+      ...(grammarIds.data ?? []).map(g => g.id),
+      ...(kanjiIds.data ?? []).map(k => k.id),
+      ...(readingIds.data ?? []).map(r => r.id),
+      ...(listeningIds.data ?? []).map(l => l.id),
+    ]
+    const totalCount = allIds.length
+
+    if (totalCount > 0) {
+      const { data: masteredItems } = await supabase
+        .from('user_mastered_items')
+        .select('item_id')
+        .eq('user_id', user.id)
+        .in('item_type', ['jlpt_vocabulary', 'jlpt_grammar', 'jlpt_kanji', 'jlpt_reading', 'jlpt_listening'])
+
+      const masteredIdSet = new Set((masteredItems ?? []).map(m => m.item_id))
+      const masteredCount = allIds.filter(id => masteredIdSet.has(id)).length
+      const progressPct = Math.round((masteredCount / totalCount) * 100)
+
+      if (progressPct < MASTERY_THRESHOLD) {
+        redirect('/japanese/jlpt')
+      }
+    }
+  }
 
   const quizTypes = params.type && ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening'].includes(params.type)
     ? [params.type]

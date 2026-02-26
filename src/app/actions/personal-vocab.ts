@@ -9,6 +9,7 @@ export async function addPersonalVocab(
   meaning: string | null,
   memo: string | null,
   sourceUrl: string | null,
+  reading: string | null = null,
 ) {
   const auth = await requireAuth()
   if ('error' in auth) return { error: auth.error }
@@ -24,6 +25,7 @@ export async function addPersonalVocab(
       meaning: meaning?.trim() || null,
       memo: memo?.trim() || null,
       source_url: sourceUrl || null,
+      reading: reading?.trim() || null,
     })
     .select('id')
     .single()
@@ -54,7 +56,7 @@ export async function getPersonalVocab(search?: string) {
 
 export async function updatePersonalVocab(
   id: string,
-  updates: { term?: string; meaning?: string | null; memo?: string | null },
+  updates: { term?: string; meaning?: string | null; memo?: string | null; reading?: string | null },
 ) {
   const auth = await requireAuth()
   if ('error' in auth) return { error: auth.error }
@@ -73,6 +75,7 @@ export async function updatePersonalVocab(
   if (updates.term !== undefined) updateData.term = updates.term.trim()
   if (updates.meaning !== undefined) updateData.meaning = updates.meaning?.trim() || null
   if (updates.memo !== undefined) updateData.memo = updates.memo?.trim() || null
+  if (updates.reading !== undefined) updateData.reading = updates.reading?.trim() || null
 
   const { error } = await supabase
     .from('personal_vocab')

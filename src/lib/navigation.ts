@@ -15,6 +15,7 @@ import {
   Volume2,
   BookOpen,
   ScrollText,
+  HardDrive,
   type LucideIcon,
 } from 'lucide-react'
 import type { UserRole } from '@/lib/supabase/types'
@@ -121,6 +122,7 @@ export const adminNavItems: AdminNavItem[] = [
   { href: '/admin/reports', label: 'レポート', icon: BarChart3, allowedRoles: ['admin', 'mentor'] },
   { href: '/admin/tts-cache', label: 'TTSキャッシュ', icon: Volume2, allowedRoles: ['admin'] },
   { href: '/admin/audit-log', label: '監査ログ', icon: ScrollText, allowedRoles: ['admin'] },
+  { href: '/admin/backup', label: 'バックアップ', icon: HardDrive, allowedRoles: ['admin'] },
 ]
 
 export function getAdminNavForRole(role: UserRole): AdminNavItem[] {

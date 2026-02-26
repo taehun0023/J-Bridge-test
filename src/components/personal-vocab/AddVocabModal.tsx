@@ -5,13 +5,14 @@ import { X } from 'lucide-react'
 import { addPersonalVocab } from '@/app/actions/personal-vocab'
 
 interface Props {
-  initialTerm: string
-  sourceUrl: string
+  initialTerm?: string
+  sourceUrl?: string
   onClose: () => void
 }
 
-export default function AddVocabModal({ initialTerm, sourceUrl, onClose }: Props) {
+export default function AddVocabModal({ initialTerm = '', sourceUrl = '', onClose }: Props) {
   const [term, setTerm] = useState(initialTerm)
+  const [reading, setReading] = useState('')
   const [meaning, setMeaning] = useState('')
   const [memo, setMemo] = useState('')
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -20,7 +21,7 @@ export default function AddVocabModal({ initialTerm, sourceUrl, onClose }: Props
   function handleSubmit() {
     if (!term.trim()) return
     startTransition(async () => {
-      const result = await addPersonalVocab(term, meaning || null, memo || null, sourceUrl || null)
+      const result = await addPersonalVocab(term, meaning || null, memo || null, sourceUrl || null, reading || null)
       if ('error' in result && result.error) {
         setMessage({ type: 'error', text: result.error })
         setTimeout(() => setMessage(null), 3000)
@@ -63,6 +64,16 @@ export default function AddVocabModal({ initialTerm, sourceUrl, onClose }: Props
               type="text"
               value={term}
               onChange={e => setTerm(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">読み（ひらがな）</label>
+            <input
+              type="text"
+              value={reading}
+              onChange={e => setReading(e.target.value)}
+              placeholder="ひらがなで入力..."
               className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
             />
           </div>

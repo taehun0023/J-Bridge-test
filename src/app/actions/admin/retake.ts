@@ -3,6 +3,7 @@
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { requireAdminOrMentor } from '@/lib/auth-helpers'
+import { logAuditEvent } from '@/app/actions/audit'
 
 export async function approveRetakeRequest(attemptId: string) {
   const auth = await requireAdminOrMentor()
@@ -21,6 +22,9 @@ export async function approveRetakeRequest(attemptId: string) {
     .eq('retake_request_status', 'requested')
 
   if (error) return { error: error.message }
+
+  await logAuditEvent(auth.user.id, 'approve', 'quiz_attempts', attemptId, { retake_request_status: 'requested' }, { retake_request_status: 'approved' })
+
   revalidatePath('/admin/tasks')
   revalidatePath('/dashboard')
   return { success: true }
@@ -42,6 +46,9 @@ export async function denyRetakeRequest(attemptId: string) {
     .eq('retake_request_status', 'requested')
 
   if (error) return { error: error.message }
+
+  await logAuditEvent(auth.user.id, 'reject', 'quiz_attempts', attemptId, { retake_request_status: 'requested' }, { retake_request_status: 'denied' })
+
   revalidatePath('/admin/tasks')
   revalidatePath('/dashboard')
   return { success: true }

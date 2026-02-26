@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useTransition } from 'react'
 import Card from '@/components/ui/Card'
+import AddVocabModal from '@/components/personal-vocab/AddVocabModal'
 import { getPersonalVocab, updatePersonalVocab, deletePersonalVocab } from '@/app/actions/personal-vocab'
-import { Pencil, Trash2, X, Check } from 'lucide-react'
+import { Pencil, Trash2, X, Check, Plus } from 'lucide-react'
 
 interface VocabItem {
   id: string
   term: string
+  reading: string | null
   meaning: string | null
   memo: string | null
   source_url: string | null
@@ -19,8 +21,10 @@ export default function PersonalVocabClient() {
   const [search, setSearch] = useState('')
   const [editId, setEditId] = useState<string | null>(null)
   const [editTerm, setEditTerm] = useState('')
+  const [editReading, setEditReading] = useState('')
   const [editMeaning, setEditMeaning] = useState('')
   const [editMemo, setEditMemo] = useState('')
+  const [showAddModal, setShowAddModal] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [pending, startTransition] = useTransition()
 
@@ -39,6 +43,7 @@ export default function PersonalVocabClient() {
   function startEdit(item: VocabItem) {
     setEditId(item.id)
     setEditTerm(item.term)
+    setEditReading(item.reading ?? '')
     setEditMeaning(item.meaning ?? '')
     setEditMemo(item.memo ?? '')
   }
@@ -51,6 +56,7 @@ export default function PersonalVocabClient() {
     startTransition(async () => {
       const result = await updatePersonalVocab(id, {
         term: editTerm,
+        reading: editReading || null,
         meaning: editMeaning || null,
         memo: editMemo || null,
       })
@@ -116,6 +122,12 @@ export default function PersonalVocabClient() {
           >
             検索
           </button>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 transition-colors"
+          >
+            <Plus className="h-4 w-4" /> 追加
+          </button>
           <span className="ml-auto text-sm text-zinc-400">全 {items.length}件</span>
         </div>
 
@@ -135,6 +147,13 @@ export default function PersonalVocabClient() {
                       onChange={e => setEditTerm(e.target.value)}
                       className="w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
                       placeholder="単語"
+                    />
+                    <input
+                      type="text"
+                      value={editReading}
+                      onChange={e => setEditReading(e.target.value)}
+                      className="w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
+                      placeholder="読み（ひらがな）"
                     />
                     <input
                       type="text"
@@ -170,9 +189,14 @@ export default function PersonalVocabClient() {
                   <div className="flex items-start gap-3">
                     <span className="mt-0.5 w-8 shrink-0 text-center text-xs text-gray-400">{idx + 1}</span>
                     <div className="min-w-0 flex-1">
-                      <span className="font-semibold text-gray-900 dark:text-white">{item.term}</span>
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-semibold text-gray-900 dark:text-white">{item.term}</span>
+                        {item.reading && (
+                          <span className="text-xs text-gray-400 dark:text-gray-500">{item.reading}</span>
+                        )}
+                      </div>
                       {item.meaning && (
-                        <span className="ml-2 text-sm text-gray-600 dark:text-gray-300">| {item.meaning}</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-300">| {item.meaning}</span>
                       )}
                       {item.memo && (
                         <span className="ml-2 text-xs text-gray-400">| {item.memo}</span>
@@ -202,6 +226,15 @@ export default function PersonalVocabClient() {
           </div>
         )}
       </Card>
+
+      {showAddModal && (
+        <AddVocabModal
+          onClose={() => {
+            setShowAddModal(false)
+            loadItems(search || undefined)
+          }}
+        />
+      )}
     </div>
   )
 }

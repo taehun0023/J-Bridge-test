@@ -1,11 +1,11 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { requireAdmin } from '@/lib/auth-helpers'
+import { requireAdminOrTechMentor } from '@/lib/auth-helpers'
 import { logAuditEvent } from '@/app/actions/audit'
 
 export async function updateCoursePublished(courseId: string, isPublished: boolean) {
-  const auth = await requireAdmin()
+  const auth = await requireAdminOrTechMentor()
   if ('error' in auth) return { error: auth.error } as const
 
   // Fetch old data for audit
@@ -29,7 +29,7 @@ export async function updateCoursePublished(courseId: string, isPublished: boole
 }
 
 export async function deleteCourse(courseId: string) {
-  const auth = await requireAdmin()
+  const auth = await requireAdminOrTechMentor()
   if ('error' in auth) return { error: auth.error } as const
 
   // Fetch old data for audit (before delete)

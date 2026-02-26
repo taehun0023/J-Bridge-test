@@ -5,27 +5,9 @@ import { requireAuth, requireAdminOrJpMentor } from '@/lib/auth-helpers'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { notifyMentorsAndAdmins, getUserDisplayName } from '@/lib/notification-helpers'
 import { createNotification } from '@/app/actions/notifications'
+import { logAuditEvent } from '@/app/actions/audit'
 import { ERR } from '@/lib/action-types'
-
-/** Normalize a term for duplicate checking */
-function normalizeTerm(term: string): string {
-  let s = term
-  // Full-width alphanumeric → half-width
-  s = s.replace(/[\uFF01-\uFF5E]/g, (ch) =>
-    String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)
-  )
-  // Katakana → Hiragana
-  s = s.replace(/[\u30A1-\u30F6]/g, (ch) =>
-    String.fromCharCode(ch.charCodeAt(0) - 0x60)
-  )
-  // Collapse whitespace
-  s = s.replace(/[\s\t\n]+/g, ' ').trim()
-  // Lowercase
-  s = s.toLowerCase()
-  // Remove common punctuation
-  s = s.replace(/[・、。,.!?！？]/g, '')
-  return s
-}
+import { normalizeTerm } from '@/lib/normalize'
 
 const VOCAB_PATH = '/japanese/business/shared-vocab'
 
@@ -143,7 +125,7 @@ export async function getMySubmissions() {
 
   const { data } = await supabase
     .from('shared_vocab_submissions')
-    .select('id, term_ja, term_reading, term_ko, example_sentence, category, status, created_at')
+    .select('id, term_ja, term_reading, term_ko, example_sentence, category, status, rejection_reason, created_at')
     .eq('submitted_by', user.id)
     .order('created_at', { ascending: false })
 
@@ -194,6 +176,8 @@ export async function approveVocab(id: string) {
 
   if (error) return { error: error.message }
 
+  await logAuditEvent(auth.user.id, 'approve', 'shared_vocab_submissions', id, { status: 'pending' }, { status: 'approved' })
+
   // Notify the submitter
   await createNotification(
     submission.submitted_by,
@@ -226,10 +210,12 @@ export async function rejectVocab(id: string, reason?: string) {
 
   const { error } = await serviceClient
     .from('shared_vocab_submissions')
-    .update({ status: 'rejected', updated_at: new Date().toISOString() })
+    .update({ status: 'rejected', rejection_reason: reason || null, updated_at: new Date().toISOString() })
     .eq('id', id)
 
   if (error) return { error: error.message }
+
+  await logAuditEvent(auth.user.id, 'reject', 'shared_vocab_submissions', id, { status: 'pending' }, { status: 'rejected', rejection_reason: reason || null })
 
   // Notify the submitter
   const msg = reason
@@ -263,6 +249,13 @@ export async function updateSharedVocab(
 
   const normalized = normalizeTerm(termJa)
 
+  // Fetch old data for audit
+  const { data: oldVocab } = await serviceClient
+    .from('shared_vocab_submissions')
+    .select('term_ja, term_reading, term_ko, example_sentence, category')
+    .eq('id', id)
+    .single()
+
   // Check for duplicates (exclude self)
   const { data: existing } = await serviceClient
     .from('shared_vocab_submissions')
@@ -290,6 +283,38 @@ export async function updateSharedVocab(
     .eq('id', id)
 
   if (error) return { error: error.message }
+
+  await logAuditEvent(auth.user.id, 'update', 'shared_vocab_submissions', id, oldVocab, { ...data, term_ja: termJa })
+
+  revalidatePath(VOCAB_PATH)
+  return { success: true }
+}
+
+export async function deleteMySubmission(id: string) {
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error }
+  const { user } = auth
+
+  const serviceClient = createServiceRoleClient()
+  if (!serviceClient) return { error: ERR.SERVICE_KEY_MISSING }
+
+  // Verify ownership + rejected status
+  const { data: submission } = await serviceClient
+    .from('shared_vocab_submissions')
+    .select('submitted_by, status')
+    .eq('id', id)
+    .single()
+
+  if (!submission) return { error: ERR.NOT_FOUND }
+  if (submission.submitted_by !== user.id) return { error: ERR.FORBIDDEN }
+  if (submission.status !== 'rejected') return { error: '却下された提出のみ削除できます' }
+
+  const { error } = await serviceClient
+    .from('shared_vocab_submissions')
+    .delete()
+    .eq('id', id)
+
+  if (error) return { error: error.message }
   revalidatePath(VOCAB_PATH)
   return { success: true }
 }
@@ -301,12 +326,22 @@ export async function deleteSharedVocab(id: string) {
   const serviceClient = createServiceRoleClient()
   if (!serviceClient) return { error: ERR.SERVICE_KEY_MISSING }
 
+  // Fetch old data for audit
+  const { data: oldData } = await serviceClient
+    .from('shared_vocab_submissions')
+    .select('*')
+    .eq('id', id)
+    .single()
+
   const { error } = await serviceClient
     .from('shared_vocab_submissions')
     .delete()
     .eq('id', id)
 
   if (error) return { error: error.message }
+
+  await logAuditEvent(auth.user.id, 'delete', 'shared_vocab_submissions', id, oldData, null)
+
   revalidatePath(VOCAB_PATH)
   return { success: true }
 }

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Badge from '@/components/ui/Badge'
 import EmptyState from '@/components/ui/EmptyState'
@@ -15,11 +16,48 @@ interface SearchParams {
   type?: string
 }
 
+const MASTERY_THRESHOLD = 80
+
+// Map quiz type to DB categories for mastery checking
+const QUIZ_TYPE_TO_CATEGORIES: Record<string, string[]> = {
+  it_terminology: ['business', 'it', 'dev'],
+  sentence_pattern: ['sentence_pattern'],
+  business_expression: ['expression'],
+}
+
 export default async function BusinessQuizListPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const supabase = await createClient()
   const params = await searchParams
 
   const { data: { user } } = await supabase.auth.getUser()
+
+  // Server-side mastery progress gate: if a specific type is requested, verify 80% mastery
+  if (user && params.type && QUIZ_TYPE_TO_CATEGORIES[params.type]) {
+    const dbCategories = QUIZ_TYPE_TO_CATEGORIES[params.type]
+
+    const { data: items } = await supabase
+      .from('it_glossary')
+      .select('id')
+      .in('category', dbCategories)
+
+    const totalCount = items?.length ?? 0
+
+    if (totalCount > 0) {
+      const { data: masteredItems } = await supabase
+        .from('user_mastered_items')
+        .select('item_id')
+        .eq('user_id', user.id)
+        .eq('item_type', 'it_glossary')
+
+      const masteredIdSet = new Set((masteredItems ?? []).map(m => m.item_id))
+      const masteredCount = items!.filter(i => masteredIdSet.has(i.id)).length
+      const progressPct = Math.round((masteredCount / totalCount) * 100)
+
+      if (progressPct < MASTERY_THRESHOLD) {
+        redirect('/japanese/business')
+      }
+    }
+  }
 
   const validTypes = ['it_terminology', 'sentence_pattern', 'business_expression']
   const quizTypes = params.type && validTypes.includes(params.type)

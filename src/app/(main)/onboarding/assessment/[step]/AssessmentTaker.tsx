@@ -217,11 +217,27 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [reviewMode, started])
 
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60)
-    const s = seconds % 60
-    return `${m}:${s.toString().padStart(2, '0')}`
-  }
+  // Anti-cheat: prevent drag, copy, select, right-click during exam
+  useEffect(() => {
+    if (!started || reviewMode) return
+
+    const prevent = (e: Event) => e.preventDefault()
+    document.addEventListener('dragstart', prevent)
+    document.addEventListener('drop', prevent)
+    document.addEventListener('copy', prevent)
+    document.addEventListener('cut', prevent)
+    document.addEventListener('selectstart', prevent)
+    document.addEventListener('contextmenu', prevent)
+
+    return () => {
+      document.removeEventListener('dragstart', prevent)
+      document.removeEventListener('drop', prevent)
+      document.removeEventListener('copy', prevent)
+      document.removeEventListener('cut', prevent)
+      document.removeEventListener('selectstart', prevent)
+      document.removeEventListener('contextmenu', prevent)
+    }
+  }, [started, reviewMode])
 
   const handleSelect = (optionId: string) => {
     if (optionId === '') {
@@ -480,28 +496,65 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
   }
 
   // ==================== EXAM MODE ====================
-  const isTimeLow = remainingSeconds < 60
+  const totalSeconds = timeLimit * 60
+  const timeProgressPct = totalSeconds > 0 ? Math.max(0, (remainingSeconds / totalSeconds) * 100) : 0
+  const isTimeCritical = remainingSeconds <= 60
+  const isTimeLow = remainingSeconds <= 300
+
+  const timerBg = isTimeCritical
+    ? 'border-red-300 bg-red-50/90 dark:border-red-500/40 dark:bg-red-900/30'
+    : isTimeLow
+    ? 'border-amber-300 bg-amber-50/90 dark:border-amber-500/40 dark:bg-amber-900/30'
+    : 'border-emerald-300 bg-emerald-50/90 dark:border-emerald-500/40 dark:bg-emerald-900/30'
+
+  const timerText = isTimeCritical
+    ? 'text-red-700 dark:text-red-300'
+    : isTimeLow
+    ? 'text-amber-700 dark:text-amber-300'
+    : 'text-emerald-700 dark:text-emerald-300'
+
+  const progressBarColor = isTimeCritical
+    ? 'bg-red-500'
+    : isTimeLow
+    ? 'bg-amber-500'
+    : 'bg-emerald-500'
+
+  const minutes = Math.floor(remainingSeconds / 60)
+  const seconds = remainingSeconds % 60
 
   return (
-    <div>
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-indigo-400">
-            総合試験 {displayStep}/{totalSteps}
-          </p>
-          <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">{label}</h1>
+    <div
+      className="select-none"
+      style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' } as React.CSSProperties}
+    >
+      {/* Header + Timer */}
+      <div className={`sticky top-0 z-10 mb-4 overflow-hidden rounded-xl border shadow-sm backdrop-blur ${timerBg}`}>
+        <div className="flex items-center justify-between px-4 py-3">
+          <div>
+            <p className="text-xs font-medium text-indigo-400">
+              総合試験 {displayStep}/{totalSteps}
+            </p>
+            <h1 className="text-base font-bold text-zinc-900 dark:text-zinc-100">{label}</h1>
+          </div>
+          <div className={`flex items-center gap-2 ${isTimeCritical ? 'animate-pulse' : isTimeLow ? 'animate-pulse' : ''}`}>
+            <span className={`rounded-lg px-3 py-1 text-sm font-bold ${timerText}`}>
+              残り {minutes}分{seconds > 0 ? ` ${seconds}秒` : ''}
+            </span>
+          </div>
+          <span className="text-sm text-zinc-600 dark:text-zinc-300">
+            回答: <span className="font-semibold">{answeredCount}/{totalQuestions}</span>
+          </span>
         </div>
-        <div className={`rounded-xl px-4 py-2 text-sm font-mono font-bold backdrop-blur-md ${
-          isTimeLow
-            ? 'bg-red-500/10 text-red-400 ring-1 ring-red-500/20 animate-pulse'
-            : 'bg-white/[0.03] text-zinc-300 border border-white/[0.08] dark:bg-white/[0.03] dark:text-zinc-300 dark:border-white/[0.08] bg-zinc-100 text-zinc-700 border-gray-200'
-        }`}>
-          {formatTime(remainingSeconds)}
+        {/* Time progress bar */}
+        <div className="h-1.5 w-full bg-gray-200/50 dark:bg-white/10">
+          <div
+            className={`h-full transition-all duration-1000 ease-linear ${progressBarColor}`}
+            style={{ width: `${timeProgressPct}%` }}
+          />
         </div>
       </div>
 
-      {/* Progress bar */}
+      {/* Answer progress bar */}
       <div className="mb-6">
         <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 mb-1">
           <span>進捗</span>

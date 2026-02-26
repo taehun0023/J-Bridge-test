@@ -4,6 +4,7 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { requireAdminOrMentor } from '@/lib/auth-helpers'
 import { createNotification } from '@/app/actions/notifications'
+import { logAuditEvent } from '@/app/actions/audit'
 
 export async function createFeedback(formData: FormData) {
   const auth = await requireAdminOrMentor()
@@ -37,6 +38,8 @@ export async function createFeedback(formData: FormData) {
 
   console.log('[createFeedback] Feedback created:', data.id)
 
+  await logAuditEvent(user.id, 'create', 'admin_feedbacks', data.id, null, { user_id: userId, category: category || 'seikatsu' })
+
   // 受信者に通知
   await createNotification(
     userId,
@@ -57,6 +60,14 @@ export async function updateFeedback(feedbackId: string, content: string) {
   const auth = await requireAdminOrMentor()
   if ('error' in auth) return { error: auth.error } as const
 
+  // Fetch old data for audit
+  const { data: oldData } = await auth.supabase
+    .from('admin_feedbacks')
+    .select('content')
+    .eq('id', feedbackId)
+    .eq('admin_id', auth.user.id)
+    .single()
+
   const { error } = await auth.supabase
     .from('admin_feedbacks')
     .update({ content })
@@ -64,6 +75,9 @@ export async function updateFeedback(feedbackId: string, content: string) {
     .eq('admin_id', auth.user.id)
 
   if (error) return { error: error.message }
+
+  await logAuditEvent(auth.user.id, 'update', 'admin_feedbacks', feedbackId, oldData, { content })
+
   revalidatePath('/admin/reports')
   revalidatePath('/feedback')
   return { success: true }
@@ -73,6 +87,14 @@ export async function deleteFeedback(feedbackId: string) {
   const auth = await requireAdminOrMentor()
   if ('error' in auth) return { error: auth.error } as const
 
+  // Fetch old data for audit
+  const { data: oldData } = await auth.supabase
+    .from('admin_feedbacks')
+    .select('*')
+    .eq('id', feedbackId)
+    .eq('admin_id', auth.user.id)
+    .single()
+
   const { error } = await auth.supabase
     .from('admin_feedbacks')
     .delete()
@@ -80,6 +102,9 @@ export async function deleteFeedback(feedbackId: string) {
     .eq('admin_id', auth.user.id)
 
   if (error) return { error: error.message }
+
+  await logAuditEvent(auth.user.id, 'delete', 'admin_feedbacks', feedbackId, oldData, null)
+
   revalidatePath('/admin/reports')
   revalidatePath('/feedback')
   return { success: true }
