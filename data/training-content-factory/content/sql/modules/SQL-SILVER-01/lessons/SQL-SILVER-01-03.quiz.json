@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "lesson_id": "SQL-SILVER-01-03",
+  "questions": [
+    {
+      "id": "SQL-SILVER-01-03-Q01",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "RIGHT JOIN の動作として正しいものはどれか。",
+      "choices": [
+        "左テーブルの全行を保持し、右テーブルに一致がない場合は NULL で埋める",
+        "右テーブルの全行を保持し、左テーブルに一致がない場合は NULL で埋める",
+        "両テーブルの全行を保持し、一致しない側を NULL で埋める",
+        "2つのテーブルの直積を生成する"
+      ],
+      "answer": 1,
+      "explanation": "RIGHT JOIN は右テーブルの全行を保持し、左テーブルに一致がない場合は NULL で埋める。LEFT JOIN のテーブル順序を逆にしたものと等価である。(Evidence: E1, E7)"
+    },
+    {
+      "id": "SQL-SILVER-01-03-Q02",
+      "type": "true_false",
+      "difficulty": 2,
+      "prompt": "RIGHT JOIN は LEFT JOIN のテーブル順序を入れ替えたものと論理的に等価である。",
+      "answer": true,
+      "explanation": "RIGHT JOIN は論理的に LEFT JOIN のテーブル順序を入れ替えたものと等価であるため、可読性のために LEFT JOIN に統一する慣習がある。(Evidence: E7)"
+    },
+    {
+      "id": "SQL-SILVER-01-03-Q03",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "FULL OUTER JOIN の結果として正しい説明はどれか。",
+      "choices": [
+        "両テーブルで一致する行のみを返す",
+        "左テーブルの全行のみを返す",
+        "左右両方のテーブルの全行を返し、一致しない側を NULL で埋める",
+        "2つのテーブルの直積を返す"
+      ],
+      "answer": 2,
+      "explanation": "FULL OUTER JOIN は左右両方のテーブルの全行を保持し、一致しない側を NULL で埋める。ANSI SQL 標準で定義されている。(Evidence: E2)"
+    },
+    {
+      "id": "SQL-SILVER-01-03-Q04",
+      "type": "code_output",
+      "difficulty": 3,
+      "prompt": "以下のテーブルとクエリの結果行数はいくつか。\n\nemployees テーブル（3行）:\n| id | name   | dept_id |\n|----|--------|---------|\n| 1  | Tanaka | 10      |\n| 2  | Suzuki | 20      |\n| 3  | Sato   | NULL    |\n\ndepartments テーブル（3行）:\n| id | name        |\n|----|-------------|\n| 10 | Engineering |\n| 20 | Sales       |\n| 30 | Marketing   |\n\nSELECT e.name, d.name AS dept_name\nFROM employees e\nFULL OUTER JOIN departments d ON e.dept_id = d.id;",
+      "answer": "4",
+      "explanation": "Tanaka-Engineering, Suzuki-Sales の2行は一致する。Sato は dept_id が NULL で一致する部署がないため NULL 行として出力される。Marketing(id=30) は一致する従業員がいないため NULL 行として出力される。合計4行。(Evidence: E2)"
+    },
+    {
+      "id": "SQL-SILVER-01-03-Q05",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "CROSS JOIN の結果行数の計算として正しいものはどれか。左テーブルが M 行、右テーブルが N 行の場合。",
+      "choices": [
+        "M + N 行",
+        "M × N 行",
+        "M または N の大きい方",
+        "M - N 行"
+      ],
+      "answer": 1,
+      "explanation": "CROSS JOIN は2つのテーブルの直積（デカルト積）を生成し、結果行数は左行数 × 右行数となる。(Evidence: E3)"
+    },
+    {
+      "id": "SQL-SILVER-01-03-Q06",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "CROSS JOIN の活用例として適切なものはどれか。",
+      "choices": [
+        "外部キーによるテーブル間の参照整合性チェック",
+        "テストデータ生成やカレンダー表の作成",
+        "重複行の削除",
+        "NULL 値の置換"
+      ],
+      "answer": 1,
+      "explanation": "CROSS JOIN は結合条件を指定しない場合に使用し、テストデータ生成やカレンダー表の作成などに活用される。(Evidence: E9)"
+    },
+    {
+      "id": "SQL-SILVER-01-03-Q07",
+      "type": "code_output",
+      "difficulty": 3,
+      "prompt": "以下のテーブルとクエリで、Yamada の manager 列の値は何か。\n\nemployees テーブル:\n| id | name   | manager_id |\n|----|--------|------------|\n| 1  | Tanaka | NULL       |\n| 2  | Suzuki | 1          |\n| 3  | Sato   | 1          |\n| 4  | Yamada | 2          |\n\nSELECT e.name AS employee, m.name AS manager\nFROM employees e\nLEFT JOIN employees m ON e.manager_id = m.id;",
+      "answer": "Suzuki",
+      "explanation": "Yamada の manager_id は 2 であり、id=2 は Suzuki である。自己結合で manager_id と id を結合すると、従業員とその上司の情報を1行で取得できる。(Evidence: E10, E4)"
+    },
+    {
+      "id": "SQL-SILVER-01-03-Q08",
+      "type": "true_false",
+      "difficulty": 3,
+      "prompt": "USING 句で指定した列は結果セットに2回出現する。",
+      "answer": false,
+      "explanation": "USING 句で指定した列は結果セットに1回のみ出現し、テーブル修飾子なしで参照できる。(Evidence: E6)"
+    },
+    {
+      "id": "SQL-SILVER-01-03-Q09",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "OUTER JOIN の WHERE 句に右テーブルの非 NULL 条件を記述した場合、どのような問題が起こりうるか。",
+      "choices": [
+        "構文エラーが発生する",
+        "事実上 INNER JOIN と同じ結果になる場合がある",
+        "結果が空になる",
+        "右テーブルのすべての行が重複して表示される"
+      ],
+      "answer": 1,
+      "explanation": "OUTER JOIN で WHERE 句に右テーブル（NULL 側）の条件を書くと、事実上 INNER JOIN と同じ結果になる場合がある。条件は ON 句に書くか、IS NULL チェックと組み合わせる必要がある。(Evidence: E11)"
+    },
+    {
+      "id": "SQL-SILVER-01-03-Q10",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "NATURAL JOIN の使用が本番コードで推奨されない理由として正しいものはどれか。",
+      "choices": [
+        "NATURAL JOIN は ANSI SQL 標準に含まれていないため",
+        "NATURAL JOIN は INNER JOIN しかサポートしないため",
+        "意図しない同名列で結合されるリスクがあるため",
+        "NATURAL JOIN は集約関数と併用できないため"
+      ],
+      "answer": 2,
+      "explanation": "NATURAL JOIN は両テーブルの同名列すべてで自動結合するが、意図しない列で結合されるリスクがあるため、本番コードでは USING か ON を明示するのが推奨される。(Evidence: E12)"
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "lesson_id": "SQL-BRONZE-01-05",
+  "questions": [
+    {
+      "id": "SQL-BRONZE-01-05-Q01",
+      "type": "single_choice",
+      "difficulty": 1,
+      "prompt": "INNER JOIN の説明として正しいものはどれか。",
+      "choices": [
+        "左テーブルの全行を返し、右テーブルに一致がなければ NULL で埋める",
+        "両方のテーブルで結合条件を満たす行のみを返す",
+        "右テーブルの全行を返し、左テーブルに一致がなければ NULL で埋める",
+        "両方のテーブルの全行を返す"
+      ],
+      "answer": 1,
+      "explanation": "INNER JOIN は両方のテーブルで結合条件を満たす行のみを返し、一致しない行は除外される。(Evidence: E2)"
+    },
+    {
+      "id": "SQL-BRONZE-01-05-Q02",
+      "type": "true_false",
+      "difficulty": 1,
+      "prompt": "LEFT JOIN は左テーブルの全行を返し、右テーブルに一致する行がない場合は NULL で埋める。",
+      "answer": true,
+      "explanation": "LEFT JOIN（LEFT OUTER JOIN）は左テーブルの全行を返し、右テーブルに一致がない場合は NULL で埋める。(Evidence: E3)"
+    },
+    {
+      "id": "SQL-BRONZE-01-05-Q03",
+      "type": "single_choice",
+      "difficulty": 1,
+      "prompt": "JOIN 文で結合条件を指定する句はどれか。",
+      "choices": [
+        "WHERE",
+        "HAVING",
+        "ON",
+        "GROUP BY"
+      ],
+      "answer": 2,
+      "explanation": "ON 句は結合条件を指定する。通常は主キーと外部キーの等値条件を指定する。(Evidence: E4)"
+    },
+    {
+      "id": "SQL-BRONZE-01-05-Q04",
+      "type": "true_false",
+      "difficulty": 1,
+      "prompt": "INNER JOIN は JOIN とだけ書いても同じ意味になる。",
+      "answer": true,
+      "explanation": "INNER JOIN は単に JOIN とも書ける。INNER は省略可能である。(Evidence: E9)"
+    },
+    {
+      "id": "SQL-BRONZE-01-05-Q05",
+      "type": "code_output",
+      "difficulty": 2,
+      "prompt": "以下のテーブルとクエリがある。結果は何行になるか。\n\n-- departments: (1,'Engineering'), (2,'Sales'), (3,'HR')\n-- employees: (101,'Tanaka',1), (102,'Suzuki',1), (103,'Sato',2)\n\nSELECT d.department_name, e.name\nFROM departments d\nINNER JOIN employees e ON d.department_id = e.department_id;",
+      "choices": [
+        "2 行",
+        "3 行",
+        "4 行",
+        "6 行"
+      ],
+      "answer": 1,
+      "explanation": "INNER JOIN は結合条件を満たす行のみ返す。department_id=1 に 2 名、department_id=2 に 1 名が一致するため合計 3 行。HR（department_id=3）には社員がいないため除外される。(Evidence: E2)"
+    },
+    {
+      "id": "SQL-BRONZE-01-05-Q06",
+      "type": "code_output",
+      "difficulty": 2,
+      "prompt": "以下のテーブルとクエリがある。結果は何行になるか。\n\n-- departments: (1,'Engineering'), (2,'Sales'), (3,'HR')\n-- employees: (101,'Tanaka',1), (102,'Suzuki',1), (103,'Sato',2)\n\nSELECT d.department_name, e.name\nFROM departments d\nLEFT JOIN employees e ON d.department_id = e.department_id;",
+      "choices": [
+        "3 行",
+        "4 行",
+        "5 行",
+        "6 行"
+      ],
+      "answer": 1,
+      "explanation": "LEFT JOIN は左テーブル（departments）の全行を返す。Engineering に 2 名、Sales に 1 名、HR に 0 名（NULL で埋め）で合計 4 行になる。(Evidence: E3)"
+    },
+    {
+      "id": "SQL-BRONZE-01-05-Q07",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "LEFT JOIN の結果で「左テーブルにあって右テーブルにないデータ」を抽出するにはどうすればよいか。",
+      "choices": [
+        "WHERE 句で右テーブルの列 IS NOT NULL を指定する",
+        "WHERE 句で右テーブルの列 IS NULL を指定する",
+        "HAVING 句で右テーブルの列 = 0 を指定する",
+        "ON 句に NOT EXISTS を追加する"
+      ],
+      "answer": 1,
+      "explanation": "LEFT JOIN の結果で右テーブル側が NULL のレコードをフィルタすると「左テーブルにあって右テーブルにないデータ」を抽出できる。(Evidence: E10)"
+    },
+    {
+      "id": "SQL-BRONZE-01-05-Q08",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "テーブル別名（alias）の説明として正しいものはどれか。",
+      "choices": [
+        "テーブル別名は WHERE 句でのみ指定できる",
+        "テーブル別名を付けると元のテーブル名は使用できなくなる",
+        "テーブル別名は FROM 句や JOIN 句で AS キーワード（省略可能）の後に指定する",
+        "テーブル別名は数値で始めなければならない"
+      ],
+      "answer": 2,
+      "explanation": "テーブル別名は FROM 句や JOIN 句で AS キーワード（省略可能）の後に指定する。JOIN 文で複数テーブルの列を区別するために使い、クエリの可読性を高める。(Evidence: E5, E6)"
+    },
+    {
+      "id": "SQL-BRONZE-01-05-Q09",
+      "type": "true_false",
+      "difficulty": 3,
+      "prompt": "JOIN の結合条件を指定し忘れると、クロス結合（全組み合わせ）になり意図しない大量の行が生成される可能性がある。",
+      "answer": true,
+      "explanation": "結合条件を間違えるとクロス結合（全組み合わせ）になり、意図しない大量の行が生成される。(Evidence: E11)"
+    },
+    {
+      "id": "SQL-BRONZE-01-05-Q10",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "同名の列が複数テーブルに存在する場合、JOIN 文ではどうしなければならないか。",
+      "choices": [
+        "片方のテーブルの列名を ALTER TABLE で変更する",
+        "テーブル名またはテーブル別名で列を修飾する",
+        "DISTINCT を使って区別する",
+        "サブクエリを使う以外に方法はない"
+      ],
+      "answer": 1,
+      "explanation": "同名の列が複数テーブルに存在する場合、テーブル名またはテーブル別名で修飾しないと曖昧性エラーが発生する。(Evidence: E7)"
+    }
+  ]
+}

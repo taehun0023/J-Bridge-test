@@ -1,0 +1,227 @@
+---
+lesson_id: SQL-GOLD-01-04
+title: "トランザクション — ACID・分離レベル・デッドロック"
+module: SQL-GOLD-01
+level: gold
+est_minutes: 35
+tags: [transaction, ACID, isolation-level, deadlock, SAVEPOINT, MVCC]
+---
+
+## 1) 要点まとめ（5行）
+
+1. **トランザクションはデータベース操作の論理的な作業単位**であり、複数の SQL 文を一つのまとまりとして扱う。全てが成功すれば COMMIT、途中で失敗すれば ROLLBACK で全て取り消す。
+2. **ACID 特性**はトランザクションが満たすべき 4 つの性質である。Atomicity（原子性）、Consistency（一貫性）、Isolation（分離性）、Durability（永続性）。
+3. **分離レベル**は READ UNCOMMITTED / READ COMMITTED / REPEATABLE READ / SERIALIZABLE の 4 段階で、トランザクション間の可視性を制御する。
+4. **デッドロック**は 2 つ以上のトランザクションが互いにロックの解放を待つ状態であり、RDBMS のデッドロック検出機構で解消される。
+5. **楽観的ロック**はバージョン番号で衝突を検出し、**悲観的ロック**は SELECT FOR UPDATE で行を明示的にロックする。用途に応じた使い分けが重要である。
+
+---
+
+## 2) 概念
+
+### トランザクションとは何か
+
+トランザクションはデータベース操作の論理的な作業単位であり、複数の SQL 文を一つのまとまりとして扱う。`BEGIN`（または `START TRANSACTION`）でトランザクションを明示的に開始し、`COMMIT` で変更を確定、`ROLLBACK` で開始時点の状態に戻す。多くの RDBMS では自動コミットモード（AUTOCOMMIT）がデフォルトである。
+
+```sql
+BEGIN;
+UPDATE accounts SET balance = balance - 10000 WHERE id = 1;
+UPDATE accounts SET balance = balance + 10000 WHERE id = 2;
+COMMIT;  -- 両方成功したら確定
+```
+
+途中でエラーが発生した場合、`ROLLBACK` で全ての変更を取り消す。これにより「口座 1 から引き落としたが口座 2 に入金されない」という不整合が防がれる。
+
+### ACID 特性
+
+ACID はトランザクションが満たすべき 4 つの性質である。
+
+| 特性 | 英語 | 説明 |
+|---|---|---|
+| 原子性 | Atomicity | 全てか無か。一部だけ実行された中途半端な状態にならない |
+| 一貫性 | Consistency | 制約（NOT NULL, UNIQUE, FK など）を常に満たす |
+| 分離性 | Isolation | 同時実行されるトランザクションが互いに干渉しない |
+| 永続性 | Durability | COMMIT 後のデータは障害後も失われない |
+
+### SAVEPOINT による部分ロールバック
+
+SAVEPOINT はトランザクション内に中間復帰点を設定する。`ROLLBACK TO SAVEPOINT` で特定の地点まで部分的にロールバックでき、トランザクション全体を取り消さずに済む。
+
+```sql
+BEGIN;
+INSERT INTO orders (product_id, qty) VALUES (1, 10);
+SAVEPOINT sp1;
+INSERT INTO orders (product_id, qty) VALUES (2, 5);
+-- 2 番目の注文に問題があったら部分ロールバック
+ROLLBACK TO SAVEPOINT sp1;
+-- 1 番目の注文は残る
+INSERT INTO orders (product_id, qty) VALUES (3, 8);
+COMMIT;
+```
+
+### 分離レベル（Isolation Level）
+
+分離レベルはトランザクション間の可視性を制御する。SQL 標準では 4 段階が定義されている。
+
+| 分離レベル | ダーティリード | ノンリピータブルリード | ファントムリード | 備考 |
+|---|---|---|---|---|
+| READ UNCOMMITTED | 発生する | 発生する | 発生する | 最低レベル |
+| READ COMMITTED | 防止 | 発生する | 発生する | PostgreSQL のデフォルト |
+| REPEATABLE READ | 防止 | 防止 | 発生する | MySQL InnoDB のデフォルト |
+| SERIALIZABLE | 防止 | 防止 | 防止 | 最高レベル、性能最低 |
+
+**ダーティリード**は他のトランザクションの未コミットデータを読んでしまう現象、**ノンリピータブルリード**は同じクエリを 2 回実行すると結果が変わる現象、**ファントムリード**は新しい行が挿入されて結果セットが変わる現象である。
+
+分離レベルの設定は `SET TRANSACTION ISOLATION LEVEL` 文で個別に行える。
+
+```sql
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+BEGIN;
+-- このトランザクションは SERIALIZABLE で実行される
+SELECT * FROM accounts WHERE balance > 100000;
+COMMIT;
+```
+
+### MVCC（Multi-Version Concurrency Control）
+
+PostgreSQL は MVCC を採用しており、読み取りと書き込みが互いをブロックしない。各トランザクションはデータのスナップショットを見るため、読み取りがロック待ちになることがない。
+
+### デッドロック
+
+デッドロックは 2 つ以上のトランザクションが互いにロックの解放を待つ状態である。
+
+```
+TX-A: UPDATE accounts SET ... WHERE id = 1;  -- id=1 をロック
+TX-B: UPDATE accounts SET ... WHERE id = 2;  -- id=2 をロック
+TX-A: UPDATE accounts SET ... WHERE id = 2;  -- TX-B のロック待ち
+TX-B: UPDATE accounts SET ... WHERE id = 1;  -- TX-A のロック待ち → デッドロック!
+```
+
+RDBMS はデッドロック検出機構を持ち、一方のトランザクションを自動的にロールバックして解消する。
+
+### 楽観的ロック vs 悲観的ロック
+
+**楽観的ロック**はバージョン番号（version カラム）で衝突を検出する方式。更新時に version が変わっていたら再試行する。ロック待ちが発生しないため、競合が少ないケースで有効。
+
+```sql
+-- 読み取り
+SELECT id, name, price, version FROM products WHERE id = 1;
+-- 更新（version を条件に含める）
+UPDATE products SET price = 2000, version = version + 1
+WHERE id = 1 AND version = 3;
+-- 0 行更新 → 他で変更済み → 再試行
+```
+
+**悲観的ロック**は `SELECT FOR UPDATE` で行を明示的にロックする方式。確実にデータを保護するが、ロック待ちが発生する。
+
+```sql
+BEGIN;
+SELECT * FROM products WHERE id = 1 FOR UPDATE;  -- 行ロック取得
+UPDATE products SET price = 2000 WHERE id = 1;
+COMMIT;  -- ロック解放
+```
+
+---
+
+## 3) 例
+
+### 例1: 銀行口座間の振替トランザクション
+
+口座 A から口座 B へ 50,000 円を振り替える。SAVEPOINT を使い、残高不足のチェックと部分ロールバックを組み合わせる。
+
+```sql
+BEGIN;
+
+-- 口座 A から引き落とし
+UPDATE accounts SET balance = balance - 50000 WHERE id = 1;
+
+SAVEPOINT after_debit;
+
+-- 口座 B に入金
+UPDATE accounts SET balance = balance + 50000 WHERE id = 2;
+
+-- 残高チェック（制約違反があればロールバック）
+-- balance < 0 の行があれば問題
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM accounts WHERE id = 1 AND balance < 0) THEN
+        RAISE EXCEPTION 'Insufficient balance';
+    END IF;
+END $$;
+
+COMMIT;
+-- エラー発生時は自動的に ROLLBACK される
+```
+
+ACID 特性により、引き落としだけ完了して入金が失敗する中途半端な状態にはならない。
+
+### 例2: 在庫更新での分離レベル比較
+
+READ COMMITTED と SERIALIZABLE の挙動を比較する。
+
+```sql
+-- セッション 1: READ COMMITTED（デフォルト）
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+BEGIN;
+SELECT stock FROM products WHERE id = 1;  -- 結果: 100
+
+-- ここでセッション 2 が stock を 80 に更新して COMMIT
+
+SELECT stock FROM products WHERE id = 1;  -- 結果: 80（変わる！）
+COMMIT;
+
+-- セッション 1: SERIALIZABLE
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+BEGIN;
+SELECT stock FROM products WHERE id = 1;  -- 結果: 80
+
+-- ここでセッション 2 が stock を 60 に更新して COMMIT
+
+SELECT stock FROM products WHERE id = 1;  -- 結果: 80（変わらない！）
+COMMIT;
+```
+
+SERIALIZABLE ではトランザクション開始時点のスナップショットを見続けるため、他のトランザクションの変更は見えない。
+
+---
+
+## 4) よくあるミス／落とし穴（5つ）
+
+### 落とし穴 1: 長すぎるトランザクション
+
+トランザクション内にユーザー入力待ちや外部 API 呼び出しを含めると、ロック保持時間が長くなり他のトランザクションがブロックされる。トランザクションは必要最小限の範囲に留めるべきである。
+
+### 落とし穴 2: AUTOCOMMIT を意識しない
+
+多くの RDBMS では AUTOCOMMIT がデフォルトで ON であり、各 SQL 文が自動的に COMMIT される。複数の操作を一つのトランザクションにまとめるには、明示的に `BEGIN` を使う必要がある。
+
+### 落とし穴 3: デッドロックのリソースロック順序
+
+異なるトランザクションが異なる順序でリソースをロックするとデッドロックが発生する。リソースのロック順序を統一する（例: 常に id の昇順でロック）ことで防止できる。
+
+### 落とし穴 4: 分離レベルの選択ミス
+
+SERIALIZABLE を安易に使うとパフォーマンスが大幅に低下する。一方で READ UNCOMMITTED はダーティリードのリスクがある。ほとんどのユースケースでは READ COMMITTED または REPEATABLE READ で十分である。
+
+### 落とし穴 5: 楽観的ロックの再試行忘れ
+
+楽観的ロックで `UPDATE ... WHERE version = N` が 0 行更新を返したとき、再試行ロジックを実装しないとデータ更新が無視される。アプリケーション側で必ず更新行数をチェックし、再試行するか例外をスローすべきである。
+
+---
+
+## 5) チェックリスト
+
+- [ ] BEGIN / COMMIT / ROLLBACK の役割を説明できる
+- [ ] ACID 特性の 4 つを具体例で説明できる
+- [ ] SAVEPOINT で部分ロールバックを実装できる
+- [ ] 4 つの分離レベルと各レベルで発生する不整合を列挙できる
+- [ ] ダーティリード・ノンリピータブルリード・ファントムリードの違いを説明できる
+- [ ] デッドロックの発生条件と防止策を述べられる
+- [ ] 楽観的ロックと悲観的ロックの違いと使い分けを理解している
+- [ ] MVCC の基本的な仕組みを説明できる
+
+---
+
+## 6) 次へ
+
+トランザクションでデータの「整合性」を守る力を磨いた。次の **SQL-GOLD-01-05: インデックスとパフォーマンス** では、クエリの「速さ」を追求する。インデックスの仕組みと実行計画の読み方を深く理解しよう。

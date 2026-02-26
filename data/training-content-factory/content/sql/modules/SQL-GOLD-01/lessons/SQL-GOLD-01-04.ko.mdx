@@ -1,0 +1,227 @@
+---
+lesson_id: SQL-GOLD-01-04
+title: "트랜잭션 — ACID·격리 수준·데드락"
+module: SQL-GOLD-01
+level: gold
+est_minutes: 35
+tags: [transaction, ACID, isolation-level, deadlock, SAVEPOINT, MVCC]
+---
+
+## 1) 핵심 요약 (5줄)
+
+1. **트랜잭션은 데이터베이스 작업의 논리적인 작업 단위**이며, 여러 SQL 문을 하나의 묶음으로 처리한다. 모두 성공하면 COMMIT, 도중에 실패하면 ROLLBACK으로 전부 취소한다.
+2. **ACID 특성**은 트랜잭션이 충족해야 할 4가지 성질이다. Atomicity(원자성), Consistency(일관성), Isolation(격리성), Durability(영속성).
+3. **격리 수준**은 READ UNCOMMITTED / READ COMMITTED / REPEATABLE READ / SERIALIZABLE의 4단계로, 트랜잭션 간 가시성을 제어한다.
+4. **데드락**은 2개 이상의 트랜잭션이 서로 락 해제를 기다리는 상태이며, RDBMS의 데드락 감지 메커니즘으로 해소된다.
+5. **낙관적 락**은 버전 번호로 충돌을 감지하고, **비관적 락**은 SELECT FOR UPDATE로 행을 명시적으로 잠근다. 용도에 따른 사용 구분이 중요하다.
+
+---
+
+## 2) 개념
+
+### 트랜잭션이란 무엇인가
+
+트랜잭션은 데이터베이스 작업의 논리적인 작업 단위이며, 여러 SQL 문을 하나의 묶음으로 처리한다. `BEGIN`(또는 `START TRANSACTION`)으로 트랜잭션을 명시적으로 시작하고, `COMMIT`으로 변경을 확정, `ROLLBACK`으로 시작 시점의 상태로 되돌린다. 많은 RDBMS에서는 자동 커밋 모드(AUTOCOMMIT)가 기본이다.
+
+```sql
+BEGIN;
+UPDATE accounts SET balance = balance - 10000 WHERE id = 1;
+UPDATE accounts SET balance = balance + 10000 WHERE id = 2;
+COMMIT;  -- 둘 다 성공하면 확정
+```
+
+도중에 오류가 발생하면 `ROLLBACK`으로 모든 변경을 취소한다. 이를 통해 "계좌 1에서 인출했지만 계좌 2에 입금되지 않은" 불일치가 방지된다.
+
+### ACID 특성
+
+ACID는 트랜잭션이 충족해야 할 4가지 성질이다.
+
+| 특성 | 영어 | 설명 |
+|---|---|---|
+| 원자성 | Atomicity | 전부 아니면 전무. 일부만 실행된 중간 상태가 되지 않는다 |
+| 일관성 | Consistency | 제약(NOT NULL, UNIQUE, FK 등)을 항상 충족한다 |
+| 격리성 | Isolation | 동시 실행되는 트랜잭션이 서로 간섭하지 않는다 |
+| 영속성 | Durability | COMMIT 후 데이터는 장애 후에도 사라지지 않는다 |
+
+### SAVEPOINT를 통한 부분 롤백
+
+SAVEPOINT는 트랜잭션 내에 중간 복귀 지점을 설정한다. `ROLLBACK TO SAVEPOINT`로 특정 지점까지 부분적으로 롤백할 수 있어, 트랜잭션 전체를 취소하지 않아도 된다.
+
+```sql
+BEGIN;
+INSERT INTO orders (product_id, qty) VALUES (1, 10);
+SAVEPOINT sp1;
+INSERT INTO orders (product_id, qty) VALUES (2, 5);
+-- 두 번째 주문에 문제가 있으면 부분 롤백
+ROLLBACK TO SAVEPOINT sp1;
+-- 첫 번째 주문은 유지된다
+INSERT INTO orders (product_id, qty) VALUES (3, 8);
+COMMIT;
+```
+
+### 격리 수준 (Isolation Level)
+
+격리 수준은 트랜잭션 간 가시성을 제어한다. SQL 표준에서는 4단계가 정의되어 있다.
+
+| 격리 수준 | 더티 리드 | 논리피터블 리드 | 팬텀 리드 | 비고 |
+|---|---|---|---|---|
+| READ UNCOMMITTED | 발생 | 발생 | 발생 | 최저 수준 |
+| READ COMMITTED | 방지 | 발생 | 발생 | PostgreSQL 기본값 |
+| REPEATABLE READ | 방지 | 방지 | 발생 | MySQL InnoDB 기본값 |
+| SERIALIZABLE | 방지 | 방지 | 방지 | 최고 수준, 성능 최저 |
+
+**더티 리드**는 다른 트랜잭션의 미커밋 데이터를 읽는 현상, **논리피터블 리드**는 같은 쿼리를 2번 실행하면 결과가 달라지는 현상, **팬텀 리드**는 새로운 행이 삽입되어 결과 집합이 달라지는 현상이다.
+
+격리 수준 설정은 `SET TRANSACTION ISOLATION LEVEL` 문으로 개별 지정할 수 있다.
+
+```sql
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+BEGIN;
+-- 이 트랜잭션은 SERIALIZABLE로 실행된다
+SELECT * FROM accounts WHERE balance > 100000;
+COMMIT;
+```
+
+### MVCC (Multi-Version Concurrency Control)
+
+PostgreSQL은 MVCC를 채택하여 읽기와 쓰기가 서로를 블로킹하지 않는다. 각 트랜잭션은 데이터의 스냅샷을 보기 때문에 읽기가 락 대기 상태가 되지 않는다.
+
+### 데드락
+
+데드락은 2개 이상의 트랜잭션이 서로 락 해제를 기다리는 상태이다.
+
+```
+TX-A: UPDATE accounts SET ... WHERE id = 1;  -- id=1 잠금
+TX-B: UPDATE accounts SET ... WHERE id = 2;  -- id=2 잠금
+TX-A: UPDATE accounts SET ... WHERE id = 2;  -- TX-B 락 대기
+TX-B: UPDATE accounts SET ... WHERE id = 1;  -- TX-A 락 대기 → 데드락!
+```
+
+RDBMS는 데드락 감지 메커니즘을 가지고 있으며, 한쪽 트랜잭션을 자동으로 롤백하여 해소한다.
+
+### 낙관적 락 vs 비관적 락
+
+**낙관적 락**은 버전 번호(version 컬럼)로 충돌을 감지하는 방식이다. 갱신 시 version이 변경되었으면 재시도한다. 락 대기가 발생하지 않아 경합이 적은 경우에 유효하다.
+
+```sql
+-- 읽기
+SELECT id, name, price, version FROM products WHERE id = 1;
+-- 갱신 (version을 조건에 포함)
+UPDATE products SET price = 2000, version = version + 1
+WHERE id = 1 AND version = 3;
+-- 0행 갱신 → 다른 곳에서 변경됨 → 재시도
+```
+
+**비관적 락**은 `SELECT FOR UPDATE`로 행을 명시적으로 잠그는 방식이다. 확실하게 데이터를 보호하지만 락 대기가 발생한다.
+
+```sql
+BEGIN;
+SELECT * FROM products WHERE id = 1 FOR UPDATE;  -- 행 락 획득
+UPDATE products SET price = 2000 WHERE id = 1;
+COMMIT;  -- 락 해제
+```
+
+---
+
+## 3) 예제
+
+### 예제 1: 은행 계좌 간 이체 트랜잭션
+
+계좌 A에서 계좌 B로 50,000원을 이체한다. SAVEPOINT를 사용하여 잔액 부족 체크와 부분 롤백을 조합한다.
+
+```sql
+BEGIN;
+
+-- 계좌 A에서 인출
+UPDATE accounts SET balance = balance - 50000 WHERE id = 1;
+
+SAVEPOINT after_debit;
+
+-- 계좌 B에 입금
+UPDATE accounts SET balance = balance + 50000 WHERE id = 2;
+
+-- 잔액 체크 (제약 위반이 있으면 롤백)
+-- balance < 0인 행이 있으면 문제
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM accounts WHERE id = 1 AND balance < 0) THEN
+        RAISE EXCEPTION 'Insufficient balance';
+    END IF;
+END $$;
+
+COMMIT;
+-- 오류 발생 시 자동으로 ROLLBACK된다
+```
+
+ACID 특성에 의해 인출만 완료되고 입금이 실패하는 중간 상태는 발생하지 않는다.
+
+### 예제 2: 재고 업데이트에서의 격리 수준 비교
+
+READ COMMITTED와 SERIALIZABLE의 동작을 비교한다.
+
+```sql
+-- 세션 1: READ COMMITTED (기본값)
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+BEGIN;
+SELECT stock FROM products WHERE id = 1;  -- 결과: 100
+
+-- 여기서 세션 2가 stock을 80으로 갱신하고 COMMIT
+
+SELECT stock FROM products WHERE id = 1;  -- 결과: 80 (변경됨!)
+COMMIT;
+
+-- 세션 1: SERIALIZABLE
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+BEGIN;
+SELECT stock FROM products WHERE id = 1;  -- 결과: 80
+
+-- 여기서 세션 2가 stock을 60으로 갱신하고 COMMIT
+
+SELECT stock FROM products WHERE id = 1;  -- 결과: 80 (변경 안 됨!)
+COMMIT;
+```
+
+SERIALIZABLE에서는 트랜잭션 시작 시점의 스냅샷을 계속 보기 때문에, 다른 트랜잭션의 변경이 보이지 않는다.
+
+---
+
+## 4) 자주 하는 실수 / 함정 (5가지)
+
+### 함정 1: 너무 긴 트랜잭션
+
+트랜잭션 내에 사용자 입력 대기나 외부 API 호출을 포함하면, 락 보유 시간이 길어져 다른 트랜잭션이 블로킹된다. 트랜잭션은 필요 최소한의 범위로 유지해야 한다.
+
+### 함정 2: AUTOCOMMIT을 의식하지 않음
+
+많은 RDBMS에서는 AUTOCOMMIT이 기본적으로 ON이며, 각 SQL 문이 자동으로 COMMIT된다. 여러 작업을 하나의 트랜잭션으로 묶으려면 명시적으로 `BEGIN`을 사용해야 한다.
+
+### 함정 3: 데드락의 리소스 락 순서
+
+서로 다른 트랜잭션이 서로 다른 순서로 리소스를 잠그면 데드락이 발생한다. 리소스의 락 순서를 통일하면(예: 항상 id 오름차순으로 잠금) 방지할 수 있다.
+
+### 함정 4: 격리 수준 선택 실수
+
+SERIALIZABLE을 안이하게 사용하면 성능이 대폭 저하된다. 반면 READ UNCOMMITTED는 더티 리드의 위험이 있다. 대부분의 유스케이스에서는 READ COMMITTED 또는 REPEATABLE READ로 충분하다.
+
+### 함정 5: 낙관적 락의 재시도 누락
+
+낙관적 락에서 `UPDATE ... WHERE version = N`이 0행 갱신을 반환했을 때, 재시도 로직을 구현하지 않으면 데이터 갱신이 무시된다. 애플리케이션 측에서 반드시 갱신 행수를 체크하고 재시도하거나 예외를 던져야 한다.
+
+---
+
+## 5) 체크리스트
+
+- [ ] BEGIN / COMMIT / ROLLBACK의 역할을 설명할 수 있다
+- [ ] ACID 특성의 4가지를 구체적인 예로 설명할 수 있다
+- [ ] SAVEPOINT로 부분 롤백을 구현할 수 있다
+- [ ] 4가지 격리 수준과 각 수준에서 발생하는 불일치를 열거할 수 있다
+- [ ] 더티 리드, 논리피터블 리드, 팬텀 리드의 차이를 설명할 수 있다
+- [ ] 데드락의 발생 조건과 방지 방법을 말할 수 있다
+- [ ] 낙관적 락과 비관적 락의 차이와 사용 구분을 이해하고 있다
+- [ ] MVCC의 기본적인 구조를 설명할 수 있다
+
+---
+
+## 6) 다음으로
+
+트랜잭션으로 데이터의 "정합성"을 지키는 역량을 키웠다. 다음 **SQL-GOLD-01-05: 인덱스와 성능**에서는 쿼리의 "속도"를 추구한다. 인덱스의 구조와 실행 계획 읽는 법을 깊이 이해하자.

@@ -1,0 +1,258 @@
+---
+lesson_id: SQL-SILVER-01-05
+title: "CASE 식과 NULL 처리 — 조건 로직 구현"
+module: SQL-SILVER-01
+level: silver
+est_minutes: 30
+tags: [case, coalesce, nullif, conditional]
+---
+
+## 1) 요점 정리 (5줄)
+
+- **CASE 식**은 SQL에서의 조건 분기이며, SELECT / WHERE / ORDER BY / UPDATE SET 등 다양한 위치에서 사용할 수 있다.
+- 검색 CASE 식(CASE WHEN condition THEN ...)은 처음으로 TRUE가 된 WHEN의 값을 반환하며, ELSE를 생략하면 NULL이 반환된다.
+- **COALESCE**는 인수를 왼쪽부터 평가하여 첫 번째 비NULL 값을 반환하는 함수이며, NULL의 기본값 설정에 사용한다.
+- **NULLIF(a, b)**는 a = b인 경우 NULL을 반환하며, 0으로 나누기 방지 등에 활용된다.
+- **조건부 집약**은 CASE 식을 집약 함수 내에 넣음으로써, 한 번의 쿼리로 여러 조건의 집계를 구현하는 테크닉이다.
+
+## 2) 개념
+
+### 검색 CASE 식
+
+✅ 결론: 검색 CASE 식은 여러 조건을 위에서 아래로 순서대로 평가하여, 처음으로 TRUE가 된 WHEN의 THEN 값을 반환한다.
+
+```sql
+SELECT name, salary,
+  CASE
+    WHEN salary >= 80000 THEN 'High'
+    WHEN salary >= 50000 THEN 'Mid'
+    ELSE 'Low'
+  END AS salary_grade
+FROM employees;
+```
+
+| name | salary | salary_grade |
+|---|---|---|
+| Tanaka | 90000 | High |
+| Suzuki | 55000 | Mid |
+| Sato | 40000 | Low |
+
+WHEN 절은 **위에서 아래로** 평가되며, 처음 일치한 시점에서 나머지는 평가되지 않는다. 따라서 조건의 순서가 중요하다.
+
+### 단순 CASE 식
+
+단순 CASE 식은 하나의 식의 값을 각 WHEN 값과 비교한다. 등가 비교만 가능하며, 부등호는 사용할 수 없다.
+
+```sql
+SELECT name, status,
+  CASE status
+    WHEN 'shipped' THEN '발송 완료'
+    WHEN 'pending' THEN '보류 중'
+    WHEN 'cancelled' THEN '취소됨'
+    ELSE '불명'
+  END AS status_ko
+FROM orders;
+```
+
+### ELSE 생략과 NULL
+
+⚠️ CASE 식에서 **ELSE를 생략**하면, 어떤 WHEN에도 일치하지 않는 경우 **NULL**이 반환된다. 의도하지 않은 NULL을 방지하기 위해 **ELSE를 명시적으로 작성**하는 것이 권장된다.
+
+```sql
+-- ELSE 생략 → 일치하지 않는 행은 NULL
+SELECT name,
+  CASE department_id
+    WHEN 1 THEN 'Engineering'
+    WHEN 2 THEN 'Sales'
+  END AS dept_label  -- department_id=3인 행은 NULL
+FROM employees;
+```
+
+### COALESCE 함수
+
+✅ 결론: COALESCE는 인수를 왼쪽부터 순서대로 평가하여, 첫 번째 비NULL 값을 반환한다. 모두 NULL이면 NULL을 반환한다.
+
+```sql
+-- NULL인 이메일을 기본값으로 대체
+SELECT name, COALESCE(email, 'no-email@example.com') AS contact
+FROM employees;
+```
+
+COALESCE는 내부적으로 다음 CASE 식과 등가이다.
+
+```sql
+-- COALESCE(a, b, c)는 다음과 등가
+CASE
+  WHEN a IS NOT NULL THEN a
+  WHEN b IS NOT NULL THEN b
+  ELSE c
+END
+```
+
+**복수 인수의 활용:**
+
+```sql
+-- 우선순위를 매긴 연락처
+SELECT name,
+       COALESCE(mobile_phone, office_phone, email, '연락처 없음') AS contact
+FROM employees;
+```
+
+### NULLIF 함수
+
+✅ 결론: NULLIF(expr1, expr2)는 두 식이 같은 경우 NULL을 반환하고, 다른 경우 expr1을 반환한다.
+
+```sql
+-- 0으로 나누기 방지
+SELECT name,
+       revenue / NULLIF(cost, 0) AS profit_ratio
+FROM products;
+```
+
+cost가 0인 경우, NULLIF(cost, 0)은 NULL을 반환하므로 division by zero 오류가 발생하지 않고 결과는 NULL이 된다.
+
+### NULL의 비교 규칙
+
+NULL에 관한 중요한 규칙을 확인한다.
+
+- `col = NULL`은 항상 **UNKNOWN**이 된다(TRUE가 되지 않는다).
+- NULL 판정에는 `IS NULL` / `IS NOT NULL`을 사용한다.
+- 집약 함수(SUM, AVG, COUNT(열이름))는 **NULL을 무시**하고 계산한다.
+- `COUNT(*)`만 NULL을 포함한 전체 행을 카운트한다.
+
+```sql
+-- 오류: col = NULL은 항상 UNKNOWN
+SELECT * FROM employees WHERE email = NULL;     -- 결과는 항상 0건
+
+-- 올바른 방법: IS NULL 사용
+SELECT * FROM employees WHERE email IS NULL;
+```
+
+### 조건부 집약 (Conditional Aggregation)
+
+✅ 결론: CASE 식을 집약 함수 안에 넣으면, WHERE로 분할하지 않고 한 번의 쿼리로 여러 조건의 집계를 수행할 수 있다.
+
+```sql
+SELECT department_id,
+  COUNT(*) AS total,
+  SUM(CASE WHEN salary >= 60000 THEN 1 ELSE 0 END) AS high_earners,
+  SUM(CASE WHEN salary < 60000 THEN 1 ELSE 0 END) AS low_earners,
+  AVG(CASE WHEN hire_date >= '2023-01-01' THEN salary END) AS new_hire_avg
+FROM employees
+GROUP BY department_id;
+```
+
+| department_id | total | high_earners | low_earners | new_hire_avg |
+|---|---|---|---|---|
+| 1 | 5 | 3 | 2 | 65000 |
+| 2 | 3 | 1 | 2 | 48000 |
+
+**피벗 테이블의 구현:**
+
+```sql
+-- 월별 주문 수를 피벗 형식으로 표시
+SELECT
+  EXTRACT(YEAR FROM order_date) AS year,
+  SUM(CASE WHEN EXTRACT(MONTH FROM order_date) = 1 THEN 1 ELSE 0 END) AS jan,
+  SUM(CASE WHEN EXTRACT(MONTH FROM order_date) = 2 THEN 1 ELSE 0 END) AS feb,
+  SUM(CASE WHEN EXTRACT(MONTH FROM order_date) = 3 THEN 1 ELSE 0 END) AS mar
+FROM orders
+GROUP BY EXTRACT(YEAR FROM order_date);
+```
+
+### CASE 식의 데이터 타입
+
+CASE 식의 각 THEN / ELSE 반환값은 **호환 가능한 데이터 타입**이어야 한다. 문자형과 숫자형을 혼합하면 오류 또는 암묵적 타입 변환이 발생한다.
+
+```sql
+-- 오류: 타입 불일치
+SELECT CASE WHEN salary > 50000 THEN 'High' ELSE 0 END FROM employees;
+-- 'High'는 문자형, 0은 숫자형 → 타입 불일치
+
+-- 올바른 방법: 타입을 통일
+SELECT CASE WHEN salary > 50000 THEN 'High' ELSE 'Low' END FROM employees;
+```
+
+## 3) 예제 (2개)
+
+### 예제 1: 고객 랭크 분류와 집계
+
+고객을 주문 총액을 기준으로 랭크를 매기고, 랭크별 인원 수와 평균 주문 금액을 집계한다.
+
+```sql
+WITH customer_totals AS (
+  SELECT c.id, c.name,
+         SUM(o.total_amount) AS total_spent
+  FROM customers c
+  JOIN orders o ON c.id = o.customer_id
+  GROUP BY c.id, c.name
+)
+SELECT
+  CASE
+    WHEN total_spent >= 100000 THEN 'Platinum'
+    WHEN total_spent >= 50000  THEN 'Gold'
+    WHEN total_spent >= 10000  THEN 'Silver'
+    ELSE 'Bronze'
+  END AS rank,
+  COUNT(*) AS customer_count,
+  AVG(total_spent) AS avg_spent
+FROM customer_totals
+GROUP BY
+  CASE
+    WHEN total_spent >= 100000 THEN 'Platinum'
+    WHEN total_spent >= 50000  THEN 'Gold'
+    WHEN total_spent >= 10000  THEN 'Silver'
+    ELSE 'Bronze'
+  END
+ORDER BY avg_spent DESC;
+```
+
+포인트: GROUP BY에도 CASE 식을 작성함으로써, 계산된 분류로 그룹화할 수 있다.
+
+### 예제 2: NULL을 고려한 직원 리포트
+
+```sql
+SELECT
+  d.name AS dept_name,
+  COUNT(e.id) AS total_emp,
+  COUNT(e.email) AS has_email,
+  COUNT(e.id) - COUNT(e.email) AS missing_email,
+  COALESCE(AVG(e.salary), 0) AS avg_salary,
+  SUM(CASE WHEN e.manager_id IS NULL THEN 1 ELSE 0 END) AS top_managers
+FROM departments d
+LEFT JOIN employees e ON d.id = e.department_id
+GROUP BY d.name
+ORDER BY total_emp DESC;
+```
+
+포인트: LEFT JOIN으로 직원이 없는 부서도 포함하고, COALESCE로 AVG의 NULL을 0으로 대체하며, CASE 식으로 manager_id가 NULL(= 최고 관리자)인 인원 수를 카운트하고 있다.
+
+## 4) 흔한 실수 / 함정 (5개)
+
+⚠️ **실수 1**: CASE 식의 ELSE를 생략하여 의도하지 않은 NULL이 반환됨
+→ **대책**: ELSE를 생략하지 않고 명시적으로 기본값을 지정한다.
+
+⚠️ **실수 2**: CASE WHEN의 조건 순서를 잘못 작성하여 의도한 분기에 도달하지 못함
+→ **대책**: 조건은 엄격한 것(범위가 좁은 것)부터 순서대로 기술한다. 예: `>= 80000` → `>= 50000` → ELSE.
+
+⚠️ **실수 3**: col = NULL로 작성하여 조건이 항상 UNKNOWN이 됨
+→ **대책**: NULL 판정에는 반드시 IS NULL / IS NOT NULL을 사용한다.
+
+⚠️ **실수 4**: CASE 식의 THEN / ELSE에서 다른 데이터 타입을 반환하여 오류 발생
+→ **대책**: 모든 THEN과 ELSE의 반환값을 같은 데이터 타입(또는 호환 타입)으로 통일한다.
+
+⚠️ **실수 5**: NULLIF의 인수 순서를 잘못 작성
+→ **대책**: NULLIF(a, b)는 "a = b이면 NULL, 그렇지 않으면 a"이다. 0으로 나누기 방지라면 NULLIF(divisor, 0)으로 작성한다.
+
+## 5) 체크리스트
+
+- [ ] CASE 식에 ELSE를 명시적으로 작성하고 있다
+- [ ] WHEN 조건을 올바른 순서(엄격한 조건부터)로 나열하고 있다
+- [ ] NULL 비교에 IS NULL / IS NOT NULL을 사용하고 있다
+- [ ] COALESCE로 NULL의 기본값을 적절히 설정하고 있다
+- [ ] 조건부 집약에서 CASE 식의 타입이 통일되어 있다
+- [ ] NULLIF의 인수 순서가 올바른지 확인했다
+
+## 6) 다음으로
+
+이 레슨으로 **SQL Silver 모듈(SQL-SILVER-01)**의 모든 레슨이 완료되었습니다. GROUP BY 응용, 서브쿼리, 조인 응용, CTE, CASE 식과 NULL 처리를 습득하여 중급 SQL을 다루기 위한 기반이 갖추어졌습니다. 다음은 Gold 레벨로 진행하여 윈도우 함수와 성능 튜닝 등 보다 고급 주제에 도전합니다.

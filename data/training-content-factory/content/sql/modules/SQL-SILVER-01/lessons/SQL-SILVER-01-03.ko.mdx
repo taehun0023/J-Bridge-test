@@ -1,0 +1,199 @@
+---
+lesson_id: SQL-SILVER-01-03
+title: "결합 응용 — OUTER / CROSS / 자기 결합"
+module: SQL-SILVER-01
+level: silver
+est_minutes: 30
+tags: [right-join, full-outer, cross-join, self-join]
+---
+
+## 1) 요점 정리 (5줄)
+
+- RIGHT JOIN은 오른쪽 테이블의 모든 행을 유지하며, LEFT JOIN의 테이블 순서를 뒤집은 것과 동일하다.
+- FULL OUTER JOIN은 양쪽 테이블의 모든 행을 유지하고, 일치하지 않는 쪽을 NULL로 채운다.
+- CROSS JOIN은 두 테이블의 직적(데카르트 곱)을 생성하며, 결과 행 수는 왼쪽 행 수 x 오른쪽 행 수이다.
+- 자기 결합(self-join)은 같은 테이블에 서로 다른 별칭을 붙여 결합하며, 계층 데이터나 행 간 비교에 사용한다.
+- USING 절은 양쪽 테이블에 동명의 열이 있을 때 ON 대신 사용할 수 있으며, 결과 세트에 해당 열이 1회만 출현한다.
+
+## 2) 개념
+
+### 결합의 전체 그림
+
+Bronze 레슨에서 배운 INNER JOIN과 LEFT JOIN 외에도, SQL에는 더 많은 결합 패턴이 있다.
+
+| 결합 유형 | 유지하는 행 |
+|---|---|
+| INNER JOIN | 양쪽 테이블에서 일치하는 행만 |
+| LEFT JOIN | 왼쪽 테이블의 모든 행 + 오른쪽 테이블의 일치 행 |
+| RIGHT JOIN | 오른쪽 테이블의 모든 행 + 왼쪽 테이블의 일치 행 |
+| FULL OUTER JOIN | 양쪽 테이블의 모든 행 |
+| CROSS JOIN | 직적(모든 조합) |
+
+### RIGHT JOIN
+
+✅ 결론: RIGHT JOIN은 오른쪽 테이블(JOIN의 오른쪽)의 모든 행을 유지한다. 왼쪽 테이블에 일치가 없는 경우 NULL이 된다.
+
+```sql
+SELECT e.name, d.name AS dept_name
+FROM employees e
+RIGHT JOIN departments d ON e.department_id = d.id;
+```
+
+이 결과에서는 직원이 없는 부서도 표시된다(e.name이 NULL).
+
+**실무적 주의:** RIGHT JOIN은 LEFT JOIN의 테이블 순서를 바꾸는 것만으로 같은 결과를 얻을 수 있으므로, **가독성을 위해 LEFT JOIN으로 통일하는** 팀이 많다.
+
+```sql
+-- 위와 동일한 LEFT JOIN
+SELECT e.name, d.name AS dept_name
+FROM departments d
+LEFT JOIN employees e ON d.id = e.department_id;
+```
+
+### FULL OUTER JOIN
+
+✅ 결론: FULL OUTER JOIN은 양쪽 테이블의 모든 행을 반환하고, 일치하지 않는 쪽을 NULL로 보충한다.
+
+```sql
+SELECT e.name AS emp_name, d.name AS dept_name
+FROM employees e
+FULL OUTER JOIN departments d ON e.department_id = d.id;
+```
+
+| emp_name | dept_name |
+|---|---|
+| Tanaka | Engineering |
+| Suzuki | Sales |
+| NULL | Marketing |
+| Yamada | NULL |
+
+이 예시에서는 소속 부서가 없는 직원(Yamada)과 직원이 없는 부서(Marketing) 모두 결과에 포함된다.
+
+**불일치 행만 가져오는 기법:**
+
+```sql
+SELECT e.name, d.name AS dept_name
+FROM employees e
+FULL OUTER JOIN departments d ON e.department_id = d.id
+WHERE e.id IS NULL OR d.id IS NULL;
+```
+
+### CROSS JOIN (직적)
+
+✅ 결론: CROSS JOIN은 결합 조건을 지정하지 않고, 두 테이블의 모든 행 조합을 생성한다.
+
+```sql
+SELECT e.name, d.name AS dept_name
+FROM employees e
+CROSS JOIN departments d;
+```
+
+직원이 5명, 부서가 3개인 경우, 결과는 5 x 3 = 15행이 된다.
+
+**활용 예:** 테스트 데이터 생성이나 캘린더 표 작성에 사용할 수 있다.
+
+```sql
+-- 연월 캘린더 생성
+WITH years AS (SELECT 2024 AS y UNION ALL SELECT 2025),
+     months AS (SELECT 1 AS m UNION ALL SELECT 2 UNION ALL SELECT 3)
+SELECT y, m FROM years CROSS JOIN months ORDER BY y, m;
+```
+
+### 자기 결합 (Self-Join)
+
+✅ 결론: 자기 결합은 같은 테이블에 서로 다른 별칭을 붙여 결합하는 기법이며, 계층 구조 탐색이나 같은 테이블 내 행 간 비교에 사용한다.
+
+```sql
+-- 직원과 그 상사 조회
+SELECT e.name AS employee, m.name AS manager
+FROM employees e
+LEFT JOIN employees m ON e.manager_id = m.id;
+```
+
+| employee | manager |
+|---|---|
+| Tanaka | NULL |
+| Suzuki | Tanaka |
+| Sato | Tanaka |
+| Yamada | Suzuki |
+
+manager_id가 NULL인 Tanaka는 최상위(상사 없음)이다. LEFT JOIN을 사용함으로써 최상위 직원도 결과에 포함된다.
+
+### USING 절
+
+✅ 결론: 양쪽 테이블에 동명의 결합 열이 있는 경우, ON 대신 USING 절로 간결하게 작성할 수 있다.
+
+```sql
+-- ON을 사용한 경우
+SELECT * FROM orders o JOIN customers c ON o.customer_id = c.id;
+
+-- USING을 사용한 경우 (열 이름이 같다면)
+SELECT * FROM orders JOIN customers USING(customer_id);
+```
+
+USING으로 지정한 열은 결과 세트에 **1회만** 출현하며, 테이블 수식자 없이 참조할 수 있다. 다만, USING을 사용할 수 있는 것은 양쪽 테이블에 동명의 열이 있는 경우에 한한다.
+
+### NATURAL JOIN의 주의사항
+
+NATURAL JOIN은 양쪽 테이블의 동명 열 전부로 자동 결합한다. 그러나 의도하지 않은 열로 결합될 위험이 있으므로, 본격적인 코드에서는 **USING이나 ON을 명시하는** 것이 권장된다.
+
+## 3) 예제 (2개)
+
+### 예제 1: 주문이 없는 고객과 고객이 없는 도시를 동시에 검출
+
+```sql
+SELECT c.name AS customer_name,
+       c.city,
+       o.id AS order_id,
+       o.total_amount
+FROM customers c
+FULL OUTER JOIN orders o ON c.id = o.customer_id
+WHERE c.id IS NULL OR o.id IS NULL;
+```
+
+FULL OUTER JOIN과 IS NULL 조건을 조합하면, "주문은 있지만 고객 마스터에 존재하지 않는 데이터"와 "주문이 없는 고객"을 한 번에 검출할 수 있다. 데이터 품질 점검에 유용한 패턴이다.
+
+### 예제 2: 자기 결합으로 같은 부서의 직원 쌍 생성
+
+```sql
+SELECT e1.name AS employee_1,
+       e2.name AS employee_2,
+       e1.department_id
+FROM employees e1
+JOIN employees e2
+  ON e1.department_id = e2.department_id
+ AND e1.id < e2.id
+ORDER BY e1.department_id, e1.name;
+```
+
+`e1.id < e2.id` 조건으로 (A, B)와 (B, A)의 중복을 제거하고, 고유한 쌍만 조회한다. 팀 편성이나 페어 프로그래밍 조합 생성 등에 활용할 수 있다.
+
+## 4) 흔한 실수 / 함정 (5개)
+
+⚠️ **실수 1**: OUTER JOIN에서 WHERE 절에 오른쪽 테이블의 비 NULL 조건을 작성하여, 실질적으로 INNER JOIN이 되는 경우
+→ **대책**: 외부 결합의 조건은 ON 절에 작성하거나, WHERE에서 IS NULL 체크와 조합한다.
+
+⚠️ **실수 2**: CROSS JOIN으로 대량 행의 테이블을 결합하여 결과가 방대해지는 경우
+→ **대책**: CROSS JOIN 전에 행 수를 확인한다. 한쪽이 10만 행이면 100억 행이 될 수 있다.
+
+⚠️ **실수 3**: 자기 결합에서 테이블 별칭을 지정하지 않아 열 참조가 모호해지는 경우
+→ **대책**: 자기 결합에서는 반드시 명확한 별칭(e, m 등)을 붙이고, 모든 열에 테이블 수식자를 붙인다.
+
+⚠️ **실수 4**: RIGHT JOIN을 남용하여 쿼리의 가독성을 떨어뜨리는 경우
+→ **대책**: 가독성을 위해 LEFT JOIN으로 통일하는 관습을 채택한다.
+
+⚠️ **실수 5**: NATURAL JOIN에서 의도하지 않은 열에 의한 결합이 발생하는 경우
+→ **대책**: NATURAL JOIN을 피하고, ON 또는 USING으로 결합 조건을 명시한다.
+
+## 5) 체크리스트
+
+- [ ] OUTER JOIN의 조건을 ON 절에 올바르게 배치하고 있다
+- [ ] CROSS JOIN의 결과 행 수가 허용 범위인지 확인했다
+- [ ] 자기 결합의 테이블 별칭이 명확하고, 열의 귀속이 모호하지 않다
+- [ ] RIGHT JOIN보다 LEFT JOIN으로 치환할 수 없는지 검토했다
+- [ ] FULL OUTER JOIN이 정말 필요한 상황인지 확인했다
+- [ ] USING의 사용 조건(동명 열의 존재)을 충족하고 있다
+
+## 6) 다음으로
+
+다음 레슨 **SQL-SILVER-01-04 "CTE와 WITH 절 — 가독성 높은 쿼리 설계"** 에서는 WITH 절을 사용한 공통 테이블 식(CTE)을 배운다. 서브쿼리의 대안으로 가독성을 향상시키는 방법과 재귀 CTE를 이용한 계층 데이터 탐색을 습득한다.

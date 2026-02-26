@@ -1,0 +1,238 @@
+---
+lesson_id: SQL-SILVER-01-04
+title: "CTE와 WITH 절 — 가독성 높은 쿼리 설계"
+module: SQL-SILVER-01
+level: silver
+est_minutes: 30
+tags: [cte, with, recursive-cte]
+---
+
+## 1) 요점 정리 (5줄)
+
+- **CTE(Common Table Expression)** 는 WITH 절로 정의하는 이름 있는 임시 결과 집합이며, 바로 뒤의 SQL 문에서 참조할 수 있다.
+- CTE를 사용하면 서브쿼리를 탑다운으로 기술할 수 있어 쿼리의 가독성이 크게 향상된다.
+- 하나의 WITH 절에 여러 CTE를 쉼표 구분으로 정의할 수 있으며, 후속 CTE가 앞의 CTE를 참조할 수 있다.
+- **재귀 CTE(WITH RECURSIVE)** 는 앵커 멤버와 리커시브 멤버를 UNION ALL로 구성하여 계층 탐색에 사용한다.
+- CTE의 스코프는 바로 뒤의 1문에 한정되며, 데이터베이스에 저장되지 않는 점에서 뷰와 다르다.
+
+## 2) 개념
+
+### CTE의 기본 구문
+
+✅ 결론: CTE는 WITH 절로 이름을 부여한 임시 결과 집합이며, 쿼리의 가독성과 유지보수성을 높인다.
+
+```sql
+WITH cte_name AS (
+  SELECT ...
+)
+SELECT ... FROM cte_name;
+```
+
+FROM 절의 서브쿼리(파생 테이블)와 논리적으로는 동일하지만, CTE는 쿼리의 선두에 정의를 작성하기 때문에 위에서 아래로 읽을 수 있는 "탑다운" 스타일이 된다.
+
+### 기본적인 CTE 사용 예
+
+```sql
+WITH dept_salary AS (
+  SELECT department_id, AVG(salary) AS avg_salary
+  FROM employees
+  GROUP BY department_id
+)
+SELECT d.name, ds.avg_salary
+FROM departments d
+JOIN dept_salary ds ON d.id = ds.department_id
+WHERE ds.avg_salary > 50000;
+```
+
+같은 내용을 서브쿼리로 작성하면, FROM 절 안에 중첩되어 읽기 어려워진다.
+
+### 복수 CTE 정의
+
+✅ 결론: 쉼표 구분으로 여러 CTE를 정의할 수 있으며, 뒤의 CTE가 앞의 CTE를 참조할 수 있다. WITH 키워드는 처음에 한 번만 작성한다.
+
+```sql
+WITH
+  dept_count AS (
+    SELECT department_id, COUNT(*) AS emp_count
+    FROM employees
+    GROUP BY department_id
+  ),
+  high_count_dept AS (
+    SELECT department_id, emp_count
+    FROM dept_count
+    WHERE emp_count >= 5
+  )
+SELECT d.name, hc.emp_count
+FROM departments d
+JOIN high_count_dept hc ON d.id = hc.department_id;
+```
+
+이 예에서 `high_count_dept`가 `dept_count`를 참조하고 있다. 처리를 단계별로 분리할 수 있어 로직이 명확해진다.
+
+### CTE vs 서브쿼리 비교
+
+| 항목 | CTE | 서브쿼리 |
+|---|---|---|
+| 기술 위치 | 쿼리 선두 (WITH 절) | 사용 위치에 인라인 |
+| 가독성 | 높음 (탑다운) | 중첩이 깊으면 저하 |
+| 재사용성 | 동일 쿼리 내에서 복수 회 참조 가능 | 사용할 때마다 기술 필요 |
+| 스코프 | 바로 뒤의 1문만 | 기술 위치만 |
+| 성능 | DBMS 의존 (대부분 동등) | DBMS 의존 |
+
+**동일 쿼리 내에서 복수 회 참조:**
+
+```sql
+WITH dept_stats AS (
+  SELECT department_id, AVG(salary) AS avg_salary, COUNT(*) AS emp_count
+  FROM employees
+  GROUP BY department_id
+)
+SELECT
+  (SELECT SUM(emp_count) FROM dept_stats) AS total_employees,
+  (SELECT AVG(avg_salary) FROM dept_stats) AS overall_avg;
+```
+
+CTE는 한 번 정의하면 몇 번이고 참조할 수 있다. 서브쿼리라면 같은 SELECT를 2번 작성해야 한다.
+
+### 재귀 CTE (WITH RECURSIVE)
+
+✅ 결론: 재귀 CTE는 앵커 멤버(초기 행)와 리커시브 멤버(재귀 부분)를 UNION ALL로 결합하여 계층 데이터의 탐색에 사용한다.
+
+```sql
+WITH RECURSIVE org_tree AS (
+  -- 앵커 멤버: 최상위 (manager_id가 NULL)
+  SELECT id, name, manager_id, 1 AS level
+  FROM employees
+  WHERE manager_id IS NULL
+
+  UNION ALL
+
+  -- 리커시브 멤버: 자식을 재귀적으로 탐색
+  SELECT e.id, e.name, e.manager_id, ot.level + 1
+  FROM employees e
+  JOIN org_tree ot ON e.manager_id = ot.id
+)
+SELECT id, name, level
+FROM org_tree
+ORDER BY level, name;
+```
+
+| id | name | level |
+|---|---|---|
+| 1 | Tanaka | 1 |
+| 2 | Sato | 2 |
+| 3 | Suzuki | 2 |
+| 4 | Yamada | 3 |
+
+### 재귀 CTE의 동작 흐름
+
+1. **앵커 멤버**가 실행되어 초기 결과 집합이 생성된다.
+2. **리커시브 멤버**가 직전의 결과 집합을 입력으로 실행된다.
+3. 리커시브 멤버가 빈 결과를 반환할 때까지 2단계가 반복된다.
+4. 모든 반복의 결과가 UNION ALL로 결합된다.
+
+### 재귀 CTE의 종료 조건
+
+⚠️ **재귀가 종료되지 않으면 무한 루프에 빠진다.** 리커시브 멤버의 JOIN 조건이나 WHERE 조건에서 반드시 결과가 수렴하도록 해야 한다.
+
+```sql
+-- 연번 생성 (1~10)
+WITH RECURSIVE seq AS (
+  SELECT 1 AS n
+  UNION ALL
+  SELECT n + 1 FROM seq WHERE n < 10  -- 종료 조건
+)
+SELECT n FROM seq;
+```
+
+### CTE와 뷰의 차이
+
+| 항목 | CTE | 뷰 |
+|---|---|---|
+| 저장 | 되지 않음 (쿼리 실행 시에만 존재) | 데이터베이스 객체로 저장 |
+| 스코프 | 바로 뒤의 1문 | 임의의 쿼리에서 참조 가능 |
+| 권한 관리 | 불필요 | GRANT / REVOKE로 제어 가능 |
+| 용도 | 임시적인 가독성 향상 | 재사용 가능한 쿼리의 추상화 |
+
+## 3) 예제 (2개)
+
+### 예제 1: 복수 CTE를 사용한 매출 분석
+
+카테고리별 매출과 전체 평균을 비교하여 평균 이상인 카테고리만 표시한다.
+
+```sql
+WITH
+  category_sales AS (
+    SELECT p.category,
+           SUM(oi.quantity * oi.unit_price) AS total_sales
+    FROM products p
+    JOIN order_items oi ON p.id = oi.product_id
+    GROUP BY p.category
+  ),
+  overall_avg AS (
+    SELECT AVG(total_sales) AS avg_sales
+    FROM category_sales
+  )
+SELECT cs.category, cs.total_sales, oa.avg_sales
+FROM category_sales cs
+CROSS JOIN overall_avg oa
+WHERE cs.total_sales > oa.avg_sales
+ORDER BY cs.total_sales DESC;
+```
+
+`category_sales` → `overall_avg` → 최종 SELECT로, 로직이 위에서 아래로 흘러간다.
+
+### 예제 2: 재귀 CTE로 부하 목록 취득
+
+특정 매니저 하위의 전체 직원(직속뿐 아니라 간접적인 부하도 포함)을 가져온다.
+
+```sql
+WITH RECURSIVE subordinates AS (
+  SELECT id, name, manager_id, 1 AS depth
+  FROM employees
+  WHERE id = 2  -- 매니저 ID=2의 부하를 탐색
+
+  UNION ALL
+
+  SELECT e.id, e.name, e.manager_id, s.depth + 1
+  FROM employees e
+  JOIN subordinates s ON e.manager_id = s.id
+  WHERE s.depth < 10  -- 안전을 위한 깊이 제한
+)
+SELECT id, name, depth
+FROM subordinates
+WHERE id != 2  -- 기점인 매니저 본인을 제외
+ORDER BY depth, name;
+```
+
+`WHERE s.depth < 10`으로 무한 루프를 방지하고 있다.
+
+## 4) 흔한 실수 / 함정 (5개)
+
+⚠️ **실수 1**: 복수 CTE에서 WITH를 반복 작성하여 오류 발생
+→ **대책**: WITH는 처음에 한 번만 작성하고, 이후의 CTE는 쉼표 구분으로 추가한다.
+
+⚠️ **실수 2**: 재귀 CTE에 종료 조건을 넣지 않아 무한 루프 발생
+→ **대책**: 리커시브 멤버에 WHERE 조건이나 JOIN 조건으로 반드시 수렴하는 로직을 넣는다.
+
+⚠️ **실수 3**: CTE의 스코프를 넘어 참조하려고 하여 오류 발생
+→ **대책**: CTE는 바로 뒤의 1문에서만 유효하다. 여러 문에서 사용하고 싶은 경우 뷰 생성을 검토한다.
+
+⚠️ **실수 4**: CTE와 임시 테이블을 혼동
+→ **대책**: CTE는 메모리상의 임시 결과이며, 테이블처럼 INSERT / UPDATE를 할 수 없다.
+
+⚠️ **실수 5**: 재귀 CTE에서 UNION을 사용하여 의도치 않게 중복이 제거됨
+→ **대책**: 재귀 CTE에서는 UNION ALL을 사용한다. UNION(중복 제거)은 재귀 동작에 영향을 줄 수 있다.
+
+## 5) 체크리스트
+
+- [ ] WITH는 한 번만 작성하고, 복수 CTE는 쉼표 구분으로 하고 있다
+- [ ] 재귀 CTE에 종료 조건이 포함되어 있다
+- [ ] CTE의 스코프(바로 뒤의 1문만)를 이해하고 있다
+- [ ] 서브쿼리와 CTE 중 어느 것이 적절한지 검토했다
+- [ ] 재귀 CTE에서는 UNION ALL을 사용하고 있다
+- [ ] CTE에 의미 있는 이름을 부여하고 있다
+
+## 6) 다음으로
+
+다음 레슨은 **SQL-SILVER-01-05: CASE 식과 NULL 처리 — 조건 로직의 구현** 입니다. SQL의 조건 분기(CASE WHEN)와 NULL을 안전하게 다루는 함수(COALESCE, NULLIF)를 배우고, 조건부 집계를 통한 피벗형 집계도 습득합니다.

@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "lesson_id": "SQL-BRONZE-01-02",
+  "questions": [
+    {
+      "id": "SQL-BRONZE-01-02-Q01",
+      "type": "single_choice",
+      "difficulty": 1,
+      "prompt": "WHERE 句はどの句の後に記述するか。",
+      "choices": [
+        "SELECT 句の前",
+        "FROM 句の後",
+        "ORDER BY 句の後",
+        "GROUP BY 句の後"
+      ],
+      "answer": 1,
+      "explanation": "WHERE 句は FROM 句の後に記述し、行の抽出条件を指定する。条件が TRUE の行のみが結果セットに含まれる。(Evidence: E1)"
+    },
+    {
+      "id": "SQL-BRONZE-01-02-Q02",
+      "type": "true_false",
+      "difficulty": 1,
+      "prompt": "ANSI SQL 標準で非等値比較に使う演算子は != である。",
+      "answer": false,
+      "explanation": "ANSI SQL 標準の非等値比較演算子は <> である。!= は多くの DBMS で使えるが標準ではない。(Evidence: E2)"
+    },
+    {
+      "id": "SQL-BRONZE-01-02-Q03",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "BETWEEN 10 AND 20 の範囲に含まれる値はどれか。",
+      "choices": [
+        "9 と 21",
+        "10 と 20",
+        "11 と 19 のみ",
+        "10 より大きく 20 より小さい値のみ"
+      ],
+      "answer": 1,
+      "explanation": "BETWEEN A AND B は A 以上 B 以下（A <= x <= B）の範囲検索を行い、境界値を含む。したがって 10 と 20 は範囲に含まれる。(Evidence: E4)"
+    },
+    {
+      "id": "SQL-BRONZE-01-02-Q04",
+      "type": "code_output",
+      "difficulty": 2,
+      "prompt": "以下のクエリで取得される department の値をすべて答えよ。\n\nSELECT department FROM employees WHERE department IN ('Sales', 'HR', 'IT');",
+      "answer": "Sales, HR, IT に一致する department の値が返される",
+      "explanation": "IN (値リスト) は複数の等値条件を OR で繋いだものと等価であり、リスト内の値に一致する行が返される。(Evidence: E5)"
+    },
+    {
+      "id": "SQL-BRONZE-01-02-Q05",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "LIKE 演算子で「0 文字以上の任意文字列」を表すワイルドカードはどれか。",
+      "choices": [
+        "_（アンダースコア）",
+        "%（パーセント）",
+        "*（アスタリスク）",
+        "#（シャープ）"
+      ],
+      "answer": 1,
+      "explanation": "LIKE 演算子では % は 0 文字以上の任意文字列を表し、_ は 1 文字の任意文字を表す。(Evidence: E6)"
+    },
+    {
+      "id": "SQL-BRONZE-01-02-Q06",
+      "type": "true_false",
+      "difficulty": 2,
+      "prompt": "WHERE salary = NULL と記述すれば、salary が NULL の行を正しく取得できる。",
+      "answer": false,
+      "explanation": "= NULL は正しくなく、常に UNKNOWN を返す。NULL 値の判定には IS NULL を使う必要がある。(Evidence: E7, E11)"
+    },
+    {
+      "id": "SQL-BRONZE-01-02-Q07",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "AND と OR を括弧なしで組み合わせた場合、どちらが先に評価されるか。",
+      "choices": [
+        "OR が先に評価される",
+        "AND が先に評価される",
+        "左から右へ順番に評価される",
+        "DBMS によって異なり規則はない"
+      ],
+      "answer": 1,
+      "explanation": "WHERE 句の条件評価順序は NOT > AND > OR である。意図と異なる結果を防ぐために括弧を使うべきである。(Evidence: E10)"
+    },
+    {
+      "id": "SQL-BRONZE-01-02-Q08",
+      "type": "code_output",
+      "difficulty": 3,
+      "prompt": "以下のクエリの結果として正しいものはどれか。\n\nSELECT name FROM products WHERE price BETWEEN 1000 AND 5000 AND category = 'Electronics';\n\nproducts テーブル:\n| name     | price | category    |\n|----------|-------|-------------|\n| Mouse    | 3000  | Electronics |\n| Desk     | 8000  | Furniture   |\n| Keyboard | 4500  | Electronics |\n| Pen      | 200   | Stationery  |",
+      "choices": [
+        "Mouse のみ",
+        "Mouse, Keyboard",
+        "Mouse, Keyboard, Desk",
+        "全行が返される"
+      ],
+      "answer": 1,
+      "explanation": "BETWEEN 1000 AND 5000 で価格が 1000 以上 5000 以下の行を抽出し（Mouse: 3000, Keyboard: 4500）、さらに AND で category = 'Electronics' を満たす行に絞り込む。両方の条件を満たす Mouse と Keyboard が返される。(Evidence: E4, E8)"
+    },
+    {
+      "id": "SQL-BRONZE-01-02-Q09",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "NOT IN ('A', 'B', 'C') と同じ意味の条件はどれか。",
+      "choices": [
+        "<> 'A' OR <> 'B' OR <> 'C'",
+        "<> 'A' AND <> 'B' AND <> 'C'",
+        "= 'A' AND = 'B' AND = 'C'",
+        "LIKE '%A%' OR LIKE '%B%'"
+      ],
+      "answer": 1,
+      "explanation": "NOT は条件の真偽を反転させる。IN は OR の連結と等価なので、NOT IN は各値との非等値を AND で繋いだものと同じである。(Evidence: E5, E9)"
+    },
+    {
+      "id": "SQL-BRONZE-01-02-Q10",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "SQL の三値論理において、NULL を含む比較の結果はどれか。",
+      "choices": [
+        "TRUE",
+        "FALSE",
+        "UNKNOWN",
+        "エラーになる"
+      ],
+      "answer": 2,
+      "explanation": "SQL の三値論理では、NULL を含む比較は TRUE でも FALSE でもなく UNKNOWN となる。そのため = NULL ではなく IS NULL を使う必要がある。(Evidence: E11, E7)"
+    }
+  ]
+}

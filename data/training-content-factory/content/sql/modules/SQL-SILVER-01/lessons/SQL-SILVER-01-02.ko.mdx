@@ -1,0 +1,204 @@
+---
+lesson_id: SQL-SILVER-01-02
+title: "서브쿼리 — 스칼라·행·테이블 서브쿼리"
+module: SQL-SILVER-01
+level: silver
+est_minutes: 35
+tags: [subquery, exists, in-subquery, correlated]
+---
+
+## 1) 요점 정리 (5줄)
+
+- 서브쿼리란 SQL 문 내부에 중첩으로 기술하는 SELECT 문이며, WHERE / FROM / SELECT / HAVING 에서 사용할 수 있다.
+- 스칼라 서브쿼리는 1행 1열을 반환하고, 테이블 서브쿼리(파생 테이블)는 여러 행·여러 열을 반환한다.
+- 상관 서브쿼리는 외부 쿼리의 값을 참조하며, 외부의 각 행마다 평가된다. 비상관 서브쿼리는 1회만 평가된다.
+- EXISTS는 상관 서브쿼리와 함께 사용하여 "존재 여부"를 판정하며, NOT IN보다 NULL 안전하다.
+- IN의 서브쿼리 결과에 NULL이 포함되면 NOT IN에서 예기치 않은 결과가 발생하므로, NOT EXISTS를 권장한다.
+
+## 2) 개념
+
+### 서브쿼리의 분류
+
+✅ 결론: 서브쿼리는 반환하는 결과의 형태에 따라 3종류로 분류할 수 있다.
+
+| 종류 | 반환 결과 | 주요 사용 위치 |
+|---|---|---|
+| 스칼라 서브쿼리 | 1행 1열 (단일 값) | SELECT 절, WHERE 절의 비교 연산자 우변 |
+| 행 서브쿼리 | 1행·여러 열 | WHERE 절의 행 생성자 비교 |
+| 테이블 서브쿼리 | 여러 행·여러 열 | FROM 절 (파생 테이블), IN / EXISTS |
+
+### 스칼라 서브쿼리
+
+스칼라 서브쿼리는 **단일 값**을 반환한다. WHERE 절이나 SELECT 절에서 마치 상수처럼 사용할 수 있다.
+
+```sql
+-- 전사 평균보다 급여가 높은 직원
+SELECT name, salary
+FROM employees
+WHERE salary > (SELECT AVG(salary) FROM employees);
+```
+
+```sql
+-- SELECT 절에서의 사용: 평균과의 차이를 표시
+SELECT name, salary,
+       salary - (SELECT AVG(salary) FROM employees) AS diff_from_avg
+FROM employees;
+```
+
+**주의:** 스칼라 서브쿼리가 여러 행을 반환하면 런타임 에러가 발생한다. 반드시 1행만 반환하는 것을 보장해야 한다.
+
+### 테이블 서브쿼리 (파생 테이블)
+
+✅ 결론: FROM 절에 서브쿼리를 작성하면 "가상 테이블"로 취급할 수 있다. **반드시 별칭(AS)을 부여**하는 것이 ANSI SQL의 규칙이다.
+
+```sql
+SELECT dept_avg.department_id, dept_avg.avg_salary
+FROM (
+  SELECT department_id, AVG(salary) AS avg_salary
+  FROM employees
+  GROUP BY department_id
+) AS dept_avg
+WHERE dept_avg.avg_salary > 50000;
+```
+
+파생 테이블은 복잡한 집계 결과를 추가로 필터링하고 싶을 때 유효하다.
+
+### IN 서브쿼리
+
+IN은 "서브쿼리의 결과 세트에 값이 포함되어 있는지"를 판정한다.
+
+```sql
+-- 도쿄에 있는 부서의 직원
+SELECT name FROM employees
+WHERE department_id IN (
+  SELECT id FROM departments WHERE location = 'Tokyo'
+);
+```
+
+### NOT IN의 NULL 문제
+
+⚠️ NOT IN의 서브쿼리 결과에 **NULL이 하나라도 포함**되면, 비교 결과가 모두 UNKNOWN이 되어 **행이 전혀 반환되지 않는다**.
+
+```sql
+-- 위험: departments.id에 NULL이 있으면 결과가 0건이 됨
+SELECT name FROM employees
+WHERE department_id NOT IN (SELECT id FROM departments);
+```
+
+### EXISTS와 NOT EXISTS
+
+✅ 결론: EXISTS는 상관 서브쿼리와 함께 사용하여 "조건을 만족하는 행이 존재하는지"를 판정한다. NOT IN보다 NULL 안전하다.
+
+```sql
+-- 직원이 있는 부서만 가져오기
+SELECT d.name
+FROM departments d
+WHERE EXISTS (
+  SELECT 1 FROM employees e WHERE e.department_id = d.id
+);
+```
+
+```sql
+-- 직원이 없는 부서 가져오기 (NOT EXISTS)
+SELECT d.name
+FROM departments d
+WHERE NOT EXISTS (
+  SELECT 1 FROM employees e WHERE e.department_id = d.id
+);
+```
+
+EXISTS의 SELECT 절에는 관례적으로 `SELECT 1`을 작성한다. 실제로는 무엇을 작성해도 동작에 영향을 주지 않는다.
+
+### 상관 서브쿼리 vs 비상관 서브쿼리
+
+| 종류 | 특징 | 평가 횟수 |
+|---|---|---|
+| 비상관 서브쿼리 | 외부 쿼리에 의존하지 않음 | 1회 |
+| 상관 서브쿼리 | 외부 행의 값을 참조 | 외부 행 수만큼 |
+
+```sql
+-- 상관 서브쿼리: 자기 부서의 평균보다 급여가 높은 직원
+SELECT e1.name, e1.salary, e1.department_id
+FROM employees e1
+WHERE e1.salary > (
+  SELECT AVG(e2.salary)
+  FROM employees e2
+  WHERE e2.department_id = e1.department_id
+);
+```
+
+이 예에서는 외부의 `e1.department_id`를 서브쿼리 내에서 참조하고 있으므로, 외부의 각 행마다 서브쿼리가 평가된다.
+
+### ANY / ALL 연산자
+
+```sql
+-- 부서 2의 모든 직원보다 급여가 높은 직원
+SELECT name, salary FROM employees
+WHERE salary > ALL (SELECT salary FROM employees WHERE department_id = 2);
+
+-- 부서 2의 누군가보다 급여가 높은 직원
+SELECT name, salary FROM employees
+WHERE salary > ANY (SELECT salary FROM employees WHERE department_id = 2);
+```
+
+## 3) 예제 (2개)
+
+### 예제 1: 주문이 있는 고객 목록 (EXISTS)
+
+```sql
+SELECT c.name, c.city
+FROM customers c
+WHERE EXISTS (
+  SELECT 1
+  FROM orders o
+  WHERE o.customer_id = c.id
+    AND o.order_date >= '2024-01-01'
+);
+```
+
+2024년 이후에 주문이 있는 고객만 추출한다. EXISTS를 사용하면 NOT IN의 NULL 문제를 회피하면서, 관련 테이블의 조건으로 필터링할 수 있다.
+
+### 예제 2: 부서 평균을 초과하는 급여의 직원 (상관 서브쿼리 + 파생 테이블 비교)
+
+```sql
+SELECT e.name, e.salary, e.department_id, dept_avg.avg_salary
+FROM employees e
+JOIN (
+  SELECT department_id, AVG(salary) AS avg_salary
+  FROM employees
+  GROUP BY department_id
+) AS dept_avg ON e.department_id = dept_avg.department_id
+WHERE e.salary > dept_avg.avg_salary;
+```
+
+이 예에서는 상관 서브쿼리 대신 파생 테이블을 JOIN으로 결합하는 접근 방식을 사용한다. 각 부서의 평균 급여를 서브쿼리로 구하고, 이를 원래 테이블과 결합하여 비교한다. 성능 면에서도 유리한 경우가 많다.
+
+## 4) 흔한 실수 / 함정 (5개)
+
+⚠️ **실수 1**: NOT IN의 서브쿼리 결과에 NULL이 포함되어 결과가 0건이 됨
+→ **대책**: NOT IN 대신 NOT EXISTS를 사용한다.
+
+⚠️ **실수 2**: 스칼라 서브쿼리가 여러 행을 반환하여 런타임 에러 발생
+→ **대책**: 스칼라 서브쿼리에는 반드시 1행만 반환하는 쿼리를 작성한다. 필요에 따라 LIMIT 1이나 집계 함수를 사용한다.
+
+⚠️ **실수 3**: FROM 절의 파생 테이블에 별칭을 붙이지 않아 에러 발생
+→ **대책**: FROM 절의 서브쿼리에는 반드시 AS alias를 붙인다.
+
+⚠️ **실수 4**: 상관 서브쿼리의 외부 테이블 별칭을 잘못 지정하여 의도치 않은 조인 조건이 됨
+→ **대책**: 외부·내부 테이블에 명확한 별칭을 부여하고, 어떤 열이 어떤 테이블에 속하는지 명시한다.
+
+⚠️ **실수 5**: 성능을 고려하지 않고 SELECT 절에서 스칼라 서브쿼리를 남용
+→ **대책**: SELECT 절의 스칼라 서브쿼리는 행마다 실행되므로, 행 수가 많은 경우 JOIN이나 CTE로 재작성하는 것을 검토한다.
+
+## 5) 체크리스트
+
+- [ ] NOT IN 대신 NOT EXISTS 사용을 검토했다
+- [ ] 스칼라 서브쿼리가 확실히 1행만 반환하는 것을 확인했다
+- [ ] FROM 절의 서브쿼리에 별칭을 부여했다
+- [ ] 상관 서브쿼리의 외부 테이블 참조가 올바른 것을 확인했다
+- [ ] 서브쿼리의 종류(스칼라 / 테이블 / 상관)를 올바르게 선택했다
+- [ ] 성능을 고려하여 필요에 따라 JOIN으로의 재작성을 검토했다
+
+## 6) 다음으로
+
+다음 레슨은 **SQL-SILVER-01-03: 결합의 응용 — OUTER / CROSS / 자기 결합** 입니다. INNER JOIN / LEFT JOIN 이외의 결합 패턴을 배우고, RIGHT JOIN, FULL OUTER JOIN, CROSS JOIN, 그리고 자기 결합의 사용법을 습득합니다.

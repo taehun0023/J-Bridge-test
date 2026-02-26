@@ -1,0 +1,209 @@
+---
+lesson_id: SQL-GOLD-01-05
+title: "インデックスと実行計画 — パフォーマンスチューニング入門"
+module: SQL-GOLD-01
+level: gold
+est_minutes: 35
+tags: [index, B-tree, EXPLAIN, performance, covering-index, composite-index]
+---
+
+## 1) 要点まとめ（5行）
+
+1. **インデックスはテーブル内のデータを高速に検索するための補助的なデータ構造**であり、書籍の索引に相当する。インデックスがなければ全行を走査（フルテーブルスキャン）する必要がある。
+2. **B-tree** は最も一般的なインデックス構造であり、等価検索と範囲検索の両方を効率的に処理できる。ハッシュインデックスは等価検索のみに特化している。
+3. **複合インデックス**は複数列を組み合わせたインデックスで、左端列優先（Leftmost Prefix）の原則に従う。
+4. **EXPLAIN（EXPLAIN ANALYZE）**はクエリの実行計画を表示するコマンドであり、パフォーマンス問題の診断に不可欠である。
+5. **インデックスは SELECT を高速化するが、INSERT / UPDATE / DELETE はインデックスの更新コストにより低速化する**。適切な選定が必要である。
+
+---
+
+## 2) 概念
+
+### インデックスとは何か
+
+インデックスとは、テーブル内のデータを高速に検索するための補助的なデータ構造である。書籍の索引と同様に、目的のデータがどこにあるかを素早く特定する。インデックスがなければ、データベースは全行を先頭から順に走査する**フルテーブルスキャン（Seq Scan）**を行わなければならない。
+
+```sql
+-- インデックスの作成
+CREATE INDEX idx_employees_department ON employees(department_id);
+
+-- 一意制約付きインデックスの作成
+CREATE UNIQUE INDEX idx_employees_email ON employees(email);
+```
+
+`CREATE INDEX` 文でテーブルの列にインデックスを作成する。`CREATE UNIQUE INDEX` にすると一意制約付きのインデックスになり、重複値が禁止される。
+
+### B-tree とハッシュインデックス
+
+**B-tree** は最も一般的なインデックス構造であり、等価検索（`=`）と範囲検索（`<`, `>`, `BETWEEN`）の両方を効率的に処理できる。PostgreSQL でインデックスを作成すると、デフォルトで B-tree が使われる。
+
+**ハッシュインデックス**は等価検索のみに特化したインデックスである。範囲検索やソートには使えないが、等価検索では B-tree と同等かそれ以上の速度を出す場合がある。
+
+### 複合インデックスと Leftmost Prefix の原則
+
+複合インデックスは複数列を組み合わせたインデックスである。左端列優先（Leftmost Prefix）の原則により、インデックスの利用可否が決まる。
+
+```sql
+-- 複合インデックスの作成
+CREATE INDEX idx_emp_dept_salary ON employees(department_id, salary);
+```
+
+| クエリ条件 | インデックス使用 |
+|---|---|
+| `WHERE department_id = 1` | 使える（左端列） |
+| `WHERE department_id = 1 AND salary > 500000` | 使える（左端列 + 2列目） |
+| `WHERE salary > 500000` | **使えない**（左端列がない） |
+
+`(department_id, salary)` のインデックスは `department_id` 単独の検索にも使えるが、`salary` 単独の検索には使えない。
+
+### カバリングインデックスと Index Only Scan
+
+カバリングインデックスはクエリが必要とする全ての列を含むインデックスである。テーブル本体にアクセスせず、**Index Only Scan** が可能になり I/O が大幅に削減される。
+
+```sql
+-- department_id で絞り込み、salary だけ取得するクエリ
+SELECT salary FROM employees WHERE department_id = 1;
+
+-- このクエリに対するカバリングインデックス
+CREATE INDEX idx_covering ON employees(department_id, salary);
+-- → Index Only Scan で完結。テーブルへのアクセス不要
+```
+
+### 部分インデックス
+
+部分インデックスは `WHERE` 条件付きで作成するインデックスであり、特定の条件に一致する行だけをインデックス化する。サイズが小さく、更新コストも低い。
+
+```sql
+-- アクティブな従業員だけをインデックス化
+CREATE INDEX idx_active_employees ON employees(department_id)
+WHERE is_active = true;
+```
+
+### EXPLAIN と実行計画
+
+`EXPLAIN`（または `EXPLAIN ANALYZE`）はクエリの実行計画を表示するコマンドである。`EXPLAIN` は推定コストのみ表示し、`EXPLAIN ANALYZE` は実際に実行して実測値を返す。
+
+```sql
+-- 推定のみ
+EXPLAIN SELECT * FROM employees WHERE department_id = 1;
+
+-- 実測値付き（実際に実行される）
+EXPLAIN ANALYZE SELECT * FROM employees WHERE department_id = 1;
+```
+
+主なスキャン方式は以下の通り。
+
+| スキャン方式 | 説明 |
+|---|---|
+| Seq Scan | テーブル全行を順次読み取り。少量データではインデックスより高速な場合もある |
+| Index Scan | インデックスで条件一致行を特定し、テーブルから行を取得 |
+| Index Only Scan | インデックスだけで必要なデータを取得。最も高速 |
+
+### SARGable と関数インデックス
+
+`WHERE` 句で列に関数を適用すると、インデックスが使われなくなる（SARGable でない）。関数インデックスで対処可能である。
+
+```sql
+-- NG: インデックスが効かない
+SELECT * FROM employees WHERE UPPER(name) = 'TANAKA';
+
+-- OK: 関数インデックスを作成
+CREATE INDEX idx_employees_upper_name ON employees(UPPER(name));
+```
+
+### 統計情報と ANALYZE
+
+統計情報はオプティマイザが実行計画を決定するために使うデータである。`ANALYZE` コマンドで統計を更新する。統計が古いと、オプティマイザが不適切な実行計画を選択する可能性がある。
+
+```sql
+-- テーブルの統計情報を更新
+ANALYZE employees;
+```
+
+---
+
+## 3) 例
+
+### 例1: インデックスの効果を EXPLAIN で確認する
+
+インデックスの有無で実行計画がどう変わるかを確認する。
+
+```sql
+-- インデックスなしの状態
+EXPLAIN ANALYZE SELECT * FROM employees WHERE department_id = 1;
+-- → Seq Scan on employees  (実行時間: 例 0.5ms)
+
+-- インデックスを作成
+CREATE INDEX idx_emp_dept ON employees(department_id);
+
+-- インデックスありの状態
+EXPLAIN ANALYZE SELECT * FROM employees WHERE department_id = 1;
+-- → Index Scan using idx_emp_dept on employees  (実行時間: 例 0.1ms)
+```
+
+少量データではフルテーブルスキャンでも高速だが、数万行以上のテーブルではインデックスの効果が顕著になる。`EXPLAIN ANALYZE` で実際のコストと実行時間を比較することで、インデックスの効果を定量的に評価できる。
+
+### 例2: 複合インデックスと Leftmost Prefix の動作確認
+
+複合インデックスが使われるケースと使われないケースを EXPLAIN で確認する。
+
+```sql
+CREATE INDEX idx_emp_dept_salary ON employees(department_id, salary);
+
+-- ケース 1: 左端列を使用 → インデックスが使われる
+EXPLAIN SELECT * FROM employees WHERE department_id = 1 AND salary > 600000;
+-- → Index Scan using idx_emp_dept_salary
+
+-- ケース 2: 左端列のみ使用 → インデックスが使われる
+EXPLAIN SELECT * FROM employees WHERE department_id = 2;
+-- → Index Scan using idx_emp_dept_salary
+
+-- ケース 3: 2列目のみ使用 → インデックスが使われない
+EXPLAIN SELECT * FROM employees WHERE salary > 600000;
+-- → Seq Scan on employees（Leftmost Prefix の原則により使用不可）
+```
+
+このように、複合インデックスの列順序は検索パターンに合わせて慎重に設計する必要がある。
+
+---
+
+## 4) よくあるミス／落とし穴（5つ）
+
+### 落とし穴 1: インデックスを付けすぎる
+
+インデックスを追加すると SELECT は高速化するが、INSERT / UPDATE / DELETE はインデックスの更新コストにより低速化する。書き込みが頻繁なテーブルにインデックスを過剰に追加すると、全体のパフォーマンスがかえって低下する。
+
+### 落とし穴 2: WHERE 句で関数を適用してインデックスを無効化
+
+`WHERE YEAR(hire_date) = 2023` のように列に関数を適用すると、インデックスが使われない（SARGable でない）。`WHERE hire_date >= '2023-01-01' AND hire_date < '2024-01-01'` のように範囲条件に書き換えるか、関数インデックスを作成する。
+
+### 落とし穴 3: 複合インデックスの列順序を間違える
+
+`(col1, col2)` の複合インデックスは `col2` 単独のクエリでは使えない。WHERE / JOIN / ORDER BY で頻繁に使われるパターンを分析し、左端列から順に選択性の高い列を配置するべきである。
+
+### 落とし穴 4: EXPLAIN を見ずにインデックスを信用する
+
+インデックスを作成しても、オプティマイザがそれを使うとは限らない。テーブルの行数が少ない場合やカーディナリティが低い場合、Seq Scan の方が効率的と判断されることがある。必ず `EXPLAIN` で確認する。
+
+### 落とし穴 5: 統計情報の更新を忘れる
+
+大量のデータを INSERT / DELETE した後に `ANALYZE` を実行しないと、統計情報が実態と乖離し、オプティマイザが不適切な実行計画を選択する。PostgreSQL の autovacuum が自動で更新するが、大量更新後は手動で `ANALYZE` を実行するのが安全である。
+
+---
+
+## 5) チェックリスト
+
+- [ ] インデックスの役割とフルテーブルスキャンとの違いを説明できる
+- [ ] B-tree とハッシュインデックスの使い分けを理解している
+- [ ] 複合インデックスの Leftmost Prefix の原則を具体例で示せる
+- [ ] カバリングインデックスと Index Only Scan の利点を説明できる
+- [ ] EXPLAIN / EXPLAIN ANALYZE で実行計画を読める
+- [ ] SARGable でないクエリの問題と対処法を知っている
+- [ ] インデックスの追加が書き込み性能に与える影響を理解している
+- [ ] 部分インデックスの用途を説明できる
+
+---
+
+## 6) 次へ
+
+インデックスと実行計画の理解で、SQL のパフォーマンスチューニングの基礎を身につけた。これで **SQL Gold モジュール（SQL-GOLD-01）**の全 5 レッスンが完了である。ウィンドウ関数、DDL、DML、トランザクション、そしてインデックスと実行計画 — これらの知識を組み合わせることで、実務レベルの SQL を書く力が備わった。

@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "lesson_id": "SQL-SILVER-01-02",
+  "questions": [
+    {
+      "id": "SQL-SILVER-01-02-Q01",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "サブクエリを使用できる SQL の句として正しい組み合わせはどれか。",
+      "choices": [
+        "WHERE と FROM のみ",
+        "WHERE、FROM、SELECT、HAVING のすべて",
+        "WHERE と HAVING のみ",
+        "SELECT と FROM のみ"
+      ],
+      "answer": 1,
+      "explanation": "サブクエリは WHERE 句、FROM 句、SELECT 句、HAVING 句のいずれでも使用可能である。(Evidence: E10)"
+    },
+    {
+      "id": "SQL-SILVER-01-02-Q02",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "スカラーサブクエリの定義として正しいものはどれか。",
+      "choices": [
+        "複数行・複数列を返すサブクエリ",
+        "単一行・複数列を返すサブクエリ",
+        "単一の値（1行1列）を返すサブクエリ",
+        "0行を返すサブクエリ"
+      ],
+      "answer": 2,
+      "explanation": "スカラーサブクエリは単一の値（1行1列）を返すサブクエリであり、SELECT 句や WHERE 句の比較演算子の右辺で使用できる。(Evidence: E2)"
+    },
+    {
+      "id": "SQL-SILVER-01-02-Q03",
+      "type": "true_false",
+      "difficulty": 2,
+      "prompt": "FROM 句でテーブルサブクエリ（導出テーブル）を使用する場合、別名（AS）を付けなくてもエラーにならない。",
+      "answer": false,
+      "explanation": "テーブルサブクエリを FROM 句で使用する場合、必ず別名を付ける必要がある。別名がないとエラーになる。(Evidence: E4)"
+    },
+    {
+      "id": "SQL-SILVER-01-02-Q04",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "NOT IN のサブクエリ結果に NULL が含まれた場合、外側のクエリの結果はどうなるか。",
+      "choices": [
+        "NULL を除外した結果が返される",
+        "エラーが発生する",
+        "比較結果が UNKNOWN となり行が一切返されない",
+        "NULL を含む行のみ返される"
+      ],
+      "answer": 2,
+      "explanation": "NOT IN のサブクエリ結果に NULL が含まれると、比較結果が UNKNOWN となり行が返されない。安全のため NOT EXISTS を使用するのが推奨される。(Evidence: E8)"
+    },
+    {
+      "id": "SQL-SILVER-01-02-Q05",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "次の SQL の種類として正しいものはどれか。\n\nSELECT e1.name\nFROM employees e1\nWHERE e1.salary > (\n  SELECT AVG(e2.salary)\n  FROM employees e2\n  WHERE e2.department_id = e1.department_id\n);",
+      "choices": [
+        "非相関サブクエリ",
+        "相関サブクエリ",
+        "テーブルサブクエリ",
+        "行サブクエリ"
+      ],
+      "answer": 1,
+      "explanation": "サブクエリ内で外側のクエリの e1.department_id を参照しているため、相関サブクエリである。相関サブクエリは外側の各行ごとに評価される。(Evidence: E6)"
+    },
+    {
+      "id": "SQL-SILVER-01-02-Q06",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "EXISTS 演算子について正しい説明はどれか。",
+      "choices": [
+        "サブクエリが0行の場合に TRUE を返す",
+        "サブクエリが1行以上返す場合に TRUE を返す",
+        "サブクエリの結果が NULL の場合に TRUE を返す",
+        "非相関サブクエリとのみ組み合わせて使用する"
+      ],
+      "answer": 1,
+      "explanation": "EXISTS は相関サブクエリと組み合わせて使用し、サブクエリが1行以上返す場合に TRUE を返す。NOT EXISTS はサブクエリが0行の場合に TRUE を返す。(Evidence: E5)"
+    },
+    {
+      "id": "SQL-SILVER-01-02-Q07",
+      "type": "code_output",
+      "difficulty": 3,
+      "prompt": "スカラーサブクエリが複数行を返した場合、どのような結果になるか。",
+      "choices": [
+        "最初の1行のみが使用される",
+        "ランタイムエラーが発生する",
+        "NULL が返される",
+        "すべての行が比較される"
+      ],
+      "answer": 1,
+      "explanation": "スカラーサブクエリが複数行を返すとランタイムエラーとなる。確実に1行だけ返すことを保証する必要がある。(Evidence: E9)"
+    },
+    {
+      "id": "SQL-SILVER-01-02-Q08",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "非相関サブクエリと相関サブクエリの評価回数について正しい説明はどれか。",
+      "choices": [
+        "どちらも外側の行数分だけ評価される",
+        "非相関サブクエリは1度だけ評価され、相関サブクエリは外側の各行ごとに評価される",
+        "相関サブクエリは1度だけ評価され、非相関サブクエリは外側の各行ごとに評価される",
+        "どちらも1度だけ評価される"
+      ],
+      "answer": 1,
+      "explanation": "非相関サブクエリは外側のクエリに依存せず一度だけ評価されるため、一般に相関サブクエリより効率的である。相関サブクエリは外側の各行ごとに評価される。(Evidence: E6, E11)"
+    },
+    {
+      "id": "SQL-SILVER-01-02-Q09",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "ANY / ALL 演算子について正しい説明はどれか。",
+      "choices": [
+        "ANY はすべての値に対して条件を満たすかを判定する",
+        "ALL はいずれかの値に対して条件を満たすかを判定する",
+        "ANY はいずれかの値、ALL はすべての値に対して条件を満たすかを判定する",
+        "ANY と ALL はどちらも同じ動作をする"
+      ],
+      "answer": 2,
+      "explanation": "ANY / ALL 演算子はサブクエリの結果と比較演算子を組み合わせ、いずれかの値（ANY）またはすべての値（ALL）に対して条件を満たすかを判定する。(Evidence: E12)"
+    },
+    {
+      "id": "SQL-SILVER-01-02-Q10",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "NOT IN の NULL 問題を安全に回避するために推奨される方法はどれか。",
+      "choices": [
+        "NOT IN の代わりに <> ALL を使用する",
+        "NOT IN の代わりに NOT EXISTS を使用する",
+        "サブクエリに LIMIT 1 を付ける",
+        "NOT IN の代わりに EXCEPT を使用する"
+      ],
+      "answer": 1,
+      "explanation": "NOT IN のサブクエリ結果に NULL が含まれると予期しない結果になるため、NOT EXISTS を使用するのが推奨される。NOT EXISTS は NULL の影響を受けない。(Evidence: E7, E8)"
+    }
+  ]
+}

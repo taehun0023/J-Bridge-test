@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "lesson_id": "SQL-GOLD-01-05",
+  "questions": [
+    {
+      "id": "SQL-GOLD-01-05-Q01",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "インデックスが存在しないテーブルに対して WHERE 句付きの SELECT を実行した場合、データベースはどのような操作を行うか。",
+      "choices": [
+        "Index Scan でインデックスを自動生成して検索する",
+        "フルテーブルスキャン（Seq Scan）で全行を順次走査する",
+        "エラーが発生し、クエリが実行できない",
+        "Index Only Scan で検索する"
+      ],
+      "answer": 1,
+      "explanation": "インデックスがなければ、データベースは全行を先頭から順に走査するフルテーブルスキャン（Seq Scan）を行う。(Evidence: E1)"
+    },
+    {
+      "id": "SQL-GOLD-01-05-Q02",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "B-tree インデックスの特徴として正しいものはどれか。",
+      "choices": [
+        "等価検索のみに特化しており、範囲検索には使えない",
+        "等価検索と範囲検索の両方を効率的に処理できる",
+        "ハッシュ関数を使って検索する",
+        "テキスト全文検索に特化している"
+      ],
+      "answer": 1,
+      "explanation": "B-tree は最も一般的なインデックス構造であり、等価検索と範囲検索の両方を効率的に処理できる。(Evidence: E2)"
+    },
+    {
+      "id": "SQL-GOLD-01-05-Q03",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "一意制約付きのインデックスを作成する SQL 文はどれか。",
+      "choices": [
+        "CREATE INDEX UNIQUE idx ON employees(email);",
+        "CREATE UNIQUE INDEX idx ON employees(email);",
+        "CREATE INDEX idx ON employees(email) UNIQUE;",
+        "ALTER INDEX idx ADD UNIQUE ON employees(email);"
+      ],
+      "answer": 1,
+      "explanation": "CREATE UNIQUE INDEX 文で一意制約付きのインデックスを作成する。(Evidence: E3)"
+    },
+    {
+      "id": "SQL-GOLD-01-05-Q04",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "複合インデックス (department_id, salary) が作成されている場合、以下のどのクエリでインデックスが使用されるか。",
+      "choices": [
+        "WHERE salary > 500000",
+        "WHERE salary > 500000 AND department_id = 1",
+        "WHERE salary BETWEEN 400000 AND 600000",
+        "WHERE salary = 500000 ORDER BY department_id"
+      ],
+      "answer": 1,
+      "explanation": "Leftmost Prefix の原則により、(department_id, salary) のインデックスは department_id を含む条件で使用される。選択肢 B は department_id = 1 を含むため使用可能。salary 単独の検索では使えない。(Evidence: E4)"
+    },
+    {
+      "id": "SQL-GOLD-01-05-Q05",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "カバリングインデックスの利点として正しいものはどれか。",
+      "choices": [
+        "INSERT の速度が向上する",
+        "インデックスだけでデータを取得でき、テーブルへのアクセスが不要になる",
+        "ディスク使用量が常に削減される",
+        "全てのクエリで自動的に適用される"
+      ],
+      "answer": 1,
+      "explanation": "カバリングインデックスはクエリが必要とする全ての列を含むインデックスであり、Index Only Scan が可能になり I/O が大幅に削減される。(Evidence: E5)"
+    },
+    {
+      "id": "SQL-GOLD-01-05-Q06",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "EXPLAIN ANALYZE と EXPLAIN の違いとして正しいものはどれか。",
+      "choices": [
+        "EXPLAIN ANALYZE はインデックスを自動作成する",
+        "EXPLAIN ANALYZE はクエリを実際に実行し、実測値を返す",
+        "EXPLAIN は実行計画を表示しない",
+        "EXPLAIN ANALYZE はデータを変更しない DML でのみ使える"
+      ],
+      "answer": 1,
+      "explanation": "EXPLAIN はクエリの実行計画（推定コスト）を表示するコマンド。EXPLAIN ANALYZE は実際にクエリを実行して実測値（実行時間、実際の行数など）を返す。(Evidence: E6)"
+    },
+    {
+      "id": "SQL-GOLD-01-05-Q07",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "フルテーブルスキャン（Seq Scan）がインデックススキャンより高速になる場合はどれか。",
+      "choices": [
+        "テーブルの行数が非常に多い場合",
+        "検索条件の選択性が非常に高い場合",
+        "テーブルの行数が少量の場合",
+        "複合インデックスが存在する場合"
+      ],
+      "answer": 2,
+      "explanation": "フルテーブルスキャン（Seq Scan）はテーブルの全行を順次読み取る方式。少量データのテーブルではインデックスのオーバーヘッドがないため、インデックススキャンより高速な場合がある。(Evidence: E7)"
+    },
+    {
+      "id": "SQL-GOLD-01-05-Q08",
+      "type": "single_choice",
+      "difficulty": 5,
+      "prompt": "以下のクエリでインデックスが使われない原因は何か。\nSELECT * FROM employees WHERE UPPER(name) = 'TANAKA';",
+      "choices": [
+        "UPPER 関数は SQL 標準ではない",
+        "WHERE 句で列に関数を適用すると SARGable でなくなり、インデックスが使われない",
+        "文字列比較ではインデックスは使えない",
+        "= 演算子がインデックスに対応していない"
+      ],
+      "answer": 1,
+      "explanation": "WHERE 句で関数を適用した列ではインデックスが使われない（SARGable でない）。関数インデックス CREATE INDEX idx ON employees(UPPER(name)) で対処可能。(Evidence: E11)"
+    },
+    {
+      "id": "SQL-GOLD-01-05-Q09",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "インデックスの追加がパフォーマンスに与える影響として正しいものはどれか。",
+      "choices": [
+        "SELECT も INSERT も共に高速化する",
+        "SELECT は高速化するが、INSERT / UPDATE / DELETE は低速化する可能性がある",
+        "SELECT は低速化するが、INSERT は高速化する",
+        "全ての操作に対して影響はない"
+      ],
+      "answer": 1,
+      "explanation": "インデックスを追加すると SELECT は高速化するが、INSERT / UPDATE / DELETE はインデックスの更新コストにより低速化する。(Evidence: E10)"
+    },
+    {
+      "id": "SQL-GOLD-01-05-Q10",
+      "type": "single_choice",
+      "difficulty": 5,
+      "prompt": "統計情報（ANALYZE）に関する記述として正しいものはどれか。",
+      "choices": [
+        "ANALYZE はインデックスを再構築するコマンドである",
+        "統計情報はオプティマイザが実行計画を決定するために使い、ANALYZE で更新する",
+        "ANALYZE はテーブルのデータを物理的に再配置する",
+        "統計情報は一度取得すれば更新不要である"
+      ],
+      "answer": 1,
+      "explanation": "統計情報はオプティマイザが実行計画を決定するために使う。ANALYZE コマンドで統計を更新する。大量のデータ変更後に更新しないと、不適切な実行計画が選択される可能性がある。(Evidence: E12)"
+    }
+  ]
+}

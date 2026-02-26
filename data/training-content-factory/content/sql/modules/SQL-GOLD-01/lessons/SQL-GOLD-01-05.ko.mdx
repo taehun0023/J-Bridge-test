@@ -1,0 +1,209 @@
+---
+lesson_id: SQL-GOLD-01-05
+title: "인덱스와 실행 계획 — 성능 튜닝 입문"
+module: SQL-GOLD-01
+level: gold
+est_minutes: 35
+tags: [index, B-tree, EXPLAIN, performance, covering-index, composite-index]
+---
+
+## 1) 핵심 요약 (5줄)
+
+1. **인덱스는 테이블 내 데이터를 빠르게 검색하기 위한 보조 데이터 구조**이며, 책의 색인에 해당한다. 인덱스가 없으면 전체 행을 순회(풀 테이블 스캔)해야 한다.
+2. **B-tree**는 가장 일반적인 인덱스 구조로, 등가 검색과 범위 검색 모두 효율적으로 처리할 수 있다. 해시 인덱스는 등가 검색에만 특화되어 있다.
+3. **복합 인덱스**는 여러 열을 조합한 인덱스로, 왼쪽 열 우선(Leftmost Prefix) 원칙을 따른다.
+4. **EXPLAIN(EXPLAIN ANALYZE)**은 쿼리의 실행 계획을 표시하는 명령으로, 성능 문제 진단에 필수적이다.
+5. **인덱스는 SELECT를 빠르게 하지만, INSERT / UPDATE / DELETE는 인덱스 갱신 비용으로 느려진다**. 적절한 선정이 필요하다.
+
+---
+
+## 2) 개념
+
+### 인덱스란 무엇인가
+
+인덱스란 테이블 내 데이터를 빠르게 검색하기 위한 보조 데이터 구조이다. 책의 색인처럼 목적 데이터의 위치를 빠르게 특정한다. 인덱스가 없으면 데이터베이스는 전체 행을 처음부터 순서대로 순회하는 **풀 테이블 스캔(Seq Scan)**을 수행해야 한다.
+
+```sql
+-- 인덱스 생성
+CREATE INDEX idx_employees_department ON employees(department_id);
+
+-- 유니크 제약 조건 인덱스 생성
+CREATE UNIQUE INDEX idx_employees_email ON employees(email);
+```
+
+`CREATE INDEX` 문으로 테이블의 열에 인덱스를 생성한다. `CREATE UNIQUE INDEX`로 만들면 유니크 제약 조건이 붙은 인덱스가 되어 중복 값이 금지된다.
+
+### B-tree와 해시 인덱스
+
+**B-tree**는 가장 일반적인 인덱스 구조로, 등가 검색(`=`)과 범위 검색(`<`, `>`, `BETWEEN`) 모두 효율적으로 처리할 수 있다. PostgreSQL에서 인덱스를 생성하면 기본적으로 B-tree가 사용된다.
+
+**해시 인덱스**는 등가 검색에만 특화된 인덱스이다. 범위 검색이나 정렬에는 사용할 수 없지만, 등가 검색에서는 B-tree와 동등하거나 더 빠른 속도를 낼 수 있다.
+
+### 복합 인덱스와 Leftmost Prefix 원칙
+
+복합 인덱스는 여러 열을 조합한 인덱스이다. 왼쪽 열 우선(Leftmost Prefix) 원칙에 따라 인덱스 사용 여부가 결정된다.
+
+```sql
+-- 복합 인덱스 생성
+CREATE INDEX idx_emp_dept_salary ON employees(department_id, salary);
+```
+
+| 쿼리 조건 | 인덱스 사용 |
+|---|---|
+| `WHERE department_id = 1` | 사용 가능 (왼쪽 열) |
+| `WHERE department_id = 1 AND salary > 500000` | 사용 가능 (왼쪽 열 + 2번째 열) |
+| `WHERE salary > 500000` | **사용 불가** (왼쪽 열 없음) |
+
+`(department_id, salary)` 인덱스는 `department_id` 단독 검색에도 사용할 수 있지만, `salary` 단독 검색에는 사용할 수 없다.
+
+### 커버링 인덱스와 Index Only Scan
+
+커버링 인덱스는 쿼리가 필요로 하는 모든 열을 포함하는 인덱스이다. 테이블 본체에 접근하지 않고 **Index Only Scan**으로 완료되어 I/O가 대폭 줄어든다.
+
+```sql
+-- department_id로 필터링하고 salary만 조회하는 쿼리
+SELECT salary FROM employees WHERE department_id = 1;
+
+-- 이 쿼리에 대한 커버링 인덱스
+CREATE INDEX idx_covering ON employees(department_id, salary);
+-- → Index Only Scan으로 완료. 테이블 접근 불필요
+```
+
+### 부분 인덱스
+
+부분 인덱스는 `WHERE` 조건을 붙여 생성하는 인덱스로, 특정 조건에 일치하는 행만 인덱스화한다. 크기가 작고 갱신 비용도 낮다.
+
+```sql
+-- 활성 직원만 인덱스화
+CREATE INDEX idx_active_employees ON employees(department_id)
+WHERE is_active = true;
+```
+
+### EXPLAIN과 실행 계획
+
+`EXPLAIN`(또는 `EXPLAIN ANALYZE`)은 쿼리의 실행 계획을 표시하는 명령이다. `EXPLAIN`은 추정 비용만 표시하고, `EXPLAIN ANALYZE`는 실제로 실행하여 실측치를 반환한다.
+
+```sql
+-- 추정만
+EXPLAIN SELECT * FROM employees WHERE department_id = 1;
+
+-- 실측치 포함 (실제로 실행됨)
+EXPLAIN ANALYZE SELECT * FROM employees WHERE department_id = 1;
+```
+
+주요 스캔 방식은 다음과 같다.
+
+| 스캔 방식 | 설명 |
+|---|---|
+| Seq Scan | 테이블 전체 행을 순차적으로 읽기. 소량 데이터에서는 인덱스보다 빠를 수 있음 |
+| Index Scan | 인덱스로 조건 일치 행을 특정하고, 테이블에서 행을 가져옴 |
+| Index Only Scan | 인덱스만으로 필요한 데이터를 가져옴. 가장 빠름 |
+
+### SARGable과 함수 인덱스
+
+`WHERE` 절에서 열에 함수를 적용하면 인덱스가 사용되지 않는다(SARGable하지 않음). 함수 인덱스로 대응할 수 있다.
+
+```sql
+-- NG: 인덱스가 작동하지 않음
+SELECT * FROM employees WHERE UPPER(name) = 'TANAKA';
+
+-- OK: 함수 인덱스 생성
+CREATE INDEX idx_employees_upper_name ON employees(UPPER(name));
+```
+
+### 통계 정보와 ANALYZE
+
+통계 정보는 옵티마이저가 실행 계획을 결정하기 위해 사용하는 데이터이다. `ANALYZE` 명령으로 통계를 갱신한다. 통계가 오래되면 옵티마이저가 부적절한 실행 계획을 선택할 수 있다.
+
+```sql
+-- 테이블의 통계 정보 갱신
+ANALYZE employees;
+```
+
+---
+
+## 3) 예제
+
+### 예제 1: 인덱스 효과를 EXPLAIN으로 확인하기
+
+인덱스 유무에 따라 실행 계획이 어떻게 바뀌는지 확인한다.
+
+```sql
+-- 인덱스 없는 상태
+EXPLAIN ANALYZE SELECT * FROM employees WHERE department_id = 1;
+-- → Seq Scan on employees  (실행 시간: 예 0.5ms)
+
+-- 인덱스 생성
+CREATE INDEX idx_emp_dept ON employees(department_id);
+
+-- 인덱스 있는 상태
+EXPLAIN ANALYZE SELECT * FROM employees WHERE department_id = 1;
+-- → Index Scan using idx_emp_dept on employees  (실행 시간: 예 0.1ms)
+```
+
+소량 데이터에서는 풀 테이블 스캔도 빠르지만, 수만 행 이상의 테이블에서는 인덱스 효과가 현저해진다. `EXPLAIN ANALYZE`로 실제 비용과 실행 시간을 비교하여 인덱스 효과를 정량적으로 평가할 수 있다.
+
+### 예제 2: 복합 인덱스와 Leftmost Prefix 동작 확인
+
+복합 인덱스가 사용되는 경우와 사용되지 않는 경우를 EXPLAIN으로 확인한다.
+
+```sql
+CREATE INDEX idx_emp_dept_salary ON employees(department_id, salary);
+
+-- 케이스 1: 왼쪽 열 사용 → 인덱스 사용됨
+EXPLAIN SELECT * FROM employees WHERE department_id = 1 AND salary > 600000;
+-- → Index Scan using idx_emp_dept_salary
+
+-- 케이스 2: 왼쪽 열만 사용 → 인덱스 사용됨
+EXPLAIN SELECT * FROM employees WHERE department_id = 2;
+-- → Index Scan using idx_emp_dept_salary
+
+-- 케이스 3: 2번째 열만 사용 → 인덱스 사용 안 됨
+EXPLAIN SELECT * FROM employees WHERE salary > 600000;
+-- → Seq Scan on employees (Leftmost Prefix 원칙에 의해 사용 불가)
+```
+
+이처럼 복합 인덱스의 열 순서는 검색 패턴에 맞춰 신중하게 설계해야 한다.
+
+---
+
+## 4) 자주 하는 실수 / 함정 (5가지)
+
+### 함정 1: 인덱스를 너무 많이 추가
+
+인덱스를 추가하면 SELECT는 빨라지지만, INSERT / UPDATE / DELETE는 인덱스 갱신 비용으로 느려진다. 쓰기가 빈번한 테이블에 인덱스를 과도하게 추가하면 전체 성능이 오히려 저하된다.
+
+### 함정 2: WHERE 절에서 함수를 적용하여 인덱스 무효화
+
+`WHERE YEAR(hire_date) = 2023`처럼 열에 함수를 적용하면 인덱스가 사용되지 않는다(SARGable하지 않음). `WHERE hire_date >= '2023-01-01' AND hire_date < '2024-01-01'`처럼 범위 조건으로 다시 작성하거나, 함수 인덱스를 생성한다.
+
+### 함정 3: 복합 인덱스의 열 순서 실수
+
+`(col1, col2)` 복합 인덱스는 `col2` 단독 쿼리에서는 사용할 수 없다. WHERE / JOIN / ORDER BY에서 자주 사용되는 패턴을 분석하고, 왼쪽 열부터 선택성이 높은 열을 배치해야 한다.
+
+### 함정 4: EXPLAIN을 보지 않고 인덱스를 맹신
+
+인덱스를 생성해도 옵티마이저가 그것을 사용한다고 보장할 수 없다. 테이블 행 수가 적거나 카디널리티가 낮은 경우, Seq Scan이 더 효율적이라고 판단될 수 있다. 반드시 `EXPLAIN`으로 확인한다.
+
+### 함정 5: 통계 정보 갱신을 잊음
+
+대량 데이터를 INSERT / DELETE한 후 `ANALYZE`를 실행하지 않으면 통계 정보가 실태와 괴리되어 옵티마이저가 부적절한 실행 계획을 선택한다. PostgreSQL의 autovacuum이 자동으로 갱신하지만, 대량 갱신 후에는 수동으로 `ANALYZE`를 실행하는 것이 안전하다.
+
+---
+
+## 5) 체크리스트
+
+- [ ] 인덱스의 역할과 풀 테이블 스캔과의 차이를 설명할 수 있다
+- [ ] B-tree와 해시 인덱스의 사용 구분을 이해하고 있다
+- [ ] 복합 인덱스의 Leftmost Prefix 원칙을 구체적인 예로 보여줄 수 있다
+- [ ] 커버링 인덱스와 Index Only Scan의 이점을 설명할 수 있다
+- [ ] EXPLAIN / EXPLAIN ANALYZE로 실행 계획을 읽을 수 있다
+- [ ] SARGable하지 않은 쿼리의 문제와 대처법을 알고 있다
+- [ ] 인덱스 추가가 쓰기 성능에 미치는 영향을 이해하고 있다
+- [ ] 부분 인덱스의 용도를 설명할 수 있다
+
+---
+
+## 6) 다음으로
+
+인덱스와 실행 계획의 이해로 SQL 성능 튜닝의 기초를 익혔다. 이것으로 **SQL Gold 모듈(SQL-GOLD-01)**의 전 5개 레슨이 완료되었다. 윈도우 함수, DDL, DML, 트랜잭션, 그리고 인덱스와 실행 계획 — 이 지식들을 조합하면 실무 수준의 SQL을 작성하는 역량이 갖춰진다.

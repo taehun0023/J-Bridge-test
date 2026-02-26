@@ -1,0 +1,283 @@
+---
+lesson_id: SQL-GOLD-01-03
+title: "DML — INSERT / UPDATE / DELETE / MERGE"
+module: SQL-GOLD-01
+level: gold
+est_minutes: 35
+tags: [DML, INSERT, UPDATE, DELETE, MERGE, UPSERT, RETURNING]
+---
+
+## 1) 要点まとめ（5行）
+
+1. **DML（Data Manipulation Language）**はテーブル内のデータを操作する SQL 文の総称であり、INSERT / UPDATE / DELETE / SELECT が含まれる。DDL と異なりトランザクション内で実行され、COMMIT / ROLLBACK で確定・取消が可能である。
+2. **INSERT INTO ... VALUES** は 1 行または複数行のデータを明示的に挿入する。複数行をまとめて記述することで 1 行ずつの INSERT より高速になる。
+3. **UPDATE SET WHERE** は条件に一致する行の列値を変更する。WHERE 句を省略すると**全行が更新される**ため、本番環境では極めて危険である。
+4. **DELETE FROM WHERE** は条件に一致する行を削除する。DELETE は行ごとにログを記録するためロールバック可能だが、TRUNCATE より低速である。
+5. **MERGE 文**（SQL:2003 標準）は対象テーブルとソースを結合し、一致行は UPDATE、不一致行は INSERT を行う UPSERT 操作を単一文で実現する。PostgreSQL では INSERT ... ON CONFLICT DO UPDATE が同等機能を提供する。
+
+---
+
+## 2) 概念
+
+### DML とは何か
+
+DML は SQL の中でテーブル内の**データそのものを操作する文**の総称である。DDL がテーブルの構造（器）を定義するのに対し、DML はその器の中身を操作する。
+
+重要な特徴として、DML 文は**トランザクション内で実行される**。つまり、`BEGIN TRANSACTION` で開始し、結果を確認してから `COMMIT`（確定）または `ROLLBACK`（取消）が可能である。これは DDL の多くが自動コミットされるのとは対照的である。
+
+### INSERT — データの挿入
+
+#### 基本的な INSERT
+
+```sql
+-- 列リストを明示して 1 行挿入
+INSERT INTO employees (id, name, department_id, salary, hire_date)
+VALUES (11, 'Morimoto', 1, 620000, '2025-06-01');
+```
+
+列リストを省略するとテーブル定義の全列にデータを指定する必要がある。**常に列リストを明示すべきである**。列が追加されたとき、列リストなしの INSERT は静かに壊れる。
+
+#### 複数行 INSERT
+
+```sql
+INSERT INTO employees (id, name, department_id, salary, hire_date)
+VALUES
+    (11, 'Morimoto', 1, 620000, '2025-06-01'),
+    (12, 'Fujita',   2, 580000, '2025-06-01'),
+    (13, 'Ogawa',    3, 510000, '2025-06-15');
+```
+
+1 行ずつ INSERT するよりネットワーク往復が減り、大幅に高速化する。大量データのバッチ INSERT やバルクロードも同じ理由で推奨される。
+
+#### INSERT INTO ... SELECT
+
+```sql
+-- 他のテーブルの結果セットをそのまま挿入
+INSERT INTO employee_archive (id, name, department_id, salary, hire_date)
+SELECT id, name, department_id, salary, hire_date
+FROM employees
+WHERE hire_date < '2020-01-01';
+```
+
+列数とデータ型が一致する必要がある。テーブル間のデータ移行やバックアップに頻繁に使用する。
+
+### UPDATE — データの更新
+
+#### 基本的な UPDATE
+
+```sql
+UPDATE employees
+SET salary = 700000, job_title = 'Senior Engineer'
+WHERE id = 2;
+```
+
+**WHERE 句を省略すると全行が更新される。** これは本番環境で最も危険なミスの 1 つである。
+
+#### サブクエリを使った UPDATE
+
+他テーブルの値を参照して更新する「相関サブクエリ UPDATE」は実務で頻出する。
+
+```sql
+-- 各部門の平均給与に基づいて給与を調整
+UPDATE employees e
+SET salary = salary * 1.1
+WHERE salary < (
+    SELECT AVG(salary)
+    FROM employees e2
+    WHERE e2.department_id = e.department_id
+);
+```
+
+### DELETE — データの削除
+
+```sql
+-- 条件に一致する行を削除
+DELETE FROM employees
+WHERE id = 13;
+```
+
+WHERE 句を省略すると**全行が削除される**。DELETE は行ごとにトランザクションログを記録するためロールバック可能だが、大量削除は低速である。
+
+#### TRUNCATE TABLE との違い
+
+```sql
+-- 全行を高速に削除（多くの RDBMS でロールバック不可）
+TRUNCATE TABLE temp_data;
+```
+
+| 特徴 | DELETE | TRUNCATE |
+|---|---|---|
+| WHERE 句 | 使用可能 | 不可（全行のみ） |
+| ロールバック | 可能 | 多くの RDBMS で不可 |
+| トリガー | 発火する | 発火しない |
+| 速度 | 遅い（行ログ） | 高速（最小ログ） |
+
+### MERGE — UPSERT 操作
+
+MERGE 文（SQL:2003 標準）は対象テーブルとソースを結合し、一致する行は UPDATE、一致しない行は INSERT を行う。
+
+```sql
+-- 標準 SQL の MERGE
+MERGE INTO products AS target
+USING new_products AS source
+ON target.id = source.id
+WHEN MATCHED THEN
+    UPDATE SET
+        target.name = source.name,
+        target.price = source.price
+WHEN NOT MATCHED THEN
+    INSERT (id, name, price)
+    VALUES (source.id, source.name, source.price);
+```
+
+#### PostgreSQL の UPSERT
+
+PostgreSQL は MERGE の代わりに `INSERT ... ON CONFLICT DO UPDATE` を提供する。
+
+```sql
+INSERT INTO products (id, name, price)
+VALUES (1, 'Widget', 1500)
+ON CONFLICT (id) DO UPDATE
+SET name = EXCLUDED.name,
+    price = EXCLUDED.price;
+```
+
+`EXCLUDED` は挿入しようとした行を参照する特殊なテーブル名である。MySQL では `INSERT ... ON DUPLICATE KEY UPDATE` が同等の機能を果たす。
+
+### RETURNING 句
+
+PostgreSQL や Oracle では、INSERT / UPDATE / DELETE の結果行を即座に返すことができる。
+
+```sql
+-- 挿入した行の自動生成 ID を取得
+INSERT INTO employees (name, department_id, salary, hire_date)
+VALUES ('Morimoto', 1, 620000, '2025-06-01')
+RETURNING id, name;
+
+-- 更新前の給与と更新後の給与を返す
+UPDATE employees
+SET salary = salary * 1.1
+WHERE department_id = 1
+RETURNING id, name, salary;
+```
+
+アプリケーション側で「INSERT してから SELECT で取得」という 2 回の往復を 1 回に減らせるため、パフォーマンスとコードの簡潔さの両面で有益である。
+
+---
+
+## 3) 例
+
+### 例1: 新入社員の一括登録と部署移動
+
+新年度に入社した 3 名を一括登録し、既存社員 1 名を異動させる。
+
+```sql
+-- 複数行 INSERT で一括登録
+INSERT INTO employees (id, name, department_id, salary, hire_date, job_title)
+VALUES
+    (11, 'Morimoto', 1, 620000, '2025-04-01', 'Engineer'),
+    (12, 'Fujita',   2, 580000, '2025-04-01', 'Sales Rep'),
+    (13, 'Ogawa',    3, 510000, '2025-04-01', 'HR Staff');
+
+-- 既存社員の部署異動（Engineering → Sales）
+UPDATE employees
+SET department_id = 2, job_title = 'Sales Engineer'
+WHERE id = 3 AND department_id = 1;
+```
+
+UPDATE の WHERE 句に `department_id = 1` を加えることで、既に異動済みの場合の二重更新を防いでいる。
+
+### 例2: 商品テーブルの UPSERT と在庫管理
+
+外部データソースから商品情報を同期する。既存の商品は価格を更新し、新商品は挿入する。
+
+```sql
+-- PostgreSQL: INSERT ... ON CONFLICT による UPSERT
+INSERT INTO products (id, name, price, stock_quantity)
+VALUES
+    (101, 'Keyboard', 8500, 50),
+    (102, 'Mouse', 3200, 100),
+    (201, 'Monitor', 45000, 20)
+ON CONFLICT (id) DO UPDATE
+SET name = EXCLUDED.name,
+    price = EXCLUDED.price,
+    stock_quantity = products.stock_quantity + EXCLUDED.stock_quantity;
+
+-- 在庫切れ商品を削除し、削除された商品名を確認
+DELETE FROM products
+WHERE stock_quantity = 0
+RETURNING id, name;
+```
+
+ON CONFLICT の SET 句で `products.stock_quantity + EXCLUDED.stock_quantity` としている点に注目。既存在庫に入荷分を加算するビジネスロジックを SQL 1 文で表現している。
+
+---
+
+## 4) よくあるミス／落とし穴（5つ）
+
+### 落とし穴 1: UPDATE / DELETE で WHERE 句を忘れる
+
+WHERE 句なしの UPDATE は全行を更新し、DELETE は全行を削除する。本番で最も深刻なデータ事故の原因である。**先に SELECT で対象行を確認してから UPDATE / DELETE に書き換える**のがベストプラクティスである。
+
+```sql
+-- まず確認
+SELECT * FROM employees WHERE department_id = 3;
+
+-- 対象を確認してから削除
+DELETE FROM employees WHERE department_id = 3;
+```
+
+### 落とし穴 2: INSERT 時に列リストを省略する
+
+列リストを省略すると、テーブルの全列に対して正しい順序で値を指定しなければならない。後からテーブルに列が追加されると、既存の INSERT 文が意図しない列にデータを挿入するか、エラーになる。
+
+```sql
+-- NG: 列リスト省略
+INSERT INTO employees VALUES (11, 'Morimoto', 1, 620000, '2025-06-01', ...);
+
+-- OK: 列リスト明示
+INSERT INTO employees (id, name, department_id, salary, hire_date)
+VALUES (11, 'Morimoto', 1, 620000, '2025-06-01');
+```
+
+### 落とし穴 3: 大量 INSERT を 1 行ずつ実行する
+
+1 行ずつ INSERT すると、各 INSERT でネットワーク往復、パース、トランザクションログの記録が発生する。**複数行 INSERT やバルクロードを使う**ことでパフォーマンスが大幅に改善する。
+
+### 落とし穴 4: TRUNCATE を DELETE と同じ感覚で使う
+
+TRUNCATE は高速だが、多くの RDBMS でロールバック不可であり、トリガーも発火しない。「あとで ROLLBACK すればいい」と思って TRUNCATE を使うと、データが完全に失われる。
+
+### 落とし穴 5: トランザクションなしで UPDATE / DELETE を実行する
+
+UPDATE / DELETE は実行前に `BEGIN TRANSACTION` で明示的にトランザクションを開始し、結果を確認してから `COMMIT` するのが安全なパターンである。自動コミットモードで誤った UPDATE を実行すると即座に確定してしまう。
+
+```sql
+BEGIN TRANSACTION;
+UPDATE employees SET salary = salary * 1.1 WHERE department_id = 1;
+-- 結果を確認
+SELECT * FROM employees WHERE department_id = 1;
+-- 問題なければ確定、問題あれば取消
+COMMIT;  -- または ROLLBACK;
+```
+
+---
+
+## 5) チェックリスト
+
+- [ ] INSERT で列リストを常に明示できる
+- [ ] 複数行 INSERT の構文を書ける
+- [ ] INSERT INTO ... SELECT でテーブル間のデータコピーができる
+- [ ] UPDATE で WHERE 句の重要性を説明できる
+- [ ] サブクエリを使った UPDATE（相関サブクエリ UPDATE）を書ける
+- [ ] DELETE と TRUNCATE の違いを 4 つ以上挙げられる
+- [ ] MERGE 文または INSERT ... ON CONFLICT（UPSERT）の構文を書ける
+- [ ] RETURNING 句の用途とメリットを説明できる
+- [ ] UPDATE / DELETE の前に SELECT で対象行を確認する習慣がある
+- [ ] トランザクション内で DML を実行する安全なパターンを説明できる
+
+---
+
+## 6) 次へ
+
+データの「入れる・変える・消す」を学んだ。次の **SQL-GOLD-01-04: トランザクション — ACID / COMMIT / ROLLBACK / 分離レベル** では、これらの DML 操作を安全に管理するトランザクションの仕組みを深く理解する。

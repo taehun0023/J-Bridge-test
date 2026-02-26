@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "lesson_id": "SQL-BRONZE-01-01",
+  "questions": [
+    {
+      "id": "SQL-BRONZE-01-01-Q01",
+      "type": "single_choice",
+      "difficulty": 1,
+      "prompt": "SQL でテーブルからデータを取得するために最低限必要な 2 つの句はどれか。",
+      "choices": [
+        "SELECT と FROM",
+        "SELECT と WHERE",
+        "FROM と WHERE",
+        "INSERT と SELECT"
+      ],
+      "answer": 0,
+      "explanation": "SELECT 文は最低限 SELECT 句と FROM 句の 2 つで構成される。WHERE は任意の絞り込み条件であり必須ではない。(Evidence: E1)"
+    },
+    {
+      "id": "SQL-BRONZE-01-01-Q02",
+      "type": "true_false",
+      "difficulty": 1,
+      "prompt": "SELECT * はテーブルの全列を取得する省略記法である。",
+      "answer": true,
+      "explanation": "SELECT * は全列取得の省略記法である。ただし本番コードでは列名を明示するのが推奨される。(Evidence: E2)"
+    },
+    {
+      "id": "SQL-BRONZE-01-01-Q03",
+      "type": "single_choice",
+      "difficulty": 1,
+      "prompt": "employees テーブルから name 列と department 列だけを取得する正しい SQL はどれか。",
+      "choices": [
+        "SELECT name department FROM employees;",
+        "SELECT name, department FROM employees;",
+        "SELECT (name, department) FROM employees;",
+        "FROM employees SELECT name, department;"
+      ],
+      "answer": 1,
+      "explanation": "取得する列はカンマ区切りで SELECT 句に並べる。選択肢 A はカンマがないため name の別名として department が解釈される。(Evidence: E3, E5)"
+    },
+    {
+      "id": "SQL-BRONZE-01-01-Q04",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "AS キーワードを使った列別名について正しい説明はどれか。",
+      "choices": [
+        "元テーブルの列名が永久に変更される",
+        "結果セットの列ヘッダーが変わるが、元テーブルには影響しない",
+        "AS は必ず記述しなければならない",
+        "列別名にはアルファベットのみ使用できる"
+      ],
+      "answer": 1,
+      "explanation": "AS による列別名は結果セットの列ヘッダーを変更するだけで、元テーブルのスキーマには影響しない。(Evidence: E4)"
+    },
+    {
+      "id": "SQL-BRONZE-01-01-Q05",
+      "type": "code_output",
+      "difficulty": 2,
+      "prompt": "以下の SQL を実行したとき、結果セットの列ヘッダーはどうなるか。\n\nSELECT name employee_name FROM employees;",
+      "choices": [
+        "name",
+        "employee_name",
+        "name employee_name",
+        "エラーになる"
+      ],
+      "answer": 1,
+      "explanation": "AS キーワードは省略可能であり、SELECT name employee_name は SELECT name AS employee_name と同じ意味になる。そのため列ヘッダーは employee_name となる。(Evidence: E5)"
+    },
+    {
+      "id": "SQL-BRONZE-01-01-Q06",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "DISTINCT キーワードの正しい配置位置はどこか。",
+      "choices": [
+        "FROM の直後",
+        "SELECT の直後",
+        "WHERE の直後",
+        "文の末尾"
+      ],
+      "answer": 1,
+      "explanation": "DISTINCT キーワードは SELECT の直後に置き、結果セットから重複行を除去する。(Evidence: E6)"
+    },
+    {
+      "id": "SQL-BRONZE-01-01-Q07",
+      "type": "true_false",
+      "difficulty": 2,
+      "prompt": "SELECT DISTINCT department, position FROM employees; は department と position の組み合わせで重複を判定する。",
+      "answer": true,
+      "explanation": "DISTINCT は SELECT 句に指定された全列の組み合わせに対して重複判定を行う。department 単体ではなく (department, position) の組が同じ行を除去する。(Evidence: E7)"
+    },
+    {
+      "id": "SQL-BRONZE-01-01-Q08",
+      "type": "short_answer",
+      "difficulty": 1,
+      "prompt": "SQL 文の末尾に付ける、文を区切るための記号は何か。記号 1 文字で答えよ。",
+      "answer": ";",
+      "explanation": "SQL 文の末尾にはセミコロン（;）を付けるのが標準であり、複数の文を区切る役割を持つ。(Evidence: E12)"
+    },
+    {
+      "id": "SQL-BRONZE-01-01-Q09",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "列別名にスペースを含めたい場合、ANSI SQL 標準ではどのように記述するか。",
+      "choices": [
+        "SELECT name AS 'Full Name' FROM employees;",
+        "SELECT name AS [Full Name] FROM employees;",
+        "SELECT name AS \"Full Name\" FROM employees;",
+        "SELECT name AS (Full Name) FROM employees;"
+      ],
+      "answer": 2,
+      "explanation": "ANSI SQL 標準では、スペースや予約語を含む列別名は二重引用符（\"\"）で囲む必要がある。シングルクォートや角括弧は特定の RDBMS 固有の構文である。(Evidence: E10)"
+    },
+    {
+      "id": "SQL-BRONZE-01-01-Q10",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "SELECT DISTINCT を大量データに対して使用する際の注意点として正しいものはどれか。",
+      "choices": [
+        "結果が常にランダムな順序で返される",
+        "取得できる行数に上限がある",
+        "内部的にソートまたはハッシュ処理が発生しパフォーマンスコストがかかる",
+        "インデックスが使用できなくなる"
+      ],
+      "answer": 2,
+      "explanation": "SELECT DISTINCT は内部的にソートまたはハッシュ処理を行うため、大量データに対してはパフォーマンスコストが発生する。必要な場合のみ使用すべきである。(Evidence: E11)"
+    }
+  ]
+}

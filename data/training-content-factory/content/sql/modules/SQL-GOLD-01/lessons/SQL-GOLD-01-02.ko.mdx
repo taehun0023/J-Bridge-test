@@ -1,0 +1,263 @@
+---
+lesson_id: SQL-GOLD-01-02
+title: "DDL — CREATE TABLE / ALTER / 제약 조건"
+module: SQL-GOLD-01
+level: gold
+est_minutes: 35
+tags: [DDL, CREATE-TABLE, ALTER-TABLE, PRIMARY-KEY, FOREIGN-KEY, UNIQUE, CHECK, NOT-NULL, DEFAULT, DROP-TABLE]
+---
+
+## 1) 핵심 요약 (5줄)
+
+1. **DDL(Data Definition Language)**은 데이터베이스의 구조를 정의/변경/삭제하는 SQL 문이며, 대부분의 RDBMS에서 자동 커밋된다.
+2. **CREATE TABLE**로 테이블의 골격을 만들고, 각 열에 데이터 타입과 제약 조건을 지정한다. 설계 품질이 시스템 전체에 영향을 미친다.
+3. **제약 조건(Constraints)**은 PRIMARY KEY / FOREIGN KEY / UNIQUE / CHECK / NOT NULL / DEFAULT의 6종으로, 데이터 무결성을 데이터베이스 레벨에서 보장한다.
+4. **ALTER TABLE**은 기존 테이블의 열 추가/삭제/타입 변경/제약 조건 추가와 삭제를 수행한다. 운영 중인 스키마 변경은 신중히.
+5. **DROP TABLE**과 **TRUNCATE TABLE**은 데이터 삭제 수단이지만, 취소 불가능한 경우가 많다. IF EXISTS / CASCADE를 이해하고 안전하게 사용한다.
+
+---
+
+## 2) 개념
+
+### DDL이란 무엇인가
+
+DDL은 SQL 중에서 데이터베이스 객체(테이블, 뷰, 인덱스 등)의 **구조를 정의하는 문**의 총칭이다. DML(INSERT / UPDATE / DELETE / SELECT)이 데이터의 조작이라면, DDL은 그릇 자체를 만들고 바꾸는 것이다.
+
+중요한 특징으로, 대부분의 RDBMS에서 DDL 문은 **암묵적으로 커밋된다**(자동 커밋). 즉, DDL을 실행한 시점에서 변경이 확정되며, `ROLLBACK`으로 되돌릴 수 없는 경우가 많다. 이는 DML과 크게 다른 점이다.
+
+### CREATE TABLE — 테이블 생성
+
+CREATE TABLE 문은 테이블의 이름, 열 이름, 데이터 타입, 제약 조건을 한꺼번에 정의한다.
+
+```sql
+CREATE TABLE employees (
+    id          INTEGER       PRIMARY KEY,
+    name        VARCHAR(100)  NOT NULL,
+    department_id INTEGER     REFERENCES departments(id) ON DELETE SET NULL,
+    salary      DECIMAL(10,2) NOT NULL CHECK (salary >= 0),
+    hire_date   DATE          NOT NULL DEFAULT CURRENT_DATE,
+    email       VARCHAR(200)  UNIQUE,
+    manager_id  INTEGER       REFERENCES employees(id),
+    job_title   VARCHAR(100)
+);
+```
+
+### 표준 SQL 데이터 타입
+
+| 카테고리 | 데이터 타입 | 설명 |
+|---|---|---|
+| 정수 | INTEGER, SMALLINT, BIGINT | 정수값. 크기 순서대로 커진다 |
+| 소수 | DECIMAL(p,s), NUMERIC(p,s) | 고정 정밀도 소수. p=전체 자릿수, s=소수 자릿수 |
+| 부동소수점 | REAL, DOUBLE PRECISION | 근사값의 부동소수점수 |
+| 문자열 | CHAR(n), VARCHAR(n) | 고정 길이 / 가변 길이 문자열 |
+| 날짜시간 | DATE, TIME, TIMESTAMP | 날짜, 시각, 일시 |
+| 논리 | BOOLEAN | TRUE / FALSE / NULL |
+
+금액에는 `DECIMAL`을 사용하고, `REAL` / `DOUBLE PRECISION`은 피한다. 부동소수점의 반올림 오차가 금융 계산에서 문제가 되기 때문이다.
+
+### 6가지 제약 조건
+
+#### PRIMARY KEY(기본키)
+
+테이블의 각 행을 고유하게 식별하는 열(또는 열의 조합). 유일성과 NOT NULL을 암묵적으로 보장한다. 테이블당 1개만 정의 가능.
+
+```sql
+-- 단일 열 기본키
+CREATE TABLE products (
+    id INTEGER PRIMARY KEY,
+    name VARCHAR(100)
+);
+
+-- 복합 기본키
+CREATE TABLE order_items (
+    order_id INTEGER,
+    product_id INTEGER,
+    quantity INTEGER NOT NULL,
+    PRIMARY KEY (order_id, product_id)
+);
+```
+
+#### FOREIGN KEY(외래키)
+
+다른 테이블의 기본키(또는 UNIQUE 열)를 참조하여 **참조 무결성**을 보장한다. 존재하지 않는 값의 INSERT나 참조되고 있는 값의 DELETE를 방지한다.
+
+```sql
+CREATE TABLE employees (
+    id INTEGER PRIMARY KEY,
+    department_id INTEGER,
+    FOREIGN KEY (department_id) REFERENCES departments(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+);
+```
+
+ON DELETE / ON UPDATE 액션:
+
+| 액션 | 동작 |
+|---|---|
+| CASCADE | 부모의 변경을 자식에게 전파 |
+| SET NULL | 자식의 외래키를 NULL로 설정 |
+| SET DEFAULT | 자식의 외래키를 DEFAULT 값으로 설정 |
+| RESTRICT | 자식이 존재하면 부모의 변경을 거부 (즉시) |
+| NO ACTION | RESTRICT와 유사하지만, 체크는 문 끝에서 (기본값) |
+
+#### UNIQUE
+
+열의 값이 중복되지 않음을 보장한다. PRIMARY KEY와 달리 NULL을 허용하며, 테이블에 여러 개 정의 가능.
+
+#### CHECK
+
+열의 값이 지정한 조건을 만족하는지 보장한다. 비즈니스 규칙을 데이터베이스 레벨에서 강제할 수 있다.
+
+```sql
+salary DECIMAL(10,2) CHECK (salary >= 0),
+status VARCHAR(20) CHECK (status IN ('active', 'inactive', 'suspended'))
+```
+
+#### NOT NULL
+
+NULL 값의 삽입을 금지한다. 필수 항목에 반드시 지정해야 한다.
+
+#### DEFAULT
+
+값이 생략되었을 때 자동으로 설정되는 값. `DEFAULT CURRENT_TIMESTAMP`로 생성 일시의 자동 기록 등에 사용한다.
+
+### ALTER TABLE — 테이블 변경
+
+```sql
+-- 열 추가
+ALTER TABLE employees ADD COLUMN phone VARCHAR(20);
+
+-- 열 삭제
+ALTER TABLE employees DROP COLUMN phone;
+
+-- 제약 조건 추가
+ALTER TABLE employees ADD CONSTRAINT chk_salary CHECK (salary >= 0);
+
+-- 제약 조건 삭제
+ALTER TABLE employees DROP CONSTRAINT chk_salary;
+```
+
+운영 환경에서의 ALTER TABLE은 특히 신중하게 수행해야 한다. 열 추가는 비교적 안전하지만, 열 삭제나 타입 변경은 데이터 손실이나 애플리케이션 오류를 초래할 수 있다.
+
+### DROP TABLE과 TRUNCATE TABLE
+
+```sql
+-- 테이블 삭제 (존재하지 않아도 에러 안 남)
+DROP TABLE IF EXISTS temp_data;
+
+-- 의존 객체도 함께 삭제
+DROP TABLE IF EXISTS departments CASCADE;
+
+-- 데이터만 삭제 (구조는 유지)
+TRUNCATE TABLE temp_data;
+```
+
+`TRUNCATE`는 `DELETE FROM table`과 비슷하지만, 로그를 최소화하여 고속으로 전체 행을 삭제한다. 다만, 대부분의 RDBMS에서 롤백 불가능하며, 트리거도 발동하지 않는다.
+
+---
+
+## 3) 예제
+
+### 예제 1: EC 사이트의 수주 테이블 설계
+
+EC 사이트의 수주 관리에 필요한 테이블을 제약 조건과 함께 설계한다.
+
+```sql
+CREATE TABLE customers (
+    id          INTEGER       PRIMARY KEY,
+    name        VARCHAR(100)  NOT NULL,
+    email       VARCHAR(200)  NOT NULL UNIQUE,
+    created_at  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE orders (
+    id          INTEGER       PRIMARY KEY,
+    customer_id INTEGER       NOT NULL REFERENCES customers(id) ON DELETE RESTRICT,
+    order_date  DATE          NOT NULL DEFAULT CURRENT_DATE,
+    status      VARCHAR(20)   NOT NULL DEFAULT 'pending'
+                              CHECK (status IN ('pending', 'confirmed', 'shipped', 'delivered', 'cancelled')),
+    total_amount DECIMAL(12,2) NOT NULL CHECK (total_amount >= 0)
+);
+
+CREATE TABLE order_items (
+    order_id    INTEGER       NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    product_id  INTEGER       NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
+    quantity    INTEGER       NOT NULL CHECK (quantity > 0),
+    unit_price  DECIMAL(10,2) NOT NULL CHECK (unit_price >= 0),
+    PRIMARY KEY (order_id, product_id)
+);
+```
+
+포인트:
+- `orders.customer_id`는 `ON DELETE RESTRICT`로 고객의 실수 삭제를 방지
+- `order_items`는 `ON DELETE CASCADE`로 주문 삭제 시 명세도 자동 삭제
+- `status`는 CHECK 제약으로 유효한 값만 허용
+- `order_items`는 복합 기본키
+
+### 예제 2: 기존 테이블에 열 추가와 제약 조건 변경
+
+운영 중인 시스템에 전화번호 열과 감사 열을 추가한다.
+
+```sql
+-- 전화번호 열 추가 (NULL 허용으로 안전하게 추가)
+ALTER TABLE customers ADD COLUMN phone VARCHAR(20);
+
+-- 감사 열 추가
+ALTER TABLE customers ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+-- 나중에 UNIQUE 제약 추가
+ALTER TABLE customers ADD CONSTRAINT uq_phone UNIQUE (phone);
+
+-- 불필요해진 제약 삭제
+ALTER TABLE orders DROP CONSTRAINT chk_status;
+
+-- 새로운 CHECK 제약으로 상태값 확장
+ALTER TABLE orders ADD CONSTRAINT chk_status
+    CHECK (status IN ('pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'returned'));
+```
+
+기존 테이블에 열을 추가할 때는 `NULL` 허용으로 시작하고, 데이터 마이그레이션 후에 `NOT NULL`을 추가하는 것이 안전한 패턴이다.
+
+---
+
+## 4) 자주 하는 실수 / 함정 (5가지)
+
+### 함정 1: FOREIGN KEY의 ON DELETE를 고려하지 않음
+
+기본값인 `NO ACTION`에서는 자식 레코드가 존재하는 부모 레코드를 삭제할 수 없다. 운영 시 "삭제할 수 없다"는 문제가 발생한다. 설계 단계에서 CASCADE / SET NULL / RESTRICT를 적절히 선택해야 한다.
+
+### 함정 2: 금액에 FLOAT / DOUBLE을 사용
+
+부동소수점 타입은 근사값이며, `0.1 + 0.2 ≠ 0.3`과 같은 반올림 오차가 발생한다. 금액에는 반드시 `DECIMAL(p,s)`을 사용한다.
+
+### 함정 3: NOT NULL 지정을 잊음
+
+필수여야 할 열에 NOT NULL을 지정하지 않으면, NULL이 섞여 들어가 애플리케이션 측에서 예상치 못한 버그가 발생한다. "이 열은 NULL이어도 되는가?"를 항상 의식한다.
+
+### 함정 4: ALTER TABLE의 운영 적용을 가볍게 여김
+
+대규모 테이블에 대한 ALTER TABLE(특히 열의 타입 변경이나 인덱스 추가)은 장시간의 락을 유발할 수 있다. 운영 환경에서는 계획적으로 실행하고, 유지보수 윈도우를 확보해야 한다.
+
+### 함정 5: DROP TABLE CASCADE의 영향 범위를 파악하지 않음
+
+CASCADE를 붙여 DROP하면, 해당 테이블을 참조하는 뷰와 외래키 제약이 모두 삭제된다. 영향 범위를 사전에 확인하지 않고 실행하면, 다른 테이블의 제약이 사라진다.
+
+---
+
+## 5) 체크리스트
+
+- [ ] CREATE TABLE에서 각 열에 데이터 타입과 적절한 제약 조건을 지정할 수 있다
+- [ ] PRIMARY KEY와 FOREIGN KEY의 역할과 차이를 설명할 수 있다
+- [ ] FOREIGN KEY의 ON DELETE 액션(CASCADE, SET NULL, RESTRICT, NO ACTION)을 구분하여 사용할 수 있다
+- [ ] CHECK 제약으로 비즈니스 규칙을 정의할 수 있다
+- [ ] ALTER TABLE로 열의 추가/삭제/제약 조건 변경을 할 수 있다
+- [ ] DROP TABLE IF EXISTS와 CASCADE의 의미를 이해하고 있다
+- [ ] 금액에는 DECIMAL을 사용하고 FLOAT/DOUBLE을 피하는 이유를 알고 있다
+- [ ] 열 레벨 제약과 테이블 레벨 제약의 구분 사용을 할 수 있다
+
+---
+
+## 6) 다음으로
+
+테이블이라는 "그릇"을 만드는 DDL을 배웠다. 다음 **SQL-GOLD-01-03: DML — INSERT / UPDATE / DELETE / MERGE**에서는 그 그릇에 데이터를 "넣고/바꾸고/지우는" 조작을 깊이 파고든다.

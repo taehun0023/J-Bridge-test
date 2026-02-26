@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "lesson_id": "SQL-BRONZE-01-04",
+  "questions": [
+    {
+      "id": "SQL-BRONZE-01-04-Q01",
+      "type": "true_false",
+      "difficulty": 1,
+      "prompt": "COUNT(*) は NULL を含む行もカウントする。",
+      "answer": true,
+      "explanation": "COUNT(*) はグループ内の全行数を返し、NULL を含む行もカウント対象となる。(Evidence: E1)"
+    },
+    {
+      "id": "SQL-BRONZE-01-04-Q02",
+      "type": "single_choice",
+      "difficulty": 1,
+      "prompt": "COUNT(*) と COUNT(列名) の違いについて正しい説明はどれか。",
+      "choices": [
+        "どちらも常に同じ結果を返す",
+        "COUNT(*) は全行数、COUNT(列名) は該当列が NULL でない行数を返す",
+        "COUNT(列名) は全行数、COUNT(*) は NULL でない行数を返す",
+        "COUNT(*) はエラーになるため使用できない"
+      ],
+      "answer": 1,
+      "explanation": "COUNT(*) は全行数を返し NULL を含む行もカウントされる。一方 COUNT(列名) は指定列が NULL でない行数を返すため、結果が異なる場合がある。(Evidence: E1, E2)"
+    },
+    {
+      "id": "SQL-BRONZE-01-04-Q03",
+      "type": "single_choice",
+      "difficulty": 1,
+      "prompt": "SUM 関数について正しい説明はどれか。",
+      "choices": [
+        "NULL 値も 0 として合計に含まれる",
+        "文字列型の列にも適用できる",
+        "NULL 値は無視され、数値型の列に対して合計値を返す",
+        "GROUP BY なしでは使用できない"
+      ],
+      "answer": 2,
+      "explanation": "SUM は指定列の合計値を返し、NULL 値は無視される。数値型以外に適用するとエラーになる。(Evidence: E3)"
+    },
+    {
+      "id": "SQL-BRONZE-01-04-Q04",
+      "type": "code_output",
+      "difficulty": 2,
+      "prompt": "以下のテーブル scores に対して SELECT AVG(score) FROM scores; を実行した。結果はどうなるか。\n\n| score |\n|-------|\n| 80    |\n| NULL  |\n| 60    |\n| NULL  |\n| 100   |",
+      "choices": [
+        "48（= 240 / 5）",
+        "80（= 240 / 3）",
+        "60",
+        "NULL"
+      ],
+      "answer": 1,
+      "explanation": "AVG は NULL 値を分母・分子の両方から除外する。NULL でない行は 80, 60, 100 の 3 行なので、平均は (80 + 60 + 100) / 3 = 80 となる。(Evidence: E4)"
+    },
+    {
+      "id": "SQL-BRONZE-01-04-Q05",
+      "type": "true_false",
+      "difficulty": 1,
+      "prompt": "MIN と MAX は数値型の列にしか使用できない。",
+      "answer": false,
+      "explanation": "MIN / MAX は数値だけでなく文字列や日付にも使える。文字列の場合は辞書順、日付の場合は時系列での最小値・最大値が返される。(Evidence: E5)"
+    },
+    {
+      "id": "SQL-BRONZE-01-04-Q06",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "GROUP BY を使った SELECT 文で、SELECT 句に記述できるものとして正しい組み合わせはどれか。",
+      "choices": [
+        "任意の列と集約関数",
+        "GROUP BY で指定した列と集約関数のみ",
+        "集約関数のみ（列は記述できない）",
+        "GROUP BY で指定していない列も自由に記述できる"
+      ],
+      "answer": 1,
+      "explanation": "GROUP BY を使う場合、SELECT 句には GROUP BY で指定した列か集約関数のみを記述できる。それ以外の列を含めるとエラーとなる。(Evidence: E7)"
+    },
+    {
+      "id": "SQL-BRONZE-01-04-Q07",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "WHERE 句と HAVING 句の違いについて正しい説明はどれか。",
+      "choices": [
+        "WHERE はグループに対するフィルタ、HAVING は個々の行に対するフィルタである",
+        "WHERE と HAVING は完全に同じ動作をする",
+        "WHERE は個々の行に対するフィルタ、HAVING はグループに対するフィルタである",
+        "HAVING は GROUP BY なしでも使用できるが WHERE は使用できない"
+      ],
+      "answer": 2,
+      "explanation": "WHERE は個々の行に対するフィルタであり、HAVING は GROUP BY の結果であるグループに対するフィルタである。HAVING では集約関数の結果に対して条件を指定できる。(Evidence: E8, E9)"
+    },
+    {
+      "id": "SQL-BRONZE-01-04-Q08",
+      "type": "code_output",
+      "difficulty": 3,
+      "prompt": "以下の SQL を実行したとき、結果に含まれるのはどのグループか。\n\nSELECT department_id, COUNT(*) AS cnt\nFROM employees\nWHERE salary >= 300000\nGROUP BY department_id\nHAVING COUNT(*) >= 3\nORDER BY cnt DESC;",
+      "choices": [
+        "全部門が表示される",
+        "salary が 300000 以上の社員が 3 人以上いる部門のみ",
+        "社員が 3 人以上いる全ての部門",
+        "salary が 300000 以上の社員がいる全ての部門"
+      ],
+      "answer": 1,
+      "explanation": "SQL の論理処理順序は FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY である。まず WHERE で salary >= 300000 の行に絞り込み、次に GROUP BY で部門ごとにグループ化し、HAVING で COUNT(*) >= 3 のグループのみを残す。(Evidence: E9, E10)"
+    },
+    {
+      "id": "SQL-BRONZE-01-04-Q09",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "COUNT(DISTINCT department_id) はどのような値を返すか。",
+      "choices": [
+        "department_id 列の全行数",
+        "department_id 列の NULL でない行数",
+        "department_id 列の重複を除いた値の数",
+        "department_id 列の NULL を含む行数"
+      ],
+      "answer": 2,
+      "explanation": "集約関数内で DISTINCT を指定すると、重複を除いた値に対して集約が行われる。COUNT(DISTINCT department_id) は department_id の一意な値の数を返す。(Evidence: E11)"
+    },
+    {
+      "id": "SQL-BRONZE-01-04-Q10",
+      "type": "true_false",
+      "difficulty": 2,
+      "prompt": "GROUP BY を使わずに SELECT COUNT(*), SUM(salary) FROM employees; を実行すると、テーブル全体が 1 つのグループとして扱われる。",
+      "answer": true,
+      "explanation": "GROUP BY なしで集約関数を使うと、テーブル全体が 1 つのグループとして扱われ、全行に対する集約結果が 1 行で返される。(Evidence: E12)"
+    }
+  ]
+}

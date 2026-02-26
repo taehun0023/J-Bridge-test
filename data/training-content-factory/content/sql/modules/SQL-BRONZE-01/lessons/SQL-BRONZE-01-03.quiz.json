@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "lesson_id": "SQL-BRONZE-01-03",
+  "questions": [
+    {
+      "id": "SQL-BRONZE-01-03-Q01",
+      "type": "single_choice",
+      "difficulty": 1,
+      "prompt": "ORDER BY 句でソート順を指定しなかった場合のデフォルトはどれか。",
+      "choices": [
+        "DESC（降順）",
+        "ASC（昇順）",
+        "ランダム",
+        "INSERT 順"
+      ],
+      "answer": 1,
+      "explanation": "ORDER BY 句のデフォルトのソート順は ASC（昇順）である。(Evidence: E1)"
+    },
+    {
+      "id": "SQL-BRONZE-01-03-Q02",
+      "type": "true_false",
+      "difficulty": 1,
+      "prompt": "ORDER BY 句で DESC を指定すると、結果が降順にソートされる。",
+      "answer": true,
+      "explanation": "DESC キーワードを指定すると降順にソートされる。(Evidence: E2)"
+    },
+    {
+      "id": "SQL-BRONZE-01-03-Q03",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "ORDER BY last_name ASC, salary DESC の動作として正しいものはどれか。",
+      "choices": [
+        "last_name の昇順のみでソートされる",
+        "salary の降順のみでソートされる",
+        "last_name の昇順でソートし、同じ last_name の場合は salary の降順でソートする",
+        "salary の降順でソートし、同じ salary の場合は last_name の昇順でソートする"
+      ],
+      "answer": 2,
+      "explanation": "ORDER BY に複数列を指定すると、第 1 ソートキーが同値の場合に第 2 ソートキーで並べ替える。ASC と DESC は列ごとに個別指定可能。(Evidence: E3, E2)"
+    },
+    {
+      "id": "SQL-BRONZE-01-03-Q04",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "ORDER BY 句で列を指定する方法として正しくないものはどれか。",
+      "choices": [
+        "列名で指定する",
+        "列の位置番号（1 始まり）で指定する",
+        "列の別名（エイリアス）で指定する",
+        "テーブル名で指定する"
+      ],
+      "answer": 3,
+      "explanation": "ORDER BY は列名、列の位置番号（1 始まり）、または列別名で指定できる。テーブル名では指定できない。(Evidence: E4)"
+    },
+    {
+      "id": "SQL-BRONZE-01-03-Q05",
+      "type": "true_false",
+      "difficulty": 2,
+      "prompt": "LIMIT 句は ANSI SQL 標準で定義された構文である。",
+      "answer": false,
+      "explanation": "LIMIT 句は広く使われているが ANSI SQL 標準ではない。ANSI SQL 標準のページング構文は FETCH FIRST N ROWS ONLY である。(Evidence: E6, E8)"
+    },
+    {
+      "id": "SQL-BRONZE-01-03-Q06",
+      "type": "code_output",
+      "difficulty": 2,
+      "prompt": "以下のテーブル products に対するクエリの結果行数はいくつか。\n\nproducts テーブル（8 行）:\n| id | name   | price |\n|----|--------|-------|\n| 1  | りんご | 100   |\n| 2  | みかん | 80    |\n| 3  | ぶどう | 300   |\n| 4  | もも   | 250   |\n| 5  | なし   | 150   |\n| 6  | いちご | 400   |\n| 7  | すいか | 500   |\n| 8  | メロン | 600   |\n\nSELECT * FROM products ORDER BY price DESC LIMIT 3;",
+      "answer": "3",
+      "explanation": "LIMIT 3 は結果セットの最大行数を 3 に制限する。price の降順で上位 3 行（メロン、すいか、いちご）が返される。(Evidence: E6)"
+    },
+    {
+      "id": "SQL-BRONZE-01-03-Q07",
+      "type": "code_output",
+      "difficulty": 3,
+      "prompt": "以下のクエリが返す最初の行の name 列の値は何か。\n\nproducts テーブル:\n| id | name   | price |\n|----|--------|-------|\n| 1  | りんご | 100   |\n| 2  | みかん | 80    |\n| 3  | ぶどう | 300   |\n| 4  | もも   | 250   |\n| 5  | なし   | 150   |\n\nSELECT name, price FROM products ORDER BY price DESC LIMIT 2 OFFSET 1;",
+      "answer": "もも",
+      "explanation": "ORDER BY price DESC の結果は ぶどう(300), もも(250), なし(150), りんご(100), みかん(80)。OFFSET 1 で先頭 1 行をスキップし、LIMIT 2 で 2 行を取得するため、もも(250) と なし(150) が返される。最初の行は「もも」。(Evidence: E7, E6)"
+    },
+    {
+      "id": "SQL-BRONZE-01-03-Q08",
+      "type": "true_false",
+      "difficulty": 2,
+      "prompt": "ORDER BY を指定せずに LIMIT と OFFSET を使うと、常に同じ結果が得られる。",
+      "answer": false,
+      "explanation": "ORDER BY なしの LIMIT/OFFSET は結果の順序が不定であり、ページングとして正しく機能しない可能性がある。(Evidence: E9)"
+    },
+    {
+      "id": "SQL-BRONZE-01-03-Q09",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "OFFSET の値が大きくなるとパフォーマンスが低下する理由として正しいものはどれか。",
+      "choices": [
+        "OFFSET の値が大きいと構文エラーになるため",
+        "DBMS は内部的に OFFSET + LIMIT 行を処理してから先頭の OFFSET 行を捨てるため",
+        "OFFSET が大きいとインデックスが使えなくなるため",
+        "OFFSET は常にテーブルフルスキャンを実行するため"
+      ],
+      "answer": 1,
+      "explanation": "OFFSET が大きくなるほどパフォーマンスが低下する傾向がある。DBMS は内部的に OFFSET + LIMIT 行を処理するためである。(Evidence: E10)"
+    },
+    {
+      "id": "SQL-BRONZE-01-03-Q10",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "SQL の論理処理順序において、ORDER BY 句はいつ評価されるか。",
+      "choices": [
+        "FROM の直後",
+        "WHERE の直後",
+        "GROUP BY の直後",
+        "SELECT の後（最後）"
+      ],
+      "answer": 3,
+      "explanation": "ORDER BY 句は SQL の論理処理順序において最後（SELECT の後）に評価される。(Evidence: E11)"
+    }
+  ]
+}

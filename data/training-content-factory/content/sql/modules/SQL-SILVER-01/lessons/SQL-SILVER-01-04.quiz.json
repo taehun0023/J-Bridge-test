@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "lesson_id": "SQL-SILVER-01-04",
+  "questions": [
+    {
+      "id": "SQL-SILVER-01-04-Q01",
+      "type": "true_false",
+      "difficulty": 2,
+      "prompt": "CTE（Common Table Expression）は WITH 句を使用して定義し、直後の SELECT / INSERT / UPDATE / DELETE 文で参照できる。",
+      "answer": true,
+      "explanation": "CTE は WITH 句で定義する名前付き一時結果セットであり、直後の SQL 文（SELECT / INSERT / UPDATE / DELETE）で参照できる。(Evidence: E1)"
+    },
+    {
+      "id": "SQL-SILVER-01-04-Q02",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "CTE の基本構文として正しいものはどれか。",
+      "choices": [
+        "CREATE CTE cte_name AS (SELECT ...) SELECT ... FROM cte_name;",
+        "WITH cte_name AS (SELECT ...) SELECT ... FROM cte_name;",
+        "DEFINE cte_name AS (SELECT ...) SELECT ... FROM cte_name;",
+        "SELECT WITH cte_name AS (SELECT ...) FROM cte_name;"
+      ],
+      "answer": 1,
+      "explanation": "CTE の基本構文は WITH cte_name AS (SELECT ...) SELECT ... FROM cte_name である。WITH キーワードで始まり、AS の後にサブクエリを定義する。(Evidence: E2)"
+    },
+    {
+      "id": "SQL-SILVER-01-04-Q03",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "1つの WITH 句で複数の CTE を定義する場合の正しい記述方法はどれか。",
+      "choices": [
+        "WITH cte1 AS (...) WITH cte2 AS (...) SELECT ...;",
+        "WITH cte1 AS (...), cte2 AS (...) SELECT ...;",
+        "WITH cte1 AS (...) AND cte2 AS (...) SELECT ...;",
+        "WITH (cte1 AS (...), cte2 AS (...)) SELECT ...;"
+      ],
+      "answer": 1,
+      "explanation": "1つの WITH 句で複数の CTE をカンマ区切りで定義できる。WITH キーワードは最初に1回だけ書き、後続の CTE は先に定義された CTE を参照できる。(Evidence: E3)"
+    },
+    {
+      "id": "SQL-SILVER-01-04-Q04",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "CTE とサブクエリの比較として正しい説明はどれか。",
+      "choices": [
+        "CTE はサブクエリより常に高速に動作する",
+        "CTE は同一クエリ内で複数回参照できるが、サブクエリは使用するたびに記述を繰り返す必要がある",
+        "サブクエリは CTE と異なりどのクエリからでも参照できる",
+        "CTE はデータベースに永続的に保存される"
+      ],
+      "answer": 1,
+      "explanation": "CTE は同一クエリ内で複数回参照できるが、サブクエリは使用するたびに記述を繰り返す必要がある。また、CTE はクエリの可読性を向上させ、複雑なサブクエリをトップダウンで記述できる。(Evidence: E4, E8)"
+    },
+    {
+      "id": "SQL-SILVER-01-04-Q05",
+      "type": "true_false",
+      "difficulty": 3,
+      "prompt": "CTE のスコープは複数の SQL 文にまたがって有効である。",
+      "answer": false,
+      "explanation": "CTE のスコープは直後の1つの SQL 文のみであり、複数の文にまたがって参照することはできない。複数の文で同じ結果セットを使いたい場合はビューや一時テーブルを検討する。(Evidence: E9)"
+    },
+    {
+      "id": "SQL-SILVER-01-04-Q06",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "再帰 CTE（WITH RECURSIVE）の構成要素として正しい組み合わせはどれか。",
+      "choices": [
+        "ベースクエリと LIMIT 句",
+        "アンカーメンバーとリカーシブメンバーを UNION ALL で結合",
+        "初期値と LOOP 句",
+        "アンカーメンバーとリカーシブメンバーを INTERSECT で結合"
+      ],
+      "answer": 1,
+      "explanation": "再帰 CTE はアンカーメンバーとリカーシブメンバーを UNION ALL で結合し、階層データの探索やシーケンス生成に使用する。ANSI SQL では RECURSIVE キーワードが必要。(Evidence: E5, E6)"
+    },
+    {
+      "id": "SQL-SILVER-01-04-Q07",
+      "type": "code_output",
+      "difficulty": 3,
+      "prompt": "以下の再帰 CTE を実行した場合、結果は何行返されるか。\n\nWITH RECURSIVE seq AS (\n  SELECT 1 AS n\n  UNION ALL\n  SELECT n + 1 FROM seq WHERE n < 5\n)\nSELECT n FROM seq;",
+      "choices": [
+        "4 行（1, 2, 3, 4）",
+        "5 行（1, 2, 3, 4, 5）",
+        "6 行（1, 2, 3, 4, 5, 6）",
+        "無限ループになる"
+      ],
+      "answer": 1,
+      "explanation": "アンカーメンバーで n=1 が生成され、リカーシブメンバーが n < 5 の間繰り返される。n=1→2→3→4→5 と進み、n=5 のとき WHERE n < 5 が偽になり終了する。結果は 1, 2, 3, 4, 5 の 5 行。(Evidence: E5, E7)"
+    },
+    {
+      "id": "SQL-SILVER-01-04-Q08",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "CTE とビューの違いについて正しい説明はどれか。",
+      "choices": [
+        "CTE はデータベースオブジェクトとして保存され、任意のクエリから参照できる",
+        "ビューはクエリ実行時にのみ存在し、保存されない",
+        "CTE はデータベースオブジェクトとして保存されず、クエリ実行時にのみ存在する",
+        "CTE とビューは全く同じ機能であり、違いはない"
+      ],
+      "answer": 2,
+      "explanation": "CTE はビューと異なり、データベースオブジェクトとして保存されず、クエリ実行時にのみ存在する。ビューはデータベースに保存され、GRANT / REVOKE で権限管理も可能。(Evidence: E10)"
+    },
+    {
+      "id": "SQL-SILVER-01-04-Q09",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "再帰 CTE が無限ループになることを防ぐために最も重要な対策はどれか。",
+      "choices": [
+        "WITH RECURSIVE の代わりに WITH を使用する",
+        "UNION ALL の代わりに UNION を使用する",
+        "リカーシブメンバーに終了条件（WHERE や JOIN の条件）を必ず含める",
+        "アンカーメンバーに LIMIT 句を追加する"
+      ],
+      "answer": 2,
+      "explanation": "再帰 CTE が無限ループに陥ることを防ぐため、リカーシブメンバーに終了条件を必ず含める必要がある。多くの DBMS は再帰回数の上限を持つが、明示的な終了条件が最も重要な対策である。(Evidence: E7)"
+    },
+    {
+      "id": "SQL-SILVER-01-04-Q10",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "再帰 CTE の実用的な用途として最も適切なものはどれか。",
+      "choices": [
+        "単純な集約関数の計算",
+        "テーブル間の INNER JOIN",
+        "組織図のツリー構造や部品表（BOM）の階層探索",
+        "インデックスの作成"
+      ],
+      "answer": 2,
+      "explanation": "再帰 CTE は組織図のツリー構造、部品表（BOM）、経路探索などの階層クエリに特に有用である。親子関係をたどりながらすべての階層を探索できる。(Evidence: E12)"
+    }
+  ]
+}

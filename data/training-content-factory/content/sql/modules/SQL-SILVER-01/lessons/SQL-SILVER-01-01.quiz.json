@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "lesson_id": "SQL-SILVER-01-01",
+  "questions": [
+    {
+      "id": "SQL-SILVER-01-01-Q01",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "GROUP BY 句の役割として正しいものはどれか。",
+      "choices": [
+        "行を昇順にソートする",
+        "指定した列の値が同じ行をグループにまとめる",
+        "重複行を削除する",
+        "テーブルを結合する"
+      ],
+      "answer": 1,
+      "explanation": "GROUP BY は指定した列の値が同じ行をグループにまとめ、集約関数と組み合わせて集計を行う。ソートは ORDER BY、重複除去は DISTINCT、結合は JOIN の役割である。(Evidence: E1)"
+    },
+    {
+      "id": "SQL-SILVER-01-01-Q02",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "GROUP BY を使用する場合、SELECT 句に記述できるものとして正しい組み合わせはどれか。",
+      "choices": [
+        "任意の列と集約関数",
+        "GROUP BY に指定した列と集約関数のみ",
+        "集約関数のみ",
+        "GROUP BY に指定した列のみ"
+      ],
+      "answer": 1,
+      "explanation": "ANSI SQL では、GROUP BY を使用する場合、SELECT 句には GROUP BY に指定した列か集約関数（COUNT, SUM, AVG, MIN, MAX）のみ記述できる。(Evidence: E3)"
+    },
+    {
+      "id": "SQL-SILVER-01-01-Q03",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "以下の SQL のうち、エラーになるものはどれか。\n\nA: SELECT dept, COUNT(*) FROM emp GROUP BY dept;\nB: SELECT dept, name, COUNT(*) FROM emp GROUP BY dept;\nC: SELECT dept, COUNT(*) FROM emp GROUP BY dept HAVING COUNT(*) > 2;\nD: SELECT COUNT(*) FROM emp;",
+      "choices": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "answer": 1,
+      "explanation": "B は name が GROUP BY に含まれておらず、集約関数でもないため ANSI SQL 違反でエラーとなる。SELECT 句には GROUP BY に指定した列か集約関数のみ記述できる。(Evidence: E3)"
+    },
+    {
+      "id": "SQL-SILVER-01-01-Q04",
+      "type": "true_false",
+      "difficulty": 2,
+      "prompt": "GROUP BY に複数列を指定すると、すべての列の値の組み合わせごとにグループが作られる。",
+      "answer": true,
+      "explanation": "GROUP BY に複数列を指定すると、すべての列の値の組み合わせごとにグループが形成される。例えば department_id と city を指定すれば、(1, 'Tokyo') と (1, 'Osaka') は別グループとなる。(Evidence: E2)"
+    },
+    {
+      "id": "SQL-SILVER-01-01-Q05",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "WHERE 句と HAVING 句の違いについて正しい説明はどれか。",
+      "choices": [
+        "WHERE はグループに対するフィルタ、HAVING は行に対するフィルタである",
+        "WHERE と HAVING はどちらも集約関数を使用できる",
+        "WHERE は行に対するフィルタであり GROUP BY の前に評価され、HAVING はグループに対するフィルタであり GROUP BY の後に評価される",
+        "HAVING は WHERE の代替であり、どちらを使っても同じ結果になる"
+      ],
+      "answer": 2,
+      "explanation": "WHERE 句は個々の行に対するフィルタであり GROUP BY より前に評価される。HAVING 句はグループに対するフィルタであり GROUP BY より後に評価される。WHERE には集約関数を記述できない。(Evidence: E5, E6)"
+    },
+    {
+      "id": "SQL-SILVER-01-01-Q06",
+      "type": "single_choice",
+      "difficulty": 2,
+      "prompt": "SQL の論理的な評価順序として正しいものはどれか。",
+      "choices": [
+        "SELECT → FROM → WHERE → GROUP BY → HAVING → ORDER BY",
+        "FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY",
+        "FROM → GROUP BY → WHERE → HAVING → SELECT → ORDER BY",
+        "FROM → WHERE → SELECT → GROUP BY → HAVING → ORDER BY"
+      ],
+      "answer": 1,
+      "explanation": "SQL の論理的な評価順序は FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY である。この順序を理解することで WHERE と HAVING の違いが明確になる。(Evidence: E7)"
+    },
+    {
+      "id": "SQL-SILVER-01-01-Q07",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "以下の SQL で WHERE 句に集約関数を記述した場合、どうなるか。\n\nSELECT department_id, COUNT(*)\nFROM employees\nWHERE COUNT(*) > 3\nGROUP BY department_id;",
+      "choices": [
+        "COUNT(*) が 3 より大きい部署のみ表示される",
+        "全グループが表示される",
+        "エラーが発生する",
+        "NULL が返される"
+      ],
+      "answer": 2,
+      "explanation": "WHERE 句には集約関数を直接記述できないため、エラーが発生する。集約関数を含む条件は HAVING 句に記述する必要がある。(Evidence: E6)"
+    },
+    {
+      "id": "SQL-SILVER-01-01-Q08",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "COUNT(*) と COUNT(column_name) の違いについて正しいものはどれか。",
+      "choices": [
+        "COUNT(*) は NULL を含む全行数を返し、COUNT(column_name) は NULL でない行の数を返す",
+        "COUNT(*) と COUNT(column_name) は常に同じ結果を返す",
+        "COUNT(*) は主キーの数を返し、COUNT(column_name) は全行数を返す",
+        "COUNT(column_name) は NULL を含む全行数を返し、COUNT(*) は NULL を除外する"
+      ],
+      "answer": 0,
+      "explanation": "COUNT(*) はグループ内の全行数を返し（NULL を含む）、COUNT(column_name) はその列が NULL でない行の数を返す。NULL の扱いが異なるため使い分けが重要である。(Evidence: E9)"
+    },
+    {
+      "id": "SQL-SILVER-01-01-Q09",
+      "type": "code_output",
+      "difficulty": 4,
+      "prompt": "以下のテーブルとクエリがある場合、結果に含まれる行数はいくつか。\n\nemployees テーブル:\n| dept_id | salary |\n|---------|--------|\n| 1       | 50000  |\n| 1       | 60000  |\n| 2       | 40000  |\n| 2       | 45000  |\n| 3       | 70000  |\n\nSELECT dept_id, AVG(salary)\nFROM employees\nGROUP BY dept_id\nHAVING AVG(salary) > 45000;",
+      "choices": [
+        "1行",
+        "2行",
+        "3行",
+        "5行"
+      ],
+      "answer": 1,
+      "explanation": "3つのグループが作られる: dept_id=1 (AVG=55000), dept_id=2 (AVG=42500), dept_id=3 (AVG=70000)。HAVING AVG(salary) > 45000 により dept_id=2 が除外され、2行が返される。HAVING は GROUP BY によって生成されたグループに対して条件を指定し、条件を満たさないグループを除外する。(Evidence: E4, E11)"
+    },
+    {
+      "id": "SQL-SILVER-01-01-Q10",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "JOIN と GROUP BY を組み合わせる際に、意図しない集計結果を防ぐために最も有効な対策はどれか。",
+      "choices": [
+        "常に INNER JOIN の代わりに LEFT JOIN を使用する",
+        "GROUP BY の前に ORDER BY を記述する",
+        "JOIN の結果行数を事前に確認し、必要に応じて COUNT(DISTINCT ...) を使用する",
+        "HAVING 句で重複を除去する"
+      ],
+      "answer": 2,
+      "explanation": "JOIN により 1 対多の関係で行が増加（重複）する場合がある。JOIN の結果行数を事前に確認し、必要に応じて COUNT(DISTINCT ...) を使用することで、意図しない集計結果を防げる。GROUP BY と JOIN を組み合わせる際は特に注意が必要である。(Evidence: E8, E9)"
+    }
+  ]
+}

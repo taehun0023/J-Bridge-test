@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "lesson_id": "SQL-GOLD-01-03",
+  "questions": [
+    {
+      "id": "SQL-GOLD-01-03-Q01",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "DML（Data Manipulation Language）に含まれる文の組み合わせとして正しいものはどれか。",
+      "choices": [
+        "INSERT, UPDATE, DELETE, SELECT",
+        "CREATE, ALTER, DROP, TRUNCATE",
+        "GRANT, REVOKE, DENY",
+        "INSERT, UPDATE, CREATE, DROP"
+      ],
+      "answer": 0,
+      "explanation": "DML はテーブル内のデータを操作する SQL 文の総称であり、INSERT, UPDATE, DELETE, SELECT が含まれる。CREATE / ALTER / DROP は DDL である。(Evidence: E1)"
+    },
+    {
+      "id": "SQL-GOLD-01-03-Q02",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "INSERT INTO 文で列リストを省略した場合の動作として正しいものはどれか。",
+      "choices": [
+        "テーブル定義の全列にデータを指定する必要がある",
+        "自動的に NULL が補完される",
+        "DEFAULT 値が全列に適用される",
+        "構文エラーになる"
+      ],
+      "answer": 0,
+      "explanation": "INSERT 時に列リストを省略すると、テーブル定義の全列にデータを指定する必要がある。常に列リストを明示すべきである。(Evidence: E12)"
+    },
+    {
+      "id": "SQL-GOLD-01-03-Q03",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "以下のクエリの問題点は何か。\nUPDATE employees SET salary = 0;",
+      "choices": [
+        "SET 句に複数列を指定していない",
+        "WHERE 句がないため全行の salary が 0 に更新される",
+        "salary に 0 を設定するのは構文エラーになる",
+        "UPDATE 文には FROM 句が必要"
+      ],
+      "answer": 1,
+      "explanation": "UPDATE で WHERE 句を省略すると全行が更新される。本番環境では極めて危険であり、先に SELECT で対象行を確認してから UPDATE に書き換えるのがベストプラクティスである。(Evidence: E4, E11)"
+    },
+    {
+      "id": "SQL-GOLD-01-03-Q04",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "DELETE と TRUNCATE の違いとして正しいものはどれか。",
+      "choices": [
+        "DELETE はロールバック不可、TRUNCATE はロールバック可能",
+        "DELETE は WHERE 句を使える、TRUNCATE は使えない",
+        "DELETE はトリガーが発火しない、TRUNCATE は発火する",
+        "DELETE と TRUNCATE は完全に同じ動作をする"
+      ],
+      "answer": 1,
+      "explanation": "DELETE FROM WHERE は条件に一致する行を削除でき、ロールバック可能でトリガーも発火する。TRUNCATE は全行削除のみで、多くの RDBMS でロールバック不可、トリガーも発火しない。(Evidence: E6, E7)"
+    },
+    {
+      "id": "SQL-GOLD-01-03-Q05",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "INSERT INTO ... SELECT 文を使う際の必須条件は何か。",
+      "choices": [
+        "SELECT の結果行数が INSERT 先テーブルの行数と一致すること",
+        "SELECT の列数とデータ型が INSERT 先の列リストと一致すること",
+        "INSERT 先テーブルが空であること",
+        "SELECT にはサブクエリを使用できないこと"
+      ],
+      "answer": 1,
+      "explanation": "INSERT INTO ... SELECT 文は他のテーブルやサブクエリの結果セットをそのまま挿入する。列数とデータ型が一致する必要がある。(Evidence: E3)"
+    },
+    {
+      "id": "SQL-GOLD-01-03-Q06",
+      "type": "single_choice",
+      "difficulty": 5,
+      "prompt": "PostgreSQL で UPSERT（存在すれば更新、なければ挿入）を実現する構文はどれか。",
+      "choices": [
+        "INSERT INTO ... ON DUPLICATE KEY UPDATE ...",
+        "INSERT INTO ... ON CONFLICT DO UPDATE ...",
+        "MERGE INTO ... USING ... WHEN MATCHED THEN ...",
+        "REPLACE INTO ... VALUES ..."
+      ],
+      "answer": 1,
+      "explanation": "PostgreSQL は INSERT ... ON CONFLICT DO UPDATE（UPSERT）を提供する。MySQL は INSERT ... ON DUPLICATE KEY UPDATE を使い、標準 SQL は MERGE 文を使う。(Evidence: E9)"
+    },
+    {
+      "id": "SQL-GOLD-01-03-Q07",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "MERGE 文（SQL:2003 標準）の機能として正しいものはどれか。",
+      "choices": [
+        "2 つのテーブルを結合して新しいテーブルを作成する",
+        "対象テーブルとソースを結合し、一致行は UPDATE、不一致行は INSERT を行う",
+        "テーブルの構造をマージして列を統合する",
+        "複数の DELETE 文を 1 つにまとめる"
+      ],
+      "answer": 1,
+      "explanation": "MERGE 文は対象テーブルとソースを結合し、一致する行は UPDATE、一致しない行は INSERT を行う UPSERT 操作を単一文で実現する。(Evidence: E8)"
+    },
+    {
+      "id": "SQL-GOLD-01-03-Q08",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "RETURNING 句の用途として正しいものはどれか。",
+      "choices": [
+        "INSERT / UPDATE / DELETE の結果行を即座に返す",
+        "エラーが発生した行のみを返す",
+        "トランザクションのログを返す",
+        "SELECT の結果をキャッシュに保存する"
+      ],
+      "answer": 0,
+      "explanation": "RETURNING 句（PostgreSQL, Oracle など）は INSERT / UPDATE / DELETE の結果行を即座に返す。アプリケーション側で INSERT 後に SELECT する往復を減らせる。(Evidence: E10)"
+    },
+    {
+      "id": "SQL-GOLD-01-03-Q09",
+      "type": "single_choice",
+      "difficulty": 5,
+      "prompt": "大量のデータを INSERT する際のパフォーマンスのベストプラクティスとして正しいものはどれか。",
+      "choices": [
+        "1 行ずつ INSERT してトランザクションを細かく COMMIT する",
+        "バッチ INSERT やバルクロードを使い、1 行ずつの INSERT を避ける",
+        "全行を INSERT した後に一括で ROLLBACK してから再度 INSERT する",
+        "INSERT の前に毎回 TRUNCATE TABLE を実行する"
+      ],
+      "answer": 1,
+      "explanation": "大量 INSERT ではバッチ INSERT やバルクロードを使い、1 行ずつの INSERT を避けることでパフォーマンスが大幅に改善する。(Evidence: E13)"
+    },
+    {
+      "id": "SQL-GOLD-01-03-Q10",
+      "type": "single_choice",
+      "difficulty": 5,
+      "prompt": "UPDATE / DELETE を安全に実行するためのベストプラクティスとして正しいものはどれか。",
+      "choices": [
+        "自動コミットモードで即座に実行する",
+        "WHERE 句を省略して全行に対して実行する",
+        "BEGIN TRANSACTION で明示的にトランザクションを開始し、結果を確認してから COMMIT する",
+        "TRUNCATE TABLE で全行削除してから INSERT し直す"
+      ],
+      "answer": 2,
+      "explanation": "UPDATE / DELETE は実行前に BEGIN TRANSACTION で明示的にトランザクションを開始し、結果を確認してから COMMIT するのが安全なパターンである。(Evidence: E14)"
+    }
+  ]
+}

@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "lesson_id": "SQL-GOLD-01-04",
+  "questions": [
+    {
+      "id": "SQL-GOLD-01-04-Q01",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "ACID 特性のうち、「トランザクション内の操作は全て成功するか全て取り消されるかのどちらかである」ことを保証する性質はどれか。",
+      "choices": [
+        "Atomicity（原子性）",
+        "Consistency（一貫性）",
+        "Isolation（分離性）",
+        "Durability（永続性）"
+      ],
+      "answer": 0,
+      "explanation": "Atomicity（原子性）は「全てか無か」を保証する性質であり、トランザクション内の操作が一部だけ実行された中途半端な状態にならないことを意味する。(Evidence: E2)"
+    },
+    {
+      "id": "SQL-GOLD-01-04-Q02",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "トランザクションを明示的に開始し、変更を確定し、取り消すための SQL 文の正しい組み合わせはどれか。",
+      "choices": [
+        "START / SAVE / UNDO",
+        "BEGIN / COMMIT / ROLLBACK",
+        "OPEN / CLOSE / CANCEL",
+        "LOCK / UNLOCK / RESET"
+      ],
+      "answer": 1,
+      "explanation": "BEGIN（または START TRANSACTION）でトランザクションを開始し、COMMIT で変更を確定、ROLLBACK で取り消す。(Evidence: E3)"
+    },
+    {
+      "id": "SQL-GOLD-01-04-Q03",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "SAVEPOINT の説明として正しいものはどれか。",
+      "choices": [
+        "トランザクション全体を自動的に COMMIT する",
+        "トランザクション内に中間復帰点を設定し、部分的にロールバックできる",
+        "データベースのバックアップを取得する",
+        "他のトランザクションの変更を保存する"
+      ],
+      "answer": 1,
+      "explanation": "SAVEPOINT はトランザクション内に中間復帰点を設定する。ROLLBACK TO SAVEPOINT で特定の地点まで部分的にロールバックでき、トランザクション全体を取り消さずに済む。(Evidence: E4)"
+    },
+    {
+      "id": "SQL-GOLD-01-04-Q04",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "ダーティリードが発生する可能性がある分離レベルはどれか。",
+      "choices": [
+        "READ COMMITTED",
+        "REPEATABLE READ",
+        "SERIALIZABLE",
+        "READ UNCOMMITTED"
+      ],
+      "answer": 3,
+      "explanation": "READ UNCOMMITTED は最低の分離レベルであり、他のトランザクションの未コミットデータを読むダーティリードが発生する。READ COMMITTED 以上ではダーティリードは防止される。(Evidence: E5, E6)"
+    },
+    {
+      "id": "SQL-GOLD-01-04-Q05",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "MySQL InnoDB のデフォルトの分離レベルはどれか。",
+      "choices": [
+        "READ UNCOMMITTED",
+        "READ COMMITTED",
+        "REPEATABLE READ",
+        "SERIALIZABLE"
+      ],
+      "answer": 2,
+      "explanation": "MySQL InnoDB のデフォルトの分離レベルは REPEATABLE READ であり、スナップショットを基準に読み取る。ファントムリードが起こり得るが、ダーティリードとノンリピータブルリードは防止される。(Evidence: E8)"
+    },
+    {
+      "id": "SQL-GOLD-01-04-Q06",
+      "type": "single_choice",
+      "difficulty": 5,
+      "prompt": "デッドロックの発生条件として正しいものはどれか。",
+      "choices": [
+        "1 つのトランザクションが大量のデータを読み取る",
+        "2 つ以上のトランザクションが互いにロックの解放を待つ",
+        "AUTOCOMMIT が ON になっている",
+        "分離レベルが READ UNCOMMITTED に設定されている"
+      ],
+      "answer": 1,
+      "explanation": "デッドロックは 2 つ以上のトランザクションが互いにロックの解放を待つ状態である。RDBMS はデッドロック検出機構で一方をロールバックして解消する。(Evidence: E10)"
+    },
+    {
+      "id": "SQL-GOLD-01-04-Q07",
+      "type": "single_choice",
+      "difficulty": 4,
+      "prompt": "デッドロック防止のベストプラクティスとして適切でないものはどれか。",
+      "choices": [
+        "リソースのロック順序を統一する",
+        "トランザクションを短く保つ",
+        "常に SERIALIZABLE 分離レベルを使用する",
+        "必要最小限のロックを取得する"
+      ],
+      "answer": 2,
+      "explanation": "デッドロック防止のベストプラクティスはロック順序の統一、トランザクションを短く保つ、必要最小限のロック、適切な分離レベルの選択である。常に SERIALIZABLE を使うことはパフォーマンスを大幅に低下させ、デッドロック防止とは直接関係しない。(Evidence: E9, E11)"
+    },
+    {
+      "id": "SQL-GOLD-01-04-Q08",
+      "type": "single_choice",
+      "difficulty": 5,
+      "prompt": "楽観的ロックと悲観的ロックの説明として正しいものはどれか。",
+      "choices": [
+        "楽観的ロックは SELECT FOR UPDATE を使い、悲観的ロックはバージョン番号を使う",
+        "楽観的ロックはバージョン番号で衝突を検出し、悲観的ロックは SELECT FOR UPDATE で行をロックする",
+        "楽観的ロックは SERIALIZABLE 専用、悲観的ロックは READ COMMITTED 専用",
+        "楽観的ロックはテーブルロック、悲観的ロックは行ロック"
+      ],
+      "answer": 1,
+      "explanation": "楽観的ロックはバージョン番号で衝突を検出する方式であり、悲観的ロックは SELECT FOR UPDATE で行を明示的にロックする方式である。(Evidence: E12)"
+    },
+    {
+      "id": "SQL-GOLD-01-04-Q09",
+      "type": "single_choice",
+      "difficulty": 3,
+      "prompt": "PostgreSQL の MVCC（Multi-Version Concurrency Control）の特徴として正しいものはどれか。",
+      "choices": [
+        "読み取りと書き込みが互いをブロックする",
+        "読み取りと書き込みが互いをブロックしない",
+        "書き込み同士がブロックしない",
+        "全てのトランザクションが同じデータバージョンを見る"
+      ],
+      "answer": 1,
+      "explanation": "PostgreSQL は MVCC を使い、読み取りと書き込みが互いをブロックしない。各トランザクションはデータのスナップショットを見るため、読み取りがロック待ちにならない。(Evidence: E13)"
+    },
+    {
+      "id": "SQL-GOLD-01-04-Q10",
+      "type": "single_choice",
+      "difficulty": 5,
+      "prompt": "トランザクションの分離レベルを個別に設定する SQL 文はどれか。",
+      "choices": [
+        "ALTER SESSION SET ISOLATION",
+        "SET TRANSACTION ISOLATION LEVEL",
+        "CONFIGURE TRANSACTION LEVEL",
+        "BEGIN ISOLATION"
+      ],
+      "answer": 1,
+      "explanation": "SET TRANSACTION ISOLATION LEVEL 文でトランザクションの分離レベルを個別に設定できる。例: SET TRANSACTION ISOLATION LEVEL SERIALIZABLE; (Evidence: E14)"
+    }
+  ]
+}
