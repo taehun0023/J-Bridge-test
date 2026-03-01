@@ -13,8 +13,6 @@ import { checkAndCreateExamCycle, getNextExamDate } from '@/app/actions/exam-sch
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
 
-type BadgeType = '未受験' | '再試験' | '再試験承認済'
-
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -150,41 +148,6 @@ export default async function DashboardPage() {
       latestByQuiz[a.quiz_id] = {
         completed_at: a.completed_at,
         retake_request_status: a.retake_request_status,
-      }
-    }
-  }
-
-  const pendingAssessments: { step: number; label: string; link: string; badge: BadgeType }[] = []
-
-  for (const step of relevantSteps) {
-    const quizId = ASSESSMENT_QUIZ_IDS[step]
-    const latest = latestByQuiz[quizId]
-
-    if (!latest) {
-      pendingAssessments.push({
-        step,
-        label: ASSESSMENT_LABELS[step],
-        link: `/onboarding/assessment/${step}`,
-        badge: '未受験',
-      })
-    } else {
-      const completedAt = new Date(latest.completed_at).getTime()
-      const elapsed = Date.now() - completedAt
-
-      if (latest.retake_request_status === 'approved') {
-        pendingAssessments.push({
-          step,
-          label: ASSESSMENT_LABELS[step],
-          link: `/onboarding/assessment/${step}`,
-          badge: '再試験承認済',
-        })
-      } else if (elapsed > THIRTY_DAYS_MS) {
-        pendingAssessments.push({
-          step,
-          label: ASSESSMENT_LABELS[step],
-          link: `/onboarding/assessment/${step}`,
-          badge: '再試験',
-        })
       }
     }
   }
@@ -353,7 +316,6 @@ export default async function DashboardPage() {
     radarScores,
     recentResults,
     tasks: tasks ?? [],
-    pendingAssessments,
     isJapanese,
     completedAssessments: completedAssessmentInfo,
     userRanking,

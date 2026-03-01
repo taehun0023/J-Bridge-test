@@ -41,15 +41,6 @@ interface TaskAssignment {
   status: string
 }
 
-type BadgeType = '未受験' | '再試験' | '再試験承認済'
-
-interface PendingAssessment {
-  step: number
-  label: string
-  link: string
-  badge: BadgeType
-}
-
 interface CompletedAssessment {
   step: number
   label: string
@@ -126,7 +117,6 @@ interface Props {
   radarScores: Record<AxisKey, number>
   recentResults: UnifiedResult[]
   tasks: TaskAssignment[]
-  pendingAssessments: PendingAssessment[]
   isJapanese: boolean
   completedAssessments: CompletedAssessment[]
   userRanking: UserRanking | null
@@ -140,23 +130,15 @@ interface Props {
   nextExamDate?: string | null
 }
 
-function getBadgeStyle(badge: BadgeType): string {
-  switch (badge) {
-    case '未受験': return 'bg-zinc-500/10 text-zinc-400 ring-1 ring-zinc-500/20'
-    case '再試験': return 'bg-indigo-500/10 text-indigo-400 ring-1 ring-indigo-500/20'
-    case '再試験承認済': return 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20'
-  }
-}
-
 export default function DashboardClient({
-  profile, radarScores, recentResults, tasks, pendingAssessments, isJapanese, completedAssessments,
+  profile, radarScores, recentResults, tasks, isJapanese, completedAssessments,
   userRanking, topRanking, enrolledCourses, learningStats, recentFeedbacks = [], compExamRetakes = [], javaBadges = [], role,
   nextExamDate,
 }: Props) {
   const isMentee = role === 'mentee'
   const relevantAxes = getRelevantAxes(isJapanese)
   const hasScores = relevantAxes.some(key => radarScores[key] > 0)
-  const hasTasks = tasks.length > 0 || pendingAssessments.length > 0
+  const hasTasks = tasks.length > 0
   const hasEnrolledCourses = enrolledCourses.length > 0
 
   const allAxesAboveB = hasScores && relevantAxes.every(key => radarScores[key] >= DISPATCH_MINIMUM_SCORE)
@@ -573,29 +555,6 @@ export default function DashboardClient({
             <p className="py-4 text-center text-sm text-zinc-500">配信された課題はありません</p>
           ) : (
             <div className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">
-              {pendingAssessments.map((assessment, index) => (
-                <Link
-                  key={`assessment-${assessment.step}`}
-                  href={assessment.link}
-                  className="flex items-center justify-between py-3 group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-xs font-bold text-indigo-400 ring-1 ring-indigo-500/20">
-                      {index + 1}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-400 transition-colors">
-                        {assessment.label}
-                      </p>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">初期総合試験</p>
-                    </div>
-                  </div>
-                  <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getBadgeStyle(assessment.badge)}`}>
-                    {assessment.badge}
-                  </span>
-                </Link>
-              ))}
-
               {tasks.map((task) => (
                 <div key={task.id} className="py-3">
                   <div className="flex items-center justify-between">
