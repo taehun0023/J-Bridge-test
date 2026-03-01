@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Card from '@/components/ui/Card'
 import { categoryChildren } from '@/lib/navigation'
 import BusinessTestBlock from '@/components/japanese/BusinessTestBlock'
+import { FileClock } from 'lucide-react'
 
 // Subcategory definitions: label, DB categories to include, quiz type
 const SUBCATEGORIES = [
@@ -20,8 +21,9 @@ export default async function BusinessJapaneseHubPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: prof } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  const { data: prof } = await supabase.from('profiles').select('role, mentor_specialty').eq('id', user.id).single()
   const bypassLock = prof?.role === 'admin' || prof?.role === 'mentor'
+  const canManage = prof?.role === 'admin' || (prof?.role === 'mentor' && prof?.mentor_specialty !== 'technical')
 
   // Fetch all mastered it_glossary items for this user
   const { data: masteredItems } = await supabase
@@ -55,8 +57,21 @@ export default async function BusinessJapaneseHubPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{config.title}</h1>
-        <p className="mt-1 text-gray-500 dark:text-gray-400">{config.description}</p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{config.title}</h1>
+            <p className="mt-1 text-gray-500 dark:text-gray-400">{config.description}</p>
+          </div>
+          {canManage && (
+            <Link
+              href="/japanese/business/log"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 hover:text-indigo-600 hover:border-indigo-200 dark:border-white/10 dark:bg-zinc-800 dark:text-gray-400 dark:hover:bg-zinc-700 dark:hover:text-indigo-400 dark:hover:border-indigo-500/30 transition-all"
+            >
+              <FileClock className="h-4 w-4" />
+              変更履歴
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Guide card */}
