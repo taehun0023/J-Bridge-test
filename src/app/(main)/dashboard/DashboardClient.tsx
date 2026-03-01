@@ -5,7 +5,7 @@ import { useState, useTransition } from 'react'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import Link from 'next/link'
-import { BarChart3, Trophy, BookOpen, Eye } from 'lucide-react'
+import { AlertTriangle, BarChart3, Trophy, BookOpen, Eye, Calendar } from 'lucide-react'
 import { getGrade, getGradeColor, DISPATCH_MINIMUM_SCORE, getRelevantAxes, AXIS_DISPLAY_LABELS } from '@/lib/assessment-config'
 import type { AxisKey } from '@/lib/assessment-config'
 import { requestRetake } from '@/app/actions/assessment'
@@ -136,6 +136,8 @@ interface Props {
   recentFeedbacks?: RecentFeedback[]
   compExamRetakes?: CompExamRetake[]
   javaBadges?: CourseWithProgress[]
+  role?: string
+  nextExamDate?: string | null
 }
 
 function getBadgeStyle(badge: BadgeType): string {
@@ -148,8 +150,10 @@ function getBadgeStyle(badge: BadgeType): string {
 
 export default function DashboardClient({
   profile, radarScores, recentResults, tasks, pendingAssessments, isJapanese, completedAssessments,
-  userRanking, topRanking, enrolledCourses, learningStats, recentFeedbacks = [], compExamRetakes = [], javaBadges = [],
+  userRanking, topRanking, enrolledCourses, learningStats, recentFeedbacks = [], compExamRetakes = [], javaBadges = [], role,
+  nextExamDate,
 }: Props) {
+  const isMentee = role === 'mentee'
   const relevantAxes = getRelevantAxes(isJapanese)
   const hasScores = relevantAxes.some(key => radarScores[key] > 0)
   const hasTasks = tasks.length > 0 || pendingAssessments.length > 0
@@ -192,6 +196,88 @@ export default function DashboardClient({
       <p className="mt-1 text-zinc-500 dark:text-zinc-400">
         {profile?.full_name ? `${profile.full_name}さんの` : '自分の'}エンジニア力量現況
       </p>
+
+      {/* Mentee priority: assignments + feedback */}
+      {isMentee && (
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          {/* Learning assignments card */}
+          {learningStats && learningStats.total > 0 && (
+            <div className="rounded-xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 p-5 dark:border-amber-600 dark:from-amber-900/20 dark:to-orange-900/20">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                <h2 className="text-base font-bold text-amber-900 dark:text-amber-200">学習課題</h2>
+              </div>
+              <div className="mb-3">
+                <div className="flex items-center justify-between text-sm mb-1">
+                  <span className="text-amber-700 dark:text-amber-300">
+                    進行中 {learningStats.inProgress} / 完了 {learningStats.completed} / 全体 {learningStats.total}
+                  </span>
+                  <span className="font-bold text-amber-900 dark:text-amber-100">
+                    {Math.round((learningStats.completed / learningStats.total) * 100)}%
+                  </span>
+                </div>
+                <div className="h-3 w-full rounded-full bg-amber-200 dark:bg-amber-800">
+                  <div
+                    className="h-3 rounded-full bg-amber-500 transition-all"
+                    style={{ width: `${Math.round((learningStats.completed / learningStats.total) * 100)}%` }}
+                  />
+                </div>
+              </div>
+              <Link
+                href="/dashboard/assignments"
+                className="block rounded-lg bg-amber-500 px-4 py-2 text-center text-sm font-bold text-white hover:bg-amber-600 transition-colors"
+              >
+                課題一覧へ
+              </Link>
+            </div>
+          )}
+
+          {/* Recent feedback card */}
+          {recentFeedbacks.length > 0 && (
+            <div className="rounded-xl border-2 border-blue-300 bg-gradient-to-br from-blue-50 to-indigo-50 p-5 dark:border-blue-600 dark:from-blue-900/20 dark:to-indigo-900/20">
+              <div className="flex items-center gap-2 mb-3">
+                <Eye className="h-5 w-5 text-blue-500" />
+                <h2 className="text-base font-bold text-blue-900 dark:text-blue-200">最近のフィードバック</h2>
+              </div>
+              <div className="space-y-2 mb-3">
+                {recentFeedbacks.map((fb) => (
+                  <div key={fb.id} className="rounded-lg bg-white/60 p-2.5 dark:bg-white/5">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-800 dark:text-blue-300">
+                        {feedbackCategoryLabels[fb.category] ?? fb.category}
+                      </span>
+                      <span className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                        {new Date(fb.created_at).toLocaleDateString('ja-JP')}
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-700 dark:text-zinc-300 line-clamp-2">{fb.content}</p>
+                  </div>
+                ))}
+              </div>
+              <Link
+                href="/feedback"
+                className="block rounded-lg bg-blue-500 px-4 py-2 text-center text-sm font-bold text-white hover:bg-blue-600 transition-colors"
+              >
+                詳細はこちら
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Next exam date indicator */}
+      {isMentee && nextExamDate && (
+        <div className="mt-4 flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/50 px-4 py-3 dark:border-indigo-800 dark:bg-indigo-900/10">
+          <Calendar className="h-4 w-4 text-indigo-500" />
+          <span className="text-sm text-indigo-700 dark:text-indigo-300">
+            次回総合試験: {new Date(nextExamDate).toLocaleDateString('ja-JP')}
+            {(() => {
+              const days = Math.ceil((new Date(nextExamDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+              return days > 0 ? `（あと${days}日）` : '（本日）'
+            })()}
+          </span>
+        </div>
+      )}
 
       {/* Bento grid */}
       <div className="mt-6 grid gap-4 lg:grid-cols-3 lg:grid-rows-[auto_auto]">
@@ -411,7 +497,7 @@ export default function DashboardClient({
       </div>
 
       {/* Learning Assignments Summary */}
-      {learningStats && learningStats.total > 0 && (
+      {!isMentee && learningStats && learningStats.total > 0 && (
         <div className="mt-4">
           <Card title="学習課題">
             <div className="flex items-center gap-4">
@@ -448,7 +534,7 @@ export default function DashboardClient({
       )}
 
       {/* Recent Feedbacks */}
-      {recentFeedbacks.length > 0 && (
+      {!isMentee && recentFeedbacks.length > 0 && (
         <div className="mt-4">
           <Card title="最近のフィードバック">
             <div className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">

@@ -11,11 +11,12 @@ interface SubcategoryProgress {
 
 interface Props {
   subcategories: SubcategoryProgress[]
+  bypassLock?: boolean
 }
 
 const THRESHOLD = 80
 
-export default function BusinessTestBlock({ subcategories }: Props) {
+export default function BusinessTestBlock({ subcategories, bypassLock = false }: Props) {
   return (
     <Card>
       <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">理解度テスト</h2>
@@ -26,7 +27,7 @@ export default function BusinessTestBlock({ subcategories }: Props) {
       <div className="space-y-4">
         {subcategories.map(sub => {
           const pct = sub.total > 0 ? Math.round((sub.mastered / sub.total) * 100) : 0
-          const unlocked = pct >= THRESHOLD
+          const unlocked = bypassLock || pct >= THRESHOLD
 
           const cardContent = (
             <>

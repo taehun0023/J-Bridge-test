@@ -1,0 +1,310 @@
+'use server'
+
+import { createServiceRoleClient } from '@/lib/supabase/server'
+import { recalculateUserScores } from '@/modules/scoring'
+
+/** Categories for comprehensive exam cycles */
+const ALL_EXAM_CATEGORIES = ['seikatsu', 'business-jp', 'cs', 'dev', 'business-lit'] as const
+const JAPANESE_EXAM_CATEGORIES = ['cs', 'dev', 'business-lit'] as const
+
+/** Cycle deadline: 14 days from scheduled date */
+const CYCLE_INTERVAL_DAYS = 14
+
+export interface ExamCycleInfo {
+  id: string
+  cycleNumber: number
+  status: string
+  scheduledAt: string
+  deadlineAt: string
+  exams: CycleExam[]
+}
+
+export interface CycleExam {
+  id: string
+  category: string
+  subcategory: string
+  status: string
+  score: number | null
+  passed: boolean | null
+}
+
+/**
+ * Check for active exam cycle or create one if needed.
+ * Called from dashboard page for mentees.
+ *
+ * Returns null if no exam is needed (dashboard can be shown).
+ * Returns ExamCycleInfo if an exam gate should be displayed.
+ */
+export async function checkAndCreateExamCycle(
+  userId: string,
+  isJapanese: boolean
+): Promise<ExamCycleInfo | null> {
+  const serviceClient = createServiceRoleClient()
+  if (!serviceClient) return null
+
+  // 1. Check for active (pending/in_progress) cycle
+  const { data: activeCycle } = await serviceClient
+    .from('exam_cycles')
+    .select('*')
+    .eq('user_id', userId)
+    .in('status', ['pending', 'in_progress'])
+    .order('cycle_number', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (activeCycle) {
+    // Find cycle exams by user_id + subcategory + timestamp (NOT by exam_cycle_id FK).
+    // PostgREST schema cache may not recognize exam_cycle_id column, causing FK queries
+    // to silently return 0 results and triggering infinite self-healing loops.
+    const { data: allExams } = await serviceClient
+      .from('comprehensive_exams')
+      .select('id, category, subcategory, status, score, passed')
+      .eq('user_id', userId)
+      .eq('subcategory', 'comprehensive')
+      .gte('requested_at', activeCycle.created_at)
+      .order('requested_at', { ascending: true })
+
+    // Deduplicate by category: if self-healing previously created duplicates,
+    // keep the exam with the highest-priority status per category.
+    const STATUS_PRIORITY: Record<string, number> = { completed: 4, failed: 3, in_progress: 2, approved: 1 }
+    const byCategory = new Map<string, NonNullable<typeof allExams>[number]>()
+    for (const e of allExams ?? []) {
+      const existing = byCategory.get(e.category)
+      if (!existing || (STATUS_PRIORITY[e.status] ?? 0) > (STATUS_PRIORITY[existing.status] ?? 0)) {
+        byCategory.set(e.category, e)
+      }
+    }
+    let exams = Array.from(byCategory.values())
+
+    // If truly no exams found (first insert failed), recreate
+    if (exams.length === 0) {
+      const newExams = await createCycleExams(serviceClient, userId, activeCycle.id, isJapanese)
+      return {
+        id: activeCycle.id,
+        cycleNumber: activeCycle.cycle_number,
+        status: activeCycle.status,
+        scheduledAt: activeCycle.scheduled_at,
+        deadlineAt: activeCycle.deadline_at,
+        exams: newExams,
+      }
+    }
+
+    return {
+      id: activeCycle.id,
+      cycleNumber: activeCycle.cycle_number,
+      status: activeCycle.status,
+      scheduledAt: activeCycle.scheduled_at,
+      deadlineAt: activeCycle.deadline_at,
+      exams: exams.map(e => ({
+        id: e.id,
+        category: e.category,
+        subcategory: e.subcategory,
+        status: e.status,
+        score: e.score,
+        passed: e.passed,
+      })),
+    }
+  }
+
+  // 2. Check last completed cycle
+  const { data: lastCompleted } = await serviceClient
+    .from('exam_cycles')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('status', 'completed')
+    .order('cycle_number', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!lastCompleted) {
+    // No cycle at all — create first one (cycle_number=1)
+    return await createExamCycle(serviceClient, userId, 1, isJapanese)
+  }
+
+  // Check if 14 days have passed since last completion
+  const completedAt = new Date(lastCompleted.completed_at ?? lastCompleted.created_at)
+  const daysSinceCompletion = (Date.now() - completedAt.getTime()) / (1000 * 60 * 60 * 24)
+
+  if (daysSinceCompletion >= CYCLE_INTERVAL_DAYS) {
+    // Time for a new cycle
+    const newCycleNumber = lastCompleted.cycle_number + 1
+    return await createExamCycle(serviceClient, userId, newCycleNumber, isJapanese)
+  }
+
+  // Not time yet — no gate needed
+  return null
+}
+
+/**
+ * Create comprehensive_exam records for a cycle.
+ */
+async function createCycleExams(
+  serviceClient: ReturnType<typeof createServiceRoleClient> & object,
+  userId: string,
+  cycleId: string,
+  isJapanese: boolean
+): Promise<CycleExam[]> {
+  const categories = isJapanese ? JAPANESE_EXAM_CATEGORIES : ALL_EXAM_CATEGORIES
+
+  const examInserts = categories.map(category => ({
+    user_id: userId,
+    category,
+    subcategory: 'comprehensive',
+    status: 'approved',
+    exam_cycle_id: cycleId,
+    time_limit_minutes: 40,
+    total_questions: 30,
+    passing_score: 70,
+  }))
+
+  const { data: exams } = await serviceClient
+    .from('comprehensive_exams')
+    .insert(examInserts)
+    .select('id, category, subcategory, status, score, passed')
+
+  return (exams ?? []).map(e => ({
+    id: e.id,
+    category: e.category,
+    subcategory: e.subcategory,
+    status: e.status,
+    score: e.score,
+    passed: e.passed,
+  }))
+}
+
+/**
+ * Create a new exam cycle with all category exams.
+ */
+async function createExamCycle(
+  serviceClient: ReturnType<typeof createServiceRoleClient> & object,
+  userId: string,
+  cycleNumber: number,
+  isJapanese: boolean
+): Promise<ExamCycleInfo> {
+  const now = new Date()
+  const deadline = new Date(now.getTime() + CYCLE_INTERVAL_DAYS * 24 * 60 * 60 * 1000)
+
+  // Create cycle
+  const { data: cycle } = await serviceClient
+    .from('exam_cycles')
+    .insert({
+      user_id: userId,
+      cycle_number: cycleNumber,
+      status: 'pending',
+      scheduled_at: now.toISOString(),
+      deadline_at: deadline.toISOString(),
+    })
+    .select('*')
+    .single()
+
+  if (!cycle) {
+    throw new Error('Failed to create exam cycle')
+  }
+
+  // Create comprehensive_exam records
+  const exams = await createCycleExams(serviceClient, userId, cycle.id, isJapanese)
+
+  return {
+    id: cycle.id,
+    cycleNumber: cycle.cycle_number,
+    status: cycle.status,
+    scheduledAt: cycle.scheduled_at,
+    deadlineAt: cycle.deadline_at,
+    exams,
+  }
+}
+
+/**
+ * Check if all exams in a cycle are done, and if so mark cycle as completed.
+ * Uses timestamp-based query (not exam_cycle_id FK) for reliability.
+ */
+async function completeExamCycle(cycleId: string, userId: string, cycleCreatedAt: string): Promise<boolean> {
+  const serviceClient = createServiceRoleClient()
+  if (!serviceClient) return false
+
+  // Find cycle exams by timestamp (not FK — PostgREST schema cache issue)
+  const { data: allExams } = await serviceClient
+    .from('comprehensive_exams')
+    .select('id, category, status')
+    .eq('user_id', userId)
+    .eq('subcategory', 'comprehensive')
+    .gte('requested_at', cycleCreatedAt)
+    .order('requested_at', { ascending: true })
+
+  // Deduplicate by category (keep highest-priority status)
+  const STATUS_PRIORITY: Record<string, number> = { completed: 4, failed: 3, in_progress: 2, approved: 1 }
+  const byCategory = new Map<string, NonNullable<typeof allExams>[number]>()
+  for (const e of allExams ?? []) {
+    const existing = byCategory.get(e.category)
+    if (!existing || (STATUS_PRIORITY[e.status] ?? 0) > (STATUS_PRIORITY[existing.status] ?? 0)) {
+      byCategory.set(e.category, e)
+    }
+  }
+  const exams = Array.from(byCategory.values())
+
+  if (exams.length === 0) return false
+
+  // Check if all exams are completed or failed
+  const allDone = exams.every(e => e.status === 'completed' || e.status === 'failed')
+  if (!allDone) return false
+
+  // Mark cycle as completed
+  await serviceClient
+    .from('exam_cycles')
+    .update({
+      status: 'completed',
+      completed_at: new Date().toISOString(),
+    })
+    .eq('id', cycleId)
+
+  await recalculateUserScores(userId)
+
+  // NOTE: No revalidatePath here — it would cause the calling page's server component
+  // to re-render. Dashboard gets fresh data via full page navigation.
+  return true
+}
+
+/**
+ * Find the active cycle for a user and check if it's complete.
+ * Called from submitExam — doesn't rely on exam.exam_cycle_id.
+ */
+export async function tryCompleteActiveCycle(userId: string): Promise<boolean> {
+  const serviceClient = createServiceRoleClient()
+  if (!serviceClient) return false
+
+  const { data: activeCycle } = await serviceClient
+    .from('exam_cycles')
+    .select('id, user_id, created_at')
+    .eq('user_id', userId)
+    .in('status', ['pending', 'in_progress'])
+    .order('cycle_number', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!activeCycle) return false
+
+  return completeExamCycle(activeCycle.id, userId, activeCycle.created_at)
+}
+
+/**
+ * Get the next scheduled exam date for a user.
+ */
+export async function getNextExamDate(userId: string): Promise<string | null> {
+  const serviceClient = createServiceRoleClient()
+  if (!serviceClient) return null
+
+  const { data: lastCompleted } = await serviceClient
+    .from('exam_cycles')
+    .select('completed_at')
+    .eq('user_id', userId)
+    .eq('status', 'completed')
+    .order('cycle_number', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!lastCompleted?.completed_at) return null
+
+  const completedDate = new Date(lastCompleted.completed_at)
+  const nextDate = new Date(completedDate.getTime() + CYCLE_INTERVAL_DAYS * 24 * 60 * 60 * 1000)
+  return nextDate.toISOString()
+}

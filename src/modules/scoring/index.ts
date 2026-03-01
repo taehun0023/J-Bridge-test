@@ -1,5 +1,4 @@
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
-import { revalidatePath } from 'next/cache'
 import { fetchScoringData } from './fetch-scoring-data'
 import { calcJapaneseAxes } from './axis-jlpt'
 import { calcCodingAxes } from './axis-core-programming'
@@ -29,10 +28,6 @@ export async function recalculateUserScores(userId: string) {
 
   // 5. Write results to DB
   await writeScores(client, userId, data.isJapanese, { japanese, coding, attitude })
-
-  revalidatePath('/dashboard')
-  revalidatePath('/profile')
-  revalidatePath('/admin/reports')
 
   return { success: true }
 }

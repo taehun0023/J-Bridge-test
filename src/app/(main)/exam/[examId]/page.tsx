@@ -20,26 +20,26 @@ export default async function ExamPage({ params }: { params: Promise<{ examId: s
 
   if (!exam) redirect('/dashboard/assignments')
 
-  const categoryLabel = getCategoryLabel(exam.category)
-  const subcategoryLabel = getSubcategoryLabel(exam.category, exam.subcategory)
-  const levelStr = exam.content_level ? ` (${exam.content_level})` : ''
+  // Determine redirect target: cycle exams go to dashboard, others to assignments
+  const backHref = exam.exam_cycle_id ? '/dashboard' : '/dashboard/assignments'
+  const backLabel = exam.exam_cycle_id ? 'ダッシュボードへ' : '課題一覧へ'
 
-  // Completed/Failed - show results
+  const categoryLabel = getCategoryLabel(exam.category)
+  const subcategoryLabel = exam.subcategory === 'comprehensive' ? null : getSubcategoryLabel(exam.category, exam.subcategory)
+  const levelStr = exam.content_level ? ` (${exam.content_level})` : ''
+  const examLabel = subcategoryLabel ? `${categoryLabel} > ${subcategoryLabel}${levelStr}` : `${categoryLabel}${levelStr}`
+
+  // Completed/Failed - show score (no pass/fail message for cycle exams)
   if (exam.status === 'completed' || exam.status === 'failed') {
     return (
       <div className="mx-auto max-w-2xl">
         <Card>
           <div className="py-8 text-center">
-            <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${
-              exam.passed ? 'bg-emerald-100 dark:bg-emerald-500/10' : 'bg-red-100 dark:bg-red-500/10'
-            }`}>
-              <span className="text-3xl">{exam.passed ? '合' : '不'}</span>
-            </div>
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-              {exam.passed ? '合格' : '不合格'}
+              総合試験 結果
             </h1>
             <p className="mt-2 text-zinc-500 dark:text-zinc-400">
-              {categoryLabel} &gt; {subcategoryLabel}{levelStr}
+              {examLabel}
             </p>
             <p className="mt-4 text-4xl font-bold font-mono text-zinc-900 dark:text-zinc-100">
               {exam.score}点
@@ -49,14 +49,11 @@ export default async function ExamPage({ params }: { params: Promise<{ examId: s
             </p>
             <div className="mt-6 flex justify-center gap-3">
               <Link
-                href="/dashboard/assignments"
+                href={backHref}
                 className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               >
-                課題一覧へ
+                {backLabel}
               </Link>
-              {!exam.passed && (
-                <ExamClient exam={exam} mode="retake" />
-              )}
             </div>
           </div>
         </Card>
@@ -64,26 +61,9 @@ export default async function ExamPage({ params }: { params: Promise<{ examId: s
     )
   }
 
-  // Approved - show start button
+  // Approved - let ExamClient handle full start→exam transition
   if (exam.status === 'approved') {
-    return (
-      <div className="mx-auto max-w-2xl">
-        <Card>
-          <div className="py-8 text-center">
-            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">総合試験</h1>
-            <p className="mt-2 text-zinc-500 dark:text-zinc-400">
-              {categoryLabel} &gt; {subcategoryLabel}{levelStr}
-            </p>
-            <div className="mt-6 space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
-              <p>問題数: {exam.total_questions}問</p>
-              <p>制限時間: {exam.time_limit_minutes}分</p>
-              <p>合格点: {exam.passing_score}点</p>
-            </div>
-            <ExamClient exam={exam} mode="start" />
-          </div>
-        </Card>
-      </div>
-    )
+    return <ExamClient exam={exam} mode="start" examLabel={examLabel} />
   }
 
   // In progress - show exam
@@ -100,13 +80,13 @@ export default async function ExamPage({ params }: { params: Promise<{ examId: s
             {exam.status === 'requested' ? '試験承認待ち' : '試験が拒否されました'}
           </h1>
           <p className="mt-2 text-zinc-500 dark:text-zinc-400">
-            {categoryLabel} &gt; {subcategoryLabel}{levelStr}
+            {examLabel}
           </p>
           <Link
-            href="/dashboard/assignments"
+            href={backHref}
             className="mt-4 inline-block rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
           >
-            課題一覧へ
+            {backLabel}
           </Link>
         </div>
       </Card>

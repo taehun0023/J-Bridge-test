@@ -7,7 +7,7 @@ export { requestExam, requestRetakeExam } from './request'
 export { approveExam, denyExam } from './approval'
 
 // Execution (mentee)
-export { startExam, submitExam } from './execution'
+export { startExam, submitExam, loadExamQuestions } from './execution'
 
 // Status
 export { getExamStatus } from './status'

@@ -20,6 +20,9 @@ export default async function BusinessJapaneseHubPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const { data: prof } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  const bypassLock = prof?.role === 'admin' || prof?.role === 'mentor'
+
   // Fetch all mastered it_glossary items for this user
   const { data: masteredItems } = await supabase
     .from('user_mastered_items')
@@ -80,7 +83,7 @@ export default async function BusinessJapaneseHubPage() {
 
       {/* Test block */}
       <div className="mt-6">
-        <BusinessTestBlock subcategories={subcategoryProgress} />
+        <BusinessTestBlock subcategories={subcategoryProgress} bypassLock={bypassLock} />
       </div>
     </div>
   )

@@ -8,6 +8,7 @@ import { fetchRandomAssessmentQuestions, fetchAssessmentQuiz } from '@/lib/supab
 import { recalculateUserScores } from './scores'
 import { ASSESSMENT_QUIZ_IDS } from '@/lib/assessment-config'
 import { notifyMentorsAndAdmins, getUserDisplayName } from '@/lib/notification-helpers'
+import { checkAndCreateExamCycle } from './exam-scheduling'
 
 /** Save onboarding preferences and mark as onboarded → dashboard */
 export async function savePreferences(formData: FormData) {
@@ -35,6 +36,10 @@ export async function savePreferences(formData: FormData) {
     .eq('id', user.id)
 
   if (error) return { error: '保存中にエラーが発生しました' }
+
+  // Create first exam cycle (cycle_number=1) on onboarding completion
+  // This triggers the exam gate on the dashboard
+  await checkAndCreateExamCycle(user.id, isJapanese)
 
   revalidatePath('/', 'layout')
   redirect('/dashboard')

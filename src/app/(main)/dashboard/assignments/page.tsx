@@ -30,6 +30,9 @@ export default async function AssignmentsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const { data: userProfile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  const isAdminOrMentor = userProfile?.role === 'admin' || userProfile?.role === 'mentor'
+
   // Fetch learning assignments
   const { data: assignments } = await supabase
     .from('learning_assignments')
@@ -357,9 +360,9 @@ export default async function AssignmentsPage() {
             const bizJpProgress = assignment.category === 'business-jp'
               ? bizJpProgressMap[assignment.subcategory] : null
             const isQuizLocked = isOverdue
-              || (assignment.category === 'business-lit' && readingTotal > 0 && readingProgress < 100)
-              || (assignment.category === 'seikatsu' && (jlptProgress?.pct ?? 0) < 80)
-              || (assignment.category === 'business-jp' && (bizJpProgress?.pct ?? 0) < 80)
+              || (!isAdminOrMentor && assignment.category === 'business-lit' && readingTotal > 0 && readingProgress < 100)
+              || (!isAdminOrMentor && assignment.category === 'seikatsu' && (jlptProgress?.pct ?? 0) < 80)
+              || (!isAdminOrMentor && assignment.category === 'business-jp' && (bizJpProgress?.pct ?? 0) < 80)
 
             return (
               <Card key={assignment.id}>

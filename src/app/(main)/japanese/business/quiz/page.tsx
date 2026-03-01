@@ -31,8 +31,14 @@ export default async function BusinessQuizListPage({ searchParams }: { searchPar
 
   const { data: { user } } = await supabase.auth.getUser()
 
+  let userRole: string | null = null
+  if (user) {
+    const { data: prof } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    userRole = prof?.role ?? null
+  }
+
   // Server-side mastery progress gate: if a specific type is requested, verify 80% mastery
-  if (user && params.type && QUIZ_TYPE_TO_CATEGORIES[params.type]) {
+  if (user && params.type && QUIZ_TYPE_TO_CATEGORIES[params.type] && userRole !== 'admin' && userRole !== 'mentor') {
     const dbCategories = QUIZ_TYPE_TO_CATEGORIES[params.type]
 
     const { data: items } = await supabase

@@ -17,6 +17,7 @@ interface LevelProgress {
 
 interface Props {
   levelProgress: Record<string, LevelProgress>
+  bypassLock?: boolean
 }
 
 const JLPT_LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'] as const
@@ -29,7 +30,7 @@ function getOverallProgress(p: LevelProgress): number {
   return Math.round((mastered / total) * 100)
 }
 
-export default function JlptTestBlock({ levelProgress }: Props) {
+export default function JlptTestBlock({ levelProgress, bypassLock = false }: Props) {
   return (
     <Card>
       <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">理解度テスト</h2>
@@ -43,7 +44,7 @@ export default function JlptTestBlock({ levelProgress }: Props) {
           if (!progress) return null
 
           const pct = getOverallProgress(progress)
-          const unlocked = pct >= THRESHOLD
+          const unlocked = bypassLock || pct >= THRESHOLD
 
           const cardContent = (
             <>

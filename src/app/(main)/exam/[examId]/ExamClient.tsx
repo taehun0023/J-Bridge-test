@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback, useTransition } from 'react'
-import { startExam, submitExam, requestRetakeExam } from '@/app/actions/comprehensive-exam'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { startExam, submitExam, requestRetakeExam, loadExamQuestions } from '@/app/actions/comprehensive-exam'
 import { submitQuestionClaim } from '@/app/actions/claims'
 import { useRouter } from 'next/navigation'
 import Card from '@/components/ui/Card'
+import QuizQuestion from '@/components/quiz/QuizQuestion'
 
 interface ExamData {
   id: string
@@ -13,12 +14,13 @@ interface ExamData {
   total_questions: number
   passing_score: number
   started_at: string | null
+  exam_cycle_id?: string | null
 }
 
 interface Question {
   id: string
   question_text: string
-  options: { id: string; option_text: string }[]
+  options: { id: string; option_text: string; sort_order: number }[]
 }
 
 interface ReviewResult {
@@ -31,72 +33,119 @@ interface ReviewResult {
 interface Props {
   exam: ExamData
   mode: 'start' | 'exam' | 'retake'
+  examLabel?: string
 }
 
-export default function ExamClient({ exam, mode }: Props) {
-  const [pending, startTransition] = useTransition()
+export default function ExamClient({ exam, mode, examLabel }: Props) {
+  const router = useRouter()
+  const hasSubmittedRef = useRef(false)
+  const answersRef = useRef<Record<string, string>>({})
+
   const [questions, setQuestions] = useState<Question[]>([])
+  const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
-  const [timeLeft, setTimeLeft] = useState(exam.time_limit_minutes * 60)
+  const [remainingSeconds, setRemainingSeconds] = useState(exam.time_limit_minutes * 60)
   const [started, setStarted] = useState(mode === 'exam')
-  const [submitted, setSubmitted] = useState(false)
-  const [result, setResult] = useState<{
-    score: number
-    passed: boolean
-    correctCount?: number
-    totalCount?: number
-    results?: ReviewResult[]
-  } | null>(null)
+  const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [showReview, setShowReview] = useState(false)
-  const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set())
+
+  // Review mode state
+  const [reviewMode, setReviewMode] = useState(false)
+  const [reviewResults, setReviewResults] = useState<ReviewResult[] | null>(null)
+  const [reviewScore, setReviewScore] = useState<{ score: number; correctCount: number; totalCount: number } | null>(null)
   const [claimedQuestions, setClaimedQuestions] = useState<Set<string>>(new Set())
   const [claimingId, setClaimingId] = useState<string | null>(null)
+  const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set())
   const [claimForms, setClaimForms] = useState<Set<string>>(new Set())
   const [claimReasons, setClaimReasons] = useState<Record<string, string>>({})
   const [claimError, setClaimError] = useState<string | null>(null)
-  const router = useRouter()
 
-  // Calculate time left if exam is already in progress
+  const totalQuestions = questions.length
+  const currentQuestion = questions[currentIndex]
+  const answeredCount = Object.keys(answers).length
+
   useEffect(() => {
-    if (mode === 'exam' && exam.started_at) {
-      const elapsed = Math.floor((Date.now() - new Date(exam.started_at).getTime()) / 1000)
-      const remaining = Math.max(0, exam.time_limit_minutes * 60 - elapsed)
-      setTimeLeft(remaining)
+    answersRef.current = answers
+  }, [answers])
+
+  // Load questions when resuming an in-progress exam
+  useEffect(() => {
+    if (mode === 'exam' && questions.length === 0 && !error) {
+      loadExamQuestions(exam.id).then(res => {
+        if ('error' in res) {
+          setError(res.error ?? '問題の読み込みに失敗しました')
+        } else if (res.questions) {
+          setQuestions(res.questions as Question[])
+          if (res.startedAt) {
+            const elapsed = Math.floor((Date.now() - new Date(res.startedAt).getTime()) / 1000)
+            setRemainingSeconds(Math.max(0, (res.timeLimit ?? exam.time_limit_minutes) * 60 - elapsed))
+          }
+        }
+      })
     }
-  }, [mode, exam.started_at, exam.time_limit_minutes])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, exam.id])
 
-  const handleSubmit = useCallback(() => {
-    if (submitted) return
-    setSubmitted(true)
-    startTransition(async () => {
-      const answerArray = questions.map(q => ({
-        questionId: q.id,
-        selectedOptionId: answers[q.id] ?? '',
-      })).filter(a => a.selectedOptionId)
+  // Fire-and-forget submit (for navigation away — submit answered questions only)
+  const doSubmit = useCallback(async (currentAnswers: Record<string, string>) => {
+    if (hasSubmittedRef.current) return
+    hasSubmittedRef.current = true
 
-      const res = await submitExam(exam.id, answerArray)
-      if (res.error) {
-        setError(res.error)
-        setSubmitted(false)
-      } else {
-        setResult({
-          score: res.score!,
-          passed: res.passed!,
-          correctCount: res.correctCount,
-          totalCount: res.totalCount,
-          results: res.results,
-        })
-      }
-    })
-  }, [submitted, questions, answers, exam.id])
+    const answerArray = questions
+      .map(q => ({ questionId: q.id, selectedOptionId: currentAnswers[q.id] ?? '' }))
+      .filter(a => a.selectedOptionId !== '')
+
+    if (answerArray.length === 0) {
+      hasSubmittedRef.current = false
+      return
+    }
+
+    await submitExam(exam.id, answerArray)
+  }, [questions, exam.id])
+
+  // Full submit — submit and enter review mode
+  const handleSubmit = useCallback(async () => {
+    if (hasSubmittedRef.current) return
+    hasSubmittedRef.current = true
+    setSubmitting(true)
+    setError(null)
+
+    const answerArray = questions
+      .map(q => ({ questionId: q.id, selectedOptionId: answersRef.current[q.id] ?? '' }))
+      .filter(a => a.selectedOptionId !== '')
+
+    if (answerArray.length === 0) {
+      setError('最低1問以上回答してください')
+      setSubmitting(false)
+      hasSubmittedRef.current = false
+      return
+    }
+
+    const res = await submitExam(exam.id, answerArray)
+    if ('error' in res && res.error) {
+      setError(res.error)
+      setSubmitting(false)
+      hasSubmittedRef.current = false
+      return
+    }
+
+    // Enter review mode with results
+    if ('results' in res && res.results) {
+      setReviewResults(res.results)
+      setReviewScore({ score: res.score, correctCount: res.correctCount, totalCount: res.totalCount })
+      setReviewMode(true)
+      setSubmitting(false)
+    } else {
+      window.location.href = '/dashboard'
+    }
+  }, [questions, exam.id])
 
   // Timer
   useEffect(() => {
-    if (!started || submitted || questions.length === 0) return
+    if (!started || submitting || reviewMode || questions.length === 0) return
 
     const interval = setInterval(() => {
-      setTimeLeft(prev => {
+      setRemainingSeconds(prev => {
         if (prev <= 1) {
           clearInterval(interval)
           handleSubmit()
@@ -107,11 +156,11 @@ export default function ExamClient({ exam, mode }: Props) {
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [started, submitted, questions.length, handleSubmit])
+  }, [started, submitting, reviewMode, questions.length, handleSubmit])
 
-  // Anti-cheat: prevent drag, copy, select, right-click during exam
+  // Anti-cheat: prevent drag, copy, select, right-click during exam (not in review)
   useEffect(() => {
-    if (!started || submitted) return
+    if (!started || submitting || reviewMode) return
 
     const prevent = (e: Event) => e.preventDefault()
     document.addEventListener('dragstart', prevent)
@@ -129,117 +178,210 @@ export default function ExamClient({ exam, mode }: Props) {
       document.removeEventListener('selectstart', prevent)
       document.removeEventListener('contextmenu', prevent)
     }
-  }, [started, submitted])
+  }, [started, submitting, reviewMode])
+
+  // Intercept link clicks during exam — warn and submit partial answers
+  useEffect(() => {
+    if (!started || submitting || reviewMode || questions.length === 0) return
+
+    const handleClick = (e: MouseEvent) => {
+      if (hasSubmittedRef.current) return
+      const anchor = (e.target as HTMLElement).closest('a')
+      if (!anchor || !anchor.href) return
+
+      const url = new URL(anchor.href, window.location.origin)
+      if (url.pathname === window.location.pathname) return
+
+      e.preventDefault()
+      e.stopPropagation()
+
+      const leave = window.confirm(
+        'テストを中断すると、回答済みの問題のみ採点されます。本当に退出しますか？'
+      )
+      if (leave) {
+        doSubmit(answersRef.current).then(() => {
+          window.location.href = anchor.href
+        })
+      }
+    }
+
+    document.addEventListener('click', handleClick, true)
+    return () => document.removeEventListener('click', handleClick, true)
+  }, [doSubmit, started, submitting, reviewMode, questions.length])
+
+  // Intercept browser back button — warn and submit partial answers
+  useEffect(() => {
+    if (!started || submitting || reviewMode || questions.length === 0) return
+
+    const handlePopState = () => {
+      if (hasSubmittedRef.current) return
+      const leave = window.confirm(
+        'テストを中断すると、回答済みの問題のみ採点されます。本当に退出しますか？'
+      )
+      if (leave) {
+        doSubmit(answersRef.current).then(() => {
+          window.location.href = '/dashboard'
+        })
+      } else {
+        window.history.pushState(null, '', window.location.href)
+      }
+    }
+
+    window.history.pushState(null, '', window.location.href)
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [doSubmit, started, submitting, reviewMode, questions.length])
+
+  // Warn on tab close / refresh
+  useEffect(() => {
+    if (!started || submitting || reviewMode || questions.length === 0) return
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasSubmittedRef.current) return
+      e.preventDefault()
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [started, submitting, reviewMode, questions.length])
 
   function handleStart() {
     if (!window.confirm('試験を受けますか？')) return
-    startTransition(async () => {
-      const res = await startExam(exam.id)
-      if (res.error) {
+    setSubmitting(true)
+    startExam(exam.id).then(res => {
+      if ('error' in res && res.error) {
         setError(res.error)
-      } else if (res.questions) {
-        setQuestions(res.questions)
-        setTimeLeft(res.timeLimit! * 60)
+        setSubmitting(false)
+      } else if ('questions' in res && res.questions) {
+        setQuestions(res.questions as Question[])
+        setRemainingSeconds(res.timeLimit! * 60)
         setStarted(true)
+        setSubmitting(false)
       }
     })
   }
 
   function handleRetake() {
-    startTransition(async () => {
-      const res = await requestRetakeExam(exam.id)
-      if (res.error) {
+    setSubmitting(true)
+    requestRetakeExam(exam.id).then(res => {
+      if ('error' in res && res.error) {
         setError(res.error)
+        setSubmitting(false)
       } else {
-        router.push('/dashboard/assignments')
+        router.push('/dashboard')
       }
     })
   }
 
-  function toggleExpanded(qId: string) {
-    setExpandedQuestions(prev => {
-      const next = new Set(prev)
-      if (next.has(qId)) next.delete(qId)
-      else next.add(qId)
-      return next
-    })
-  }
-
-  function toggleClaimForm(qId: string) {
-    setClaimForms(prev => {
-      const next = new Set(prev)
-      if (next.has(qId)) next.delete(qId)
-      else next.add(qId)
-      return next
-    })
-    setClaimError(null)
-  }
-
-  async function handleClaim(qId: string) {
-    setClaimingId(qId)
-    setClaimError(null)
-    const res = await submitQuestionClaim(qId, claimReasons[qId] || undefined)
-    if (res.error) {
-      setClaimError(res.error)
-    } else {
-      setClaimedQuestions(prev => new Set(prev).add(qId))
-      setClaimForms(prev => {
-        const next = new Set(prev)
-        next.delete(qId)
+  function handleSelect(optionId: string) {
+    if (!currentQuestion) return
+    if (optionId === '') {
+      setAnswers(prev => {
+        const next = { ...prev }
+        delete next[currentQuestion.id]
         return next
       })
+    } else {
+      setAnswers(prev => ({ ...prev, [currentQuestion.id]: optionId }))
+    }
+  }
+
+  const handleClaim = async (questionId: string) => {
+    setClaimingId(questionId)
+    setClaimError(null)
+    const reason = claimReasons[questionId] || undefined
+    const result = await submitQuestionClaim(questionId, reason)
+    if (result.success) {
+      setClaimedQuestions(prev => new Set(prev).add(questionId))
+      setClaimForms(prev => { const next = new Set(prev); next.delete(questionId); return next })
+    } else if ('error' in result && result.error) {
+      setClaimError(result.error)
     }
     setClaimingId(null)
   }
 
-  // Retake button mode
+  const toggleClaimForm = (questionId: string) => {
+    setClaimForms(prev => {
+      const next = new Set(prev)
+      if (next.has(questionId)) next.delete(questionId)
+      else next.add(questionId)
+      return next
+    })
+  }
+
+  const toggleExpanded = (questionId: string) => {
+    setExpandedQuestions(prev => {
+      const next = new Set(prev)
+      if (next.has(questionId)) next.delete(questionId)
+      else next.add(questionId)
+      return next
+    })
+  }
+
+  // ==================== RETAKE BUTTON ====================
   if (mode === 'retake') {
     return (
       <button
         onClick={handleRetake}
-        disabled={pending}
+        disabled={submitting}
         className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
       >
-        {pending ? 'リクエスト中...' : '再試験リクエスト'}
+        {submitting ? 'リクエスト中...' : '再試験リクエスト'}
       </button>
     )
   }
 
-  // Start button mode
-  if (mode === 'start' && !started) {
+  // ==================== START SCREEN ====================
+  if (mode === 'start' && !started && !reviewMode) {
     return (
-      <div className="mt-6">
-        {error && <p className="mb-3 text-sm text-red-500">{error}</p>}
-        <button
-          onClick={handleStart}
-          disabled={pending}
-          className="rounded-lg bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
-        >
-          {pending ? '準備中...' : '試験を開始する'}
-        </button>
-        <p className="mt-3 text-xs text-zinc-400 dark:text-zinc-500">
-          開始後、タイマーが自動的にスタートします
-        </p>
+      <div className="mx-auto max-w-2xl">
+        <Card>
+          <div className="py-8 text-center">
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">総合試験</h1>
+            {examLabel && (
+              <p className="mt-2 text-zinc-500 dark:text-zinc-400">{examLabel}</p>
+            )}
+            <div className="mt-6 space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
+              <p>問題数: {exam.total_questions}問</p>
+              <p>制限時間: {exam.time_limit_minutes}分</p>
+              <p>合格点: {exam.passing_score}点</p>
+            </div>
+            <div className="mt-6">
+              {error && <p className="mb-3 text-sm text-red-500">{error}</p>}
+              <button
+                onClick={handleStart}
+                disabled={submitting}
+                className="rounded-lg bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+              >
+                {submitting ? '準備中...' : '試験を開始する'}
+              </button>
+              <p className="mt-3 text-xs text-zinc-400 dark:text-zinc-500">
+                開始後、タイマーが自動的にスタートします
+              </p>
+            </div>
+          </div>
+        </Card>
       </div>
     )
   }
 
-  // Review mode
-  if (result && showReview && result.results) {
-    const resultMap = new Map(result.results.map(r => [r.questionId, r]))
+  // ==================== REVIEW MODE ====================
+  if (reviewMode && reviewResults && reviewScore) {
+    const resultMap = new Map(reviewResults.map(r => [r.questionId, r]))
 
     return (
-      <div className="mx-auto max-w-3xl py-8">
+      <div className="mx-auto max-w-3xl">
         {/* Review Header */}
         <div className="mb-6">
           <p className="text-sm font-medium text-indigo-400">総合試験 — 結果レビュー</p>
+          {examLabel && (
+            <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">{examLabel}</h1>
+          )}
           <div className="mt-3 flex items-center gap-4">
-            <div className="rounded-xl bg-white/[0.03] border border-white/[0.08] px-4 py-2 dark:bg-white/[0.03] dark:border-white/[0.08] bg-zinc-100 border-gray-200">
-              <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{result.score}</span>
+            <div className="rounded-xl bg-zinc-100 border border-gray-200 px-4 py-2 dark:bg-white/[0.03] dark:border-white/[0.08]">
+              <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{reviewScore.score}</span>
               <span className="text-sm text-zinc-500 dark:text-zinc-400">点</span>
             </div>
             <div className="text-sm text-zinc-500 dark:text-zinc-400">
-              {result.correctCount}/{result.totalCount} 正解
+              {reviewScore.correctCount}/{reviewScore.totalCount} 正解
             </div>
           </div>
         </div>
@@ -276,7 +418,7 @@ export default function ExamClient({ exam, mode }: Props) {
                         ? 'bg-red-500/20 text-red-500'
                         : 'bg-zinc-200 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400'
                     }`}>
-                      {isCorrect ? '✓' : wasAnswered ? '✗' : '-'}
+                      {isCorrect ? '\u2713' : wasAnswered ? '\u2717' : '-'}
                     </span>
                     <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
                       問{i + 1}
@@ -307,10 +449,17 @@ export default function ExamClient({ exam, mode }: Props) {
                         }
 
                         return (
-                          <div key={opt.id} className={`rounded-lg border px-3 py-2 text-sm ${optionClass}`}>
+                          <div
+                            key={opt.id}
+                            className={`rounded-lg border px-3 py-2 text-sm ${optionClass}`}
+                          >
                             <div className="flex items-center gap-2">
-                              {isCorrectOption && <span className="text-emerald-500 font-bold text-xs">✓</span>}
-                              {isSelected && !isCorrect && <span className="text-red-500 font-bold text-xs">✗</span>}
+                              {isCorrectOption && (
+                                <span className="text-emerald-500 font-bold text-xs">{'\u2713'}</span>
+                              )}
+                              {isSelected && !isCorrect && (
+                                <span className="text-red-500 font-bold text-xs">{'\u2717'}</span>
+                              )}
                               <span className={`${
                                 isCorrectOption
                                   ? 'text-emerald-700 dark:text-emerald-300 font-medium'
@@ -381,150 +530,169 @@ export default function ExamClient({ exam, mode }: Props) {
         </div>
 
         {/* Footer */}
-        <div className="mt-6 flex justify-center gap-3">
+        <div className="mt-6 flex justify-center">
           <button
-            onClick={() => setShowReview(false)}
-            className="rounded-xl bg-gray-100 px-6 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
-          >
-            結果に戻る
-          </button>
-          <button
-            onClick={() => router.push('/dashboard/assignments')}
+            onClick={() => { window.location.href = '/dashboard' }}
             className="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors"
           >
-            課題一覧へ
+            ダッシュボードに戻る
           </button>
         </div>
       </div>
     )
   }
 
-  // Result display
-  if (result) {
+  // ==================== EXAM MODE (one question at a time) ====================
+  if (questions.length === 0) {
     return (
-      <div className="mx-auto max-w-2xl py-8">
+      <div className="mx-auto max-w-3xl">
         <Card>
-          <div className="py-8 text-center">
-            <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${
-              result.passed ? 'bg-emerald-100 dark:bg-emerald-500/10' : 'bg-red-100 dark:bg-red-500/10'
-            }`}>
-              <span className="text-3xl">{result.passed ? '合' : '不'}</span>
-            </div>
-            <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-              {result.passed ? '合格' : '不合格'}
-            </h2>
-            <p className="mt-4 text-4xl font-bold font-mono text-zinc-900 dark:text-zinc-100">
-              {result.score}点
-            </p>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-              合格点: {exam.passing_score}点
-            </p>
-            <div className="mt-6 flex justify-center gap-3">
-              {result.results && result.results.length > 0 && (
-                <button
-                  onClick={() => setShowReview(true)}
-                  className="rounded-lg bg-amber-100 px-4 py-2 text-sm font-medium text-amber-700 hover:bg-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:hover:bg-amber-500/20"
-                >
-                  結果レビュー
-                </button>
-              )}
-              <button
-                onClick={() => router.push('/dashboard/assignments')}
-                className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-              >
-                課題一覧へ
-              </button>
-              {!result.passed && (
-                <button
-                  onClick={handleRetake}
-                  disabled={pending}
-                  className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
-                >
-                  再試験リクエスト
-                </button>
-              )}
-            </div>
-          </div>
+          <div className="py-8 text-center text-zinc-500">問題を読み込み中...</div>
         </Card>
       </div>
     )
   }
 
-  // Exam in progress
-  const minutes = Math.floor(timeLeft / 60)
-  const seconds = timeLeft % 60
-  const answeredCount = Object.keys(answers).length
-  const isTimeLow = timeLeft < 300 // 5 minutes
+  const totalSeconds = exam.time_limit_minutes * 60
+  const timeProgressPct = totalSeconds > 0 ? Math.max(0, (remainingSeconds / totalSeconds) * 100) : 0
+  const isTimeCritical = remainingSeconds <= 60
+  const isTimeLow = remainingSeconds <= 300
+
+  const timerBg = isTimeCritical
+    ? 'border-red-300 bg-red-50/90 dark:border-red-500/40 dark:bg-red-900/30'
+    : isTimeLow
+    ? 'border-amber-300 bg-amber-50/90 dark:border-amber-500/40 dark:bg-amber-900/30'
+    : 'border-emerald-300 bg-emerald-50/90 dark:border-emerald-500/40 dark:bg-emerald-900/30'
+
+  const timerText = isTimeCritical
+    ? 'text-red-700 dark:text-red-300'
+    : isTimeLow
+    ? 'text-amber-700 dark:text-amber-300'
+    : 'text-emerald-700 dark:text-emerald-300'
+
+  const progressBarColor = isTimeCritical
+    ? 'bg-red-500'
+    : isTimeLow
+    ? 'bg-amber-500'
+    : 'bg-emerald-500'
+
+  const minutes = Math.floor(remainingSeconds / 60)
+  const seconds = remainingSeconds % 60
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div
+      className="mx-auto max-w-3xl select-none"
+      style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' } as React.CSSProperties}
+    >
       {error && (
         <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600 dark:bg-red-900/30 dark:text-red-400">
           {error}
         </div>
       )}
 
-      {/* Sticky timer bar */}
-      <div className="sticky top-0 z-10 mb-4 flex items-center justify-between rounded-xl border border-gray-200 bg-white/90 px-4 py-3 shadow-sm backdrop-blur dark:border-white/[0.08] dark:bg-zinc-900/90">
-        <span className="text-sm text-zinc-500 dark:text-zinc-400">
-          回答: {answeredCount}/{questions.length}
-        </span>
-        <span className={`text-lg font-mono font-bold ${isTimeLow ? 'text-red-500 animate-pulse' : 'text-zinc-900 dark:text-zinc-100'}`}>
-          {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
-        </span>
-        <button
-          onClick={handleSubmit}
-          disabled={pending || submitted}
-          className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
-        >
-          {pending ? '提出中...' : '提出する'}
-        </button>
+      {/* Header + Timer */}
+      <div className={`sticky top-0 z-10 mb-4 overflow-hidden rounded-xl border shadow-sm backdrop-blur ${timerBg}`}>
+        <div className="flex items-center justify-between px-4 py-3">
+          <div>
+            <p className="text-xs font-medium text-indigo-400">総合試験</p>
+          </div>
+          <div className={`flex items-center gap-2 ${isTimeCritical || isTimeLow ? 'animate-pulse' : ''}`}>
+            <span className={`rounded-lg px-3 py-1 text-sm font-bold ${timerText}`}>
+              残り {minutes}分{seconds > 0 ? ` ${seconds}秒` : ''}
+            </span>
+          </div>
+          <span className="text-sm text-zinc-600 dark:text-zinc-300">
+            回答: <span className="font-semibold">{answeredCount}/{totalQuestions}</span>
+          </span>
+        </div>
+        {/* Time progress bar */}
+        <div className="h-1.5 w-full bg-gray-200/50 dark:bg-white/10">
+          <div
+            className={`h-full transition-all duration-1000 ease-linear ${progressBarColor}`}
+            style={{ width: `${timeProgressPct}%` }}
+          />
+        </div>
       </div>
 
-      {/* Questions */}
-      {questions.length === 0 && started ? (
-        <Card>
-          <div className="py-8 text-center text-zinc-500">問題を読み込み中...</div>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {questions.map((question, idx) => (
-            <Card key={question.id}>
-              <div className="flex items-start gap-3">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400">
-                  {idx + 1}
-                </span>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 whitespace-pre-wrap">
-                    {question.question_text}
-                  </p>
-                  <div className="mt-3 space-y-2">
-                    {question.options.map(option => (
-                      <label
-                        key={option.id}
-                        className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${
-                          answers[question.id] === option.id
-                            ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-500/10'
-                            : 'border-gray-200 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-white/5'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name={`q-${question.id}`}
-                          value={option.id}
-                          checked={answers[question.id] === option.id}
-                          onChange={() => setAnswers(prev => ({ ...prev, [question.id]: option.id }))}
-                          className="h-4 w-4 text-indigo-600"
-                        />
-                        <span className="text-sm text-zinc-700 dark:text-zinc-300">{option.option_text}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
+      {/* Answer progress bar */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 mb-1">
+          <span>進捗</span>
+          <span>{answeredCount}/{totalQuestions} 回答完了</span>
         </div>
+        <div className="h-2 rounded-full bg-zinc-200 dark:bg-white/5">
+          <div
+            className="h-2 rounded-full bg-indigo-600 transition-all"
+            style={{ width: `${(answeredCount / totalQuestions) * 100}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Question navigation dots */}
+      <div className="mb-6 flex flex-wrap gap-1.5">
+        {questions.map((q, i) => (
+          <button
+            key={q.id}
+            onClick={() => setCurrentIndex(i)}
+            className={`h-7 w-7 rounded text-xs font-medium transition-colors ${
+              i === currentIndex
+                ? 'bg-indigo-600 text-white'
+                : answers[q.id]
+                  ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20'
+                  : 'bg-zinc-100 text-zinc-500 dark:bg-white/5 dark:text-zinc-400'
+            }`}
+          >
+            {i + 1}
+          </button>
+        ))}
+      </div>
+
+      {/* Current question */}
+      {currentQuestion && (
+        <div className="rounded-2xl border border-gray-200/60 bg-white/80 backdrop-blur-md p-6 dark:border-white/[0.08] dark:bg-white/[0.03]">
+          <QuizQuestion
+            questionNumber={currentIndex + 1}
+            totalQuestions={totalQuestions}
+            questionText={currentQuestion.question_text}
+            options={currentQuestion.options}
+            selectedOptionId={answers[currentQuestion.id] ?? null}
+            onSelect={handleSelect}
+          />
+        </div>
+      )}
+
+      {/* Navigation */}
+      <div className="mt-6 flex items-center justify-between">
+        <button
+          onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
+          disabled={currentIndex === 0}
+          className="rounded-xl border border-gray-200 dark:border-white/[0.08] px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          前へ
+        </button>
+
+        {currentIndex < totalQuestions - 1 ? (
+          <button
+            onClick={() => setCurrentIndex(prev => Math.min(totalQuestions - 1, prev + 1))}
+            className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+          >
+            次へ
+          </button>
+        ) : (
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || answeredCount === 0}
+            className="rounded-xl bg-emerald-600 px-6 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {submitting ? '提出中...' : '提出する'}
+          </button>
+        )}
+      </div>
+
+      {currentIndex === totalQuestions - 1 && answeredCount < totalQuestions && (
+        <p className="mt-3 text-center text-xs text-amber-400">
+          {totalQuestions - answeredCount}問がまだ未回答です
+        </p>
       )}
     </div>
   )

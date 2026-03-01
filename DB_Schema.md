@@ -41,7 +41,7 @@ profiles ───────────────────────�
     ├── admin_feedbacks ── feedback_replies (피드백 + 답글)        │
     │                                                             │
     ├── learning_assignments (학습 과제)                           │
-    ├── comprehensive_exams ── comprehensive_exam_answers          │
+    ├── exam_cycles ── comprehensive_exams ── comprehensive_exam_answers │
     ├── content_access_requests (열람 신청)                        │
     ├── user_mastered_items (암기 체크)                            │
     │                                                             │
@@ -65,7 +65,7 @@ profiles ───────────────────────�
 | 랭킹 시스템 | ranking_seasons, user_rankings | 2 |
 | 관리자/멘토 기능 | task_assignments, admin_feedbacks, feedback_replies | 3 |
 | 멘토-멘티 & 알림 | mentor_mentee_assignments, notifications | 2 |
-| 학습 과제 & 종합 시험 | learning_assignments, comprehensive_exams, comprehensive_exam_answers | 3 |
+| 학습 과제 & 종합 시험 | learning_assignments, exam_cycles, comprehensive_exams, comprehensive_exam_answers | 4 |
 | 콘텐츠 접근 & 사용자 인터랙션 | content_access_requests, question_claims, user_mastered_items | 3 |
 
 ---
@@ -861,9 +861,34 @@ CREATE TABLE learning_assignments (
 CREATE INDEX idx_learning_assignments_assignee ON learning_assignments(assigned_to, status);
 ```
 
-### 38. comprehensive_exams
+### 38a. exam_cycles
 
-종합 시험 (카테고리별 승인제 시험).
+시험 사이클 추적 (유저별 2주 간격 종합시험 스케줄링).
+
+```sql
+CREATE TABLE exam_cycles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  cycle_number SMALLINT NOT NULL DEFAULT 1,
+  status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'in_progress', 'completed', 'expired')),
+  scheduled_at TIMESTAMPTZ NOT NULL,
+  deadline_at TIMESTAMPTZ NOT NULL,
+  completed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, cycle_number)
+);
+
+CREATE INDEX idx_exam_cycles_user_status ON exam_cycles(user_id, status);
+```
+
+- `cycle_number=1`: 입사 후 첫 시험 (온보딩 완료 시 자동 생성)
+- 이후 2주마다 새 사이클 자동 생성 (대시보드 접속 시 체크)
+- 사이클 내 모든 시험 완료 시 `status='completed'`
+
+### 38b. comprehensive_exams
+
+종합 시험 (카테고리별 시험). 사이클 기반 자동 생성 또는 수동 요청.
 
 ```sql
 CREATE TABLE comprehensive_exams (
@@ -874,6 +899,7 @@ CREATE TABLE comprehensive_exams (
   content_level TEXT,
   status TEXT NOT NULL DEFAULT 'requested'
     CHECK (status IN ('requested', 'approved', 'denied', 'in_progress', 'completed', 'failed')),
+  exam_cycle_id UUID REFERENCES exam_cycles(id) ON DELETE SET NULL,
   requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   approved_at TIMESTAMPTZ,
   approved_by UUID REFERENCES profiles(id),
@@ -887,7 +913,11 @@ CREATE TABLE comprehensive_exams (
 );
 
 CREATE INDEX idx_comprehensive_exams_user ON comprehensive_exams(user_id, status);
+CREATE INDEX idx_comprehensive_exams_cycle ON comprehensive_exams(exam_cycle_id);
 ```
+
+- `exam_cycle_id`: 사이클 기반 시험일 때 설정 (자동 생성, status='approved')
+- `exam_cycle_id IS NULL`: 수동 요청 시험 (기존 request→approve 플로우)
 
 ### 39. comprehensive_exam_answers
 

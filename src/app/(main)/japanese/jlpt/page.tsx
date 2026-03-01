@@ -15,6 +15,9 @@ export default async function JlptHubPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const { data: prof } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  const bypassLock = prof?.role === 'admin' || prof?.role === 'mentor'
+
   // Fetch mastered counts per level for vocabulary, grammar, kanji, reading, listening
   const { data: masteredItems } = await supabase
     .from('user_mastered_items')
@@ -100,7 +103,7 @@ export default async function JlptHubPage() {
 
       {/* Test block — moved to bottom */}
       <div className="mt-6">
-        <JlptTestBlock levelProgress={levelProgress} />
+        <JlptTestBlock levelProgress={levelProgress} bypassLock={bypassLock} />
       </div>
     </div>
   )

@@ -25,8 +25,14 @@ export default async function QuizListPage({ searchParams }: { searchParams: Pro
 
   const { data: { user } } = await supabase.auth.getUser()
 
+  let userRole: string | null = null
+  if (user) {
+    const { data: prof } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    userRole = prof?.role ?? null
+  }
+
   // Server-side mastery progress gate: if a specific level is requested, verify 80% mastery
-  if (user && params.level) {
+  if (user && params.level && userRole !== 'admin' && userRole !== 'mentor') {
     const level = params.level
     const [vocabIds, grammarIds, kanjiIds, readingIds, listeningIds] = await Promise.all([
       supabase.from('jlpt_vocabulary').select('id').eq('jlpt_level', level),
