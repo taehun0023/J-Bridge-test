@@ -83,3 +83,35 @@ export async function denyExam(examId: string) {
   revalidatePath('/dashboard/assignments')
   return { success: true }
 }
+
+export async function deleteExam(examId: string) {
+  const auth = await requireAdminOrMentor()
+  if ('error' in auth) return { error: auth.error } as const
+
+  const serviceClient = createServiceRoleClient()
+  if (!serviceClient) return { error: 'Service role key not configured' }
+
+  const { data: exam } = await serviceClient
+    .from('comprehensive_exams')
+    .select('id, status')
+    .eq('id', examId)
+    .single()
+
+  if (!exam) return { error: '試験が見つかりません' }
+
+  // Delete related answers first (FK constraint)
+  await serviceClient
+    .from('comprehensive_exam_answers')
+    .delete()
+    .eq('exam_id', examId)
+
+  const { error } = await serviceClient
+    .from('comprehensive_exams')
+    .delete()
+    .eq('id', examId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/tasks')
+  return { success: true }
+}

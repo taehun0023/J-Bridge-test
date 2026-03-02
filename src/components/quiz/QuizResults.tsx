@@ -1,4 +1,5 @@
 import Badge from '@/components/ui/Badge'
+import { RotateCcw, ArrowLeft } from 'lucide-react'
 
 interface QuizResultsProps {
   score: number
@@ -48,14 +49,16 @@ export default function QuizResults({
       <div className="mt-6 flex gap-3">
         <button
           onClick={onBack}
-          className="flex-1 rounded-xl border border-gray-300 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-300 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
         >
+          <ArrowLeft className="h-4 w-4" />
           {backLabel}
         </button>
         <button
           onClick={onRetry}
-          className="flex-1 rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
         >
+          <RotateCcw className="h-4 w-4" />
           もう一度
         </button>
       </div>

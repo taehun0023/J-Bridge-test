@@ -194,7 +194,7 @@ export default async function AssignmentsPage() {
   const jlptProgressMap: Record<string, { mastered: number; total: number; pct: number }> = {}
 
   if (jlptLevels.length > 0) {
-    const JLPT_ITEM_TYPES = ['jlpt_vocabulary', 'jlpt_grammar', 'jlpt_kanji', 'jlpt_reading', 'jlpt_listening']
+    const JLPT_ITEM_TYPES = ['jlpt_vocabulary', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening']
 
     const { data: jlptMastered } = await supabase
       .from('user_mastered_items')
@@ -203,26 +203,23 @@ export default async function AssignmentsPage() {
       .in('item_type', JLPT_ITEM_TYPES)
 
     for (const level of jlptLevels) {
-      const [vocabIds, grammarIds, kanjiIds, readingIds, listeningIds] = await Promise.all([
+      const [vocabIds, grammarIds, readingIds, listeningIds] = await Promise.all([
         supabase.from('jlpt_vocabulary').select('id').eq('jlpt_level', level),
         supabase.from('jlpt_grammar').select('id').eq('jlpt_level', level),
-        supabase.from('jlpt_kanji').select('id').eq('jlpt_level', level),
         supabase.from('jlpt_reading_passages').select('id').eq('jlpt_level', level),
         supabase.from('jlpt_listening_scripts').select('id').eq('jlpt_level', level),
       ])
 
       const vocabIdSet = new Set(vocabIds.data?.map(v => v.id) ?? [])
       const grammarIdSet = new Set(grammarIds.data?.map(g => g.id) ?? [])
-      const kanjiIdSet = new Set(kanjiIds.data?.map(k => k.id) ?? [])
       const readingIdSet = new Set(readingIds.data?.map(r => r.id) ?? [])
       const listeningIdSet = new Set(listeningIds.data?.map(l => l.id) ?? [])
 
-      const total = vocabIdSet.size + grammarIdSet.size + kanjiIdSet.size + readingIdSet.size + listeningIdSet.size
+      const total = vocabIdSet.size + grammarIdSet.size + readingIdSet.size + listeningIdSet.size
 
       const mastered = (jlptMastered ?? []).filter(m =>
         (m.item_type === 'jlpt_vocabulary' && vocabIdSet.has(m.item_id)) ||
         (m.item_type === 'jlpt_grammar' && grammarIdSet.has(m.item_id)) ||
-        (m.item_type === 'jlpt_kanji' && kanjiIdSet.has(m.item_id)) ||
         (m.item_type === 'jlpt_reading' && readingIdSet.has(m.item_id)) ||
         (m.item_type === 'jlpt_listening' && listeningIdSet.has(m.item_id))
       ).length

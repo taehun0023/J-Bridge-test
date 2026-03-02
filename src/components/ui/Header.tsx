@@ -32,7 +32,7 @@ export default function Header({
 
       {(userRole === 'admin' || userRole === 'mentor') && (
         <Link
-          href="/admin"
+          href={userRole === 'admin' ? '/admin' : '/mentor'}
           className="ml-2 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-500/10 transition-colors"
         >
           <Shield className="h-4 w-4" />

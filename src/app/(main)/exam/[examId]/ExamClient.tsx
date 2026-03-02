@@ -20,7 +20,139 @@ interface ExamData {
 interface Question {
   id: string
   question_text: string
+  question_category?: string | null
   options: { id: string; option_text: string; sort_order: number }[]
+}
+
+/**
+ * Parse listening question: split into script (for TTS) and question (for display).
+ * Format: "次の会話を聞いて...\n\n[dialogue]\n\n質問？"
+ */
+function parseListeningQuestion(text: string): { script: string; question: string } | null {
+  const normalized = text.replace(/\\n/g, '\n')
+  // Split by double newline
+  const parts = normalized.split('\n\n')
+  if (parts.length < 3) return null
+  // First part: instruction, middle parts: script, last part: question
+  const question = parts[parts.length - 1]
+  const script = parts.slice(0, parts.length - 1).join('\n\n')
+  return { script, question }
+}
+
+/** Inline TTS player for listening questions */
+function ListeningPlayer({ script }: { script: string }) {
+  const [playing, setPlaying] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [speed, setSpeed] = useState(1.0)
+  const [playCount, setPlayCount] = useState(0)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const blobUrlRef = useRef<string | null>(null)
+
+  const MAX_PLAYS = 1
+
+  const handlePlay = async () => {
+    if (playCount >= MAX_PLAYS) return
+
+    if (playing && audioRef.current) {
+      audioRef.current.pause()
+      setPlaying(false)
+      return
+    }
+
+    // If already fetched, replay
+    if (blobUrlRef.current && audioRef.current) {
+      audioRef.current.playbackRate = speed
+      audioRef.current.currentTime = 0
+      audioRef.current.play()
+      setPlaying(true)
+      return
+    }
+
+    setLoading(true)
+    try {
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: script, speed }),
+      })
+      if (!res.ok) throw new Error('TTS error')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      blobUrlRef.current = url
+      const audio = new Audio(url)
+      audio.playbackRate = speed
+      audioRef.current = audio
+      audio.onended = () => {
+        setPlaying(false)
+        setPlayCount(c => c + 1)
+      }
+      audio.play()
+      setPlaying(true)
+    } catch {
+      console.error('TTS playback failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Update speed on existing audio
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.playbackRate = speed
+  }, [speed])
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) audioRef.current.pause()
+      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current)
+    }
+  }, [])
+
+  const canPlay = playCount < MAX_PLAYS
+
+  return (
+    <div className="mb-4 flex items-center gap-3 rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-3">
+      <button
+        onClick={handlePlay}
+        disabled={loading || !canPlay}
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+      >
+        {loading ? (
+          <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+        ) : playing ? (
+          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
+        ) : (
+          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+        )}
+      </button>
+      <div className="flex-1">
+        <p className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
+          聴解問題 — 音声を聞いてから回答してください
+        </p>
+        <p className="text-xs text-indigo-500/70 dark:text-indigo-400/60">
+          再生回数: {playCount}/{MAX_PLAYS}
+        </p>
+      </div>
+      <div className="flex items-center gap-1">
+        {[0.8, 1.0, 1.2].map(s => (
+          <button
+            key={s}
+            onClick={() => setSpeed(s)}
+            className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
+              speed === s
+                ? 'bg-indigo-600 text-white'
+                : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
+            }`}
+          >
+            {s}x
+          </button>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 interface ReviewResult {
@@ -648,18 +780,26 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
       </div>
 
       {/* Current question */}
-      {currentQuestion && (
-        <div className="rounded-2xl border border-gray-200/60 bg-white/80 backdrop-blur-md p-6 dark:border-white/[0.08] dark:bg-white/[0.03]">
-          <QuizQuestion
-            questionNumber={currentIndex + 1}
-            totalQuestions={totalQuestions}
-            questionText={currentQuestion.question_text}
-            options={currentQuestion.options}
-            selectedOptionId={answers[currentQuestion.id] ?? null}
-            onSelect={handleSelect}
-          />
-        </div>
-      )}
+      {currentQuestion && (() => {
+        const isListening = currentQuestion.question_category === 'listening'
+        const parsed = isListening ? parseListeningQuestion(currentQuestion.question_text) : null
+
+        return (
+          <div className="rounded-2xl border border-gray-200/60 bg-white/80 backdrop-blur-md p-6 dark:border-white/[0.08] dark:bg-white/[0.03]">
+            {isListening && parsed && (
+              <ListeningPlayer key={currentQuestion.id} script={parsed.script} />
+            )}
+            <QuizQuestion
+              questionNumber={currentIndex + 1}
+              totalQuestions={totalQuestions}
+              questionText={isListening && parsed ? parsed.question : currentQuestion.question_text}
+              options={currentQuestion.options}
+              selectedOptionId={answers[currentQuestion.id] ?? null}
+              onSelect={handleSelect}
+            />
+          </div>
+        )
+      })()}
 
       {/* Navigation */}
       <div className="mt-6 flex items-center justify-between">

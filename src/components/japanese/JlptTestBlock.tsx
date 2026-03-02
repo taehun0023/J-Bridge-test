@@ -7,8 +7,6 @@ interface LevelProgress {
   vocabTotal: number
   grammarMastered: number
   grammarTotal: number
-  kanjiMastered: number
-  kanjiTotal: number
   readingMastered: number
   readingTotal: number
   listeningMastered: number
@@ -24,9 +22,9 @@ const JLPT_LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'] as const
 const THRESHOLD = 80
 
 function getOverallProgress(p: LevelProgress): number {
-  const total = p.vocabTotal + p.grammarTotal + p.kanjiTotal + p.readingTotal + p.listeningTotal
+  const total = p.vocabTotal + p.grammarTotal + p.readingTotal + p.listeningTotal
   if (total === 0) return 0
-  const mastered = p.vocabMastered + p.grammarMastered + p.kanjiMastered + p.readingMastered + p.listeningMastered
+  const mastered = p.vocabMastered + p.grammarMastered + p.readingMastered + p.listeningMastered
   return Math.round((mastered / total) * 100)
 }
 
@@ -67,7 +65,6 @@ export default function JlptTestBlock({ levelProgress, bypassLock = false }: Pro
               <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
                 <span>語彙 {progress.vocabMastered}/{progress.vocabTotal}</span>
                 <span>文法 {progress.grammarMastered}/{progress.grammarTotal}</span>
-                <span>漢字 {progress.kanjiMastered}/{progress.kanjiTotal}</span>
                 <span>読解 {progress.readingMastered}/{progress.readingTotal}</span>
                 <span>聴解 {progress.listeningMastered}/{progress.listeningTotal}</span>
               </div>

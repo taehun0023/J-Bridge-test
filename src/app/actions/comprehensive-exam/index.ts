@@ -4,7 +4,7 @@
 export { requestExam, requestRetakeExam } from './request'
 
 // Approval (admin/mentor)
-export { approveExam, denyExam } from './approval'
+export { approveExam, denyExam, deleteExam } from './approval'
 
 // Execution (mentee)
 export { startExam, submitExam, loadExamQuestions } from './execution'

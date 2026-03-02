@@ -39,10 +39,11 @@ export async function fetchScoringData(
         .eq('passed', true),
       client
         .from('comprehensive_exams')
-        .select('category, score')
+        .select('category, score, completed_at')
         .eq('user_id', userId)
         .in('status', ['completed', 'failed'])
-        .not('score', 'is', null),
+        .not('score', 'is', null)
+        .order('completed_at', { ascending: false }),
     ])
 
   const isJapanese = profileResult.data?.is_japanese ?? false
@@ -68,7 +69,7 @@ export async function fetchScoringData(
     }
   }
 
-  // Merge comprehensive exam scores (max strategy)
+  // Merge comprehensive exam scores (latest strategy — most recent exam per category wins)
   mergeCompExamScores(assessmentScores, compExamResult.data ?? [])
 
   // Organize regular quiz scores by type
@@ -108,19 +109,22 @@ export async function fetchScoringData(
 }
 
 /**
- * Merge comprehensive exam scores into assessment scores using max strategy.
- * For each category, keeps the higher score between onboarding assessment and comprehensive exam.
+ * Merge comprehensive exam scores into assessment scores using latest strategy.
+ * For each category, the most recent comprehensive exam score wins.
+ * compExams must be sorted by completed_at DESC (most recent first).
  */
 export function mergeCompExamScores(
   assessmentScores: AssessmentScores,
-  compExams: { category: string; score: number | null }[]
+  compExams: { category: string; score: number | null; completed_at?: string | null }[]
 ): void {
+  const seen = new Set<number>()
   for (const compExam of compExams) {
     if (compExam.score == null) continue
     const step = COMP_EXAM_CATEGORY_TO_STEP[compExam.category]
     if (!step) continue
-    if (!assessmentScores[step] || compExam.score > assessmentScores[step]) {
-      assessmentScores[step] = compExam.score
-    }
+    // Already saw a more recent exam for this category — skip
+    if (seen.has(step)) continue
+    seen.add(step)
+    assessmentScores[step] = compExam.score
   }
 }

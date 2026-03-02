@@ -151,20 +151,31 @@ async function fetchStep1JlptStyle(quizIds: string | string[]): Promise<Question
   const allQuestions = await fetchAllQuestions(quizIds)
 
   const result: QuestionWithOptions[] = []
+  const usedIds = new Set<string>()
 
   for (const [category, targetCount] of Object.entries(STEP1_CATEGORY_WEIGHTS)) {
-    const pool = allQuestions.filter(q => q.question_category === category)
-    if (pool.length === 0) continue
+    const categoryPool = allQuestions.filter(q => q.question_category === category)
+    if (categoryPool.length === 0) continue
 
-    const easyCount = Math.round(targetCount * STEP1_DIFFICULTY_RATIOS.easy)
-    const mediumCount = Math.round(targetCount * STEP1_DIFFICULTY_RATIOS.medium)
-    const hardCount = targetCount - easyCount - mediumCount
+    const picked: QuestionWithOptions[] = []
 
-    const easy = shuffle(pool.filter(q => q.difficulty === 'easy')).slice(0, easyCount)
-    const medium = shuffle(pool.filter(q => q.difficulty === 'medium')).slice(0, mediumCount)
-    const hard = shuffle(pool.filter(q => q.difficulty === 'hard')).slice(0, hardCount)
+    for (const [difficulty, ratio] of Object.entries(STEP1_DIFFICULTY_RATIOS)) {
+      const count = Math.round(targetCount * ratio)
+      const pool = shuffle(categoryPool.filter(q => q.difficulty === difficulty && !usedIds.has(q.id)))
+      const selected = pool.slice(0, count)
+      selected.forEach(q => usedIds.add(q.id))
+      picked.push(...selected)
+    }
 
-    result.push(...easy, ...medium, ...hard)
+    // Rounding error correction: fill shortfall from remaining pool
+    if (picked.length < targetCount) {
+      const remaining = shuffle(categoryPool.filter(q => !usedIds.has(q.id)))
+      const needed = remaining.slice(0, targetCount - picked.length)
+      needed.forEach(q => usedIds.add(q.id))
+      picked.push(...needed)
+    }
+
+    result.push(...picked)
   }
 
   return shuffle(result)

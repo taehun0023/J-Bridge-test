@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { submitQuestionClaim } from '@/app/actions/claims'
+import { Eye } from 'lucide-react'
 import type { ReviewQuestion } from '@/app/actions/review'
 
 interface Props {
@@ -9,9 +10,11 @@ interface Props {
   title: string
   score: number
   completedAt: string
+  hideClaim?: boolean
+  infoMessage?: string
 }
 
-export default function ReviewClient({ questions, title, score, completedAt }: Props) {
+export default function ReviewClient({ questions, title, score, completedAt, hideClaim, infoMessage }: Props) {
   const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set())
   const [claimedQuestions, setClaimedQuestions] = useState<Set<string>>(new Set())
   const [claimingId, setClaimingId] = useState<string | null>(null)
@@ -75,6 +78,13 @@ export default function ReviewClient({ questions, title, score, completedAt }: P
           </div>
         </div>
       </div>
+
+      {infoMessage && (
+        <div className="mb-6 flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/50 px-4 py-3 dark:border-indigo-800 dark:bg-indigo-900/10">
+          <Eye className="h-4 w-4 text-indigo-500 shrink-0" />
+          <span className="text-sm text-indigo-700 dark:text-indigo-300">{infoMessage}</span>
+        </div>
+      )}
 
       {/* Question Review List */}
       <div className="space-y-3">
@@ -156,7 +166,7 @@ export default function ReviewClient({ questions, title, score, completedAt }: P
                   </div>
 
                   {/* Claim section */}
-                  <div className="mt-3">
+                  {!hideClaim && <div className="mt-3">
                     {isClaimed ? (
                       <div className="flex justify-end">
                         <span className="rounded-lg bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500">
@@ -201,7 +211,7 @@ export default function ReviewClient({ questions, title, score, completedAt }: P
                         </button>
                       </div>
                     )}
-                  </div>
+                  </div>}
                 </div>
               )}
             </div>

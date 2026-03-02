@@ -37,17 +37,13 @@ export default async function JlptListeningPage({ searchParams }: { searchParams
 
   query = query.range(offset, offset + ITEMS_PER_PAGE - 1)
 
-  const [{ data: items, count }, masteredIds] = await Promise.all([
+  // All 3 queries in parallel (1 RTT)
+  const [{ data: items, count }, masteredIds, { data: typeData }] = await Promise.all([
     query,
     getMasteredIds('jlpt_listening'),
+    supabase.from('jlpt_listening_scripts').select('script_type').eq('jlpt_level', level),
   ])
   const totalPages = Math.ceil((count ?? 0) / ITEMS_PER_PAGE)
-
-  // Get distinct script_type values for filter
-  const { data: typeData } = await supabase
-    .from('jlpt_listening_scripts')
-    .select('script_type')
-    .eq('jlpt_level', level)
 
   const typeOptions = [...new Set(typeData?.map(t => t.script_type).filter(Boolean) ?? [])]
 

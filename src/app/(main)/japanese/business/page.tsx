@@ -5,6 +5,7 @@ import Card from '@/components/ui/Card'
 import { categoryChildren } from '@/lib/navigation'
 import BusinessTestBlock from '@/components/japanese/BusinessTestBlock'
 import { FileClock } from 'lucide-react'
+import GuideCard from '@/components/japanese/JlptGuideCard'
 
 // Subcategory definitions: label, DB categories to include, quiz type
 const SUBCATEGORIES = [
@@ -75,14 +76,13 @@ export default async function BusinessJapaneseHubPage() {
       </div>
 
       {/* Guide card */}
-      <Card className="mb-6 border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-900/20">
-        <h2 className="text-base font-semibold text-blue-900 dark:text-blue-200">学習の進め方</h2>
+      <GuideCard storageKey="business-jp-guide-dismissed">
         <ol className="mt-2 list-inside list-decimal space-y-1 text-sm text-blue-800 dark:text-blue-300">
           <li>各カテゴリの語彙・パターン・表現を学習し「✓」でチェックしてください</li>
           <li>進行率80%以上で理解度テストが解放されます</li>
           <li>テストに合格して実力を確認しましょう</li>
         </ol>
-      </Card>
+      </GuideCard>
 
       {/* Category cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

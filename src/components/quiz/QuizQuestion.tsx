@@ -107,7 +107,7 @@ export default function QuizQuestion({
                 <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                   isSelected
                     ? 'bg-indigo-600 text-white'
-                    : 'bg-white/5 text-zinc-400 dark:bg-white/5 dark:text-zinc-400 bg-zinc-100 text-zinc-600'
+                    : 'border border-gray-200 bg-gray-50 text-gray-500 dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-400'
                 }`}>
                   {option.sort_order}
                 </div>

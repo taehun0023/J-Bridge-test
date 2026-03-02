@@ -23,8 +23,17 @@ export default async function JlptVocabularyPage({ searchParams }: { searchParam
   const offset = (page - 1) * ITEMS_PER_PAGE
 
   const supabase = await createClient()
-  const masteredIds = await getMasteredIds('jlpt_vocabulary')
 
+  // Parallel batch 1: masteredIds + distinct POS (independent of main query)
+  const [masteredIds, { data: posData }] = await Promise.all([
+    getMasteredIds('jlpt_vocabulary'),
+    supabase.from('jlpt_vocabulary').select('part_of_speech')
+      .eq('jlpt_level', level).not('part_of_speech', 'is', null),
+  ])
+
+  const partOfSpeechOptions = [...new Set(posData?.map(p => p.part_of_speech).filter(Boolean) ?? [])]
+
+  // Main query (may depend on masteredIds for mastery filter)
   let query = supabase
     .from('jlpt_vocabulary')
     .select('*', { count: 'exact' })
@@ -50,15 +59,6 @@ export default async function JlptVocabularyPage({ searchParams }: { searchParam
 
   const { data: items, count } = await query
   const totalPages = Math.ceil((count ?? 0) / ITEMS_PER_PAGE)
-
-  // Get distinct part_of_speech values for filter
-  const { data: posData } = await supabase
-    .from('jlpt_vocabulary')
-    .select('part_of_speech')
-    .eq('jlpt_level', level)
-    .not('part_of_speech', 'is', null)
-
-  const partOfSpeechOptions = [...new Set(posData?.map(p => p.part_of_speech).filter(Boolean) ?? [])]
 
   return (
     <div>

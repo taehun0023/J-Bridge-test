@@ -34,31 +34,27 @@ export default async function QuizListPage({ searchParams }: { searchParams: Pro
   // Server-side mastery progress gate: if a specific level is requested, verify 80% mastery
   if (user && params.level && userRole !== 'admin' && userRole !== 'mentor') {
     const level = params.level
-    const [vocabIds, grammarIds, kanjiIds, readingIds, listeningIds] = await Promise.all([
+    // 5 queries in parallel (1 RTT instead of 2)
+    const [vocabIds, grammarIds, readingIds, listeningIds, masteredItems] = await Promise.all([
       supabase.from('jlpt_vocabulary').select('id').eq('jlpt_level', level),
       supabase.from('jlpt_grammar').select('id').eq('jlpt_level', level),
-      supabase.from('jlpt_kanji').select('id').eq('jlpt_level', level),
       supabase.from('jlpt_reading_passages').select('id').eq('jlpt_level', level),
       supabase.from('jlpt_listening_scripts').select('id').eq('jlpt_level', level),
+      supabase.from('user_mastered_items').select('item_id')
+        .eq('user_id', user.id)
+        .in('item_type', ['jlpt_vocabulary', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening']),
     ])
 
     const allIds = [
       ...(vocabIds.data ?? []).map(v => v.id),
       ...(grammarIds.data ?? []).map(g => g.id),
-      ...(kanjiIds.data ?? []).map(k => k.id),
       ...(readingIds.data ?? []).map(r => r.id),
       ...(listeningIds.data ?? []).map(l => l.id),
     ]
     const totalCount = allIds.length
 
     if (totalCount > 0) {
-      const { data: masteredItems } = await supabase
-        .from('user_mastered_items')
-        .select('item_id')
-        .eq('user_id', user.id)
-        .in('item_type', ['jlpt_vocabulary', 'jlpt_grammar', 'jlpt_kanji', 'jlpt_reading', 'jlpt_listening'])
-
-      const masteredIdSet = new Set((masteredItems ?? []).map(m => m.item_id))
+      const masteredIdSet = new Set((masteredItems.data ?? []).map(m => m.item_id))
       const masteredCount = allIds.filter(id => masteredIdSet.has(id)).length
       const progressPct = Math.round((masteredCount / totalCount) * 100)
 

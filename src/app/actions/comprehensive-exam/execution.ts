@@ -6,7 +6,7 @@ import { ASSIGNMENT_CATEGORIES } from '@/lib/assignment-categories'
 import { notifyMentorsOf, getUserDisplayName } from '@/lib/notification-helpers'
 import { recalculateUserScores } from '@/modules/scoring'
 import { tryCompleteActiveCycle } from '@/app/actions/exam-scheduling'
-import { COMP_EXAM_CATEGORY_TO_STEP, ASSESSMENT_QUIZ_IDS, ASSESSMENT_CONTENT_QUIZ_TYPES } from '@/lib/assessment-config'
+import { COMP_EXAM_CATEGORY_TO_STEP, ASSESSMENT_QUIZ_IDS, ASSESSMENT_CONTENT_QUIZ_TYPES, ASSESSMENT_TOTAL_QUESTIONS, ASSESSMENT_TIME_LIMITS } from '@/lib/assessment-config'
 import { fetchRandomAssessmentQuestions } from '@/lib/supabase/queries/assessments'
 
 /** Shuffle array and assign sort_order to options */
@@ -50,7 +50,6 @@ export async function startExam(examId: string) {
         .select('id')
         .in('quiz_type', contentQuizTypes)
         .eq('is_assessment', false)
-        .eq('is_published', true)
       if (contentQuizzes?.length) {
         quizIds.push(...contentQuizzes.map(q => q.id))
       }
@@ -77,14 +76,20 @@ export async function startExam(examId: string) {
       return { error: '出題可能な問題がありません' }
     }
 
+    // Use config values (authoritative) — DB records may have stale defaults
+    const totalQ = ASSESSMENT_TOTAL_QUESTIONS[step] ?? exam.total_questions
+    const timeLimit = ASSESSMENT_TIME_LIMITS[step] ?? exam.time_limit_minutes
+
     const startedAt = new Date().toISOString()
 
-    // Update exam status to in_progress
+    // Update exam status to in_progress + sync config values to DB
     const { error: updateErr } = await serviceClient
       .from('comprehensive_exams')
       .update({
         status: 'in_progress',
         started_at: startedAt,
+        total_questions: totalQ,
+        time_limit_minutes: timeLimit,
       })
       .eq('id', examId)
 
@@ -96,12 +101,13 @@ export async function startExam(examId: string) {
     // NOTE: Do NOT revalidatePath here — it causes the server component to re-render,
     // which changes mode from 'start' to 'exam' and re-mounts ExamClient, losing questions state.
     return {
-      questions: questions.slice(0, exam.total_questions).map(q => ({
+      questions: questions.slice(0, totalQ).map(q => ({
         id: q.id,
         question_text: q.question_text,
+        question_category: q.question_category,
         options: shuffleOptions(q.quiz_question_options_safe),
       })),
-      timeLimit: exam.time_limit_minutes,
+      timeLimit,
       startedAt,
     }
   }
@@ -206,7 +212,6 @@ export async function loadExamQuestions(examId: string) {
         .select('id')
         .in('quiz_type', contentQuizTypes)
         .eq('is_assessment', false)
-        .eq('is_published', true)
       if (contentQuizzes?.length) {
         quizIds.push(...contentQuizzes.map(q => q.id))
       }
@@ -229,13 +234,17 @@ export async function loadExamQuestions(examId: string) {
     )
     if (questions.length === 0) return { error: '出題可能な問題がありません' }
 
+    const totalQ = ASSESSMENT_TOTAL_QUESTIONS[step] ?? exam.total_questions
+    const timeLimit = ASSESSMENT_TIME_LIMITS[step] ?? exam.time_limit_minutes
+
     return {
-      questions: questions.slice(0, exam.total_questions).map(q => ({
+      questions: questions.slice(0, totalQ).map(q => ({
         id: q.id,
         question_text: q.question_text,
+        question_category: q.question_category,
         options: shuffleOptions(q.quiz_question_options_safe),
       })),
-      timeLimit: exam.time_limit_minutes,
+      timeLimit,
       startedAt: exam.started_at,
     }
   }
@@ -332,7 +341,9 @@ export async function submitExam(
     return { error: '回答の保存に失敗しました' }
   }
 
-  const score = answers.length > 0 ? Math.round((correctCount / answers.length) * 100) : 0
+  // Use total questions (not just answered count) as denominator — unanswered = incorrect
+  const totalQ = exam.total_questions > 0 ? exam.total_questions : answers.length
+  const score = totalQ > 0 ? Math.round((correctCount / totalQ) * 100) : 0
   const passed = score >= exam.passing_score
   const newStatus = passed ? 'completed' : 'failed'
 
@@ -392,5 +403,5 @@ export async function submitExam(
     isCorrect: correctMap.get(a.questionId) === a.selectedOptionId,
   }))
 
-  return { score, passed, correctCount, totalCount: answers.length, results }
+  return { score, passed, correctCount, totalCount: totalQ, results }
 }

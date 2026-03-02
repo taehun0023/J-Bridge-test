@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Card from '@/components/ui/Card'
 import { categoryChildren } from '@/lib/navigation'
 import JlptTestBlock from '@/components/japanese/JlptTestBlock'
+import GuideCard from '@/components/japanese/JlptGuideCard'
 
 const JLPT_LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'] as const
 
@@ -15,60 +16,40 @@ export default async function JlptHubPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: prof } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  const bypassLock = prof?.role === 'admin' || prof?.role === 'mentor'
+  // Parallel batch: profile + 4 content tables + mastered items (6 queries)
+  const [prof, vocabAll, grammarAll, readingAll, listeningAll, masteredResult] = await Promise.all([
+    supabase.from('profiles').select('role').eq('id', user.id).single(),
+    supabase.from('jlpt_vocabulary').select('id, jlpt_level'),
+    supabase.from('jlpt_grammar').select('id, jlpt_level'),
+    supabase.from('jlpt_reading_passages').select('id, jlpt_level'),
+    supabase.from('jlpt_listening_scripts').select('id, jlpt_level'),
+    supabase.from('user_mastered_items').select('item_type, item_id')
+      .eq('user_id', user.id)
+      .in('item_type', ['jlpt_vocabulary', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening']),
+  ])
 
-  // Fetch mastered counts per level for vocabulary, grammar, kanji, reading, listening
-  const { data: masteredItems } = await supabase
-    .from('user_mastered_items')
-    .select('item_type, item_id')
-    .eq('user_id', user.id)
-    .in('item_type', ['jlpt_vocabulary', 'jlpt_grammar', 'jlpt_kanji', 'jlpt_reading', 'jlpt_listening'])
+  const bypassLock = prof.data?.role === 'admin' || prof.data?.role === 'mentor'
 
-  // Fetch total counts per level
-  const levelProgress: Record<string, { vocabMastered: number; vocabTotal: number; grammarMastered: number; grammarTotal: number; kanjiMastered: number; kanjiTotal: number; readingMastered: number; readingTotal: number; listeningMastered: number; listeningTotal: number }> = {}
+  // Group by level and compute progress (client-side)
+  const masteredSet = new Set(masteredResult.data?.map(m => `${m.item_type}:${m.item_id}`) ?? [])
+
+  const levelProgress: Record<string, { vocabMastered: number; vocabTotal: number; grammarMastered: number; grammarTotal: number; readingMastered: number; readingTotal: number; listeningMastered: number; listeningTotal: number }> = {}
 
   for (const level of JLPT_LEVELS) {
-    const [vocabCount, grammarCount, kanjiCount, readingCount, listeningCount] = await Promise.all([
-      supabase.from('jlpt_vocabulary').select('id', { count: 'exact', head: true }).eq('jlpt_level', level),
-      supabase.from('jlpt_grammar').select('id', { count: 'exact', head: true }).eq('jlpt_level', level),
-      supabase.from('jlpt_kanji').select('id', { count: 'exact', head: true }).eq('jlpt_level', level),
-      supabase.from('jlpt_reading_passages').select('id', { count: 'exact', head: true }).eq('jlpt_level', level),
-      supabase.from('jlpt_listening_scripts').select('id', { count: 'exact', head: true }).eq('jlpt_level', level),
-    ])
-
-    // Get IDs for this level to cross-reference with mastered items
-    const [vocabIds, grammarIds, kanjiIds, readingIds, listeningIds] = await Promise.all([
-      supabase.from('jlpt_vocabulary').select('id').eq('jlpt_level', level),
-      supabase.from('jlpt_grammar').select('id').eq('jlpt_level', level),
-      supabase.from('jlpt_kanji').select('id').eq('jlpt_level', level),
-      supabase.from('jlpt_reading_passages').select('id').eq('jlpt_level', level),
-      supabase.from('jlpt_listening_scripts').select('id').eq('jlpt_level', level),
-    ])
-
-    const vocabIdSet = new Set(vocabIds.data?.map(v => v.id) ?? [])
-    const grammarIdSet = new Set(grammarIds.data?.map(g => g.id) ?? [])
-    const kanjiIdSet = new Set(kanjiIds.data?.map(k => k.id) ?? [])
-    const readingIdSet = new Set(readingIds.data?.map(r => r.id) ?? [])
-    const listeningIdSet = new Set(listeningIds.data?.map(l => l.id) ?? [])
-
-    const vocabMastered = masteredItems?.filter(m => m.item_type === 'jlpt_vocabulary' && vocabIdSet.has(m.item_id)).length ?? 0
-    const grammarMastered = masteredItems?.filter(m => m.item_type === 'jlpt_grammar' && grammarIdSet.has(m.item_id)).length ?? 0
-    const kanjiMastered = masteredItems?.filter(m => m.item_type === 'jlpt_kanji' && kanjiIdSet.has(m.item_id)).length ?? 0
-    const readingMastered = masteredItems?.filter(m => m.item_type === 'jlpt_reading' && readingIdSet.has(m.item_id)).length ?? 0
-    const listeningMastered = masteredItems?.filter(m => m.item_type === 'jlpt_listening' && listeningIdSet.has(m.item_id)).length ?? 0
+    const vocabIds = vocabAll.data?.filter(v => v.jlpt_level === level) ?? []
+    const grammarIds = grammarAll.data?.filter(g => g.jlpt_level === level) ?? []
+    const readingIds = readingAll.data?.filter(r => r.jlpt_level === level) ?? []
+    const listeningIds = listeningAll.data?.filter(l => l.jlpt_level === level) ?? []
 
     levelProgress[level] = {
-      vocabMastered,
-      vocabTotal: vocabCount.count ?? 0,
-      grammarMastered,
-      grammarTotal: grammarCount.count ?? 0,
-      kanjiMastered,
-      kanjiTotal: kanjiCount.count ?? 0,
-      readingMastered,
-      readingTotal: readingCount.count ?? 0,
-      listeningMastered,
-      listeningTotal: listeningCount.count ?? 0,
+      vocabMastered: vocabIds.filter(v => masteredSet.has(`jlpt_vocabulary:${v.id}`)).length,
+      vocabTotal: vocabIds.length,
+      grammarMastered: grammarIds.filter(g => masteredSet.has(`jlpt_grammar:${g.id}`)).length,
+      grammarTotal: grammarIds.length,
+      readingMastered: readingIds.filter(r => masteredSet.has(`jlpt_reading:${r.id}`)).length,
+      readingTotal: readingIds.length,
+      listeningMastered: listeningIds.filter(l => masteredSet.has(`jlpt_listening:${l.id}`)).length,
+      listeningTotal: listeningIds.length,
     }
   }
 
@@ -79,15 +60,13 @@ export default async function JlptHubPage() {
         <p className="mt-1 text-gray-500 dark:text-gray-400">{config.description}</p>
       </div>
 
-      {/* Guide card */}
-      <Card className="mb-6 border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-900/20">
-        <h2 className="text-base font-semibold text-blue-900 dark:text-blue-200">学習の進め方</h2>
+      <GuideCard storageKey="jlpt-guide-dismissed">
         <ol className="mt-2 list-inside list-decimal space-y-1 text-sm text-blue-800 dark:text-blue-300">
-          <li>各レベルの語彙・文法・漢字・読解・聴解を学習し「✓」でチェックしてください</li>
+          <li>各レベルの語彙・文法・読解・聴解を学習し「✓」でチェックしてください</li>
           <li>進行率80%以上で理解度テストが解放されます</li>
           <li>テストに合格して次のレベルへ進みましょう</li>
         </ol>
-      </Card>
+      </GuideCard>
 
       {/* Category cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

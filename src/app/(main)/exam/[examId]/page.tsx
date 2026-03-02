@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import ExamClient from './ExamClient'
 import { getCategoryLabel, getSubcategoryLabel } from '@/lib/assignment-categories'
+import { COMP_EXAM_CATEGORY_TO_STEP, ASSESSMENT_TOTAL_QUESTIONS, ASSESSMENT_TIME_LIMITS } from '@/lib/assessment-config'
 import Card from '@/components/ui/Card'
 import Link from 'next/link'
 
@@ -19,6 +20,15 @@ export default async function ExamPage({ params }: { params: Promise<{ examId: s
     .single()
 
   if (!exam) redirect('/dashboard/assignments')
+
+  // For comprehensive cycle exams, override total_questions/time_limit with config values
+  if (exam.subcategory === 'comprehensive') {
+    const step = COMP_EXAM_CATEGORY_TO_STEP[exam.category]
+    if (step) {
+      exam.total_questions = ASSESSMENT_TOTAL_QUESTIONS[step] ?? exam.total_questions
+      exam.time_limit_minutes = ASSESSMENT_TIME_LIMITS[step] ?? exam.time_limit_minutes
+    }
+  }
 
   // Determine redirect target: cycle exams go to dashboard, others to assignments
   const backHref = exam.exam_cycle_id ? '/dashboard' : '/dashboard/assignments'

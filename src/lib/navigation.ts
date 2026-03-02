@@ -110,6 +110,7 @@ export const mainNavItems: NavItem[] = [
 
 export const adminNavItems: AdminNavItem[] = [
   { href: '/admin', label: 'ダッシュボード', icon: LayoutDashboard, allowedRoles: ['admin'] },
+  { href: '/mentor', label: 'メンティ管理', icon: Users, allowedRoles: ['mentor'] },
   { href: '/admin/users', label: 'ユーザー管理', icon: Users, allowedRoles: ['admin'] },
   { href: '/admin/mentors', label: 'メンター管理', icon: UserCog, allowedRoles: ['admin'] },
   { href: '/admin/courses', label: 'コンテンツ管理', icon: FileEdit, allowedRoles: ['admin'] },

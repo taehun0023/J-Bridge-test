@@ -23,8 +23,17 @@ export default async function JlptGrammarPage({ searchParams }: { searchParams: 
   const offset = (page - 1) * ITEMS_PER_PAGE
 
   const supabase = await createClient()
-  const masteredIds = await getMasteredIds('jlpt_grammar')
 
+  // Parallel batch 1: masteredIds + distinct categories (independent of main query)
+  const [masteredIds, { data: catData }] = await Promise.all([
+    getMasteredIds('jlpt_grammar'),
+    supabase.from('jlpt_grammar').select('category')
+      .eq('jlpt_level', level).not('category', 'is', null),
+  ])
+
+  const categoryOptions = [...new Set(catData?.map(c => c.category).filter(Boolean) ?? [])]
+
+  // Main query (may depend on masteredIds for mastery filter)
   let query = supabase
     .from('jlpt_grammar')
     .select('*', { count: 'exact' })
@@ -50,15 +59,6 @@ export default async function JlptGrammarPage({ searchParams }: { searchParams: 
 
   const { data: items, count } = await query
   const totalPages = Math.ceil((count ?? 0) / ITEMS_PER_PAGE)
-
-  // Get distinct category values for filter
-  const { data: catData } = await supabase
-    .from('jlpt_grammar')
-    .select('category')
-    .eq('jlpt_level', level)
-    .not('category', 'is', null)
-
-  const categoryOptions = [...new Set(catData?.map(c => c.category).filter(Boolean) ?? [])]
 
   return (
     <div>

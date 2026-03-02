@@ -2,7 +2,7 @@
 
 import { Fragment, useState, useTransition } from 'react'
 import { createLearningAssignment, deleteLearningAssignment, confirmAssignment, reassignAssignment, getAssigneeUnlockedLevels } from '@/app/actions/learning-assignments'
-import { approveExam, denyExam } from '@/app/actions/comprehensive-exam'
+import { approveExam, denyExam, deleteExam } from '@/app/actions/comprehensive-exam'
 import { ASSIGNMENT_CATEGORIES, JLPT_LEVELS, DEV_LEVELS, getCategoryLabel, getSubcategoryLabel, getContentLevelLabel } from '@/lib/assignment-categories'
 
 interface LearningAssignmentRow {
@@ -188,6 +188,15 @@ export default function AdminTasksClient({ learningAssignments, examRequests, us
       const result = await denyExam(examId)
       if (result.error) showMsg(result.error)
       else showMsg('試験を拒否しました')
+    })
+  }
+
+  function handleDeleteExam(examId: string) {
+    if (!confirm('この試験リクエストを削除しますか？関連する回答データも削除されます。')) return
+    startTransition(async () => {
+      const result = await deleteExam(examId)
+      if (result.error) showMsg(result.error)
+      else showMsg('試験を削除しました')
     })
   }
 
@@ -526,24 +535,33 @@ export default function AdminTasksClient({ learningAssignments, examRequests, us
                           {new Date(exam.requested_at).toLocaleDateString('ja-JP')}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          {exam.status === 'requested' && (
-                            <div className="flex justify-end gap-2">
-                              <button
-                                onClick={() => handleApproveExam(exam.id)}
-                                disabled={pending}
-                                className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-                              >
-                                承認
-                              </button>
-                              <button
-                                onClick={() => handleDenyExam(exam.id)}
-                                disabled={pending}
-                                className="rounded-md bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
-                              >
-                                拒否
-                              </button>
-                            </div>
-                          )}
+                          <div className="flex justify-end gap-2">
+                            {exam.status === 'requested' && (
+                              <>
+                                <button
+                                  onClick={() => handleApproveExam(exam.id)}
+                                  disabled={pending}
+                                  className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                                >
+                                  承認
+                                </button>
+                                <button
+                                  onClick={() => handleDenyExam(exam.id)}
+                                  disabled={pending}
+                                  className="rounded-md bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                                >
+                                  拒否
+                                </button>
+                              </>
+                            )}
+                            <button
+                              onClick={() => handleDeleteExam(exam.id)}
+                              disabled={pending}
+                              className="text-xs text-red-600 hover:underline disabled:opacity-50 dark:text-red-400"
+                            >
+                              削除
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}

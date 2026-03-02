@@ -37,17 +37,13 @@ export default async function JlptReadingPage({ searchParams }: { searchParams: 
 
   query = query.range(offset, offset + ITEMS_PER_PAGE - 1)
 
-  const [{ data: items, count }, masteredIds] = await Promise.all([
+  // All 3 queries in parallel (1 RTT)
+  const [{ data: items, count }, masteredIds, { data: typeData }] = await Promise.all([
     query,
     getMasteredIds('jlpt_reading'),
+    supabase.from('jlpt_reading_passages').select('passage_type').eq('jlpt_level', level),
   ])
   const totalPages = Math.ceil((count ?? 0) / ITEMS_PER_PAGE)
-
-  // Get distinct passage_type values for filter
-  const { data: typeData } = await supabase
-    .from('jlpt_reading_passages')
-    .select('passage_type')
-    .eq('jlpt_level', level)
 
   const typeOptions = [...new Set(typeData?.map(t => t.passage_type).filter(Boolean) ?? [])]
 

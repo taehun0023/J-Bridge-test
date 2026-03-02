@@ -2,6 +2,7 @@
 
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { recalculateUserScores } from '@/modules/scoring'
+import { COMP_EXAM_CATEGORY_TO_STEP, ASSESSMENT_TIME_LIMITS, ASSESSMENT_TOTAL_QUESTIONS } from '@/lib/assessment-config'
 
 /** Categories for comprehensive exam cycles */
 const ALL_EXAM_CATEGORIES = ['seikatsu', 'business-jp', 'cs', 'dev', 'business-lit'] as const
@@ -146,16 +147,19 @@ async function createCycleExams(
 ): Promise<CycleExam[]> {
   const categories = isJapanese ? JAPANESE_EXAM_CATEGORIES : ALL_EXAM_CATEGORIES
 
-  const examInserts = categories.map(category => ({
-    user_id: userId,
-    category,
-    subcategory: 'comprehensive',
-    status: 'approved',
-    exam_cycle_id: cycleId,
-    time_limit_minutes: 40,
-    total_questions: 30,
-    passing_score: 70,
-  }))
+  const examInserts = categories.map(category => {
+    const step = COMP_EXAM_CATEGORY_TO_STEP[category]
+    return {
+      user_id: userId,
+      category,
+      subcategory: 'comprehensive',
+      status: 'approved',
+      exam_cycle_id: cycleId,
+      time_limit_minutes: step ? ASSESSMENT_TIME_LIMITS[step] : 30,
+      total_questions: step ? ASSESSMENT_TOTAL_QUESTIONS[step] : 30,
+      passing_score: 70,
+    }
+  })
 
   const { data: exams } = await serviceClient
     .from('comprehensive_exams')

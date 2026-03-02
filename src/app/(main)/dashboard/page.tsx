@@ -4,9 +4,7 @@ import type { AxisKey } from '@/lib/assessment-config'
 import { computeRankingEntry, filterUnscoredUsers, sortByCategory } from '@/lib/ranking'
 import type { RankingUserData } from '@/lib/ranking'
 import DashboardClient from './DashboardClient'
-import MentorDashboardClient from '@/components/dashboard/MentorDashboardClient'
 import ExamGatePage from '@/components/dashboard/ExamGatePage'
-import { getMentorDashboardData } from '@/app/actions/mentor'
 import { checkAndCreateExamCycle, getNextExamDate } from '@/app/actions/exam-scheduling'
 
 export default async function DashboardPage() {
@@ -82,22 +80,8 @@ export default async function DashboardPage() {
   ])
 
   // ──────────────────────────────────────────────
-  // Phase 2: profile 결과에 의존하는 쿼리
-  // ──────────────────────────────────────────────
-  const mentorDataResult = profile?.role === 'mentor'
-    ? await getMentorDashboardData()
-    : null
-
-  // ──────────────────────────────────────────────
   // 후처리: 쿼리 결과를 가공 (CPU 연산, 네트워크 없음)
   // ──────────────────────────────────────────────
-
-  // 멘토 데이터 정규화
-  let mentorData: { mentees: Awaited<ReturnType<typeof getMentorDashboardData>>['mentees']; pendingVocabCount: number } | null = null
-  if (mentorDataResult && !('error' in mentorDataResult && !mentorDataResult.mentees)) {
-    const r = mentorDataResult as Awaited<ReturnType<typeof getMentorDashboardData>>
-    mentorData = { mentees: r.mentees, pendingVocabCount: r.pendingVocabCount }
-  }
 
   // 랭킹 계산
   let userRanking: {
@@ -245,22 +229,6 @@ export default async function DashboardPage() {
     compExamRetakeByCategory,
     role: profile?.role ?? 'mentee',
     nextExamDate,
-  }
-
-  if (mentorData) {
-    return (
-      <div className="space-y-8">
-        <MentorDashboardClient
-          mentees={mentorData.mentees}
-          pendingVocabCount={mentorData.pendingVocabCount}
-          mentorSpecialty={profile?.mentor_specialty ?? null}
-        />
-        <div>
-          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">自分のダッシュボード</h2>
-          <DashboardClient {...dashboardProps} />
-        </div>
-      </div>
-    )
   }
 
   return <DashboardClient {...dashboardProps} />

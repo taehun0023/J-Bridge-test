@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import QuizQuestion from '@/components/quiz/QuizQuestion'
 import QuizResults from '@/components/quiz/QuizResults'
-import { Clock, PlayCircle } from 'lucide-react'
+import { Clock, PlayCircle, ChevronLeft, ChevronRight, Play, Pause, Square, Loader2, Send } from 'lucide-react'
 import { startQuizAttempt, submitQuizAnswers } from '@/app/actions/quiz'
 
 interface Option {
@@ -255,7 +255,7 @@ export default function QuizTaker({ quiz, questions, backUrl, quizType }: Props)
   if (!started) {
     return (
       <div className="mx-auto max-w-2xl">
-        <div className="rounded-xl border border-gray-200 bg-white p-8 dark:border-gray-700 dark:bg-gray-900">
+        <div className="rounded-xl bg-white p-8 shadow-lg dark:bg-gray-900">
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">{quiz.title}</h1>
           <div className="mt-4 space-y-2 text-sm text-gray-600 dark:text-gray-400">
             <p>問題数: <span className="font-medium text-gray-900 dark:text-white">{stableQuestions.length}問</span></p>
@@ -272,7 +272,7 @@ export default function QuizTaker({ quiz, questions, backUrl, quizType }: Props)
           )}
           <button
             onClick={() => setStarted(true)}
-            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-blue-700"
+            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
           >
             <PlayCircle className="h-5 w-5" />
             開始
@@ -294,7 +294,7 @@ export default function QuizTaker({ quiz, questions, backUrl, quizType }: Props)
     <div className="mx-auto max-w-2xl">
       {/* Sticky timer bar (timed quizzes only) */}
       {quiz.time_limit_minutes ? (
-        <div className="sticky top-0 z-10 mb-4 flex items-center justify-between rounded-xl border border-gray-200 bg-white/90 px-4 py-3 shadow-sm backdrop-blur dark:border-white/[0.08] dark:bg-zinc-900/90">
+        <div className="sticky top-0 z-10 mb-4 flex items-center justify-between rounded-xl border border-gray-200 bg-white/90 px-4 py-3 shadow-md backdrop-blur dark:border-white/[0.08] dark:bg-zinc-900/90">
           <span className="text-sm text-zinc-500 dark:text-zinc-400">
             回答: {answeredCount}/{stableQuestions.length}
           </span>
@@ -304,8 +304,9 @@ export default function QuizTaker({ quiz, questions, backUrl, quizType }: Props)
           <button
             onClick={handleSubmit}
             disabled={!allAnswered || submitting}
-            className="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
+            <Send className="h-3.5 w-3.5" />
             {submitting ? '提出中...' : '提出する'}
           </button>
         </div>
@@ -320,11 +321,16 @@ export default function QuizTaker({ quiz, questions, backUrl, quizType }: Props)
       )}
 
       {/* Progress bar */}
-      <div className="mb-6 h-2 rounded-full bg-gray-200 dark:bg-gray-700">
-        <div
-          className="h-2 rounded-full bg-blue-600 transition-all"
-          style={{ width: `${(answeredCount / stableQuestions.length) * 100}%` }}
-        />
+      <div className="mb-6">
+        <div className="mb-1.5 text-xs font-medium text-gray-500 dark:text-gray-400">
+          {answeredCount}/{stableQuestions.length} 回答済み
+        </div>
+        <div className="h-1.5 rounded-full bg-gray-200 dark:bg-gray-700">
+          <div
+            className="h-1.5 rounded-full bg-blue-600 transition-all"
+            style={{ width: `${(answeredCount / stableQuestions.length) * 100}%` }}
+          />
+        </div>
       </div>
 
       {/* Listening quiz audio controls */}
@@ -340,33 +346,25 @@ export default function QuizTaker({ quiz, questions, backUrl, quizType }: Props)
               {playState === 'loading' ? (
                 <button
                   disabled
-                  className="flex items-center gap-2 rounded-lg bg-purple-100 px-3 py-1.5 text-sm font-medium text-purple-400 dark:bg-purple-900/30 dark:text-purple-300"
+                  className="flex items-center gap-2 rounded-xl bg-purple-100 px-3 py-1.5 text-sm font-medium text-purple-400 dark:bg-purple-900/30 dark:text-purple-300"
                 >
-                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   読み込み中...
                 </button>
               ) : playState === 'playing' ? (
                 <>
                   <button
                     onClick={() => handlePlay(script)}
-                    className="flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-purple-700"
+                    className="flex items-center gap-2 rounded-xl bg-purple-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-purple-700"
                   >
-                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                      <rect x="6" y="4" width="4" height="16" />
-                      <rect x="14" y="4" width="4" height="16" />
-                    </svg>
+                    <Pause className="h-4 w-4" />
                     一時停止
                   </button>
                   <button
                     onClick={handleStop}
-                    className="flex items-center gap-2 rounded-lg bg-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
+                    className="flex items-center gap-2 rounded-xl bg-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
                   >
-                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                      <rect x="6" y="6" width="12" height="12" />
-                    </svg>
+                    <Square className="h-4 w-4" />
                     停止
                   </button>
                 </>
@@ -374,44 +372,44 @@ export default function QuizTaker({ quiz, questions, backUrl, quizType }: Props)
                 <>
                   <button
                     onClick={() => handlePlay(script)}
-                    className="flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-purple-700"
+                    className="flex items-center gap-2 rounded-xl bg-purple-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-purple-700"
                   >
-                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                      <polygon points="5,3 19,12 5,21" />
-                    </svg>
+                    <Play className="h-4 w-4" />
                     再開
                   </button>
                   <button
                     onClick={handleStop}
-                    className="flex items-center gap-2 rounded-lg bg-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
+                    className="flex items-center gap-2 rounded-xl bg-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
                   >
-                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                      <rect x="6" y="6" width="12" height="12" />
-                    </svg>
+                    <Square className="h-4 w-4" />
                     停止
                   </button>
                 </>
               ) : (
                 <button
                   onClick={() => handlePlay(script)}
-                  className="flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-purple-700"
+                  className="flex items-center gap-2 rounded-xl bg-purple-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-purple-700"
                 >
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                    <polygon points="5,3 19,12 5,21" />
-                  </svg>
+                  <Play className="h-4 w-4" />
                   再生
                 </button>
               )}
 
-              <select
-                value={speed}
-                onChange={(e) => setSpeed(Number(e.target.value))}
-                className="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-600 dark:text-gray-200"
-              >
-                <option value={0.75}>0.75x</option>
-                <option value={1.0}>1.0x</option>
-                <option value={1.25}>1.25x</option>
-              </select>
+              <div className="flex overflow-hidden rounded-lg border border-gray-300 dark:border-gray-600">
+                {[0.75, 1.0, 1.25].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setSpeed(s)}
+                    className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                      speed === s
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-white text-gray-600 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    {s}x
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )
@@ -438,49 +436,54 @@ export default function QuizTaker({ quiz, questions, backUrl, quizType }: Props)
       </div>
 
       {/* Navigation */}
-      <div className="mt-4 flex items-center justify-between">
-        <button
-          onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
-          disabled={currentIndex === 0}
-          className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-40 dark:text-gray-300 dark:hover:bg-gray-800"
-        >
-          前の問題
-        </button>
+      <div className="mt-4 rounded-xl border border-gray-200 bg-white p-3 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
+            disabled={currentIndex === 0}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50 disabled:opacity-40 dark:border-gray-600 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-800"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            前の問題
+          </button>
 
-        <div className="flex gap-1">
-          {stableQuestions.map((q, i) => (
+          <div className="flex flex-wrap justify-center gap-1.5">
+            {stableQuestions.map((q, i) => (
+              <button
+                key={q.id}
+                onClick={() => setCurrentIndex(i)}
+                className={`h-9 w-9 rounded-full text-xs font-medium transition-all ${
+                  i === currentIndex
+                    ? 'bg-blue-600 text-white ring-2 ring-blue-600 ring-offset-2 dark:ring-offset-gray-900'
+                    : answers[q.id]
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                    : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+
+          {currentIndex < stableQuestions.length - 1 ? (
             <button
-              key={q.id}
-              onClick={() => setCurrentIndex(i)}
-              className={`h-8 w-8 rounded-lg text-xs font-medium ${
-                i === currentIndex
-                  ? 'bg-blue-600 text-white'
-                  : answers[q.id]
-                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-                  : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
-              }`}
+              onClick={() => setCurrentIndex(currentIndex + 1)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-800"
             >
-              {i + 1}
+              次の問題
+              <ChevronRight className="h-4 w-4" />
             </button>
-          ))}
+          ) : (
+            <button
+              onClick={handleSubmit}
+              disabled={!allAnswered || submitting}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+            >
+              <Send className="h-3.5 w-3.5" />
+              {submitting ? '提出中...' : '提出する'}
+            </button>
+          )}
         </div>
-
-        {currentIndex < stableQuestions.length - 1 ? (
-          <button
-            onClick={() => setCurrentIndex(currentIndex + 1)}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
-            次の問題
-          </button>
-        ) : (
-          <button
-            onClick={handleSubmit}
-            disabled={!allAnswered || submitting}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-          >
-            {submitting ? '提出中...' : '提出する'}
-          </button>
-        )}
       </div>
     </div>
   )
