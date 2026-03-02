@@ -1,18 +1,9 @@
 'use client'
 
 import { Fragment, useState, useTransition } from 'react'
-import { approveRetakeRequest, denyRetakeRequest } from '@/app/actions/admin/retake'
 import { createLearningAssignment, deleteLearningAssignment, confirmAssignment, reassignAssignment, getAssigneeUnlockedLevels } from '@/app/actions/learning-assignments'
 import { approveExam, denyExam } from '@/app/actions/comprehensive-exam'
 import { ASSIGNMENT_CATEGORIES, JLPT_LEVELS, DEV_LEVELS, getCategoryLabel, getSubcategoryLabel, getContentLevelLabel } from '@/lib/assignment-categories'
-
-interface RetakeRequest {
-  attempt_id: string
-  user_id: string
-  user_name: string | null
-  quiz_title: string | null
-  retake_requested_at: string | null
-}
 
 interface LearningAssignmentRow {
   id: string
@@ -78,12 +69,11 @@ const statusLabels: Record<string, string> = {
 interface Props {
   learningAssignments: LearningAssignmentRow[]
   examRequests: ExamRequest[]
-  retakeRequests: RetakeRequest[]
   users: User[]
   currentRole: string
 }
 
-export default function AdminTasksClient({ learningAssignments, examRequests, retakeRequests, users, currentRole }: Props) {
+export default function AdminTasksClient({ learningAssignments, examRequests, users, currentRole }: Props) {
   const [activeTab, setActiveTab] = useState<'learning' | 'approvals'>('learning')
   const [showForm, setShowForm] = useState(false)
   const [pending, startTransition] = useTransition()
@@ -136,23 +126,6 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
         setSelectedAssignee('')
         setDevLevelLocks({})
       }
-    })
-  }
-
-  function handleApproveRetake(attemptId: string) {
-    startTransition(async () => {
-      const result = await approveRetakeRequest(attemptId)
-      if (result.error) showMsg(result.error)
-      else showMsg('再試験を承認しました')
-    })
-  }
-
-  function handleDenyRetake(attemptId: string) {
-    if (!confirm('再試験リクエストを拒否しますか？')) return
-    startTransition(async () => {
-      const result = await denyRetakeRequest(attemptId)
-      if (result.error) showMsg(result.error)
-      else showMsg('再試験を拒否しました')
     })
   }
 
@@ -225,7 +198,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
     return Math.round((passed / total) * 100)
   }
 
-  const pendingApprovals = retakeRequests.length + examRequests.filter(e => e.status === 'requested').length
+  const pendingApprovals = examRequests.filter(e => e.status === 'requested').length
 
   const tabs = [
     { key: 'learning' as const, label: '学習課題' },
@@ -519,61 +492,6 @@ export default function AdminTasksClient({ learningAssignments, examRequests, re
       {/* Approvals Tab */}
       {activeTab === 'approvals' && (
         <div className="space-y-6">
-          {/* Retake Requests */}
-          <div>
-            <h3 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">再試験リクエスト</h3>
-            <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">ユーザー名</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">クイズ</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">リクエスト日</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400">操作</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                    {retakeRequests.map(req => (
-                      <tr key={req.attempt_id}>
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
-                          {req.user_name ?? '-'}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                          {req.quiz_title ?? '-'}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-                          {req.retake_requested_at ? new Date(req.retake_requested_at).toLocaleDateString('ja-JP') : '-'}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => handleApproveRetake(req.attempt_id)}
-                              disabled={pending}
-                              className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-                            >
-                              承認
-                            </button>
-                            <button
-                              onClick={() => handleDenyRetake(req.attempt_id)}
-                              disabled={pending}
-                              className="rounded-md bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
-                            >
-                              拒否
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {retakeRequests.length === 0 && (
-                <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">再試験リクエストがありません</div>
-              )}
-            </div>
-          </div>
-
           {/* Comprehensive Exam Requests */}
           <div>
             <h3 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">総合試験リクエスト</h3>

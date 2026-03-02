@@ -4,7 +4,7 @@ import { useState, useEffect, useTransition } from 'react'
 import Card from '@/components/ui/Card'
 import AddVocabModal from '@/components/personal-vocab/AddVocabModal'
 import { getPersonalVocab, updatePersonalVocab, deletePersonalVocab } from '@/app/actions/personal-vocab'
-import { Pencil, Trash2, X, Check, Plus } from 'lucide-react'
+import { Pencil, Trash2, X, Check, Plus, Info } from 'lucide-react'
 
 interface VocabItem {
   id: string
@@ -25,6 +25,7 @@ export default function PersonalVocabClient() {
   const [editMeaning, setEditMeaning] = useState('')
   const [editMemo, setEditMemo] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showGuide, setShowGuide] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [pending, startTransition] = useTransition()
 
@@ -37,6 +38,9 @@ export default function PersonalVocabClient() {
 
   useEffect(() => {
     loadItems()
+    if (!localStorage.getItem('personal-vocab-guide-dismissed')) {
+      setShowGuide(true)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -94,6 +98,24 @@ export default function PersonalVocabClient() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">個人単語帳</h1>
         <p className="mt-1 text-gray-500 dark:text-gray-400">自分だけの単語帳。テキストを選択して右クリックで追加できます。</p>
       </div>
+
+      {showGuide && (
+        <div className="mb-4 flex items-start gap-3 rounded-xl border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-800 dark:bg-indigo-900/10">
+          <Info className="mt-0.5 h-5 w-5 shrink-0 text-indigo-500 dark:text-indigo-400" />
+          <p className="flex-1 text-sm text-indigo-700 dark:text-indigo-300">
+            ページ上で分からない単語を選択して右クリック →「個人単語帳に追加」で、この単語帳に登録できます。
+          </p>
+          <button
+            onClick={() => {
+              localStorage.setItem('personal-vocab-guide-dismissed', 'true')
+              setShowGuide(false)
+            }}
+            className="shrink-0 rounded-lg p-1 text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-800/30"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {message && (
         <div className={`mb-4 rounded-xl px-4 py-3 text-sm ${

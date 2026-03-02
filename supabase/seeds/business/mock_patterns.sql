@@ -469,6 +469,71 @@ BEGIN
     (gen_random_uuid(), q_id, 'お忙しいところ恐れ入りますが、添付資料のご確認のほどよろしくお願いいたします。', TRUE, 3),
     (gen_random_uuid(), q_id, '添付資料、見ていただけますか。', FALSE, 4);
 
+  -- Question 11: 返信が遅れたことへの謝罪
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order)
+  VALUES (q_id, quiz_id, 'multiple_choice',
+    'メールの返信が遅れた場合、最も適切なお詫びの書き出しはどれですか？',
+    '「ご返信が遅くなり、大変申し訳ございません」は返信遅延の謝罪として最も丁寧な定型表現です。「大変」を付けることで深いお詫びの気持ちを表します。',
+    2, 11);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '返信が遅くなってすみません。', FALSE, 1),
+    (gen_random_uuid(), q_id, 'ご返信が遅くなり、大変申し訳ございません。', TRUE, 2),
+    (gen_random_uuid(), q_id, '遅くなりました。', FALSE, 3),
+    (gen_random_uuid(), q_id, '返事が遅れてごめんなさい。', FALSE, 4);
+
+  -- Question 12: CCメールの宛名パターン
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order)
+  VALUES (q_id, quiz_id, 'multiple_choice',
+    'CCに上司を入れてメールを送る際、本文中で上司に言及する最も適切な表現はどれですか？',
+    '「CCにて○○にも共有させていただいております」はCC受信者への言及として適切なビジネスパターンです。情報共有の透明性を示しつつ、丁寧に伝えています。',
+    2, 12);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'CCに上司を入れています。', FALSE, 1),
+    (gen_random_uuid(), q_id, '上司にもCCしておきました。', FALSE, 2),
+    (gen_random_uuid(), q_id, 'CCにて部長の田中にも共有させていただいております。', TRUE, 3),
+    (gen_random_uuid(), q_id, '上司も見ています。', FALSE, 4);
+
+  -- Question 13: 添付ファイルの案内パターン
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order)
+  VALUES (q_id, quiz_id, 'multiple_choice',
+    'メールに資料を添付して送る際、最も適切な案内表現はどれですか？',
+    '「添付ファイルにてお送りいたしますので、ご査収のほどよろしくお願いいたします」は添付ファイル送付時の定型表現です。「ご査収」は「受け取って内容を確認する」という意味のビジネス用語です。',
+    2, 13);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'ファイルを付けたので見てください。', FALSE, 1),
+    (gen_random_uuid(), q_id, '添付ファイルにてお送りいたしますので、ご査収のほどよろしくお願いいたします。', TRUE, 2),
+    (gen_random_uuid(), q_id, '資料を添付しました。確認お願いします。', FALSE, 3),
+    (gen_random_uuid(), q_id, '添付を見ておいてください。', FALSE, 4);
+
+  -- Question 14: 社内チャットでの簡潔な依頼パターン
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order)
+  VALUES (q_id, quiz_id, 'multiple_choice',
+    '社内チャット（Slack等）で同僚にコードレビューを依頼する際、最も適切な表現はどれですか？',
+    '社内チャットではメールほど堅くなくてもよいですが、「お手すきの際に」「いただけますでしょうか」など丁寧さは保ちます。チャットでも基本的な敬語は必要です。',
+    2, 14);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'レビューよろしく！', FALSE, 1),
+    (gen_random_uuid(), q_id, 'お手すきの際に、PRのレビューをお願いできますでしょうか。', TRUE, 2),
+    (gen_random_uuid(), q_id, 'レビューしといてください。', FALSE, 3),
+    (gen_random_uuid(), q_id, 'PR出したから見て。', FALSE, 4);
+
+  -- Question 15: メールの締めくくりパターン
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order)
+  VALUES (q_id, quiz_id, 'multiple_choice',
+    'ビジネスメールの最後に添える定型表現として、今後の関係継続を示す最も適切なものはどれですか？',
+    '「今後とも何卒よろしくお願い申し上げます」はビジネスメールの締めくくりとして最もフォーマルな表現です。「何卒」は「どうか」の丁寧語で、強い依頼の気持ちを込めています。',
+    2, 15);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'よろしくお願いします。', FALSE, 1),
+    (gen_random_uuid(), q_id, 'これからもよろしく。', FALSE, 2),
+    (gen_random_uuid(), q_id, '今後とも何卒よろしくお願い申し上げます。', TRUE, 3),
+    (gen_random_uuid(), q_id, 'またお願いします。', FALSE, 4);
+
 END $$;
 
 COMMIT;

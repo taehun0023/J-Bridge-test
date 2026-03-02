@@ -11,8 +11,20 @@ export async function requestExam(category: string, subcategory: string, content
   if ('error' in auth) return { error: auth.error } as const
   const { supabase, user } = auth
 
+  // Use serviceClient for RLS bypass (admin/mentor may not have RLS access to comprehensive_exams)
+  const serviceClient = createServiceRoleClient()
+  const queryClient = serviceClient ?? supabase
+
+  // Check role for auto-approval
+  const { data: profile } = await queryClient
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  const isAdminOrMentor = profile?.role === 'admin' || profile?.role === 'mentor'
+
   // Check for existing pending/in_progress exam
-  const { data: existing } = await supabase
+  const { data: existing } = await queryClient
     .from('comprehensive_exams')
     .select('id')
     .eq('user_id', user.id)
@@ -25,33 +37,36 @@ export async function requestExam(category: string, subcategory: string, content
     return { error: '既にリクエスト中または進行中の試験があります' }
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await queryClient
     .from('comprehensive_exams')
     .insert({
       user_id: user.id,
       category,
       subcategory,
       content_level: contentLevel,
+      status: isAdminOrMentor ? 'approved' : 'requested',
     })
     .select('id')
     .single()
 
   if (error) return { error: error.message }
 
-  // Notify mentors and admins
-  const userName = await getUserDisplayName(user.id)
-  const catLabel = ASSIGNMENT_CATEGORIES[category]?.label ?? category
-  const subLabel = ASSIGNMENT_CATEGORIES[category]?.subcategories[subcategory]?.label ?? subcategory
-  const levelStr = contentLevel ? ` ${contentLevel}` : ''
+  // Notify mentors and admins (skip for admin/mentor self-request)
+  if (!isAdminOrMentor) {
+    const userName = await getUserDisplayName(user.id)
+    const catLabel = ASSIGNMENT_CATEGORIES[category]?.label ?? category
+    const subLabel = ASSIGNMENT_CATEGORIES[category]?.subcategories[subcategory]?.label ?? subcategory
+    const levelStr = contentLevel ? ` ${contentLevel}` : ''
 
-  await notifyMentorsAndAdmins(
-    user.id,
-    'exam_requested',
-    `${userName}さんが総合試験をリクエスト`,
-    `${catLabel} > ${subLabel}${levelStr}`,
-    '/admin/tasks',
-    data.id
-  )
+    await notifyMentorsAndAdmins(
+      user.id,
+      'exam_requested',
+      `${userName}さんが総合試験をリクエスト`,
+      `${catLabel} > ${subLabel}${levelStr}`,
+      '/admin/tasks',
+      data.id
+    )
+  }
 
   revalidatePath('/dashboard/assignments')
   return { success: true, examId: data.id }
@@ -74,9 +89,17 @@ export async function requestRetakeExam(examId: string) {
     .single()
 
   if (!exam) return { error: '試験が見つかりません' }
-  if (exam.status !== 'failed') return { error: '不合格の試験のみ再試験リクエストできます' }
+  if (exam.status !== 'failed' && exam.status !== 'completed') return { error: '完了済みまたは不合格の試験のみ再試験リクエストできます' }
 
-  // Create a new exam request (retake)
+  // Check if user is admin or mentor
+  const { data: profile } = await queryClient
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  const isAdminOrMentor = profile?.role === 'admin' || profile?.role === 'mentor'
+
+  // Create a new exam request (retake) — admin/mentor gets auto-approved
   const { data: newExam, error: insertError } = await queryClient
     .from('comprehensive_exams')
     .insert({
@@ -84,26 +107,28 @@ export async function requestRetakeExam(examId: string) {
       category: exam.category,
       subcategory: exam.subcategory,
       content_level: exam.content_level,
-      status: 'requested',
+      status: isAdminOrMentor ? 'approved' : 'requested',
     })
     .select('id')
     .single()
 
   if (insertError) return { error: insertError.message }
 
-  // Notify mentors and admins
-  const userName = await getUserDisplayName(user.id, queryClient)
-  await notifyMentorsAndAdmins(
-    user.id,
-    'exam_requested',
-    `${userName}さんが総合試験の再試験をリクエスト`,
-    undefined,
-    '/admin/tasks',
-    newExam.id,
-    queryClient
-  )
+  // Notify mentors and admins (skip for admin/mentor self-retake)
+  if (!isAdminOrMentor) {
+    const userName = await getUserDisplayName(user.id, queryClient)
+    await notifyMentorsAndAdmins(
+      user.id,
+      'exam_requested',
+      `${userName}さんが総合試験の再試験をリクエスト`,
+      undefined,
+      '/admin/tasks',
+      newExam.id,
+      queryClient
+    )
+  }
 
   revalidatePath('/dashboard')
   revalidatePath('/dashboard/assignments')
-  return { success: true }
+  return { success: true, examId: newExam.id }
 }

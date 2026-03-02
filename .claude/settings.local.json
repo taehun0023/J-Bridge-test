@@ -41,7 +41,23 @@
       "Bash(npx vitest run)",
       "Bash(supabase status:*)",
       "Bash(node:*)",
-      "Bash(git status:*)"
+      "Bash(git status:*)",
+      "WebFetch(domain:www.jlptglobal.com)",
+      "WebFetch(domain:nihongoichiban.com)",
+      "WebFetch(domain:www.kanshudo.com)",
+      "WebFetch(domain:jlptsensei.com)",
+      "WebFetch(domain:www.japanese-kanji.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:jlptstudy.net)",
+      "WebFetch(domain:www.tanos.co.uk)",
+      "WebFetch(domain:www.ejable.com)",
+      "WebFetch(domain:www.jlpthub.com)",
+      "WebFetch(domain:rirekishobuilder.com)",
+      "WebFetch(domain:www.jlpt.jp)",
+      "Bash(python:*)",
+      "Bash(npx next:*)",
+      "Bash(npm test:*)",
+      "Bash(python3:*)"
     ]
   }
 }

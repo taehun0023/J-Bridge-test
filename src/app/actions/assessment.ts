@@ -7,7 +7,6 @@ import { requireAuth } from '@/lib/auth-helpers'
 import { fetchRandomAssessmentQuestions, fetchAssessmentQuiz } from '@/lib/supabase/queries/assessments'
 import { recalculateUserScores } from './scores'
 import { ASSESSMENT_QUIZ_IDS } from '@/lib/assessment-config'
-import { notifyMentorsAndAdmins, getUserDisplayName } from '@/lib/notification-helpers'
 import { checkAndCreateExamCycle } from './exam-scheduling'
 
 /** Save onboarding preferences and mark as onboarded → dashboard */
@@ -152,66 +151,6 @@ export async function submitAssessment(
     totalCount: totalQuestions,
     results,
   }
-}
-
-/** Request retake for a completed assessment step */
-export async function requestRetake(step: number) {
-  const auth = await requireAuth()
-  if ('error' in auth) return { error: auth.error } as const
-  const { supabase, user } = auth
-
-  const quizId = ASSESSMENT_QUIZ_IDS[step]
-  if (!quizId) return { error: '無効なステップです' }
-
-  // Find the latest completed attempt for this step
-  const { data: attempt } = await supabase
-    .from('quiz_attempts')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('quiz_id', quizId)
-    .not('completed_at', 'is', null)
-    .order('completed_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  if (!attempt) return { error: '完了済みの試験が見つかりません' }
-  if (attempt.retake_request_status === 'requested') return { error: '既にリクエスト済みです' }
-  if (attempt.retake_request_status === 'approved') return { error: '既に承認されています' }
-
-  const { error } = await supabase
-    .from('quiz_attempts')
-    .update({
-      retake_request_status: 'requested',
-      retake_requested_at: new Date().toISOString(),
-    })
-    .eq('id', attempt.id)
-
-  if (error) return { error: 'リクエスト送信に失敗しました' }
-
-  // Notify mentors and admins
-  const queryClient = createServiceRoleClient() ?? supabase
-  const userName = await getUserDisplayName(user.id, queryClient)
-
-  const { data: quizData } = await queryClient
-    .from('quizzes')
-    .select('title')
-    .eq('id', quizId)
-    .single()
-
-  const quizTitle = quizData?.title ?? '評価テスト'
-
-  await notifyMentorsAndAdmins(
-    user.id,
-    'retake_requested',
-    `${userName}さんが再試験をリクエスト`,
-    quizTitle,
-    '/admin/tasks',
-    attempt.id,
-    queryClient
-  )
-
-  revalidatePath('/dashboard')
-  return { success: true }
 }
 
 /** Finalize onboarding: set is_onboarded=true and redirect to dashboard */

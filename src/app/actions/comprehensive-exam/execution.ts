@@ -6,7 +6,7 @@ import { ASSIGNMENT_CATEGORIES } from '@/lib/assignment-categories'
 import { notifyMentorsOf, getUserDisplayName } from '@/lib/notification-helpers'
 import { recalculateUserScores } from '@/modules/scoring'
 import { tryCompleteActiveCycle } from '@/app/actions/exam-scheduling'
-import { COMP_EXAM_CATEGORY_TO_STEP, ASSESSMENT_QUIZ_IDS } from '@/lib/assessment-config'
+import { COMP_EXAM_CATEGORY_TO_STEP, ASSESSMENT_QUIZ_IDS, ASSESSMENT_CONTENT_QUIZ_TYPES } from '@/lib/assessment-config'
 import { fetchRandomAssessmentQuestions } from '@/lib/supabase/queries/assessments'
 
 /** Shuffle array and assign sort_order to options */
@@ -38,8 +38,23 @@ export async function startExam(examId: string) {
     const step = COMP_EXAM_CATEGORY_TO_STEP[exam.category]
     if (!step) return { error: 'カテゴリが無効です' }
 
-    const quizId = ASSESSMENT_QUIZ_IDS[step]
-    if (!quizId) return { error: '該当するクイズが見つかりません' }
+    const assessmentQuizId = ASSESSMENT_QUIZ_IDS[step]
+    if (!assessmentQuizId) return { error: '該当するクイズが見つかりません' }
+
+    // Build quiz ID list: assessment quiz + blended content quizzes (if applicable)
+    const quizIds: string[] = [assessmentQuizId]
+    const contentQuizTypes = ASSESSMENT_CONTENT_QUIZ_TYPES[step]
+    if (contentQuizTypes) {
+      const { data: contentQuizzes } = await serviceClient
+        .from('quizzes')
+        .select('id')
+        .in('quiz_type', contentQuizTypes)
+        .eq('is_assessment', false)
+        .eq('is_published', true)
+      if (contentQuizzes?.length) {
+        quizIds.push(...contentQuizzes.map(q => q.id))
+      }
+    }
 
     // For step 4 (dev), get user's target_coding_area
     let targetCodingArea: string | null = null
@@ -52,7 +67,11 @@ export async function startExam(examId: string) {
       targetCodingArea = profile?.target_coding_area ?? null
     }
 
-    const questions = await fetchRandomAssessmentQuestions(quizId, step, targetCodingArea)
+    const questions = await fetchRandomAssessmentQuestions(
+      quizIds.length === 1 ? quizIds[0] : quizIds,
+      step,
+      targetCodingArea
+    )
 
     if (questions.length === 0) {
       return { error: '出題可能な問題がありません' }
@@ -170,13 +189,28 @@ export async function loadExamQuestions(examId: string) {
   if (!exam) return { error: '試験が見つかりません' }
   if (exam.status !== 'in_progress') return { error: 'この試験は進行中ではありません' }
 
-  // Cycle comprehensive exam: use assessment quiz IDs
+  // Cycle comprehensive exam: use assessment quiz IDs + blending
   if (exam.subcategory === 'comprehensive') {
     const step = COMP_EXAM_CATEGORY_TO_STEP[exam.category]
     if (!step) return { error: 'カテゴリが無効です' }
 
-    const quizId = ASSESSMENT_QUIZ_IDS[step]
-    if (!quizId) return { error: '該当するクイズが見つかりません' }
+    const assessmentQuizId = ASSESSMENT_QUIZ_IDS[step]
+    if (!assessmentQuizId) return { error: '該当するクイズが見つかりません' }
+
+    // Build quiz ID list: assessment quiz + blended content quizzes
+    const quizIds: string[] = [assessmentQuizId]
+    const contentQuizTypes = ASSESSMENT_CONTENT_QUIZ_TYPES[step]
+    if (contentQuizTypes) {
+      const { data: contentQuizzes } = await serviceClient
+        .from('quizzes')
+        .select('id')
+        .in('quiz_type', contentQuizTypes)
+        .eq('is_assessment', false)
+        .eq('is_published', true)
+      if (contentQuizzes?.length) {
+        quizIds.push(...contentQuizzes.map(q => q.id))
+      }
+    }
 
     let targetCodingArea: string | null = null
     if (step === 4) {
@@ -188,7 +222,11 @@ export async function loadExamQuestions(examId: string) {
       targetCodingArea = profile?.target_coding_area ?? null
     }
 
-    const questions = await fetchRandomAssessmentQuestions(quizId, step, targetCodingArea)
+    const questions = await fetchRandomAssessmentQuestions(
+      quizIds.length === 1 ? quizIds[0] : quizIds,
+      step,
+      targetCodingArea
+    )
     if (questions.length === 0) return { error: '出題可能な問題がありません' }
 
     return {

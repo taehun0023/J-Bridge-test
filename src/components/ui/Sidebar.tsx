@@ -3,15 +3,12 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { X } from 'lucide-react'
-import type { UserRole } from '@/lib/supabase/types'
-import { mainNavItems, getAdminNavForRole } from '@/lib/navigation'
+import { mainNavItems } from '@/lib/navigation'
 
-export default function Sidebar({ onClose, userRole = 'mentee' }: { onClose?: () => void; userRole?: UserRole }) {
+export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname()
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
-
-  const adminItems = getAdminNavForRole(userRole)
 
   const activeClass = 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-l-2 dark:border-indigo-500'
   const inactiveClass = 'text-zinc-600 hover:bg-gray-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-200'
@@ -50,35 +47,6 @@ export default function Sidebar({ onClose, userRole = 'mentee' }: { onClose?: ()
             </li>
           )
         })}
-
-        {adminItems.length > 0 && (
-          <>
-            <li className="pt-4 pb-1">
-              <div className="border-t border-gray-200 dark:border-white/[0.06] pt-4">
-                <span className="px-3 text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-                  管理者
-                </span>
-              </div>
-            </li>
-            {adminItems.map((item) => {
-              const Icon = item.icon
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    onClick={onClose}
-                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                      isActive(item.href) ? activeClass : inactiveClass
-                    }`}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    {item.label}
-                  </Link>
-                </li>
-              )
-            })}
-          </>
-        )}
       </ul>
     </nav>
   )

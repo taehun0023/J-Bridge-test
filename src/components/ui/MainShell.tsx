@@ -24,17 +24,18 @@ export default function MainShell({
     <div className="flex h-screen bg-zinc-50 dark:bg-zinc-950">
       {/* Desktop sidebar */}
       <div className="hidden w-64 shrink-0 lg:block">
-        <Sidebar userRole={userRole} />
+        <Sidebar />
       </div>
 
       {/* Mobile nav */}
-      <MobileNav isOpen={mobileOpen} onClose={() => setMobileOpen(false)} userRole={userRole} />
+      <MobileNav isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
 
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header
           userName={userName}
           avatarUrl={avatarUrl}
+          userRole={userRole}
           onMenuToggle={() => setMobileOpen(true)}
         />
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">

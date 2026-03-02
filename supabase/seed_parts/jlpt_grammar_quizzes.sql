@@ -4,6 +4,26 @@
 -- ============================================
 
 -- Cleanup existing grammar quiz data
+DELETE FROM comprehensive_exam_answers WHERE selected_option_id IN (
+  SELECT id FROM quiz_question_options WHERE question_id IN (
+    SELECT id FROM quiz_questions WHERE quiz_id IN (
+      'b0000001-0000-0000-0000-000000000001',
+      'b0000002-0000-0000-0000-000000000002',
+      'b0000003-0000-0000-0000-000000000003',
+      'b0000004-0000-0000-0000-000000000004',
+      'b0000005-0000-0000-0000-000000000005'
+    )
+  )
+);
+DELETE FROM comprehensive_exam_answers WHERE question_id IN (
+  SELECT id FROM quiz_questions WHERE quiz_id IN (
+    'b0000001-0000-0000-0000-000000000001',
+    'b0000002-0000-0000-0000-000000000002',
+    'b0000003-0000-0000-0000-000000000003',
+    'b0000004-0000-0000-0000-000000000004',
+    'b0000005-0000-0000-0000-000000000005'
+  )
+);
 DELETE FROM quiz_answers WHERE attempt_id IN (
   SELECT id FROM quiz_attempts WHERE quiz_id IN (
     'b0000001-0000-0000-0000-000000000001',
@@ -1091,3 +1111,341 @@ BEGIN
     (gen_random_uuid(), q_id, '彼の成功は、日々の努力の成果にほかならない。', TRUE, 3),
     (gen_random_uuid(), q_id, '彼の成功は、日々の努力の成果でほかならない。', FALSE, 4);
 END $$;
+
+-- ============================================
+-- Additional Grammar Questions (+6 per quiz, Q21-Q26)
+-- ============================================
+
+-- N5 追加問題 (Q21-Q26)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  -- Q21: 〜てから (순서 표현)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000001-0000-0000-0000-000000000001', 'multiple_choice', '「手を洗ってから、ごはんを食べます」の意味として正しいものは？', '「〜てから」は動作の順序を表す文型で、「~하고 나서」という意味です。手を洗った後にごはんを食べるという順序を示しています。', 1, 21, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '손을 씻으면서 밥을 먹는다', FALSE, 1),
+    (gen_random_uuid(), q_id, '손을 씻고 나서 밥을 먹는다', TRUE, 2),
+    (gen_random_uuid(), q_id, '손을 씻지 않고 밥을 먹는다', FALSE, 3),
+    (gen_random_uuid(), q_id, '손을 씻기 전에 밥을 먹는다', FALSE, 4);
+
+  -- Q22: 〜に (목적지 조사)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000001-0000-0000-0000-000000000001', 'multiple_choice', 'あした　がっこう（　）いきます。', '「〜に」は移動の目的地を表す助詞で、「~에」に相当します。「学校に行きます」で「학교에 갑니다」の意味です。', 1, 22, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'を', FALSE, 1),
+    (gen_random_uuid(), q_id, 'で', FALSE, 2),
+    (gen_random_uuid(), q_id, 'に', TRUE, 3),
+    (gen_random_uuid(), q_id, 'が', FALSE, 4);
+
+  -- Q23: 〜も (「も」의 사용법)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000001-0000-0000-0000-000000000001', 'multiple_choice', 'わたしは　にほんご（　）べんきょうしています。えいご（　）べんきょうしています。', '「〜も」は「~도」に相当する助詞で、同類のものを並列する時に使います。日本語も英語も勉強しているという意味です。', 1, 23, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'を / を', FALSE, 1),
+    (gen_random_uuid(), q_id, 'も / も', TRUE, 2),
+    (gen_random_uuid(), q_id, 'は / は', FALSE, 3),
+    (gen_random_uuid(), q_id, 'が / が', FALSE, 4);
+
+  -- Q24: 〜あげる/もらう/くれる (수수표현)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000001-0000-0000-0000-000000000001', 'multiple_choice', 'ともだちが　わたしに　ほんを（　）。', '「くれる」は다른 사람이 나에게 무언가를 주는 것을 나타내는 동사입니다。友達(주어)が 私(받는 사람)に 本を くれました。', 1, 24, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'あげました', FALSE, 1),
+    (gen_random_uuid(), q_id, 'もらいました', FALSE, 2),
+    (gen_random_uuid(), q_id, 'くれました', TRUE, 3),
+    (gen_random_uuid(), q_id, 'やりました', FALSE, 4);
+
+  -- Q25: 〜なくてもいい (허가 불필요)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000001-0000-0000-0000-000000000001', 'multiple_choice', '「明日は休みですから、早く起きなくてもいいです」の意味は？', '「〜なくてもいい」は「~하지 않아도 된다」という意味で、必要ないことを表します。明日は休みなので早く起きる必要はないということです。', 1, 25, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '내일은 쉬는 날이니까 일찍 일어나야 한다', FALSE, 1),
+    (gen_random_uuid(), q_id, '내일은 쉬는 날이니까 일찍 일어나지 않아도 된다', TRUE, 2),
+    (gen_random_uuid(), q_id, '내일은 쉬는 날이니까 일찍 일어나고 싶다', FALSE, 3),
+    (gen_random_uuid(), q_id, '내일은 쉬는 날이니까 일찍 일어날 수 없다', FALSE, 4);
+
+  -- Q26: 〜まだ〜ていません (미완료)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000001-0000-0000-0000-000000000001', 'multiple_choice', 'A：「もう宿題をしましたか。」 B：「いいえ、（　）。」', '「まだ〜ていません」は「아직 ~하지 않았습니다」의 의미로, 아직 완료되지 않은 상태를 나타냅니다。', 1, 26, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'もうしました', FALSE, 1),
+    (gen_random_uuid(), q_id, 'しません', FALSE, 2),
+    (gen_random_uuid(), q_id, 'まだしていません', TRUE, 3),
+    (gen_random_uuid(), q_id, 'しなかったです', FALSE, 4);
+END $$;
+
+-- N4 追加問題 (Q21-Q26)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  -- Q21: 〜てあげる (행위 수수)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000002-0000-0000-0000-000000000002', 'multiple_choice', '妹に漢字を教えて（　）。', '「〜てあげる」は상대방을 위해 행위를 해주는 것을 나타냅니다。「教えてあげた」で「가르쳐 주었다」の意味です。', 1, 21, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'もらった', FALSE, 1),
+    (gen_random_uuid(), q_id, 'くれた', FALSE, 2),
+    (gen_random_uuid(), q_id, 'あげた', TRUE, 3),
+    (gen_random_uuid(), q_id, 'やった', FALSE, 4);
+
+  -- Q22: 〜てもらう (행위 수수 - 받는 쪽)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000002-0000-0000-0000-000000000002', 'multiple_choice', '友達に荷物を持って（　）。', '「〜てもらう」は다른 사람에게 행위를 받는 것을 나타냅니다。「持ってもらった」で「들어 받았다」의 의미입니다。', 1, 22, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'あげた', FALSE, 1),
+    (gen_random_uuid(), q_id, 'もらった', TRUE, 2),
+    (gen_random_uuid(), q_id, 'くれた', FALSE, 3),
+    (gen_random_uuid(), q_id, 'おいた', FALSE, 4);
+
+  -- Q23: 〜ことにする (결정 표현)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000002-0000-0000-0000-000000000002', 'multiple_choice', '来月から毎日運動する（　）しました。', '「〜ことにする」는 자신의 의지로 결정하는 것을 나타내는 문형으로、「~하기로 하다」의 의미입니다。', 1, 23, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'ように', FALSE, 1),
+    (gen_random_uuid(), q_id, 'ために', FALSE, 2),
+    (gen_random_uuid(), q_id, 'ことに', TRUE, 3),
+    (gen_random_uuid(), q_id, 'ことが', FALSE, 4);
+
+  -- Q24: 〜ことになる (결정 - 타자/자연)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000002-0000-0000-0000-000000000002', 'multiple_choice', '来月から大阪に転勤する（　）なりました。', '「〜ことになる」는 외부 요인이나 상황에 의한 결정을 나타내는 문형으로、「~하게 되다」의 의미입니다。', 1, 24, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'ように', FALSE, 1),
+    (gen_random_uuid(), q_id, 'ことに', TRUE, 2),
+    (gen_random_uuid(), q_id, 'ために', FALSE, 3),
+    (gen_random_uuid(), q_id, 'はずに', FALSE, 4);
+
+  -- Q25: 〜ても (역접 가정)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000002-0000-0000-0000-000000000002', 'multiple_choice', '雨が降っ（　）、サッカーの試合をします。', '「〜ても」は역접 가정을 나타내는 문형으로、「~하더라도」의 의미입니다。비가 와도 축구 시합을 한다는 의미입니다。', 1, 25, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'たら', FALSE, 1),
+    (gen_random_uuid(), q_id, 'ても', TRUE, 2),
+    (gen_random_uuid(), q_id, 'ので', FALSE, 3),
+    (gen_random_uuid(), q_id, 'から', FALSE, 4);
+
+  -- Q26: 〜ば〜ほど (비례 표현)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000002-0000-0000-0000-000000000002', 'multiple_choice', '日本語は勉強すれば（　）おもしろくなります。', '「〜ば〜ほど」は「~하면 ~할수록」의 의미로, 비례관계를 나타냅니다。공부하면 할수록 재미있어진다는 뜻입니다。', 1, 26, 'hard', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'するだけ', FALSE, 1),
+    (gen_random_uuid(), q_id, 'するほど', TRUE, 2),
+    (gen_random_uuid(), q_id, 'するまで', FALSE, 3),
+    (gen_random_uuid(), q_id, 'するなら', FALSE, 4);
+END $$;
+
+-- N3 追加問題 (Q21-Q26)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  -- Q21: 〜ようとする (시도 표현)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000003-0000-0000-0000-000000000003', 'multiple_choice', 'ドアを開けよう（　）したが、鍵がかかっていた。', '「〜ようとする」は「~하려고 하다」의 의미로, 시도나 의도를 나타냅니다。문을 열려고 했지만 잠겨 있었다는 뜻입니다。', 1, 21, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'に', FALSE, 1),
+    (gen_random_uuid(), q_id, 'と', TRUE, 2),
+    (gen_random_uuid(), q_id, 'で', FALSE, 3),
+    (gen_random_uuid(), q_id, 'か', FALSE, 4);
+
+  -- Q22: 〜ことにしている (습관적 결정)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000003-0000-0000-0000-000000000003', 'multiple_choice', '健康のために、毎朝ジョギングをする（　）している。', '「〜ことにしている」は습관적인 결정이나 자기 규칙을 나타내는 문형으로、「~하기로 하고 있다」의 의미입니다。', 1, 22, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'ように', FALSE, 1),
+    (gen_random_uuid(), q_id, 'ことに', TRUE, 2),
+    (gen_random_uuid(), q_id, 'ために', FALSE, 3),
+    (gen_random_uuid(), q_id, 'はずに', FALSE, 4);
+
+  -- Q23: 〜せいで (부정적 원인)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000003-0000-0000-0000-000000000003', 'multiple_choice', '台風の（　）、飛行機が欠航になった。', '「〜せいで」는 부정적인 결과의 원인을 나타내는 문형으로、「~탓에 / ~때문에(부정적)」의 의미입니다。', 1, 23, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'おかげで', FALSE, 1),
+    (gen_random_uuid(), q_id, 'せいで', TRUE, 2),
+    (gen_random_uuid(), q_id, 'ために', FALSE, 3),
+    (gen_random_uuid(), q_id, 'ことで', FALSE, 4);
+
+  -- Q24: 〜っぽい (경향/인상)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000003-0000-0000-0000-000000000003', 'multiple_choice', '最近の天気は秋（　）くなってきた。', '「〜っぽい」は「~스러운 / ~같은」의 의미로, 어떤 경향이나 인상을 나타냅니다。「秋っぽい」로 가을 같은 느낌이 된다는 뜻입니다。', 1, 24, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'みたい', FALSE, 1),
+    (gen_random_uuid(), q_id, 'らし', FALSE, 2),
+    (gen_random_uuid(), q_id, 'っぽ', TRUE, 3),
+    (gen_random_uuid(), q_id, 'そう', FALSE, 4);
+
+  -- Q25: 〜かわりに (대신/대가)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000003-0000-0000-0000-000000000003', 'multiple_choice', '手伝ってくれた（　）、昼ご飯をおごりますよ。', '「〜かわりに」は「~대신에」의 의미로, 교환이나 보상의 조건을 나타냅니다。도와준 대신에 점심을 사겠다는 뜻입니다。', 1, 25, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'ついでに', FALSE, 1),
+    (gen_random_uuid(), q_id, 'かわりに', TRUE, 2),
+    (gen_random_uuid(), q_id, 'ために', FALSE, 3),
+    (gen_random_uuid(), q_id, 'おかげで', FALSE, 4);
+
+  -- Q26: 〜ついでに (겸사겸사)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000003-0000-0000-0000-000000000003', 'multiple_choice', '買い物に行く（　）、クリーニングも出してきてくれない？', '「〜ついでに」は「~하는 김에」의 의미로, 메인 행동을 하면서 부수적인 행동도 함께 하는 것을 나타냅니다。', 1, 26, 'hard', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'かわりに', FALSE, 1),
+    (gen_random_uuid(), q_id, 'ために', FALSE, 2),
+    (gen_random_uuid(), q_id, 'ついでに', TRUE, 3),
+    (gen_random_uuid(), q_id, 'ながら', FALSE, 4);
+END $$;
+
+-- N2 追加問題 (Q21-Q26)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  -- Q21: 〜ものなら (불가능/도전 가정)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000004-0000-0000-0000-000000000004', 'multiple_choice', 'できる（　）やってみろ。', '「〜ものなら」は「~할 수 있다면 / ~한다면」의 의미로, 실현이 어려운 가정을 나타냅니다。할 수 있으면 해봐라 라는 도전적 의미입니다。', 1, 21, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'ことなら', FALSE, 1),
+    (gen_random_uuid(), q_id, 'ものなら', TRUE, 2),
+    (gen_random_uuid(), q_id, 'としたら', FALSE, 3),
+    (gen_random_uuid(), q_id, 'ばかりか', FALSE, 4);
+
+  -- Q22: 〜からして (판단 근거)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000004-0000-0000-0000-000000000004', 'multiple_choice', 'あの店は外観（　）高級そうだ。', '「〜からして」は「~부터가」의 의미로, 가장 기본적인 것을 예로 들어 판단을 나타냅니다。외관부터가 고급스럽다는 뜻입니다。', 1, 22, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'にして', FALSE, 1),
+    (gen_random_uuid(), q_id, 'からして', TRUE, 2),
+    (gen_random_uuid(), q_id, 'として', FALSE, 3),
+    (gen_random_uuid(), q_id, 'にとって', FALSE, 4);
+
+  -- Q23: 〜てたまらない (참을 수 없는 감정)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000004-0000-0000-0000-000000000004', 'multiple_choice', '試験の結果が心配で（　）。', '「〜てたまらない」は「~해서 견딜 수 없다」의 의미로, 감정이나 감각이 매우 강한 상태를 나타냅니다。', 1, 23, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'しかたない', FALSE, 1),
+    (gen_random_uuid(), q_id, 'ならない', FALSE, 2),
+    (gen_random_uuid(), q_id, 'たまらない', TRUE, 3),
+    (gen_random_uuid(), q_id, 'いられない', FALSE, 4);
+
+  -- Q24: 〜に限って (한정/의외)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000004-0000-0000-0000-000000000004', 'multiple_choice', '傘を持っていない日（　）、雨が降る。', '「〜に限って」は「~에 한해서 / 하필 ~할 때」의 의미로, 의외의 상황이나 한정을 나타냅니다。우산이 없는 날에 한해 비가 온다는 뜻입니다。', 1, 24, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'にかけて', FALSE, 1),
+    (gen_random_uuid(), q_id, 'に限って', TRUE, 2),
+    (gen_random_uuid(), q_id, 'につれて', FALSE, 3),
+    (gen_random_uuid(), q_id, 'に関して', FALSE, 4);
+
+  -- Q25: 〜どころか (부정적 강조)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000004-0000-0000-0000-000000000004', 'multiple_choice', '彼は英語（　）、日本語も中国語も話せる。', '「〜どころか」は「~는커녕 / ~은 물론이고」의 의미로, 예상과 다른 정도를 강조합니다。영어는 물론이고 일본어, 중국어까지 할 수 있다는 뜻입니다。', 1, 25, 'hard', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'ばかりか', FALSE, 1),
+    (gen_random_uuid(), q_id, 'どころか', TRUE, 2),
+    (gen_random_uuid(), q_id, 'だけでなく', FALSE, 3),
+    (gen_random_uuid(), q_id, 'のみならず', FALSE, 4);
+
+  -- Q26: 〜を中心に (중심 표현)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000004-0000-0000-0000-000000000004', 'multiple_choice', 'この授業は会話（　）進められます。', '「〜を中心に」は「~을 중심으로」의 의미로, 무언가를 중심 축으로 하는 것을 나타냅니다。회화를 중심으로 수업이 진행된다는 뜻입니다。', 1, 26, 'hard', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'をもとに', FALSE, 1),
+    (gen_random_uuid(), q_id, 'を中心に', TRUE, 2),
+    (gen_random_uuid(), q_id, 'に関して', FALSE, 3),
+    (gen_random_uuid(), q_id, 'について', FALSE, 4);
+END $$;
+
+-- N1 追加問題 (Q21-Q26)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  -- Q21: 〜ともあろう (지위에 어울리지 않는 행동)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000005-0000-0000-0000-000000000005', 'multiple_choice', '社長（　）人が、そんな初歩的なミスをするとは信じられない。', '「〜ともあろう」は「~정도 되는 / ~다운 지위의」의 의미로, 높은 지위나 입장에 어울리지 않는 행동에 대한 비난이나 놀라움을 나타냅니다。', 1, 21, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'ともあろう', TRUE, 1),
+    (gen_random_uuid(), q_id, 'ともなると', FALSE, 2),
+    (gen_random_uuid(), q_id, 'としての', FALSE, 3),
+    (gen_random_uuid(), q_id, 'にあたる', FALSE, 4);
+
+  -- Q22: 〜ないものでもない (완곡한 긍정)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000005-0000-0000-0000-000000000005', 'multiple_choice', '条件次第では、協力でき（　）。', '「〜ないものでもない」는 이중부정을 통한 완곡한 긍정 표현으로、「~하지 못할 것도 없다」의 의미입니다。조건에 따라 협력할 수도 있다는 뉘앙스입니다。', 1, 22, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'るものではない', FALSE, 1),
+    (gen_random_uuid(), q_id, 'ないものでもない', TRUE, 2),
+    (gen_random_uuid(), q_id, 'ないではいられない', FALSE, 3),
+    (gen_random_uuid(), q_id, 'ざるをえない', FALSE, 4);
+
+  -- Q23: 〜てからというもの (전환점)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000005-0000-0000-0000-000000000005', 'multiple_choice', '日本に来て（　）、毎日が新しい発見の連続だ。', '「〜てからというもの」は「~하고 나서부터는 쭉」의 의미로, 어떤 시점을 계기로 상태가 계속 변한 것을 나타냅니다。', 1, 23, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'からには', FALSE, 1),
+    (gen_random_uuid(), q_id, 'からというもの', TRUE, 2),
+    (gen_random_uuid(), q_id, 'てはじめて', FALSE, 3),
+    (gen_random_uuid(), q_id, 'たとたん', FALSE, 4);
+
+  -- Q24: 〜まじき (있어서는 안 되는)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000005-0000-0000-0000-000000000005', 'multiple_choice', '教師に（　）行為として、厳しく批判された。', '「〜まじき」は「~해서는 안 되는 / ~답지 않은」의 의미로, 그 입장에서 있어서는 안 되는 행위를 비난할 때 사용합니다。', 1, 24, 'hard', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'あるべき', FALSE, 1),
+    (gen_random_uuid(), q_id, 'あるまじき', TRUE, 2),
+    (gen_random_uuid(), q_id, 'あらざる', FALSE, 3),
+    (gen_random_uuid(), q_id, 'ありえない', FALSE, 4);
+
+  -- Q25: 〜極まりない (극도의 정도)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000005-0000-0000-0000-000000000005', 'multiple_choice', 'あの政治家の発言は無責任（　）。', '「〜極まりない」は「더없이 ~하다 / 극히 ~하다」의 의미로, 정도가 극에 달해 있음을 나타내는 강조 표현입니다。', 1, 25, 'hard', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'きわまる', FALSE, 1),
+    (gen_random_uuid(), q_id, '極まりない', TRUE, 2),
+    (gen_random_uuid(), q_id, 'この上ない', FALSE, 3),
+    (gen_random_uuid(), q_id, 'に堪えない', FALSE, 4);
+
+  -- Q26: 〜とは (의외/감탄)
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'b0000005-0000-0000-0000-000000000005', 'multiple_choice', 'まさか彼が辞職する（　）、誰も予想していなかった。', '「〜とは」는 의외성이나 놀라움을 나타내는 문형으로、「~하다니 / ~라고는」의 의미입니다。예상치 못한 일에 대한 놀라움을 표현합니다。', 1, 26, 'hard', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'とは', TRUE, 1),
+    (gen_random_uuid(), q_id, 'ものを', FALSE, 2),
+    (gen_random_uuid(), q_id, 'ことに', FALSE, 3),
+    (gen_random_uuid(), q_id, 'ところを', FALSE, 4);
+END $$;
+
+-- Update time limits (+3 minutes each)
+UPDATE quizzes SET time_limit_minutes = time_limit_minutes + 3 WHERE id IN (
+  'b0000001-0000-0000-0000-000000000001',
+  'b0000002-0000-0000-0000-000000000002',
+  'b0000003-0000-0000-0000-000000000003',
+  'b0000004-0000-0000-0000-000000000004',
+  'b0000005-0000-0000-0000-000000000005'
+);

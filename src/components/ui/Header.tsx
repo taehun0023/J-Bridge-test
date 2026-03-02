@@ -1,30 +1,52 @@
 'use client'
 
+import Link from 'next/link'
 import { signOut } from '@/app/actions/auth'
 import NotificationBell from './NotificationBell'
 import ProfileAvatar from './ProfileAvatar'
 import { useTheme } from '@/components/theme/ThemeProvider'
-import { Menu, Sun, Moon, LogOut } from 'lucide-react'
+import { Menu, Sun, Moon, Shield, Settings, BookOpen, LogOut } from 'lucide-react'
+import type { UserRole } from '@/lib/supabase/types'
 
 export default function Header({
   userName,
   avatarUrl,
+  userRole,
   onMenuToggle,
 }: {
   userName: string | null
   avatarUrl: string | null
+  userRole: UserRole
   onMenuToggle: () => void
 }) {
   const { theme, toggleTheme } = useTheme()
 
   return (
-    <header className="relative z-50 flex h-16 items-center justify-between bg-white/80 backdrop-blur-xl px-4 dark:bg-zinc-950/80 dark:backdrop-blur-xl border-b border-gray-200 dark:border-white/[0.06] lg:px-6">
+    <header className="relative z-50 flex h-16 items-center bg-white/80 backdrop-blur-xl px-4 dark:bg-zinc-950/80 dark:backdrop-blur-xl border-b border-gray-200 dark:border-white/[0.06] lg:px-6">
       <button
         onClick={onMenuToggle}
         className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/5 lg:hidden"
       >
         <Menu className="h-5 w-5" />
       </button>
+
+      {(userRole === 'admin' || userRole === 'mentor') && (
+        <Link
+          href="/admin"
+          className="ml-2 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-500/10 transition-colors"
+        >
+          <Shield className="h-4 w-4" />
+          管理
+        </Link>
+      )}
+
+      <Link
+        href="/personal-vocab"
+        className="ml-2 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-500/10 transition-colors"
+      >
+        <BookOpen className="h-4 w-4" />
+        単語帳
+      </Link>
 
       <div className="flex-1" />
 
@@ -38,6 +60,14 @@ export default function Header({
         </button>
 
         <NotificationBell />
+
+        <Link
+          href="/profile"
+          className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/5"
+          aria-label="プロフィール"
+        >
+          <Settings className="h-5 w-5" />
+        </Link>
 
         <ProfileAvatar avatarUrl={avatarUrl} userName={userName} size="md" />
 

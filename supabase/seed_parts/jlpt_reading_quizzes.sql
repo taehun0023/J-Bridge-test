@@ -4,6 +4,26 @@
 -- ============================================
 
 -- Cleanup existing reading quiz data
+DELETE FROM comprehensive_exam_answers WHERE selected_option_id IN (
+  SELECT id FROM quiz_question_options WHERE question_id IN (
+    SELECT id FROM quiz_questions WHERE quiz_id IN (
+      'c0000001-0000-0000-0000-000000000001',
+      'c0000002-0000-0000-0000-000000000002',
+      'c0000003-0000-0000-0000-000000000003',
+      'c0000004-0000-0000-0000-000000000004',
+      'c0000005-0000-0000-0000-000000000005'
+    )
+  )
+);
+DELETE FROM comprehensive_exam_answers WHERE question_id IN (
+  SELECT id FROM quiz_questions WHERE quiz_id IN (
+    'c0000001-0000-0000-0000-000000000001',
+    'c0000002-0000-0000-0000-000000000002',
+    'c0000003-0000-0000-0000-000000000003',
+    'c0000004-0000-0000-0000-000000000004',
+    'c0000005-0000-0000-0000-000000000005'
+  )
+);
 DELETE FROM quiz_answers WHERE attempt_id IN (
   SELECT id FROM quiz_attempts WHERE quiz_id IN (
     'c0000001-0000-0000-0000-000000000001',
@@ -776,3 +796,1436 @@ BEGIN
     (gen_random_uuid(), q_id, '상황에 따라 모호한 표현과 명확한 표현을 구분하여 사용하는 능력이 중요하다', TRUE, 3),
     (gen_random_uuid(), q_id, '외국인에게는 명확한 표현만 사용해야 한다', FALSE, 4);
 END $$;
+
+-- ============================================
+-- Additional Reading Questions (+20 per quiz, Q11-Q30)
+-- ============================================
+
+-- ============================================
+-- N5 読解 追加問題 (Q11-Q30)
+-- ============================================
+
+-- N5 Q11: 내용이해 (학교 안내문)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000001-0000-0000-0000-000000000001', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nがくせいの みなさんへ\nあしたは たいいくの じゅぎょうが あります。うんどうぐつを もってきてください。たいいくかんに 9じに あつまってください。\nせんせいより\n\n質問：あした なにを もっていきますか？', '「うんどうぐつを もってきてください」と書いてあります。내일 운동화를 가져가야 합니다。', 1, 11, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '교과서', FALSE, 1),
+    (gen_random_uuid(), q_id, '도시락', FALSE, 2),
+    (gen_random_uuid(), q_id, '운동화', TRUE, 3),
+    (gen_random_uuid(), q_id, '수영복', FALSE, 4);
+END $$;
+
+-- N5 Q12: 세부정보 (전단지)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000001-0000-0000-0000-000000000001', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nさくらレストラン\nひる：11じ〜2じ\nよる：5じ〜9じ\nやすみ：すいようび\nランチセット：800えん（サラダ、スープつき）\n\n質問：ランチセットに ついているものは なんですか？', '「サラダ、スープつき」と書いてあります。런치 세트에는 샐러드와 수프가 포함되어 있습니다。', 1, 12, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '샐러드와 음료', FALSE, 1),
+    (gen_random_uuid(), q_id, '수프와 디저트', FALSE, 2),
+    (gen_random_uuid(), q_id, '샐러드와 수프', TRUE, 3),
+    (gen_random_uuid(), q_id, '빵과 수프', FALSE, 4);
+END $$;
+
+-- N5 Q13: 내용이해 (일기)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000001-0000-0000-0000-000000000001', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nきょうは にちようびです。あさ こうえんで ジョギングを しました。それから としょかんで ほんを よみました。ごごは ともだちと えいがを みました。とても たのしかったです。\n\n質問：この人は ごぜん なにを しましたか？', '朝は公園でジョギング、それから図書館で本を読みました。오전에는 조깅과 독서를 했습니다。', 1, 13, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '영화를 보았다', FALSE, 1),
+    (gen_random_uuid(), q_id, '조깅과 독서를 했다', TRUE, 2),
+    (gen_random_uuid(), q_id, '친구를 만났다', FALSE, 3),
+    (gen_random_uuid(), q_id, '쇼핑을 했다', FALSE, 4);
+END $$;
+
+-- N5 Q14: 문맥어휘 (메모)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000001-0000-0000-0000-000000000001', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nたなかさんへ\nでんわが ありました。やまださんから です。あしたの かいぎは 3じに かわりました。2じでは ありません。\nすずきより\n\n質問：「かわりました」は なんの いみですか？', '「かわりました」は「変わりました」で、時間が変更されたことを意味します。변경되었다는 의미입니다。', 1, 14, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '취소되었다', FALSE, 1),
+    (gen_random_uuid(), q_id, '변경되었다', TRUE, 2),
+    (gen_random_uuid(), q_id, '시작되었다', FALSE, 3),
+    (gen_random_uuid(), q_id, '끝났다', FALSE, 4);
+END $$;
+
+-- N5 Q15: 세부정보 (가족 소개)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000001-0000-0000-0000-000000000001', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nわたしの かぞくは 4にんです。ちちと ははと あにと わたしです。ちちは かいしゃいんです。ははは せんせいです。あには だいがくせいです。\n\n質問：おかあさんの しごとは なんですか？', '「ははは せんせいです」と書いてあります。어머니는 선생님입니다。', 1, 15, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '회사원', FALSE, 1),
+    (gen_random_uuid(), q_id, '대학생', FALSE, 2),
+    (gen_random_uuid(), q_id, '선생님', TRUE, 3),
+    (gen_random_uuid(), q_id, '간호사', FALSE, 4);
+END $$;
+
+-- N5 Q16: 내용이해 (교통 안내)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000001-0000-0000-0000-000000000001', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nえきから びょういんまで バスで 10ぷんです。バスは 1ばんの のりばから でます。30ぷんに 1かい あります。\n\n質問：バスは どのくらいの かんかくで ありますか？', '「30ぷんに 1かい あります」と書いてあります。30분에 1번 있습니다。', 1, 16, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '10분에 1번', FALSE, 1),
+    (gen_random_uuid(), q_id, '20분에 1번', FALSE, 2),
+    (gen_random_uuid(), q_id, '30분에 1번', TRUE, 3),
+    (gen_random_uuid(), q_id, '1시간에 1번', FALSE, 4);
+END $$;
+
+-- N5 Q17: 세부정보 (날씨 예보)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000001-0000-0000-0000-000000000001', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nあしたの てんきよほう\nあさ：はれ\nひる：くもり\nよる：あめ\nかさを もっていった ほうが いいです。\n\n質問：いつから あめが ふりますか？', '「よる：あめ」と書いてあります。밤부터 비가 옵니다。', 1, 17, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '아침부터', FALSE, 1),
+    (gen_random_uuid(), q_id, '낮부터', FALSE, 2),
+    (gen_random_uuid(), q_id, '밤부터', TRUE, 3),
+    (gen_random_uuid(), q_id, '하루 종일', FALSE, 4);
+END $$;
+
+-- N5 Q18: 문맥어휘 (쇼핑)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000001-0000-0000-0000-000000000001', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nこの みせでは やさいが とても やすいです。にんじんは 1ぽん 50えんです。たまねぎは 3つで 100えんです。まいにち たくさんの ひとが きます。\n\n質問：「やすい」は なんの いみですか？', '「やすい」は「安い」で、値段が低いことを意味します。(가격이) 싸다는 의미입니다。', 1, 18, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '맛있다', FALSE, 1),
+    (gen_random_uuid(), q_id, '싸다', TRUE, 2),
+    (gen_random_uuid(), q_id, '비싸다', FALSE, 3),
+    (gen_random_uuid(), q_id, '신선하다', FALSE, 4);
+END $$;
+
+-- N5 Q19: 추론 (초대)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000001-0000-0000-0000-000000000001', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nリンさんへ\nこんど の どようび、うちで パーティーを します。ともだちも たくさん きます。りょうりも つくります。リンさんも きませんか。\nたなかより\n\n質問：たなかさんは リンさんに なにを したいですか？', '「リンさんも きませんか」は誘いの表現です。田中さんはリンさんをパーティーに招待したいと考えています。파티에 초대하고 싶어합니다。', 1, 19, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '요리를 가르쳐 주고 싶다', FALSE, 1),
+    (gen_random_uuid(), q_id, '파티에 초대하고 싶다', TRUE, 2),
+    (gen_random_uuid(), q_id, '선물을 주고 싶다', FALSE, 3),
+    (gen_random_uuid(), q_id, '함께 공부하고 싶다', FALSE, 4);
+END $$;
+
+-- N5 Q20: 내용이해 (취미)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000001-0000-0000-0000-000000000001', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nわたしの しゅみは りょうりです。まいにち よるごはんを つくります。にほんの りょうりが すきです。とくに おすしが だいすきです。でも つくるのは むずかしいです。\n\n質問：この ひとが いちばん すきな りょうりは なんですか？', '「とくに おすしが だいすきです」と書いてあります。특히 초밥을 가장 좋아합니다。', 1, 20, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '라멘', FALSE, 1),
+    (gen_random_uuid(), q_id, '초밥', TRUE, 2),
+    (gen_random_uuid(), q_id, '카레', FALSE, 3),
+    (gen_random_uuid(), q_id, '튀김', FALSE, 4);
+END $$;
+
+-- N5 Q21: 세부정보 (병원 접수)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000001-0000-0000-0000-000000000001', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nやまだ びょういん\nうけつけ じかん：ごぜん 9じ〜12じ、ごご 2じ〜5じ\nやすみ：にちようびと しゅくじつ\nはじめての ひとは ほけんしょうを もってきてください。\n\n質問：はじめての ひとは なにが ひつようですか？', '「ほけんしょうを もってきてください」と書いてあります。처음 오는 사람은 보험증이 필요합니다。', 1, 21, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '여권', FALSE, 1),
+    (gen_random_uuid(), q_id, '보험증', TRUE, 2),
+    (gen_random_uuid(), q_id, '학생증', FALSE, 3),
+    (gen_random_uuid(), q_id, '진찰권', FALSE, 4);
+END $$;
+
+-- N5 Q22: 내용이해 (여행 계획)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000001-0000-0000-0000-000000000001', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nらいしゅう おおさかに いきます。しんかんせんで いきます。2はく します。おおさかじょうと どうとんぼりに いきたいです。\n\n質問：なんで おおさかに いきますか？', '「しんかんせんで いきます」と書いてあります。신칸센으로 갑니다。', 1, 22, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '비행기', FALSE, 1),
+    (gen_random_uuid(), q_id, '버스', FALSE, 2),
+    (gen_random_uuid(), q_id, '신칸센', TRUE, 3),
+    (gen_random_uuid(), q_id, '자동차', FALSE, 4);
+END $$;
+
+-- N5 Q23: 추론 (메일)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000001-0000-0000-0000-000000000001', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nキムさんへ\nあした いっしょに べんきょうしませんか。としょかんで 10じに まっています。おわったら、いっしょに おひるごはんを たべましょう。\nリンより\n\n質問：リンさんは あした なにを しますか？', 'リンさんは図書館で勉強した後、一緒に昼ご飯を食べる予定です。공부 후 점심을 같이 먹습니다。', 1, 23, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '공부만 한다', FALSE, 1),
+    (gen_random_uuid(), q_id, '공부한 후 점심을 같이 먹는다', TRUE, 2),
+    (gen_random_uuid(), q_id, '점심만 먹는다', FALSE, 3),
+    (gen_random_uuid(), q_id, '영화를 본다', FALSE, 4);
+END $$;
+
+-- N5 Q24: 세부정보 (자기소개)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000001-0000-0000-0000-000000000001', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nわたしは パクです。かんこくから きました。いま とうきょうに すんでいます。にほんごの がっこうに かよっています。まいにち 3じかん べんきょうします。\n\n質問：パクさんは まいにち なんじかん べんきょうしますか？', '「まいにち 3じかん べんきょうします」と書いてあります。매일 3시간 공부합니다。', 1, 24, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '1시간', FALSE, 1),
+    (gen_random_uuid(), q_id, '2시간', FALSE, 2),
+    (gen_random_uuid(), q_id, '3시간', TRUE, 3),
+    (gen_random_uuid(), q_id, '4시간', FALSE, 4);
+END $$;
+
+-- N5 Q25: 문맥어휘 (도서관 규칙)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000001-0000-0000-0000-000000000001', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nとしょかんの きまり\n・しずかに してください。\n・ほんは 2しゅうかん かりられます。\n・たべものと のみものは だめです。\n\n質問：「だめです」は なんの いみですか？', '「だめです」は禁止を表す表現で、「안 됩니다 / 금지입니다」の意味です。', 1, 25, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '좋다', FALSE, 1),
+    (gen_random_uuid(), q_id, '안 된다', TRUE, 2),
+    (gen_random_uuid(), q_id, '필요하다', FALSE, 3),
+    (gen_random_uuid(), q_id, '가능하다', FALSE, 4);
+END $$;
+
+-- N5 Q26: 내용이해 (아르바이트 모집)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000001-0000-0000-0000-000000000001', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nアルバイト ぼしゅう\nコンビニの しごとです。\nじかん：ごご 6じ〜10じ\nきゅうりょう：1じかん 1000えん\nがくせい OK\n\n質問：1にち なんじかん はたらきますか？', '午後6時〜10時なので、4時間です。하루 4시간 일합니다。', 1, 26, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '3시간', FALSE, 1),
+    (gen_random_uuid(), q_id, '4시간', TRUE, 2),
+    (gen_random_uuid(), q_id, '5시간', FALSE, 3),
+    (gen_random_uuid(), q_id, '6시간', FALSE, 4);
+END $$;
+
+-- N5 Q27: 추론 (감사 편지)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000001-0000-0000-0000-000000000001', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nせんせいへ\nいつも ていねいに おしえてくださって、ありがとうございます。おかげで にほんごが すこし わかるように なりました。これからも がんばります。\nキムより\n\n質問：キムさんは いま どう おもっていますか？', 'キムさんは先生に感謝し、日本語が少しわかるようになったと言っています。감사하고 있으며 앞으로도 열심히 하겠다고 합니다。', 1, 27, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '일본어가 너무 어려워서 포기하고 싶다', FALSE, 1),
+    (gen_random_uuid(), q_id, '선생님께 감사하며 앞으로도 열심히 하겠다', TRUE, 2),
+    (gen_random_uuid(), q_id, '선생님의 수업이 불만이다', FALSE, 3),
+    (gen_random_uuid(), q_id, '일본어를 다 배웠다', FALSE, 4);
+END $$;
+
+-- N5 Q28: 세부정보 (아파트 안내)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000001-0000-0000-0000-000000000001', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nアパートの みなさんへ\nすいようびは ゴミの ひです。あさ 8じまでに だしてください。ペットボトルは きんようびに だしてください。\nかんりにんより\n\n質問：ペットボトルは いつ だしますか？', '「ペットボトルは きんようびに だしてください」と書いてあります。페트병은 금요일에 내놓습니다。', 1, 28, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '수요일', FALSE, 1),
+    (gen_random_uuid(), q_id, '목요일', FALSE, 2),
+    (gen_random_uuid(), q_id, '금요일', TRUE, 3),
+    (gen_random_uuid(), q_id, '월요일', FALSE, 4);
+END $$;
+
+-- N5 Q29: 내용이해 (계절)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000001-0000-0000-0000-000000000001', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nにほんの なつは あつくて、むしむしします。7がつと 8がつが いちばん あついです。みんな うみや プールに いきます。かきごおりが にんきです。\n\n質問：にほんの なつの とくちょうは なんですか？', '「あつくて、むしむしします」と書いてあります。일본의 여름은 덥고 습합니다。', 1, 29, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '춥고 건조하다', FALSE, 1),
+    (gen_random_uuid(), q_id, '덥고 습하다', TRUE, 2),
+    (gen_random_uuid(), q_id, '시원하고 쾌적하다', FALSE, 3),
+    (gen_random_uuid(), q_id, '비가 많이 온다', FALSE, 4);
+END $$;
+
+-- N5 Q30: 문맥어휘 (약속 변경)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000001-0000-0000-0000-000000000001', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nすみません、あしたの やくそくですが、ちょっと つごうが わるくなりました。あさっては どうですか。おなじ じかんで おねがいします。\n\n質問：「つごうが わるい」は なんの いみですか？', '「つごうが わるい」は「都合が悪い」で、予定が合わないことを意味します。사정이 안 좋다 / 시간이 안 된다는 의미입니다。', 1, 30, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '기분이 나쁘다', FALSE, 1),
+    (gen_random_uuid(), q_id, '사정이 안 된다', TRUE, 2),
+    (gen_random_uuid(), q_id, '날씨가 나쁘다', FALSE, 3),
+    (gen_random_uuid(), q_id, '건강이 안 좋다', FALSE, 4);
+END $$;
+
+-- ============================================
+-- N4 読解 追加問題 (Q11-Q30)
+-- ============================================
+
+-- N4 Q11: 내용이해 (회사 안내 메일)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n社員の皆さんへ\n来週の月曜日から、会社の入り口が変わります。正面ではなく、横の入り口を使ってください。工事は2週間かかります。ご迷惑をおかけしますが、よろしくお願いします。\n\n質問：来週から何が変わりますか？', '「会社の入り口が変わります」と書いてあります。회사 입구가 변경됩니다。', 1, 11, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '근무 시간', FALSE, 1),
+    (gen_random_uuid(), q_id, '회사 입구', TRUE, 2),
+    (gen_random_uuid(), q_id, '점심 시간', FALSE, 3),
+    (gen_random_uuid(), q_id, '회의실', FALSE, 4);
+END $$;
+
+-- N4 Q12: 세부정보 (이벤트 안내)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n春のフリーマーケット\n日時：4月15日（土）10時〜16時\n場所：中央公園\n参加費：1ブース 500円\n雨天の場合は翌日に延期します。\n申し込み：4月10日まで\n\n質問：雨が降ったらどうなりますか？', '「雨天の場合は翌日に延期します」と書いてあります。비가 오면 다음 날로 연기됩니다。', 1, 12, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '중지된다', FALSE, 1),
+    (gen_random_uuid(), q_id, '다음 날로 연기된다', TRUE, 2),
+    (gen_random_uuid(), q_id, '실내에서 한다', FALSE, 3),
+    (gen_random_uuid(), q_id, '그대로 진행한다', FALSE, 4);
+END $$;
+
+-- N4 Q13: 내용이해 (일상 블로그)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n先週、新しいカフェに行きました。駅から歩いて5分のところにあります。ケーキがおいしくて、コーヒーも安いです。でも、席が少ないので、週末は混んでいます。平日に行くほうがいいと思います。\n\n質問：この人はいつ行くことをすすめていますか？', '「平日に行くほうがいいと思います」と言っています。평일에 가는 것을 추천합니다。', 1, 13, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '주말 오전', FALSE, 1),
+    (gen_random_uuid(), q_id, '평일', TRUE, 2),
+    (gen_random_uuid(), q_id, '주말 오후', FALSE, 3),
+    (gen_random_uuid(), q_id, '공휴일', FALSE, 4);
+END $$;
+
+-- N4 Q14: 문맥어휘 (요리 레시피)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nかんたんオムライス\n1. たまねぎを細かく切ります。\n2. フライパンで炒めます。\n3. ごはんとケチャップを入れて混ぜます。\n4. 別のフライパンでたまごを焼きます。\n5. ごはんの上にたまごをのせて、できあがりです。\n\n質問：「炒めます」の意味は何ですか？', '「炒めます」は火を使って食材をかき混ぜながら加熱することです。볶다라는 의미입니다。', 1, 14, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '삶다', FALSE, 1),
+    (gen_random_uuid(), q_id, '볶다', TRUE, 2),
+    (gen_random_uuid(), q_id, '찌다', FALSE, 3),
+    (gen_random_uuid(), q_id, '튀기다', FALSE, 4);
+END $$;
+
+-- N4 Q15: 추론 (감사 메일)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n田中先輩へ\n昨日は引っ越しを手伝ってくださって、ありがとうございました。おかげさまで予定より早く終わりました。今度、お礼にご飯をおごらせてください。\n金より\n\n質問：金さんはこれから何をしたいですか？', '「お礼にご飯をおごらせてください」と言っています。감사의 뜻으로 밥을 사고 싶어합니다。', 1, 15, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '또 이사를 도와달라고 하고 싶다', FALSE, 1),
+    (gen_random_uuid(), q_id, '감사의 뜻으로 밥을 사고 싶다', TRUE, 2),
+    (gen_random_uuid(), q_id, '선물을 보내고 싶다', FALSE, 3),
+    (gen_random_uuid(), q_id, '편지를 쓰고 싶다', FALSE, 4);
+END $$;
+
+-- N4 Q16: 내용이해 (스포츠 클럽)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nスポーツクラブ会員募集\n月会費：5000円\nプール・ジム使い放題\n営業時間：朝7時〜夜10時\n初回体験は無料です。\n持ち物：運動着、タオル、室内シューズ\n\n質問：初めての人はいくら払いますか？', '「初回体験は無料です」と書いてあります。처음 체험은 무료입니다。', 1, 16, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '5000엔', FALSE, 1),
+    (gen_random_uuid(), q_id, '3000엔', FALSE, 2),
+    (gen_random_uuid(), q_id, '무료', TRUE, 3),
+    (gen_random_uuid(), q_id, '1000엔', FALSE, 4);
+END $$;
+
+-- N4 Q17: 세부정보 (여행 후기)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n先月、京都に旅行に行きました。一日目はお寺を見て回りました。二日目は着物を着て街を歩きました。三日目は抹茶の体験をしました。京都は古い建物が多くて、とてもきれいでした。\n\n質問：二日目に何をしましたか？', '「二日目は着物を着て街を歩きました」と書いてあります。이틀째에는 기모노를 입고 거리를 걸었습니다。', 1, 17, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '절을 구경했다', FALSE, 1),
+    (gen_random_uuid(), q_id, '기모노를 입고 거리를 걸었다', TRUE, 2),
+    (gen_random_uuid(), q_id, '말차 체험을 했다', FALSE, 3),
+    (gen_random_uuid(), q_id, '쇼핑을 했다', FALSE, 4);
+END $$;
+
+-- N4 Q18: 내용이해 (건강 조언)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n健康のために大切なことが三つあります。一つ目は、毎日少しでも運動することです。二つ目は、野菜を多く食べることです。三つ目は、十分な睡眠をとることです。この三つを守れば、病気になりにくくなります。\n\n質問：健康のために大切なことはいくつありますか？', '「健康のために大切なことが三つあります」と書いてあります。건강을 위해 중요한 것은 3가지입니다。', 1, 18, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '2가지', FALSE, 1),
+    (gen_random_uuid(), q_id, '3가지', TRUE, 2),
+    (gen_random_uuid(), q_id, '4가지', FALSE, 3),
+    (gen_random_uuid(), q_id, '5가지', FALSE, 4);
+END $$;
+
+-- N4 Q19: 문맥어휘 (계절 묘사)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n秋になると、木の葉が赤や黄色に色づきます。これを「紅葉」と言います。日本では紅葉を見に山や公園に行く人がたくさんいます。京都の紅葉が特に有名です。\n\n質問：「色づく」の意味は何ですか？', '「色づく」は葉の色が変わることを意味します。색이 물들다 / 단풍이 들다의 의미입니다。', 1, 19, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '잎이 떨어지다', FALSE, 1),
+    (gen_random_uuid(), q_id, '색이 물들다', TRUE, 2),
+    (gen_random_uuid(), q_id, '꽃이 피다', FALSE, 3),
+    (gen_random_uuid(), q_id, '열매가 열리다', FALSE, 4);
+END $$;
+
+-- N4 Q20: 추론 (고민 상담)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n最近、夜なかなか眠れません。スマートフォンを見るのをやめたほうがいいと友達に言われました。確かに寝る前にいつもスマートフォンを使っています。今日から寝る前1時間はスマートフォンを見ないようにしてみます。\n\n質問：この人はこれから何をしますか？', '「寝る前1時間はスマートフォンを見ないようにしてみます」と言っています。잠자기 전 1시간은 스마트폰을 보지 않겠다고 합니다。', 1, 20, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '수면제를 먹는다', FALSE, 1),
+    (gen_random_uuid(), q_id, '잠자기 전 1시간은 스마트폰을 보지 않는다', TRUE, 2),
+    (gen_random_uuid(), q_id, '스마트폰을 버린다', FALSE, 3),
+    (gen_random_uuid(), q_id, '병원에 간다', FALSE, 4);
+END $$;
+
+-- N4 Q21: 내용이해 (교통 안내)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n東京から大阪まで新幹線で2時間半かかります。飛行機なら1時間ですが、空港までの移動時間を入れると、あまり変わりません。安く行きたいなら、夜行バスもあります。約8時間かかりますが、5000円ぐらいで行けます。\n\n質問：一番安い方法はどれですか？', '夜行バスが「5000円ぐらいで行けます」と書いてあります。야간 버스가 가장 저렴합니다。', 1, 21, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '신칸센', FALSE, 1),
+    (gen_random_uuid(), q_id, '비행기', FALSE, 2),
+    (gen_random_uuid(), q_id, '야간 버스', TRUE, 3),
+    (gen_random_uuid(), q_id, '택시', FALSE, 4);
+END $$;
+
+-- N4 Q22: 세부정보 (도서관 이용)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n図書館からのお知らせ\n本の貸し出し：1人5冊まで、2週間\nDVD：1人2枚まで、1週間\n返却が遅れた場合、1日につき10円の延滞料がかかります。\n\n質問：DVDは何枚まで借りられますか？', '「DVD：1人2枚まで」と書いてあります。DVD는 1인당 2장까지 빌릴 수 있습니다。', 1, 22, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '1장', FALSE, 1),
+    (gen_random_uuid(), q_id, '2장', TRUE, 2),
+    (gen_random_uuid(), q_id, '3장', FALSE, 3),
+    (gen_random_uuid(), q_id, '5장', FALSE, 4);
+END $$;
+
+-- N4 Q23: 추론 (선물 고민)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n友達の誕生日プレゼントに迷っています。本が好きだから本をあげようと思いましたが、同じ本を持っているかもしれません。それで、本屋のギフトカードにしようと思います。そうすれば、好きな本を自分で選べますから。\n\n質問：この人は最終的に何をプレゼントしますか？', '「本屋のギフトカードにしようと思います」と言っています。서점 기프트카드를 선물합니다。', 1, 23, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '책', FALSE, 1),
+    (gen_random_uuid(), q_id, '서점 기프트카드', TRUE, 2),
+    (gen_random_uuid(), q_id, '현금', FALSE, 3),
+    (gen_random_uuid(), q_id, '꽃', FALSE, 4);
+END $$;
+
+-- N4 Q24: 내용이해 (환경 기사)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n最近、マイバッグを持って買い物に行く人が増えています。2020年からレジ袋が有料になったからです。環境のためにプラスチックを減らすことが大切です。小さなことから始めましょう。\n\n質問：なぜマイバッグを持つ人が増えましたか？', '「レジ袋が有料になったからです」と書いてあります。비닐봉지가 유료가 되었기 때문입니다。', 1, 24, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '마이백이 유행이니까', FALSE, 1),
+    (gen_random_uuid(), q_id, '비닐봉지가 유료가 되었으니까', TRUE, 2),
+    (gen_random_uuid(), q_id, '마이백이 무료로 배포되니까', FALSE, 3),
+    (gen_random_uuid(), q_id, '비닐봉지가 부족하니까', FALSE, 4);
+END $$;
+
+-- N4 Q25: 문맥어휘 (직장 이메일)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nお疲れ様です。明日の会議の資料を添付します。ご確認の上、修正点があればお知らせください。なお、会議の時間が14時から15時に変更になりましたのでご注意ください。\n\n質問：「添付」の意味は何ですか？', '「添付」はメールにファイルを付けることです。첨부하다의 의미입니다。', 1, 25, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '인쇄하다', FALSE, 1),
+    (gen_random_uuid(), q_id, '첨부하다', TRUE, 2),
+    (gen_random_uuid(), q_id, '삭제하다', FALSE, 3),
+    (gen_random_uuid(), q_id, '복사하다', FALSE, 4);
+END $$;
+
+-- N4 Q26: 세부정보 (아파트 규칙)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nマンションの規則\n・夜10時以降は大きな音を出さないでください。\n・ペットは小型犬と猫のみ飼えます。\n・ベランダでのバーベキューは禁止です。\n・ゴミは指定の場所に出してください。\n\n質問：このマンションで飼えない動物はどれですか？', '「小型犬と猫のみ飼えます」なので、大型犬は飼えません。소형견과 고양이만 가능하므로 대형견은 불가합니다。', 1, 26, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '소형견', FALSE, 1),
+    (gen_random_uuid(), q_id, '고양이', FALSE, 2),
+    (gen_random_uuid(), q_id, '대형견', TRUE, 3),
+    (gen_random_uuid(), q_id, '소형견과 고양이 모두', FALSE, 4);
+END $$;
+
+-- N4 Q27: 추론 (학생 작문)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n日本に来て一番驚いたことは、電車の正確さです。韓国でも電車は大体時間通りに来ますが、日本は1分も遅れないことが多いです。遅れた時はアナウンスで謝ります。日本人の時間に対する考え方がよくわかります。\n\n質問：この人が一番驚いたことは何ですか？', '「一番驚いたことは、電車の正確さです」と書いてあります。전철의 정확성에 가장 놀랐습니다。', 1, 27, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '전철이 깨끗한 것', FALSE, 1),
+    (gen_random_uuid(), q_id, '전철의 정확성', TRUE, 2),
+    (gen_random_uuid(), q_id, '전철 요금이 비싼 것', FALSE, 3),
+    (gen_random_uuid(), q_id, '전철이 혼잡한 것', FALSE, 4);
+END $$;
+
+-- N4 Q28: 내용이해 (일본 문화)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n日本では食事の前に「いただきます」と言い、食事の後に「ごちそうさまでした」と言います。これは食べ物への感謝の気持ちを表す言葉です。料理を作ってくれた人にも感謝しています。\n\n質問：「いただきます」は何を表していますか？', '「食べ物への感謝の気持ちを表す言葉です」と書いてあります。음식에 대한 감사의 마음을 나타냅니다。', 1, 28, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '배가 고프다는 것', FALSE, 1),
+    (gen_random_uuid(), q_id, '음식에 대한 감사', TRUE, 2),
+    (gen_random_uuid(), q_id, '식사 시작 시간', FALSE, 3),
+    (gen_random_uuid(), q_id, '요리 주문', FALSE, 4);
+END $$;
+
+-- N4 Q29: 세부정보 (수업 변경)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n学生の皆さんへ\n来週の水曜日、鈴木先生がお休みのため、3時間目の数学の授業は中止です。そのかわり、4時間目に田中先生の英語の授業があります。教科書を忘れないでください。\n\n質問：来週の水曜日の3時間目はどうなりますか？', '「3時間目の数学の授業は中止です」と書いてあります。3교시 수학 수업은 중지됩니다。', 1, 29, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '영어 수업으로 변경', FALSE, 1),
+    (gen_random_uuid(), q_id, '다른 선생님이 수학 수업', FALSE, 2),
+    (gen_random_uuid(), q_id, '수업 중지', TRUE, 3),
+    (gen_random_uuid(), q_id, '자습', FALSE, 4);
+END $$;
+
+-- N4 Q30: 추론 (미래 꿈)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n私の夢はITエンジニアとして日本で働くことです。そのために、毎日プログラミングの勉強をしています。日本語も上手になりたいので、日本のドラマを見たり、日本人の友達と話したりしています。大変ですが、とても楽しいです。\n\n質問：この人が日本語の勉強のためにしていることは何ですか？', '「日本のドラマを見たり、日本人の友達と話したり」と言っています。일본 드라마를 보거나 일본인 친구와 이야기합니다。', 1, 30, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '교과서만 공부한다', FALSE, 1),
+    (gen_random_uuid(), q_id, '일본 드라마를 보거나 일본인 친구와 이야기한다', TRUE, 2),
+    (gen_random_uuid(), q_id, '일본어 학원에 다닌다', FALSE, 3),
+    (gen_random_uuid(), q_id, '매일 일기를 쓴다', FALSE, 4);
+END $$;
+
+-- ============================================
+-- N3 読解 追加問題 (Q11-Q30)
+-- ============================================
+
+-- N3 Q11: 내용이해 (리모트워크 기사)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000003-0000-0000-0000-000000000003', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nリモートワークを導入する企業が増えている。通勤時間がなくなるため、自由に使える時間が増えるというメリットがある。一方で、同僚とのコミュニケーションが減り、孤独を感じる人もいるという課題もある。\n\n質問：リモートワークの課題として挙げられているのは何ですか？', '「同僚とのコミュニケーションが減り、孤独を感じる人もいる」と書いてあります。동료와의 소통 감소와 고독감이 과제입니다。', 1, 11, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '통근 시간이 길어진다', FALSE, 1),
+    (gen_random_uuid(), q_id, '동료와의 소통 감소와 고독감', TRUE, 2),
+    (gen_random_uuid(), q_id, '급여가 줄어든다', FALSE, 3),
+    (gen_random_uuid(), q_id, '인터넷 비용이 든다', FALSE, 4);
+END $$;
+
+-- N3 Q12: 세부정보 (영양 기사)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000003-0000-0000-0000-000000000003', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n朝ごはんを食べないと、脳にエネルギーが行かず、集中力が下がります。特に学生は朝ごはんをしっかり食べることが大切です。理想的な朝ごはんは、ごはんやパンなどの炭水化物と、卵や牛乳などのたんぱく質を組み合わせたものです。\n\n質問：朝ごはんを食べないとどうなりますか？', '「脳にエネルギーが行かず、集中力が下がります」と書いてあります。집중력이 떨어집니다。', 1, 12, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '체중이 줄어든다', FALSE, 1),
+    (gen_random_uuid(), q_id, '집중력이 떨어진다', TRUE, 2),
+    (gen_random_uuid(), q_id, '운동 능력이 향상된다', FALSE, 3),
+    (gen_random_uuid(), q_id, '수면의 질이 좋아진다', FALSE, 4);
+END $$;
+
+-- N3 Q13: 문맥어휘 (비즈니스 메일)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000003-0000-0000-0000-000000000003', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nお世話になっております。先日お送りしたお見積もりについて、ご検討いただけましたでしょうか。ご不明な点がございましたら、お気軽にお問い合わせください。何卒よろしくお願いいたします。\n\n質問：「お見積もり」の意味は何ですか？', '「お見積もり」は商品やサービスの料金を事前に計算した書類です。견적서의 의미입니다。', 1, 13, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '영수증', FALSE, 1),
+    (gen_random_uuid(), q_id, '견적서', TRUE, 2),
+    (gen_random_uuid(), q_id, '계약서', FALSE, 3),
+    (gen_random_uuid(), q_id, '청구서', FALSE, 4);
+END $$;
+
+-- N3 Q14: 추론 (에세이)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000003-0000-0000-0000-000000000003', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n「失敗は成功のもと」ということわざがある。失敗すると落ち込んでしまうが、なぜ失敗したかを考え、次に活かすことが大切だ。何度失敗しても、あきらめずに挑戦し続ける人こそ、最後に成功する。\n\n質問：筆者が最も伝えたいことは何ですか？', '筆者は失敗から学んで挑戦し続けることの大切さを伝えています。실패에서 배우고 계속 도전하는 것이 중요합니다。', 1, 14, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '실패하지 않는 것이 중요하다', FALSE, 1),
+    (gen_random_uuid(), q_id, '실패에서 배우고 계속 도전하는 것이 중요하다', TRUE, 2),
+    (gen_random_uuid(), q_id, '실패하면 빨리 포기해야 한다', FALSE, 3),
+    (gen_random_uuid(), q_id, '성공한 사람은 실패한 적이 없다', FALSE, 4);
+END $$;
+
+-- N3 Q15: 내용이해 (환경 문제)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000003-0000-0000-0000-000000000003', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n食品ロスが世界的な問題になっている。日本では年間約600万トンの食品が捨てられている。これを減らすために、「賞味期限」と「消費期限」の違いを正しく理解し、まだ食べられるものを無駄にしないことが重要だ。\n\n質問：日本で年間どのくらいの食品が捨てられていますか？', '「年間約600万トンの食品が捨てられている」と書いてあります。연간 약 600만 톤입니다。', 1, 15, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '약 100만 톤', FALSE, 1),
+    (gen_random_uuid(), q_id, '약 600만 톤', TRUE, 2),
+    (gen_random_uuid(), q_id, '약 1000만 톤', FALSE, 3),
+    (gen_random_uuid(), q_id, '약 60만 톤', FALSE, 4);
+END $$;
+
+-- N3 Q16: 세부정보 (IT 기사)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000003-0000-0000-0000-000000000003', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nパスワードの安全性を高めるためのポイントを紹介します。まず、8文字以上にすること。次に、大文字・小文字・数字・記号を組み合わせること。そして、同じパスワードを複数のサイトで使い回さないことです。定期的に変更することも推奨されます。\n\n質問：パスワードは最低何文字以上にすべきですか？', '「8文字以上にすること」と書いてあります。최소 8자 이상으로 해야 합니다。', 1, 16, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '4자', FALSE, 1),
+    (gen_random_uuid(), q_id, '6자', FALSE, 2),
+    (gen_random_uuid(), q_id, '8자', TRUE, 3),
+    (gen_random_uuid(), q_id, '10자', FALSE, 4);
+END $$;
+
+-- N3 Q17: 문맥어휘 (사회 문제)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000003-0000-0000-0000-000000000003', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n日本の少子高齢化は深刻な問題だ。若い世代の人口が減り、高齢者の割合が増えている。その結果、労働力の不足や社会保障費の増加といった課題に直面している。外国人労働者の受け入れ拡大も一つの対策として議論されている。\n\n質問：「少子高齢化」の意味は何ですか？', '「少子高齢化」は若い世代が減り高齢者が増えることです。저출산·고령화의 의미입니다。', 1, 17, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '인구가 급증하는 것', FALSE, 1),
+    (gen_random_uuid(), q_id, '출생률이 낮고 고령자 비율이 높아지는 것', TRUE, 2),
+    (gen_random_uuid(), q_id, '젊은 사람이 해외로 이주하는 것', FALSE, 3),
+    (gen_random_uuid(), q_id, '도시 인구만 증가하는 것', FALSE, 4);
+END $$;
+
+-- N3 Q18: 추론 (IT 직장 문화)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000003-0000-0000-0000-000000000003', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n日本のIT企業では、「報連相（ほうれんそう）」が重視されている。報告・連絡・相談の頭文字を取ったものだ。問題が起きた時にすぐに上司に報告し、関係者に連絡し、困った時は一人で悩まず相談することが求められる。\n\n質問：「報連相」で最も重要視されていることは何ですか？', '報連相は問題の早期共有と円滑なコミュニケーションを重視しています。문제의 조기 공유와 원활한 소통이 중요합니다。', 1, 18, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '혼자서 문제를 해결하는 것', FALSE, 1),
+    (gen_random_uuid(), q_id, '정보를 적극적으로 공유하고 소통하는 것', TRUE, 2),
+    (gen_random_uuid(), q_id, '상사의 지시만 따르는 것', FALSE, 3),
+    (gen_random_uuid(), q_id, '보고서를 많이 쓰는 것', FALSE, 4);
+END $$;
+
+-- N3 Q19: 내용이해 (취미 에세이)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000003-0000-0000-0000-000000000003', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n最近、DIYが流行っている。自分で家具を作ったり、部屋をリフォームしたりする人が増えている。完成した時の達成感がやみつきになるらしい。ただし、工具の使い方を間違えると危険なので、初心者は簡単なものから始めるのがいいだろう。\n\n質問：筆者が初心者にアドバイスしていることは何ですか？', '「初心者は簡単なものから始めるのがいい」と言っています。초보자는 간단한 것부터 시작하는 게 좋다고 합니다。', 1, 19, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '전문가에게 맡겨야 한다', FALSE, 1),
+    (gen_random_uuid(), q_id, '간단한 것부터 시작해야 한다', TRUE, 2),
+    (gen_random_uuid(), q_id, '비싼 도구를 사야 한다', FALSE, 3),
+    (gen_random_uuid(), q_id, 'DIY를 하면 안 된다', FALSE, 4);
+END $$;
+
+-- N3 Q20: 세부정보 (구인 광고)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000003-0000-0000-0000-000000000003', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n【求人】Webエンジニア募集\n勤務地：東京都渋谷区\n給与：月25万〜40万円（経験による）\n勤務時間：フレックスタイム制（コアタイム11:00〜15:00）\n必須スキル：HTML/CSS/JavaScript\n歓迎スキル：React、TypeScript\n\n質問：必ず出社しなければならない時間は？', '「コアタイム11:00〜15:00」が必ず出社する時間です。코어 타임은 11시~15시입니다。', 1, 20, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '9시~17시', FALSE, 1),
+    (gen_random_uuid(), q_id, '10시~16시', FALSE, 2),
+    (gen_random_uuid(), q_id, '11시~15시', TRUE, 3),
+    (gen_random_uuid(), q_id, '자유', FALSE, 4);
+END $$;
+
+-- N3 Q21: 내용이해 (문화 비교)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000003-0000-0000-0000-000000000003', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n日本では名刺交換がビジネスマナーの基本だ。名刺は両手で渡し、受け取る時も両手で受ける。もらった名刺はすぐにしまわず、テーブルの上に置いておくのが礼儀である。名刺を折ったり、メモを書いたりするのは失礼にあたる。\n\n質問：名刺をもらった後、すべきことは何ですか？', '「テーブルの上に置いておくのが礼儀」と書いてあります。테이블 위에 놓아두는 것이 예의입니다。', 1, 21, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '바로 주머니에 넣는다', FALSE, 1),
+    (gen_random_uuid(), q_id, '테이블 위에 놓아둔다', TRUE, 2),
+    (gen_random_uuid(), q_id, '메모를 적는다', FALSE, 3),
+    (gen_random_uuid(), q_id, '반으로 접는다', FALSE, 4);
+END $$;
+
+-- N3 Q22: 문맥어휘 (경제 기사)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000003-0000-0000-0000-000000000003', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n円安が進んでいる。円安とは、外国の通貨に対して円の価値が下がることだ。輸出企業にとってはメリットがあるが、輸入品の価格が上がるため、消費者の生活には影響が出る。特にエネルギーや食料品の価格上昇が懸念されている。\n\n質問：「円安」の影響として正しいものはどれですか？', '円安では輸入品の価格が上がります。수입품 가격이 오릅니다。', 1, 22, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '수입품 가격이 내려간다', FALSE, 1),
+    (gen_random_uuid(), q_id, '수입품 가격이 올라간다', TRUE, 2),
+    (gen_random_uuid(), q_id, '수출이 줄어든다', FALSE, 3),
+    (gen_random_uuid(), q_id, '관광객이 줄어든다', FALSE, 4);
+END $$;
+
+-- N3 Q23: 추론 (자기 관리)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000003-0000-0000-0000-000000000003', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nスマートフォンの使いすぎが問題になっている。長時間画面を見ることで、目が疲れたり、肩がこったりする。また、寝る前にスマホを見ると、ブルーライトの影響で睡眠の質が低下する。使用時間を意識的にコントロールすることが必要だ。\n\n質問：筆者が提案していることは何ですか？', '「使用時間を意識的にコントロールすることが必要」と言っています。사용 시간을 의식적으로 조절해야 합니다。', 1, 23, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '스마트폰을 사용하지 않는다', FALSE, 1),
+    (gen_random_uuid(), q_id, '사용 시간을 의식적으로 조절한다', TRUE, 2),
+    (gen_random_uuid(), q_id, '블루라이트 차단 안경을 산다', FALSE, 3),
+    (gen_random_uuid(), q_id, '스마트폰 대신 컴퓨터를 사용한다', FALSE, 4);
+END $$;
+
+-- N3 Q24: 내용이해 (일본어 학습)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000003-0000-0000-0000-000000000003', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n日本語の敬語は「尊敬語」「謙譲語」「丁寧語」の三種類がある。尊敬語は相手の動作を高める表現で、謙譲語は自分の動作を低める表現だ。丁寧語は「です」「ます」をつけて丁寧に話す表現である。ビジネスでは正しく使い分けることが求められる。\n\n質問：「謙譲語」はどのような表現ですか？', '「謙譲語は自分の動作を低める表現」と書いてあります。겸양어는 자신의 동작을 낮추는 표현입니다。', 1, 24, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '상대의 동작을 높이는 표현', FALSE, 1),
+    (gen_random_uuid(), q_id, '자신의 동작을 낮추는 표현', TRUE, 2),
+    (gen_random_uuid(), q_id, '정중하게 말하는 표현', FALSE, 3),
+    (gen_random_uuid(), q_id, '친한 사이에 쓰는 표현', FALSE, 4);
+END $$;
+
+-- N3 Q25: 세부정보 (건강 기사)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000003-0000-0000-0000-000000000003', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n睡眠の質を上げるために、いくつかのポイントがある。寝る2時間前にお風呂に入ること、カフェインは午後3時以降は控えること、そして寝室の温度を18〜22度に保つことだ。特に寝る直前のスマホ使用は避けたほうがいい。\n\n質問：カフェインはいつまでに控えるべきですか？', '「カフェインは午後3時以降は控えること」と書いてあります。오후 3시 이후에는 카페인을 자제해야 합니다。', 1, 25, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '정오 이후', FALSE, 1),
+    (gen_random_uuid(), q_id, '오후 3시 이후', TRUE, 2),
+    (gen_random_uuid(), q_id, '저녁 6시 이후', FALSE, 3),
+    (gen_random_uuid(), q_id, '밤 9시 이후', FALSE, 4);
+END $$;
+
+-- N3 Q26: 추론 (교육 에세이)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000003-0000-0000-0000-000000000003', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nプログラミング教育が小学校で必修化された。目的はプログラマーを育てることではなく、論理的思考力を身につけることだ。問題を小さく分けて、順番に解決していく力は、プログラミング以外の場面でも役立つ。\n\n質問：小学校のプログラミング教育の主な目的は何ですか？', '「論理的思考力を身につけること」が目的です。논리적 사고력을 기르는 것이 목적입니다。', 1, 26, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '프로그래머를 육성한다', FALSE, 1),
+    (gen_random_uuid(), q_id, '논리적 사고력을 기른다', TRUE, 2),
+    (gen_random_uuid(), q_id, '컴퓨터 조작법을 익힌다', FALSE, 3),
+    (gen_random_uuid(), q_id, 'IT 기업에 취직시킨다', FALSE, 4);
+END $$;
+
+-- N3 Q27: 내용이해 (일본 생활)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000003-0000-0000-0000-000000000003', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n日本のコンビニは24時間営業で、食べ物や飲み物だけでなく、公共料金の支払いや荷物の受け取りもできる。最近はコピー機でチケットを印刷したり、ATMでお金を下ろしたりすることもできるようになった。まさに生活のインフラと言える。\n\n質問：日本のコンビニで最近できるようになったことは何ですか？', '「コピー機でチケットを印刷したり、ATMでお金を下ろしたり」が最近の機能です。복사기로 티켓 인쇄, ATM으로 현금 인출 등입니다。', 1, 27, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '음식 배달', FALSE, 1),
+    (gen_random_uuid(), q_id, '티켓 인쇄와 현금 인출', TRUE, 2),
+    (gen_random_uuid(), q_id, '의료 서비스', FALSE, 3),
+    (gen_random_uuid(), q_id, '세탁 서비스', FALSE, 4);
+END $$;
+
+-- N3 Q28: 문맥어휘 (기술 기사)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000003-0000-0000-0000-000000000003', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nAIの発展により、多くの仕事が自動化されると言われている。しかし、AIにはできないこともある。創造性が必要な仕事や、人の感情を理解する仕事は、まだ人間にしかできない。AIと人間がそれぞれの強みを活かして協力することが大切だ。\n\n質問：「自動化」の意味は何ですか？', '「自動化」は人の代わりに機械やシステムが作業を行うことです。자동화의 의미입니다。', 1, 28, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '사람이 직접 하는 것', FALSE, 1),
+    (gen_random_uuid(), q_id, '기계나 시스템이 대신 작업하는 것', TRUE, 2),
+    (gen_random_uuid(), q_id, '속도를 높이는 것', FALSE, 3),
+    (gen_random_uuid(), q_id, '비용을 줄이는 것', FALSE, 4);
+END $$;
+
+-- N3 Q29: 세부정보 (사내 공지)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000003-0000-0000-0000-000000000003', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n社員各位\n来月から新しい勤怠管理システムを導入します。出退勤はスマートフォンのアプリで打刻してください。従来のタイムカードは廃止します。アプリの使い方は来週の説明会でご案内します。\n\n質問：来月からどのように出退勤を記録しますか？', '「スマートフォンのアプリで打刻してください」と書いてあります。스마트폰 앱으로 출퇴근을 기록합니다。', 1, 29, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '타임카드', FALSE, 1),
+    (gen_random_uuid(), q_id, '스마트폰 앱', TRUE, 2),
+    (gen_random_uuid(), q_id, '수기 기록', FALSE, 3),
+    (gen_random_uuid(), q_id, 'PC 로그인', FALSE, 4);
+END $$;
+
+-- N3 Q30: 추론 (다문화 공존)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000003-0000-0000-0000-000000000003', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n外国人労働者が増える中、職場での異文化理解が重要になっている。言葉の壁だけでなく、仕事の進め方や時間に対する感覚の違いもある。お互いの文化を尊重し、オープンにコミュニケーションを取ることが、良い職場環境を作る鍵である。\n\n質問：筆者が良い職場環境のために必要だと考えていることは何ですか？', '「お互いの文化を尊重し、オープンにコミュニケーションを取ること」が鍵です。서로의 문화를 존중하고 열린 소통을 하는 것입니다。', 1, 30, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '외국인에게 일본 문화만 가르친다', FALSE, 1),
+    (gen_random_uuid(), q_id, '서로의 문화를 존중하고 열린 소통을 한다', TRUE, 2),
+    (gen_random_uuid(), q_id, '같은 나라 사람끼리만 일한다', FALSE, 3),
+    (gen_random_uuid(), q_id, '규칙을 더 엄격하게 한다', FALSE, 4);
+END $$;
+
+-- ============================================
+-- N2 読解 追加問題 (Q11-Q30)
+-- ============================================
+
+-- N2 Q11: 내용이해 (일본의 고용 관행)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000004-0000-0000-0000-000000000004', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n日本の終身雇用制度は、高度経済成長期に定着した雇用慣行である。一つの企業に定年まで勤める代わりに、企業は社員の生活を保障するという暗黙の契約であった。しかし、グローバル化や経済環境の変化により、転職が一般的になりつつあり、この制度は徐々に崩れ始めている。\n\n質問：終身雇用制度が変化している理由は何ですか？', 'グローバル化や経済環境の変化が理由です。글로벌화와 경제 환경의 변화가 원인입니다。', 1, 11, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '사원들이 일을 싫어하게 되었다', FALSE, 1),
+    (gen_random_uuid(), q_id, '글로벌화와 경제 환경의 변화', TRUE, 2),
+    (gen_random_uuid(), q_id, '정부가 법으로 금지했다', FALSE, 3),
+    (gen_random_uuid(), q_id, '기업의 수가 줄었다', FALSE, 4);
+END $$;
+
+-- N2 Q12: 세부정보 (기술 블로그)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000004-0000-0000-0000-000000000004', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nアジャイル開発とは、短い開発サイクルを繰り返しながらソフトウェアを完成させていく手法である。従来のウォーターフォール型と異なり、要件の変更に柔軟に対応できる点が最大のメリットだ。ただし、全体の設計が曖昧なまま進むリスクもあるため、チーム内のコミュニケーションが不可欠である。\n\n質問：アジャイル開発の最大のメリットは何ですか？', '「要件の変更に柔軟に対応できる点」が最大のメリットです。요건 변경에 유연하게 대응할 수 있습니다。', 1, 12, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '개발 비용이 줄어든다', FALSE, 1),
+    (gen_random_uuid(), q_id, '요건 변경에 유연하게 대응할 수 있다', TRUE, 2),
+    (gen_random_uuid(), q_id, '전체 설계가 완벽해진다', FALSE, 3),
+    (gen_random_uuid(), q_id, '인원이 적어도 된다', FALSE, 4);
+END $$;
+
+-- N2 Q13: 문맥어휘 (사회 논설)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000004-0000-0000-0000-000000000004', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nSNSの普及により、情報の拡散が急速に進むようになった。しかし、その中には根拠のない情報、いわゆる「フェイクニュース」も含まれている。情報を鵜呑みにせず、出典を確認する「メディアリテラシー」が今後ますます重要になるだろう。\n\n質問：「鵜呑みにする」の意味は何ですか？', '「鵜呑みにする」は情報をそのまま信じることです。그대로 곧이곧대로 믿다의 의미입니다。', 1, 13, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '의심하다', FALSE, 1),
+    (gen_random_uuid(), q_id, '그대로 곧이곧대로 믿다', TRUE, 2),
+    (gen_random_uuid(), q_id, '무시하다', FALSE, 3),
+    (gen_random_uuid(), q_id, '공유하다', FALSE, 4);
+END $$;
+
+-- N2 Q14: 추론 (직장 에세이)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000004-0000-0000-0000-000000000004', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n日本企業では「根回し」という習慣がある。会議の前に関係者に個別に相談し、合意を得ておくことだ。外国人からは非効率に見えるかもしれないが、実際の会議がスムーズに進むという利点がある。全員が事前に内容を理解しているため、会議での反対意見が少なくなる。\n\n質問：「根回し」の利点は何ですか？', '事前に合意を得ることで会議がスムーズに進みます。사전에 합의를 얻어 회의가 원활하게 진행됩니다。', 1, 14, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '회의를 생략할 수 있다', FALSE, 1),
+    (gen_random_uuid(), q_id, '실제 회의가 원활하게 진행된다', TRUE, 2),
+    (gen_random_uuid(), q_id, '비용을 절약할 수 있다', FALSE, 3),
+    (gen_random_uuid(), q_id, '개인의 의견이 반영되지 않는다', FALSE, 4);
+END $$;
+
+-- N2 Q15: 내용이해 (환경 정책)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000004-0000-0000-0000-000000000004', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nカーボンニュートラルとは、温室効果ガスの排出量と吸収量を均衡させ、実質的にゼロにすることを指す。日本政府は2050年までにこの目標を達成すると宣言した。再生可能エネルギーの普及や電気自動車の推進など、あらゆる分野での取り組みが必要とされている。\n\n質問：日本のカーボンニュートラルの目標年はいつですか？', '「2050年まで」と明記されています。2050년까지가 목표입니다。', 1, 15, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '2030년', FALSE, 1),
+    (gen_random_uuid(), q_id, '2040년', FALSE, 2),
+    (gen_random_uuid(), q_id, '2050년', TRUE, 3),
+    (gen_random_uuid(), q_id, '2060년', FALSE, 4);
+END $$;
+
+-- N2 Q16: 세부정보 (개발 프로세스)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000004-0000-0000-0000-000000000004', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nコードレビューとは、他の開発者が書いたコードを確認し、改善点を指摘するプロセスである。バグの早期発見だけでなく、チーム全体のコーディングスキル向上にもつながる。ただし、指摘する際は建設的なフィードバックを心がけ、人格攻撃にならないよう注意が必要だ。\n\n質問：コードレビューの効果として挙げられていないものはどれですか？', 'バグの早期発見とスキル向上は挙げられていますが、開発速度の向上は言及されていません。개발 속도 향상은 언급되지 않았습니다。', 1, 16, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '버그의 조기 발견', FALSE, 1),
+    (gen_random_uuid(), q_id, '팀 코딩 스킬 향상', FALSE, 2),
+    (gen_random_uuid(), q_id, '개발 속도 향상', TRUE, 3),
+    (gen_random_uuid(), q_id, '건설적인 피드백 문화 형성', FALSE, 4);
+END $$;
+
+-- N2 Q17: 문맥어휘 (비즈니스 일본어)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000004-0000-0000-0000-000000000004', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n日本のビジネスメールでは、冒頭に「お世話になっております」と書くのが一般的である。初めてメールを送る相手には「初めてご連絡いたします」と書く。また、依頼する際は「恐れ入りますが」や「お手数をおかけしますが」といったクッション言葉を使うことで、相手への配慮を示す。\n\n質問：「クッション言葉」の役割は何ですか？', 'クッション言葉は相手への配慮を示す表現です。상대에 대한 배려를 나타내는 완충 표현입니다。', 1, 17, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '자기소개를 하기 위해', FALSE, 1),
+    (gen_random_uuid(), q_id, '상대에 대한 배려를 나타내기 위해', TRUE, 2),
+    (gen_random_uuid(), q_id, '메일을 길게 쓰기 위해', FALSE, 3),
+    (gen_random_uuid(), q_id, '격식을 차리지 않기 위해', FALSE, 4);
+END $$;
+
+-- N2 Q18: 추론 (사회 변화)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000004-0000-0000-0000-000000000004', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n働き方改革により、長時間労働の是正が進んでいる。しかし、残業時間の削減だけでは根本的な解決にはならない。業務プロセスの見直しやITツールの活用による生産性向上が不可欠である。限られた時間の中で最大の成果を出す働き方が求められている。\n\n質問：筆者が本当に必要だと考えていることは何ですか？', '残業削減だけでなく生産性向上が必要と言っています。잔업 삭감만이 아니라 생산성 향상이 필요합니다。', 1, 18, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '잔업 시간의 삭감만으로 충분하다', FALSE, 1),
+    (gen_random_uuid(), q_id, '업무 프로세스 개선과 IT 활용으로 생산성 향상', TRUE, 2),
+    (gen_random_uuid(), q_id, '직원 수를 늘린다', FALSE, 3),
+    (gen_random_uuid(), q_id, '재택근무를 전면 도입한다', FALSE, 4);
+END $$;
+
+-- N2 Q19: 내용이해 (프로젝트 관리)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000004-0000-0000-0000-000000000004', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nプロジェクトマネジメントにおいて、「スコープクリープ」は最も警戒すべきリスクの一つだ。これは、プロジェクトの範囲が徐々に拡大し、当初の計画を超えてしまう現象を指す。明確な要件定義と変更管理プロセスを確立することで、このリスクを軽減できる。\n\n質問：「スコープクリープ」を防ぐために必要なことは何ですか？', '明確な要件定義と変更管理プロセスが必要です。명확한 요건 정의와 변경 관리 프로세스가 필요합니다。', 1, 19, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '인원을 늘린다', FALSE, 1),
+    (gen_random_uuid(), q_id, '명확한 요건 정의와 변경 관리 프로세스', TRUE, 2),
+    (gen_random_uuid(), q_id, '납기를 연장한다', FALSE, 3),
+    (gen_random_uuid(), q_id, '모든 요청을 수용한다', FALSE, 4);
+END $$;
+
+-- N2 Q20: 세부정보 (법률 안내)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000004-0000-0000-0000-000000000004', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n個人情報保護法により、企業は顧客の個人情報を適切に管理する義務がある。個人情報とは、氏名、住所、電話番号、メールアドレスなど、特定の個人を識別できる情報を指す。データの漏洩が発生した場合、企業は速やかに本人に通知し、監督官庁に報告しなければならない。\n\n質問：データ漏洩時に企業がすべきことは何ですか？', '本人への通知と監督官庁への報告が必要です。본인에게 통지하고 감독관청에 보고해야 합니다。', 1, 20, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '사실을 숨긴다', FALSE, 1),
+    (gen_random_uuid(), q_id, '본인에게 통지하고 감독관청에 보고한다', TRUE, 2),
+    (gen_random_uuid(), q_id, '시스템을 정지시킨다', FALSE, 3),
+    (gen_random_uuid(), q_id, '담당자를 해고한다', FALSE, 4);
+END $$;
+
+-- N2 Q21: 추론 (조직 문화)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000004-0000-0000-0000-000000000004', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n心理的安全性とは、チーム内で自分の意見を自由に言えると感じられる状態のことだ。Googleの研究では、高パフォーマンスのチームに共通する最大の要因がこの心理的安全性であった。失敗を責めず、建設的な議論ができる環境が、イノベーションを生む土壌となる。\n\n質問：高パフォーマンスチームに最も重要な要因は何ですか？', '心理的安全性が最大の要因です。심리적 안전성이 가장 중요한 요인입니다。', 1, 21, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '높은 급여', FALSE, 1),
+    (gen_random_uuid(), q_id, '심리적 안전성', TRUE, 2),
+    (gen_random_uuid(), q_id, '엄격한 규칙', FALSE, 3),
+    (gen_random_uuid(), q_id, '우수한 리더', FALSE, 4);
+END $$;
+
+-- N2 Q22: 내용이해 (기술 트렌드)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000004-0000-0000-0000-000000000004', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nクラウドコンピューティングの普及により、企業のITインフラは大きく変わった。自社でサーバーを保有・管理する「オンプレミス」から、必要な分だけリソースを借りるクラウドへの移行が進んでいる。初期投資が抑えられ、拡張性に優れている点がクラウドの強みである。\n\n質問：クラウドの強みとして挙げられているのはどれですか？', '初期投資の抑制と拡張性が強みです。초기 투자 절감과 확장성이 장점입니다。', 1, 22, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '보안이 완벽하다', FALSE, 1),
+    (gen_random_uuid(), q_id, '초기 투자 절감과 높은 확장성', TRUE, 2),
+    (gen_random_uuid(), q_id, '인터넷 없이도 사용 가능', FALSE, 3),
+    (gen_random_uuid(), q_id, '속도가 항상 빠르다', FALSE, 4);
+END $$;
+
+-- N2 Q23: 문맥어휘 (경영 기사)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000004-0000-0000-0000-000000000004', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n企業の持続的成長のためには、短期的な利益の追求だけでなく、ESG（環境・社会・ガバナンス）への取り組みが不可欠になっている。投資家もESGの観点から企業を評価するようになり、社会的責任を果たさない企業は淘汰されるリスクがある。\n\n質問：「淘汰される」の意味は何ですか？', '「淘汰される」は競争に負けて排除されることです。도태되다 / 경쟁에서 밀려나다의 의미입니다。', 1, 23, 'hard', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '성장하다', FALSE, 1),
+    (gen_random_uuid(), q_id, '도태되다 / 경쟁에서 밀려나다', TRUE, 2),
+    (gen_random_uuid(), q_id, '합병되다', FALSE, 3),
+    (gen_random_uuid(), q_id, '상장되다', FALSE, 4);
+END $$;
+
+-- N2 Q24: 추론 (AI 논의)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000004-0000-0000-0000-000000000004', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n生成AIの登場により、クリエイティブ産業にも大きな変化が訪れている。AIが文章を書き、絵を描き、音楽を作る時代になった。これにより、クリエイターの仕事が奪われるという懸念がある一方で、AIをツールとして活用することで、制作の効率が飛躍的に向上するという見方もある。\n\n質問：筆者が提示している二つの見方はどれですか？', '仕事が奪われるという懸念とツールとして活用できるという見方の二つです。일자리를 빼앗긴다는 우려와 도구로 활용할 수 있다는 관점입니다。', 1, 24, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'AI가 완벽하다는 것과 불완전하다는 것', FALSE, 1),
+    (gen_random_uuid(), q_id, '일자리를 빼앗긴다는 우려와 도구로 활용할 수 있다는 관점', TRUE, 2),
+    (gen_random_uuid(), q_id, 'AI가 비싸다는 것과 싸다는 것', FALSE, 3),
+    (gen_random_uuid(), q_id, 'AI를 금지해야 한다는 것과 의무화해야 한다는 것', FALSE, 4);
+END $$;
+
+-- N2 Q25: 내용이해 (사내 제도)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000004-0000-0000-0000-000000000004', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nメンター制度とは、経験豊富な先輩社員が新入社員に対して、業務指導やキャリア相談を行う仕組みである。定期的な面談を通じて、新入社員の不安を解消し、早期離職を防ぐ効果が期待できる。メンターにとっても、指導力やコミュニケーション能力の向上という成長機会になる。\n\n質問：メンター側にとってのメリットは何ですか？', 'メンターにとって指導力やコミュニケーション能力が向上します。지도력과 의사소통 능력이 향상됩니다。', 1, 25, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '급여가 올라간다', FALSE, 1),
+    (gen_random_uuid(), q_id, '지도력과 의사소통 능력 향상', TRUE, 2),
+    (gen_random_uuid(), q_id, '업무량이 줄어든다', FALSE, 3),
+    (gen_random_uuid(), q_id, '승진이 보장된다', FALSE, 4);
+END $$;
+
+-- N2 Q26: 세부정보 (데이터 보안)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000004-0000-0000-0000-000000000004', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nゼロトラストセキュリティとは、「何も信頼しない」という前提に基づくセキュリティモデルである。従来の境界型セキュリティでは、社内ネットワークを信頼し、外部からのアクセスのみを制限していた。しかし、リモートワークの普及やクラウド利用の拡大により、すべてのアクセスを検証する必要性が高まっている。\n\n質問：ゼロトラストセキュリティの基本的な考え方は何ですか？', '「何も信頼しない」という前提です。아무것도 신뢰하지 않는다는 전제입니다。', 1, 26, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '사내 네트워크만 신뢰한다', FALSE, 1),
+    (gen_random_uuid(), q_id, '아무것도 신뢰하지 않고 모든 접근을 검증한다', TRUE, 2),
+    (gen_random_uuid(), q_id, '모든 것을 신뢰한다', FALSE, 3),
+    (gen_random_uuid(), q_id, '외부 접근만 차단한다', FALSE, 4);
+END $$;
+
+-- N2 Q27: 문맥어휘 (인사 제도)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000004-0000-0000-0000-000000000004', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n日本企業の多くは年功序列型の賃金体系を採用してきたが、近年は成果主義への移行が進んでいる。年齢や勤続年数ではなく、実際の業績や能力に基づいて評価・報酬を決定する仕組みだ。若手社員のモチベーション向上が期待される反面、評価基準の客観性をいかに担保するかが課題となっている。\n\n質問：「年功序列」の意味は何ですか？', '年功序列は年齢や勤続年数に応じて地位・賃金が上がる制度です。연공서열의 의미입니다。', 1, 27, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '능력에 따라 급여가 결정되는 것', FALSE, 1),
+    (gen_random_uuid(), q_id, '연령이나 근속 연수에 따라 지위와 급여가 올라가는 것', TRUE, 2),
+    (gen_random_uuid(), q_id, '성과에 따라 승진이 결정되는 것', FALSE, 3),
+    (gen_random_uuid(), q_id, '상사의 판단으로 급여가 결정되는 것', FALSE, 4);
+END $$;
+
+-- N2 Q28: 추론 (리더십)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000004-0000-0000-0000-000000000004', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nサーバントリーダーシップとは、リーダーが部下に奉仕するという考え方だ。命令するのではなく、部下の成長を支援し、働きやすい環境を整えることで、結果的にチームの成果が向上する。従来のトップダウン型とは対照的なアプローチであり、多様性を重視する現代の組織に適していると言われている。\n\n質問：サーバントリーダーシップの特徴はどれですか？', 'リーダーが部下に奉仕し成長を支援するアプローチです。리더가 부하에게 봉사하고 성장을 지원합니다。', 1, 28, 'hard', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '리더가 강하게 지시한다', FALSE, 1),
+    (gen_random_uuid(), q_id, '리더가 부하의 성장을 지원하고 일하기 좋은 환경을 만든다', TRUE, 2),
+    (gen_random_uuid(), q_id, '리더가 모든 것을 결정한다', FALSE, 3),
+    (gen_random_uuid(), q_id, '리더가 필요 없다', FALSE, 4);
+END $$;
+
+-- N2 Q29: 내용이해 (기술 부채)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000004-0000-0000-0000-000000000004', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n技術的負債とは、短期的な開発スピードを優先した結果、コードの品質が低下し、将来的に修正コストが増大する現象を指す。納期に追われて応急処置的なコードを書くことは避けられない場合もあるが、放置すると保守性が著しく低下する。定期的なリファクタリングが技術的負債を管理する鍵となる。\n\n質問：技術的負債を管理するために必要なことは何ですか？', '「定期的なリファクタリング」が鍵です。정기적인 리팩토링이 핵심입니다。', 1, 29, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '코드를 처음부터 다시 작성한다', FALSE, 1),
+    (gen_random_uuid(), q_id, '정기적인 리팩토링', TRUE, 2),
+    (gen_random_uuid(), q_id, '테스트를 생략한다', FALSE, 3),
+    (gen_random_uuid(), q_id, '외주에 맡긴다', FALSE, 4);
+END $$;
+
+-- N2 Q30: 추론 (다양성)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000004-0000-0000-0000-000000000004', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nダイバーシティ経営とは、多様な人材の能力を最大限に活かすことで、イノベーションを生み出し、企業価値を向上させる経営戦略である。性別、国籍、年齢、障がいの有無に関わらず、多様な視点があることで、市場の変化に柔軟に対応でき、新たなビジネスチャンスを捉えることができる。\n\n質問：ダイバーシティ経営の目的は何ですか？', '多様な人材を活かしてイノベーションを生むことです。다양한 인재를 활용하여 혁신을 창출하는 것입니다。', 1, 30, 'hard', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '인건비를 절감한다', FALSE, 1),
+    (gen_random_uuid(), q_id, '다양한 인재를 활용하여 혁신과 기업 가치를 높인다', TRUE, 2),
+    (gen_random_uuid(), q_id, '해외 진출만을 위한 것이다', FALSE, 3),
+    (gen_random_uuid(), q_id, '법적 의무를 충족하기 위한 것이다', FALSE, 4);
+END $$;
+
+-- ============================================
+-- N1 読解 追加問題 (Q11-Q30)
+-- ============================================
+
+-- N1 Q11: 내용이해 (언어 철학)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000005-0000-0000-0000-000000000005', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n言語は単なるコミュニケーションの道具ではなく、思考そのものを形作るものである。サピア＝ウォーフ仮説によれば、使用する言語が世界の認知の仕方に影響を与える。例えば、色の名前が豊富な言語を持つ民族は、色の識別能力が高いという研究結果がある。\n\n質問：サピア＝ウォーフ仮説の主張は何ですか？', '使用する言語が世界の認知の仕方に影響するという仮説です。사용하는 언어가 세계 인식 방식에 영향을 준다는 가설입니다。', 1, 11, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '모든 언어는 동일한 구조를 가진다', FALSE, 1),
+    (gen_random_uuid(), q_id, '사용하는 언어가 세계 인식 방식에 영향을 준다', TRUE, 2),
+    (gen_random_uuid(), q_id, '언어는 의사소통 도구에 불과하다', FALSE, 3),
+    (gen_random_uuid(), q_id, '사고는 언어와 무관하다', FALSE, 4);
+END $$;
+
+-- N1 Q12: 세부정보 (경영 전략)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000005-0000-0000-0000-000000000005', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nイノベーションのジレンマとは、成功している企業が既存の製品やサービスの改善に注力するあまり、破壊的技術の台頭に対応できなくなる現象を指す。既存顧客の声に応えることは重要だが、市場の根本的な変化を見落とすリスクがある。持続的イノベーションと破壊的イノベーションの両方に目を配る経営判断が求められる。\n\n質問：イノベーションのジレンマが起きる原因は何ですか？', '既存製品の改善に注力しすぎることが原因です。기존 제품 개선에 지나치게 집중하는 것이 원인입니다。', 1, 12, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '연구 개발비가 부족하다', FALSE, 1),
+    (gen_random_uuid(), q_id, '기존 제품 개선에 지나치게 집중하여 파괴적 기술에 대응하지 못한다', TRUE, 2),
+    (gen_random_uuid(), q_id, '경쟁사가 너무 많다', FALSE, 3),
+    (gen_random_uuid(), q_id, '소비자의 취향이 바뀌지 않는다', FALSE, 4);
+END $$;
+
+-- N1 Q13: 문맥어휘 (법학 논문)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000005-0000-0000-0000-000000000005', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n法の下の平等とは、全ての国民が法的に平等に扱われるべきという原則である。しかし、形式的平等だけでは不十分な場合がある。社会的弱者に対する積極的是正措置（アファーマティブ・アクション）は、実質的平等を実現するための手段として議論されている。\n\n質問：「積極的是正措置」の目的は何ですか？', '実質的平等を実現するための措置です。실질적 평등을 실현하기 위한 조치입니다。', 1, 13, 'hard', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '형식적 평등을 유지하기 위해', FALSE, 1),
+    (gen_random_uuid(), q_id, '실질적 평등을 실현하기 위해', TRUE, 2),
+    (gen_random_uuid(), q_id, '특정 집단을 우대하기 위해', FALSE, 3),
+    (gen_random_uuid(), q_id, '법률을 개정하기 위해', FALSE, 4);
+END $$;
+
+-- N1 Q14: 추론 (철학 에세이)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000005-0000-0000-0000-000000000005', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n「知の呪い」とは、ある分野に精通した人が、その分野の知識がない人の立場を理解できなくなる現象を指す。専門家が初心者に説明する際、無意識に専門用語を使ったり、前提知識があることを当然と思ったりする。優れた教育者とは、この呪いから自らを解放し、学習者の視点に立てる者のことである。\n\n質問：筆者が考える「優れた教育者」の条件は何ですか？', '学習者の視点に立てることです。학습자의 관점에 설 수 있는 것이 조건입니다。', 1, 14, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '전문 지식이 풍부한 사람', FALSE, 1),
+    (gen_random_uuid(), q_id, '학습자의 관점에 설 수 있는 사람', TRUE, 2),
+    (gen_random_uuid(), q_id, '엄격하게 가르치는 사람', FALSE, 3),
+    (gen_random_uuid(), q_id, '많은 경험을 가진 사람', FALSE, 4);
+END $$;
+
+-- N1 Q15: 내용이해 (사회학 논문)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000005-0000-0000-0000-000000000005', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n現代社会における「孤独」は、個人的な問題にとどまらず、社会的課題として認識されるようになった。英国では2018年に「孤独担当大臣」が設置され、日本でも2021年に同様のポストが新設された。孤独は精神的健康に悪影響を及ぼすだけでなく、心臓病や認知症のリスクを高めるという研究結果もある。\n\n質問：日本で孤独担当大臣が設置されたのはいつですか？', '「日本でも2021年に同様のポストが新設された」と書いてあります。2021년에 설치되었습니다。', 1, 15, 'easy', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '2018년', FALSE, 1),
+    (gen_random_uuid(), q_id, '2021년', TRUE, 2),
+    (gen_random_uuid(), q_id, '2020년', FALSE, 3),
+    (gen_random_uuid(), q_id, '2023년', FALSE, 4);
+END $$;
+
+-- N1 Q16: 세부정보 (과학 기사)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000005-0000-0000-0000-000000000005', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n量子コンピュータは、従来のコンピュータとは根本的に異なる計算原理に基づく。従来のビットが0か1の状態しか取れないのに対し、量子ビットは0と1の重ね合わせ状態を取ることができる。これにより、特定の問題に対して従来のコンピュータでは不可能なほどの高速計算が可能になる。ただし、実用化にはエラー率の低減や環境制御など、多くの技術的課題が残されている。\n\n質問：量子コンピュータの実用化に向けた課題はどれですか？', 'エラー率の低減や環境制御が課題です。오류율 저감과 환경 제어가 과제입니다。', 1, 16, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '계산 속도가 느리다', FALSE, 1),
+    (gen_random_uuid(), q_id, '오류율 저감과 환경 제어', TRUE, 2),
+    (gen_random_uuid(), q_id, '소프트웨어가 부족하다', FALSE, 3),
+    (gen_random_uuid(), q_id, '비용이 저렴하다', FALSE, 4);
+END $$;
+
+-- N1 Q17: 문맥어휘 (문학 평론)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000005-0000-0000-0000-000000000005', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n文学作品における「メタファー」は、表面的な意味の背後に深い含意を持つ表現技法である。例えば、「人生は旅である」という表現は、人生の不確実性や発見の連続を暗示している。優れた作家は、メタファーを通じて読者の想像力を喚起し、言葉の限界を超えた意味の伝達を可能にする。\n\n質問：「喚起する」の意味は何ですか？', '「喚起する」は呼び起こす、引き出すという意味です。불러일으키다 / 환기시키다의 의미입니다。', 1, 17, 'hard', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '억제하다', FALSE, 1),
+    (gen_random_uuid(), q_id, '불러일으키다', TRUE, 2),
+    (gen_random_uuid(), q_id, '무시하다', FALSE, 3),
+    (gen_random_uuid(), q_id, '제한하다', FALSE, 4);
+END $$;
+
+-- N1 Q18: 추론 (윤리학)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000005-0000-0000-0000-000000000005', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nAI倫理の議論において、「トロッコ問題」のような思考実験が再注目されている。自動運転車が避けられない事故に直面した時、乗客を守るべきか歩行者を守るべきかという判断を、AIにどうプログラムするかという問題だ。技術の進歩が倫理的判断の自動化を迫る中、社会全体での合意形成が急務となっている。\n\n質問：筆者が最も重要だと考えていることは何ですか？', '社会全体での合意形成が急務だと言っています。사회 전체의 합의 형성이 시급합니다。', 1, 18, 'hard', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'AI 기술의 발전을 멈추는 것', FALSE, 1),
+    (gen_random_uuid(), q_id, '사회 전체의 합의 형성', TRUE, 2),
+    (gen_random_uuid(), q_id, '자동운전을 금지하는 것', FALSE, 3),
+    (gen_random_uuid(), q_id, '기술자에게 판단을 맡기는 것', FALSE, 4);
+END $$;
+
+-- N1 Q19: 내용이해 (경제학)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000005-0000-0000-0000-000000000005', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n行動経済学は、人間が必ずしも合理的な判断を下すわけではないという前提に立つ学問だ。例えば、「損失回避バイアス」により、人は同額の利益を得る喜びよりも、同額を失う苦痛の方を大きく感じる。この知見は、マーケティングや公共政策の設計に広く応用されている。\n\n質問：「損失回避バイアス」とは何ですか？', '同額でも利益より損失の方を大きく感じる傾向です。같은 금액이라도 이익보다 손실을 더 크게 느끼는 경향입니다。', 1, 19, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '이익을 극대화하려는 경향', FALSE, 1),
+    (gen_random_uuid(), q_id, '같은 금액이라도 이익보다 손실을 더 크게 느끼는 경향', TRUE, 2),
+    (gen_random_uuid(), q_id, '위험을 좋아하는 경향', FALSE, 3),
+    (gen_random_uuid(), q_id, '미래의 이익을 무시하는 경향', FALSE, 4);
+END $$;
+
+-- N1 Q20: 세부정보 (기업 가치)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000005-0000-0000-0000-000000000005', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nステークホルダー資本主義とは、企業が株主だけでなく、従業員、顧客、取引先、地域社会など、全てのステークホルダーの利益を考慮すべきだという考え方である。従来の株主至上主義では短期的な利益が重視されがちだったが、長期的な企業価値の向上には、多様なステークホルダーとの関係構築が不可欠だとする見解が主流になりつつある。\n\n質問：ステークホルダー資本主義が重視するのは何ですか？', '全てのステークホルダーの利益です。모든 이해관계자의 이익을 중시합니다。', 1, 20, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '주주의 이익만', FALSE, 1),
+    (gen_random_uuid(), q_id, '모든 이해관계자의 이익', TRUE, 2),
+    (gen_random_uuid(), q_id, '경영자의 보수', FALSE, 3),
+    (gen_random_uuid(), q_id, '단기적 수익', FALSE, 4);
+END $$;
+
+-- N1 Q21: 문맥어휘 (정치학)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000005-0000-0000-0000-000000000005', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n民主主義の根幹を成すのは、国民の知る権利と報道の自由である。権力の監視機能を果たすジャーナリズムは「第四の権力」とも称される。しかし、メディアの商業化やSNSの台頭により、センセーショナリズムに偏った報道が増加し、ジャーナリズムの信頼性が揺らいでいるのも事実である。\n\n質問：「揺らいでいる」の意味は何ですか？', '「揺らいでいる」は不安定になっている、動揺しているという意味です。흔들리고 있다의 의미입니다。', 1, 21, 'hard', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '강화되고 있다', FALSE, 1),
+    (gen_random_uuid(), q_id, '흔들리고 있다', TRUE, 2),
+    (gen_random_uuid(), q_id, '확립되고 있다', FALSE, 3),
+    (gen_random_uuid(), q_id, '무시되고 있다', FALSE, 4);
+END $$;
+
+-- N1 Q22: 추론 (과학 철학)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000005-0000-0000-0000-000000000005', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nカール・ポパーの反証可能性の概念は、科学と非科学を区別する基準として提唱された。科学的理論とは、原理的に反証可能な命題でなければならない。すなわち、どのような観察結果が得られればその理論が誤りだと判断できるかが明確でなければ、それは科学とは言えないのである。\n\n質問：ポパーが提唱した科学の条件は何ですか？', '反証可能性、つまり理論が原理的に反証可能であることです。이론이 원리적으로 반증 가능해야 합니다。', 1, 22, 'hard', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '실험으로 증명할 수 있어야 한다', FALSE, 1),
+    (gen_random_uuid(), q_id, '이론이 원리적으로 반증 가능해야 한다', TRUE, 2),
+    (gen_random_uuid(), q_id, '다수의 과학자가 동의해야 한다', FALSE, 3),
+    (gen_random_uuid(), q_id, '수학적으로 증명 가능해야 한다', FALSE, 4);
+END $$;
+
+-- N1 Q23: 내용이해 (조직론)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000005-0000-0000-0000-000000000005', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n「学習する組織」とは、ピーター・センゲが提唱した概念であり、組織のメンバーが継続的に学び、変化に適応する能力を持つ組織を指す。個人の学習だけでなく、チーム学習やシステム思考が重要視される。知識を個人に閉じ込めず、組織全体で共有・活用する文化が不可欠である。\n\n質問：「学習する組織」で重要視されていることは何ですか？', 'チーム学習やシステム思考が重要視されています。팀 학습과 시스템 사고가 중시됩니다。', 1, 23, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '개인의 경쟁', FALSE, 1),
+    (gen_random_uuid(), q_id, '팀 학습과 시스템 사고', TRUE, 2),
+    (gen_random_uuid(), q_id, '관리자의 지시', FALSE, 3),
+    (gen_random_uuid(), q_id, '외부 컨설팅', FALSE, 4);
+END $$;
+
+-- N1 Q24: 세부정보 (국제 관계)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000005-0000-0000-0000-000000000005', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nソフトパワーとは、軍事力や経済制裁のようなハードパワーとは対照的に、文化、価値観、外交政策の魅力によって他国の行動に影響を与える能力を指す。日本のアニメ、食文化、おもてなしの精神は、国際社会における日本のソフトパワーの源泉として評価されている。\n\n質問：ソフトパワーに該当しないものはどれですか？', 'ソフトパワーは文化的魅力による影響力で、軍事力はハードパワーです。군사력은 소프트파워가 아닙니다。', 1, 24, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '애니메이션 문화', FALSE, 1),
+    (gen_random_uuid(), q_id, '음식 문화', FALSE, 2),
+    (gen_random_uuid(), q_id, '군사적 위협', TRUE, 3),
+    (gen_random_uuid(), q_id, '오모테나시 정신', FALSE, 4);
+END $$;
+
+-- N1 Q25: 추론 (기술 윤리)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000005-0000-0000-0000-000000000005', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nデジタルデバイドとは、情報技術を活用できる者とできない者の間に生じる格差を指す。高齢者や低所得層は、デジタル化の恩恵を受けにくい傾向がある。行政サービスのオンライン化が進む中、デジタルに不慣れな市民が取り残されないよう、対面窓口の維持やデジタルリテラシー教育の充実が不可欠である。\n\n質問：筆者が必要だと考えていることは何ですか？', '対面窓口の維持とデジタルリテラシー教育です。대면 창구 유지와 디지털 리터러시 교육입니다。', 1, 25, 'medium', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '모든 서비스를 온라인으로 전환한다', FALSE, 1),
+    (gen_random_uuid(), q_id, '대면 창구 유지와 디지털 리터러시 교육 충실', TRUE, 2),
+    (gen_random_uuid(), q_id, '고령자에게 스마트폰을 무료 배포한다', FALSE, 3),
+    (gen_random_uuid(), q_id, '디지털화를 중지한다', FALSE, 4);
+END $$;
+
+-- N1 Q26: 내용이해 (심리학)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000005-0000-0000-0000-000000000005', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nダニング＝クルーガー効果とは、能力の低い人ほど自分の能力を過大評価し、能力の高い人ほど自分の能力を過小評価する傾向を指す認知バイアスである。これは、能力が低い人は自分の無知を認識する能力すら欠如しているために起こる。逆に、専門家は自分にとって容易なことを他者にも容易だと錯覚しやすい。\n\n質問：能力の高い人に見られる傾向は何ですか？', '能力の高い人は自分を過小評価する傾向があります。능력이 높은 사람은 자신을 과소평가하는 경향이 있습니다。', 1, 26, 'hard', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '자신의 능력을 과대평가한다', FALSE, 1),
+    (gen_random_uuid(), q_id, '자신의 능력을 과소평가한다', TRUE, 2),
+    (gen_random_uuid(), q_id, '자신의 능력을 정확히 평가한다', FALSE, 3),
+    (gen_random_uuid(), q_id, '다른 사람의 능력을 과소평가한다', FALSE, 4);
+END $$;
+
+-- N1 Q27: 문맥어휘 (환경 논문)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000005-0000-0000-0000-000000000005', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n生物多様性の喪失は、気候変動と並ぶ地球規模の危機である。一つの種の絶滅は、食物連鎖を通じて生態系全体に波及する。この「カスケード効果」により、一見無関係に見える種の減少が、農業や漁業などの人間活動にも甚大な影響を及ぼす可能性がある。\n\n質問：「甚大な」の意味は何ですか？', '「甚大な」は非常に大きい、深刻なという意味です。매우 큰 / 심대한의 의미입니다。', 1, 27, 'hard', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '사소한', FALSE, 1),
+    (gen_random_uuid(), q_id, '매우 큰 / 심대한', TRUE, 2),
+    (gen_random_uuid(), q_id, '일시적인', FALSE, 3),
+    (gen_random_uuid(), q_id, '간접적인', FALSE, 4);
+END $$;
+
+-- N1 Q28: 추론 (미디어론)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000005-0000-0000-0000-000000000005', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nエコーチェンバー現象とは、SNS上で自分と同じ意見の情報ばかりに触れることで、特定の信念がますます強化される現象を指す。アルゴリズムがユーザーの好みに合った情報を優先的に表示するため、異なる視点に触れる機会が減少する。これにより、社会の分断が加速するリスクがある。\n\n質問：エコーチェンバー現象が社会にもたらすリスクは何ですか？', '社会の分断が加速するリスクがあります。사회의 분단이 가속화될 위험이 있습니다。', 1, 28, 'hard', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '정보의 질이 향상된다', FALSE, 1),
+    (gen_random_uuid(), q_id, '사회의 분단이 가속화된다', TRUE, 2),
+    (gen_random_uuid(), q_id, '다양한 의견이 확산된다', FALSE, 3),
+    (gen_random_uuid(), q_id, 'SNS 이용자가 줄어든다', FALSE, 4);
+END $$;
+
+-- N1 Q29: 내용이해 (기술 경영)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000005-0000-0000-0000-000000000005', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\nDX（デジタルトランスフォーメーション）は、単なるIT化やデジタル化とは本質的に異なる概念である。既存の業務プロセスをデジタル化する「デジタイゼーション」を超え、デジタル技術を活用してビジネスモデルそのものを変革し、新たな価値を創造することがDXの本質である。組織文化の変革なくしてDXの成功はあり得ない。\n\n質問：DXの本質として筆者が最も強調していることは何ですか？', 'ビジネスモデルの変革と新たな価値の創造がDXの本質です。비즈니스 모델 변혁과 새로운 가치 창조가 핵심입니다。', 1, 29, 'hard', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '기존 업무의 IT화', FALSE, 1),
+    (gen_random_uuid(), q_id, '비즈니스 모델 자체의 변혁과 새로운 가치 창조', TRUE, 2),
+    (gen_random_uuid(), q_id, '종이 업무의 디지털화', FALSE, 3),
+    (gen_random_uuid(), q_id, '최신 기술의 도입', FALSE, 4);
+END $$;
+
+-- N1 Q30: 추론 (사회 철학)
+DO $$
+DECLARE q_id UUID;
+BEGIN
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
+  VALUES (q_id, 'c0000005-0000-0000-0000-000000000005', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n「正義」の概念は時代や文化によって異なる。ジョン・ロールズは「無知のヴェール」という思考実験を通じて、公正な社会制度を構想した。自分がどのような立場に生まれるかわからないという前提で制度を設計すれば、最も恵まれない人々の利益を最大化する制度が選ばれるはずだ、と主張した。\n\n質問：ロールズの「無知のヴェール」が導く結論は何ですか？', '最も恵まれない人々の利益を最大化する制度が選ばれるという結論です。가장 불우한 사람들의 이익을 최대화하는 제도가 선택됩니다。', 1, 30, 'hard', NULL);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '다수결이 항상 정의이다', FALSE, 1),
+    (gen_random_uuid(), q_id, '가장 불우한 사람들의 이익을 최대화하는 제도가 선택된다', TRUE, 2),
+    (gen_random_uuid(), q_id, '개인의 자유가 절대적이다', FALSE, 3),
+    (gen_random_uuid(), q_id, '모든 사람에게 같은 양을 분배한다', FALSE, 4);
+END $$;
+
+-- Update reading quiz time limits (+10 minutes each)
+UPDATE quizzes SET time_limit_minutes = time_limit_minutes + 10 WHERE id IN (
+  'c0000001-0000-0000-0000-000000000001',
+  'c0000002-0000-0000-0000-000000000002',
+  'c0000003-0000-0000-0000-000000000003',
+  'c0000004-0000-0000-0000-000000000004',
+  'c0000005-0000-0000-0000-000000000005'
+);

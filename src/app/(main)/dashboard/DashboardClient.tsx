@@ -3,17 +3,11 @@
 import dynamic from 'next/dynamic'
 import { useState, useTransition } from 'react'
 import Card from '@/components/ui/Card'
-import Badge from '@/components/ui/Badge'
 import Link from 'next/link'
 import { AlertTriangle, BarChart3, Trophy, BookOpen, Eye, Calendar } from 'lucide-react'
 import { getGrade, getGradeColor, DISPATCH_MINIMUM_SCORE, getRelevantAxes, AXIS_DISPLAY_LABELS } from '@/lib/assessment-config'
 import type { AxisKey } from '@/lib/assessment-config'
-import { requestRetake } from '@/app/actions/assessment'
-import { requestRetakeExam } from '@/app/actions/comprehensive-exam'
-import { CATEGORY_LABELS } from '@/lib/constants'
-import { getCategoryLabel, getSubcategoryLabel } from '@/lib/assignment-categories'
-import EarnedBadges from '@/components/dashboard/EarnedBadges'
-import type { CourseWithProgress } from '@/lib/course-progress'
+import { requestExam, requestRetakeExam } from '@/app/actions/comprehensive-exam'
 
 const RadarChart = dynamic(() => import('@/components/dashboard/RadarChart'), { ssr: false })
 
@@ -33,24 +27,11 @@ interface UnifiedResult {
   type: 'quiz' | 'comprehensive'
 }
 
-interface CompletedAssessment {
-  step: number
-  label: string
-  completedAt: string
-  retakeStatus: string | null
-}
-
 interface UserRanking {
   overall_score: number
   overall_rank: number
   japanese_score: number
   programming_score: number
-}
-
-interface EnrolledCourse {
-  id: string
-  course_id: string
-  courses: { title: string; category: string; subcategory: string | null } | null
 }
 
 interface LearningStats {
@@ -67,20 +48,6 @@ interface RecentFeedback {
   admin: { full_name: string | null } | null
 }
 
-interface CompExamRetake {
-  examId: string
-  category: string
-  subcategory: string
-  contentLevel: string | null
-  score: number | null
-  retakeStatus: 'failed' | 'requested' | 'approved'
-}
-
-const CATEGORY_ROUTE_PREFIX: Record<string, string> = {
-  core_programming: '/dev',
-  framework: '/dev',
-}
-
 const feedbackCategoryLabels: Record<string, string> = {
   seikatsu: '生活日本語',
   business_jp: 'ビジネス日本語',
@@ -89,12 +56,12 @@ const feedbackCategoryLabels: Record<string, string> = {
   business_lit: 'ビジネスリテラシー',
 }
 
-const AXIS_TO_STEP: Record<AxisKey, number> = {
-  jlpt: 1,
-  itJapanese: 2,
-  coreProgramming: 3,
-  framework: 4,
-  attitudeCulture: 5,
+const AXIS_TO_CATEGORY: Record<AxisKey, string> = {
+  jlpt: 'seikatsu',
+  itJapanese: 'business-jp',
+  coreProgramming: 'cs',
+  framework: 'dev',
+  attitudeCulture: 'business-lit',
 }
 
 interface TopRankingEntry {
@@ -109,27 +76,23 @@ interface Props {
   radarScores: Record<AxisKey, number>
   recentResults: UnifiedResult[]
   isJapanese: boolean
-  completedAssessments: CompletedAssessment[]
   userRanking: UserRanking | null
   topRanking?: TopRankingEntry[] | null
-  enrolledCourses: EnrolledCourse[]
   learningStats?: LearningStats
   recentFeedbacks?: RecentFeedback[]
-  compExamRetakes?: CompExamRetake[]
-  javaBadges?: CourseWithProgress[]
+  compExamRetakeByCategory?: Record<string, { examId: string; score: number | null; retakeStatus: 'completed' | 'failed' | 'requested' | 'approved' }>
   role?: string
   nextExamDate?: string | null
 }
 
 export default function DashboardClient({
-  profile, radarScores, recentResults, isJapanese, completedAssessments,
-  userRanking, topRanking, enrolledCourses, learningStats, recentFeedbacks = [], compExamRetakes = [], javaBadges = [], role,
+  profile, radarScores, recentResults, isJapanese,
+  userRanking, topRanking, learningStats, recentFeedbacks = [], compExamRetakeByCategory = {}, role,
   nextExamDate,
 }: Props) {
   const isMentee = role === 'mentee'
   const relevantAxes = getRelevantAxes(isJapanese)
   const hasScores = relevantAxes.some(key => radarScores[key] > 0)
-  const hasEnrolledCourses = enrolledCourses.length > 0
 
   const allAxesAboveB = hasScores && relevantAxes.every(key => radarScores[key] >= DISPATCH_MINIMUM_SCORE)
 
@@ -138,18 +101,6 @@ export default function DashboardClient({
   const [retakeMessage, setRetakeMessage] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
 
-  function handleRetakeRequest(step: number) {
-    startTransition(async () => {
-      const result = await requestRetake(step)
-      if ('error' in result && result.error) {
-        setRetakeMessage(result.error)
-      } else {
-        setRetakeMessage('再試験リクエストを送信しました')
-      }
-      setTimeout(() => setRetakeMessage(null), 3000)
-    })
-  }
-
   function handleCompRetakeRequest(examId: string) {
     startTransition(async () => {
       const result = await requestRetakeExam(examId)
@@ -157,6 +108,30 @@ export default function DashboardClient({
         setRetakeMessage(result.error)
       } else {
         setRetakeMessage('総合試験の再試験リクエストを送信しました')
+      }
+      setTimeout(() => setRetakeMessage(null), 3000)
+    })
+  }
+
+  function handleDirectRetake(examId: string) {
+    startTransition(async () => {
+      const result = await requestRetakeExam(examId)
+      if ('error' in result && result.error) {
+        setRetakeMessage(result.error)
+      } else if ('examId' in result && result.examId) {
+        window.location.href = `/exam/${result.examId}`
+      }
+      setTimeout(() => setRetakeMessage(null), 3000)
+    })
+  }
+
+  function handleFirstExam(category: string) {
+    startTransition(async () => {
+      const result = await requestExam(category, 'comprehensive', null)
+      if ('error' in result && result.error) {
+        setRetakeMessage(result.error)
+      } else if ('examId' in result && result.examId) {
+        window.location.href = `/exam/${result.examId}`
       }
       setTimeout(() => setRetakeMessage(null), 3000)
     })
@@ -227,7 +202,7 @@ export default function DashboardClient({
                 ))}
               </div>
               <Link
-                href="/feedback"
+                href="/profile/feedback"
                 className="block rounded-lg bg-blue-500 px-4 py-2 text-center text-sm font-bold text-white hover:bg-blue-600 transition-colors"
               >
                 詳細はこちら
@@ -273,8 +248,8 @@ export default function DashboardClient({
                   const grade = getGrade(score)
                   const colorClass = getGradeColor(grade)
                   const isBelowB = score < DISPATCH_MINIMUM_SCORE
-                  const step = AXIS_TO_STEP[key]
-                  const ca = completedAssessments.find(a => a.step === step)
+                  const category = AXIS_TO_CATEGORY[key]
+                  const retakeInfo = compExamRetakeByCategory[category]
                   return (
                     <div
                       key={key}
@@ -289,17 +264,28 @@ export default function DashboardClient({
                       <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-bold ${colorClass}`}>
                         {grade}
                       </span>
-                      {ca && (
+                      {retakeInfo ? (
                         <div className="mt-1.5">
-                          {ca.retakeStatus === 'requested' ? (
+                          {retakeInfo.retakeStatus === 'requested' ? (
                             <span className="text-[10px] text-amber-400">リクエスト中</span>
-                          ) : ca.retakeStatus === 'approved' ? (
-                            <span className="text-[10px] text-emerald-400">承認済</span>
-                          ) : ca.retakeStatus === 'denied' ? (
-                            <span className="text-[10px] text-red-400">拒否</span>
+                          ) : retakeInfo.retakeStatus === 'approved' ? (
+                            <Link
+                              href={`/exam/${retakeInfo.examId}`}
+                              className="rounded-md bg-emerald-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-emerald-500 transition-colors"
+                            >
+                              再試験する
+                            </Link>
+                          ) : (role === 'admin' || role === 'mentor') ? (
+                            <button
+                              onClick={() => handleDirectRetake(retakeInfo.examId)}
+                              disabled={pending}
+                              className="rounded-md bg-emerald-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-emerald-500 disabled:opacity-50 transition-colors"
+                            >
+                              再試験する
+                            </button>
                           ) : (
                             <button
-                              onClick={() => handleRetakeRequest(ca.step)}
+                              onClick={() => handleCompRetakeRequest(retakeInfo.examId)}
                               disabled={pending}
                               className="rounded-md border border-white/[0.08] dark:border-white/[0.08] border-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-zinc-400 hover:bg-white/5 dark:hover:bg-white/5 hover:bg-zinc-50 disabled:opacity-50 transition-colors"
                             >
@@ -307,56 +293,21 @@ export default function DashboardClient({
                             </button>
                           )}
                         </div>
-                      )}
+                      ) : (role === 'admin' || role === 'mentor') ? (
+                        <div className="mt-1.5">
+                          <button
+                            onClick={() => handleFirstExam(category)}
+                            disabled={pending}
+                            className="rounded-md bg-indigo-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+                          >
+                            試験を受ける
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
                   )
                 })}
               </div>
-
-              {/* Comprehensive exam retake section */}
-              {compExamRetakes.length > 0 && (
-                <div className="mt-4 border-t border-white/[0.06] dark:border-white/[0.06] border-gray-100 pt-3">
-                  <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2">総合試験 再試験</p>
-                  <div className="space-y-2">
-                    {compExamRetakes.map((exam) => (
-                      <div
-                        key={exam.examId}
-                        className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] dark:border-white/[0.08] dark:bg-white/[0.03] border-gray-200/60 px-3 py-2"
-                      >
-                        <div>
-                          <p className="text-xs font-medium text-zinc-900 dark:text-zinc-100">
-                            {getCategoryLabel(exam.category)} &gt; {getSubcategoryLabel(exam.category, exam.subcategory)}
-                            {exam.contentLevel && ` (${exam.contentLevel})`}
-                          </p>
-                          {exam.score !== null && (
-                            <p className="text-[10px] text-red-400">{exam.score}点（不合格）</p>
-                          )}
-                        </div>
-                        <div>
-                          {exam.retakeStatus === 'requested' ? (
-                            <span className="text-[10px] text-amber-400">リクエスト中</span>
-                          ) : exam.retakeStatus === 'approved' ? (
-                            <Link
-                              href={`/exam/${exam.examId}`}
-                              className="rounded-md bg-emerald-600 px-2 py-0.5 text-[10px] font-medium text-white hover:bg-emerald-500 transition-colors"
-                            >
-                              試験を受ける
-                            </Link>
-                          ) : (
-                            <button
-                              onClick={() => handleCompRetakeRequest(exam.examId)}
-                              disabled={pending}
-                              className="rounded-md border border-white/[0.08] dark:border-white/[0.08] border-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-zinc-400 hover:bg-white/5 dark:hover:bg-white/5 hover:bg-zinc-50 disabled:opacity-50 transition-colors"
-                            >
-                              再試験リクエスト
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {/* Dispatch readiness badge */}
               <div className="mt-3 text-center">
@@ -381,34 +332,7 @@ export default function DashboardClient({
           )}
         </Card>
 
-        {/* Earned badges */}
-        <Card title="取得済み資格">
-          {javaBadges.length > 0 ? (
-            <div className="py-2">
-              <EarnedBadges language="Java" badges={javaBadges} />
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">コースがありません</p>
-            </div>
-          )}
-
-          {(profile?.target_jlpt_level || profile?.target_coding_area) && (
-            <div className="mt-4 border-t border-white/[0.06] dark:border-white/[0.06] border-gray-100 pt-4">
-              <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">学習目標</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {profile?.target_jlpt_level && (
-                  <Badge label={profile.target_jlpt_level} variant="jlpt" />
-                )}
-                {profile?.target_coding_area && (
-                  <Badge label={profile.target_coding_area.toUpperCase()} variant="default" />
-                )}
-              </div>
-            </div>
-          )}
-        </Card>
-
-        {/* Recent results — below coding rank on right */}
+        {/* Recent results — right col, row 1 */}
         <Card title="最近の試験結果">
           {recentResults.length === 0 ? (
             <p className="py-4 text-center text-sm text-zinc-500">まだ試験を受けていません</p>
@@ -466,80 +390,8 @@ export default function DashboardClient({
             全履歴を見る →
           </Link>
         </Card>
-      </div>
 
-      {/* Learning Assignments Summary */}
-      {!isMentee && learningStats && learningStats.total > 0 && (
-        <div className="mt-4">
-          <Card title="学習課題">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10">
-                  <BookOpen className="h-5 w-5 text-indigo-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400">進行中 / 完了 / 全体</p>
-                  <p className="text-lg font-bold font-mono text-zinc-900 dark:text-zinc-100">
-                    {learningStats.inProgress} / {learningStats.completed} / {learningStats.total}
-                  </p>
-                </div>
-              </div>
-              {learningStats.total > 0 && (
-                <div className="flex-1">
-                  <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-600">
-                    <div
-                      className="h-2 rounded-full bg-indigo-500 transition-all"
-                      style={{ width: `${Math.round((learningStats.completed / learningStats.total) * 100)}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-            <Link
-              href="/dashboard/assignments"
-              className="mt-4 block rounded-xl bg-indigo-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
-            >
-              課題一覧へ
-            </Link>
-          </Card>
-        </div>
-      )}
-
-      {/* Recent Feedbacks */}
-      {!isMentee && recentFeedbacks.length > 0 && (
-        <div className="mt-4">
-          <Card title="最近のフィードバック">
-            <div className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">
-              {recentFeedbacks.map((fb) => (
-                <div key={fb.id} className="py-3">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex rounded-full bg-indigo-500/10 px-2 py-0.5 text-xs font-medium text-indigo-400 ring-1 ring-indigo-500/20">
-                      {feedbackCategoryLabels[fb.category] ?? fb.category}
-                    </span>
-                    <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                      {(fb.admin as { full_name: string | null } | null)?.full_name ?? '管理者'}
-                    </span>
-                    <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                      {new Date(fb.created_at).toLocaleDateString('ja-JP')}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300 line-clamp-2">{fb.content}</p>
-                </div>
-              ))}
-            </div>
-            <Link
-              href="/feedback"
-              className="mt-3 block text-center text-sm font-medium text-indigo-500 hover:text-indigo-400 transition-colors"
-            >
-              詳細はこちら →
-            </Link>
-          </Card>
-        </div>
-      )}
-
-      {/* Bottom grid: Ranking | Enrolled Courses (mentee) */}
-      <div className={`mt-4 grid gap-4 ${hasEnrolledCourses ? 'lg:grid-cols-2' : ''}`}>
-        {/* Ranking */}
+        {/* ランキング — right col, row 2 */}
         <Card title="ランキング">
           {userRanking ? (
             <div>
@@ -611,39 +463,77 @@ export default function DashboardClient({
             </div>
           )}
         </Card>
-
-        {/* Enrolled Courses (mentee only) */}
-        {hasEnrolledCourses && (
-          <Card title="受講中コース">
-            <div className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">
-              {enrolledCourses.map((enrollment) => {
-                const routePrefix = enrollment.courses?.category
-                  ? CATEGORY_ROUTE_PREFIX[enrollment.courses.category]
-                  : undefined
-                const href = routePrefix && enrollment.courses?.subcategory
-                  ? `${routePrefix}/${enrollment.courses.subcategory}`
-                  : `/courses/${enrollment.course_id}`
-                return (
-                  <Link
-                    key={enrollment.id}
-                    href={href}
-                    className="block py-3 -mx-3 px-3 rounded-lg hover:bg-white/5 dark:hover:bg-white/5 hover:bg-zinc-50 transition-colors"
-                  >
-                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                      {enrollment.courses?.title ?? 'コース'}
-                    </p>
-                    {enrollment.courses?.category && (
-                      <span className="mt-1 inline-block rounded-full bg-indigo-500/10 px-2 py-0.5 text-xs font-medium text-indigo-400 ring-1 ring-indigo-500/20">
-                        {CATEGORY_LABELS[enrollment.courses.category] ?? enrollment.courses.category}
-                      </span>
-                    )}
-                  </Link>
-                )
-              })}
-            </div>
-          </Card>
-        )}
       </div>
+
+      {/* Learning Assignments Summary */}
+      {!isMentee && learningStats && learningStats.total > 0 && (
+        <div className="mt-4">
+          <Card title="学習課題">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10">
+                  <BookOpen className="h-5 w-5 text-indigo-500" />
+                </div>
+                <div>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400">進行中 / 完了 / 全体</p>
+                  <p className="text-lg font-bold font-mono text-zinc-900 dark:text-zinc-100">
+                    {learningStats.inProgress} / {learningStats.completed} / {learningStats.total}
+                  </p>
+                </div>
+              </div>
+              {learningStats.total > 0 && (
+                <div className="flex-1">
+                  <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-600">
+                    <div
+                      className="h-2 rounded-full bg-indigo-500 transition-all"
+                      style={{ width: `${Math.round((learningStats.completed / learningStats.total) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            <Link
+              href="/dashboard/assignments"
+              className="mt-4 block rounded-xl bg-indigo-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+            >
+              課題一覧へ
+            </Link>
+          </Card>
+        </div>
+      )}
+
+      {/* Recent Feedbacks */}
+      {!isMentee && recentFeedbacks.length > 0 && (
+        <div className="mt-4">
+          <Card title="最近のフィードバック">
+            <div className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">
+              {recentFeedbacks.map((fb) => (
+                <div key={fb.id} className="py-3">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex rounded-full bg-indigo-500/10 px-2 py-0.5 text-xs font-medium text-indigo-400 ring-1 ring-indigo-500/20">
+                      {feedbackCategoryLabels[fb.category] ?? fb.category}
+                    </span>
+                    <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                      {(fb.admin as { full_name: string | null } | null)?.full_name ?? '管理者'}
+                    </span>
+                    <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                      {new Date(fb.created_at).toLocaleDateString('ja-JP')}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300 line-clamp-2">{fb.content}</p>
+                </div>
+              ))}
+            </div>
+            <Link
+              href="/profile/feedback"
+              className="mt-3 block text-center text-sm font-medium text-indigo-500 hover:text-indigo-400 transition-colors"
+            >
+              詳細はこちら →
+            </Link>
+          </Card>
+        </div>
+      )}
+
     </div>
   )
 }

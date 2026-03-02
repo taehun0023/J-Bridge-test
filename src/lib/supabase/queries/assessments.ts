@@ -37,22 +37,28 @@ export async function fetchAssessmentQuiz(quizId: string) {
     .single()
 }
 
-async function fetchAllQuestions(quizId: string): Promise<QuestionWithOptions[]> {
+async function fetchAllQuestions(quizIds: string | string[]): Promise<QuestionWithOptions[]> {
   const supabase = await createClient()
-  const { data, error } = await supabase
+  const query = supabase
     .from('quiz_questions')
     .select('*, quiz_question_options_safe(*)')
-    .eq('quiz_id', quizId)
     .eq('is_published', true)
     .order('sort_order', { ascending: true })
 
+  if (Array.isArray(quizIds)) {
+    query.in('quiz_id', quizIds)
+  } else {
+    query.eq('quiz_id', quizIds)
+  }
+
+  const { data, error } = await query
   if (error || !data) return []
   return data as unknown as QuestionWithOptions[]
 }
 
 /** Balanced random selection by difficulty */
-export async function fetchRandomByDifficulty(quizId: string, count: number): Promise<QuestionWithOptions[]> {
-  const allQuestions = await fetchAllQuestions(quizId)
+export async function fetchRandomByDifficulty(quizIds: string | string[], count: number): Promise<QuestionWithOptions[]> {
+  const allQuestions = await fetchAllQuestions(quizIds)
   const easy = allQuestions.filter(q => q.difficulty === 'easy')
   const medium = allQuestions.filter(q => q.difficulty === 'medium')
   const hard = allQuestions.filter(q => q.difficulty === 'hard')
@@ -71,11 +77,11 @@ export async function fetchRandomByDifficulty(quizId: string, count: number): Pr
 
 /** Balanced random selection by question_category (IT Japanese: vocab/reading/fill_blank) */
 export async function fetchRandomByCategory(
-  quizId: string,
+  quizIds: string | string[],
   countPerCategory: number,
   categories?: string[]
 ): Promise<QuestionWithOptions[]> {
-  const allQuestions = await fetchAllQuestions(quizId)
+  const allQuestions = await fetchAllQuestions(quizIds)
   const cats = categories ?? ['vocab', 'reading', 'fill_blank']
 
   return shuffle(
@@ -88,11 +94,11 @@ export async function fetchRandomByCategory(
 
 /** Language group based selection for programming/framework quizzes */
 export async function fetchRandomByLanguageGroup(
-  quizId: string,
+  quizIds: string | string[],
   categories: string[],
   count: number
 ): Promise<QuestionWithOptions[]> {
-  const allQuestions = await fetchAllQuestions(quizId)
+  const allQuestions = await fetchAllQuestions(quizIds)
   const filtered = allQuestions.filter(q => categories.includes(q.question_category ?? ''))
 
   const easy = filtered.filter(q => q.difficulty === 'easy')
@@ -112,10 +118,10 @@ export async function fetchRandomByLanguageGroup(
 
 /** Weighted random selection by category (CS知識: algorithm 9, data_structure 9, os 6, network 6) */
 export async function fetchRandomByWeightedCategory(
-  quizId: string,
+  quizIds: string | string[],
   categoryWeights: Record<string, number>
 ): Promise<QuestionWithOptions[]> {
-  const allQuestions = await fetchAllQuestions(quizId)
+  const allQuestions = await fetchAllQuestions(quizIds)
 
   const result: QuestionWithOptions[] = []
 
@@ -139,24 +145,54 @@ export async function fetchRandomByWeightedCategory(
   return shuffle(result)
 }
 
+/** Step 1 JLPT-style selection: grammar 30 + reading 15 + listening 15 = 60, with N-level difficulty distribution */
+async function fetchStep1JlptStyle(quizIds: string | string[]): Promise<QuestionWithOptions[]> {
+  const { STEP1_CATEGORY_WEIGHTS, STEP1_DIFFICULTY_RATIOS } = await import('@/lib/assessment-config')
+  const allQuestions = await fetchAllQuestions(quizIds)
+
+  const result: QuestionWithOptions[] = []
+
+  for (const [category, targetCount] of Object.entries(STEP1_CATEGORY_WEIGHTS)) {
+    const pool = allQuestions.filter(q => q.question_category === category)
+    if (pool.length === 0) continue
+
+    const easyCount = Math.round(targetCount * STEP1_DIFFICULTY_RATIOS.easy)
+    const mediumCount = Math.round(targetCount * STEP1_DIFFICULTY_RATIOS.medium)
+    const hardCount = targetCount - easyCount - mediumCount
+
+    const easy = shuffle(pool.filter(q => q.difficulty === 'easy')).slice(0, easyCount)
+    const medium = shuffle(pool.filter(q => q.difficulty === 'medium')).slice(0, mediumCount)
+    const hard = shuffle(pool.filter(q => q.difficulty === 'hard')).slice(0, hardCount)
+
+    result.push(...easy, ...medium, ...hard)
+  }
+
+  return shuffle(result)
+}
+
 /** Fetch random assessment questions based on step and optional target coding area */
 export async function fetchRandomAssessmentQuestions(
-  quizId: string,
+  quizIds: string | string[],
   step: number,
   targetCodingArea?: string | null
 ): Promise<QuestionWithOptions[]> {
+  if (step === 1) {
+    // 生活日本語: JLPT-style (grammar 30 + reading 15 + listening 15 = 60)
+    return fetchStep1JlptStyle(quizIds)
+  }
+
   if (step === 2) {
     // ビジネス日本語: category-based selection (10 per category = 30 total)
-    return fetchRandomByCategory(quizId, 10)
+    return fetchRandomByCategory(quizIds, 10)
   }
 
   if (step === 3) {
     // CS知識: weighted category selection
     const { CS_KNOWLEDGE_WEIGHTS } = await import('@/lib/assessment-config')
-    const result = await fetchRandomByWeightedCategory(quizId, CS_KNOWLEDGE_WEIGHTS)
+    const result = await fetchRandomByWeightedCategory(quizIds, CS_KNOWLEDGE_WEIGHTS)
     // Fallback to difficulty-based if categories not yet tagged
     if (result.length > 0) return result
-    return fetchRandomByDifficulty(quizId, 30)
+    return fetchRandomByDifficulty(quizIds, 30)
   }
 
   if (step === 5) {
@@ -167,10 +203,10 @@ export async function fetchRandomAssessmentQuestions(
       cross_culture: 7,
       security: 7,
     }
-    const result = await fetchRandomByWeightedCategory(quizId, weights)
+    const result = await fetchRandomByWeightedCategory(quizIds, weights)
     // Fallback to difficulty-based if categories not yet tagged
     if (result.length > 0) return result
-    return fetchRandomByDifficulty(quizId, 30)
+    return fetchRandomByDifficulty(quizIds, 30)
   }
 
   // Step 4 (開発実務能力): use language grouping if available
@@ -178,11 +214,11 @@ export async function fetchRandomAssessmentQuestions(
     const { getLanguageCategories } = await import('@/lib/assessment-config')
     const categories = getLanguageCategories(step, targetCodingArea)
     if (categories) {
-      const result = await fetchRandomByLanguageGroup(quizId, categories, 30)
+      const result = await fetchRandomByLanguageGroup(quizIds, categories, 30)
       if (result.length > 0) return result
     }
   }
 
-  // JLPT (step 1) or fallback: 30 questions by difficulty
-  return fetchRandomByDifficulty(quizId, 30)
+  // Fallback: 30 questions by difficulty
+  return fetchRandomByDifficulty(quizIds, 30)
 }

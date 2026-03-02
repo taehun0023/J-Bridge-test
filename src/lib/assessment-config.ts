@@ -15,11 +15,34 @@ export const ASSESSMENT_LABELS: Record<number, string> = {
 }
 
 export const ASSESSMENT_TIME_LIMITS: Record<number, number> = {
-  1: 25,
+  1: 70,
   2: 25,
   3: 30,
   4: 30,
   5: 25,
+}
+
+/** Step 1 (生活日本語): JLPT-style weighted category selection — 60 questions total */
+export const STEP1_CATEGORY_WEIGHTS: Record<string, number> = {
+  grammar: 30,   // 文字・語彙・文法
+  reading: 15,   // 読解
+  listening: 15, // 聴解
+}
+
+/** Step 1 difficulty distribution: easy=N5+N4 20%, medium=N3 20%, hard=N2+N1 60% */
+export const STEP1_DIFFICULTY_RATIOS = {
+  easy: 0.2,
+  medium: 0.2,
+  hard: 0.6,
+}
+
+/**
+ * Content quiz types that can be blended into assessment exams.
+ * Step 1 excluded — assessment quiz has dedicated Japanese-only options.
+ */
+export const ASSESSMENT_CONTENT_QUIZ_TYPES: Record<number, string[]> = {
+  2: ['it_terminology', 'sentence_pattern', 'business_expression'],
+  // 3, 4 are separate tasks (CS / dev)
 }
 
 /** comprehensive_exams.category → assessment step (radar axis) mapping */

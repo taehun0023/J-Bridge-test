@@ -1,4 +1,4 @@
-import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import Card from '@/components/ui/Card'
 import AdminTasksClient from './AdminTasksClient'
 import { detectAndMarkOverdue } from '@/app/actions/learning-assignments'
@@ -32,27 +32,10 @@ export default async function AdminTasksPage() {
     .order('requested_at', { ascending: false })
     .limit(50)
 
-  // Fetch pending retake requests (admin/mentor can view all quiz_attempts via RLS)
-  const serviceClient = createServiceRoleClient()
-  const queryClient = serviceClient ?? supabase
-  const { data: retakeAttempts } = await queryClient
-    .from('quiz_attempts')
-    .select('id, user_id, retake_requested_at, quizzes(title), profiles:user_id(full_name)')
-    .eq('retake_request_status', 'requested')
-    .order('retake_requested_at', { ascending: false })
-
-  const retakeRequests = (retakeAttempts ?? []).map((a: Record<string, unknown>) => ({
-    attempt_id: a.id as string,
-    user_id: a.user_id as string,
-    user_name: (a.profiles as { full_name: string | null } | null)?.full_name ?? null,
-    quiz_title: (a.quizzes as { title: string | null } | null)?.title ?? null,
-    retake_requested_at: a.retake_requested_at as string | null,
-  }))
-
-  // For mentors: only show their assigned mentees (use serviceClient to bypass RLS/schema cache issues)
+  // For mentors: only show their assigned mentees
   let users: { id: string; full_name: string | null; email: string; role: string }[] = []
   if (currentRole === 'mentor') {
-    const { data: menteeAssignments } = await queryClient
+    const { data: menteeAssignments } = await supabase
       .from('mentor_mentee_assignments')
       .select('mentee:profiles!mentor_mentee_assignments_mentee_id_fkey(id, full_name, email, role)')
       .eq('mentor_id', user!.id)
@@ -76,7 +59,7 @@ export default async function AdminTasksPage() {
     inProgress: learningAssignments?.filter(t => t.status === 'in_progress').length ?? 0,
     completed: learningAssignments?.filter(t => t.status === 'completed').length ?? 0,
     overdue: learningAssignments?.filter(t => t.status === 'overdue').length ?? 0,
-    approvals: retakeRequests.length + (examRequests?.filter(e => e.status === 'requested').length ?? 0) + awaitingConfirmation,
+    approvals: (examRequests?.filter(e => e.status === 'requested').length ?? 0) + awaitingConfirmation,
   }
 
   return (
@@ -114,7 +97,6 @@ export default async function AdminTasksPage() {
       <AdminTasksClient
         learningAssignments={learningAssignments ?? []}
         examRequests={examRequests ?? []}
-        retakeRequests={retakeRequests}
         users={users}
         currentRole={currentRole}
       />

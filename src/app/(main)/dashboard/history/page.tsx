@@ -16,14 +16,6 @@ export default async function HistoryPage() {
     .not('completed_at', 'is', null)
     .order('completed_at', { ascending: false })
 
-  // Fetch all coding exam attempts
-  const { data: codingExamAttempts } = await supabase
-    .from('coding_exam_attempts')
-    .select('id, score, passed, started_at, completed_at, coding_skill_exams(title, target_rank)')
-    .eq('user_id', user.id)
-    .not('completed_at', 'is', null)
-    .order('completed_at', { ascending: false })
-
   // Fetch comprehensive exams
   const { data: comprehensiveExams } = await supabase
     .from('comprehensive_exams')
@@ -41,10 +33,6 @@ export default async function HistoryPage() {
         quizAttempts={(quizAttempts ?? []).map(a => ({
           ...a,
           quizzes: Array.isArray(a.quizzes) ? a.quizzes[0] ?? null : a.quizzes,
-        }))}
-        codingExamAttempts={(codingExamAttempts ?? []).map(a => ({
-          ...a,
-          coding_skill_exams: Array.isArray(a.coding_skill_exams) ? a.coding_skill_exams[0] ?? null : a.coding_skill_exams,
         }))}
         comprehensiveExams={comprehensiveExams ?? []}
       />

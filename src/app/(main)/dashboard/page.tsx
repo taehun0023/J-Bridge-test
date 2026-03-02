@@ -1,8 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { ASSESSMENT_QUIZ_IDS, ASSESSMENT_LABELS, getRelevantSteps } from '@/lib/assessment-config'
 import type { AxisKey } from '@/lib/assessment-config'
-import { getCoursesWithProgress } from '@/lib/course-progress'
 import { computeRankingEntry, filterUnscoredUsers, sortByCategory } from '@/lib/ranking'
 import type { RankingUserData } from '@/lib/ranking'
 import DashboardClient from './DashboardClient'
@@ -10,8 +8,6 @@ import MentorDashboardClient from '@/components/dashboard/MentorDashboardClient'
 import ExamGatePage from '@/components/dashboard/ExamGatePage'
 import { getMentorDashboardData } from '@/app/actions/mentor'
 import { checkAndCreateExamCycle, getNextExamDate } from '@/app/actions/exam-scheduling'
-
-const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -80,71 +76,27 @@ export default async function DashboardPage() {
       .select('id, category, content, created_at, admin:profiles!admin_feedbacks_admin_id_fkey(full_name)')
       .eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
     // 10. 종합시험 재시험 정보
-    supabase.from('comprehensive_exams').select('id, category, subcategory, content_level, score, status')
-      .eq('user_id', user.id).in('status', ['failed', 'requested', 'approved'])
-      .order('created_at', { ascending: false }),
+    supabase.from('comprehensive_exams').select('id, category, score, status')
+      .eq('user_id', user.id).in('status', ['completed', 'failed', 'requested', 'approved'])
+      .order('requested_at', { ascending: false }),
   ])
 
   // ──────────────────────────────────────────────
-  // Phase 2: profile 결과에 의존하는 쿼리 4개를 동시 실행
+  // Phase 2: profile 결과에 의존하는 쿼리
   // ──────────────────────────────────────────────
-  const relevantSteps = getRelevantSteps(isJapanese)
-  const relevantQuizIds = relevantSteps.map(s => ASSESSMENT_QUIZ_IDS[s])
-
-  const [
-    { data: completedAssessments },
-    enrolledCoursesResult,
-    javaBadges,
-    mentorDataResult,
-  ] = await Promise.all([
-    // 1. 등급평가 완료 현황 (isJapanese 필요)
-    supabase.from('quiz_attempts').select('*')
-      .eq('user_id', user.id).in('quiz_id', relevantQuizIds)
-      .not('completed_at', 'is', null)
-      .order('completed_at', { ascending: false }),
-    // 2. 수강 코스 (role 필요)
-    (profile?.role === 'mentee' || profile?.role === 'mentor')
-      ? supabase.from('enrollments')
-          .select('id, course_id, courses(title, category, subcategory)')
-          .eq('user_id', user.id).limit(5)
-      : Promise.resolve({ data: null }),
-    // 3. Java 뱃지 (isAdmin 필요)
-    getCoursesWithProgress(supabase, user.id, 'java', isAdmin ?? false),
-    // 4. 멘토 데이터 (role 필요)
-    profile?.role === 'mentor'
-      ? getMentorDashboardData()
-      : Promise.resolve(null),
-  ])
+  const mentorDataResult = profile?.role === 'mentor'
+    ? await getMentorDashboardData()
+    : null
 
   // ──────────────────────────────────────────────
   // 후처리: 쿼리 결과를 가공 (CPU 연산, 네트워크 없음)
   // ──────────────────────────────────────────────
-
-  // 수강 코스 정규화
-  let enrolledCourses: { id: string; course_id: string; courses: { title: string; category: string; subcategory: string | null } | null }[] = []
-  if (enrolledCoursesResult.data) {
-    enrolledCourses = enrolledCoursesResult.data.map((d: Record<string, unknown>) => ({
-      ...d,
-      courses: Array.isArray(d.courses) ? (d.courses as Record<string, unknown>[])[0] ?? null : d.courses,
-    })) as typeof enrolledCourses
-  }
 
   // 멘토 데이터 정규화
   let mentorData: { mentees: Awaited<ReturnType<typeof getMentorDashboardData>>['mentees']; pendingVocabCount: number } | null = null
   if (mentorDataResult && !('error' in mentorDataResult && !mentorDataResult.mentees)) {
     const r = mentorDataResult as Awaited<ReturnType<typeof getMentorDashboardData>>
     mentorData = { mentees: r.mentees, pendingVocabCount: r.pendingVocabCount }
-  }
-
-  // 등급평가 맵 구축
-  const latestByQuiz: Record<string, { completed_at: string; retake_request_status: string | null }> = {}
-  for (const a of completedAssessments ?? []) {
-    if (!latestByQuiz[a.quiz_id]) {
-      latestByQuiz[a.quiz_id] = {
-        completed_at: a.completed_at,
-        retake_request_status: a.retake_request_status,
-      }
-    }
   }
 
   // 랭킹 계산
@@ -205,36 +157,28 @@ export default async function DashboardPage() {
     completed: learningAssignments?.filter(a => a.status === 'completed').length ?? 0,
   }
 
-  // 종합시험 재시험 맵
-  const STATUS_PRIORITY: Record<string, number> = { approved: 3, requested: 2, failed: 1 }
-  const compExamRetakeMap: Record<string, {
+  // 종합시험 재시험 맵 (category 단위로 집약)
+  const STATUS_PRIORITY: Record<string, number> = { approved: 4, requested: 3, failed: 2, completed: 1 }
+  const compExamRetakeByCategory: Record<string, {
     examId: string
-    category: string
-    subcategory: string
-    contentLevel: string | null
     score: number | null
-    retakeStatus: 'failed' | 'requested' | 'approved'
+    retakeStatus: 'completed' | 'failed' | 'requested' | 'approved'
   }> = {}
 
   for (const exam of userCompExams ?? []) {
-    const key = `${exam.category}:${exam.subcategory}`
-    const existing = compExamRetakeMap[key]
+    const key = exam.category
+    const existing = compExamRetakeByCategory[key]
     const newPriority = STATUS_PRIORITY[exam.status] ?? 0
     const existingPriority = existing ? (STATUS_PRIORITY[existing.retakeStatus] ?? 0) : 0
 
     if (!existing || newPriority > existingPriority) {
-      compExamRetakeMap[key] = {
+      compExamRetakeByCategory[key] = {
         examId: exam.id,
-        category: exam.category,
-        subcategory: exam.subcategory,
-        contentLevel: exam.content_level,
         score: exam.score,
-        retakeStatus: exam.status as 'failed' | 'requested' | 'approved',
+        retakeStatus: exam.status as 'completed' | 'failed' | 'requested' | 'approved',
       }
     }
   }
-
-  const compExamRetakes = Object.values(compExamRetakeMap)
 
   // 레이더 차트 점수
   const radarScores: Record<AxisKey, number> = {
@@ -276,23 +220,6 @@ export default async function DashboardPage() {
     .sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())
     .slice(0, 5)
 
-  // 등급평가 재시험 UI 데이터
-  const completedAssessmentInfo = relevantSteps
-    .filter(step => {
-      const quizId = ASSESSMENT_QUIZ_IDS[step]
-      return !!latestByQuiz[quizId]
-    })
-    .map(step => {
-      const quizId = ASSESSMENT_QUIZ_IDS[step]
-      const latest = latestByQuiz[quizId]
-      return {
-        step,
-        label: ASSESSMENT_LABELS[step],
-        completedAt: latest.completed_at,
-        retakeStatus: latest.retake_request_status,
-      }
-    })
-
   // 다음 시험 예정일 (멘티 only)
   const nextExamDate = profile?.role === 'mentee'
     ? await getNextExamDate(user.id)
@@ -311,14 +238,11 @@ export default async function DashboardPage() {
     radarScores,
     recentResults,
     isJapanese,
-    completedAssessments: completedAssessmentInfo,
     userRanking,
     topRanking,
-    enrolledCourses,
     learningStats,
     recentFeedbacks: feedbackProps,
-    compExamRetakes,
-    javaBadges,
+    compExamRetakeByCategory,
     role: profile?.role ?? 'mentee',
     nextExamDate,
   }

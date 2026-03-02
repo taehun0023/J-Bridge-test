@@ -33,15 +33,6 @@ interface QuizAttempt {
   quizzes: { title: string; quiz_type: string; is_assessment: boolean } | null
 }
 
-interface CodingExamAttempt {
-  id: string
-  score: number
-  passed: boolean
-  started_at: string
-  completed_at: string
-  coding_skill_exams: { title: string; target_rank: string } | null
-}
-
 interface ComprehensiveExam {
   id: string
   category: string
@@ -56,15 +47,25 @@ interface ComprehensiveExam {
   completed_at: string | null
 }
 
-type Tab = 'mock' | 'coding' | 'comprehensive'
+interface UnifiedExamEntry {
+  id: string
+  title: string
+  type: 'quiz' | 'comprehensive'
+  status: string
+  statusColor: string
+  score: string
+  passed: boolean | null
+  isReviewable: boolean
+  date: string
+}
+
+type Tab = 'mock' | 'comprehensive'
 
 export default function HistoryClient({
   quizAttempts,
-  codingExamAttempts,
   comprehensiveExams,
 }: {
   quizAttempts: QuizAttempt[]
-  codingExamAttempts: CodingExamAttempt[]
   comprehensiveExams: ComprehensiveExam[]
 }) {
   const [activeTab, setActiveTab] = useState<Tab>('mock')
@@ -74,9 +75,38 @@ export default function HistoryClient({
 
   const tabs: { key: Tab; label: string; count: number }[] = [
     { key: 'mock', label: 'テスト結果', count: mockExamAttempts.length },
-    { key: 'coding', label: '等級テスト', count: codingExamAttempts.length },
     { key: 'comprehensive', label: '総合試験', count: assessmentAttempts.length + comprehensiveExams.length },
   ]
+
+  // Build unified comprehensive entries
+  const unifiedEntries: UnifiedExamEntry[] = [
+    ...assessmentAttempts.map(q => ({
+      id: q.id,
+      title: (q.quizzes as { title: string } | null)?.title ?? '総合試験',
+      type: 'quiz' as const,
+      status: '完了',
+      statusColor: 'text-emerald-400',
+      score: `${q.score}点`,
+      passed: q.passed,
+      isReviewable: Date.now() - new Date(q.completed_at).getTime() < SEVEN_DAYS_MS,
+      date: q.completed_at,
+    })),
+    ...comprehensiveExams.map(ce => {
+      const statusInfo = EXAM_STATUS_LABELS[ce.status] ?? { label: ce.status, color: 'text-zinc-400' }
+      const isFinished = ce.status === 'completed' || ce.status === 'failed'
+      return {
+        id: ce.id,
+        title: CATEGORY_LABELS[ce.category] ?? ce.category,
+        type: 'comprehensive' as const,
+        status: statusInfo.label,
+        statusColor: statusInfo.color,
+        score: ce.score !== null ? `${ce.score}/${ce.total_questions}` : '—',
+        passed: ce.passed,
+        isReviewable: isFinished && !!ce.completed_at && Date.now() - new Date(ce.completed_at).getTime() < SEVEN_DAYS_MS,
+        date: ce.completed_at ?? ce.requested_at,
+      }
+    }),
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
   return (
     <div>
@@ -162,46 +192,59 @@ export default function HistoryClient({
         </Card>
       )}
 
-      {/* Coding exam results */}
-      {activeTab === 'coding' && (
+      {/* Unified comprehensive exam results (assessment quiz_attempts + comprehensive_exams) */}
+      {activeTab === 'comprehensive' && (
         <Card>
-          {codingExamAttempts.length === 0 ? (
-            <p className="py-8 text-center text-sm text-zinc-500">等級テストの受験履歴がありません</p>
+          {unifiedEntries.length === 0 ? (
+            <p className="py-8 text-center text-sm text-zinc-500">総合試験の履歴がありません</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-white/[0.06]">
                     <th className="py-3 pr-4 text-left font-medium text-zinc-500 dark:text-zinc-400">タイトル</th>
-                    <th className="py-3 px-4 text-center font-medium text-zinc-500 dark:text-zinc-400">目標ランク</th>
+                    <th className="py-3 px-4 text-center font-medium text-zinc-500 dark:text-zinc-400">ステータス</th>
                     <th className="py-3 px-4 text-center font-medium text-zinc-500 dark:text-zinc-400">スコア</th>
                     <th className="py-3 px-4 text-center font-medium text-zinc-500 dark:text-zinc-400">結果</th>
                     <th className="py-3 pl-4 text-right font-medium text-zinc-500 dark:text-zinc-400">日時</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/[0.06]">
-                  {codingExamAttempts.map((ca) => (
-                    <tr key={ca.id}>
+                  {unifiedEntries.map((entry) => (
+                    <tr key={entry.id}>
                       <td className="py-3 pr-4 text-zinc-900 dark:text-zinc-100">
-                        {(ca.coding_skill_exams as { title: string } | null)?.title ?? '等級テスト'}
+                        <div className="flex items-center gap-2">
+                          {entry.isReviewable ? (
+                            <Link href={`/dashboard/history/${entry.id}?type=${entry.type}`} className="hover:text-indigo-400 transition-colors flex items-center gap-1.5">
+                              {entry.title}
+                              <Eye className="h-3.5 w-3.5 text-indigo-400" />
+                            </Link>
+                          ) : (
+                            <span>{entry.title}</span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-3 px-4 text-center">
-                        <span className="inline-flex rounded-full bg-indigo-500/10 px-2 py-0.5 text-xs font-bold text-indigo-400 ring-1 ring-indigo-500/20">
-                          {(ca.coding_skill_exams as { target_rank: string } | null)?.target_rank ?? '—'}
-                        </span>
+                        <span className={`text-xs font-medium ${entry.statusColor}`}>{entry.status}</span>
                       </td>
-                      <td className="py-3 px-4 text-center font-mono font-bold text-zinc-900 dark:text-zinc-100">{ca.score}点</td>
+                      <td className="py-3 px-4 text-center font-mono font-bold text-zinc-900 dark:text-zinc-100">
+                        {entry.score}
+                      </td>
                       <td className="py-3 px-4 text-center">
-                        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                          ca.passed
-                            ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20'
-                            : 'bg-red-500/10 text-red-400 ring-1 ring-red-500/20'
-                        }`}>
-                          {ca.passed ? '合格' : '不合格'}
-                        </span>
+                        {entry.passed !== null ? (
+                          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                            entry.passed
+                              ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20'
+                              : 'bg-red-500/10 text-red-400 ring-1 ring-red-500/20'
+                          }`}>
+                            {entry.passed ? '合格' : '不合格'}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-zinc-400">—</span>
+                        )}
                       </td>
                       <td className="py-3 pl-4 text-right text-zinc-500 dark:text-zinc-400">
-                        {new Date(ca.completed_at).toLocaleDateString('ja-JP')}
+                        {new Date(entry.date).toLocaleDateString('ja-JP')}
                       </td>
                     </tr>
                   ))}
@@ -210,146 +253,6 @@ export default function HistoryClient({
             </div>
           )}
         </Card>
-      )}
-
-      {/* Comprehensive exam results (assessment quiz_attempts + comprehensive_exams) */}
-      {activeTab === 'comprehensive' && (
-        <div className="space-y-4">
-          {/* Initial assessments (assessment quiz_attempts) */}
-          <Card>
-            <h3 className="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">初期総合試験</h3>
-            {assessmentAttempts.length === 0 ? (
-              <p className="py-4 text-center text-sm text-zinc-500">初期総合試験の履歴がありません</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-200 dark:border-white/[0.06]">
-                      <th className="py-3 pr-4 text-left font-medium text-zinc-500 dark:text-zinc-400">タイトル</th>
-                      <th className="py-3 px-4 text-center font-medium text-zinc-500 dark:text-zinc-400">スコア</th>
-                      <th className="py-3 px-4 text-center font-medium text-zinc-500 dark:text-zinc-400">結果</th>
-                      <th className="py-3 px-4 text-center font-medium text-zinc-500 dark:text-zinc-400">再試験</th>
-                      <th className="py-3 pl-4 text-right font-medium text-zinc-500 dark:text-zinc-400">日時</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-white/[0.06]">
-                    {assessmentAttempts.map((q) => {
-                      const isReviewable = Date.now() - new Date(q.completed_at).getTime() < SEVEN_DAYS_MS
-                      return (
-                        <tr key={q.id}>
-                          <td className="py-3 pr-4 text-zinc-900 dark:text-zinc-100">
-                            <div className="flex items-center gap-2">
-                              {isReviewable ? (
-                                <Link href={`/dashboard/history/${q.id}?type=quiz`} className="hover:text-indigo-400 transition-colors flex items-center gap-1.5">
-                                  {(q.quizzes as { title: string } | null)?.title ?? '総合試験'}
-                                  <Eye className="h-3.5 w-3.5 text-indigo-400" />
-                                </Link>
-                              ) : (
-                                <span>{(q.quizzes as { title: string } | null)?.title ?? '総合試験'}</span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 text-center font-mono font-bold text-zinc-900 dark:text-zinc-100">{q.score}点</td>
-                          <td className="py-3 px-4 text-center">
-                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                              q.passed
-                                ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20'
-                                : 'bg-red-500/10 text-red-400 ring-1 ring-red-500/20'
-                            }`}>
-                              {q.passed ? '合格' : '不合格'}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-center text-xs">
-                            {q.retake_request_status === 'requested' && <span className="text-amber-400">リクエスト中</span>}
-                            {q.retake_request_status === 'approved' && <span className="text-emerald-400">承認済</span>}
-                            {q.retake_request_status === 'denied' && <span className="text-red-400">拒否</span>}
-                            {!q.retake_request_status && <span className="text-zinc-400">—</span>}
-                          </td>
-                          <td className="py-3 pl-4 text-right text-zinc-500 dark:text-zinc-400">
-                            {new Date(q.completed_at).toLocaleDateString('ja-JP')}
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </Card>
-
-          {/* Divider */}
-          <div className="border-t border-gray-200 dark:border-white/[0.06]" />
-
-          {/* Subject-specific comprehensive exams */}
-          <Card>
-            <h3 className="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">科目別総合試験</h3>
-            {comprehensiveExams.length === 0 ? (
-              <p className="py-4 text-center text-sm text-zinc-500">科目別総合試験の履歴がありません</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-200 dark:border-white/[0.06]">
-                      <th className="py-3 pr-4 text-left font-medium text-zinc-500 dark:text-zinc-400">カテゴリ</th>
-                      <th className="py-3 px-4 text-center font-medium text-zinc-500 dark:text-zinc-400">ステータス</th>
-                      <th className="py-3 px-4 text-center font-medium text-zinc-500 dark:text-zinc-400">スコア</th>
-                      <th className="py-3 px-4 text-center font-medium text-zinc-500 dark:text-zinc-400">結果</th>
-                      <th className="py-3 pl-4 text-right font-medium text-zinc-500 dark:text-zinc-400">日時</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-white/[0.06]">
-                    {comprehensiveExams.map((ce) => {
-                      const statusInfo = EXAM_STATUS_LABELS[ce.status] ?? { label: ce.status, color: 'text-zinc-400' }
-                      const isFinished = ce.status === 'completed' || ce.status === 'failed'
-                      const isReviewable = isFinished && ce.completed_at && Date.now() - new Date(ce.completed_at).getTime() < SEVEN_DAYS_MS
-                      return (
-                        <tr key={ce.id}>
-                          <td className="py-3 pr-4 text-zinc-900 dark:text-zinc-100">
-                            <div className="flex items-center gap-2">
-                              {isReviewable ? (
-                                <Link href={`/dashboard/history/${ce.id}?type=comprehensive`} className="hover:text-indigo-400 transition-colors flex items-center gap-1.5">
-                                  {CATEGORY_LABELS[ce.category] ?? ce.category}
-                                  <Eye className="h-3.5 w-3.5 text-indigo-400" />
-                                </Link>
-                              ) : (
-                                <span>{CATEGORY_LABELS[ce.category] ?? ce.category}</span>
-                              )}
-                            </div>
-                            <div className="text-xs text-zinc-500 dark:text-zinc-400">{ce.subcategory}{ce.content_level ? ` (${ce.content_level})` : ''}</div>
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <span className={`text-xs font-medium ${statusInfo.color}`}>{statusInfo.label}</span>
-                          </td>
-                          <td className="py-3 px-4 text-center font-mono font-bold text-zinc-900 dark:text-zinc-100">
-                            {ce.score !== null ? `${ce.score}/${ce.total_questions}` : '—'}
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            {ce.passed !== null ? (
-                              <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                                ce.passed
-                                  ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20'
-                                  : 'bg-red-500/10 text-red-400 ring-1 ring-red-500/20'
-                              }`}>
-                                {ce.passed ? '合格' : '不合格'}
-                              </span>
-                            ) : (
-                              <span className="text-xs text-zinc-400">—</span>
-                            )}
-                          </td>
-                          <td className="py-3 pl-4 text-right text-zinc-500 dark:text-zinc-400">
-                            {ce.completed_at
-                              ? new Date(ce.completed_at).toLocaleDateString('ja-JP')
-                              : new Date(ce.requested_at).toLocaleDateString('ja-JP')}
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </Card>
-        </div>
       )}
     </div>
   )
