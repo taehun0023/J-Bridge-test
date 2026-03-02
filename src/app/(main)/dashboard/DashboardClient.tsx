@@ -33,14 +33,6 @@ interface UnifiedResult {
   type: 'quiz' | 'comprehensive'
 }
 
-interface TaskAssignment {
-  id: string
-  title: string | null
-  description: string | null
-  due_date: string | null
-  status: string
-}
-
 interface CompletedAssessment {
   step: number
   label: string
@@ -116,7 +108,6 @@ interface Props {
   profile: Profile | null
   radarScores: Record<AxisKey, number>
   recentResults: UnifiedResult[]
-  tasks: TaskAssignment[]
   isJapanese: boolean
   completedAssessments: CompletedAssessment[]
   userRanking: UserRanking | null
@@ -131,14 +122,13 @@ interface Props {
 }
 
 export default function DashboardClient({
-  profile, radarScores, recentResults, tasks, isJapanese, completedAssessments,
+  profile, radarScores, recentResults, isJapanese, completedAssessments,
   userRanking, topRanking, enrolledCourses, learningStats, recentFeedbacks = [], compExamRetakes = [], javaBadges = [], role,
   nextExamDate,
 }: Props) {
   const isMentee = role === 'mentee'
   const relevantAxes = getRelevantAxes(isJapanese)
   const hasScores = relevantAxes.some(key => radarScores[key] > 0)
-  const hasTasks = tasks.length > 0
   const hasEnrolledCourses = enrolledCourses.length > 0
 
   const allAxesAboveB = hasScores && relevantAxes.every(key => radarScores[key] >= DISPATCH_MINIMUM_SCORE)
@@ -547,31 +537,8 @@ export default function DashboardClient({
         </div>
       )}
 
-      {/* Bottom grid: Tasks | Ranking | Enrolled Courses (mentee) */}
-      <div className={`mt-4 grid gap-4 ${hasEnrolledCourses ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
-        {/* Tasks */}
-        <Card title="配信された課題">
-          {!hasTasks ? (
-            <p className="py-4 text-center text-sm text-zinc-500">配信された課題はありません</p>
-          ) : (
-            <div className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">
-              {tasks.map((task) => (
-                <div key={task.id} className="py-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{task.title ?? '課題'}</p>
-                    <Badge label={task.status === 'pending' ? '待機' : '進行中'} variant="default" />
-                  </div>
-                  {task.due_date && (
-                    <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                      締切: {new Date(task.due_date).toLocaleDateString('ja-JP')}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-
+      {/* Bottom grid: Ranking | Enrolled Courses (mentee) */}
+      <div className={`mt-4 grid gap-4 ${hasEnrolledCourses ? 'lg:grid-cols-2' : ''}`}>
         {/* Ranking */}
         <Card title="ランキング">
           {userRanking ? (

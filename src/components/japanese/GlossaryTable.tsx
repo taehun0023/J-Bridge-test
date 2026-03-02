@@ -1,8 +1,11 @@
 'use client'
 
 import { Fragment, useState, useEffect, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import TtsButton from './TtsButton'
 import { toggleMastery } from '@/app/actions/mastery'
+import { updateGlossaryItem, deleteGlossaryItem } from '@/app/actions/admin/glossary'
+import { Pencil, Trash2, X, Check } from 'lucide-react'
 
 interface GlossaryItem {
   id: string
@@ -15,17 +18,31 @@ interface GlossaryItem {
   example_sentence: string | null
 }
 
+interface EditFormState {
+  term_ja: string
+  reading: string
+  term_ko: string
+  term_en: string
+  description: string
+  example_sentence: string
+}
+
 interface GlossaryTableProps {
   items: GlossaryItem[]
   offset?: number
   masteredIds?: string[]
   itemType?: 'it_glossary' | 'cs_term'
+  canManage?: boolean
 }
 
-export default function GlossaryTable({ items, offset = 0, masteredIds = [], itemType = 'it_glossary' }: GlossaryTableProps) {
+export default function GlossaryTable({ items, offset = 0, masteredIds = [], itemType = 'it_glossary', canManage }: GlossaryTableProps) {
+  const router = useRouter()
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [localMastered, setLocalMastered] = useState<Set<string>>(new Set(masteredIds))
   const [isPending, startTransition] = useTransition()
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState<EditFormState>({ term_ja: '', reading: '', term_ko: '', term_en: '', description: '', example_sentence: '' })
+  const [editMessage, setEditMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   useEffect(() => {
     setLocalMastered(new Set(masteredIds))
@@ -45,6 +62,60 @@ export default function GlossaryTable({ items, offset = 0, masteredIds = [], ite
       await toggleMastery(itemType, itemId)
     })
   }
+
+  function startEdit(item: GlossaryItem) {
+    setEditingId(item.id)
+    setEditForm({
+      term_ja: item.term_ja,
+      reading: item.reading ?? '',
+      term_ko: item.term_ko,
+      term_en: item.term_en ?? '',
+      description: item.description ?? '',
+      example_sentence: item.example_sentence ?? '',
+    })
+  }
+
+  function handleSaveEdit(item: GlossaryItem) {
+    startTransition(async () => {
+      const result = await updateGlossaryItem(item.id, {
+        term_ja: editForm.term_ja,
+        reading: editForm.reading || null,
+        term_ko: editForm.term_ko,
+        term_en: editForm.term_en || null,
+        category: item.category,
+        subcategory: null,
+        description: editForm.description || null,
+        example_sentence: editForm.example_sentence || null,
+      })
+      if ('error' in result && result.error) {
+        setEditMessage({ type: 'error', text: result.error })
+        setTimeout(() => setEditMessage(null), 3000)
+      } else {
+        setEditMessage({ type: 'success', text: '更新しました' })
+        setTimeout(() => setEditMessage(null), 3000)
+        setEditingId(null)
+        router.refresh()
+      }
+    })
+  }
+
+  function handleDelete(id: string) {
+    if (!confirm('この用語を削除しますか？')) return
+    startTransition(async () => {
+      const result = await deleteGlossaryItem(id)
+      if ('error' in result && result.error) {
+        setEditMessage({ type: 'error', text: result.error })
+        setTimeout(() => setEditMessage(null), 3000)
+      } else {
+        setEditMessage({ type: 'success', text: '削除しました' })
+        setTimeout(() => setEditMessage(null), 3000)
+        setExpandedId(null)
+        router.refresh()
+      }
+    })
+  }
+
+  const inputClass = 'w-full rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white'
 
   return (
     <div className="overflow-x-auto">
@@ -100,34 +171,112 @@ export default function GlossaryTable({ items, offset = 0, masteredIds = [], ite
               {expandedId === item.id && (
                 <tr key={`${item.id}-detail`}>
                   <td colSpan={3} className="bg-gray-50 px-4 py-3 dark:bg-gray-700">
-                    <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-                      {item.reading && (
-                        <>
-                          <dt className="font-medium text-gray-500 dark:text-gray-400">読み</dt>
-                          <dd className="text-gray-700 dark:text-gray-300">{item.reading}</dd>
-                        </>
-                      )}
-                      <dt className="font-medium text-gray-500 dark:text-gray-400">韓国語</dt>
-                      <dd className="text-gray-700 dark:text-gray-300">{item.term_ko}</dd>
-                      {item.term_en && (
-                        <>
-                          <dt className="font-medium text-gray-500 dark:text-gray-400">English</dt>
-                          <dd className="text-gray-700 dark:text-gray-300">{item.term_en}</dd>
-                        </>
-                      )}
-                      {item.description && (
-                        <>
-                          <dt className="font-medium text-gray-500 dark:text-gray-400">説明</dt>
-                          <dd className="text-gray-700 dark:text-gray-300">{item.description}</dd>
-                        </>
-                      )}
-                      {item.example_sentence && (
-                        <>
-                          <dt className="font-medium text-gray-500 dark:text-gray-400">例文</dt>
-                          <dd className="text-gray-600 dark:text-gray-400 italic">{item.example_sentence}</dd>
-                        </>
-                      )}
-                    </dl>
+                    {editingId === item.id ? (
+                      <div>
+                        <div className="grid gap-2 sm:grid-cols-2 text-sm">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">日本語 *</label>
+                            <input type="text" value={editForm.term_ja} onChange={e => setEditForm({ ...editForm, term_ja: e.target.value })} className={inputClass} />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">読み</label>
+                            <input type="text" value={editForm.reading} onChange={e => setEditForm({ ...editForm, reading: e.target.value })} className={inputClass} />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">韓国語 *</label>
+                            <input type="text" value={editForm.term_ko} onChange={e => setEditForm({ ...editForm, term_ko: e.target.value })} className={inputClass} />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">English</label>
+                            <input type="text" value={editForm.term_en} onChange={e => setEditForm({ ...editForm, term_en: e.target.value })} className={inputClass} />
+                          </div>
+                          <div className="sm:col-span-2">
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">説明</label>
+                            <textarea value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value })} rows={2} className={inputClass} />
+                          </div>
+                          <div className="sm:col-span-2">
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">例文</label>
+                            <textarea value={editForm.example_sentence} onChange={e => setEditForm({ ...editForm, example_sentence: e.target.value })} rows={2} className={inputClass} />
+                          </div>
+                        </div>
+                        <div className="mt-3 flex gap-2">
+                          <button
+                            onClick={() => handleSaveEdit(item)}
+                            disabled={isPending || !editForm.term_ja || !editForm.term_ko}
+                            className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                            {isPending ? '保存中...' : '保存'}
+                          </button>
+                          <button
+                            onClick={() => setEditingId(null)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                            キャンセル
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+                          {item.reading && (
+                            <>
+                              <dt className="font-medium text-gray-500 dark:text-gray-400">読み</dt>
+                              <dd className="text-gray-700 dark:text-gray-300">{item.reading}</dd>
+                            </>
+                          )}
+                          <dt className="font-medium text-gray-500 dark:text-gray-400">韓国語</dt>
+                          <dd className="text-gray-700 dark:text-gray-300">{item.term_ko}</dd>
+                          {item.term_en && (
+                            <>
+                              <dt className="font-medium text-gray-500 dark:text-gray-400">English</dt>
+                              <dd className="text-gray-700 dark:text-gray-300">{item.term_en}</dd>
+                            </>
+                          )}
+                          {item.description && (
+                            <>
+                              <dt className="font-medium text-gray-500 dark:text-gray-400">説明</dt>
+                              <dd className="text-gray-700 dark:text-gray-300">{item.description}</dd>
+                            </>
+                          )}
+                          {item.example_sentence && (
+                            <>
+                              <dt className="font-medium text-gray-500 dark:text-gray-400">例文</dt>
+                              <dd className="text-gray-600 dark:text-gray-400 italic">{item.example_sentence}</dd>
+                            </>
+                          )}
+                        </dl>
+                        {canManage && (
+                          <div className="mt-3 flex gap-2 border-t border-gray-200 dark:border-gray-600 pt-3">
+                            <button
+                              onClick={() => startEdit(item)}
+                              className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-500/10 transition-colors"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                              編集
+                            </button>
+                            <button
+                              onClick={() => handleDelete(item.id)}
+                              disabled={isPending}
+                              className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 disabled:opacity-50 transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              削除
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    )}
+                    {editMessage && expandedId === item.id && (
+                      <div className={`mt-2 rounded-lg px-3 py-2 text-xs ${
+                        editMessage.type === 'success'
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                          : 'bg-red-500/10 text-red-600 dark:text-red-400'
+                      }`}>
+                        {editMessage.text}
+                      </div>
+                    )}
                   </td>
                 </tr>
               )}

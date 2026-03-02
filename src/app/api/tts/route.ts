@@ -164,8 +164,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Text exceeds ${MAX_TEXT_LENGTH} character limit` }, { status: 400 })
   }
 
+  // リテラルな \n（バックスラッシュ+n）を実際の改行に変換（キャッシュキー計算前に実施）
+  const cleanedText = text.replace(/\\n/g, '\n')
+
   const speakingRate = Math.max(0.5, Math.min(2.0, speed))
-  const cacheKey = getCacheKey(text, speakingRate)
+  const cacheKey = getCacheKey(cleanedText, speakingRate)
 
   // Storage用クライアント（serviceClient優先、なければ通常クライアント）
   const storageClient = createServiceRoleClient() ?? supabase
@@ -183,12 +186,14 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { isDialogue, segments } = parseDialogueScript(text)
+    // リテラルな \n（バックスラッシュ+n）を実際の改行に変換
+    const cleanedText = text.replace(/\\n/g, '\n')
+    const { isDialogue, segments } = parseDialogueScript(cleanedText)
     let audioBuffer: Buffer
 
     if (!isDialogue) {
       // 非対話：単一音声で全文を読む
-      audioBuffer = await synthesize(apiKey, text, narratorVoice, speakingRate)
+      audioBuffer = await synthesize(apiKey, cleanedText, narratorVoice, speakingRate)
     } else {
       // 対話モード：話者ごとに異なる音声を割り当て
       const grouped = groupSegments(segments)

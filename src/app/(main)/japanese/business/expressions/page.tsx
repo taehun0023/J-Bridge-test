@@ -31,13 +31,23 @@ export default async function ExpressionsPage({ searchParams }: { searchParams: 
   const offset = (page - 1) * ITEMS_PER_PAGE
 
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, mentor_specialty')
+    .eq('id', user!.id)
+    .single()
+
+  const canManage = profile?.role === 'admin' ||
+    (profile?.role === 'mentor' && profile.mentor_specialty !== 'technical')
+
   const masteredIds = await getMasteredIds('it_glossary')
 
   let query = supabase
     .from('it_glossary')
     .select('*', { count: 'exact' })
     .eq('category', 'expression')
-    .order('term_ja', { ascending: true })
+    .order('created_at', { ascending: true })
 
   if (subcategory) {
     query = query.eq('subcategory', subcategory)
@@ -79,6 +89,7 @@ export default async function ExpressionsPage({ searchParams }: { searchParams: 
         masteredIds={masteredIds}
         mastery={mastery}
         itemType="it_glossary"
+        canManage={canManage}
       />
     </div>
   )

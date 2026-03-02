@@ -108,6 +108,15 @@ export default function AdminReportsClient({
 
   return (
     <div className="mt-6">
+      <div className="mb-4">
+        <a
+          href="/admin/reports/weakness"
+          className="inline-flex items-center gap-1 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-2 text-sm font-medium text-indigo-400 hover:bg-indigo-500/20 transition-colors"
+        >
+          弱点分析レポート →
+        </a>
+      </div>
+
       {message && (
         <div className="mb-4 rounded-xl bg-indigo-500/10 px-4 py-3 text-sm text-indigo-400 ring-1 ring-indigo-500/20">{message}</div>
       )}

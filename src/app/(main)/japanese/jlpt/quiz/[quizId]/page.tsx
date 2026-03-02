@@ -47,6 +47,7 @@ export default async function QuizPage({ params }: { params: Promise<Params> }) 
       quiz={quiz}
       questions={shuffledQuestions}
       backUrl="/japanese/jlpt/quiz"
+      quizType={quiz.quiz_type}
     />
   )
 }

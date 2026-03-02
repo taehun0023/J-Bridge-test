@@ -29,12 +29,22 @@ export default async function GlossaryPage({ searchParams }: { searchParams: Pro
   const offset = (page - 1) * ITEMS_PER_PAGE
 
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, mentor_specialty')
+    .eq('id', user!.id)
+    .single()
+
+  const canManage = profile?.role === 'admin' ||
+    (profile?.role === 'mentor' && profile.mentor_specialty !== 'technical')
+
   const masteredIds = await getMasteredIds('it_glossary')
 
   let query = supabase
     .from('it_glossary')
     .select('*', { count: 'exact' })
-    .order('term_ja', { ascending: true })
+    .order('created_at', { ascending: true })
 
   if (category) {
     query = query.eq('category', category)
@@ -78,6 +88,7 @@ export default async function GlossaryPage({ searchParams }: { searchParams: Pro
         masteredIds={masteredIds}
         mastery={mastery}
         itemType="it_glossary"
+        canManage={canManage}
       />
     </div>
   )

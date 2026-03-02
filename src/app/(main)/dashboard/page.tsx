@@ -47,7 +47,6 @@ export default async function DashboardPage() {
     { data: attitudeSkills },
     { data: recentQuizzes },
     { data: recentExams },
-    { data: tasks },
     { data: rankProfiles },
     { data: learningAssignments },
     { data: recentFeedbacks },
@@ -68,11 +67,7 @@ export default async function DashboardPage() {
       .eq('user_id', user.id).in('status', ['completed', 'failed'])
       .not('completed_at', 'is', null)
       .order('completed_at', { ascending: false }).limit(5),
-    // 6. 배정 과제
-    supabase.from('task_assignments').select('*')
-      .eq('assigned_to', user.id).in('status', ['pending', 'in_progress'])
-      .order('due_date', { ascending: true }).limit(5),
-    // 7. 랭킹용 전체 프로필 (user.id 불필요)
+    // 6. 랭킹용 전체 프로필 (user.id 불필요)
     supabase.from('profiles').select(`
       id, full_name, avatar_url, is_japanese,
       japanese_skills(jlpt_normalized, it_japanese_normalized, updated_at),
@@ -315,7 +310,6 @@ export default async function DashboardPage() {
     profile,
     radarScores,
     recentResults,
-    tasks: tasks ?? [],
     isJapanese,
     completedAssessments: completedAssessmentInfo,
     userRanking,
