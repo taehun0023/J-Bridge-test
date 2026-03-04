@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { Lock, ArrowRight } from 'lucide-react'
-import { BJ_POOL_QUIZ_IDS } from '@/lib/assessment-config'
 
 interface SubcategoryProgress {
   label: string
@@ -79,14 +78,10 @@ export default function BusinessTestBlock({ subcategories, bypassLock = false }:
           )
 
           if (unlocked) {
-            const poolQuizId = BJ_POOL_QUIZ_IDS[sub.quizType]
-            const href = poolQuizId
-              ? `/japanese/business/quiz/${poolQuizId}`
-              : `/japanese/business/quiz?type=${sub.quizType}`
             return (
               <Link
                 key={sub.quizType}
-                href={href}
+                href={`/japanese/business/quiz/tests?type=${sub.quizType}`}
                 className="group block"
               >
                 {card}

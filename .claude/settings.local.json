@@ -65,7 +65,8 @@
       "Bash(do echo:*)",
       "Bash(awk:*)",
       "Bash(sed:*)",
-      "Bash(/tmp/analyze_per_level.py:*)"
+      "Bash(/tmp/analyze_per_level.py:*)",
+      "Bash(rm:*)"
     ]
   }
 }

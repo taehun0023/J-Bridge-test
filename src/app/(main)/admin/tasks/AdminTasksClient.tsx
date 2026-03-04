@@ -77,15 +77,23 @@ const statusLabels: Record<string, string> = {
   failed: '不合格',
 }
 
+interface LearningProgressData {
+  mastered: number
+  total: number
+  pct: number
+  dailyTrend: number[]
+}
+
 interface Props {
   learningAssignments: LearningAssignmentRow[]
   examRequests: ExamRequest[]
   quizRetakeRequests: QuizRetakeRequest[]
   users: User[]
   currentRole: string
+  learningProgress: Record<string, LearningProgressData>
 }
 
-export default function AdminTasksClient({ learningAssignments, examRequests, quizRetakeRequests, users, currentRole }: Props) {
+export default function AdminTasksClient({ learningAssignments, examRequests, quizRetakeRequests, users, currentRole, learningProgress }: Props) {
   const [activeTab, setActiveTab] = useState<'learning' | 'approvals'>('learning')
   const [showForm, setShowForm] = useState(false)
   const [pending, startTransition] = useTransition()
@@ -397,7 +405,8 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">タイトル</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">対象者</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">カテゴリ</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">進捗</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">学習進捗</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">テスト進捗</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">状態</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">期限</th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400">操作</th>
@@ -408,6 +417,10 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
                     const progress = getProgressPercent(la)
                     const totalQuizzes = la.required_quiz_ids?.length ?? 0
                     const passedQuizzes = la.passed_quiz_ids?.length ?? 0
+                    const lp = learningProgress[la.id]
+                    const trend = lp?.dailyTrend ?? []
+                    const trendMax = Math.max(...trend, 1)
+                    const trendSum = trend.reduce((a, b) => a + b, 0)
                     return (
                       <Fragment key={la.id}>
                         <tr>
@@ -418,6 +431,34 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
                           <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
                             {getCategoryLabel(la.category)} &gt; {getSubcategoryLabel(la.category, la.subcategory)}
                             {la.content_level && ` (${getContentLevelLabel(la.category, la.content_level)})`}
+                          </td>
+                          <td className="px-4 py-3">
+                            {lp && lp.total > 0 ? (
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <div className="h-2 w-16 rounded-full bg-gray-200 dark:bg-gray-600">
+                                    <div
+                                      className="h-2 rounded-full bg-amber-500 transition-all"
+                                      style={{ width: `${lp.pct}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">{lp.pct}%</span>
+                                </div>
+                                <div className="flex items-end gap-px" title={`7日間: +${trendSum}`}>
+                                  {trend.map((v, i) => (
+                                    <div
+                                      key={i}
+                                      className={`w-1.5 rounded-t ${v > 0 ? 'bg-amber-400 dark:bg-amber-500' : 'bg-gray-200 dark:bg-gray-600'}`}
+                                      style={{ height: `${Math.max(v / trendMax * 14, 2)}px` }}
+                                      title={`${['月', '火', '水', '木', '金', '土', '日'][(new Date(Date.now() - (6 - i) * 86400000).getDay() + 6) % 7]}: +${v}`}
+                                    />
+                                  ))}
+                                  <span className="ml-1 text-[10px] text-gray-400">+{trendSum}</span>
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-gray-400">-</span>
+                            )}
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
@@ -498,7 +539,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
                         </tr>
                         {la.status === 'overdue' && (
                           <tr>
-                            <td colSpan={7} className="px-4 py-2">
+                            <td colSpan={8} className="px-4 py-2">
                               {la.overdue_reason ? (
                                 <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
                                   <span className="font-medium">遅延理由:</span> {la.overdue_reason}

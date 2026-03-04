@@ -60,7 +60,7 @@ BEGIN
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '本日のアジェンダですが、画面共有させていただきます', TRUE, 1),
     (gen_random_uuid(), q_id, '前回の議事録について、修正点をお伝えいたします', FALSE, 2),
-    (gen_random_uuid(), q_id, '本日の進捗状況につきまして、ご報告申し上げます', FALSE, 3),
+    (gen_random_uuid(), q_id, '本日の進捗状況につきまして、詳しくご報告申し上げます', FALSE, 3),
     (gen_random_uuid(), q_id, '皆様のご意見を伺いたく、お時間をいただきました', FALSE, 4);
 
   -- Q2: 会議で意見を述べる
@@ -97,7 +97,7 @@ BEGIN
     '「ここまでの内容を整理させていただきます」は会議の途中や最後に内容をまとめる際に使う丁寧な表現です。',
     2, 4);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '本日の決定事項を共有させていただきます', FALSE, 1),
+    (gen_random_uuid(), q_id, '本日の決定事項を改めて共有させていただきます', FALSE, 1),
     (gen_random_uuid(), q_id, 'ここまでの内容を整理させていただきます', TRUE, 2),
     (gen_random_uuid(), q_id, '次回までの宿題事項を確認いたします', FALSE, 3),
     (gen_random_uuid(), q_id, '各担当者の作業状況をお聞かせください', FALSE, 4);
@@ -111,9 +111,9 @@ BEGIN
     2, 5);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '本日の議事録は後日メールにてお送りいたしますので、ご確認のほどよろしくお願いいたします', FALSE, 1),
-    (gen_random_uuid(), q_id, '次回の打ち合わせ日程につきましては、改めてメールにてご連絡させていただきます', FALSE, 2),
+    (gen_random_uuid(), q_id, '次回の打ち合わせ日程につきましては、改めてメールにてご連絡させていただきますので', FALSE, 2),
     (gen_random_uuid(), q_id, '本日の会議は以上とさせていただきます。お忙しい中ご参加いただきありがとうございました', TRUE, 3),
-    (gen_random_uuid(), q_id, '残りの議題に関しましては、各自でご確認いただけますようお願い申し上げます', FALSE, 4);
+    (gen_random_uuid(), q_id, '残りの議題に関しましては、お手数ですが各自でご確認いただけますようお願い申し上げます', FALSE, 4);
 
   -- Q6: 会議で質問する
   q_id := gen_random_uuid();
@@ -136,9 +136,9 @@ BEGIN
     '「おっしゃる通りだと思います。その方向で進めさせていただきます」は上司の意見に賛同し、実行に移す意思を示す丁寧な表現です。「おっしゃる」は「言う」の尊敬語です。',
     2, 7);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '恐れ入りますが、別の観点からご提案させていただきます', FALSE, 1),
+    (gen_random_uuid(), q_id, '恐れ入りますが、別の観点からぜひご提案させていただきます', FALSE, 1),
     (gen_random_uuid(), q_id, 'おっしゃる通りだと思います。その方向で進めさせていただきます', TRUE, 2),
-    (gen_random_uuid(), q_id, '本件につきましては、社内で再度検討させていただきます', FALSE, 3),
+    (gen_random_uuid(), q_id, '本件につきましては、早急に社内にて改めて検討させていただきます', FALSE, 3),
     (gen_random_uuid(), q_id, 'ご提案の内容を踏まえて、議事録にまとめさせていただきます', FALSE, 4);
 
   -- Q8: 会議で反対意見を述べる
@@ -149,7 +149,7 @@ BEGIN
     '「恐れ入りますが、別の観点からご提案させていただいてもよろしいでしょうか」は直接的な反対を避けつつ、代替案を提示するための丁寧な表現です。日本のビジネスでは直接的な反対を避けるのがマナーです。',
     2, 8);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'おっしゃる通りかと存じます。ぜひその方向で進めさせていただきます', FALSE, 1),
+    (gen_random_uuid(), q_id, 'おっしゃる通りかと存じます。ぜひその方向で進めさせていただきたく存じます', FALSE, 1),
     (gen_random_uuid(), q_id, '本件につきましては、一度社内に持ち帰らせていただいてもよろしいでしょうか', FALSE, 2),
     (gen_random_uuid(), q_id, 'ご提案の趣旨は理解いたしました。詳細を改めて確認させていただきます', FALSE, 3),
     (gen_random_uuid(), q_id, '恐れ入りますが、別の観点からご提案させていただいてもよろしいでしょうか', TRUE, 4);
@@ -175,8 +175,8 @@ BEGIN
     '「それでは、次の議題に移らせていただきます」は進行役が話題を転換する際の定型表現です。スムーズな会議進行に欠かせないフレーズです。',
     2, 10);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'ここまでの内容を整理させていただきます', FALSE, 1),
-    (gen_random_uuid(), q_id, '皆様のご意見を伺いたいのですが', FALSE, 2),
+    (gen_random_uuid(), q_id, 'ここまでの内容を改めて整理させていただきます', FALSE, 1),
+    (gen_random_uuid(), q_id, '皆様のご意見をぜひ伺いたいと存じますが', FALSE, 2),
     (gen_random_uuid(), q_id, 'それでは、次の議題に移らせていただきます', TRUE, 3),
     (gen_random_uuid(), q_id, '本日の会議は以上とさせていただきます', FALSE, 4);
 
@@ -188,7 +188,7 @@ BEGIN
     '「ご都合のよろしい日時をお知らせいただけますでしょうか」は相手のスケジュールを確認する丁寧な表現です。「ご都合」は「都合」の尊敬語表現です。',
     2, 11);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '会議室の予約が完了いたしましたのでご連絡いたします', FALSE, 1),
+    (gen_random_uuid(), q_id, '会議室の予約が完了いたしましたので改めてご連絡いたします', FALSE, 1),
     (gen_random_uuid(), q_id, 'ご都合のよろしい日時をお知らせいただけますでしょうか', TRUE, 2),
     (gen_random_uuid(), q_id, '前回の打ち合わせ内容を踏まえてご報告いたします', FALSE, 3),
     (gen_random_uuid(), q_id, '日程変更のご連絡をいただきありがとうございます', FALSE, 4);
@@ -216,7 +216,7 @@ BEGIN
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '先ほどの決定事項について、一点補足させていただきます', FALSE, 1),
     (gen_random_uuid(), q_id, '一つご提案がございますが、ご検討いただけますでしょうか', TRUE, 2),
-    (gen_random_uuid(), q_id, '本件の進捗につきまして、改めてご報告させていただきます', FALSE, 3),
+    (gen_random_uuid(), q_id, '本件の進捗につきまして、改めて詳しくご報告させていただきます', FALSE, 3),
     (gen_random_uuid(), q_id, '前回のご指摘を踏まえまして、内容を修正いたしました', FALSE, 4);
 
   -- Q14: 会議でタスクを引き受ける
@@ -240,9 +240,9 @@ BEGIN
     '「お時間が迫っておりますので、残りの議題は次回に持ち越させていただいてもよろしいでしょうか」は時間切れを丁寧に伝え、参加者の合意を得る表現です。',
     2, 15);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'ここまでの決定事項を確認させていただきます。議事録は後日お送りいたしますので', FALSE, 1),
+    (gen_random_uuid(), q_id, 'ここまでの決定事項を確認させていただきます。なお、議事録は後日メールにてお送りいたします', FALSE, 1),
     (gen_random_uuid(), q_id, 'お時間が迫っておりますので、残りの議題は次回に持ち越させていただいてもよろしいでしょうか', TRUE, 2),
-    (gen_random_uuid(), q_id, '本日の会議は以上でございます。皆様お忙しい中ご参加いただきありがとうございました', FALSE, 3),
+    (gen_random_uuid(), q_id, '本日の会議は以上でございます。皆様、お忙しい中ご参加いただき誠にありがとうございました', FALSE, 3),
     (gen_random_uuid(), q_id, '次回の日程につきましては、改めてメールにてご連絡させていただきますのでご確認ください', FALSE, 4);
 
   -- Q16: 会議で発言を求める
@@ -254,7 +254,7 @@ BEGIN
     2, 16);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '〇〇さん、先ほどの資料について補足をお願いします', FALSE, 1),
-    (gen_random_uuid(), q_id, '〇〇さん、次回までの進捗をご報告ください', FALSE, 2),
+    (gen_random_uuid(), q_id, '〇〇さん、次回までの進捗状況をぜひご報告ください', FALSE, 2),
     (gen_random_uuid(), q_id, '〇〇さん、この件について何かご意見はございますか', TRUE, 3),
     (gen_random_uuid(), q_id, '〇〇さん、本件のスケジュールをご確認ください', FALSE, 4);
 
@@ -269,7 +269,7 @@ BEGIN
     (gen_random_uuid(), q_id, '画面共有の準備ができましたので、こちらの資料をご覧いただけますでしょうか', FALSE, 1),
     (gen_random_uuid(), q_id, '恐れ入りますが、音声が途切れておりましたので、もう一度お願いできますでしょうか', TRUE, 2),
     (gen_random_uuid(), q_id, 'ネットワークの接続状況を確認いたしますので、少々お待ちいただけますでしょうか', FALSE, 3),
-    (gen_random_uuid(), q_id, 'チャット機能にて補足資料を共有させていただきますので、ご確認をお願いいたします', FALSE, 4);
+    (gen_random_uuid(), q_id, 'チャット機能にて補足資料を共有させていただきますので、ぜひご確認をお願いいたします', FALSE, 4);
 
   -- Q18: 会議で決定事項を確認する
   q_id := gen_random_uuid();
@@ -279,7 +279,7 @@ BEGIN
     '「本日の決定事項を確認させていただきます」は会議の締めくくりで決定事項を振り返る際の定型表現です。認識の齟齬を防ぐために重要なプロセスです。',
     2, 18);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '次回の打ち合わせ日程を調整いたします', FALSE, 1),
+    (gen_random_uuid(), q_id, '次回の打ち合わせ日程を改めて調整いたします', FALSE, 1),
     (gen_random_uuid(), q_id, '本日の決定事項を確認させていただきます', TRUE, 2),
     (gen_random_uuid(), q_id, '議事録を後ほど共有させていただきます', FALSE, 3),
     (gen_random_uuid(), q_id, '各自のタスク期限をご報告ください', FALSE, 4);
@@ -292,10 +292,10 @@ BEGIN
     '「画面を共有させていただきます。資料の〇ページをご覧ください」は画面共有時の丁寧な案内表現です。IT業界のオンライン会議で頻繁に使います。',
     2, 19);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '本日の議題につきまして、ご報告させていただきます', FALSE, 1),
+    (gen_random_uuid(), q_id, '本日の議題につきまして、早速ご報告させていただきます', FALSE, 1),
     (gen_random_uuid(), q_id, '先日いただいたご質問に対して、回答を準備いたしました', FALSE, 2),
     (gen_random_uuid(), q_id, '画面を共有させていただきます。資料の3ページをご覧ください', TRUE, 3),
-    (gen_random_uuid(), q_id, '前回の打ち合わせ内容を踏まえて、修正案を作成いたしました', FALSE, 4);
+    (gen_random_uuid(), q_id, '前回の打ち合わせ内容を踏まえまして、修正案を作成いたしました', FALSE, 4);
 
   -- Q20: 会議で次回の予定を確認する
   q_id := gen_random_uuid();
@@ -305,7 +305,7 @@ BEGIN
     '「次回の打ち合わせは〇月〇日を予定しておりますが、ご都合いかがでしょうか」は次回日程を確認する丁寧な表現です。相手の都合を確認する姿勢が大切です。',
     2, 20);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '本日の議事録は後日メールにてお送りいたしますので、ご確認ください', FALSE, 1),
+    (gen_random_uuid(), q_id, '本日の議事録は後日メールにてお送りさせていただきますので、ご確認ください', FALSE, 1),
     (gen_random_uuid(), q_id, '次回の打ち合わせは来週水曜日を予定しておりますが、ご都合いかがでしょうか', TRUE, 2),
     (gen_random_uuid(), q_id, '本日の決定事項を踏まえまして、各担当者はタスクの対応をお願いいたします', FALSE, 3),
     (gen_random_uuid(), q_id, 'お忙しい中ご参加いただきありがとうございました。引き続きよろしくお願いします', FALSE, 4);
@@ -333,8 +333,8 @@ BEGIN
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '本日はお時間をいただき、誠にありがとうございます。株式会社〇〇の△△と申します', TRUE, 1),
     (gen_random_uuid(), q_id, '弊社の新サービスについてご説明させていただきたく、本日お時間を頂戴いたしました', FALSE, 2),
-    (gen_random_uuid(), q_id, '先日ご依頼いただきました件につきまして、お見積書を持参いたしました', FALSE, 3),
-    (gen_random_uuid(), q_id, '御社のプロジェクトについて、進捗状況をご報告させていただきます', FALSE, 4);
+    (gen_random_uuid(), q_id, '先日ご依頼いただきました件につきまして、本日お見積書を持参させていただきました', FALSE, 3),
+    (gen_random_uuid(), q_id, '御社のプロジェクトにつきまして、現在の進捗状況を詳しくご報告させていただきます', FALSE, 4);
 
   -- Q2: クライアントの要望を受ける
   q_id := gen_random_uuid();
@@ -346,7 +346,7 @@ BEGIN
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '恐れ入りますが、その内容につきましては対応が難しい状況でございます', FALSE, 1),
     (gen_random_uuid(), q_id, 'ご要望を承りました。社内で検討の上、改めてご回答させていただきます', TRUE, 2),
-    (gen_random_uuid(), q_id, '本件につきましては、担当者から改めて折り返しご連絡いたします', FALSE, 3),
+    (gen_random_uuid(), q_id, '本件につきましては、担当者から改めて折り返しご連絡させていただきます', FALSE, 3),
     (gen_random_uuid(), q_id, 'ご提案の趣旨は理解いたしました。早急に代替案をご用意いたします', FALSE, 4);
 
   -- Q3: 納期の相談
@@ -372,7 +372,7 @@ BEGIN
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '現時点での進捗状況をご報告いたします。全体の80%が完了しており、残りの作業につきましても予定通り進めてまいります', FALSE, 1),
     (gen_random_uuid(), q_id, '大変申し訳ございませんが、当初の納期より3日ほど遅れる見込みでございます。リカバリー策として増員を実施いたします', TRUE, 2),
-    (gen_random_uuid(), q_id, '仕様変更について承知いたしました。影響範囲を調査の上、追加工数のお見積もりを早急にご提出させていただきます', FALSE, 3),
+    (gen_random_uuid(), q_id, '仕様変更について承知いたしました。影響範囲を詳細に調査の上、追加工数のお見積もりを早急にご提出させていただきます', FALSE, 3),
     (gen_random_uuid(), q_id, 'テスト結果についてご報告いたします。全テストケース200件中、198件が合格しており大変順調に推移しております', FALSE, 4);
 
   -- Q5: 進捗報告
@@ -386,7 +386,7 @@ BEGIN
     (gen_random_uuid(), q_id, '納期につきましてご相談がございます。一部機能の仕様変更に伴い、スケジュールの見直しが必要です', FALSE, 1),
     (gen_random_uuid(), q_id, '現時点での進捗状況をご報告いたします。全体の70%が完了しており、予定通りに進んでおります', TRUE, 2),
     (gen_random_uuid(), q_id, '追加機能のご要望について承知いたしました。工数とスケジュールへの影響を確認させていただきます', FALSE, 3),
-    (gen_random_uuid(), q_id, 'テスト工程に入りましたので、不具合が見つかった場合は速やかにご報告させていただきます', FALSE, 4);
+    (gen_random_uuid(), q_id, 'テスト工程に入りましたので、万が一不具合が見つかった場合は速やかにご報告させていただきます', FALSE, 4);
 
   -- Q6: 仕様変更の確認
   q_id := gen_random_uuid();
@@ -397,9 +397,9 @@ BEGIN
     2, 6);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, 'ご要望いただきました機能につきましては、現在の技術スタックでは実装が困難でございますので代替案をご提示いたします', FALSE, 1),
-    (gen_random_uuid(), q_id, '大変申し訳ございませんが、当初のスケジュールより遅延が発生する見込みでございます。対策をご説明いたします', FALSE, 2),
+    (gen_random_uuid(), q_id, '大変申し訳ございませんが、当初のスケジュールより遅延が発生する見込みでございます。具体的な対策をご説明いたします', FALSE, 2),
     (gen_random_uuid(), q_id, '仕様変更について承知いたしました。影響範囲を調査の上、工数とスケジュールへの影響をお見積もりさせていただきます', TRUE, 3),
-    (gen_random_uuid(), q_id, 'テスト完了後の結果につきましてご報告いたします。全体として品質基準を満たしている状況でございます', FALSE, 4);
+    (gen_random_uuid(), q_id, 'テスト完了後の結果につきまして詳細にご報告いたします。全体として品質基準を十分に満たしている状況でございます', FALSE, 4);
 
   -- Q7: 見積書の提出
   q_id := gen_random_uuid();
@@ -411,8 +411,8 @@ BEGIN
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '仕様変更に伴う追加費用について、影響範囲を整理いたしましたので、詳細をご説明させていただいてもよろしいでしょうか', FALSE, 1),
     (gen_random_uuid(), q_id, 'お見積書を作成いたしましたので、ご確認いただけますでしょうか。ご不明な点がございましたら、お気軽にお問い合わせください', TRUE, 2),
-    (gen_random_uuid(), q_id, '納品スケジュールにつきまして、段階的なリリース計画を作成いたしましたので、ご検討いただけますと大変幸いでございます', FALSE, 3),
-    (gen_random_uuid(), q_id, '先日ご依頼いただきました要件定義書を作成いたしました。内容にお気づきの点がございましたら何なりとご指摘ください', FALSE, 4);
+    (gen_random_uuid(), q_id, '納品スケジュールにつきまして、段階的なリリース計画を詳細に作成いたしましたので、ご検討いただけますと大変幸いでございます', FALSE, 3),
+    (gen_random_uuid(), q_id, '先日ご依頼いただきました要件定義書を作成いたしました。内容にお気づきの点がございましたら何なりとご指摘くださいませ', FALSE, 4);
 
   -- Q8: クライアントからのクレーム対応
   q_id := gen_random_uuid();
@@ -475,9 +475,9 @@ BEGIN
     2, 12);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, 'リリーススケジュールについてご提案させていただきます。段階的なリリースを推奨いたしますが、いかがでしょうか', TRUE, 1),
-    (gen_random_uuid(), q_id, '本番環境での障害対応マニュアルを作成いたしましたので、お手すきの際にご確認いただけますと幸いでございます', FALSE, 2),
-    (gen_random_uuid(), q_id, '保守運用についての体制を整備いたしました。月次の定例会議を設けさせていただいてもよろしいでしょうか', FALSE, 3),
-    (gen_random_uuid(), q_id, 'テスト完了後の品質レポートを作成いたしましたので、改めて詳細をご説明させていただければと存じます', FALSE, 4);
+    (gen_random_uuid(), q_id, '本番環境での障害対応マニュアルを作成いたしましたので、お手すきの際にぜひご確認いただけますと幸いでございます', FALSE, 2),
+    (gen_random_uuid(), q_id, '保守運用についての体制を整備いたしました。なお、月次の定例会議を設けさせていただいてもよろしいでしょうか', FALSE, 3),
+    (gen_random_uuid(), q_id, 'テスト完了後の品質レポートを作成いたしましたので、改めて詳細をご説明させていただければ幸いに存じます', FALSE, 4);
 
   -- Q13: クライアントへのお礼メール
   q_id := gen_random_uuid();
@@ -489,8 +489,8 @@ BEGIN
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '先日ご依頼いただきました追加機能について、お見積書を添付いたしましたのでご査収ください', FALSE, 1),
     (gen_random_uuid(), q_id, '本日はお忙しい中、お打ち合わせのお時間をいただき、誠にありがとうございました', TRUE, 2),
-    (gen_random_uuid(), q_id, '次回の打ち合わせにつきましては、来週中に日程を調整させていただきたく存じます', FALSE, 3),
-    (gen_random_uuid(), q_id, '議事録を添付いたしましたので、内容にご不明な点がございましたらご連絡ください', FALSE, 4);
+    (gen_random_uuid(), q_id, '次回の打ち合わせにつきましては、来週中に改めて日程を調整させていただきたく存じます', FALSE, 3),
+    (gen_random_uuid(), q_id, '議事録を添付いたしましたので、内容にご不明な点がございましたらお気軽にご連絡ください', FALSE, 4);
 
   -- Q14: クライアントの質問に即答できない場合
   q_id := gen_random_uuid();
@@ -500,7 +500,7 @@ BEGIN
     '「確認の上、本日中にご回答させていただきます」はすぐに回答できない場合に回答期限を明示する丁寧な表現です。期限を切ることで信頼を維持します。',
     2, 14);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '恐れ入りますが、その件は担当外でございます', FALSE, 1),
+    (gen_random_uuid(), q_id, '恐れ入りますが、その件は私の担当外でございます', FALSE, 1),
     (gen_random_uuid(), q_id, '確認の上、本日中にご回答させていただきます', TRUE, 2),
     (gen_random_uuid(), q_id, '社内の技術チームに確認を取らせていただきます', FALSE, 3),
     (gen_random_uuid(), q_id, 'ご質問いただきありがとうございます。即答は控えます', FALSE, 4);
@@ -514,9 +514,9 @@ BEGIN
     2, 15);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, 'ご報告が遅くなりまして大変申し訳ございません。先日のテスト工程において一部不具合が発見されましたので、修正対応を進めております', FALSE, 1),
-    (gen_random_uuid(), q_id, '定期メンテナンスのご案内でございます。来週末にサーバーの更新作業を実施いたしますので、一時的にサービスが停止いたします', FALSE, 2),
+    (gen_random_uuid(), q_id, '定期メンテナンスのご案内でございます。来週末にサーバーの更新作業を実施いたしますので、一時的にサービスが停止する予定でございます', FALSE, 2),
     (gen_random_uuid(), q_id, '緊急のご連絡でございます。現在、受注管理システムにおいて障害が発生しております。現在、原因の特定と復旧に全力で取り組んでおります', TRUE, 3),
-    (gen_random_uuid(), q_id, 'セキュリティアップデートの適用が完了いたしましたので、ご報告させていただきます。システムへの影響はございませんでした', FALSE, 4);
+    (gen_random_uuid(), q_id, 'セキュリティアップデートの適用が完了いたしましたので、ご報告させていただきます。なお、システムへの影響はございませんでした', FALSE, 4);
 
   -- Q16: 機能追加の費用説明
   q_id := gen_random_uuid();
@@ -541,8 +541,8 @@ BEGIN
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '保守契約の更新時期が近づいてまいりましたので、次年度の契約内容につきましてご相談させていただきたく存じます', FALSE, 1),
     (gen_random_uuid(), q_id, '成果物を納品させていただきます。ご確認の上、ご不明な点やご要望がございましたら、お知らせいただけますと幸いです', TRUE, 2),
-    (gen_random_uuid(), q_id, '運用マニュアルを作成いたしましたので、操作方法について詳しくご説明させていただいてもよろしいでしょうか', FALSE, 3),
-    (gen_random_uuid(), q_id, 'プロジェクトの最終報告書を作成いたしました。振り返りのミーティングをぜひ設けさせていただけますか', FALSE, 4);
+    (gen_random_uuid(), q_id, '運用マニュアルを作成いたしましたので、具体的な操作方法について改めて詳しくご説明させていただいてもよろしいでしょうか', FALSE, 3),
+    (gen_random_uuid(), q_id, 'プロジェクトの最終報告書を作成いたしました。つきましては振り返りのミーティングをぜひ設けさせていただけますか', FALSE, 4);
 
   -- Q18: クライアントとの契約更新
   q_id := gen_random_uuid();
@@ -566,8 +566,8 @@ BEGIN
     2, 19);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '仕様変更について承知いたしました。影響範囲を調査の上、スケジュールへの影響をお見積もりさせていただきます', FALSE, 1),
-    (gen_random_uuid(), q_id, 'ご依頼の追加機能につきましては、次期リリースにて対応させていただく方向で検討させていただきます', FALSE, 2),
-    (gen_random_uuid(), q_id, '本件のお見積もりを作成いたしましたので、ご確認のうえご不明な点がございましたらお問い合わせください', FALSE, 3),
+    (gen_random_uuid(), q_id, 'ご依頼の追加機能につきましては、次期リリースにて対応させていただく方向で前向きに検討させていただきます', FALSE, 2),
+    (gen_random_uuid(), q_id, '本件のお見積もりを作成いたしましたので、ぜひご確認のうえご不明な点がございましたらお気軽にお問い合わせください', FALSE, 3),
     (gen_random_uuid(), q_id, 'ご要望の実装は技術的に難しい状況でございますが、代替案としてこちらの方法をご提案させていただけますでしょうか', TRUE, 4);
 
   -- Q20: プロジェクト完了の報告
@@ -578,10 +578,10 @@ BEGIN
     '「プロジェクトが無事完了いたしましたことをご報告申し上げます。ご支援いただき、誠にありがとうございました」はプロジェクト完了報告の丁寧な表現です。クライアントへの感謝を忘れないことが大切です。',
     2, 20);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '保守運用の体制が整いましたので、今後のサポート内容についてご説明させていただきたく存じます', FALSE, 1),
+    (gen_random_uuid(), q_id, '保守運用の体制が整いましたので、今後のサポート内容につきまして詳しくご説明させていただきたく存じます', FALSE, 1),
     (gen_random_uuid(), q_id, 'プロジェクトが無事完了いたしましたことをご報告申し上げます。ご支援いただき、誠にありがとうございました', TRUE, 2),
     (gen_random_uuid(), q_id, '最終的な成果物一式を納品させていただきましたので、ご確認のうえお気づきの点がございましたらご連絡ください', FALSE, 3),
-    (gen_random_uuid(), q_id, '本プロジェクトの振り返りレポートを作成いたしましたので、次回の打ち合わせにてご共有いたします', FALSE, 4);
+    (gen_random_uuid(), q_id, '本プロジェクトの振り返りレポートを作成いたしましたので、次回の打ち合わせにて詳細をご共有いたします', FALSE, 4);
 
 END $$;
 
@@ -631,7 +631,7 @@ BEGIN
     2, 3);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, 'API実装の件、ご報告いたします。現在、認証機能まで完了しております', TRUE, 1),
-    (gen_random_uuid(), q_id, 'お忙しいところ恐れ入りますが、一点ご相談させていただきたく存じます', FALSE, 2),
+    (gen_random_uuid(), q_id, 'お忙しいところ大変恐れ入りますが、一点ご相談させていただきたく存じます', FALSE, 2),
     (gen_random_uuid(), q_id, '先ほどの件について、補足説明をさせていただいてもよろしいでしょうか', FALSE, 3),
     (gen_random_uuid(), q_id, '本件につきましては、改めてメールにてご連絡をさせていただきます', FALSE, 4);
 
@@ -658,8 +658,8 @@ BEGIN
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '資料の差し替えが完了いたしました。修正箇所は3ページ目となっておりますのでご確認ください', FALSE, 1),
     (gen_random_uuid(), q_id, '申し訳ございません。私の確認不足により書類に誤りがございました。現在修正対応中でございます', TRUE, 2),
-    (gen_random_uuid(), q_id, 'ご指摘いただいた箇所の修正が完了いたしましたので、再度ご確認をお願いします', FALSE, 3),
-    (gen_random_uuid(), q_id, '本日の作業予定でございますが、見積書の作成と資料の整理を進めてまいります', FALSE, 4);
+    (gen_random_uuid(), q_id, 'ご指摘いただいた箇所の修正が完了いたしましたので、お手数ですが再度ご確認をお願いいたします', FALSE, 3),
+    (gen_random_uuid(), q_id, '本日の作業予定でございますが、見積書の作成と提出資料の整理を優先的に進めてまいります', FALSE, 4);
 
   -- Q6: 休暇申請
   q_id := gen_random_uuid();
@@ -671,7 +671,7 @@ BEGIN
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '来週金曜日の打ち合わせにつきまして、議題を事前にお送りさせていただきます', FALSE, 1),
     (gen_random_uuid(), q_id, '恐れ入りますが、来週金曜日にお休みをいただきたく存じますが、よろしいでしょうか', TRUE, 2),
-    (gen_random_uuid(), q_id, '来週金曜日のスケジュールでございますが、午後から客先への外出の予定がございます', FALSE, 3),
+    (gen_random_uuid(), q_id, '来週金曜日のスケジュールでございますが、午後から客先への外出をする予定がございます', FALSE, 3),
     (gen_random_uuid(), q_id, '来週金曜日までに資料を完成させますので、ご確認のほどよろしくお願いいたします', FALSE, 4);
 
   -- Q7: 電話対応の取り次ぎ
@@ -684,7 +684,7 @@ BEGIN
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '恐れ入りますが、担当者はただいま外出しております', FALSE, 1),
     (gen_random_uuid(), q_id, '少々お待ちいただけますでしょうか。担当の者に代わります', TRUE, 2),
-    (gen_random_uuid(), q_id, 'お電話ありがとうございます。ご用件を承ります', FALSE, 3),
+    (gen_random_uuid(), q_id, 'お電話ありがとうございます。ご用件を改めてお伺いいたします', FALSE, 3),
     (gen_random_uuid(), q_id, '折り返しのお電話をさせていただいてもよろしいですか', FALSE, 4);
 
   -- Q8: 遅刻の連絡
@@ -696,7 +696,7 @@ BEGIN
     2, 8);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '本日は少し体調がすぐれないため、在宅勤務に切り替えさせていただいてもよろしいでしょうか', FALSE, 1),
-    (gen_random_uuid(), q_id, '恐れ入りますが、本日は通院のため午前中お休みをいただきまして、午後から出社いたします', FALSE, 2),
+    (gen_random_uuid(), q_id, '恐れ入りますが、本日は通院のため午前中お休みをいただきまして、午後から出社させていただきます', FALSE, 2),
     (gen_random_uuid(), q_id, '申し訳ございません。電車の遅延により、30分ほど遅れる見込みです。到着後すぐに業務に入ります', TRUE, 3),
     (gen_random_uuid(), q_id, 'お疲れ様です。本日の業務予定をお送りいたしますので、ご確認のほどよろしくお願いいたします', FALSE, 4);
 
@@ -721,10 +721,10 @@ BEGIN
     '「いつもお世話になっております」は社外メールの書き出しとして最も広く使われる表現です。取引関係のある相手に対して使います。初めての相手には「初めてご連絡させていただきます」が適切です。',
     2, 10);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'お疲れ様でございます', FALSE, 1),
+    (gen_random_uuid(), q_id, '大変お疲れ様でございます', FALSE, 1),
     (gen_random_uuid(), q_id, 'いつもお世話になっております', TRUE, 2),
     (gen_random_uuid(), q_id, 'ご無沙汰しておりますが', FALSE, 3),
-    (gen_random_uuid(), q_id, '平素より大変お世話になります', FALSE, 4);
+    (gen_random_uuid(), q_id, '平素より大変お世話になっております', FALSE, 4);
 
   -- Q11: 作業依頼を受ける
   q_id := gen_random_uuid();
@@ -762,7 +762,7 @@ BEGIN
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '会議室の空き状況を確認いたしましたので、候補日時をご連絡させていただきます', FALSE, 1),
     (gen_random_uuid(), q_id, 'お手数ですが、来週月曜日の14時から会議室Aの予約をお願いできますでしょうか', TRUE, 2),
-    (gen_random_uuid(), q_id, '来週月曜日の打ち合わせにつきまして、参加者の出欠をご確認ください', FALSE, 3),
+    (gen_random_uuid(), q_id, '来週月曜日の打ち合わせにつきまして、参加者の出欠を事前にぜひご確認いただけますか', FALSE, 3),
     (gen_random_uuid(), q_id, 'オンライン会議のURLを発行いたしましたので、招待メールをご確認ください', FALSE, 4);
 
   -- Q14: 資料の確認依頼
@@ -776,7 +776,7 @@ BEGIN
     (gen_random_uuid(), q_id, '恐れ入りますが、修正箇所を赤字でハイライトしております', FALSE, 1),
     (gen_random_uuid(), q_id, 'ご多忙のところ恐縮ですが、本日中にご回答をお願いします', FALSE, 2),
     (gen_random_uuid(), q_id, 'お手すきの際に、こちらの資料をご確認いただけますでしょうか', TRUE, 3),
-    (gen_random_uuid(), q_id, '先日いただいたフィードバックを反映した修正版をお送りします', FALSE, 4);
+    (gen_random_uuid(), q_id, '先日いただいたフィードバックを反映した修正版をお送りいたします', FALSE, 4);
 
   -- Q15: タスクの優先順位を確認する
   q_id := gen_random_uuid();
@@ -788,8 +788,8 @@ BEGIN
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '承知いたしました。本日中にAPI開発の作業を完了させまして、明日からはテスト作成に着手いたします', FALSE, 1),
     (gen_random_uuid(), q_id, '現在、API開発とテスト作成のタスクを抱えておりますが、優先順位についてご指示いただけますでしょうか', TRUE, 2),
-    (gen_random_uuid(), q_id, '恐れ入りますが、納期に間に合わせるために追加のリソースをいただくことは可能でございましょうか', FALSE, 3),
-    (gen_random_uuid(), q_id, 'API開発とテスト作成の進捗状況をご報告いたします。現在どちらも50%ほど完了しております', FALSE, 4);
+    (gen_random_uuid(), q_id, '恐れ入りますが、確実に納期に間に合わせるために追加のリソースをいただくことは可能でございましょうか', FALSE, 3),
+    (gen_random_uuid(), q_id, 'API開発とテスト作成の進捗状況をご報告いたします。現在どちらも50%ほど完了しており順調でございます', FALSE, 4);
 
   -- Q16: 相談したいことがある場合
   q_id := gen_random_uuid();
@@ -800,9 +800,9 @@ BEGIN
     2, 16);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '先ほどの件、承知いたしました。早速確認の上、対応いたします', FALSE, 1),
-    (gen_random_uuid(), q_id, '本日の作業報告をさせていただきたいのですが、よろしいですか', FALSE, 2),
+    (gen_random_uuid(), q_id, '本日の作業報告をさせていただきたいのですが、よろしいでしょうか', FALSE, 2),
     (gen_random_uuid(), q_id, 'お時間をいただけますでしょうか。ご相談したいことがございます', TRUE, 3),
-    (gen_random_uuid(), q_id, '恐れ入りますが、一点ご確認をお願いできますでしょうか', FALSE, 4);
+    (gen_random_uuid(), q_id, '恐れ入りますが、一点だけご確認をお願いできますでしょうか', FALSE, 4);
 
   -- Q17: コードレビューの依頼
   q_id := gen_random_uuid();
@@ -812,10 +812,10 @@ BEGIN
     '「お忙しいところ恐縮ですが、企画書のご確認をお願いできますでしょうか」は確認依頼の丁寧な表現です。「恐縮ですが」は「恐れ入りますが」と同様のクッション言葉です。',
     2, 17);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'いただいたご指摘を反映いたしましたので、再度ご確認をお願いいたします', FALSE, 1),
+    (gen_random_uuid(), q_id, 'いただいたご指摘を反映いたしましたので、お手数ですが再度ご確認をお願いいたします', FALSE, 1),
     (gen_random_uuid(), q_id, 'お忙しいところ恐縮ですが、企画書のご確認をお願いできますでしょうか', TRUE, 2),
     (gen_random_uuid(), q_id, '報告書の修正が完了いたしましたので、お手すきの際にご確認いただけますでしょうか', FALSE, 3),
-    (gen_random_uuid(), q_id, '見積書の内容が確定いたしましたので、承認をお願いいたします', FALSE, 4);
+    (gen_random_uuid(), q_id, '見積書の内容が確定いたしましたので、お手すきの際にご承認をお願いいたします', FALSE, 4);
 
   -- Q18: お礼を述べる
   q_id := gen_random_uuid();
@@ -825,10 +825,10 @@ BEGIN
     '「丁寧にご確認いただき、ありがとうございます。いただいたフィードバックを反映いたします」は確認後のお礼として適切な表現です。感謝とアクションの両方を伝えることが重要です。',
     2, 18);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'お忙しいところ恐縮ですが、追加でもう一件ご確認をお願いできますでしょうか', FALSE, 1),
+    (gen_random_uuid(), q_id, 'お忙しいところ大変恐縮でございますが、追加でもう一件ご確認をお願いできますでしょうか', FALSE, 1),
     (gen_random_uuid(), q_id, '丁寧にご確認いただき、ありがとうございます。いただいたフィードバックを反映いたします', TRUE, 2),
     (gen_random_uuid(), q_id, 'ご指摘の箇所について確認いたしましたが、意図的にこの表現としておりますのでご了承ください', FALSE, 3),
-    (gen_random_uuid(), q_id, '社内規定に基づいて修正いたしましたので、再度お送りいたします', FALSE, 4);
+    (gen_random_uuid(), q_id, '社内規定に基づいて修正いたしましたので、再度お送りさせていただきます。ご確認ください', FALSE, 4);
 
   -- Q19: 残業の許可を求める
   q_id := gen_random_uuid();
@@ -838,7 +838,7 @@ BEGIN
     '「〇〇の対応が残っておりますので、本日残業させていただいてもよろしいでしょうか」は残業の許可を求める丁寧な表現です。残業理由を明示した上で許可を求めるのがポイントです。',
     2, 19);
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '本日のタスクは予定通り完了いたしましたので、何かご指示がなければ退社いたします', FALSE, 1),
+    (gen_random_uuid(), q_id, '本日のタスクは予定通り完了いたしましたので、何かご指示がなければ退社させていただきます', FALSE, 1),
     (gen_random_uuid(), q_id, 'バグ修正の対応が残っておりますので、本日残業させていただいてもよろしいでしょうか', TRUE, 2),
     (gen_random_uuid(), q_id, '明日の朝一で対応いたしますので、本日の残りのタスクは持ち越しとさせてください', FALSE, 3),
     (gen_random_uuid(), q_id, '恐れ入りますが、明日の午前中にお打ち合わせのお時間をいただけますでしょうか', FALSE, 4);

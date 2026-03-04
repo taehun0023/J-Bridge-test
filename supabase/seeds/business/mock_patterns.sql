@@ -440,7 +440,7 @@ BEGIN
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '3月15日に有給休暇を取得いたしたく、ご連絡させていただきます。当日の対応事項は佐藤さんにお引き継ぎ済みです。', FALSE, 1),
     (gen_random_uuid(), q_id, '3月15日に有給休暇を取得させていただきたく、ご連絡いたします。当日の対応事項は佐藤さんに引き継ぎ済みです。', TRUE, 2),
-    (gen_random_uuid(), q_id, '3月15日に有給休暇を取らせてもらいたく存じます。当日の対応事項は佐藤さんに引き継ぎしております。', FALSE, 3),
+    (gen_random_uuid(), q_id, '3月15日に有給休暇を取らせてもらいたく存じます。当日の対応事項につきましては佐藤さんに引き継ぎしております。', FALSE, 3),
     (gen_random_uuid(), q_id, '3月15日に有給休暇をいただきたく、ご報告させていただきます。当日の対応事項を佐藤さんへ引き継ぎ済みです。', FALSE, 4);
 
   -- Question 9

@@ -44,7 +44,7 @@ export default async function AssignmentsPage() {
   // Also re-resolve seikatsu assignments to ensure all quiz types are included
   const resolvedQuizIdsMap: Record<string, string[]> = {}
   const emptyAssignments = (assignments ?? []).filter(a =>
-    (a.required_quiz_ids ?? []).length === 0 || a.category === 'seikatsu'
+    (a.required_quiz_ids ?? []).length === 0 || a.category === 'seikatsu' || a.category === 'business-jp'
   )
 
   for (const a of emptyAssignments) {
@@ -103,6 +103,11 @@ export default async function AssignmentsPage() {
           .from('quizzes')
           .select('id')
           .eq('quiz_type', subcatConfig.quizType)
+
+        // For business-jp, only include pool quizzes (comprehension tests)
+        if (a.category === 'business-jp') {
+          query = query.eq('is_pool', true)
+        }
 
         if (a.content_level) {
           query = query.eq('content_level', a.content_level)

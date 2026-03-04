@@ -210,7 +210,11 @@ export async function checkAssignmentProgress(userId: string, quizId: string) {
 
     const updateData: Record<string, unknown> = {
       passed_quiz_ids: newPassedIds,
-      status: allCompleted ? 'awaiting_confirmation' : 'in_progress',
+      status: allCompleted ? 'completed' : 'in_progress',
+    }
+
+    if (allCompleted) {
+      updateData.completed_at = new Date().toISOString()
     }
 
     await serviceClient
@@ -219,13 +223,12 @@ export async function checkAssignmentProgress(userId: string, quizId: string) {
       .eq('id', assignment.id)
 
     if (allCompleted) {
-      // Notify the assigner that all quizzes are completed
       const userName = await getUserDisplayName(userId)
       await createNotification(
         assignment.assigned_by,
         'assignment_completed',
         `${userName}さんが学習課題を完了: ${assignment.title}`,
-        '確認完了ボタンを押してください',
+        undefined,
         '/admin/tasks',
         assignment.id
       )
@@ -469,6 +472,60 @@ export async function cancelAssignment(assignmentId: string) {
   revalidatePath('/admin/tasks')
   revalidatePath('/dashboard/assignments')
   return { success: true }
+}
+
+// ─── Auto-detect learning progress → update pending to in_progress ───
+
+export async function updateLearningStatuses() {
+  const serviceClient = createServiceRoleClient()
+  if (!serviceClient) return
+
+  // Find all pending assignments
+  const { data: pendingAssignments } = await serviceClient
+    .from('learning_assignments')
+    .select('id, assigned_to, category, subcategory, content_level')
+    .eq('status', 'pending')
+
+  if (!pendingAssignments?.length) return
+
+  const userIds = [...new Set(pendingAssignments.map(a => a.assigned_to))]
+
+  // Fetch all mastered items for these users
+  const { data: allMastered } = await serviceClient
+    .from('user_mastered_items')
+    .select('user_id, item_type, item_id')
+    .in('user_id', userIds)
+
+  const userMastery = new Map<string, Set<string>>()
+  for (const m of allMastered ?? []) {
+    const key = `${m.user_id}:${m.item_type}`
+    if (!userMastery.has(key)) userMastery.set(key, new Set())
+    userMastery.get(key)!.add(m.item_id)
+  }
+
+  const JLPT_TYPES = ['jlpt_vocabulary', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening']
+
+  for (const a of pendingAssignments) {
+    let hasProgress = false
+
+    if (a.category === 'seikatsu') {
+      hasProgress = JLPT_TYPES.some(t => (userMastery.get(`${a.assigned_to}:${t}`)?.size ?? 0) > 0)
+    } else if (a.category === 'business-jp') {
+      hasProgress = (userMastery.get(`${a.assigned_to}:it_glossary`)?.size ?? 0) > 0
+    } else if (a.category === 'business-lit') {
+      const types = a.subcategory === 'attitude-culture'
+        ? ['attitude_manual', 'culture_manual']
+        : a.subcategory === 'security' ? ['security_manual'] : []
+      hasProgress = types.some(t => (userMastery.get(`${a.assigned_to}:${t}`)?.size ?? 0) > 0)
+    }
+
+    if (hasProgress) {
+      await serviceClient
+        .from('learning_assignments')
+        .update({ status: 'in_progress' })
+        .eq('id', a.id)
+    }
+  }
 }
 
 // ─── Dev level unlock check ───

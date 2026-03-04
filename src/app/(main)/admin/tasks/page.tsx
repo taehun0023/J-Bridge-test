@@ -1,12 +1,15 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import Card from '@/components/ui/Card'
 import AdminTasksClient from './AdminTasksClient'
-import { detectAndMarkOverdue } from '@/app/actions/learning-assignments'
+import { detectAndMarkOverdue, updateLearningStatuses } from '@/app/actions/learning-assignments'
+import { getReadingTotalCount } from '@/lib/assignment-categories'
 
 export default async function AdminTasksPage() {
   await detectAndMarkOverdue()
+  await updateLearningStatuses()
 
   const supabase = await createClient()
+  const serviceClient = createServiceRoleClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   const { data: currentProfile } = await supabase
@@ -83,6 +86,176 @@ export default async function AdminTasksPage() {
     users = data ?? []
   }
 
+  // ─── Learning progress calculation ───
+  const learningProgress: Record<string, { mastered: number; total: number; pct: number; dailyTrend: number[] }> = {}
+
+  if (serviceClient && (learningAssignments ?? []).length > 0) {
+    const allUserIds = [...new Set((learningAssignments ?? []).map(a => a.assigned_to))]
+
+    // Fetch all mastered items for all relevant users (service role bypasses RLS)
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+
+    const [{ data: allMastered }, { data: recentMastered }] = await Promise.all([
+      serviceClient
+        .from('user_mastered_items')
+        .select('user_id, item_type, item_id')
+        .in('user_id', allUserIds),
+      serviceClient
+        .from('user_mastered_items')
+        .select('user_id, item_type, item_id, created_at')
+        .in('user_id', allUserIds)
+        .gte('created_at', sevenDaysAgo.toISOString()),
+    ])
+
+    // Build user mastery lookup: userId → item_type → Set<item_id>
+    const userMastery = new Map<string, Map<string, Set<string>>>()
+    for (const m of allMastered ?? []) {
+      if (!userMastery.has(m.user_id)) userMastery.set(m.user_id, new Map())
+      const typeMap = userMastery.get(m.user_id)!
+      if (!typeMap.has(m.item_type)) typeMap.set(m.item_type, new Set())
+      typeMap.get(m.item_type)!.add(m.item_id)
+    }
+
+    // JLPT item sets per level (for seikatsu assignments)
+    const seikatsuLevels = [...new Set(
+      (learningAssignments ?? [])
+        .filter(a => a.category === 'seikatsu' && a.content_level)
+        .map(a => a.content_level as string)
+    )]
+
+    const jlptItemSets: Record<string, { vocab: Set<string>; grammar: Set<string>; reading: Set<string>; listening: Set<string>; total: number }> = {}
+
+    for (const level of seikatsuLevels) {
+      const [vocabRes, grammarRes, readingRes, listeningRes] = await Promise.all([
+        serviceClient.from('jlpt_vocabulary').select('id').eq('jlpt_level', level),
+        serviceClient.from('jlpt_grammar').select('id').eq('jlpt_level', level),
+        serviceClient.from('jlpt_reading_passages').select('id').eq('jlpt_level', level),
+        serviceClient.from('jlpt_listening_scripts').select('id').eq('jlpt_level', level),
+      ])
+      const vocab = new Set((vocabRes.data ?? []).map(v => v.id))
+      const grammar = new Set((grammarRes.data ?? []).map(g => g.id))
+      const reading = new Set((readingRes.data ?? []).map(r => r.id))
+      const listening = new Set((listeningRes.data ?? []).map(l => l.id))
+      jlptItemSets[level] = { vocab, grammar, reading, listening, total: vocab.size + grammar.size + reading.size + listening.size }
+    }
+
+    // Business JP item sets per subcategory
+    const bizSubcatDbMap: Record<string, string[]> = {
+      glossary: ['business', 'it', 'dev'],
+      'sentence-patterns': ['sentence_pattern'],
+      expressions: ['expression'],
+    }
+    const neededBizSubcats = [...new Set(
+      (learningAssignments ?? [])
+        .filter(a => a.category === 'business-jp')
+        .map(a => a.subcategory)
+    )]
+    const bizJpInfo: Record<string, { ids: Set<string>; total: number }> = {}
+
+    for (const subcat of neededBizSubcats) {
+      const cats = bizSubcatDbMap[subcat]
+      if (!cats) continue
+      const { data: items } = await serviceClient
+        .from('it_glossary')
+        .select('id')
+        .in('category', cats)
+      const ids = new Set((items ?? []).map(i => i.id))
+      bizJpInfo[subcat] = { ids, total: ids.size }
+    }
+
+    // Helper: check if mastered item is relevant to a given assignment
+    function isRelevant(m: { item_type: string; item_id: string }, a: { category: string; subcategory: string; content_level: string | null }): boolean {
+      if (a.category === 'seikatsu' && a.content_level) {
+        const sets = jlptItemSets[a.content_level]
+        if (!sets) return false
+        return (m.item_type === 'jlpt_vocabulary' && sets.vocab.has(m.item_id))
+          || (m.item_type === 'jlpt_grammar' && sets.grammar.has(m.item_id))
+          || (m.item_type === 'jlpt_reading' && sets.reading.has(m.item_id))
+          || (m.item_type === 'jlpt_listening' && sets.listening.has(m.item_id))
+      }
+      if (a.category === 'business-jp') {
+        const info = bizJpInfo[a.subcategory]
+        return !!info && m.item_type === 'it_glossary' && info.ids.has(m.item_id)
+      }
+      if (a.category === 'business-lit') {
+        const types = a.subcategory === 'attitude-culture'
+          ? ['attitude_manual', 'culture_manual']
+          : a.subcategory === 'security' ? ['security_manual'] : []
+        return types.includes(m.item_type)
+      }
+      return false
+    }
+
+    // Calculate per-assignment
+    for (const la of learningAssignments ?? []) {
+      const typeMap = userMastery.get(la.assigned_to)
+      let mastered = 0
+      let total = 0
+
+      if (la.category === 'seikatsu' && la.content_level) {
+        const sets = jlptItemSets[la.content_level]
+        if (sets) {
+          total = sets.total
+          for (const [type, idSet] of [
+            ['jlpt_vocabulary', sets.vocab],
+            ['jlpt_grammar', sets.grammar],
+            ['jlpt_reading', sets.reading],
+            ['jlpt_listening', sets.listening],
+          ] as const) {
+            const masteredIds = typeMap?.get(type)
+            if (masteredIds) {
+              for (const id of masteredIds) {
+                if ((idSet as Set<string>).has(id)) mastered++
+              }
+            }
+          }
+        }
+      } else if (la.category === 'business-jp') {
+        const info = bizJpInfo[la.subcategory]
+        if (info) {
+          total = info.total
+          const masteredIds = typeMap?.get('it_glossary')
+          if (masteredIds) {
+            for (const id of masteredIds) {
+              if (info.ids.has(id)) mastered++
+            }
+          }
+        }
+      } else if (la.category === 'business-lit') {
+        total = getReadingTotalCount(la.category, la.subcategory)
+        const types = la.subcategory === 'attitude-culture'
+          ? ['attitude_manual', 'culture_manual']
+          : la.subcategory === 'security' ? ['security_manual'] : []
+        for (const t of types) {
+          mastered += typeMap?.get(t)?.size ?? 0
+        }
+      }
+
+      // Daily trend (last 7 days)
+      const now = new Date()
+      const dailyTrend: number[] = []
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now)
+        d.setDate(d.getDate() - i)
+        const dateStr = d.toISOString().split('T')[0]
+        const dayCount = (recentMastered ?? []).filter(m =>
+          m.user_id === la.assigned_to
+          && m.created_at.startsWith(dateStr)
+          && isRelevant(m, la)
+        ).length
+        dailyTrend.push(dayCount)
+      }
+
+      learningProgress[la.id] = {
+        mastered,
+        total,
+        pct: total > 0 ? Math.round((mastered / total) * 100) : 0,
+        dailyTrend,
+      }
+    }
+  }
+
   const awaitingConfirmation = learningAssignments?.filter(t => t.status === 'awaiting_confirmation').length ?? 0
   const taskStats = {
     total: learningAssignments?.length ?? 0,
@@ -95,7 +268,7 @@ export default async function AdminTasksPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">課題配分</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">課題配信</h1>
       <p className="mt-1 text-gray-500 dark:text-gray-400">課題作成及び進捗状況管理</p>
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-6">
@@ -131,6 +304,7 @@ export default async function AdminTasksPage() {
         quizRetakeRequests={quizRetakeRequests}
         users={users}
         currentRole={currentRole}
+        learningProgress={learningProgress}
       />
     </div>
   )
