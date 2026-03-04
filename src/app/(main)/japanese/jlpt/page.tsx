@@ -16,10 +16,12 @@ export default async function JlptHubPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Parallel batch: profile + 4 content tables + mastered items (6 queries)
-  const [prof, vocabAll, grammarAll, readingAll, listeningAll, masteredResult] = await Promise.all([
+  // Parallel batch: profile + vocabulary (paginated) + 3 content tables + mastered items (8 queries)
+  // jlpt_vocabulary exceeds PostgREST's 1000-row server limit, so fetch in 2 batches
+  const [prof, vocabBatch1, vocabBatch2, grammarAll, readingAll, listeningAll, masteredResult] = await Promise.all([
     supabase.from('profiles').select('role').eq('id', user.id).single(),
-    supabase.from('jlpt_vocabulary').select('id, jlpt_level'),
+    supabase.from('jlpt_vocabulary').select('id, jlpt_level').range(0, 999),
+    supabase.from('jlpt_vocabulary').select('id, jlpt_level').range(1000, 1999),
     supabase.from('jlpt_grammar').select('id, jlpt_level'),
     supabase.from('jlpt_reading_passages').select('id, jlpt_level'),
     supabase.from('jlpt_listening_scripts').select('id, jlpt_level'),
@@ -28,6 +30,7 @@ export default async function JlptHubPage() {
       .in('item_type', ['jlpt_vocabulary', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening']),
   ])
 
+  const vocabAllData = [...(vocabBatch1.data ?? []), ...(vocabBatch2.data ?? [])]
   const bypassLock = prof.data?.role === 'admin' || prof.data?.role === 'mentor'
 
   // Group by level and compute progress (client-side)
@@ -36,7 +39,7 @@ export default async function JlptHubPage() {
   const levelProgress: Record<string, { vocabMastered: number; vocabTotal: number; grammarMastered: number; grammarTotal: number; readingMastered: number; readingTotal: number; listeningMastered: number; listeningTotal: number }> = {}
 
   for (const level of JLPT_LEVELS) {
-    const vocabIds = vocabAll.data?.filter(v => v.jlpt_level === level) ?? []
+    const vocabIds = vocabAllData.filter(v => v.jlpt_level === level)
     const grammarIds = grammarAll.data?.filter(g => g.jlpt_level === level) ?? []
     const readingIds = readingAll.data?.filter(r => r.jlpt_level === level) ?? []
     const listeningIds = listeningAll.data?.filter(l => l.jlpt_level === level) ?? []

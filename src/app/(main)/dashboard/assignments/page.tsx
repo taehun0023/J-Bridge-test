@@ -41,9 +41,10 @@ export default async function AssignmentsPage() {
     .order('created_at', { ascending: false })
 
   // Resolve quizzes for assignments with empty required_quiz_ids (backfill)
+  // Also re-resolve seikatsu assignments to ensure all quiz types are included
   const resolvedQuizIdsMap: Record<string, string[]> = {}
   const emptyAssignments = (assignments ?? []).filter(a =>
-    (a.required_quiz_ids ?? []).length === 0
+    (a.required_quiz_ids ?? []).length === 0 || a.category === 'seikatsu'
   )
 
   for (const a of emptyAssignments) {
@@ -60,7 +61,7 @@ export default async function AssignmentsPage() {
         .in('quiz_type', catConfig.quizTypes)
 
       if (a.content_level) {
-        query = query.eq('content_level', a.content_level)
+        query = query.ilike('title', `%${a.content_level}%`)
       }
 
       const { data: quizzes } = await query.order('created_at')
@@ -118,15 +119,21 @@ export default async function AssignmentsPage() {
     }
 
     if (resolvedIds.length > 0) {
-      resolvedQuizIdsMap[a.id] = resolvedIds
+      const existingIds = a.required_quiz_ids ?? []
+      const needsUpdate = resolvedIds.length !== existingIds.length
+        || resolvedIds.some(id => !existingIds.includes(id))
 
-      // Backfill the DB record so progress tracking works
-      const serviceClient = createServiceRoleClient()
-      if (serviceClient) {
-        await serviceClient
-          .from('learning_assignments')
-          .update({ required_quiz_ids: resolvedIds })
-          .eq('id', a.id)
+      if (needsUpdate) {
+        resolvedQuizIdsMap[a.id] = resolvedIds
+
+        // Backfill the DB record so progress tracking works
+        const serviceClient = createServiceRoleClient()
+        if (serviceClient) {
+          await serviceClient
+            .from('learning_assignments')
+            .update({ required_quiz_ids: resolvedIds })
+            .eq('id', a.id)
+        }
       }
     }
   }

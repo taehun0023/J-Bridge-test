@@ -41,14 +41,14 @@ export async function createLearningAssignment(formData: FormData) {
   const queryClient = createServiceRoleClient() ?? supabase
   {
     if (isLevelOnly && catConfig?.quizTypes) {
-      // levelOnly: search all quiz types for this category
+      // levelOnly: search all quiz types for this category by title pattern
       let query = queryClient
         .from('quizzes')
         .select('id')
         .in('quiz_type', catConfig.quizTypes)
 
       if (contentLevel) {
-        query = query.eq('content_level', contentLevel)
+        query = query.ilike('title', `%${contentLevel}%`)
       }
 
       const { data: quizzes } = await query.order('created_at')
