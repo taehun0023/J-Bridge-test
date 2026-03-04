@@ -292,11 +292,11 @@ async function deleteExistingQuizData() {
 async function insertReadingQuizzes() {
   console.log('\n4. Inserting reading quiz definitions...');
   const quizzes = [
-    { id: QUIZ_IDS[0], title: 'N5 読解クイズ', quiz_type: 'jlpt_reading', passing_score: 70, time_limit_minutes: 15, is_assessment: false },
-    { id: QUIZ_IDS[1], title: 'N4 読解クイズ', quiz_type: 'jlpt_reading', passing_score: 70, time_limit_minutes: 20, is_assessment: false },
-    { id: QUIZ_IDS[2], title: 'N3 読解クイズ', quiz_type: 'jlpt_reading', passing_score: 70, time_limit_minutes: 25, is_assessment: false },
-    { id: QUIZ_IDS[3], title: 'N2 読解クイズ', quiz_type: 'jlpt_reading', passing_score: 70, time_limit_minutes: 30, is_assessment: false },
-    { id: QUIZ_IDS[4], title: 'N1 読解クイズ', quiz_type: 'jlpt_reading', passing_score: 70, time_limit_minutes: 35, is_assessment: false },
+    { id: QUIZ_IDS[0], title: 'N5 読解テスト', quiz_type: 'jlpt_reading', passing_score: 70, time_limit_minutes: 15, is_assessment: false },
+    { id: QUIZ_IDS[1], title: 'N4 読解テスト', quiz_type: 'jlpt_reading', passing_score: 70, time_limit_minutes: 20, is_assessment: false },
+    { id: QUIZ_IDS[2], title: 'N3 読解テスト', quiz_type: 'jlpt_reading', passing_score: 70, time_limit_minutes: 25, is_assessment: false },
+    { id: QUIZ_IDS[3], title: 'N2 読解テスト', quiz_type: 'jlpt_reading', passing_score: 70, time_limit_minutes: 30, is_assessment: false },
+    { id: QUIZ_IDS[4], title: 'N1 読解テスト', quiz_type: 'jlpt_reading', passing_score: 70, time_limit_minutes: 35, is_assessment: false },
   ];
 
   const resp = await fetch(`${SUPABASE_URL}/rest/v1/quizzes`, {

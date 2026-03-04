@@ -488,7 +488,7 @@ BEGIN
   VALUES (q_id, 'c0000003-0000-0000-0000-000000000003', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n手紙を書く習慣が少なくなっている現代ですが、心のこもった手書きの手紙は、もらった人をとても喜ばせるものです。年賀状は1月1日に届くように、12月中旬までに出しましょう。\n\n質問：「心のこもった」の意味に一番近いものはどれですか？', '「心のこもった」は真心が入った、気持ちを込めて書いたという意味です。진심이 담긴이라는 뜻입니다。', 1, 9, 'N3', 'reading');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '長く書いた', FALSE, 1),
-    (gen_random_uuid(), q_id, '心のこもった', TRUE, 2),
+    (gen_random_uuid(), q_id, '気持ちを込めて書いた', TRUE, 2),
     (gen_random_uuid(), q_id, '高い紙に書いた', FALSE, 3),
     (gen_random_uuid(), q_id, '難しい言葉を使った', FALSE, 4);
 END $$;
@@ -1210,7 +1210,7 @@ BEGIN
   VALUES (q_id, 'c0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の文章を読んで、質問に答えてください。\n\n秋になると、木の葉が赤や黄色に色づきます。これを「紅葉」と言います。日本では紅葉を見に山や公園に行く人がたくさんいます。京都の紅葉が特に有名です。\n\n質問：「色づく」の意味は何ですか？', '「色づく」は葉の色が変わることを意味します。색이 물들다 / 단풍이 들다의 의미입니다。', 1, 19, 'N4', 'reading');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '葉が落ちる', FALSE, 1),
-    (gen_random_uuid(), q_id, '色づく', TRUE, 2),
+    (gen_random_uuid(), q_id, '色が変わる', TRUE, 2),
     (gen_random_uuid(), q_id, '花が咲く', FALSE, 3),
     (gen_random_uuid(), q_id, '実がなる', FALSE, 4);
 END $$;

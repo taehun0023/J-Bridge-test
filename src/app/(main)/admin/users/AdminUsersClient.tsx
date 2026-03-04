@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { updateUserRole, createUserAccount, updateMentorSpecialty } from '@/app/actions/admin/users'
+import { updateUserRole, createUserAccount, updateMentorSpecialty, deleteUser } from '@/app/actions/admin/users'
+import { Trash2 } from 'lucide-react'
 
 interface User {
   id: string
@@ -27,6 +28,7 @@ export default function AdminUsersClient({ users }: Props) {
   const [search, setSearch] = useState('')
   const [pending, startTransition] = useTransition()
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<User | null>(null)
 
   const filtered = users.filter(u =>
     (u.full_name ?? '').toLowerCase().includes(search.toLowerCase()) ||
@@ -58,6 +60,21 @@ export default function AdminUsersClient({ users }: Props) {
         setTimeout(() => setMessage(null), 3000)
         router.refresh()
       }
+    })
+  }
+
+  function handleDelete() {
+    if (!deleteTarget) return
+    startTransition(async () => {
+      const result = await deleteUser(deleteTarget.id)
+      if (result.error) {
+        setMessage({ type: 'error', text: result.error })
+      } else {
+        setMessage({ type: 'success', text: 'アカウントが削除されました' })
+      }
+      setDeleteTarget(null)
+      setTimeout(() => setMessage(null), 3000)
+      router.refresh()
     })
   }
 
@@ -149,9 +166,8 @@ export default function AdminUsersClient({ users }: Props) {
                 <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">メール</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">役割</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">専門分野</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">日本語力</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">プログラミング技術力</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">登録日</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">
@@ -195,18 +211,18 @@ export default function AdminUsersClient({ users }: Props) {
                       <span className="text-xs text-zinc-400">—</span>
                     )}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3">
-                    <span className="text-sm font-mono text-zinc-900 dark:text-zinc-100">
-                      {user.is_japanese ? '—' : `${user.japanese_score} /200`}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3">
-                    <span className="text-sm font-mono text-zinc-900 dark:text-zinc-100">
-                      {user.programming_score} /200
-                    </span>
-                  </td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
                     {new Date(user.created_at).toLocaleDateString('ja-JP')}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3">
+                    <button
+                      onClick={() => setDeleteTarget(user)}
+                      disabled={pending}
+                      className="rounded-lg p-1.5 text-zinc-400 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50 transition-colors"
+                      title="削除"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -217,6 +233,40 @@ export default function AdminUsersClient({ users }: Props) {
           <div className="py-8 text-center text-sm text-zinc-500">検索結果がありません</div>
         )}
       </div>
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setDeleteTarget(null)}>
+          <div className="mx-4 w-full max-w-md rounded-2xl border border-gray-200/60 bg-white p-6 shadow-xl dark:border-white/[0.08] dark:bg-zinc-900" onClick={e => e.stopPropagation()}>
+            <h3 className="flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+              <span className="text-amber-500">⚠</span> アカウント削除
+            </h3>
+            <div className="mt-4 space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
+              <p>以下のアカウントを削除します。</p>
+              <p className="font-medium text-red-500">この操作は取り消せません。</p>
+              <p>関連する全てのデータ（試験結果、学習記録等）も削除されます。</p>
+            </div>
+            <div className="mt-4 rounded-xl bg-zinc-50 p-3 dark:bg-white/5">
+              <p className="text-sm text-zinc-900 dark:text-zinc-100"><span className="text-zinc-500 dark:text-zinc-400">名前:</span> {deleteTarget.full_name ?? '-'}</p>
+              <p className="text-sm text-zinc-900 dark:text-zinc-100"><span className="text-zinc-500 dark:text-zinc-400">メール:</span> {deleteTarget.email}</p>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={pending}
+                className="rounded-xl px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/5 transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={pending}
+                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50 transition-colors"
+              >
+                {pending ? '削除中...' : '削除する'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

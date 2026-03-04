@@ -15,8 +15,8 @@ export const ASSESSMENT_LABELS: Record<number, string> = {
 }
 
 export const ASSESSMENT_TIME_LIMITS: Record<number, number> = {
-  1: 70,
-  2: 25,
+  1: 50,
+  2: 50,
   3: 30,
   4: 30,
   5: 25,
@@ -24,17 +24,18 @@ export const ASSESSMENT_TIME_LIMITS: Record<number, number> = {
 
 export const ASSESSMENT_TOTAL_QUESTIONS: Record<number, number> = {
   1: 60,  // 文法30 + 読解15 + 聴解15
-  2: 30,
+  2: 60,
   3: 30,
   4: 30,
   5: 30,
 }
 
-/** Step 1 (生活日本語): JLPT-style weighted category selection — 60 questions total */
+/** Step 1 (生活日本語): JLPT-style weighted category selection — 60 questions total
+ *  Key order determines exam section order: 聴解 → 文法 → 読解 */
 export const STEP1_CATEGORY_WEIGHTS: Record<string, number> = {
+  listening: 15, // 聴解
   grammar: 30,   // 文字・語彙・文法
   reading: 15,   // 読解
-  listening: 15, // 聴解
 }
 
 /** Step 1 difficulty distribution by JLPT N-level: N5+N4 20%, N3 20%, N2 30%, N1 30% */
@@ -46,16 +47,96 @@ export const STEP1_DIFFICULTY_RATIOS: Record<string, number> = {
   N1: 0.3,
 }
 
+/** Step 2 (ビジネス日本語): category weights — 60 questions total (15 per category) */
+export const STEP2_CATEGORY_WEIGHTS: Record<string, number> = {
+  vocabulary: 15,
+  sentence_pattern: 15,
+  business_expression: 15,
+  reading: 15,
+}
+
+/** Step 2 difficulty distribution: 初級 20%, 中級 40%, 上級 40% */
+export const STEP2_DIFFICULTY_RATIOS: Record<string, number> = {
+  '初級': 0.2,
+  '中級': 0.4,
+  '上級': 0.4,
+}
+
 /**
  * Content quiz types that can be blended into assessment exams.
  * Step 1: practice quizzes (grammar/reading/listening) with Japanese-only options.
  * Step 2: IT terminology + sentence patterns + business expressions.
+ * NOTE: jlpt_vocab is intentionally excluded — vocab is NOT blended into comprehensive exams.
  */
 export const ASSESSMENT_CONTENT_QUIZ_TYPES: Record<number, string[]> = {
   1: ['jlpt_grammar', 'jlpt_reading', 'jlpt_listening'],
   2: ['it_terminology', 'sentence_pattern', 'business_expression'],
   // 3, 4 are separate tasks (CS / dev)
 }
+
+/**
+ * All practice quiz types visible in admin content management (per step).
+ * Superset of ASSESSMENT_CONTENT_QUIZ_TYPES — includes vocab for claim/edit management.
+ */
+export const ADMIN_CONTENT_QUIZ_TYPES: Record<number, string[]> = {
+  1: ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening'],
+  2: ['it_terminology', 'sentence_pattern', 'business_expression'],
+}
+
+/** Practice (理解度テスト) quiz type labels for admin content management */
+export const PRACTICE_QUIZ_TYPE_LABELS: Record<string, string> = {
+  jlpt_vocab: '語彙(練習)',
+  jlpt_grammar: '文法(練習)',
+  jlpt_reading: '読解(練習)',
+  jlpt_listening: '聴解(練習)',
+  it_terminology: '語彙(練習)',
+  sentence_pattern: '文章パターン(練習)',
+  business_expression: 'ビジネス表現(練習)',
+}
+
+/** Pool quiz IDs — per category × level for level-specific random-draw tests */
+export const POOL_QUIZ_IDS: Record<string, Record<string, string>> = {
+  jlpt_vocab: {
+    N5: 'e0000001-0000-0000-0000-000000000011',
+    N4: 'e0000001-0000-0000-0000-000000000012',
+    N3: 'e0000001-0000-0000-0000-000000000013',
+    N2: 'e0000001-0000-0000-0000-000000000014',
+    N1: 'e0000001-0000-0000-0000-000000000015',
+  },
+  jlpt_grammar: {
+    N5: 'e0000001-0000-0000-0000-000000000021',
+    N4: 'e0000001-0000-0000-0000-000000000022',
+    N3: 'e0000001-0000-0000-0000-000000000023',
+    N2: 'e0000001-0000-0000-0000-000000000024',
+    N1: 'e0000001-0000-0000-0000-000000000025',
+  },
+  jlpt_reading: {
+    N5: 'e0000001-0000-0000-0000-000000000031',
+    N4: 'e0000001-0000-0000-0000-000000000032',
+    N3: 'e0000001-0000-0000-0000-000000000033',
+    N2: 'e0000001-0000-0000-0000-000000000034',
+    N1: 'e0000001-0000-0000-0000-000000000035',
+  },
+  jlpt_listening: {
+    N5: 'e0000001-0000-0000-0000-000000000041',
+    N4: 'e0000001-0000-0000-0000-000000000042',
+    N3: 'e0000001-0000-0000-0000-000000000043',
+    N2: 'e0000001-0000-0000-0000-000000000044',
+    N1: 'e0000001-0000-0000-0000-000000000045',
+  },
+}
+
+/** Pool quiz IDs for Business Japanese (Step 2) comprehension tests */
+export const BJ_POOL_QUIZ_IDS: Record<string, string> = {
+  it_terminology: 'f0000001-0000-0000-0000-000000000001',
+  sentence_pattern: 'f0000001-0000-0000-0000-000000000002',
+  business_expression: 'f0000001-0000-0000-0000-000000000003',
+}
+
+export const ALL_PRACTICE_QUIZ_TYPES = [
+  'jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening',
+  'it_terminology', 'sentence_pattern', 'business_expression',
+] as const
 
 /** comprehensive_exams.category → assessment step (radar axis) mapping */
 export const COMP_EXAM_CATEGORY_TO_STEP: Record<string, number> = {
@@ -127,7 +208,8 @@ export const AXIS_DISPLAY_LABELS: Record<AxisKey, string> = {
   attitudeCulture: 'ビジネスリテラシー',
 }
 
-export function getRelevantAxes(isJapanese: boolean): readonly AxisKey[] {
+export function getRelevantAxes(isJapanese: boolean, role?: string): readonly AxisKey[] {
+  if (role === 'admin' || role === 'mentor') return ALL_AXES
   return isJapanese ? JAPANESE_USER_AXES : ALL_AXES
 }
 

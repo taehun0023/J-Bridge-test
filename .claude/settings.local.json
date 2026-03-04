@@ -57,7 +57,15 @@
       "Bash(python:*)",
       "Bash(npx next:*)",
       "Bash(npm test:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(tail:*)",
+      "Bash(head:*)",
+      "Bash(npx vitest:*)",
+      "Bash(done)",
+      "Bash(do echo:*)",
+      "Bash(awk:*)",
+      "Bash(sed:*)",
+      "Bash(/tmp/analyze_per_level.py:*)"
     ]
   }
 }

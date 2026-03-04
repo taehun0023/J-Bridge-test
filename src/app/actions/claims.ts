@@ -1,6 +1,19 @@
 'use server'
 
-import { requireAuth } from '@/lib/auth-helpers'
+import { requireAuth, requireAdmin } from '@/lib/auth-helpers'
+
+export async function resolveQuestionClaims(questionId: string): Promise<{ success?: boolean; error?: string }> {
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error as string }
+
+  const { error } = await auth.serviceClient
+    .from('question_claims')
+    .delete()
+    .eq('question_id', questionId)
+
+  if (error) return { error: 'クレームの削除に失敗しました' }
+  return { success: true }
+}
 
 export async function submitQuestionClaim(questionId: string, reason?: string): Promise<{ success?: boolean; error?: string }> {
   const auth = await requireAuth()

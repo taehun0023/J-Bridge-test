@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ClipboardCheck, CheckCircle, Clock, Circle } from 'lucide-react'
+import { ClipboardCheck, CheckCircle, Clock, Circle, Hourglass } from 'lucide-react'
 import type { ExamCycleInfo, CycleExam } from '@/app/actions/exam-scheduling'
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -20,6 +20,8 @@ function getStatusIcon(status: string) {
       return <CheckCircle className="h-6 w-6 text-red-400" />
     case 'in_progress':
       return <Clock className="h-6 w-6 text-blue-500 animate-pulse" />
+    case 'requested':
+      return <Hourglass className="h-6 w-6 text-amber-500" />
     default:
       return <Circle className="h-6 w-6 text-zinc-400" />
   }
@@ -33,6 +35,8 @@ function getStatusLabel(status: string, score: number | null) {
       return <span className="text-sm font-bold text-red-400">{score}点 不合格</span>
     case 'in_progress':
       return <span className="text-sm font-medium text-blue-500">進行中</span>
+    case 'requested':
+      return <span className="text-sm font-medium text-amber-500">承認待ち</span>
     default:
       return <span className="text-sm text-zinc-500">未受験</span>
   }
@@ -46,9 +50,15 @@ function getDaysRemaining(deadlineAt: string): number {
 
 function getNextUnfinishedExam(exams: CycleExam[]): CycleExam | null {
   // Prioritize in_progress, then approved (not started)
+  // 'requested' exams are not clickable (waiting for admin approval)
   const inProgress = exams.find(e => e.status === 'in_progress')
   if (inProgress) return inProgress
   return exams.find(e => e.status === 'approved') ?? null
+}
+
+function allWaitingApproval(exams: CycleExam[]): boolean {
+  return exams.every(e => e.status === 'requested' || e.status === 'completed' || e.status === 'failed')
+    && exams.some(e => e.status === 'requested')
 }
 
 interface Props {
@@ -83,7 +93,7 @@ export default function ExamGatePage({ cycle, userName }: Props) {
                   {userName ? `${userName}さん、` : ''}J-Bridgeへようこそ！
                 </p>
                 <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                  まず、エンジニアとしての現在の実力を測定する総合試験を受けてください。
+                  まず、日本語の実力を測定する試験を受けてください。管理者の承認後に受験可能です。
                 </p>
               </>
             ) : (
@@ -121,6 +131,7 @@ export default function ExamGatePage({ cycle, userName }: Props) {
             {cycle.exams.map((exam) => {
               const isDone = exam.status === 'completed' || exam.status === 'failed'
               const isClickable = exam.status === 'approved' || exam.status === 'in_progress'
+              const isRequested = exam.status === 'requested'
 
               const cardContent = (
                 <div
@@ -129,9 +140,11 @@ export default function ExamGatePage({ cycle, userName }: Props) {
                       ? exam.status === 'completed'
                         ? 'border-emerald-200 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-900/10'
                         : 'border-red-200 bg-red-50/50 dark:border-red-800 dark:bg-red-900/10'
-                      : isClickable
-                        ? 'border-indigo-200 bg-white hover:border-indigo-400 hover:shadow-md cursor-pointer dark:border-indigo-700 dark:bg-zinc-800 dark:hover:border-indigo-500'
-                        : 'border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/50'
+                      : isRequested
+                        ? 'border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-900/10'
+                        : isClickable
+                          ? 'border-indigo-200 bg-white hover:border-indigo-400 hover:shadow-md cursor-pointer dark:border-indigo-700 dark:bg-zinc-800 dark:hover:border-indigo-500'
+                          : 'border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/50'
                   }`}
                 >
                   <div className="flex justify-center mb-2">
@@ -168,6 +181,16 @@ export default function ExamGatePage({ cycle, userName }: Props) {
                 {nextExam.status === 'in_progress' ? '試験を続ける' : isFirstCycle ? '最初の試験を始める' : '試験を受ける'}
                 <span className="text-xl">→</span>
               </Link>
+            ) : allWaitingApproval(cycle.exams) ? (
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-2 rounded-xl bg-amber-100 px-6 py-3 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                  <Hourglass className="h-5 w-5" />
+                  <span className="font-semibold">管理者の承認を待っています</span>
+                </div>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  担当メンターまたは管理者が承認すると試験を受けられます
+                </p>
+              </div>
             ) : (
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
                 すべての試験が完了しています。ページをリロードしてください。
@@ -178,7 +201,7 @@ export default function ExamGatePage({ cycle, userName }: Props) {
           {/* Footer note */}
           <p className="mt-6 text-center text-xs text-zinc-400 dark:text-zinc-500">
             {isFirstCycle
-              ? 'すべての試験を完了するとダッシュボードが利用できます'
+              ? '承認後、すべての試験を完了するとダッシュボードが利用できます'
               : `締切: ${new Date(cycle.deadlineAt).toLocaleDateString('ja-JP')}`
             }
           </p>

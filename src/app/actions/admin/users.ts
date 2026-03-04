@@ -62,6 +62,29 @@ export async function updateMentorSpecialty(userId: string, specialty: string | 
   return { success: true }
 }
 
+export async function deleteUser(userId: string) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error } as const
+
+  if (userId === auth.user.id) {
+    return { error: '自分のアカウントは削除できません' }
+  }
+
+  const { data: oldData } = await auth.serviceClient
+    .from('profiles')
+    .select('email, full_name, role')
+    .eq('id', userId)
+    .single()
+
+  const { error } = await auth.serviceClient.auth.admin.deleteUser(userId)
+  if (error) return { error: error.message }
+
+  await logAuditEvent(auth.user.id, 'delete', 'profiles', userId, oldData, null)
+
+  revalidatePath('/admin/users')
+  return { success: true }
+}
+
 export async function createUserAccount(formData: FormData) {
   const auth = await requireAdmin()
   if ('error' in auth) return { error: auth.error } as const

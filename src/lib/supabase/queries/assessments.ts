@@ -145,7 +145,8 @@ export async function fetchRandomByWeightedCategory(
   return shuffle(result)
 }
 
-/** Step 1 JLPT-style selection: grammar 30 + reading 15 + listening 15 = 60, with N-level difficulty distribution */
+/** Step 1 JLPT-style selection: listening 15 + grammar 30 + reading 15 = 60, with N-level difficulty distribution.
+ *  Questions are grouped by category (order from STEP1_CATEGORY_WEIGHTS), shuffled within each category. */
 async function fetchStep1JlptStyle(quizIds: string | string[]): Promise<QuestionWithOptions[]> {
   const { STEP1_CATEGORY_WEIGHTS, STEP1_DIFFICULTY_RATIOS } = await import('@/lib/assessment-config')
   const allQuestions = await fetchAllQuestions(quizIds)
@@ -175,10 +176,49 @@ async function fetchStep1JlptStyle(quizIds: string | string[]): Promise<Question
       picked.push(...needed)
     }
 
-    result.push(...picked)
+    // Shuffle within category, but keep category order intact
+    result.push(...shuffle(picked))
   }
 
-  return shuffle(result)
+  return result
+}
+
+/** Step 2 Business JP selection: vocabulary 15 + sentence_pattern 15 + business_expression 15 + reading 15 = 60, with 初級/中級/上級 distribution.
+ *  Questions are grouped by category (order from STEP2_CATEGORY_WEIGHTS), shuffled within each category. */
+async function fetchStep2BusinessStyle(quizIds: string | string[]): Promise<QuestionWithOptions[]> {
+  const { STEP2_CATEGORY_WEIGHTS, STEP2_DIFFICULTY_RATIOS } = await import('@/lib/assessment-config')
+  const allQuestions = await fetchAllQuestions(quizIds)
+
+  const result: QuestionWithOptions[] = []
+  const usedIds = new Set<string>()
+
+  for (const [category, targetCount] of Object.entries(STEP2_CATEGORY_WEIGHTS)) {
+    const categoryPool = allQuestions.filter(q => q.question_category === category)
+    if (categoryPool.length === 0) continue
+
+    const picked: QuestionWithOptions[] = []
+
+    for (const [difficulty, ratio] of Object.entries(STEP2_DIFFICULTY_RATIOS)) {
+      const count = Math.round(targetCount * ratio)
+      const pool = shuffle(categoryPool.filter(q => q.difficulty === difficulty && !usedIds.has(q.id)))
+      const selected = pool.slice(0, count)
+      selected.forEach(q => usedIds.add(q.id))
+      picked.push(...selected)
+    }
+
+    // Rounding error correction: fill shortfall from remaining pool
+    if (picked.length < targetCount) {
+      const remaining = shuffle(categoryPool.filter(q => !usedIds.has(q.id)))
+      const needed = remaining.slice(0, targetCount - picked.length)
+      needed.forEach(q => usedIds.add(q.id))
+      picked.push(...needed)
+    }
+
+    // Shuffle within category, but keep category order intact
+    result.push(...shuffle(picked))
+  }
+
+  return result
 }
 
 /** Fetch random assessment questions based on step and optional target coding area */
@@ -193,8 +233,8 @@ export async function fetchRandomAssessmentQuestions(
   }
 
   if (step === 2) {
-    // ビジネス日本語: category-based selection (10 per category = 30 total)
-    return fetchRandomByCategory(quizIds, 10)
+    // ビジネス日本語: weighted category + difficulty selection (15 per category = 60 total)
+    return fetchStep2BusinessStyle(quizIds)
   }
 
   if (step === 3) {

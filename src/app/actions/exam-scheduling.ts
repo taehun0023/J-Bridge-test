@@ -2,11 +2,13 @@
 
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { recalculateUserScores } from '@/modules/scoring'
+import { notifyMentorsOf, notifyAdmins, getUserDisplayName } from '@/lib/notification-helpers'
 import { COMP_EXAM_CATEGORY_TO_STEP, ASSESSMENT_TIME_LIMITS, ASSESSMENT_TOTAL_QUESTIONS } from '@/lib/assessment-config'
 
 /** Categories for comprehensive exam cycles */
-const ALL_EXAM_CATEGORIES = ['seikatsu', 'business-jp', 'cs', 'dev', 'business-lit'] as const
 const JAPANESE_EXAM_CATEGORIES = ['cs', 'dev', 'business-lit'] as const
+/** First cycle for non-Japanese: only Japanese language exams are mandatory */
+const FIRST_CYCLE_NON_JAPANESE = ['seikatsu', 'business-jp'] as const
 
 /** Cycle deadline: 14 days from scheduled date */
 const CYCLE_INTERVAL_DAYS = 14
@@ -43,6 +45,9 @@ export async function checkAndCreateExamCycle(
   const serviceClient = createServiceRoleClient()
   if (!serviceClient) return null
 
+  // Japanese users skip the exam gate entirely — go straight to dashboard
+  if (isJapanese) return null
+
   // 1. Check for active (pending/in_progress) cycle
   const { data: activeCycle } = await serviceClient
     .from('exam_cycles')
@@ -67,7 +72,7 @@ export async function checkAndCreateExamCycle(
 
     // Deduplicate by category: if self-healing previously created duplicates,
     // keep the exam with the highest-priority status per category.
-    const STATUS_PRIORITY: Record<string, number> = { completed: 4, failed: 3, in_progress: 2, approved: 1 }
+    const STATUS_PRIORITY: Record<string, number> = { completed: 5, failed: 4, in_progress: 3, approved: 2, requested: 1 }
     const byCategory = new Map<string, NonNullable<typeof allExams>[number]>()
     for (const e of allExams ?? []) {
       const existing = byCategory.get(e.category)
@@ -79,7 +84,7 @@ export async function checkAndCreateExamCycle(
 
     // If truly no exams found (first insert failed), recreate
     if (exams.length === 0) {
-      const newExams = await createCycleExams(serviceClient, userId, activeCycle.id, isJapanese)
+      const newExams = await createCycleExams(serviceClient, userId, activeCycle.id, isJapanese, activeCycle.cycle_number)
       return {
         id: activeCycle.id,
         cycleNumber: activeCycle.cycle_number,
@@ -143,9 +148,14 @@ async function createCycleExams(
   serviceClient: ReturnType<typeof createServiceRoleClient> & object,
   userId: string,
   cycleId: string,
-  isJapanese: boolean
+  isJapanese: boolean,
+  cycleNumber: number = 1
 ): Promise<CycleExam[]> {
-  const categories = isJapanese ? JAPANESE_EXAM_CATEGORIES : ALL_EXAM_CATEGORIES
+  // Japanese users never reach here (gated in checkAndCreateExamCycle).
+  // Non-Japanese: seikatsu + business-jp only (all cycles).
+  const categories = isJapanese
+    ? JAPANESE_EXAM_CATEGORIES
+    : FIRST_CYCLE_NON_JAPANESE
 
   const examInserts = categories.map(category => {
     const step = COMP_EXAM_CATEGORY_TO_STEP[category]
@@ -153,7 +163,7 @@ async function createCycleExams(
       user_id: userId,
       category,
       subcategory: 'comprehensive',
-      status: 'approved',
+      status: 'requested',
       exam_cycle_id: cycleId,
       time_limit_minutes: step ? ASSESSMENT_TIME_LIMITS[step] : 30,
       total_questions: step ? ASSESSMENT_TOTAL_QUESTIONS[step] : 30,
@@ -165,6 +175,24 @@ async function createCycleExams(
     .from('comprehensive_exams')
     .insert(examInserts)
     .select('id, category, subcategory, status, score, passed')
+
+  // Notify mentors/admins about pending exam approval
+  const userName = await getUserDisplayName(userId)
+  await Promise.all([
+    notifyMentorsOf(
+      userId,
+      'exam_requested',
+      `${userName}さんが総合試験（第${cycleNumber}回）の承認を待っています`,
+      undefined,
+      '/admin/tasks'
+    ),
+    notifyAdmins(
+      'exam_requested',
+      `${userName}さんが総合試験（第${cycleNumber}回）の承認を待っています`,
+      undefined,
+      '/admin/tasks'
+    ),
+  ])
 
   return (exams ?? []).map(e => ({
     id: e.id,
@@ -206,7 +234,7 @@ async function createExamCycle(
   }
 
   // Create comprehensive_exam records
-  const exams = await createCycleExams(serviceClient, userId, cycle.id, isJapanese)
+  const exams = await createCycleExams(serviceClient, userId, cycle.id, isJapanese, cycleNumber)
 
   return {
     id: cycle.id,

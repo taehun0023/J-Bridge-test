@@ -5,6 +5,7 @@ import Card from '@/components/ui/Card'
 import { categoryChildren } from '@/lib/navigation'
 import JlptTestBlock from '@/components/japanese/JlptTestBlock'
 import GuideCard from '@/components/japanese/JlptGuideCard'
+import { getJlptLevel } from '@/lib/assessment-config'
 
 const JLPT_LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'] as const
 
@@ -18,8 +19,8 @@ export default async function JlptHubPage() {
 
   // Parallel batch: profile + vocabulary (paginated) + 3 content tables + mastered items (8 queries)
   // jlpt_vocabulary exceeds PostgREST's 1000-row server limit, so fetch in 2 batches
-  const [prof, vocabBatch1, vocabBatch2, grammarAll, readingAll, listeningAll, masteredResult] = await Promise.all([
-    supabase.from('profiles').select('role').eq('id', user.id).single(),
+  const [prof, vocabBatch1, vocabBatch2, grammarAll, readingAll, listeningAll, masteredResult, seikatsuExamResult] = await Promise.all([
+    supabase.from('profiles').select('role, mentor_specialty').eq('id', user.id).single(),
     supabase.from('jlpt_vocabulary').select('id, jlpt_level').range(0, 999),
     supabase.from('jlpt_vocabulary').select('id, jlpt_level').range(1000, 1999),
     supabase.from('jlpt_grammar').select('id, jlpt_level'),
@@ -28,10 +29,16 @@ export default async function JlptHubPage() {
     supabase.from('user_mastered_items').select('item_type, item_id')
       .eq('user_id', user.id)
       .in('item_type', ['jlpt_vocabulary', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening']),
+    supabase.from('comprehensive_exams').select('score')
+      .eq('user_id', user.id).eq('category', 'seikatsu')
+      .in('status', ['completed', 'failed'])
+      .not('completed_at', 'is', null)
+      .order('completed_at', { ascending: false }).limit(1).maybeSingle(),
   ])
 
   const vocabAllData = [...(vocabBatch1.data ?? []), ...(vocabBatch2.data ?? [])]
-  const bypassLock = prof.data?.role === 'admin' || prof.data?.role === 'mentor'
+  const bypassLock = prof.data?.role === 'admin' || (prof.data?.role === 'mentor' && prof.data?.mentor_specialty !== 'tech')
+  const examJlptLevel = seikatsuExamResult.data?.score != null ? getJlptLevel(seikatsuExamResult.data.score) : null
 
   // Group by level and compute progress (client-side)
   const masteredSet = new Set(masteredResult.data?.map(m => `${m.item_type}:${m.item_id}`) ?? [])
@@ -74,7 +81,7 @@ export default async function JlptHubPage() {
       {/* Category cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {config.children.map((child) => (
-          <Link key={child.href} href={child.href}>
+          <Link key={child.href} href={examJlptLevel ? `${child.href}?level=${examJlptLevel}` : child.href}>
             <Card className="h-full transition-shadow hover:shadow-md">
               <h3 className="font-semibold text-gray-900 dark:text-white">{child.label}</h3>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{child.description}</p>
@@ -85,7 +92,7 @@ export default async function JlptHubPage() {
 
       {/* Test block — moved to bottom */}
       <div className="mt-6">
-        <JlptTestBlock levelProgress={levelProgress} bypassLock={bypassLock} />
+        <JlptTestBlock levelProgress={levelProgress} bypassLock={bypassLock} examLevel={examJlptLevel} />
       </div>
     </div>
   )

@@ -55,17 +55,19 @@ export default async function AssignmentsPage() {
     let resolvedIds: string[] = []
 
     if (isLevelOnly && catConfig.quizTypes) {
-      let query = supabase
+      // Fetch pool quizzes only (4 per level: 語彙/文法/読解/聴解)
+      let poolQuery = supabase
         .from('quizzes')
         .select('id')
         .in('quiz_type', catConfig.quizTypes)
+        .eq('is_pool', true)
 
       if (a.content_level) {
-        query = query.ilike('title', `%${a.content_level}%`)
+        poolQuery = poolQuery.ilike('title', `${a.content_level}%`)
       }
 
-      const { data: quizzes } = await query.order('created_at')
-      resolvedIds = (quizzes ?? []).map(q => q.id)
+      const { data: poolQuizzes } = await poolQuery.order('created_at')
+      resolvedIds = (poolQuizzes ?? []).map(q => q.id)
     } else {
       const subcatConfig = catConfig.subcategories[a.subcategory]
       if (!subcatConfig) continue

@@ -58,8 +58,8 @@ export async function writeScores(
   // Dispatch readiness snapshot
   await client.from('dispatch_readiness_scores').insert({
     user_id: userId,
-    jlpt_score: isJapanese ? null : japanese.jlptNormalized,
-    it_japanese_score: isJapanese ? null : japanese.itJapaneseNormalized,
+    jlpt_score: japanese.jlptNormalized,
+    it_japanese_score: japanese.itJapaneseNormalized,
     core_programming_score: coding.coreNormalized,
     framework_score: coding.frameworkNormalized,
     attitude_culture_score: attitude.attitudeNormalized,

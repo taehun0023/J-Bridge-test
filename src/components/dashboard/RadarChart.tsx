@@ -17,9 +17,10 @@ import type { AxisKey } from '@/lib/assessment-config'
 interface RadarChartProps {
   scores: Record<AxisKey, number>
   isJapanese?: boolean
+  role?: string
 }
 
-export default function RadarChart({ scores, isJapanese = false }: RadarChartProps) {
+export default function RadarChart({ scores, isJapanese = false, role }: RadarChartProps) {
   const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
@@ -30,7 +31,7 @@ export default function RadarChart({ scores, isJapanese = false }: RadarChartPro
     return () => observer.disconnect()
   }, [])
 
-  const relevantAxes = getRelevantAxes(isJapanese)
+  const relevantAxes = getRelevantAxes(isJapanese, role)
 
   const data = relevantAxes.map((key) => ({
     axis: AXIS_DISPLAY_LABELS[key],

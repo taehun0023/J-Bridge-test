@@ -43,11 +43,12 @@ export async function getQuizAttemptReview(attemptId: string): Promise<{ data?: 
     return { error: 'レビュー期限（7日間）を過ぎています' }
   }
 
-  // Fetch answers for this attempt
+  // Fetch answers for this attempt (ordered by sort_order for presentation order)
   const { data: answers } = await supabase
     .from('quiz_answers')
-    .select('question_id, selected_option_id, is_correct')
+    .select('question_id, selected_option_id, is_correct, sort_order')
     .eq('attempt_id', attemptId)
+    .order('sort_order', { ascending: true, nullsFirst: false })
 
   if (!answers || answers.length === 0) return { error: '回答データが見つかりません' }
 
@@ -60,9 +61,12 @@ export async function getQuizAttemptReview(attemptId: string): Promise<{ data?: 
 
   if (!questions) return { error: '問題データが見つかりません' }
 
+  // Reorder questions to match answer (presentation) order
+  const qMap = new Map(questions.map(q => [q.id, q]))
+  const orderedQuestions = answers.map(a => qMap.get(a.question_id)).filter(Boolean) as typeof questions
   const answerMap = new Map(answers.map(a => [a.question_id, a]))
 
-  const reviewQuestions: ReviewQuestion[] = questions.map(q => {
+  const reviewQuestions: ReviewQuestion[] = orderedQuestions.map(q => {
     const answer = answerMap.get(q.id)
     const options = (q.quiz_question_options as { id: string; option_text: string; is_correct: boolean; sort_order: number }[])
       .sort((a, b) => a.sort_order - b.sort_order)
@@ -114,11 +118,12 @@ export async function getCompExamReview(examId: string): Promise<{ data?: Review
     return { error: 'レビュー期限（7日間）を過ぎています' }
   }
 
-  // Fetch answers for this exam
+  // Fetch answers for this exam (ordered by sort_order for presentation order)
   const { data: answers } = await supabase
     .from('comprehensive_exam_answers')
-    .select('question_id, selected_option_id, is_correct')
+    .select('question_id, selected_option_id, is_correct, sort_order')
     .eq('exam_id', examId)
+    .order('sort_order', { ascending: true, nullsFirst: false })
 
   if (!answers || answers.length === 0) return { error: '回答データが見つかりません' }
 
@@ -131,6 +136,9 @@ export async function getCompExamReview(examId: string): Promise<{ data?: Review
 
   if (!questions) return { error: '問題データが見つかりません' }
 
+  // Reorder questions to match answer (presentation) order
+  const qMap = new Map(questions.map(q => [q.id, q]))
+  const orderedQuestions = answers.map(a => qMap.get(a.question_id)).filter(Boolean) as typeof questions
   const answerMap = new Map(answers.map(a => [a.question_id, a]))
 
   const EXAM_CATEGORY_LABELS: Record<string, string> = {
@@ -141,7 +149,7 @@ export async function getCompExamReview(examId: string): Promise<{ data?: Review
     'business-lit': 'ビジネスリテラシー 総合試験',
   }
 
-  const reviewQuestions: ReviewQuestion[] = questions.map(q => {
+  const reviewQuestions: ReviewQuestion[] = orderedQuestions.map(q => {
     const answer = answerMap.get(q.id)
     const options = (q.quiz_question_options as { id: string; option_text: string; is_correct: boolean; sort_order: number }[])
       .sort((a, b) => a.sort_order - b.sort_order)
@@ -207,11 +215,12 @@ export async function getMentorCompExamReview(examId: string): Promise<{ data?: 
   const serviceClient = createServiceRoleClient()
   const queryClient = serviceClient ?? supabase
 
-  // Fetch answers for this exam
+  // Fetch answers for this exam (ordered by sort_order for presentation order)
   const { data: answers } = await queryClient
     .from('comprehensive_exam_answers')
-    .select('question_id, selected_option_id, is_correct')
+    .select('question_id, selected_option_id, is_correct, sort_order')
     .eq('exam_id', examId)
+    .order('sort_order', { ascending: true, nullsFirst: false })
 
   if (!answers || answers.length === 0) return { error: '回答データが見つかりません' }
 
@@ -224,6 +233,9 @@ export async function getMentorCompExamReview(examId: string): Promise<{ data?: 
 
   if (!questions) return { error: '問題データが見つかりません' }
 
+  // Reorder questions to match answer (presentation) order
+  const qMap = new Map(questions.map(q => [q.id, q]))
+  const orderedQuestions = answers.map(a => qMap.get(a.question_id)).filter(Boolean) as typeof questions
   const answerMap = new Map(answers.map(a => [a.question_id, a]))
 
   const EXAM_CATEGORY_LABELS: Record<string, string> = {
@@ -234,7 +246,7 @@ export async function getMentorCompExamReview(examId: string): Promise<{ data?: 
     'business-lit': 'ビジネスリテラシー 総合試験',
   }
 
-  const reviewQuestions: ReviewQuestion[] = questions.map(q => {
+  const reviewQuestions: ReviewQuestion[] = orderedQuestions.map(q => {
     const answer = answerMap.get(q.id)
     const options = (q.quiz_question_options as { id: string; option_text: string; is_correct: boolean; sort_order: number }[])
       .sort((a, b) => a.sort_order - b.sort_order)

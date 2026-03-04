@@ -310,6 +310,44 @@ export async function submitExam(
   if (!exam) return { error: '試験が見つかりません' }
   if (exam.status !== 'in_progress') return { error: 'この試験は提出できません' }
 
+  // 0 answers = auto-fail with 0 score (e.g. user navigated away without answering)
+  if (answers.length === 0) {
+    const { data: updated, error: statusErr } = await serviceClient
+      .from('comprehensive_exams')
+      .update({
+        status: 'failed',
+        completed_at: new Date().toISOString(),
+        score: 0,
+        passed: false,
+      })
+      .eq('id', examId)
+      .select('id, status, score')
+      .single()
+
+    if (statusErr || !updated) {
+      console.error('Failed to update exam status (0 answers):', statusErr)
+      return { error: '試験結果の保存に失敗しました' }
+    }
+
+    await recalculateUserScores(user.id)
+
+    if (exam.subcategory === 'comprehensive') {
+      await tryCompleteActiveCycle(user.id)
+    }
+
+    const userName = await getUserDisplayName(user.id)
+    await notifyMentorsOf(
+      user.id,
+      'exam_completed',
+      `${userName}さんが総合試験を完了 (0点 - 不合格)`,
+      undefined,
+      '/admin/tasks',
+      examId
+    )
+
+    return { score: 0, passed: false, correctCount: 0, totalCount: exam.total_questions, results: [] }
+  }
+
   // Get correct answers
   const questionIds = answers.map(a => a.questionId)
   const { data: correctOptions } = await serviceClient
@@ -324,7 +362,7 @@ export async function submitExam(
 
   // Grade and insert answers
   let correctCount = 0
-  const answerRows = answers.map(a => {
+  const answerRows = answers.map((a, index) => {
     const isCorrect = correctMap.get(a.questionId) === a.selectedOptionId
     if (isCorrect) correctCount++
     return {
@@ -332,6 +370,7 @@ export async function submitExam(
       question_id: a.questionId,
       selected_option_id: a.selectedOptionId,
       is_correct: isCorrect,
+      sort_order: index,
     }
   })
 

@@ -8,7 +8,7 @@ import Card from '@/components/ui/Card'
 import { getGrade, getGradeColor, getJlptLevel, getJlptLevelColor, AXIS_DISPLAY_LABELS, DISPATCH_MINIMUM_SCORE } from '@/lib/assessment-config'
 import type { AxisKey, JlptLevel, SkillGrade } from '@/lib/assessment-config'
 import type { MenteeOverview } from '@/app/actions/mentor'
-import { ClipboardList, FileBarChart, ChevronDown, Calendar, CheckCircle2, Clock, AlertTriangle, Eye } from 'lucide-react'
+import { ClipboardList, FileBarChart, MessageSquare, ChevronDown, Calendar, CheckCircle2, Clock, AlertTriangle, Eye } from 'lucide-react'
 
 const RadarChart = dynamic(() => import('./RadarChart'), { ssr: false })
 
@@ -303,7 +303,7 @@ export default function MentorDashboardClient({ mentees, pendingVocabCount, ment
       </div>
 
       {/* Quick links */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-2">
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <Link href="/admin/tasks">
           <Card className="flex items-center gap-3 hover:ring-2 hover:ring-indigo-300 dark:hover:ring-indigo-700 transition-all cursor-pointer">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 dark:bg-indigo-900/40">
@@ -323,6 +323,17 @@ export default function MentorDashboardClient({ mentees, pendingVocabCount, ment
             <div>
               <p className="font-semibold text-gray-900 dark:text-white">レポート</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">取弱点分析・成績レポート</p>
+            </div>
+          </Card>
+        </Link>
+        <Link href="/profile/feedback">
+          <Card className="flex items-center gap-3 hover:ring-2 hover:ring-indigo-300 dark:hover:ring-indigo-700 transition-all cursor-pointer">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-100 dark:bg-teal-900/40">
+              <MessageSquare className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900 dark:text-white">フィードバック</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">フィードバック履歴の確認</p>
             </div>
           </Card>
         </Link>

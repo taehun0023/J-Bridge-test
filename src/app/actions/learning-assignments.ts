@@ -91,6 +91,11 @@ export async function createLearningAssignment(formData: FormData) {
           .select('id')
           .eq('quiz_type', quizType)
 
+        // For business-jp, only include pool quizzes (comprehension tests)
+        if (category === 'business-jp') {
+          query = query.eq('is_pool', true)
+        }
+
         if (contentLevel) {
           query = query.eq('content_level', contentLevel)
         }

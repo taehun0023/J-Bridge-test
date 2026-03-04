@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getMasteredIds } from '@/app/actions/mastery'
 import type { JlptLevel } from '@/lib/supabase/types'
+import { getJlptLevel } from '@/lib/assessment-config'
 import JlptGrammarClient from '../JlptGrammarClient'
 
 interface SearchParams {
@@ -15,7 +16,6 @@ const ITEMS_PER_PAGE = 30
 
 export default async function JlptGrammarPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams
-  const level = (['N5', 'N4', 'N3', 'N2', 'N1'].includes(params.level ?? '') ? params.level : 'N5') as JlptLevel
   const search = params.search ?? ''
   const category = params.category ?? ''
   const page = Math.max(1, parseInt(params.page ?? '1'))
@@ -23,6 +23,19 @@ export default async function JlptGrammarPage({ searchParams }: { searchParams: 
   const offset = (page - 1) * ITEMS_PER_PAGE
 
   const supabase = await createClient()
+
+  let defaultLevel: JlptLevel = 'N5'
+  if (!params.level) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data: exam } = await supabase.from('comprehensive_exams').select('score')
+        .eq('user_id', user.id).eq('category', 'seikatsu')
+        .in('status', ['completed', 'failed']).not('completed_at', 'is', null)
+        .order('completed_at', { ascending: false }).limit(1).maybeSingle()
+      if (exam?.score != null) defaultLevel = getJlptLevel(exam.score)
+    }
+  }
+  const level = (['N5', 'N4', 'N3', 'N2', 'N1'].includes(params.level ?? '') ? params.level : defaultLevel) as JlptLevel
 
   // Parallel batch 1: masteredIds + distinct categories (independent of main query)
   const [masteredIds, { data: catData }] = await Promise.all([

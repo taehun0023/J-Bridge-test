@@ -308,11 +308,11 @@ async function deleteExistingQuizData() {
 async function insertGrammarQuizzes() {
   console.log('\n4. Inserting grammar quiz definitions...');
   const quizzes = [
-    { id: QUIZ_IDS[0], title: 'N5 文法クイズ', quiz_type: 'jlpt_grammar', passing_score: 70, time_limit_minutes: 10, is_assessment: false },
-    { id: QUIZ_IDS[1], title: 'N4 文法クイズ', quiz_type: 'jlpt_grammar', passing_score: 70, time_limit_minutes: 12, is_assessment: false },
-    { id: QUIZ_IDS[2], title: 'N3 文法クイズ', quiz_type: 'jlpt_grammar', passing_score: 70, time_limit_minutes: 15, is_assessment: false },
-    { id: QUIZ_IDS[3], title: 'N2 文法クイズ', quiz_type: 'jlpt_grammar', passing_score: 70, time_limit_minutes: 15, is_assessment: false },
-    { id: QUIZ_IDS[4], title: 'N1 文法クイズ', quiz_type: 'jlpt_grammar', passing_score: 70, time_limit_minutes: 20, is_assessment: false },
+    { id: QUIZ_IDS[0], title: 'N5 文法テスト', quiz_type: 'jlpt_grammar', passing_score: 70, time_limit_minutes: 10, is_assessment: false },
+    { id: QUIZ_IDS[1], title: 'N4 文法テスト', quiz_type: 'jlpt_grammar', passing_score: 70, time_limit_minutes: 12, is_assessment: false },
+    { id: QUIZ_IDS[2], title: 'N3 文法テスト', quiz_type: 'jlpt_grammar', passing_score: 70, time_limit_minutes: 15, is_assessment: false },
+    { id: QUIZ_IDS[3], title: 'N2 文法テスト', quiz_type: 'jlpt_grammar', passing_score: 70, time_limit_minutes: 15, is_assessment: false },
+    { id: QUIZ_IDS[4], title: 'N1 文法テスト', quiz_type: 'jlpt_grammar', passing_score: 70, time_limit_minutes: 20, is_assessment: false },
   ];
 
   const resp = await fetch(`${SUPABASE_URL}/rest/v1/quizzes`, {

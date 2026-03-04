@@ -6,20 +6,6 @@ import type { ScoringData, JapaneseAxisResult } from './types'
  * Both are skipped (zeroed) for Japanese native users.
  */
 export function calcJapaneseAxes(data: ScoringData): JapaneseAxisResult {
-  if (data.isJapanese) {
-    return {
-      vocabMastery: 0,
-      grammarMastery: 0,
-      readingMastery: 0,
-      listeningMastery: 0,
-      jlptNormalized: 0,
-      itTermScore: 0,
-      docReadingScore: 0,
-      businessConvScore: 0,
-      itJapaneseNormalized: 0,
-    }
-  }
-
   const { quizScoresByType, assessmentScores } = data
 
   // ─── Axis 1: 生活日本語 ───

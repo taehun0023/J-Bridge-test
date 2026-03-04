@@ -1,13 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import Badge from '@/components/ui/Badge'
 import EmptyState from '@/components/ui/EmptyState'
+import PracticeQuizCard from '@/components/quiz/PracticeQuizCard'
 
-interface SearchParams {
-  level?: string
-  type?: string
-}
+export const dynamic = 'force-dynamic'
 
 interface Quiz {
   id: string
@@ -15,12 +11,18 @@ interface Quiz {
   quiz_type: string
   passing_score: number
   time_limit_minutes: number | null
+  questions_per_attempt: number | null
 }
 
-const MASTERY_THRESHOLD = 80
+const LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'] as const
+const CATEGORY_ORDER = ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening']
 
-export default async function QuizListPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const params = await searchParams
+export default async function QuizListPage({ searchParams }: { searchParams: Promise<{ level?: string }> }) {
+  const { level } = await searchParams
+  if (!level || !LEVELS.includes(level as typeof LEVELS[number])) {
+    redirect('/japanese/jlpt')
+  }
+
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -31,162 +33,59 @@ export default async function QuizListPage({ searchParams }: { searchParams: Pro
     userRole = prof?.role ?? null
   }
 
-  // Server-side mastery progress gate: if a specific level is requested, verify 80% mastery
-  if (user && params.level && userRole !== 'admin' && userRole !== 'mentor') {
-    const level = params.level
-    // 5 queries in parallel (1 RTT instead of 2)
-    const [vocabIds, grammarIds, readingIds, listeningIds, masteredItems] = await Promise.all([
-      supabase.from('jlpt_vocabulary').select('id').eq('jlpt_level', level),
-      supabase.from('jlpt_grammar').select('id').eq('jlpt_level', level),
-      supabase.from('jlpt_reading_passages').select('id').eq('jlpt_level', level),
-      supabase.from('jlpt_listening_scripts').select('id').eq('jlpt_level', level),
-      supabase.from('user_mastered_items').select('item_id')
-        .eq('user_id', user.id)
-        .in('item_type', ['jlpt_vocabulary', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening']),
-    ])
-
-    const allIds = [
-      ...(vocabIds.data ?? []).map(v => v.id),
-      ...(grammarIds.data ?? []).map(g => g.id),
-      ...(readingIds.data ?? []).map(r => r.id),
-      ...(listeningIds.data ?? []).map(l => l.id),
-    ]
-    const totalCount = allIds.length
-
-    if (totalCount > 0) {
-      const masteredIdSet = new Set((masteredItems.data ?? []).map(m => m.item_id))
-      const masteredCount = allIds.filter(id => masteredIdSet.has(id)).length
-      const progressPct = Math.round((masteredCount / totalCount) * 100)
-
-      if (progressPct < MASTERY_THRESHOLD) {
-        redirect('/japanese/jlpt')
-      }
-    }
-  }
-
-  const quizTypes = params.type && ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening'].includes(params.type)
-    ? [params.type]
-    : ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening']
-
-  let query = supabase
+  // Fetch pool quizzes for the selected level only
+  const { data: poolQuizzes } = await supabase
     .from('quizzes')
     .select('*')
-    .in('quiz_type', quizTypes)
-    .eq('is_assessment', false)
+    .eq('is_pool', true)
+    .in('quiz_type', ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening'])
+    .ilike('title', `${level}%`)
     .order('created_at', { ascending: true })
 
-  if (params.level) {
-    query = query.ilike('title', `%${params.level}%`)
-  }
-
-  const { data: quizzes } = await query
-
-  // Fetch user's attempts
-  let attemptMap: Record<string, { score: number; passed: boolean }> = {}
-  if (user && quizzes?.length) {
+  // Fetch user's attempts for pool quizzes
+  let attemptMap: Record<string, { id: string; score: number; passed: boolean; retake_request_status: string | null }> = {}
+  if (user && poolQuizzes?.length) {
     const { data: attempts } = await supabase
       .from('quiz_attempts')
-      .select('quiz_id, score, passed')
+      .select('id, quiz_id, score, passed, retake_request_status')
       .eq('user_id', user.id)
+      .in('quiz_id', poolQuizzes.map(q => q.id))
       .not('completed_at', 'is', null)
-      .order('score', { ascending: false })
+      .order('completed_at', { ascending: false })
 
     attempts?.forEach((a) => {
-      if (!attemptMap[a.quiz_id] || a.score > attemptMap[a.quiz_id].score) {
-        attemptMap[a.quiz_id] = { score: a.score, passed: a.passed }
+      if (!attemptMap[a.quiz_id]) {
+        attemptMap[a.quiz_id] = { id: a.id, score: a.score, passed: a.passed, retake_request_status: a.retake_request_status }
       }
     })
   }
 
-  const vocabQuizzes = quizzes?.filter(q => q.quiz_type === 'jlpt_vocab') ?? []
-  const grammarQuizzes = quizzes?.filter(q => q.quiz_type === 'jlpt_grammar') ?? []
-  const readingQuizzes = quizzes?.filter(q => q.quiz_type === 'jlpt_reading') ?? []
-  const listeningQuizzes = quizzes?.filter(q => q.quiz_type === 'jlpt_listening') ?? []
-
-  function renderQuizCard(quiz: Quiz) {
-    const attempt = attemptMap[quiz.id]
-    return (
-      <Link
-        key={quiz.id}
-        href={`/japanese/jlpt/quiz/${quiz.id}`}
-        className="group rounded-xl border border-gray-200 bg-white p-5 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
-      >
-        <div className="flex items-start justify-between">
-          <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 dark:text-white">
-            {quiz.title}
-          </h3>
-          {attempt && (
-            <Badge
-              label={attempt.passed ? '合格' : '不合格'}
-              variant="default"
-            />
-          )}
-        </div>
-        <div className="mt-3 flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-          {quiz.time_limit_minutes && (
-            <span>制限時間 {quiz.time_limit_minutes}分</span>
-          )}
-          <span>合格 {quiz.passing_score}点</span>
-        </div>
-        {attempt && (
-          <div className="mt-2 text-sm">
-            <span className={attempt.passed ? 'text-green-600' : 'text-red-600'}>
-              最高点: {attempt.score}点
-            </span>
-          </div>
-        )}
-      </Link>
-    )
-  }
-
-  const hasAny = vocabQuizzes.length > 0 || grammarQuizzes.length > 0 || readingQuizzes.length > 0 || listeningQuizzes.length > 0
+  const quizzes = (poolQuizzes ?? [])
+    .sort((a: Quiz, b: Quiz) => CATEGORY_ORDER.indexOf(a.quiz_type) - CATEGORY_ORDER.indexOf(b.quiz_type))
 
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">生活日本語 テスト</h1>
-        <p className="mt-1 text-gray-500 dark:text-gray-400">テストを解いて実力を確認しましょう</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{level} テスト</h1>
+        <p className="mt-1 text-gray-500 dark:text-gray-400">レベルごとにランダム出題されます</p>
       </div>
 
-      {!hasAny ? (
+      {quizzes.length === 0 ? (
         <EmptyState title="テストはありません" description="まだ登録されたテストはありません" icon="📝" />
       ) : (
-        <div className="space-y-8">
-          {vocabQuizzes.length > 0 && (
-            <div>
-              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">語彙テスト</h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {vocabQuizzes.map(renderQuizCard)}
-              </div>
-            </div>
-          )}
-
-          {grammarQuizzes.length > 0 && (
-            <div>
-              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">文法テスト</h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {grammarQuizzes.map(renderQuizCard)}
-              </div>
-            </div>
-          )}
-
-          {readingQuizzes.length > 0 && (
-            <div>
-              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">読解テスト</h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {readingQuizzes.map(renderQuizCard)}
-              </div>
-            </div>
-          )}
-
-          {listeningQuizzes.length > 0 && (
-            <div>
-              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">聴解テスト</h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {listeningQuizzes.map(renderQuizCard)}
-              </div>
-            </div>
-          )}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {quizzes.map((quiz: Quiz) => {
+            const attempt = attemptMap[quiz.id] ?? null
+            return (
+              <PracticeQuizCard
+                key={quiz.id}
+                quiz={quiz}
+                attempt={attempt}
+                quizHref={`/japanese/jlpt/quiz/${quiz.id}`}
+                userRole={userRole}
+              />
+            )
+          })}
         </div>
       )}
     </div>

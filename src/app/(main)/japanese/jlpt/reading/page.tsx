@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import type { JlptLevel } from '@/lib/supabase/types'
 import { getMasteredIds } from '@/app/actions/mastery'
+import { getJlptLevel } from '@/lib/assessment-config'
 import JlptReadingClient from '../JlptReadingClient'
 
 interface SearchParams {
@@ -14,13 +15,25 @@ const ITEMS_PER_PAGE = 10
 
 export default async function JlptReadingPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams
-  const level = (['N5', 'N4', 'N3', 'N2', 'N1'].includes(params.level ?? '') ? params.level : 'N5') as JlptLevel
   const search = params.search ?? ''
   const passageType = params.passage_type ?? ''
   const page = Math.max(1, parseInt(params.page ?? '1'))
   const offset = (page - 1) * ITEMS_PER_PAGE
 
   const supabase = await createClient()
+
+  let defaultLevel: JlptLevel = 'N5'
+  if (!params.level) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data: exam } = await supabase.from('comprehensive_exams').select('score')
+        .eq('user_id', user.id).eq('category', 'seikatsu')
+        .in('status', ['completed', 'failed']).not('completed_at', 'is', null)
+        .order('completed_at', { ascending: false }).limit(1).maybeSingle()
+      if (exam?.score != null) defaultLevel = getJlptLevel(exam.score)
+    }
+  }
+  const level = (['N5', 'N4', 'N3', 'N2', 'N1'].includes(params.level ?? '') ? params.level : defaultLevel) as JlptLevel
 
   let query = supabase
     .from('jlpt_reading_passages')

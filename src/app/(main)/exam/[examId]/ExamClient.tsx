@@ -43,7 +43,6 @@ function parseListeningQuestion(text: string): { script: string; question: strin
 function ListeningPlayer({ script }: { script: string }) {
   const [playing, setPlaying] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [speed, setSpeed] = useState(1.0)
   const [playCount, setPlayCount] = useState(0)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const blobUrlRef = useRef<string | null>(null)
@@ -51,36 +50,20 @@ function ListeningPlayer({ script }: { script: string }) {
   const MAX_PLAYS = 1
 
   const handlePlay = async () => {
-    if (playCount >= MAX_PLAYS) return
-
-    if (playing && audioRef.current) {
-      audioRef.current.pause()
-      setPlaying(false)
-      return
-    }
-
-    // If already fetched, replay
-    if (blobUrlRef.current && audioRef.current) {
-      audioRef.current.playbackRate = speed
-      audioRef.current.currentTime = 0
-      audioRef.current.play()
-      setPlaying(true)
-      return
-    }
+    if (playCount >= MAX_PLAYS || playing) return
 
     setLoading(true)
     try {
       const res = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: script, speed }),
+        body: JSON.stringify({ text: script, speed: 1.0 }),
       })
       if (!res.ok) throw new Error('TTS error')
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       blobUrlRef.current = url
       const audio = new Audio(url)
-      audio.playbackRate = speed
       audioRef.current = audio
       audio.onended = () => {
         setPlaying(false)
@@ -94,11 +77,6 @@ function ListeningPlayer({ script }: { script: string }) {
       setLoading(false)
     }
   }
-
-  // Update speed on existing audio
-  useEffect(() => {
-    if (audioRef.current) audioRef.current.playbackRate = speed
-  }, [speed])
 
   // Cleanup
   useEffect(() => {
@@ -114,16 +92,14 @@ function ListeningPlayer({ script }: { script: string }) {
     <div className="mb-4 flex items-center gap-3 rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-3">
       <button
         onClick={handlePlay}
-        disabled={loading || !canPlay}
+        disabled={loading || !canPlay || playing}
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
       >
-        {loading ? (
+        {loading || playing ? (
           <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
-        ) : playing ? (
-          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
         ) : (
           <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
         )}
@@ -135,21 +111,6 @@ function ListeningPlayer({ script }: { script: string }) {
         <p className="text-xs text-indigo-500/70 dark:text-indigo-400/60">
           再生回数: {playCount}/{MAX_PLAYS}
         </p>
-      </div>
-      <div className="flex items-center gap-1">
-        {[0.8, 1.0, 1.2].map(s => (
-          <button
-            key={s}
-            onClick={() => setSpeed(s)}
-            className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
-              speed === s
-                ? 'bg-indigo-600 text-white'
-                : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
-            }`}
-          >
-            {s}x
-          </button>
-        ))}
       </div>
     </div>
   )
@@ -218,7 +179,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, exam.id])
 
-  // Fire-and-forget submit (for navigation away — submit answered questions only)
+  // Fire-and-forget submit (for navigation away — submit answered questions only, or 0-score fail)
   const doSubmit = useCallback(async (currentAnswers: Record<string, string>) => {
     if (hasSubmittedRef.current) return
     hasSubmittedRef.current = true
@@ -227,11 +188,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
       .map(q => ({ questionId: q.id, selectedOptionId: currentAnswers[q.id] ?? '' }))
       .filter(a => a.selectedOptionId !== '')
 
-    if (answerArray.length === 0) {
-      hasSubmittedRef.current = false
-      return
-    }
-
+    // Even with 0 answers, submit to mark as failed (0 score) instead of stuck in_progress
     await submitExam(exam.id, answerArray)
   }, [questions, exam.id])
 
@@ -245,13 +202,6 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
     const answerArray = questions
       .map(q => ({ questionId: q.id, selectedOptionId: answersRef.current[q.id] ?? '' }))
       .filter(a => a.selectedOptionId !== '')
-
-    if (answerArray.length === 0) {
-      setError('最低1問以上回答してください')
-      setSubmitting(false)
-      hasSubmittedRef.current = false
-      return
-    }
 
     const res = await submitExam(exam.id, answerArray)
     if ('error' in res && res.error) {

@@ -10,6 +10,7 @@ interface QuizResultsProps {
   onRetry: () => void
   onBack: () => void
   backLabel?: string
+  hideRetry?: boolean
 }
 
 export default function QuizResults({
@@ -21,6 +22,7 @@ export default function QuizResults({
   onRetry,
   onBack,
   backLabel = 'テスト一覧',
+  hideRetry,
 }: QuizResultsProps) {
   return (
     <div className="mx-auto max-w-lg text-center">
@@ -49,18 +51,20 @@ export default function QuizResults({
       <div className="mt-6 flex gap-3">
         <button
           onClick={onBack}
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-300 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+          className={`inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800 ${hideRetry ? 'w-full' : 'flex-1'}`}
         >
           <ArrowLeft className="h-4 w-4" />
           {backLabel}
         </button>
-        <button
-          onClick={onRetry}
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
-        >
-          <RotateCcw className="h-4 w-4" />
-          もう一度
-        </button>
+        {!hideRetry && (
+          <button
+            onClick={onRetry}
+            className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+          >
+            <RotateCcw className="h-4 w-4" />
+            もう一度
+          </button>
+        )}
       </div>
     </div>
   )

@@ -106,7 +106,7 @@ export async function submitAssessment(
 
   // Grade and insert answers
   let correctCount = 0
-  const answerRows = answers.map(a => {
+  const answerRows = answers.map((a, index) => {
     const isCorrect = correctMap.get(a.questionId) === a.selectedOptionId
     if (isCorrect) correctCount++
     return {
@@ -114,6 +114,7 @@ export async function submitAssessment(
       question_id: a.questionId,
       selected_option_id: a.selectedOptionId,
       is_correct: isCorrect,
+      sort_order: index,
     }
   })
 

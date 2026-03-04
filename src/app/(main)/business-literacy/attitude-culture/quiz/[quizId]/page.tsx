@@ -23,6 +23,7 @@ export default async function AttitudeCultureQuizPage({ params }: { params: Prom
     .from('quiz_questions')
     .select('id, question_text, explanation, points, sort_order, quiz_question_options_safe(id, option_text, sort_order)')
     .eq('quiz_id', quizId)
+    .eq('is_published', true)
     .order('sort_order', { ascending: true })
 
   // Shuffle both question order and option order

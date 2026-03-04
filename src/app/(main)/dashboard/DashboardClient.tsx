@@ -91,12 +91,12 @@ export default function DashboardClient({
   nextExamDate,
 }: Props) {
   const isMentee = role === 'mentee'
-  const relevantAxes = getRelevantAxes(isJapanese)
+  const relevantAxes = getRelevantAxes(isJapanese, role)
   const hasScores = relevantAxes.some(key => radarScores[key] > 0)
 
   const allAxesAboveB = hasScores && relevantAxes.every(key => radarScores[key] >= DISPATCH_MINIMUM_SCORE)
 
-  const gridCols = isJapanese ? 'grid-cols-3' : 'grid-cols-5'
+  const gridCols = relevantAxes.length === 3 ? 'grid-cols-3' : 'grid-cols-5'
 
   const [retakeMessage, setRetakeMessage] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
@@ -132,6 +132,19 @@ export default function DashboardClient({
         setRetakeMessage(result.error)
       } else if ('examId' in result && result.examId) {
         window.location.href = `/exam/${result.examId}`
+      }
+      setTimeout(() => setRetakeMessage(null), 3000)
+    })
+  }
+
+  function handleExamRequest(category: string) {
+    startTransition(async () => {
+      const result = await requestExam(category, 'comprehensive', null)
+      if ('error' in result && result.error) {
+        setRetakeMessage(result.error)
+      } else {
+        setRetakeMessage('試験リクエストを送信しました')
+        window.location.reload()
       }
       setTimeout(() => setRetakeMessage(null), 3000)
     })
@@ -238,7 +251,7 @@ export default function DashboardClient({
           {hasScores ? (
             <div>
               <div className="mx-auto max-w-md">
-                <RadarChart scores={radarScores} isJapanese={isJapanese} />
+                <RadarChart scores={radarScores} isJapanese={isJapanese} role={role} />
               </div>
 
               {/* Grade summary cards with retake buttons */}
@@ -304,7 +317,17 @@ export default function DashboardClient({
                             試験を受ける
                           </button>
                         </div>
-                      ) : null}
+                      ) : (
+                        <div className="mt-1.5">
+                          <button
+                            onClick={() => handleExamRequest(category)}
+                            disabled={pending}
+                            className="rounded-md bg-indigo-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+                          >
+                            試験をリクエスト
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )
                 })}
@@ -329,50 +352,64 @@ export default function DashboardClient({
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <BarChart3 className="h-10 w-10 text-zinc-500" />
               <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">総合試験を受けると力量が表示されます</p>
-              {(role === 'admin' || role === 'mentor') && (
-                <div className={`mt-6 w-full grid ${gridCols} gap-2`}>
-                  {relevantAxes.map((key) => {
-                    const category = AXIS_TO_CATEGORY[key]
-                    const retakeInfo = compExamRetakeByCategory[category]
-                    return (
-                      <div key={key} className="rounded-xl border border-white/[0.08] bg-white/[0.03] dark:border-white/[0.08] dark:bg-white/[0.03] border-gray-200/60 p-2 text-center">
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{AXIS_DISPLAY_LABELS[key]}</p>
-                        <p className="mt-1 text-lg font-mono font-bold text-zinc-400 dark:text-zinc-500">—</p>
-                        <div className="mt-1.5">
-                          {retakeInfo ? (
-                            retakeInfo.retakeStatus === 'requested' ? (
-                              <span className="text-[10px] text-amber-400">リクエスト中</span>
-                            ) : retakeInfo.retakeStatus === 'approved' ? (
-                              <Link
-                                href={`/exam/${retakeInfo.examId}`}
-                                className="rounded-md bg-emerald-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-emerald-500 transition-colors"
-                              >
-                                試験を受ける
-                              </Link>
-                            ) : (
-                              <button
-                                onClick={() => handleDirectRetake(retakeInfo.examId)}
-                                disabled={pending}
-                                className="rounded-md bg-emerald-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-emerald-500 disabled:opacity-50 transition-colors"
-                              >
-                                再試験する
-                              </button>
-                            )
-                          ) : (
-                            <button
-                              onClick={() => handleFirstExam(category)}
-                              disabled={pending}
-                              className="rounded-md bg-indigo-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+              <div className={`mt-6 w-full grid ${gridCols} gap-2`}>
+                {relevantAxes.map((key) => {
+                  const category = AXIS_TO_CATEGORY[key]
+                  const retakeInfo = compExamRetakeByCategory[category]
+                  return (
+                    <div key={key} className="rounded-xl border border-white/[0.08] bg-white/[0.03] dark:border-white/[0.08] dark:bg-white/[0.03] border-gray-200/60 p-2 text-center">
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{AXIS_DISPLAY_LABELS[key]}</p>
+                      <p className="mt-1 text-lg font-mono font-bold text-zinc-400 dark:text-zinc-500">—</p>
+                      <div className="mt-1.5">
+                        {retakeInfo ? (
+                          retakeInfo.retakeStatus === 'requested' ? (
+                            <span className="text-[10px] text-amber-400">リクエスト中</span>
+                          ) : retakeInfo.retakeStatus === 'approved' ? (
+                            <Link
+                              href={`/exam/${retakeInfo.examId}`}
+                              className="rounded-md bg-emerald-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-emerald-500 transition-colors"
                             >
                               試験を受ける
+                            </Link>
+                          ) : (role === 'admin' || role === 'mentor') ? (
+                            <button
+                              onClick={() => handleDirectRetake(retakeInfo.examId)}
+                              disabled={pending}
+                              className="rounded-md bg-emerald-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-emerald-500 disabled:opacity-50 transition-colors"
+                            >
+                              再試験する
                             </button>
-                          )}
-                        </div>
+                          ) : (
+                            <button
+                              onClick={() => handleCompRetakeRequest(retakeInfo.examId)}
+                              disabled={pending}
+                              className="rounded-md border border-white/[0.08] dark:border-white/[0.08] border-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-zinc-400 hover:bg-white/5 dark:hover:bg-white/5 hover:bg-zinc-50 disabled:opacity-50 transition-colors"
+                            >
+                              再試験リクエスト
+                            </button>
+                          )
+                        ) : (role === 'admin' || role === 'mentor') ? (
+                          <button
+                            onClick={() => handleFirstExam(category)}
+                            disabled={pending}
+                            className="rounded-md bg-indigo-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+                          >
+                            試験を受ける
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleExamRequest(category)}
+                            disabled={pending}
+                            className="rounded-md bg-indigo-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+                          >
+                            試験をリクエスト
+                          </button>
+                        )}
                       </div>
-                    )
-                  })}
-                </div>
-              )}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
         </Card>

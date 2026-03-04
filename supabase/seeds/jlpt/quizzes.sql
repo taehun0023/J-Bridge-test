@@ -1,6 +1,7 @@
 -- JLPT Vocabulary Quiz Seed Data
--- 총 18개 퀴즈: N5(5개), N4(5개), N3(3개), N2(3개), N1(2개)
+-- 총 38개 퀴즈: N5(5개), N4(5개), N3(3개), N2(3개), N1(2개) + 풀 퀴즈 20개 (4카테고리 × 5레벨)
 -- 각 퀴즈당 10문제, 각 문제당 4지선다
+-- NOTE: question difficulty/question_category are backfilled by migration 00086
 
 -- ============================================
 -- 1. Quizzes (18개)
@@ -25,6 +26,36 @@ VALUES
   ('a0000001-0000-4000-a000-000000000010', NULL, 'N2 語彙テスト 第3回', 'jlpt_vocab', 70, 20),
   ('a0000001-0000-4000-a000-000000000011', NULL, 'N1 語彙テスト 第1回', 'jlpt_vocab', 70, 25),
   ('a0000001-0000-4000-a000-000000000012', NULL, 'N1 語彙テスト 第2回', 'jlpt_vocab', 70, 25)
+ON CONFLICT (id) DO NOTHING;
+
+-- Pool quizzes (1 per category per level = 20 total, random-draw from source quizzes)
+-- 語彙: 100問/30分, 文法: 20問/20分, 読解: 20問/20分, 聴解: 20問/25分
+INSERT INTO quizzes (id, title, quiz_type, passing_score, time_limit_minutes, is_assessment, is_pool, questions_per_attempt)
+VALUES
+  -- 語彙 (100問/30分)
+  ('e0000001-0000-0000-0000-000000000011', 'N5 語彙テスト', 'jlpt_vocab', 70, 30, false, true, 100),
+  ('e0000001-0000-0000-0000-000000000012', 'N4 語彙テスト', 'jlpt_vocab', 70, 30, false, true, 100),
+  ('e0000001-0000-0000-0000-000000000013', 'N3 語彙テスト', 'jlpt_vocab', 70, 30, false, true, 100),
+  ('e0000001-0000-0000-0000-000000000014', 'N2 語彙テスト', 'jlpt_vocab', 70, 30, false, true, 100),
+  ('e0000001-0000-0000-0000-000000000015', 'N1 語彙テスト', 'jlpt_vocab', 70, 30, false, true, 100),
+  -- 文法 (20問/20分)
+  ('e0000001-0000-0000-0000-000000000021', 'N5 文法テスト', 'jlpt_grammar', 70, 20, false, true, 20),
+  ('e0000001-0000-0000-0000-000000000022', 'N4 文法テスト', 'jlpt_grammar', 70, 20, false, true, 20),
+  ('e0000001-0000-0000-0000-000000000023', 'N3 文法テスト', 'jlpt_grammar', 70, 20, false, true, 20),
+  ('e0000001-0000-0000-0000-000000000024', 'N2 文法テスト', 'jlpt_grammar', 70, 20, false, true, 20),
+  ('e0000001-0000-0000-0000-000000000025', 'N1 文法テスト', 'jlpt_grammar', 70, 20, false, true, 20),
+  -- 読解 (20問/20分)
+  ('e0000001-0000-0000-0000-000000000031', 'N5 読解テスト', 'jlpt_reading', 70, 20, false, true, 20),
+  ('e0000001-0000-0000-0000-000000000032', 'N4 読解テスト', 'jlpt_reading', 70, 20, false, true, 20),
+  ('e0000001-0000-0000-0000-000000000033', 'N3 読解テスト', 'jlpt_reading', 70, 20, false, true, 20),
+  ('e0000001-0000-0000-0000-000000000034', 'N2 読解テスト', 'jlpt_reading', 70, 20, false, true, 20),
+  ('e0000001-0000-0000-0000-000000000035', 'N1 読解テスト', 'jlpt_reading', 70, 20, false, true, 20),
+  -- 聴解 (20問/25分)
+  ('e0000001-0000-0000-0000-000000000041', 'N5 聴解テスト', 'jlpt_listening', 70, 25, false, true, 20),
+  ('e0000001-0000-0000-0000-000000000042', 'N4 聴解テスト', 'jlpt_listening', 70, 25, false, true, 20),
+  ('e0000001-0000-0000-0000-000000000043', 'N3 聴解テスト', 'jlpt_listening', 70, 25, false, true, 20),
+  ('e0000001-0000-0000-0000-000000000044', 'N2 聴解テスト', 'jlpt_listening', 70, 25, false, true, 20),
+  ('e0000001-0000-0000-0000-000000000045', 'N1 聴解テスト', 'jlpt_listening', 70, 25, false, true, 20)
 ON CONFLICT (id) DO NOTHING;
 
 -- ============================================
@@ -96,7 +127,7 @@ INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sor
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000010010', '낮다', FALSE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000010010', '넓다', FALSE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000010010', '좁다', FALSE, 4),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000010010', '높다/비싸다', TRUE, 1);
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000010010', '높다', TRUE, 1);
 
 -- ============================================
 -- Quiz 2: N5 어휘 테스트 2
@@ -282,7 +313,7 @@ INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sor
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000040007', '고기', FALSE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000040007', '채소', FALSE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000040007', '과일', FALSE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000040007', '생선/물고기', TRUE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000040007', '생선', TRUE, 1),
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000040008', '꽃', TRUE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000040008', '나무', FALSE, 2),
@@ -362,7 +393,7 @@ INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sor
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000050009', '정류장', FALSE, 3),
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000050010', '피곤한', FALSE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000050010', '건강한/활기찬', TRUE, 4),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000050010', '건강한', TRUE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000050010', '조용한', FALSE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000050010', '유명한', FALSE, 3);
 
@@ -383,7 +414,7 @@ INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanati
 
 -- Quiz 6 Options
 INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000060001', '전달하다/배달하다', TRUE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000060001', '전달하다', TRUE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000060001', '돌려주다', FALSE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000060001', '빌리다', FALSE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000060001', '보내다', FALSE, 3),
@@ -425,11 +456,11 @@ INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sor
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000060009', '즐겁다', FALSE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000060009', '기쁘다', FALSE, 4),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000060009', '아쉽다/유감이다', TRUE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000060009', '아쉽다', TRUE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000060009', '화나다', FALSE, 2),
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000060010', '엄격하다', FALSE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000060010', '정중하다/공손하다', TRUE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000060010', '정중하다', TRUE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000060010', '친절하다', FALSE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000060010', '성실하다', FALSE, 4);
 
@@ -451,7 +482,7 @@ INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanati
 -- Quiz 7 Options
 INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070001', '만들다', FALSE, 4),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070001', '고장나다/부서지다', TRUE, 2),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070001', '고장나다', TRUE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070001', '수리하다', FALSE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070001', '조립하다', FALSE, 1),
 
@@ -461,11 +492,11 @@ INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sor
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070002', '버리다', FALSE, 2),
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070003', '돌아가다', FALSE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070003', '바꾸다/변경하다', TRUE, 2),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070003', '바꾸다', TRUE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070003', '계속하다', FALSE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070003', '그만두다', FALSE, 1),
 
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070004', '정하다/결정하다', TRUE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070004', '정하다', TRUE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070004', '포기하다', FALSE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070004', '망설이다', FALSE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070004', '약속하다', FALSE, 2),
@@ -477,17 +508,17 @@ INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sor
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070006', '이해하다', FALSE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070006', '성공하다', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070006', '틀리다/실수하다', TRUE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070006', '틀리다', TRUE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070006', '확인하다', FALSE, 2),
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070007', '기분', FALSE, 4),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070007', '상태/컨디션', TRUE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070007', '상태', TRUE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070007', '성격', FALSE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070007', '습관', FALSE, 3),
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070008', '날씨', FALSE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070008', '건물', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070008', '경치/풍경', TRUE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070008', '경치', TRUE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070008', '공원', FALSE, 4),
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000070009', '습관', FALSE, 1),
@@ -538,13 +569,13 @@ INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sor
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000080004', '승인', FALSE, 4),
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000080005', '주다', FALSE, 4),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000080005', '받다/시험을 보다', TRUE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000080005', '받다', TRUE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000080005', '보내다', FALSE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000080005', '거절하다', FALSE, 2),
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000080006', '걷다', FALSE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000080006', '달리다', FALSE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000080006', '다니다/통학하다', TRUE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000080006', '다니다', TRUE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000080006', '이사하다', FALSE, 4),
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000080007', '불필요', FALSE, 2),
@@ -558,7 +589,7 @@ INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sor
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000080008', '안전하다', FALSE, 4),
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000080009', '연습', FALSE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000080009', '시합/경기', TRUE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000080009', '시합', TRUE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000080009', '시험', FALSE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000080009', '운동', FALSE, 2),
 
@@ -605,13 +636,13 @@ INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sor
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090004', '배송', FALSE, 4),
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090005', '기억하다', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090005', '잊다/잊어버리다', TRUE, 4),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090005', '잊다', TRUE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090005', '생각하다', FALSE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090005', '떠올리다', FALSE, 2),
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090006', '잃어버리다', FALSE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090006', '숨기다', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090006', '찾다/발견하다', TRUE, 4),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090006', '찾다', TRUE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090006', '주다', FALSE, 2),
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090007', '지치다', FALSE, 3),
@@ -620,12 +651,12 @@ INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sor
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090007', '긴장하다', FALSE, 1),
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090008', '줄다', FALSE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090008', '늘다/증가하다', TRUE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090008', '늘다', TRUE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090008', '변하다', FALSE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090008', '사라지다', FALSE, 2),
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090009', '늘다', FALSE, 4),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090009', '줄다/감소하다', TRUE, 2),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090009', '줄다', TRUE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090009', '바뀌다', FALSE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000090009', '멈추다', FALSE, 1),
 
@@ -662,22 +693,22 @@ INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sor
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100002', '안전', FALSE, 1),
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100003', '나아가다', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100003', '돌아가다/돌아오다', TRUE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100003', '돌아가다', TRUE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100003', '출발하다', FALSE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100003', '도망치다', FALSE, 2),
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100004', '보내다', FALSE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100004', '도착하다/닿다', TRUE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100004', '도착하다', TRUE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100004', '받다', FALSE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100004', '전달하다', FALSE, 4),
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100005', '더럽히다', FALSE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100005', '정리하다/치우다', TRUE, 4),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100005', '정리하다', TRUE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100005', '꾸미다', FALSE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100005', '쌓다', FALSE, 1),
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100006', '늦다', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100006', '시간에 대다/충분하다', TRUE, 4),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100006', '시간에 대다', TRUE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100006', '서두르다', FALSE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100006', '기다리다', FALSE, 3),
 
@@ -698,7 +729,7 @@ INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sor
 
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100010', '이상', FALSE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100010', '이하', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100010', '이외/외에', TRUE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100010', '이외', TRUE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000100010', '이내', FALSE, 4);
 
 -- ============================================
@@ -978,9 +1009,9 @@ INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanati
 -- Quiz 15 Options
 INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000150001', '영향을 미치다', TRUE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000150001', '영향을 받다', FALSE, 4),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000150001', '영향을 주다', FALSE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000150001', '영향을 끼치다', FALSE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000150001', '감동하다', FALSE, 4),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000150001', '작용하다', FALSE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000150001', '반영하다', FALSE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000150002', '실현하다', TRUE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000150002', '실행하다', FALSE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000150002', '실시하다', FALSE, 4),
@@ -1014,9 +1045,9 @@ INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sor
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000150009', '도달하다', FALSE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000150009', '도착하다', FALSE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000150010', '인정하다', TRUE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000150010', '승인하다', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000150010', '확인하다', FALSE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000150010', '인식하다', FALSE, 4);
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000150010', '부정하다', FALSE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000150010', '무시하다', FALSE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000150010', '간과하다', FALSE, 4);
 
 -- ============================================
 -- Quiz 16: N2 어휘 테스트 3
@@ -1036,33 +1067,33 @@ INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanati
 -- Quiz 16 Options
 INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160001', '엄격하다', TRUE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160001', '엄중하다', FALSE, 4),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160001', '엄숙하다', FALSE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160001', '엄밀하다', FALSE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160001', '부드럽다', FALSE, 4),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160001', '가볍다', FALSE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160001', '느슨하다', FALSE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160002', '훌륭하다', TRUE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160002', '멋지다', FALSE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160002', '훌륭한', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160002', '우수하다', FALSE, 4),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160002', '평범하다', FALSE, 2),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160002', '부족하다', FALSE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160002', '어리석다', FALSE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160003', '바람직하다', TRUE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160003', '희망적이다', FALSE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160003', '기대된다', FALSE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160003', '원한다', FALSE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160004', '유효하다', TRUE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160004', '효과적이다', FALSE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160004', '효율적이다', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160004', '유용하다', FALSE, 4),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160004', '무효이다', FALSE, 2),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160004', '비효율적이다', FALSE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160004', '쓸모없다', FALSE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160005', '적절하다', TRUE, 4),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160005', '적합하다', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160005', '적당하다', FALSE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160005', '적정하다', FALSE, 2),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160005', '불충분하다', FALSE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160005', '과도하다', FALSE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160005', '부적절하다', FALSE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160006', '명확하다', TRUE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160006', '명백하다', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160006', '명료하다', FALSE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160006', '명시적이다', FALSE, 4),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160006', '모호하다', FALSE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160006', '불분명하다', FALSE, 2),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160006', '암묵적이다', FALSE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160007', '효율적이다', TRUE, 4),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160007', '효과적이다', FALSE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160007', '유효하다', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160007', '유용하다', FALSE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160007', '비경제적이다', FALSE, 2),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160007', '낭비적이다', FALSE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160007', '무용하다', FALSE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160008', '구체적이다', TRUE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160008', '구성적이다', FALSE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000160008', '구조적이다', FALSE, 2),
@@ -1098,41 +1129,41 @@ INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sor
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170001', '뒤지다', FALSE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170001', '뒤쫓다', FALSE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170002', '이루다', TRUE, 4),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170002', '이루어지다', FALSE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170002', '이루어내다', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170002', '이루어가다', FALSE, 2),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170002', '실패하다', FALSE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170002', '포기하다', FALSE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170002', '중단하다', FALSE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170003', '종사하다', TRUE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170003', '참여하다', FALSE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170003', '관련하다', FALSE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170003', '연관하다', FALSE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170004', '방해하다', TRUE, 4),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170004', '저지하다', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170004', '차단하다', FALSE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170004', '막다', FALSE, 2),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170004', '돕다', FALSE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170004', '개방하다', FALSE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170004', '허용하다', FALSE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170005', '빠지다', TRUE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170005', '떨어지다', FALSE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170005', '넘어지다', FALSE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170005', '떠나다', FALSE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170006', '면하다', TRUE, 4),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170006', '피하다', FALSE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170006', '회피하다', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170006', '도피하다', FALSE, 2),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170006', '직면하다', FALSE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170006', '감수하다', FALSE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170006', '대면하다', FALSE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170007', '촉구하다', TRUE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170007', '요구하다', FALSE, 4),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170007', '재촉하다', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170007', '독촉하다', FALSE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170007', '양보하다', FALSE, 4),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170007', '거부하다', FALSE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170007', '저지하다', FALSE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170008', '기르다', TRUE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170008', '배우다', FALSE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170008', '가르치다', FALSE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170008', '교육하다', FALSE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170009', '보충하다', TRUE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170009', '보완하다', FALSE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170009', '보장하다', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170009', '보호하다', FALSE, 4),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170009', '제거하다', FALSE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170009', '삭감하다', FALSE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170009', '방치하다', FALSE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170010', '근거하다', TRUE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170010', '기반하다', FALSE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170010', '기초하다', FALSE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170010', '근본하다', FALSE, 4);
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170010', '무시하다', FALSE, 2),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170010', '간과하다', FALSE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000170010', '경시하다', FALSE, 4);
 
 -- ============================================
 -- Quiz 18: N1 어휘 테스트 2
@@ -1152,42 +1183,42 @@ INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanati
 -- Quiz 18 Options
 INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180001', '심하다', TRUE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180001', '심각하다', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180001', '심각하게', FALSE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180001', '심각한', FALSE, 4),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180001', '사소하다', FALSE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180001', '가볍다', FALSE, 2),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180001', '미미하다', FALSE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180002', '눈부시다', TRUE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180002', '눈에 띄다', FALSE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180002', '눈에 보이다', FALSE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180002', '눈에 들어오다', FALSE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180003', '헷갈리다', TRUE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180003', '혼란스럽다', FALSE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180003', '혼동하다', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180003', '혼란하다', FALSE, 4),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180003', '분명하다', FALSE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180003', '구별하다', FALSE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180003', '명쾌하다', FALSE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180004', '현저하다', TRUE, 4),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180004', '현저하게', FALSE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180004', '현저한', FALSE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180004', '현저히', FALSE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180004', '미미하다', FALSE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180004', '불명확하다', FALSE, 2),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180004', '사소하다', FALSE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180005', '막대하다', TRUE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180005', '거대하다', FALSE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180005', '대규모다', FALSE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180005', '대량이다', FALSE, 2),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180006', '치밀하다', TRUE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180006', '정밀하다', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180006', '세밀하다', FALSE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180006', '밀집하다', FALSE, 4),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180006', '대충이다', FALSE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180006', '거칠다', FALSE, 2),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180006', '산만하다', FALSE, 4),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180007', '섬세하다', TRUE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180007', '세밀하다', FALSE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180007', '정밀하다', FALSE, 4),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180007', '미세하다', FALSE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180007', '투박하다', FALSE, 2),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180007', '대범하다', FALSE, 4),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180007', '둔감하다', FALSE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180008', '가혹하다', TRUE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180008', '혹독하다', FALSE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180008', '엄격하다', FALSE, 4),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180008', '엄중하다', FALSE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180008', '온화하다', FALSE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180008', '관대하다', FALSE, 4),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180008', '느긋하다', FALSE, 1),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180009', '엄밀하다', TRUE, 4),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180009', '정확하다', FALSE, 1),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180009', '정밀하다', FALSE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180009', '정확하게', FALSE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180009', '대략적이다', FALSE, 1),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180009', '모호하다', FALSE, 2),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180009', '부정확하다', FALSE, 3),
   (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180010', '불가결하다', TRUE, 2),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180010', '필수적이다', FALSE, 4),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180010', '필요하다', FALSE, 3),
-  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180010', '중요하다', FALSE, 1);
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180010', '불필요하다', FALSE, 4),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180010', '사소하다', FALSE, 3),
+  (uuid_generate_v4(), 'b0000001-0000-4000-a000-000000180010', '무관하다', FALSE, 1);

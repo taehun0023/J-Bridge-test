@@ -1278,10 +1278,10 @@ BEGIN
     E'次の会話を聞いて、質問に答えてください。\n\n佐藤：キムさん、このタスクの進捗はどうですか？\nキム：すみません、少し遅れています。データベースの設計で\n　　　予想以上に時間がかかっていまして。\n佐藤：そうですか。期限は金曜日ですよね。間に合いそうですか？\nキム：木曜日までにはなんとか終わらせます。\n佐藤：分かりました。もし助けが必要なら、遠慮なく言ってくださいね。\nキム：ありがとうございます。\n\nキムさんのタスクが遅れている理由は何ですか？',
     '業務の進捗確認の会話です。データベースの設計に時間がかかっています。(데이터베이스 설계에 시간이 걸리고 있습니다)', 1, 97, 'N3', 'listening');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'テストに時間がかかっている', FALSE, 1),
+    (gen_random_uuid(), q_id, 'テストの実施に予想以上の時間がかかっている', FALSE, 1),
     (gen_random_uuid(), q_id, 'データベースの設計に時間がかかっている', TRUE, 2),
-    (gen_random_uuid(), q_id, '体調が悪かった', FALSE, 3),
-    (gen_random_uuid(), q_id, '他のタスクが忙しかった', FALSE, 4);
+    (gen_random_uuid(), q_id, '体調不良で数日間作業が進まなかった', FALSE, 3),
+    (gen_random_uuid(), q_id, '他の優先タスクの対応に追われていた', FALSE, 4);
 
   -- L8: medium listening - office discussion
   q_id := gen_random_uuid();
@@ -1290,10 +1290,10 @@ BEGIN
     E'次の会話を聞いて、質問に答えてください。\n\n山田：来週の歓迎会の場所、決まりましたか？\n鈴木：はい、駅前のイタリアンレストランを予約しました。\n山田：何人ですか？\n鈴木：今のところ12人です。でも、まだ返事をしていない人が3人います。\n山田：そうですか。明日までに確認してもらえますか？\n鈴木：はい、明日のお昼までに全員に確認します。\n\n歓迎会の場所はどこですか？',
     '歓迎会の準備に関する会話です。駅前のイタリアンレストランです。(역 앞 이탈리안 레스토랑입니다)', 1, 98, 'N3', 'listening');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '会社の食堂', FALSE, 1),
-    (gen_random_uuid(), q_id, '駅前の居酒屋', FALSE, 2),
+    (gen_random_uuid(), q_id, '会社の近くにある中華レストラン', FALSE, 1),
+    (gen_random_uuid(), q_id, '駅前にある和食の居酒屋', FALSE, 2),
     (gen_random_uuid(), q_id, '駅前のイタリアンレストラン', TRUE, 3),
-    (gen_random_uuid(), q_id, 'ホテルのレストラン', FALSE, 4);
+    (gen_random_uuid(), q_id, '会社から徒歩圏内のホテル内', FALSE, 4);
 
   -- L9: medium listening - request handling
   q_id := gen_random_uuid();
@@ -1302,10 +1302,10 @@ BEGIN
     E'次の会話を聞いて、質問に答えてください。\n\n上司：キムさん、明日のプレゼンの資料はできていますか？\nキム：はい、ほぼ完成しています。グラフのデータだけ最新のものに\n　　　更新する必要があります。\n上司：分かりました。更新したら、私に確認のメールを送ってください。\nキム：はい、今日中に送ります。\n上司：それから、プレゼンは英語でお願いしますね。\nキム：承知しました。\n\nキムさんがまだやっていないことは何ですか？',
     'プレゼン準備の会話です。グラフのデータ更新がまだです。(그래프 데이터 업데이트가 아직입니다)', 1, 99, 'N3', 'listening');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '資料の作成', FALSE, 1),
+    (gen_random_uuid(), q_id, 'プレゼン資料の全体作成', FALSE, 1),
     (gen_random_uuid(), q_id, 'グラフのデータ更新', TRUE, 2),
-    (gen_random_uuid(), q_id, '英語への翻訳', FALSE, 3),
-    (gen_random_uuid(), q_id, 'メールの送信', FALSE, 4);
+    (gen_random_uuid(), q_id, '英語への翻訳と校正作業', FALSE, 3),
+    (gen_random_uuid(), q_id, '確認メールの送信準備', FALSE, 4);
 
   -- L10: medium listening - trouble reporting
   q_id := gen_random_uuid();
@@ -1359,10 +1359,10 @@ BEGIN
     E'次の会話を聞いて、質問に答えてください。\n\n佐藤：今スプリントの振り返りですが、予定していた8つのタスクのうち、\n　　　完了したのは6つでした。\n田中：残りの2つは何が原因で遅れたんですか？\n佐藤：一つはAPIの仕様が途中で変更になったためです。\n　　　もう一つは、テスト環境の不具合で検証に時間がかかりました。\n田中：なるほど。次のスプリントでは、仕様変更のリスクを見込んで\n　　　バッファを設けましょう。\n佐藤：そうですね。ストーリーポイントを少し減らして計画します。\n\n次のスプリントで対策として行うことはどれですか？',
     'スプリント振り返りの会話です。バッファを設けてポイントを減らす計画です。(버퍼를 두고 포인트를 줄여 계획합니다)', 1, 103, 'N2', 'listening');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'メンバーを増やす', FALSE, 1),
-    (gen_random_uuid(), q_id, 'テスト環境を新しくする', FALSE, 2),
+    (gen_random_uuid(), q_id, '開発メンバーを増員して作業を分担する', FALSE, 1),
+    (gen_random_uuid(), q_id, 'テスト環境を刷新して検証速度を上げる', FALSE, 2),
     (gen_random_uuid(), q_id, 'バッファを設けてポイントを減らす', TRUE, 3),
-    (gen_random_uuid(), q_id, 'タスクを全て延期する', FALSE, 4);
+    (gen_random_uuid(), q_id, '未完了のタスクを全て次回に延期する', FALSE, 4);
 
   -- L14: hard listening - code review discussion
   q_id := gen_random_uuid();
@@ -1371,10 +1371,10 @@ BEGIN
     E'次の会話を聞いて、質問に答えてください。\n\n山田：キムさん、コードレビューのフィードバックなんですが、\n　　　この関数は責務が多すぎると思います。\nキム：具体的にはどの部分でしょうか？\n山田：データの取得と加工と表示を全部一つの関数でやっていますよね。\n　　　単一責任の原則に沿って、それぞれ分割した方がいいですよ。\nキム：なるほど、確かにテストも書きにくい状態ですね。\n山田：そうなんです。分割すればユニットテストも書きやすくなります。\n\n山田さんが指摘した問題は何ですか？',
     'コードレビューの会話です。一つの関数に責務が多すぎることが問題です。(하나의 함수에 책임이 너무 많다는 것이 문제입니다)', 1, 104, 'N2', 'listening');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '変数名が分かりにくい', FALSE, 1),
+    (gen_random_uuid(), q_id, '変数名が分かりにくく可読性が低い', FALSE, 1),
     (gen_random_uuid(), q_id, '一つの関数に責務が多すぎる', TRUE, 2),
-    (gen_random_uuid(), q_id, 'コメントが少ない', FALSE, 3),
-    (gen_random_uuid(), q_id, 'パフォーマンスが悪い', FALSE, 4);
+    (gen_random_uuid(), q_id, 'コメントやドキュメントが不足している', FALSE, 3),
+    (gen_random_uuid(), q_id, 'パフォーマンスに重大な問題がある', FALSE, 4);
 
   -- L15: hard listening - client meeting
   q_id := gen_random_uuid();
@@ -1407,10 +1407,10 @@ BEGIN
     E'次の会話を聞いて、質問に答えてください。\n\n上司：キムさん、今期の評価面談です。全体的に良い成績でしたね。\nキム：ありがとうございます。\n上司：特にコードの品質が向上しています。ただ、一点だけ\n　　　改善点があります。\nキム：何でしょうか？\n上司：チームミーティングでの発言をもう少し増やしてほしいんです。\n　　　技術的な知識は十分あるので、それをチームに共有することで\n　　　全体のレベルアップにつながります。\nキム：分かりました。来期は積極的に発言するようにします。\n\n上司がキムさんに求めていることは何ですか？',
     '評価面談の会話です。チームミーティングでの発言を増やすよう求めています。(팀 미팅에서의 발언을 늘리도록 요구하고 있습니다)', 1, 107, 'N2', 'listening');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'コードの品質を上げること', FALSE, 1),
-    (gen_random_uuid(), q_id, '残業を減らすこと', FALSE, 2),
+    (gen_random_uuid(), q_id, 'コードの品質をさらに向上させて基準を超えること', FALSE, 1),
+    (gen_random_uuid(), q_id, '残業時間を大幅に削減して効率を高めること', FALSE, 2),
     (gen_random_uuid(), q_id, 'チームミーティングで積極的に発言すること', TRUE, 3),
-    (gen_random_uuid(), q_id, '新しい技術を学ぶこと', FALSE, 4);
+    (gen_random_uuid(), q_id, '新しいプログラミング言語やフレームワークを学ぶこと', FALSE, 4);
 
   -- L18: hard listening - architecture discussion
   q_id := gen_random_uuid();
@@ -1419,10 +1419,10 @@ BEGIN
     E'次の会話を聞いて、質問に答えてください。\n\n田中：現在のモノリシックなアーキテクチャをマイクロサービスに\n　　　移行すべきか検討しています。\n山田：メリットは理解していますが、チームの規模を考えると、\n　　　運用の複雑さが大きな課題になりませんか？\n田中：確かにそうですね。現在のチームは5人ですから。\n山田：まずはモジュラーモノリスで機能を分離して、\n　　　チームが成長してからマイクロサービスに移行する方が\n　　　現実的だと思います。\n田中：段階的なアプローチですね。それが一番リスクが少なそうです。\n\n山田さんが提案したアプローチはどれですか？',
     'アーキテクチャ議論の会話です。まずモジュラーモノリスにして段階的に移行する提案です。(먼저 모듈러 모노리스로 하고 단계적으로 이전하는 제안입니다)', 1, 108, 'N2', 'listening');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'すぐにマイクロサービスに移行する', FALSE, 1),
-    (gen_random_uuid(), q_id, 'モノリシックのまま維持する', FALSE, 2),
+    (gen_random_uuid(), q_id, 'すぐにマイクロサービスに全面的に移行して運用する', FALSE, 1),
+    (gen_random_uuid(), q_id, 'モノリシックのまま最適化して現状の運用を続ける', FALSE, 2),
     (gen_random_uuid(), q_id, 'まずモジュラーモノリスにして段階的に移行する', TRUE, 3),
-    (gen_random_uuid(), q_id, '外部のサービスを利用する', FALSE, 4);
+    (gen_random_uuid(), q_id, '外部のクラウドサービスに全面的に移行して運用する', FALSE, 4);
 
   -- L19: hard listening - salary negotiation context
   q_id := gen_random_uuid();
@@ -1443,10 +1443,10 @@ BEGIN
     E'次の会話を聞いて、質問に答えてください。\n\n鈴木：今回のリリースですが、ブルーグリーンデプロイメントで\n　　　進めたいと思います。\n佐藤：カナリアリリースではなくて？\n鈴木：今回は大きな仕様変更があるので、一部ユーザーだけに\n　　　公開するよりも、環境を丸ごと切り替えて、問題があれば\n　　　即座にロールバックできる方が安全だと判断しました。\n佐藤：なるほど。ロールバック手順は準備できていますか？\n鈴木：はい、検証環境で3回テスト済みです。\n\nブルーグリーンデプロイメントを選んだ理由はどれですか？',
     'デプロイ戦略の会話です。大きな仕様変更があり、即座にロールバックできる方が安全だからです。(큰 사양 변경이 있어 즉시 롤백할 수 있는 것이 안전하기 때문입니다)', 1, 110, 'N2', 'listening');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'コストが安いから', FALSE, 1),
+    (gen_random_uuid(), q_id, 'インフラコストが安く日常的な運用負担が少ないから', FALSE, 1),
     (gen_random_uuid(), q_id, '大きな仕様変更で即座にロールバックできるから', TRUE, 2),
-    (gen_random_uuid(), q_id, 'カナリアリリースより簡単だから', FALSE, 3),
-    (gen_random_uuid(), q_id, 'チームが慣れているから', FALSE, 4);
+    (gen_random_uuid(), q_id, 'カナリアリリースより設定が簡単で導入が早いから', FALSE, 3),
+    (gen_random_uuid(), q_id, 'チームが以前から慣れていて導入の実績があるから', FALSE, 4);
 
   -- L21: hard listening - mentoring session
   q_id := gen_random_uuid();
@@ -1455,10 +1455,10 @@ BEGIN
     E'次の会話を聞いて、質問に答えてください。\n\nメンター：キムさん、日本のIT現場で一番大事なのは何だと思いますか？\nキム：技術力でしょうか？\nメンター：もちろん技術力も大事ですが、それ以上に\n　　　　「報連相」が重要視されます。\nキム：報告・連絡・相談ですよね。\nメンター：そうです。特に問題が発生したときに、一人で抱え込まずに\n　　　　早めに相談することが大切です。日本では「悪い知らせほど\n　　　　早く」という考え方があります。\nキム：韓国でも同じような考え方がありますが、日本ではより\n　　　頻繁に報告するんですね。\n\nメンターが最も強調していることはどれですか？',
     'メンタリングの会話です。問題発生時に早めに相談することの重要性を強調しています。(문제 발생 시 빨리 상담하는 것의 중요성을 강조하고 있습니다)', 1, 111, 'N2', 'listening');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '技術力を高めること', FALSE, 1),
-    (gen_random_uuid(), q_id, '問題を一人で解決すること', FALSE, 2),
+    (gen_random_uuid(), q_id, '技術力を常に向上させて貢献すること', FALSE, 1),
+    (gen_random_uuid(), q_id, '問題を一人で最後まで解決すること', FALSE, 2),
     (gen_random_uuid(), q_id, '問題が起きたら早めに相談すること', TRUE, 3),
-    (gen_random_uuid(), q_id, '韓国と日本の違いを理解すること', FALSE, 4);
+    (gen_random_uuid(), q_id, '韓国と日本の文化の違いを学ぶこと', FALSE, 4);
 
 END $$;
 
@@ -1476,10 +1476,10 @@ BEGIN
     E'次の会話を聞いて、質問に答えてください。\n\nPM：要件定義の段階で、お客様から新しい要望が出ました。\n　　ユーザー権限管理機能を追加してほしいそうです。\n開発者：それは当初のスコープには含まれていませんよね？\nPM：はい。ただ、お客様にとっては重要な機能らしいです。\n開発者：追加するとなると、工数が2週間ほど増えますし、\n　　　　テスト範囲も広がります。\nPM：では、まず影響範囲を整理して、見積もりを出した上で\n　　お客様と再度協議しましょう。スコープを広げるなら\n　　納期か費用の調整が必要です。\n\nPMの対応方針はどれですか？',
     '要件変更に関する会話です。影響範囲を整理して見積もりを出した上でお客様と協議します。(영향 범위를 정리하고 견적을 낸 후 고객과 협의합니다)', 1, 112, 'N1', 'listening');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '要望をすぐに受け入れる', FALSE, 1),
-    (gen_random_uuid(), q_id, '要望を断る', FALSE, 2),
+    (gen_random_uuid(), q_id, '要望をそのままスコープに含めて即座に対応する', FALSE, 1),
+    (gen_random_uuid(), q_id, 'スコープ外の要望として丁重にお断りする', FALSE, 2),
     (gen_random_uuid(), q_id, '影響を整理して見積もり後にお客様と協議する', TRUE, 3),
-    (gen_random_uuid(), q_id, '開発チームを増員する', FALSE, 4);
+    (gen_random_uuid(), q_id, '開発チームを増員して納期内に間に合わせる', FALSE, 4);
 
   -- L23: hard listening - technical training
   q_id := gen_random_uuid();
@@ -1488,10 +1488,10 @@ BEGIN
     E'次の会話を聞いて、質問に答えてください。\n\n講師：Dockerコンテナの最大のメリットは環境の一貫性です。\n　　　「自分の環境では動くのに、本番では動かない」という\n　　　問題を解消できます。\n受講生：VMとの違いは何ですか？\n講師：VMはOSごと仮想化しますが、コンテナはOSのカーネルを\n　　　共有するので、起動が非常に速く、リソースの消費も\n　　　少ないのが特徴です。\n受講生：セキュリティ面ではどうですか？\n講師：カーネルを共有するため、VMに比べて分離性は低いです。\n　　　そのため、センシティブな環境ではVMが適している場合もあります。\n\nコンテナのデメリットとして述べられていることはどれですか？',
     '技術研修の会話です。カーネル共有のためVMに比べて分離性が低いことがデメリットです。(커널을 공유하므로 VM에 비해 격리성이 낮은 것이 단점입니다)', 1, 113, 'N1', 'listening');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '起動が遅い', FALSE, 1),
-    (gen_random_uuid(), q_id, 'リソースの消費が多い', FALSE, 2),
+    (gen_random_uuid(), q_id, '起動に時間がかかり速度が遅い', FALSE, 1),
+    (gen_random_uuid(), q_id, 'リソースの消費が非常に多い', FALSE, 2),
     (gen_random_uuid(), q_id, 'VMに比べて分離性が低い', TRUE, 3),
-    (gen_random_uuid(), q_id, '環境の一貫性が保てない', FALSE, 4);
+    (gen_random_uuid(), q_id, '環境の一貫性を維持できない', FALSE, 4);
 
   -- L24: hard listening - conflict resolution
   q_id := gen_random_uuid();
@@ -1500,10 +1500,10 @@ BEGIN
     E'次の会話を聞いて、質問に答えてください。\n\nマネージャー：AチームとBチームの間でAPIの仕様について意見が\n　　　　　　食い違っているようですね。\nリーダー：はい、AチームはRESTを主張していますが、\n　　　　Bチームはパフォーマンスの面からgRPCを推しています。\nマネージャー：両チームの要件を再度確認しましょう。\n　　　　　　外部公開が必要な部分はREST、内部通信はgRPCという\n　　　　　　ハイブリッドアプローチも一つの選択肢です。\nリーダー：なるほど、要件によって使い分けるんですね。\n　　　　両チームに提案してみます。\n\nマネージャーが提案した解決策はどれですか？',
     'チーム間の意見対立に関する会話です。外部はREST、内部はgRPCのハイブリッドアプローチです。(외부는 REST, 내부는 gRPC의 하이브리드 접근법입니다)', 1, 114, 'N1', 'listening');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '全てRESTに統一する', FALSE, 1),
-    (gen_random_uuid(), q_id, '全てgRPCに統一する', FALSE, 2),
+    (gen_random_uuid(), q_id, '全てのAPIをRESTに統一して運用する', FALSE, 1),
+    (gen_random_uuid(), q_id, '全てのAPIをgRPCに統一して運用する', FALSE, 2),
     (gen_random_uuid(), q_id, '外部REST・内部gRPCのハイブリッド', TRUE, 3),
-    (gen_random_uuid(), q_id, '第三の技術を採用する', FALSE, 4);
+    (gen_random_uuid(), q_id, 'GraphQLなど第三の技術を新規採用する', FALSE, 4);
 
   -- L25: hard listening - retrospective
   q_id := gen_random_uuid();
@@ -1512,10 +1512,10 @@ BEGIN
     E'次の会話を聞いて、質問に答えてください。\n\n佐藤：先月のプロジェクトの反省点として、ドキュメントの不足が\n　　　挙げられています。\n田中：確かに、設計書が古いまま更新されていなかったですね。\n佐藤：新しいメンバーが参加したときに、コードを読むしかなくて\n　　　キャッチアップに時間がかかったそうです。\n田中：今後はプルリクエストのレビュー時に、関連ドキュメントの\n　　　更新も確認項目に入れましょう。\n佐藤：それは良い案ですね。レビューチェックリストに追加します。\n\nドキュメント不足による具体的な問題は何でしたか？',
     'プロジェクト振り返りの会話です。新メンバーのキャッチアップに時間がかかりました。(새 멤버의 적응에 시간이 걸렸습니다)', 1, 115, 'N1', 'listening');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'バグが増えた', FALSE, 1),
+    (gen_random_uuid(), q_id, '本番環境でバグが頻繁に発生するようになった', FALSE, 1),
     (gen_random_uuid(), q_id, '新メンバーのキャッチアップに時間がかかった', TRUE, 2),
-    (gen_random_uuid(), q_id, 'テストが書けなかった', FALSE, 3),
-    (gen_random_uuid(), q_id, 'デプロイに失敗した', FALSE, 4);
+    (gen_random_uuid(), q_id, 'ユニットテストの作成が困難になっていた', FALSE, 3),
+    (gen_random_uuid(), q_id, 'デプロイの手順が不明確で失敗が続いた', FALSE, 4);
 
   -- L26: hard listening - estimation meeting
   q_id := gen_random_uuid();
@@ -1524,10 +1524,10 @@ BEGIN
     E'次の会話を聞いて、質問に答えてください。\n\n課長：この機能の見積もりはどのくらいですか？\nキム：開発だけで言えば3日程度ですが、テストとコードレビューを\n　　　含めると5日は見ておいた方がいいと思います。\n課長：お客様には3日と伝えてしまったんですが。\nキム：品質を担保するためには、テスト期間は削れません。\n　　　もし3日で納品するなら、機能を絞る必要があります。\n課長：分かりました。お客様に正確な見積もりを再提示します。\n\nキムさんの主張はどれですか？',
     '見積もり会議の会話です。テスト期間は品質のために削れないと主張しています。(테스트 기간은 품질을 위해 줄일 수 없다고 주장합니다)', 1, 116, 'N1', 'listening');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '3日で全て完了できる', FALSE, 1),
+    (gen_random_uuid(), q_id, '3日あれば開発からテストまで全て完了できる', FALSE, 1),
     (gen_random_uuid(), q_id, 'テスト期間は品質のために削れない', TRUE, 2),
-    (gen_random_uuid(), q_id, 'お客様の要望に合わせるべきだ', FALSE, 3),
-    (gen_random_uuid(), q_id, '機能を増やすべきだ', FALSE, 4);
+    (gen_random_uuid(), q_id, 'お客様の要望通りの納期に合わせるべきだ', FALSE, 3),
+    (gen_random_uuid(), q_id, '予算を増やして機能を追加すべきだ', FALSE, 4);
 
   -- L27: hard listening - business etiquette
   q_id := gen_random_uuid();
@@ -1536,10 +1536,10 @@ BEGIN
     E'次の会話を聞いて、質問に答えてください。\n\n先輩：キムさん、日本の会社では名刺交換にもルールがあるんですよ。\nキム：そうなんですか？\n先輩：まず、相手より先に名刺を出すのが礼儀です。両手で差し出して、\n　　　相手の名刺も両手で受け取ります。\nキム：受け取った名刺はすぐにしまっても大丈夫ですか？\n先輩：いいえ、それは失礼にあたります。打ち合わせ中は\n　　　テーブルの上に置いておくのがマナーです。\n　　　相手の名前を確認するためにも役立ちますよ。\n\n名刺を受け取った後、すべきことはどれですか？',
     'ビジネスマナーの会話です。名刺は打ち合わせ中テーブルの上に置いておきます。(명함은 미팅 중 테이블 위에 놓아둡니다)', 1, 117, 'N1', 'listening');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'すぐにカバンにしまう', FALSE, 1),
-    (gen_random_uuid(), q_id, 'ポケットに入れる', FALSE, 2),
+    (gen_random_uuid(), q_id, 'すぐにカバンの中にしまう', FALSE, 1),
+    (gen_random_uuid(), q_id, 'ポケットに丁寧に入れておく', FALSE, 2),
     (gen_random_uuid(), q_id, 'テーブルの上に置いておく', TRUE, 3),
-    (gen_random_uuid(), q_id, '名刺入れの中に入れる', FALSE, 4);
+    (gen_random_uuid(), q_id, '名刺入れに重ねて保管する', FALSE, 4);
 
   -- L28: hard listening - security briefing
   q_id := gen_random_uuid();
@@ -1548,10 +1548,10 @@ BEGIN
     E'次の会話を聞いて、質問に答えてください。\n\nセキュリティ担当：最近、社内でフィッシングメールの被害が\n　　　　　　　　増えています。先月だけで5件の報告がありました。\n部長：具体的にはどんな手口ですか？\nセキュリティ担当：取引先を装ったメールで、添付ファイルを\n　　　　　　　　開かせるパターンが多いです。\n部長：対策はどうしますか？\nセキュリティ担当：まず、全社員向けのセキュリティ研修を実施します。\n　　　　　　　　また、不審なメールを簡単に報告できるボタンを\n　　　　　　　　メーラーに追加する予定です。\n\nフィッシングメールの主な手口はどれですか？',
     'セキュリティブリーフィングの会話です。取引先を装い添付ファイルを開かせるのが主な手口です。(거래처를 사칭하여 첨부파일을 열게 하는 것이 주된 수법입니다)', 1, 118, 'N1', 'listening');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'パスワードを聞き出す電話', FALSE, 1),
+    (gen_random_uuid(), q_id, 'パスワードを電話で巧みに聞き出す手口', FALSE, 1),
     (gen_random_uuid(), q_id, '取引先を装い添付ファイルを開かせる', TRUE, 2),
-    (gen_random_uuid(), q_id, '偽のログインページに誘導する', FALSE, 3),
-    (gen_random_uuid(), q_id, 'USBメモリを配布する', FALSE, 4);
+    (gen_random_uuid(), q_id, '偽のログインページに誘導して情報を盗む', FALSE, 3),
+    (gen_random_uuid(), q_id, 'ウイルス入りのUSBメモリを配布する', FALSE, 4);
 
   -- L29: hard listening - team building
   q_id := gen_random_uuid();
@@ -1560,10 +1560,10 @@ BEGIN
     E'次の会話を聞いて、質問に答えてください。\n\n山田：最近チームのモチベーションが下がっているように感じます。\n佐藤：何が原因だと思いますか？\n山田：連続するデッドラインと、成果が見えにくいことだと思います。\n　　　バックエンドのリファクタリングって、ユーザーからは\n　　　見えないですからね。\n佐藤：なるほど。では、毎週のデモタイムを設けましょう。\n　　　パフォーマンスの改善数値やコード品質のメトリクスを\n　　　共有することで、成果を可視化できると思います。\n山田：いいですね。小さな成功を積み重ねることが大事ですよね。\n\n佐藤さんが提案した解決策の目的はどれですか？',
     'チームビルディングの会話です。デモタイムで成果を可視化してモチベーションを上げる提案です。(데모 타임으로 성과를 가시화하여 동기부여를 높이는 제안입니다)', 1, 119, 'N1', 'listening');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'デッドラインを延ばすこと', FALSE, 1),
-    (gen_random_uuid(), q_id, 'チームのメンバーを変えること', FALSE, 2),
+    (gen_random_uuid(), q_id, 'デッドラインを延長してチームの負担を軽くすること', FALSE, 1),
+    (gen_random_uuid(), q_id, 'チームのメンバーを入れ替えて士気を回復すること', FALSE, 2),
     (gen_random_uuid(), q_id, '成果を可視化してモチベーションを上げること', TRUE, 3),
-    (gen_random_uuid(), q_id, 'リファクタリングをやめること', FALSE, 4);
+    (gen_random_uuid(), q_id, 'バックエンドのリファクタリング作業を中止すること', FALSE, 4);
 
   -- L30: hard listening - cross-cultural communication
   q_id := gen_random_uuid();
@@ -1572,9 +1572,9 @@ BEGIN
     E'次の会話を聞いて、質問に答えてください。\n\nキム：日本の会議で「検討します」と言われたとき、\n　　　それは前向きな返事だと思っていいですか？\nメンター：実は、それは注意が必要な表現です。「検討します」は\n　　　　文字通り「考えます」という意味ですが、\n　　　　日本のビジネスでは婉曲な断りである場合も多いです。\nキム：えっ、そうなんですか？どう見分ければいいですか？\nメンター：相手の表情やその後のフォローアップに注目してください。\n　　　　具体的な日程や条件の話が続けば前向きですが、\n　　　　そのまま連絡が途絶えた場合は、断られた可能性が高いです。\n\n「検討します」の意味について正しいものはどれですか？',
     '日本のビジネスコミュニケーションの会話です。「検討します」は婉曲な断りの場合もあります。(「검토하겠습니다」는 완곡한 거절인 경우도 있습니다)', 1, 120, 'N1', 'listening');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '必ず前向きな返事である', FALSE, 1),
-    (gen_random_uuid(), q_id, '必ず断りの意味である', FALSE, 2),
+    (gen_random_uuid(), q_id, '必ず前向きな返事であり承諾を意味する', FALSE, 1),
+    (gen_random_uuid(), q_id, '必ず断りの意味であり拒否を表している', FALSE, 2),
     (gen_random_uuid(), q_id, '前向きな場合も婉曲な断りの場合もある', TRUE, 3),
-    (gen_random_uuid(), q_id, '返事を保留するという意味だけである', FALSE, 4);
+    (gen_random_uuid(), q_id, '返事を保留するという意味だけで使われる', FALSE, 4);
 
 END $$;

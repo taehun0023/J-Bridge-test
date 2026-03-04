@@ -1,14 +1,64 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
 import { requireAuth } from '@/lib/auth-helpers'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import { recalculateUserScores } from './scores'
 import { checkAssignmentProgress } from './learning-assignments'
+
+// Practice quiz types that are subject to 1-attempt limit
+const PRACTICE_QUIZ_TYPES = [
+  'jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening',
+  'it_terminology', 'sentence_pattern', 'business_expression',
+]
 
 export async function startQuizAttempt(quizId: string) {
   const auth = await requireAuth()
   if ('error' in auth) return { error: auth.error } as const
   const { supabase, user } = auth
+
+  const serviceClient = createServiceRoleClient()
+  const queryClient = serviceClient ?? supabase
+
+  // Check if this is a practice quiz with 1-attempt limit
+  const { data: quiz } = await queryClient
+    .from('quizzes')
+    .select('quiz_type, is_assessment, is_pool')
+    .eq('id', quizId)
+    .single()
+
+  if (quiz && !quiz.is_assessment && PRACTICE_QUIZ_TYPES.includes(quiz.quiz_type)) {
+    // Check user role
+    const { data: profile } = await queryClient
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.role === 'mentee') {
+      // Check for existing completed attempt
+      const { data: existingAttempt } = await queryClient
+        .from('quiz_attempts')
+        .select('id, retake_request_status')
+        .eq('user_id', user.id)
+        .eq('quiz_id', quizId)
+        .not('completed_at', 'is', null)
+        .order('completed_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (existingAttempt) {
+        if (existingAttempt.retake_request_status === 'approved') {
+          // Consume the retake approval (reset to null)
+          await queryClient
+            .from('quiz_attempts')
+            .update({ retake_request_status: null })
+            .eq('id', existingAttempt.id)
+        } else {
+          return { error: 'このテストは既に受験済みです。再試験が必要な場合はリクエストしてください。' }
+        }
+      }
+    }
+  }
 
   const { data, error } = await supabase
     .from('quiz_attempts')
@@ -23,7 +73,8 @@ export async function startQuizAttempt(quizId: string) {
 
 export async function submitQuizAnswers(
   attemptId: string,
-  answers: { questionId: string; selectedOptionId: string }[]
+  answers: { questionId: string; selectedOptionId: string }[],
+  totalQuestions?: number
 ) {
   const auth = await requireAuth()
   if ('error' in auth) return { error: auth.error } as const
@@ -54,7 +105,7 @@ export async function submitQuizAnswers(
 
   // Grade and insert answers
   let correctCount = 0
-  const answerRows = answers.map(a => {
+  const answerRows = answers.map((a, index) => {
     const isCorrect = correctMap.get(a.questionId) === a.selectedOptionId
     if (isCorrect) correctCount++
     return {
@@ -62,14 +113,16 @@ export async function submitQuizAnswers(
       question_id: a.questionId,
       selected_option_id: a.selectedOptionId,
       is_correct: isCorrect,
+      sort_order: index,
     }
   })
 
   const { error: answersError } = await supabase.from('quiz_answers').insert(answerRows)
   if (answersError) return { error: '回答の保存に失敗しました: ' + answersError.message }
 
-  // Calculate score and update attempt
-  const score = answers.length > 0 ? Math.round((correctCount / answers.length) * 100) : 0
+  // Calculate score: use totalQuestions (full quiz length) as denominator when provided
+  const denominator = totalQuestions && totalQuestions > 0 ? totalQuestions : answers.length
+  const score = denominator > 0 ? Math.round((correctCount / denominator) * 100) : 0
 
   // Get passing score
   const { data: quiz, error: quizError } = await supabase
@@ -93,8 +146,6 @@ export async function submitQuizAnswers(
 
   if (updateError) return { error: 'クイズ結果の保存に失敗しました: ' + updateError.message }
 
-  revalidatePath('/japanese/jlpt/quiz')
-
   // Recalculate user scores after quiz completion
   recalculateUserScores(user.id).catch((err) =>
     console.error('[Score Recalculation Failed]', user.id, err)
@@ -107,10 +158,19 @@ export async function submitQuizAnswers(
     )
   }
 
+  // Per-question results for review mode
+  const results = answers.map(a => ({
+    questionId: a.questionId,
+    selectedOptionId: a.selectedOptionId,
+    correctOptionId: correctMap.get(a.questionId) ?? '',
+    isCorrect: correctMap.get(a.questionId) === a.selectedOptionId,
+  }))
+
   return {
     score,
     passed,
     correctCount,
-    totalCount: answers.length,
+    totalCount: denominator,
+    results,
   }
 }

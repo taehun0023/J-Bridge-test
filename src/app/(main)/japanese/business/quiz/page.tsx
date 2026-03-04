@@ -1,8 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import Badge from '@/components/ui/Badge'
 import EmptyState from '@/components/ui/EmptyState'
+import PracticeQuizCard from '@/components/quiz/PracticeQuizCard'
 
 interface Quiz {
   id: string
@@ -75,21 +74,23 @@ export default async function BusinessQuizListPage({ searchParams }: { searchPar
     .select('*')
     .in('quiz_type', quizTypes)
     .eq('is_assessment', false)
+    .eq('is_pool', false)
     .order('created_at', { ascending: true })
 
-  // Fetch user's attempts
-  let attemptMap: Record<string, { score: number; passed: boolean }> = {}
+  // Fetch user's attempts (include id + retake_request_status for PracticeQuizCard)
+  let attemptMap: Record<string, { id: string; score: number; passed: boolean; retake_request_status: string | null }> = {}
   if (user && quizzes?.length) {
     const { data: attempts } = await supabase
       .from('quiz_attempts')
-      .select('quiz_id, score, passed')
+      .select('id, quiz_id, score, passed, retake_request_status')
       .eq('user_id', user.id)
       .not('completed_at', 'is', null)
-      .order('score', { ascending: false })
+      .order('completed_at', { ascending: false })
 
     attempts?.forEach((a) => {
-      if (!attemptMap[a.quiz_id] || a.score > attemptMap[a.quiz_id].score) {
-        attemptMap[a.quiz_id] = { score: a.score, passed: a.passed }
+      // Keep the most recent attempt per quiz
+      if (!attemptMap[a.quiz_id]) {
+        attemptMap[a.quiz_id] = { id: a.id, score: a.score, passed: a.passed, retake_request_status: a.retake_request_status }
       }
     })
   }
@@ -99,38 +100,15 @@ export default async function BusinessQuizListPage({ searchParams }: { searchPar
   const expressionQuizzes = quizzes?.filter(q => q.quiz_type === 'business_expression') ?? []
 
   function renderQuizCard(quiz: Quiz) {
-    const attempt = attemptMap[quiz.id]
+    const attempt = attemptMap[quiz.id] ?? null
     return (
-      <Link
+      <PracticeQuizCard
         key={quiz.id}
-        href={`/japanese/business/quiz/${quiz.id}`}
-        className="group rounded-xl border border-gray-200 bg-white p-5 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
-      >
-        <div className="flex items-start justify-between">
-          <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 dark:text-white">
-            {quiz.title}
-          </h3>
-          {attempt && (
-            <Badge
-              label={attempt.passed ? '合格' : '不合格'}
-              variant="default"
-            />
-          )}
-        </div>
-        <div className="mt-3 flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-          {quiz.time_limit_minutes && (
-            <span>制限時間 {quiz.time_limit_minutes}分</span>
-          )}
-          <span>合格 {quiz.passing_score}点</span>
-        </div>
-        {attempt && (
-          <div className="mt-2 text-sm">
-            <span className={attempt.passed ? 'text-green-600' : 'text-red-600'}>
-              最高点: {attempt.score}点
-            </span>
-          </div>
-        )}
-      </Link>
+        quiz={quiz}
+        attempt={attempt}
+        quizHref={`/japanese/business/quiz/${quiz.id}`}
+        userRole={userRole}
+      />
     )
   }
 

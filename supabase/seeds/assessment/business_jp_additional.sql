@@ -248,10 +248,10 @@ BEGIN
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
   VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次のメールを読んでください。\n「お疲れ様です。本日のデプロイ作業は完了しました。ステージング環境での動作確認をお願いいたします。不具合がありましたらSlackでご連絡ください。」\nメールの依頼事項は？', 'デプロイ完了後のステージング環境確認依頼メールです。', 1, 111, 'easy', 'reading');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '본번 환경에 배포를 실행해 달라', FALSE, 1),
+    (gen_random_uuid(), q_id, '본번 환경에 직접 배포 작업을 실행해 달라', FALSE, 1),
     (gen_random_uuid(), q_id, '스테이징 환경에서 동작 확인을 해 달라', TRUE, 2),
-    (gen_random_uuid(), q_id, 'Slack 채널을 새로 만들어 달라', FALSE, 3),
-    (gen_random_uuid(), q_id, '배포 작업을 중지해 달라', FALSE, 4);
+    (gen_random_uuid(), q_id, 'Slack 채널을 새로 만들고 팀원을 초대해 달라', FALSE, 3),
+    (gen_random_uuid(), q_id, '배포 작업을 일시 중지하고 롤백해 달라', FALSE, 4);
 
   -- Q112: 社内通知 (easy)
   q_id := gen_random_uuid();
@@ -268,20 +268,20 @@ BEGIN
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
   VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次のSlackメッセージを読んでください。\n「田中さん、ログイン画面のバリデーションエラーメッセージを日本語に翻訳してください。対象は5件です。金曜日までにプルリクエストを出してください。」\nこのメッセージの依頼内容は？', 'バリデーションメッセージの翻訳タスクの指示です。', 1, 113, 'easy', 'reading');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '로그인 화면의 디자인을 변경해 달라', FALSE, 1),
+    (gen_random_uuid(), q_id, '로그인 화면의 디자인을 변경하고 프론트에 반영해 달라', FALSE, 1),
     (gen_random_uuid(), q_id, '밸리데이션 에러 메시지 5건을 일본어로 번역해 달라', TRUE, 2),
-    (gen_random_uuid(), q_id, '금요일까지 로그인 기능을 새로 개발해 달라', FALSE, 3),
-    (gen_random_uuid(), q_id, '프론트엔드 테스트 코드를 작성해 달라', FALSE, 4);
+    (gen_random_uuid(), q_id, '금요일까지 로그인 기능의 버그를 수정해서 배포해 달라', FALSE, 3),
+    (gen_random_uuid(), q_id, '프론트엔드 테스트 코드를 작성하고 PR을 올려 달라', FALSE, 4);
 
   -- Q114: リリースノート (easy)
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
   VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次のリリースノートを読んでください。\n「v2.1.0 リリースノート\n・ダッシュボードにグラフ表示機能を追加\n・パスワードリセット時のメール送信バグを修正\n・ページ読み込み速度を30%改善」\n今回のリリースで修正されたバグは？', 'リリースノートからバグ修正項目を読み取る問題です。', 1, 114, 'easy', 'reading');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '대시보드 그래프 표시 오류', FALSE, 1),
+    (gen_random_uuid(), q_id, '대시보드 그래프 표시 기능의 오류', FALSE, 1),
     (gen_random_uuid(), q_id, '비밀번호 재설정 시 메일 전송 버그', TRUE, 2),
-    (gen_random_uuid(), q_id, '페이지 로딩 속도 저하 문제', FALSE, 3),
-    (gen_random_uuid(), q_id, '로그인 인증 실패 오류', FALSE, 4);
+    (gen_random_uuid(), q_id, '페이지 로딩 속도가 저하되는 문제', FALSE, 3),
+    (gen_random_uuid(), q_id, '로그인 인증 처리 시 발생한 오류', FALSE, 4);
 
   -- ==========================================
   -- READING - MEDIUM (8 questions, sort_order 115-122)
@@ -292,10 +292,10 @@ BEGIN
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
   VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の議事録を読んでください。\n「【スプリント振り返り議事録】\n日時：2025/3/10 15:00-16:00\n参加者：田中、佐藤、キム\n■良かった点\n・コードレビューのスピードが向上した\n■改善点\n・テストケースの作成が遅れがち\n■アクション\n・佐藤：テストケーステンプレートを来週までに作成する」\n佐藤さんのアクション項目は？', '議事録からアクション項目を読み取る問題です。', 1, 115, 'medium', 'reading');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '코드 리뷰 속도를 더 향상시키기', FALSE, 1),
+    (gen_random_uuid(), q_id, '코드 리뷰의 속도를 더 향상시키는 방법을 검토하기', FALSE, 1),
     (gen_random_uuid(), q_id, '다음 주까지 테스트 케이스 템플릿을 작성하기', TRUE, 2),
-    (gen_random_uuid(), q_id, '스프린트 회고 일정을 조정하기', FALSE, 3),
-    (gen_random_uuid(), q_id, '새로운 팀원을 온보딩하기', FALSE, 4);
+    (gen_random_uuid(), q_id, '다음 스프린트 회고 일정을 재조정하여 공유하기', FALSE, 3),
+    (gen_random_uuid(), q_id, '새로운 팀원에 대한 온보딩 문서를 정리하기', FALSE, 4);
 
   -- Q116: 仕様書 (medium)
   q_id := gen_random_uuid();
@@ -322,10 +322,10 @@ BEGIN
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
   VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の議事録を読んでください。\n「【設計レビュー議事録】\n議題：認証方式の変更提案\n現状：セッションベース認証\n提案：JWTトークン認証への移行\n理由：\n1. マイクロサービス化に対応するため\n2. スケーラビリティの向上\n決定事項：次スプリントでPoCを実施し、パフォーマンス比較を行う」\n認証方式を変更する理由は？', '設計レビュー議事録から変更理由を読み取る問題です。', 1, 118, 'medium', 'reading');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '보안 취약점이 발견되었기 때문에', FALSE, 1),
+    (gen_random_uuid(), q_id, '보안 취약점이 발견되어 즉시 대응이 필요해서', FALSE, 1),
     (gen_random_uuid(), q_id, '마이크로서비스 대응과 확장성 향상을 위해', TRUE, 2),
-    (gen_random_uuid(), q_id, '라이센스 비용을 절감하기 위해', FALSE, 3),
-    (gen_random_uuid(), q_id, '고객으로부터 변경 요청을 받았기 때문에', FALSE, 4);
+    (gen_random_uuid(), q_id, '라이센스 비용과 운영 비용을 절감하기 위해', FALSE, 3),
+    (gen_random_uuid(), q_id, '고객으로부터 인증 방식의 변경 요청을 받아서', FALSE, 4);
 
   -- Q119: 仕様書 (medium)
   q_id := gen_random_uuid();
@@ -342,10 +342,10 @@ BEGIN
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
   VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の障害報告を読んでください。\n「障害報告書\n発生日時：2025/3/12 09:15\n検知方法：監視アラート（CPU使用率90%超過）\n影響：レスポンスタイム3秒以上に悪化\n原因：バッチ処理のクエリがテーブルフルスキャンになっていた\n対応：該当クエリにインデックスを追加して解消」\n障害の根本原因は？', '障害報告書から根本原因を読み取る問題です。', 1, 120, 'medium', 'reading');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '서버의 CPU가 물리적으로 고장났다', FALSE, 1),
-    (gen_random_uuid(), q_id, '네트워크 대역폭이 부족했다', FALSE, 2),
+    (gen_random_uuid(), q_id, '서버의 CPU가 물리적으로 고장나서 교체가 필요했다', FALSE, 1),
+    (gen_random_uuid(), q_id, '네트워크 대역폭이 부족해서 응답이 지연되었다', FALSE, 2),
     (gen_random_uuid(), q_id, '배치 처리 쿼리가 테이블 풀 스캔을 하고 있었다', TRUE, 3),
-    (gen_random_uuid(), q_id, '동시 접속 사용자가 급증했다', FALSE, 4);
+    (gen_random_uuid(), q_id, '동시 접속 사용자가 급증하여 서버에 부하가 걸렸다', FALSE, 4);
 
   -- Q121: ビジネスメール (medium)
   q_id := gen_random_uuid();
@@ -362,10 +362,10 @@ BEGIN
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
   VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の仕様を読んでください。\n「ファイルアップロード仕様\n・対応形式：JPEG, PNG, PDF\n・最大サイズ：10MB\n・保存先：S3バケット（リージョン：東京）\n・アップロード後、サムネイルを自動生成（JPEG/PNGのみ）\n・PDFの場合は1ページ目をプレビュー画像として生成」\nPDFをアップロードした場合の動作は？', 'ファイルアップロード仕様からPDFの特別処理を読み取る問題です。', 1, 122, 'medium', 'reading');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '썸네일이 자동 생성된다', FALSE, 1),
+    (gen_random_uuid(), q_id, '썸네일이 자동으로 생성되어 표시된다', FALSE, 1),
     (gen_random_uuid(), q_id, '1페이지를 프리뷰 이미지로 생성한다', TRUE, 2),
-    (gen_random_uuid(), q_id, '모든 페이지가 이미지로 변환된다', FALSE, 3),
-    (gen_random_uuid(), q_id, 'PDF 뷰어가 자동으로 실행된다', FALSE, 4);
+    (gen_random_uuid(), q_id, '모든 페이지가 개별 이미지로 변환된다', FALSE, 3),
+    (gen_random_uuid(), q_id, 'PDF 전용 뷰어가 자동으로 실행된다', FALSE, 4);
 
   -- ==========================================
   -- READING - HARD (8 questions, sort_order 123-130)
@@ -386,20 +386,20 @@ BEGIN
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
   VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の議事録を読んでください。\n「【アーキテクチャ検討会議事録】\n議題：モノリスからマイクロサービスへの移行方針\n結論：段階的移行（ストラングラーフィグパターン）を採用\n理由：\n1. ビッグバン移行はリスクが高すぎる\n2. 既存機能を維持しながら段階的に切り出せる\n3. 各チームが独立してデプロイ可能になる\n第1フェーズ：認証サービスの分離（4月〜6月）\n第2フェーズ：通知サービスの分離（7月〜9月）」\nストラングラーフィグパターンが採用された主な理由は？', 'アーキテクチャ移行の意思決定を読み取る問題です。', 1, 124, 'hard', 'reading');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '개발 비용이 가장 저렴하기 때문에', FALSE, 1),
+    (gen_random_uuid(), q_id, '개발 비용과 인프라 유지 비용이 가장 저렴하고 팀 부담이 적기 때문에', FALSE, 1),
     (gen_random_uuid(), q_id, '빅뱅 이행의 리스크가 높고 기존 기능을 유지하면서 단계적으로 분리 가능하기 때문에', TRUE, 2),
-    (gen_random_uuid(), q_id, '마이크로서비스의 업계 표준이기 때문에', FALSE, 3),
-    (gen_random_uuid(), q_id, '고객의 요청으로 결정되었기 때문에', FALSE, 4);
+    (gen_random_uuid(), q_id, '마이크로서비스 아키텍처 이행의 업계 표준 패턴으로 널리 사용되기 때문에', FALSE, 3),
+    (gen_random_uuid(), q_id, '고객으로부터 아키텍처 이행 방식에 대한 구체적인 요청을 받았기 때문에', FALSE, 4);
 
   -- Q125: 障害対応報告 (hard)
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
   VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の障害報告を読んでください。\n「ポストモーテムレポート\n事象：2025/3/8 デプロイ後に500エラーが多発\nタイムライン：\n14:00 デプロイ実施\n14:05 500エラーアラート発報\n14:10 ロールバック判断\n14:15 前バージョンにロールバック完了\n14:20 正常復旧確認\n根本原因：環境変数の設定漏れ（新しく追加したAPI_KEYが本番環境に未設定）\n再発防止策：\n1. デプロイチェックリストに環境変数確認項目を追加\n2. 環境変数の差分チェックをCI/CDに組み込む」\n障害の根本原因は？', 'ポストモーテムから根本原因を読み取る問題です。', 1, 125, 'hard', 'reading');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '코드에 버그가 있었기 때문에', FALSE, 1),
-    (gen_random_uuid(), q_id, '서버 리소스가 부족했기 때문에', FALSE, 2),
+    (gen_random_uuid(), q_id, '새로 추가된 기능의 코드에 치명적 버그가 포함되어 있었다', FALSE, 1),
+    (gen_random_uuid(), q_id, '서버 리소스가 부족해서 배포 후 처리 용량을 초과했다', FALSE, 2),
     (gen_random_uuid(), q_id, '환경 변수 설정 누락 (새로운 API_KEY가 본번에 미설정)', TRUE, 3),
-    (gen_random_uuid(), q_id, '롤백 절차에 문제가 있었기 때문에', FALSE, 4);
+    (gen_random_uuid(), q_id, '롤백 절차가 제대로 정비되어 있지 않아 복구가 지연되었다', FALSE, 4);
 
   -- Q126: 技術提案書 (hard)
   q_id := gen_random_uuid();
@@ -426,10 +426,10 @@ BEGIN
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
   VALUES (q_id, 'a0000002-0000-0000-0000-000000000002', 'multiple_choice', E'次の設計書を読んでください。\n「エラーハンドリング設計\n・4xx系エラー：ユーザー起因（バリデーションエラー等）→ クライアントにエラー詳細を返す\n・5xx系エラー：サーバー起因 → 汎用エラーメッセージを返し、詳細はサーバーログに記録\n・リトライ方針：\n  - 429 Too Many Requests → Exponential Backoffで最大3回リトライ\n  - 503 Service Unavailable → 5秒後に1回リトライ\n  - その他5xx → リトライしない」\n429エラー時のリトライ方針は？', 'エラーハンドリング設計書からリトライ方針を読み取る問題です。', 1, 128, 'hard', 'reading');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '5초 후에 1회 리트라이', FALSE, 1),
-    (gen_random_uuid(), q_id, '리트라이하지 않음', FALSE, 2),
+    (gen_random_uuid(), q_id, '5초 간격으로 최대 1회까지 리트라이 시도', FALSE, 1),
+    (gen_random_uuid(), q_id, '리트라이하지 않고 에러를 즉시 반환', FALSE, 2),
     (gen_random_uuid(), q_id, 'Exponential Backoff로 최대 3회 리트라이', TRUE, 3),
-    (gen_random_uuid(), q_id, '즉시 3회 리트라이', FALSE, 4);
+    (gen_random_uuid(), q_id, '간격 없이 즉시 최대 3회 리트라이 시도', FALSE, 4);
 
   -- Q129: 運用ドキュメント (hard)
   q_id := gen_random_uuid();
@@ -676,3 +676,23 @@ BEGIN
     (gen_random_uuid(), q_id, '中断', FALSE, 4);
 
 END $$;
+
+-- ============================================
+-- Post-insert: remap categories and difficulty for fresh install
+-- vocab → vocabulary, fill_blank → sentence_pattern
+-- easy → 初級, medium → 中級, hard → 上級
+-- ============================================
+UPDATE quiz_questions SET question_category = 'vocabulary'
+WHERE quiz_id = 'a0000002-0000-0000-0000-000000000002' AND question_category = 'vocab';
+
+UPDATE quiz_questions SET question_category = 'sentence_pattern'
+WHERE quiz_id = 'a0000002-0000-0000-0000-000000000002' AND question_category = 'fill_blank';
+
+UPDATE quiz_questions SET difficulty = '初級'
+WHERE quiz_id = 'a0000002-0000-0000-0000-000000000002' AND difficulty = 'easy';
+
+UPDATE quiz_questions SET difficulty = '中級'
+WHERE quiz_id = 'a0000002-0000-0000-0000-000000000002' AND difficulty = 'medium';
+
+UPDATE quiz_questions SET difficulty = '上級'
+WHERE quiz_id = 'a0000002-0000-0000-0000-000000000002' AND difficulty = 'hard';

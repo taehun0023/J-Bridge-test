@@ -102,12 +102,12 @@ BEGIN
   -- Q3: 〜たい (의미 선택)
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'b0000001-0000-0000-0000-000000000001', 'multiple_choice', '「〜たい」の意味として正しいものは？', '「〜たい」は話者の願望を表す助動詞で、「~하고 싶다」という意味です。動詞の連用形（ます形の「ます」を取った形）に付きます。', 1, 3, 'N5', 'grammar');
+  VALUES (q_id, 'b0000001-0000-0000-0000-000000000001', 'multiple_choice', '「日本に（　）です。」に入る正しいものは？', '「〜たい」は話者の願望を表す助動詞で、「~하고 싶다」という意味です。動詞の連用形に付きます。「行きたい」が正解です。', 1, 3, 'N5', 'grammar');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '～しなければならない', FALSE, 1),
-    (gen_random_uuid(), q_id, '～できる', FALSE, 2),
-    (gen_random_uuid(), q_id, '～した', FALSE, 3),
-    (gen_random_uuid(), q_id, '～したい', TRUE, 4);
+    (gen_random_uuid(), q_id, '行かない', FALSE, 1),
+    (gen_random_uuid(), q_id, '行ける', FALSE, 2),
+    (gen_random_uuid(), q_id, '行った', FALSE, 3),
+    (gen_random_uuid(), q_id, '行きたい', TRUE, 4);
 
   -- Q4: 〜てください (빈칸 채우기)
   q_id := gen_random_uuid();
@@ -206,7 +206,7 @@ BEGIN
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '命令', FALSE, 1),
     (gen_random_uuid(), q_id, '依頼', FALSE, 2),
-    (gen_random_uuid(), q_id, '勧誘（～ましょう）', TRUE, 3),
+    (gen_random_uuid(), q_id, '勧誘（一緒にしようと誘う）', TRUE, 3),
     (gen_random_uuid(), q_id, '禁止', FALSE, 4);
 
   -- Q14: 〜でしょう (빈칸 채우기)
@@ -232,12 +232,12 @@ BEGIN
   -- Q16: 〜すぎる (의미 선택)
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'b0000001-0000-0000-0000-000000000001', 'multiple_choice', '「〜すぎる」の意味として正しいものは？', '「〜すぎる」は程度が過度であることを表す文型で、「너무 ~하다」という意味です。動詞のます形や形容詞の語幹に付きます。例：「食べすぎる」＝「너무 많이 먹다」', 1, 16, 'N5', 'grammar');
+  VALUES (q_id, 'b0000001-0000-0000-0000-000000000001', 'multiple_choice', '「昨日、食べ（　）てお腹が痛くなりました。」に入る正しいものは？', '「〜すぎる」は程度が過度であることを表す文型で、「너무 ~하다」という意味です。「食べすぎて」が正解です。', 1, 16, 'N5', 'grammar');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '少し～する', FALSE, 1),
-    (gen_random_uuid(), q_id, '～すぎる', TRUE, 2),
-    (gen_random_uuid(), q_id, '～しやすい', FALSE, 3),
-    (gen_random_uuid(), q_id, '～したほうがいい', FALSE, 4);
+    (gen_random_uuid(), q_id, 'やすく', FALSE, 1),
+    (gen_random_uuid(), q_id, 'すぎ', TRUE, 2),
+    (gen_random_uuid(), q_id, 'にくく', FALSE, 3),
+    (gen_random_uuid(), q_id, 'たく', FALSE, 4);
 
   -- Q17: 〜やすい (의미 선택)
   q_id := gen_random_uuid();
@@ -290,12 +290,12 @@ BEGIN
   -- Q1: 〜たり〜たり (의미 선택)
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'b0000002-0000-0000-0000-000000000002', 'multiple_choice', '「〜たり〜たりする」の意味として正しいものは？', '「〜たり〜たりする」は複数の動作を例示する文型で、「~하거나 ~하거나 하다」という意味です。いくつかの動作の中から代表的なものを挙げる時に使います。', 1, 1, 'N4', 'grammar');
+  VALUES (q_id, 'b0000002-0000-0000-0000-000000000002', 'multiple_choice', '「休みの日は映画を見（　）買い物をし（　）します。」に入る正しいものは？', '「〜たり〜たりする」は複数の動作を例示する文型で、「~하거나 ~하거나 하다」という意味です。「たり…たり」が正解です。', 1, 1, 'N4', 'grammar');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '～しながら～する', FALSE, 1),
-    (gen_random_uuid(), q_id, '～たり～たりする', TRUE, 2),
-    (gen_random_uuid(), q_id, '～した後で～する', FALSE, 3),
-    (gen_random_uuid(), q_id, '～するために～する', FALSE, 4);
+    (gen_random_uuid(), q_id, 'ながら…ながら', FALSE, 1),
+    (gen_random_uuid(), q_id, 'たり…たり', TRUE, 2),
+    (gen_random_uuid(), q_id, 'ては…ては', FALSE, 3),
+    (gen_random_uuid(), q_id, 'つつ…つつ', FALSE, 4);
 
   -- Q2: 〜ながら (빈칸 채우기)
   q_id := gen_random_uuid();
@@ -314,7 +314,7 @@ BEGIN
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '～だから', FALSE, 1),
     (gen_random_uuid(), q_id, '～する時', FALSE, 2),
-    (gen_random_uuid(), q_id, '～したのに', TRUE, 3),
+    (gen_random_uuid(), q_id, '予想と違う結果への不満・驚き', TRUE, 3),
     (gen_random_uuid(), q_id, '～するために', FALSE, 4);
 
   -- Q4: 〜ようにする (빈칸 채우기 - IT 직장 맥락)
@@ -330,12 +330,12 @@ BEGIN
   -- Q5: 〜ことがある (의미 선택)
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'b0000002-0000-0000-0000-000000000002', 'multiple_choice', '「〜たことがある」の意味として正しいものは？', '「〜たことがある」は過去の経験を表す文型で、「~한 적이 있다」という意味です。動詞の過去形（た形）に付きます。', 1, 5, 'N4', 'grammar');
+  VALUES (q_id, 'b0000002-0000-0000-0000-000000000002', 'multiple_choice', '「日本に行っ（　）ことがあります。」に入る正しいものは？', '「〜たことがある」は過去の経験を表す文型で、「~한 적이 있다」という意味です。動詞のた形「た」が入ります。', 1, 5, 'N4', 'grammar');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '～できる', FALSE, 1),
-    (gen_random_uuid(), q_id, '～することにした', FALSE, 2),
-    (gen_random_uuid(), q_id, '～するようになった', FALSE, 3),
-    (gen_random_uuid(), q_id, '～したことがある', TRUE, 4);
+    (gen_random_uuid(), q_id, 'ている', FALSE, 1),
+    (gen_random_uuid(), q_id, 'ての', FALSE, 2),
+    (gen_random_uuid(), q_id, 'た', TRUE, 3),
+    (gen_random_uuid(), q_id, 'てみた', FALSE, 4);
 
   -- Q6: 〜し〜し (빈칸 채우기)
   q_id := gen_random_uuid();
@@ -360,7 +360,7 @@ BEGIN
   -- Q8: 〜らしい (빈칸 채우기)
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'b0000002-0000-0000-0000-000000000002', 'multiple_choice', 'あの人は先生（　）。服装がとてもきちんとしている。', '「〜らしい」は根拠に基づく推量を表し、「~인 것 같다 / ~답다」という意味です。名詞に直接付けて使います。', 1, 8, 'N4', 'grammar');
+  VALUES (q_id, 'b0000002-0000-0000-0000-000000000002', 'multiple_choice', '新聞によると、明日は雨（　）。', '「〜らしい」は間接的な情報や伝聞に基づく推量を表し、「~인 것 같다 / ~라고 한다」という意味です。「によると」と合わせて使うのが自然です。', 1, 8, 'N4', 'grammar');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, 'みたい', FALSE, 1),
     (gen_random_uuid(), q_id, 'そうだ', FALSE, 2),
@@ -373,7 +373,7 @@ BEGIN
   VALUES (q_id, 'b0000002-0000-0000-0000-000000000002', 'multiple_choice', '「彼は疲れているみたいだ。」の「みたいだ」の意味は？', '「〜みたいだ」は見た目や状況から判断した推量を表す口語的表現で、「~인 것 같다」という意味です。「ようだ」のカジュアルな表現です。', 1, 9, 'N4', 'grammar');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '～だ（断定）', FALSE, 1),
-    (gen_random_uuid(), q_id, '～みたいだ（推測）', TRUE, 2),
+    (gen_random_uuid(), q_id, '見た目や状況からの推測', TRUE, 2),
     (gen_random_uuid(), q_id, '～しようとする（意志）', FALSE, 3),
     (gen_random_uuid(), q_id, '～だった（過去）', FALSE, 4);
 
@@ -410,22 +410,22 @@ BEGIN
   -- Q13: 〜ようだ (적절한 문법 선택)
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'b0000002-0000-0000-0000-000000000002', 'multiple_choice', '外は寒い（　）。コートを着ている人が多い。', '「〜ようだ」は状況証拠に基づく推量を表し、「~인 것 같다」という意味です。観察した根拠を基に判断する時に使います。', 1, 13, 'N4', 'grammar');
+  VALUES (q_id, 'b0000002-0000-0000-0000-000000000002', 'multiple_choice', '天気予報によると、明日は暑い（　）。', '「〜らしい」は伝聞や間接的な情報に基づく推量を表す表現です。「天気予報によると」という情報源と合わせて使います。', 1, 13, 'N4', 'grammar');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, 'そうだ', FALSE, 1),
-    (gen_random_uuid(), q_id, 'ようだ', TRUE, 2),
-    (gen_random_uuid(), q_id, 'らしい', FALSE, 3),
+    (gen_random_uuid(), q_id, 'ようだ', FALSE, 2),
+    (gen_random_uuid(), q_id, 'らしい', TRUE, 3),
     (gen_random_uuid(), q_id, 'だろう', FALSE, 4);
 
   -- Q14: 〜かもしれない (의미 선택)
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'b0000002-0000-0000-0000-000000000002', 'multiple_choice', '「〜かもしれない」の意味として正しいものは？', '「〜かもしれない」は不確実な推量を表す文型で、「~일지도 모른다」という意味です。確信度が低い推測に使います。', 1, 14, 'N4', 'grammar');
+  VALUES (q_id, 'b0000002-0000-0000-0000-000000000002', 'multiple_choice', '「明日は雨が降る（　）。」に入る正しいものは？', '「〜かもしれない」は不確実な推量を表す文型で、「~일지도 모른다」という意味です。確信度が低い推測に使います。「かもしれない」が正解です。', 1, 14, 'N4', 'grammar');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '～しなければならない', FALSE, 1),
-    (gen_random_uuid(), q_id, '～かもしれない', TRUE, 2),
-    (gen_random_uuid(), q_id, '～に違いない', FALSE, 3),
-    (gen_random_uuid(), q_id, '～できない', FALSE, 4);
+    (gen_random_uuid(), q_id, 'に違いない', FALSE, 1),
+    (gen_random_uuid(), q_id, 'かもしれない', TRUE, 2),
+    (gen_random_uuid(), q_id, 'はずだ', FALSE, 3),
+    (gen_random_uuid(), q_id, 'べきだ', FALSE, 4);
 
   -- Q15: 〜はずだ (오류 찾기)
   q_id := gen_random_uuid();
@@ -443,19 +443,19 @@ BEGIN
   VALUES (q_id, 'b0000002-0000-0000-0000-000000000002', 'multiple_choice', '「先生に褒められました。」の「〜られる」は何を表しますか？', '「〜(ら)れる」は受身を表す助動詞で、「~당하다 / ~받다 / ~되다」という意味です。この文では「칭찬받았습니다」で受身を表しています。', 1, 16, 'N4', 'grammar');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, '可能（～できる）', FALSE, 1),
-    (gen_random_uuid(), q_id, '受身（～られる）', TRUE, 2),
+    (gen_random_uuid(), q_id, '受身（他者の動作を受ける）', TRUE, 2),
     (gen_random_uuid(), q_id, '使役（～させる）', FALSE, 3),
     (gen_random_uuid(), q_id, '尊敬（～なさる）', FALSE, 4);
 
   -- Q17: 〜(さ)せる (의미 선택)
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'b0000002-0000-0000-0000-000000000002', 'multiple_choice', '「〜(さ)せる」の意味として正しいものは？', '「〜(さ)せる」は使役を表す助動詞で、「~시키다 / ~하게 하다」という意味です。他の人に動作を行わせる時に使います。例：「子どもに野菜を食べさせる」＝「아이에게 야채를 먹게 하다」', 1, 17, 'N4', 'grammar');
+  VALUES (q_id, 'b0000002-0000-0000-0000-000000000002', 'multiple_choice', '「母は子どもに野菜を食べ（　）。」に入る正しいものは？', '「〜(さ)せる」は使役を表す助動詞で、「~시키다 / ~하게 하다」という意味です。「食べさせた」が正解です。', 1, 17, 'N4', 'grammar');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '～される（受身）', FALSE, 1),
-    (gen_random_uuid(), q_id, '～させる（使役）', TRUE, 2),
-    (gen_random_uuid(), q_id, '～できる（可能）', FALSE, 3),
-    (gen_random_uuid(), q_id, '～したい（希望）', FALSE, 4);
+    (gen_random_uuid(), q_id, 'られた', FALSE, 1),
+    (gen_random_uuid(), q_id, 'させた', TRUE, 2),
+    (gen_random_uuid(), q_id, 'たがった', FALSE, 3),
+    (gen_random_uuid(), q_id, 'すぎた', FALSE, 4);
 
   -- Q18: 〜ように (빈칸 채우기)
   q_id := gen_random_uuid();
@@ -498,12 +498,12 @@ BEGIN
   -- Q1: 〜てもいい (의미 선택)
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'b0000003-0000-0000-0000-000000000003', 'multiple_choice', '「〜てもいい」の意味として正しいものは？', '「〜てもいい」は許可を表す文型で、「~해도 된다」という意味です。動詞のて形に付きます。例：「ここに座ってもいいですか？」', 1, 1, 'N3', 'grammar');
+  VALUES (q_id, 'b0000003-0000-0000-0000-000000000003', 'multiple_choice', '「ここに座っ（　）いいですか？」に入る正しいものは？', '「〜てもいい」は許可を表す文型で、「~해도 된다」という意味です。「ても」が正解です。', 1, 1, 'N3', 'grammar');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '～してもいい', TRUE, 1),
-    (gen_random_uuid(), q_id, '～してはいけない', FALSE, 2),
-    (gen_random_uuid(), q_id, '～しなければならない', FALSE, 3),
-    (gen_random_uuid(), q_id, '～したい', FALSE, 4);
+    (gen_random_uuid(), q_id, 'ては', FALSE, 1),
+    (gen_random_uuid(), q_id, 'ても', TRUE, 2),
+    (gen_random_uuid(), q_id, 'たら', FALSE, 3),
+    (gen_random_uuid(), q_id, 'ので', FALSE, 4);
 
   -- Q2: 〜なければならない (빈칸 채우기 - IT 직장 맥락)
   q_id := gen_random_uuid();
@@ -608,9 +608,9 @@ BEGIN
   -- Q12: 〜わけだ (빈칸 채우기)
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'b0000003-0000-0000-0000-000000000003', 'multiple_choice', '毎日3時間勉強している。それなら上手になる（　）だ。', '「〜わけだ」は論理的な帰結・納得を表す文型で、「~인 셈이다 / 그러니까 ~인 것이다」という意味です。前の情報から当然の結論を導く時に使います。', 1, 12, 'N3', 'grammar');
+  VALUES (q_id, 'b0000003-0000-0000-0000-000000000003', 'multiple_choice', '彼は10年日本に住んでいる。日本語が上手な（　）だ。', '「〜わけだ」は論理的な帰結・納得を表す文型で、「~인 셈이다 / 그러니까 ~인 것이다」という意味です。事実から当然の結論を導く時に使います。', 1, 12, 'N3', 'grammar');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, 'はず', FALSE, 1),
+    (gen_random_uuid(), q_id, 'もの', FALSE, 1),
     (gen_random_uuid(), q_id, 'つもり', FALSE, 2),
     (gen_random_uuid(), q_id, 'わけ', TRUE, 3),
     (gen_random_uuid(), q_id, 'ところ', FALSE, 4);
@@ -706,12 +706,12 @@ BEGIN
   -- Q1: 〜にもかかわらず (의미 선택)
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'b0000004-0000-0000-0000-000000000004', 'multiple_choice', '「〜にもかかわらず」の意味として正しいものは？', '「〜にもかかわらず」は逆接を強調する表現で、「~임에도 불구하고」という意味です。期待に反する結果を強く述べる時に使います。', 1, 1, 'N2', 'grammar');
+  VALUES (q_id, 'b0000004-0000-0000-0000-000000000004', 'multiple_choice', '「雨（　）、試合は予定通り行われた。」に入る正しいものは？', '「〜にもかかわらず」は逆接を強調する表現で、「~임에도 불구하고」という意味です。「にもかかわらず」が正解です。', 1, 1, 'N2', 'grammar');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '～だから', FALSE, 1),
-    (gen_random_uuid(), q_id, '～にもかかわらず', TRUE, 2),
-    (gen_random_uuid(), q_id, '～に従って', FALSE, 3),
-    (gen_random_uuid(), q_id, '～とともに', FALSE, 4);
+    (gen_random_uuid(), q_id, 'によって', FALSE, 1),
+    (gen_random_uuid(), q_id, 'にもかかわらず', TRUE, 2),
+    (gen_random_uuid(), q_id, 'に関して', FALSE, 3),
+    (gen_random_uuid(), q_id, 'に対して', FALSE, 4);
 
   -- Q2: 〜わけにはいかない (빈칸 채우기 - IT 직장 맥락)
   q_id := gen_random_uuid();
@@ -934,12 +934,12 @@ BEGIN
   -- Q3: 〜んがために (의미 선택)
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'b0000005-0000-0000-0000-000000000005', 'multiple_choice', '「〜んがために」の意味として正しいものは？', '「〜んがために」は目的を表す文語的な表現で、「~하기 위해서」という強い意志を伴う目的表現です。「ために」よりも格式が高く、強い決意を示します。', 1, 3, 'N1', 'grammar');
+  VALUES (q_id, 'b0000005-0000-0000-0000-000000000005', 'multiple_choice', '「夢を実現せ（　）、毎日努力を続けている。」に入る正しいものは？', '「〜んがために」は目的を表す文語的表現で、「~하기 위해서」という強い意志を伴います。「せんがために」が正解です。', 1, 3, 'N1', 'grammar');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '～した結果', FALSE, 1),
-    (gen_random_uuid(), q_id, '～したにもかかわらず', FALSE, 2),
-    (gen_random_uuid(), q_id, '～するために（強い意志）', TRUE, 3),
-    (gen_random_uuid(), q_id, '～している途中で', FALSE, 4);
+    (gen_random_uuid(), q_id, 'ざるを得ず', FALSE, 1),
+    (gen_random_uuid(), q_id, 'んがために', TRUE, 2),
+    (gen_random_uuid(), q_id, 'ずにはいられず', FALSE, 3),
+    (gen_random_uuid(), q_id, 'んばかりに', FALSE, 4);
 
   -- Q4: 〜を余儀なくされる (빈칸 채우기 - IT 직장 맥락)
   q_id := gen_random_uuid();
@@ -994,12 +994,12 @@ BEGIN
   -- Q9: 〜ゆえに (의미 선택)
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'b0000005-0000-0000-0000-000000000005', 'multiple_choice', '「〜ゆえに」の意味として正しいものは？', '「〜ゆえに」は原因・理由を表す文語的な表現で、「~이기 때문에 / ~인 고로」という意味です。「から」「ので」の格式高い表現です。', 1, 9, 'N1', 'grammar');
+  VALUES (q_id, 'b0000005-0000-0000-0000-000000000005', 'multiple_choice', '「経験不足（　）、多くの失敗を重ねた。」に入る正しいものは？', '「〜ゆえに」は原因・理由を表す文語的表現で、「~이기 때문에 / ~인 고로」という意味です。「ゆえに」が正解です。', 1, 9, 'N1', 'grammar');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '～にもかかわらず', FALSE, 1),
-    (gen_random_uuid(), q_id, '～がゆえに（格式体）', TRUE, 2),
-    (gen_random_uuid(), q_id, '～する限り', FALSE, 3),
-    (gen_random_uuid(), q_id, '～によると', FALSE, 4);
+    (gen_random_uuid(), q_id, 'にもかかわらず', FALSE, 1),
+    (gen_random_uuid(), q_id, 'ゆえに', TRUE, 2),
+    (gen_random_uuid(), q_id, 'ならでは', FALSE, 3),
+    (gen_random_uuid(), q_id, 'をもって', FALSE, 4);
 
   -- Q10: 〜ないまでも (빈칸 채우기 - IT 직장 맥락)
   q_id := gen_random_uuid();
@@ -1074,12 +1074,12 @@ BEGIN
   -- Q17: 〜ならでは (의미 선택)
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'b0000005-0000-0000-0000-000000000005', 'multiple_choice', '「〜ならでは」の意味として正しいものは？', '「〜ならでは」は「〜だからこそできる / 〜でなければできない」を表す文型で、「~만의 / ~이 아니면 안 되는」という意味です。その対象の独自性・特別さを強調します。', 1, 17, 'N1', 'grammar');
+  VALUES (q_id, 'b0000005-0000-0000-0000-000000000005', 'multiple_choice', '「この味は京都（　）の味だ。」に入る正しいものは？', '「〜ならでは」は「〜だからこそできる / 〜でなければできない」を表す文型で、「~만의 / ~이 아니면 안 되는」という意味です。「ならでは」が正解です。', 1, 17, 'N1', 'grammar');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '～にもかかわらず', FALSE, 1),
-    (gen_random_uuid(), q_id, '～ならではの', TRUE, 2),
-    (gen_random_uuid(), q_id, '～によると', FALSE, 3),
-    (gen_random_uuid(), q_id, '～に関わらず', FALSE, 4);
+    (gen_random_uuid(), q_id, 'だからこその', FALSE, 1),
+    (gen_random_uuid(), q_id, 'ならでは', TRUE, 2),
+    (gen_random_uuid(), q_id, 'にとっての', FALSE, 3),
+    (gen_random_uuid(), q_id, 'にしての', FALSE, 4);
 
   -- Q18: 〜あっての (빈칸 채우기)
   q_id := gen_random_uuid();
@@ -1123,12 +1123,12 @@ BEGIN
   -- Q21: 〜てから (순서 표현)
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'b0000001-0000-0000-0000-000000000001', 'multiple_choice', '「手を洗ってから、ごはんを食べます」の意味として正しいものは？', '「〜てから」は動作の順序を表す文型で、「~하고 나서」という意味です。手を洗った後にごはんを食べるという順序を示しています。', 1, 21, 'N5', 'grammar');
+  VALUES (q_id, 'b0000001-0000-0000-0000-000000000001', 'multiple_choice', '「手を洗って（　）、ごはんを食べます。」に入る正しいものは？', '「〜てから」は動作の順序を表す文型で、「~하고 나서」という意味です。「から」が正解です。', 1, 21, 'N5', 'grammar');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
-    (gen_random_uuid(), q_id, '手を洗いながらご飯を食べる', FALSE, 1),
-    (gen_random_uuid(), q_id, '手を洗ってからご飯を食べる', TRUE, 2),
-    (gen_random_uuid(), q_id, '手を洗わないでご飯を食べる', FALSE, 3),
-    (gen_random_uuid(), q_id, '手を洗う前にご飯を食べる', FALSE, 4);
+    (gen_random_uuid(), q_id, 'ながら', FALSE, 1),
+    (gen_random_uuid(), q_id, 'まで', FALSE, 2),
+    (gen_random_uuid(), q_id, 'から', TRUE, 3),
+    (gen_random_uuid(), q_id, 'のに', FALSE, 4);
 
   -- Q22: 〜に (목적지 조사)
   q_id := gen_random_uuid();
@@ -1358,7 +1358,7 @@ BEGIN
   -- Q25: 〜どころか (부정적 강조)
   q_id := gen_random_uuid();
   INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order, difficulty, question_category)
-  VALUES (q_id, 'b0000004-0000-0000-0000-000000000004', 'multiple_choice', '彼は英語（　）、日本語も中国語も話せる。', '「〜どころか」は「~는커녕 / ~은 물론이고」의 의미로, 예상과 다른 정도를 강조합니다。영어는 물론이고 일본어, 중국어까지 할 수 있다는 뜻입니다。', 1, 25, 'N2', 'grammar');
+  VALUES (q_id, 'b0000004-0000-0000-0000-000000000004', 'multiple_choice', '忙しくて旅行（　）、買い物にも行けない。', '「〜どころか」は「~는커녕 / ~은 물론이고」의 의미로, 예상한 것보다 더 못하거나 부정적인 상황을 강조합니다。旅行はもちろん買い物さえできないという意味です。', 1, 25, 'N2', 'grammar');
   INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
     (gen_random_uuid(), q_id, 'ばかりか', FALSE, 1),
     (gen_random_uuid(), q_id, 'どころか', TRUE, 2),
