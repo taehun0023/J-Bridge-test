@@ -22,6 +22,7 @@ const QUIZ_TYPE_TO_CATEGORIES: Record<string, string[]> = {
   it_terminology: ['business', 'it', 'dev'],
   sentence_pattern: ['sentence_pattern'],
   business_expression: ['expression'],
+  keigo: ['keigo'],
 }
 
 export default async function BusinessQuizListPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
@@ -64,7 +65,7 @@ export default async function BusinessQuizListPage({ searchParams }: { searchPar
     }
   }
 
-  const validTypes = ['it_terminology', 'sentence_pattern', 'business_expression']
+  const validTypes = ['it_terminology', 'sentence_pattern', 'business_expression', 'keigo']
   const quizTypes = params.type && validTypes.includes(params.type)
     ? [params.type]
     : validTypes
@@ -98,6 +99,7 @@ export default async function BusinessQuizListPage({ searchParams }: { searchPar
   const itTermQuizzes = quizzes?.filter(q => q.quiz_type === 'it_terminology') ?? []
   const patternQuizzes = quizzes?.filter(q => q.quiz_type === 'sentence_pattern') ?? []
   const expressionQuizzes = quizzes?.filter(q => q.quiz_type === 'business_expression') ?? []
+  const keigoQuizzes = quizzes?.filter(q => q.quiz_type === 'keigo') ?? []
 
   function renderQuizCard(quiz: Quiz) {
     const attempt = attemptMap[quiz.id] ?? null
@@ -112,7 +114,7 @@ export default async function BusinessQuizListPage({ searchParams }: { searchPar
     )
   }
 
-  const hasAny = itTermQuizzes.length > 0 || patternQuizzes.length > 0 || expressionQuizzes.length > 0
+  const hasAny = itTermQuizzes.length > 0 || patternQuizzes.length > 0 || expressionQuizzes.length > 0 || keigoQuizzes.length > 0
 
   return (
     <div>
@@ -148,6 +150,15 @@ export default async function BusinessQuizListPage({ searchParams }: { searchPar
               <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">ビジネス表現テスト</h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {expressionQuizzes.map(renderQuizCard)}
+              </div>
+            </div>
+          )}
+
+          {keigoQuizzes.length > 0 && (
+            <div>
+              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">敬語テスト</h2>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {keigoQuizzes.map(renderQuizCard)}
               </div>
             </div>
           )}

@@ -13,11 +13,9 @@ const ITEMS_PER_PAGE = 30
 
 const CATEGORIES = [
   { key: '', label: '全て' },
-  { key: 'email', label: 'ビジネスメール' },
-  { key: 'horenso', label: '報連相' },
-  { key: 'meeting', label: '会議' },
-  { key: 'document', label: 'ドキュメント' },
-  { key: 'daily', label: '日常業務' },
+  { key: 'request', label: '依頼・調整' },
+  { key: 'report', label: '報告・共有' },
+  { key: 'response', label: '対応・応答' },
 ]
 
 export default async function SentencePatternsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
@@ -71,7 +69,7 @@ export default async function SentencePatternsPage({ searchParams }: { searchPar
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">文章パターン</h1>
-        <p className="mt-1 text-gray-500 dark:text-gray-400">ビジネスメールや報連相の文章パターンを学習しましょう</p>
+        <p className="mt-1 text-gray-500 dark:text-gray-400">依頼・報告・応答の文章パターンを学習しましょう</p>
       </div>
 
       <BusinessGlossaryClient

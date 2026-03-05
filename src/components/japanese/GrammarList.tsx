@@ -69,15 +69,15 @@ export default function GrammarList({ items, level, offset = 0, masteredIds = []
             {onToggleMastery && (
               <button
                 onClick={(e) => handleToggle(e, item.id)}
-                className="shrink-0"
+                className="-m-1.5 shrink-0 p-1.5"
                 title={localMastered.has(item.id) ? '暗記済み' : '未暗記'}
               >
                 {localMastered.has(item.id) ? (
-                  <svg className="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
                   </svg>
                 ) : (
-                  <svg className="h-4 w-4 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="h-5 w-5 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
                   </svg>
                 )}

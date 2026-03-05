@@ -66,7 +66,8 @@
       "Bash(awk:*)",
       "Bash(sed:*)",
       "Bash(/tmp/analyze_per_level.py:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(clip:*)"
     ]
   }
 }

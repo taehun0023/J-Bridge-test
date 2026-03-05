@@ -17,18 +17,20 @@ export default async function JlptHubPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Parallel batch: profile + vocabulary (paginated) + 3 content tables + mastered items (8 queries)
-  // jlpt_vocabulary exceeds PostgREST's 1000-row server limit, so fetch in 2 batches
-  const [prof, vocabBatch1, vocabBatch2, grammarAll, readingAll, listeningAll, masteredResult, seikatsuExamResult] = await Promise.all([
+  // Parallel batch: profile + vocabulary (paginated) + kanji (paginated) + 3 content tables + mastered items (10 queries)
+  // jlpt_vocabulary and jlpt_kanji exceed PostgREST's 1000-row server limit, so fetch in 2 batches each
+  const [prof, vocabBatch1, vocabBatch2, kanjiBatch1, kanjiBatch2, grammarAll, readingAll, listeningAll, masteredResult, seikatsuExamResult] = await Promise.all([
     supabase.from('profiles').select('role, mentor_specialty').eq('id', user.id).single(),
     supabase.from('jlpt_vocabulary').select('id, jlpt_level').range(0, 999),
     supabase.from('jlpt_vocabulary').select('id, jlpt_level').range(1000, 1999),
+    supabase.from('jlpt_kanji').select('id, jlpt_level').range(0, 999),
+    supabase.from('jlpt_kanji').select('id, jlpt_level').range(1000, 1999),
     supabase.from('jlpt_grammar').select('id, jlpt_level'),
     supabase.from('jlpt_reading_passages').select('id, jlpt_level'),
     supabase.from('jlpt_listening_scripts').select('id, jlpt_level'),
     supabase.from('user_mastered_items').select('item_type, item_id')
       .eq('user_id', user.id)
-      .in('item_type', ['jlpt_vocabulary', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening']),
+      .in('item_type', ['jlpt_vocabulary', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening', 'jlpt_kanji']),
     supabase.from('comprehensive_exams').select('score')
       .eq('user_id', user.id).eq('category', 'seikatsu')
       .in('status', ['completed', 'failed'])
@@ -37,19 +39,24 @@ export default async function JlptHubPage() {
   ])
 
   const vocabAllData = [...(vocabBatch1.data ?? []), ...(vocabBatch2.data ?? [])]
+  const kanjiAllData = [...(kanjiBatch1.data ?? []), ...(kanjiBatch2.data ?? [])]
   const bypassLock = prof.data?.role === 'admin' || (prof.data?.role === 'mentor' && prof.data?.mentor_specialty !== 'tech')
   const examJlptLevel = seikatsuExamResult.data?.score != null ? getJlptLevel(seikatsuExamResult.data.score) : null
 
   // Group by level and compute progress (client-side)
   const masteredSet = new Set(masteredResult.data?.map(m => `${m.item_type}:${m.item_id}`) ?? [])
 
-  const levelProgress: Record<string, { vocabMastered: number; vocabTotal: number; grammarMastered: number; grammarTotal: number; readingMastered: number; readingTotal: number; listeningMastered: number; listeningTotal: number }> = {}
+  const KANJI_CAP = 100
+
+  const levelProgress: Record<string, { vocabMastered: number; vocabTotal: number; grammarMastered: number; grammarTotal: number; readingMastered: number; readingTotal: number; listeningMastered: number; listeningTotal: number; kanjiMastered: number; kanjiTotal: number }> = {}
 
   for (const level of JLPT_LEVELS) {
     const vocabIds = vocabAllData.filter(v => v.jlpt_level === level)
     const grammarIds = grammarAll.data?.filter(g => g.jlpt_level === level) ?? []
     const readingIds = readingAll.data?.filter(r => r.jlpt_level === level) ?? []
     const listeningIds = listeningAll.data?.filter(l => l.jlpt_level === level) ?? []
+    const kanjiIds = kanjiAllData.filter(k => k.jlpt_level === level)
+    const kanjiMasteredRaw = kanjiIds.filter(k => masteredSet.has(`jlpt_kanji:${k.id}`)).length
 
     levelProgress[level] = {
       vocabMastered: vocabIds.filter(v => masteredSet.has(`jlpt_vocabulary:${v.id}`)).length,
@@ -60,6 +67,8 @@ export default async function JlptHubPage() {
       readingTotal: readingIds.length,
       listeningMastered: listeningIds.filter(l => masteredSet.has(`jlpt_listening:${l.id}`)).length,
       listeningTotal: listeningIds.length,
+      kanjiMastered: Math.min(kanjiMasteredRaw, KANJI_CAP),
+      kanjiTotal: Math.min(kanjiIds.length, KANJI_CAP),
     }
   }
 
@@ -72,7 +81,7 @@ export default async function JlptHubPage() {
 
       <GuideCard storageKey="jlpt-guide-dismissed">
         <ol className="mt-2 list-inside list-decimal space-y-1 text-sm text-blue-800 dark:text-blue-300">
-          <li>各レベルの語彙・文法・読解・聴解を学習し「✓」でチェックしてください</li>
+          <li>各レベルの語彙・文法・読解・聴解・漢字を学習し「✓」でチェックしてください</li>
           <li>進行率80%以上で理解度テストが解放されます</li>
           <li>テストに合格して次のレベルへ進みましょう</li>
         </ol>

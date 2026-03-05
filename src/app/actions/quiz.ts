@@ -7,8 +7,8 @@ import { checkAssignmentProgress } from './learning-assignments'
 
 // Practice quiz types that are subject to 1-attempt limit
 const PRACTICE_QUIZ_TYPES = [
-  'jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening',
-  'it_terminology', 'sentence_pattern', 'business_expression',
+  'jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening', 'jlpt_kanji',
+  'it_terminology', 'sentence_pattern', 'business_expression', 'keigo',
 ]
 
 export async function startQuizAttempt(quizId: string) {

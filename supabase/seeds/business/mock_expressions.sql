@@ -1,7 +1,7 @@
 -- ============================================
--- ビジネス表現テスト Seed Data (3セット × 20問)
+-- ビジネス表現テスト Seed Data (3セット × 25問)
 -- quiz_type: 'business_expression', is_assessment: FALSE
--- Total: 60 questions, 240 options
+-- Total: 75 questions, 300 options
 -- ============================================
 
 BEGIN;
@@ -310,6 +310,75 @@ BEGIN
     (gen_random_uuid(), q_id, '本日の決定事項を踏まえまして、各担当者はタスクの対応をお願いいたします', FALSE, 3),
     (gen_random_uuid(), q_id, 'お忙しい中ご参加いただきありがとうございました。引き続きよろしくお願いします', FALSE, 4);
 
+  -- ============================================
+  -- Q21-Q25: ウチ・ソト（内と外）表現
+  -- ============================================
+
+  -- Q21: 社外の人に自社の上司を紹介する
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order)
+  VALUES (q_id, quiz_id, 'multiple_choice',
+    'お客様に対して自社の部長を紹介する際、最も適切な表現はどれですか？',
+    '社外の人に自社の上司を紹介する際は、ウチ（内）の人間として敬称を外し、謙譲語を使います。「部長の田中でございます」のように役職＋名字で紹介し、「様」や「さん」は付けません。これがウチ・ソトの基本ルールです。',
+    2, 21);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '田中部長様をご紹介いたします', FALSE, 1),
+    (gen_random_uuid(), q_id, '弊社の部長の田中でございます', TRUE, 2),
+    (gen_random_uuid(), q_id, '田中部長さんをご紹介させていただきます', FALSE, 3),
+    (gen_random_uuid(), q_id, '弊社の田中部長がお話しになります', FALSE, 4);
+
+  -- Q22: 電話で自社の社員が不在であることを伝える
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order)
+  VALUES (q_id, quiz_id, 'multiple_choice',
+    '社外からの電話で、自社の佐藤課長が席を外している場合、最も適切な応答はどれですか？',
+    '社外の人に対して自社の社員について話す場合、ウチの人間には敬称を付けず、謙譲語を使います。「佐藤は席を外しております」が正しく、「佐藤課長は〜」や「いらっしゃいません」（尊敬語）は不適切です。',
+    2, 22);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '佐藤課長はただいま席を外していらっしゃいます', FALSE, 1),
+    (gen_random_uuid(), q_id, '佐藤はただいま席を外しております', TRUE, 2),
+    (gen_random_uuid(), q_id, '佐藤課長はただいま不在でございます', FALSE, 3),
+    (gen_random_uuid(), q_id, '佐藤さんは外出されております', FALSE, 4);
+
+  -- Q23: 弊社・御社・当社・貴社の使い分け
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order)
+  VALUES (q_id, quiz_id, 'multiple_choice',
+    '口頭でクライアントと会話する際、自社と相手の会社を指す組み合わせとして最も適切なものはどれですか？',
+    '口頭では自社を「弊社」、相手の会社を「御社」と言います。「当社」はニュートラルな表現で社内向け、「貴社」は書面で使います。口頭で「貴社」を使うと「帰社」と紛らわしいため、「御社」が適切です。',
+    2, 23);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '自社＝当社、相手＝貴社', FALSE, 1),
+    (gen_random_uuid(), q_id, '自社＝弊社、相手＝御社', TRUE, 2),
+    (gen_random_uuid(), q_id, '自社＝我が社、相手＝御社', FALSE, 3),
+    (gen_random_uuid(), q_id, '自社＝弊社、相手＝貴社', FALSE, 4);
+
+  -- Q24: 社外の人に自社社員の行動を伝える
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order)
+  VALUES (q_id, quiz_id, 'multiple_choice',
+    'クライアントに「弊社の山田が資料を確認した」ことを伝える場合、最も適切な表現はどれですか？',
+    'ウチ・ソトの原則に従い、社外の人に対して自社社員の行動を述べる際は謙譲語を使います。「山田が確認いたしました」が適切で、「山田さんが確認されました」のように尊敬語を使うのは不適切です。',
+    2, 24);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '山田さんが確認されました', FALSE, 1),
+    (gen_random_uuid(), q_id, '山田が確認なさいました', FALSE, 2),
+    (gen_random_uuid(), q_id, '山田が確認いたしました', TRUE, 3),
+    (gen_random_uuid(), q_id, '山田様が確認してくださいました', FALSE, 4);
+
+  -- Q25: ウチ・ソトの基本概念
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order)
+  VALUES (q_id, quiz_id, 'multiple_choice',
+    '日本のビジネスにおける「ウチ・ソト」の考え方について、最も正しい説明はどれですか？',
+    '「ウチ・ソト」とは、自分の所属する集団（ウチ＝内）と外部の人（ソト＝外）を区別し、敬語の使い方を変える日本語特有の概念です。ウチの人間には謙譲表現を使い、ソトの人間には尊敬表現を使います。',
+    2, 25);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'ウチの人には尊敬語、ソトの人には謙譲語を使う', FALSE, 1),
+    (gen_random_uuid(), q_id, 'ソトの人に対してウチの人を高めて話す', FALSE, 2),
+    (gen_random_uuid(), q_id, 'ソトの人に対してウチの人を低めて（謙譲語で）話す', TRUE, 3),
+    (gen_random_uuid(), q_id, 'ウチの人にもソトの人にも同じ敬語を使う', FALSE, 4);
+
 END $$;
 
 -- ============================================
@@ -582,6 +651,75 @@ BEGIN
     (gen_random_uuid(), q_id, 'プロジェクトが無事完了いたしましたことをご報告申し上げます。ご支援いただき、誠にありがとうございました', TRUE, 2),
     (gen_random_uuid(), q_id, '最終的な成果物一式を納品させていただきましたので、ご確認のうえお気づきの点がございましたらご連絡ください', FALSE, 3),
     (gen_random_uuid(), q_id, '本プロジェクトの振り返りレポートを作成いたしましたので、次回の打ち合わせにて詳細をご共有いたします', FALSE, 4);
+
+  -- ============================================
+  -- Q21-Q25: ウチ・ソト（内と外）表現
+  -- ============================================
+
+  -- Q21: 自社の社長について社外に伝える
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order)
+  VALUES (q_id, quiz_id, 'multiple_choice',
+    'クライアントに対して、自社の社長の意向を伝える際、最も適切な表現はどれですか？',
+    'ウチ・ソトの原則により、社外の人に対して自社の社長について話す場合は敬称を付けません。「弊社の社長の鈴木が申しておりました」のように、名前を呼び捨てにし、謙譲語（申す）を使います。',
+    2, 21);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '弊社の鈴木社長様がおっしゃっておりました', FALSE, 1),
+    (gen_random_uuid(), q_id, '弊社の社長の鈴木が申しておりました', TRUE, 2),
+    (gen_random_uuid(), q_id, '弊社の鈴木社長がお話しになっておりました', FALSE, 3),
+    (gen_random_uuid(), q_id, '弊社の鈴木社長さんが言われておりました', FALSE, 4);
+
+  -- Q22: クライアントの社員に敬語を使う
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order)
+  VALUES (q_id, quiz_id, 'multiple_choice',
+    'クライアントの担当者である高橋部長に確認をお願いする際、最も適切な表現はどれですか？',
+    'ソト（社外）の人に対しては尊敬語を使います。「高橋部長にご確認いただけますでしょうか」のように、役職＋名前に敬称を付け、尊敬語を使うのが適切です。ウチの人と違い、ソトの人には敬意を表します。',
+    2, 22);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '高橋が確認いたしますでしょうか', FALSE, 1),
+    (gen_random_uuid(), q_id, '高橋に確認させていただけますか', FALSE, 2),
+    (gen_random_uuid(), q_id, '高橋部長にご確認いただけますでしょうか', TRUE, 3),
+    (gen_random_uuid(), q_id, '高橋部長が確認してくれますか', FALSE, 4);
+
+  -- Q23: 自社の同僚をクライアントに紹介する
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order)
+  VALUES (q_id, quiz_id, 'multiple_choice',
+    'クライアントとの打ち合わせで、同行した自社のエンジニア中村を紹介する際、最も適切な表現はどれですか？',
+    'ウチ・ソトの原則により、社外の人に対して自社の同僚を紹介する際は「さん」を付けず、謙譲表現を使います。「弊社の中村でございます」が適切です。「中村さん」や尊敬語は使いません。',
+    2, 23);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '弊社の中村さんをご紹介いたします', FALSE, 1),
+    (gen_random_uuid(), q_id, '弊社の中村でございます。本日同席させていただきます', TRUE, 2),
+    (gen_random_uuid(), q_id, '弊社のエンジニアの中村様です', FALSE, 3),
+    (gen_random_uuid(), q_id, '中村さんが本日参加されます', FALSE, 4);
+
+  -- Q24: 電話での伝言 — ウチの人の行動
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order)
+  VALUES (q_id, quiz_id, 'multiple_choice',
+    '社外からの電話で「木村部長はいらっしゃいますか」と聞かれた場合、木村が外出中であることを伝える最も適切な表現はどれですか？',
+    '自社の人間について社外の人に伝える際は、敬称を省き謙譲語を使います。「木村は外出しております」が適切です。「木村部長は外出されています」のように役職を付けたり尊敬語を使ったりするのは不適切です。',
+    2, 24);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '木村部長は外出されております', FALSE, 1),
+    (gen_random_uuid(), q_id, '木村は外出しております。戻り次第ご連絡いたしましょうか', TRUE, 2),
+    (gen_random_uuid(), q_id, '木村部長様は本日お休みを取られております', FALSE, 3),
+    (gen_random_uuid(), q_id, '木村さんはただいまいらっしゃいません', FALSE, 4);
+
+  -- Q25: 社内と社外での呼び方の切り替え
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order)
+  VALUES (q_id, quiz_id, 'multiple_choice',
+    '社内では「田中部長」と呼んでいる上司について、社外の人との会話での正しい呼び方はどれですか？',
+    'ウチ・ソトの切り替えにより、社内では「田中部長」と敬称付きで呼びますが、社外の人に対しては「部長の田中」または「田中」と呼び捨てにします。これは日本のビジネスマナーの基本中の基本です。',
+    2, 25);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '田中部長', FALSE, 1),
+    (gen_random_uuid(), q_id, '田中部長さん', FALSE, 2),
+    (gen_random_uuid(), q_id, '部長の田中', TRUE, 3),
+    (gen_random_uuid(), q_id, '田中部長様', FALSE, 4);
 
 END $$;
 
@@ -856,12 +994,81 @@ BEGIN
     (gen_random_uuid(), q_id, '「連絡」は口頭で行うもので、「相談」は書面で行うもの', FALSE, 3),
     (gen_random_uuid(), q_id, '「連絡」は上司に対して行い、「相談」は同僚に対して行う', FALSE, 4);
 
+  -- ============================================
+  -- Q21-Q25: ウチ・ソト（内と外）表現
+  -- ============================================
+
+  -- Q21: 自社の人間に「いらっしゃる」は使えるか
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order)
+  VALUES (q_id, quiz_id, 'multiple_choice',
+    '社外の人から電話があり「鈴木さんはいらっしゃいますか」と聞かれました。鈴木が社内にいる場合、最も適切な応答はどれですか？',
+    '「いらっしゃる」は尊敬語なので、社外の人に対して自社の鈴木について使うのは不適切です。「鈴木でございますね。少々お待ちください」のように、ウチの人間には謙譲語や丁重語を使います。',
+    2, 21);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '鈴木さんはいらっしゃいます。少々お待ちください', FALSE, 1),
+    (gen_random_uuid(), q_id, '鈴木でございますね。少々お待ちください', TRUE, 2),
+    (gen_random_uuid(), q_id, '鈴木様はおります。おつなぎいたします', FALSE, 3),
+    (gen_random_uuid(), q_id, '鈴木部長はいらっしゃいますので、お待ちいただけますか', FALSE, 4);
+
+  -- Q22: 「参る」と「いらっしゃる」の使い分け
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order)
+  VALUES (q_id, quiz_id, 'multiple_choice',
+    'クライアントに「明日、弊社の担当がそちらに行きます」と伝える場合、最も適切な表現はどれですか？',
+    '自社の人間の行動を社外に伝える際は謙譲語を使います。「参る」は「行く」の謙譲語です。「伺う」も謙譲語として適切ですが、「いらっしゃる」や「行かれる」は尊敬語なのでウチの人間には使いません。',
+    2, 22);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '明日、弊社の担当がそちらにいらっしゃいます', FALSE, 1),
+    (gen_random_uuid(), q_id, '明日、弊社の担当が行かれます', FALSE, 2),
+    (gen_random_uuid(), q_id, '明日、弊社の担当がそちらに参ります', TRUE, 3),
+    (gen_random_uuid(), q_id, '明日、弊社の担当者様がお伺いされます', FALSE, 4);
+
+  -- Q23: 自社の家族的呼称（ウチの概念の拡張）
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order)
+  VALUES (q_id, quiz_id, 'multiple_choice',
+    'ウチ・ソトの概念はビジネスだけでなく日常生活にも適用されます。社外の人に自分の家族を紹介する際の正しいルールはどれですか？',
+    'ウチ・ソトの概念は会社だけでなく家族にも適用されます。社外の人に対して自分の家族を紹介する際は、謙譲表現を使い、「父」「母」「妻」「夫」のように呼びます。「お父さん」「お母さん」は使いません。',
+    2, 23);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '家族にも敬称を付けて「お父様は〜」と紹介する', FALSE, 1),
+    (gen_random_uuid(), q_id, '家族は「父」「母」など謙譲表現で紹介する', TRUE, 2),
+    (gen_random_uuid(), q_id, '家族も「さん」付けで「父さんは〜」と紹介する', FALSE, 3),
+    (gen_random_uuid(), q_id, '家族にはウチ・ソトの概念は適用されない', FALSE, 4);
+
+  -- Q24: 社内メールと社外メールの敬語の違い
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order)
+  VALUES (q_id, quiz_id, 'multiple_choice',
+    '社内の同僚に送るメールと社外のクライアントに送るメールの敬語レベルについて、最も正しい説明はどれですか？',
+    'ウチ・ソトの原則により、社内（ウチ）の同僚へは「お疲れ様です」などの丁寧語で十分ですが、社外（ソト）のクライアントへは「いつもお世話になっております」のように、より高い敬語レベルを使います。',
+    2, 24);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, '社内も社外も同じ敬語レベルで統一するのがマナーである', FALSE, 1),
+    (gen_random_uuid(), q_id, '社内の方が目上なので、社内メールの方が敬語レベルが高い', FALSE, 2),
+    (gen_random_uuid(), q_id, '社外（ソト）への方が敬語レベルが高く、社内（ウチ）は丁寧語で十分', TRUE, 3),
+    (gen_random_uuid(), q_id, '敬語レベルは個人の判断に任されており、特にルールはない', FALSE, 4);
+
+  -- Q25: 取引先との会話で自社の対応を伝える
+  q_id := gen_random_uuid();
+  INSERT INTO quiz_questions (id, quiz_id, question_type, question_text, explanation, points, sort_order)
+  VALUES (q_id, quiz_id, 'multiple_choice',
+    '取引先から「御社の開発チームが対応してくださるのですか」と聞かれた際、最も適切な返答はどれですか？',
+    '自社の行動について社外に伝える際は、謙譲語を使います。「弊社の開発チームが対応いたします」が正しく、「対応してくださいます」（尊敬語）や「対応されます」（尊敬語）は自社に使う表現としては不適切です。',
+    2, 25);
+  INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, sort_order) VALUES
+    (gen_random_uuid(), q_id, 'はい、弊社の開発チームが対応してくださいます', FALSE, 1),
+    (gen_random_uuid(), q_id, 'はい、弊社の開発チームが対応されます', FALSE, 2),
+    (gen_random_uuid(), q_id, 'はい、弊社の開発チームが対応いたします', TRUE, 3),
+    (gen_random_uuid(), q_id, 'はい、弊社の開発チームが対応なさいます', FALSE, 4);
+
 END $$;
 
 -- ============================================
 -- Post-insert: set question_category and difficulty
 -- question_category = 'business_expression' for all expression questions
--- difficulty by sort_order: 初級 1-4, 中級 5-12, 上級 13-20
+-- difficulty by sort_order: 初級 1-4, 中級 5-12, 上級 13-25
 -- ============================================
 UPDATE quiz_questions SET question_category = 'business_expression'
 WHERE quiz_id IN (
@@ -889,6 +1096,6 @@ WHERE quiz_id IN (
   'b3000001-0000-0000-0000-000000000001',
   'b3000002-0000-0000-0000-000000000002',
   'b3000003-0000-0000-0000-000000000003'
-) AND sort_order BETWEEN 13 AND 20;
+) AND sort_order BETWEEN 13 AND 25;
 
 COMMIT;

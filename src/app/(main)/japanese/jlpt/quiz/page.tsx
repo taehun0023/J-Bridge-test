@@ -15,7 +15,7 @@ interface Quiz {
 }
 
 const LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'] as const
-const CATEGORY_ORDER = ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening']
+const CATEGORY_ORDER = ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening', 'jlpt_kanji']
 
 export default async function QuizListPage({ searchParams }: { searchParams: Promise<{ level?: string }> }) {
   const { level } = await searchParams
@@ -38,7 +38,7 @@ export default async function QuizListPage({ searchParams }: { searchParams: Pro
     .from('quizzes')
     .select('*')
     .eq('is_pool', true)
-    .in('quiz_type', ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening'])
+    .in('quiz_type', ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening', 'jlpt_kanji'])
     .ilike('title', `${level}%`)
     .order('created_at', { ascending: true })
 

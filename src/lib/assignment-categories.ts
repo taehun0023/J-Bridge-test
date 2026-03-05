@@ -23,7 +23,7 @@ export const ASSIGNMENT_CATEGORIES: Record<string, CategoryConfig> = {
   seikatsu: {
     label: '生活日本語',
     levelOnly: true,
-    quizTypes: ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening'],
+    quizTypes: ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening', 'jlpt_kanji'],
     subcategories: {},
   },
   'business-jp': {
@@ -32,6 +32,7 @@ export const ASSIGNMENT_CATEGORIES: Record<string, CategoryConfig> = {
       glossary: { label: 'IT語彙', quizType: 'it_terminology', hasLevel: false },
       'sentence-patterns': { label: '文章パターン', quizType: 'sentence_pattern', hasLevel: false },
       expressions: { label: 'ビジネス表現', quizType: 'business_expression', hasLevel: false },
+      keigo: { label: '敬語', quizType: 'keigo', hasLevel: false },
     },
   },
   cs: {
@@ -127,10 +128,12 @@ export function getQuizUrl(
     case 'jlpt_grammar':
     case 'jlpt_reading':
     case 'jlpt_listening':
+    case 'jlpt_kanji':
       return `/japanese/jlpt/quiz/${quizId}`
     case 'it_terminology':
     case 'sentence_pattern':
     case 'business_expression':
+    case 'keigo':
       return `/japanese/business/quiz/${quizId}`
     case 'cs_knowledge':
       return `/cs/quiz/${quizId}`

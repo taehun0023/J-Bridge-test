@@ -47,12 +47,13 @@ export const STEP1_DIFFICULTY_RATIOS: Record<string, number> = {
   N1: 0.3,
 }
 
-/** Step 2 (ビジネス日本語): category weights — 60 questions total (15 per category) */
+/** Step 2 (ビジネス日本語): category weights — 60 questions total (12 per category) */
 export const STEP2_CATEGORY_WEIGHTS: Record<string, number> = {
-  vocabulary: 15,
-  sentence_pattern: 15,
-  business_expression: 15,
-  reading: 15,
+  vocabulary: 12,
+  sentence_pattern: 12,
+  business_expression: 12,
+  keigo: 12,
+  reading: 12,
 }
 
 /** Step 2 difficulty distribution: 初級 20%, 中級 40%, 上級 40% */
@@ -70,7 +71,7 @@ export const STEP2_DIFFICULTY_RATIOS: Record<string, number> = {
  */
 export const ASSESSMENT_CONTENT_QUIZ_TYPES: Record<number, string[]> = {
   1: ['jlpt_grammar', 'jlpt_reading', 'jlpt_listening'],
-  2: ['it_terminology', 'sentence_pattern', 'business_expression'],
+  2: ['it_terminology', 'sentence_pattern', 'business_expression', 'keigo'],
   // 3, 4 are separate tasks (CS / dev)
 }
 
@@ -79,8 +80,8 @@ export const ASSESSMENT_CONTENT_QUIZ_TYPES: Record<number, string[]> = {
  * Superset of ASSESSMENT_CONTENT_QUIZ_TYPES — includes vocab for claim/edit management.
  */
 export const ADMIN_CONTENT_QUIZ_TYPES: Record<number, string[]> = {
-  1: ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening'],
-  2: ['it_terminology', 'sentence_pattern', 'business_expression'],
+  1: ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening', 'jlpt_kanji'],
+  2: ['it_terminology', 'sentence_pattern', 'business_expression', 'keigo'],
 }
 
 /** Practice (理解度テスト) quiz type labels for admin content management */
@@ -89,9 +90,11 @@ export const PRACTICE_QUIZ_TYPE_LABELS: Record<string, string> = {
   jlpt_grammar: '文法(練習)',
   jlpt_reading: '読解(練習)',
   jlpt_listening: '聴解(練習)',
+  jlpt_kanji: '漢字(練習)',
   it_terminology: '語彙(練習)',
   sentence_pattern: '文章パターン(練習)',
   business_expression: 'ビジネス表現(練習)',
+  keigo: '敬語(練習)',
 }
 
 /** Pool quiz IDs — per category × level for level-specific random-draw tests */
@@ -124,6 +127,13 @@ export const POOL_QUIZ_IDS: Record<string, Record<string, string>> = {
     N2: 'e0000001-0000-0000-0000-000000000044',
     N1: 'e0000001-0000-0000-0000-000000000045',
   },
+  jlpt_kanji: {
+    N5: 'e0000001-0000-0000-0000-000000000051',
+    N4: 'e0000001-0000-0000-0000-000000000052',
+    N3: 'e0000001-0000-0000-0000-000000000053',
+    N2: 'e0000001-0000-0000-0000-000000000054',
+    N1: 'e0000001-0000-0000-0000-000000000055',
+  },
 }
 
 /** Pool quiz IDs for Business Japanese (Step 2) comprehension tests */
@@ -131,11 +141,12 @@ export const BJ_POOL_QUIZ_IDS: Record<string, string> = {
   it_terminology: 'f0000001-0000-0000-0000-000000000001',
   sentence_pattern: 'f0000001-0000-0000-0000-000000000002',
   business_expression: 'f0000001-0000-0000-0000-000000000003',
+  keigo: 'f0000001-0000-0000-0000-000000000004',
 }
 
 export const ALL_PRACTICE_QUIZ_TYPES = [
-  'jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening',
-  'it_terminology', 'sentence_pattern', 'business_expression',
+  'jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening', 'jlpt_kanji',
+  'it_terminology', 'sentence_pattern', 'business_expression', 'keigo',
 ] as const
 
 /** comprehensive_exams.category → assessment step (radar axis) mapping */

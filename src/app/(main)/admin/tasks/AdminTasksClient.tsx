@@ -1,6 +1,7 @@
 'use client'
 
 import { Fragment, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { createLearningAssignment, deleteLearningAssignment, confirmAssignment, reassignAssignment, getAssigneeUnlockedLevels } from '@/app/actions/learning-assignments'
 import { approveExam, denyExam, deleteExam } from '@/app/actions/comprehensive-exam'
 import { approveQuizRetake, denyQuizRetake } from '@/app/actions/quiz-retake'
@@ -81,7 +82,6 @@ interface LearningProgressData {
   mastered: number
   total: number
   pct: number
-  dailyTrend: number[]
 }
 
 interface Props {
@@ -95,6 +95,7 @@ interface Props {
 
 export default function AdminTasksClient({ learningAssignments, examRequests, quizRetakeRequests, users, currentRole, learningProgress }: Props) {
   const [activeTab, setActiveTab] = useState<'learning' | 'approvals'>('learning')
+  const router = useRouter()
   const [showForm, setShowForm] = useState(false)
   const [pending, startTransition] = useTransition()
   const [message, setMessage] = useState<string | null>(null)
@@ -418,12 +419,12 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
                     const totalQuizzes = la.required_quiz_ids?.length ?? 0
                     const passedQuizzes = la.passed_quiz_ids?.length ?? 0
                     const lp = learningProgress[la.id]
-                    const trend = lp?.dailyTrend ?? []
-                    const trendMax = Math.max(...trend, 1)
-                    const trendSum = trend.reduce((a, b) => a + b, 0)
                     return (
                       <Fragment key={la.id}>
-                        <tr>
+                        <tr
+                          onClick={() => router.push(`/admin/reports?mentee=${la.assigned_to}`)}
+                          className="cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                        >
                           <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{la.title}</td>
                           <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
                             {(la.assignee as { full_name: string | null } | null)?.full_name ?? '-'}
@@ -434,27 +435,14 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
                           </td>
                           <td className="px-4 py-3">
                             {lp && lp.total > 0 ? (
-                              <div className="space-y-1">
-                                <div className="flex items-center gap-2">
-                                  <div className="h-2 w-16 rounded-full bg-gray-200 dark:bg-gray-600">
-                                    <div
-                                      className="h-2 rounded-full bg-amber-500 transition-all"
-                                      style={{ width: `${lp.pct}%` }}
-                                    />
-                                  </div>
-                                  <span className="text-xs text-gray-500 dark:text-gray-400">{lp.pct}%</span>
+                              <div className="flex items-center gap-2">
+                                <div className="h-2 w-16 rounded-full bg-gray-200 dark:bg-gray-600">
+                                  <div
+                                    className="h-2 rounded-full bg-amber-500 transition-all"
+                                    style={{ width: `${lp.pct}%` }}
+                                  />
                                 </div>
-                                <div className="flex items-end gap-px" title={`7日間: +${trendSum}`}>
-                                  {trend.map((v, i) => (
-                                    <div
-                                      key={i}
-                                      className={`w-1.5 rounded-t ${v > 0 ? 'bg-amber-400 dark:bg-amber-500' : 'bg-gray-200 dark:bg-gray-600'}`}
-                                      style={{ height: `${Math.max(v / trendMax * 14, 2)}px` }}
-                                      title={`${['月', '火', '水', '木', '金', '土', '日'][(new Date(Date.now() - (6 - i) * 86400000).getDay() + 6) % 7]}: +${v}`}
-                                    />
-                                  ))}
-                                  <span className="ml-1 text-[10px] text-gray-400">+{trendSum}</span>
-                                </div>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">{lp.pct}%</span>
                               </div>
                             ) : (
                               <span className="text-xs text-gray-400">-</span>
@@ -479,7 +467,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
                           <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
                             {la.due_date ? new Date(la.due_date).toLocaleDateString('ja-JP') : '-'}
                           </td>
-                          <td className="px-4 py-3 text-right">
+                          <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                             <div className="flex flex-col items-end gap-2">
                               <div className="flex justify-end gap-2">
                                 {la.status === 'awaiting_confirmation' && (

@@ -10,6 +10,96 @@ import { logAuditEvent } from '@/app/actions/audit'
 import { ERR } from '@/lib/action-types'
 import { getCoursesWithProgress } from '@/lib/course-progress'
 
+/**
+ * Dynamically resolve quiz IDs for a given assignment's category/subcategory/level.
+ * Always queries the quizzes table for the latest state.
+ */
+export async function resolveQuizIdsForAssignment(
+  category: string,
+  subcategory: string,
+  contentLevel: string | null,
+  client: Awaited<ReturnType<typeof createClient>> | NonNullable<ReturnType<typeof createServiceRoleClient>>,
+): Promise<string[]> {
+  const catConfig = ASSIGNMENT_CATEGORIES[category]
+  if (!catConfig) return []
+
+  const isLevelOnly = catConfig.levelOnly === true
+
+  if (isLevelOnly && catConfig.quizTypes) {
+    let query = client
+      .from('quizzes')
+      .select('id')
+      .in('quiz_type', catConfig.quizTypes)
+      .eq('is_pool', true)
+
+    if (contentLevel) {
+      query = query.ilike('title', `${contentLevel}%`)
+    }
+
+    const { data } = await query.order('created_at')
+    return (data ?? []).map(q => q.id)
+  }
+
+  const subcatConfig = catConfig.subcategories[subcategory]
+  if (!subcatConfig) return []
+
+  if (subcatConfig.courseSubcategory && contentLevel) {
+    const { data: courses } = await client
+      .from('courses')
+      .select('id')
+      .eq('subcategory', subcatConfig.courseSubcategory)
+      .eq('difficulty', contentLevel)
+      .eq('is_published', true)
+
+    if (courses?.length) {
+      const courseIds = courses.map(c => c.id)
+      const { data: lessons } = await client
+        .from('lessons')
+        .select('id')
+        .in('course_id', courseIds)
+
+      if (lessons?.length) {
+        const lessonIds = lessons.map(l => l.id)
+        const { data: quizzes } = await client
+          .from('quizzes')
+          .select('id')
+          .in('lesson_id', lessonIds)
+          .order('created_at')
+
+        return (quizzes ?? []).map(q => q.id)
+      }
+    }
+    return []
+  }
+
+  if (subcatConfig.quizType) {
+    let query = client
+      .from('quizzes')
+      .select('id')
+      .eq('quiz_type', subcatConfig.quizType)
+
+    if (category === 'business-jp') {
+      query = query.eq('is_pool', true)
+    }
+
+    if (contentLevel) {
+      query = query.eq('content_level', contentLevel)
+    }
+
+    if (subcatConfig.titlePatterns?.length) {
+      const orFilter = subcatConfig.titlePatterns
+        .map(p => `title.ilike.${p}`)
+        .join(',')
+      query = query.or(orFilter)
+    }
+
+    const { data } = await query.order('created_at')
+    return (data ?? []).map(q => q.id)
+  }
+
+  return []
+}
+
 export async function createLearningAssignment(formData: FormData) {
   const auth = await requireAdminOrMentor()
   if ('error' in auth) return { error: auth.error } as const
@@ -37,81 +127,8 @@ export async function createLearningAssignment(formData: FormData) {
   }
 
   // Find matching quizzes based on category/subcategory/level
-  let requiredQuizIds: string[] = []
   const queryClient = createServiceRoleClient() ?? supabase
-  {
-    if (isLevelOnly && catConfig?.quizTypes) {
-      // levelOnly: search all quiz types for this category by title pattern
-      let query = queryClient
-        .from('quizzes')
-        .select('id')
-        .in('quiz_type', catConfig.quizTypes)
-
-      if (contentLevel) {
-        query = query.ilike('title', `%${contentLevel}%`)
-      }
-
-      const { data: quizzes } = await query.order('created_at')
-      requiredQuizIds = (quizzes ?? []).map(q => q.id)
-    } else {
-      // Normal: search by single quiz type
-      const subcatConfig = catConfig?.subcategories[subcategory]
-      const quizType = subcatConfig?.quizType
-
-      if (subcatConfig?.courseSubcategory && contentLevel) {
-        // Course-based quiz resolution: find quizzes via courses → lessons → quizzes
-        const { data: courses } = await queryClient
-          .from('courses')
-          .select('id')
-          .eq('subcategory', subcatConfig.courseSubcategory)
-          .eq('difficulty', contentLevel)
-          .eq('is_published', true)
-
-        if (courses?.length) {
-          const courseIds = courses.map(c => c.id)
-          const { data: lessons } = await queryClient
-            .from('lessons')
-            .select('id')
-            .in('course_id', courseIds)
-
-          if (lessons?.length) {
-            const lessonIds = lessons.map(l => l.id)
-            const { data: quizzes } = await queryClient
-              .from('quizzes')
-              .select('id')
-              .in('lesson_id', lessonIds)
-              .order('created_at')
-
-            requiredQuizIds = (quizzes ?? []).map(q => q.id)
-          }
-        }
-      } else if (quizType) {
-        let query = queryClient
-          .from('quizzes')
-          .select('id')
-          .eq('quiz_type', quizType)
-
-        // For business-jp, only include pool quizzes (comprehension tests)
-        if (category === 'business-jp') {
-          query = query.eq('is_pool', true)
-        }
-
-        if (contentLevel) {
-          query = query.eq('content_level', contentLevel)
-        }
-
-        if (subcatConfig?.titlePatterns?.length) {
-          const orFilter = subcatConfig.titlePatterns
-            .map(p => `title.ilike.${p}`)
-            .join(',')
-          query = query.or(orFilter)
-        }
-
-        const { data: quizzes } = await query.order('created_at')
-        requiredQuizIds = (quizzes ?? []).map(q => q.id)
-      }
-    }
-  }
+  const requiredQuizIds = await resolveQuizIdsForAssignment(category, subcategory, contentLevel, queryClient)
 
   const { data, error } = await supabase
     .from('learning_assignments')

@@ -12,6 +12,7 @@ const SUBCATEGORIES = [
   { key: 'glossary', label: 'ビジネス語彙', dbCategories: ['business', 'it', 'dev'], quizType: 'it_terminology' },
   { key: 'sentence_pattern', label: '文章パターン', dbCategories: ['sentence_pattern'], quizType: 'sentence_pattern' },
   { key: 'expression', label: 'ビジネス表現', dbCategories: ['expression'], quizType: 'business_expression' },
+  { key: 'keigo', label: '敬語', dbCategories: ['keigo'], quizType: 'keigo' },
 ] as const
 
 export default async function BusinessJapaneseHubPage() {

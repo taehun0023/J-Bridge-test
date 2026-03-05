@@ -51,6 +51,7 @@ export async function createFeedback(formData: FormData) {
   )
 
   revalidatePath('/admin/reports')
+  revalidatePath('/admin')
   revalidatePath('/feedback')
   revalidatePath('/dashboard')
   return { success: true }
@@ -79,6 +80,7 @@ export async function updateFeedback(feedbackId: string, content: string) {
   await logAuditEvent(auth.user.id, 'update', 'admin_feedbacks', feedbackId, oldData, { content })
 
   revalidatePath('/admin/reports')
+  revalidatePath('/admin')
   revalidatePath('/feedback')
   return { success: true }
 }
@@ -87,25 +89,29 @@ export async function deleteFeedback(feedbackId: string) {
   const auth = await requireAdminOrMentor()
   if ('error' in auth) return { error: auth.error } as const
 
+  const isAdmin = auth.profile.role === 'admin'
+
   // Fetch old data for audit
-  const { data: oldData } = await auth.supabase
+  let oldQuery = auth.supabase
     .from('admin_feedbacks')
     .select('*')
     .eq('id', feedbackId)
-    .eq('admin_id', auth.user.id)
-    .single()
+  if (!isAdmin) oldQuery = oldQuery.eq('admin_id', auth.user.id)
+  const { data: oldData } = await oldQuery.single()
 
-  const { error } = await auth.supabase
+  let deleteQuery = auth.supabase
     .from('admin_feedbacks')
     .delete()
     .eq('id', feedbackId)
-    .eq('admin_id', auth.user.id)
+  if (!isAdmin) deleteQuery = deleteQuery.eq('admin_id', auth.user.id)
+  const { error } = await deleteQuery
 
   if (error) return { error: error.message }
 
   await logAuditEvent(auth.user.id, 'delete', 'admin_feedbacks', feedbackId, oldData, null)
 
   revalidatePath('/admin/reports')
+  revalidatePath('/admin')
   revalidatePath('/feedback')
   return { success: true }
 }

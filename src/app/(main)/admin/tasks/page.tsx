@@ -87,26 +87,16 @@ export default async function AdminTasksPage() {
   }
 
   // ─── Learning progress calculation ───
-  const learningProgress: Record<string, { mastered: number; total: number; pct: number; dailyTrend: number[] }> = {}
+  const learningProgress: Record<string, { mastered: number; total: number; pct: number }> = {}
 
   if (serviceClient && (learningAssignments ?? []).length > 0) {
     const allUserIds = [...new Set((learningAssignments ?? []).map(a => a.assigned_to))]
 
     // Fetch all mastered items for all relevant users (service role bypasses RLS)
-    const sevenDaysAgo = new Date()
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-
-    const [{ data: allMastered }, { data: recentMastered }] = await Promise.all([
-      serviceClient
-        .from('user_mastered_items')
-        .select('user_id, item_type, item_id')
-        .in('user_id', allUserIds),
-      serviceClient
-        .from('user_mastered_items')
-        .select('user_id, item_type, item_id, created_at')
-        .in('user_id', allUserIds)
-        .gte('created_at', sevenDaysAgo.toISOString()),
-    ])
+    const { data: allMastered } = await serviceClient
+      .from('user_mastered_items')
+      .select('user_id, item_type, item_id')
+      .in('user_id', allUserIds)
 
     // Build user mastery lookup: userId → item_type → Set<item_id>
     const userMastery = new Map<string, Map<string, Set<string>>>()
@@ -145,6 +135,7 @@ export default async function AdminTasksPage() {
       glossary: ['business', 'it', 'dev'],
       'sentence-patterns': ['sentence_pattern'],
       expressions: ['expression'],
+      keigo: ['keigo'],
     }
     const neededBizSubcats = [...new Set(
       (learningAssignments ?? [])
@@ -162,29 +153,6 @@ export default async function AdminTasksPage() {
         .in('category', cats)
       const ids = new Set((items ?? []).map(i => i.id))
       bizJpInfo[subcat] = { ids, total: ids.size }
-    }
-
-    // Helper: check if mastered item is relevant to a given assignment
-    function isRelevant(m: { item_type: string; item_id: string }, a: { category: string; subcategory: string; content_level: string | null }): boolean {
-      if (a.category === 'seikatsu' && a.content_level) {
-        const sets = jlptItemSets[a.content_level]
-        if (!sets) return false
-        return (m.item_type === 'jlpt_vocabulary' && sets.vocab.has(m.item_id))
-          || (m.item_type === 'jlpt_grammar' && sets.grammar.has(m.item_id))
-          || (m.item_type === 'jlpt_reading' && sets.reading.has(m.item_id))
-          || (m.item_type === 'jlpt_listening' && sets.listening.has(m.item_id))
-      }
-      if (a.category === 'business-jp') {
-        const info = bizJpInfo[a.subcategory]
-        return !!info && m.item_type === 'it_glossary' && info.ids.has(m.item_id)
-      }
-      if (a.category === 'business-lit') {
-        const types = a.subcategory === 'attitude-culture'
-          ? ['attitude_manual', 'culture_manual']
-          : a.subcategory === 'security' ? ['security_manual'] : []
-        return types.includes(m.item_type)
-      }
-      return false
     }
 
     // Calculate per-assignment
@@ -232,26 +200,10 @@ export default async function AdminTasksPage() {
         }
       }
 
-      // Daily trend (last 7 days)
-      const now = new Date()
-      const dailyTrend: number[] = []
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date(now)
-        d.setDate(d.getDate() - i)
-        const dateStr = d.toISOString().split('T')[0]
-        const dayCount = (recentMastered ?? []).filter(m =>
-          m.user_id === la.assigned_to
-          && m.created_at.startsWith(dateStr)
-          && isRelevant(m, la)
-        ).length
-        dailyTrend.push(dayCount)
-      }
-
       learningProgress[la.id] = {
         mastered,
         total,
         pct: total > 0 ? Math.round((mastered / total) * 100) : 0,
-        dailyTrend,
       }
     }
   }

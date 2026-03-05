@@ -13,12 +13,12 @@ const ITEMS_PER_PAGE = 30
 
 const CATEGORIES = [
   { key: '', label: '全て' },
-  { key: 'request', label: '依頼・確認' },
-  { key: 'report', label: '報告・連絡' },
-  { key: 'manner', label: '挨拶・応対' },
+  { key: 'rule', label: '変換規則' },
+  { key: 'mistake', label: 'よくある間違い' },
+  { key: 'uchi_soto', label: 'ウチ・ソト' },
 ]
 
-export default async function ExpressionsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+export default async function KeigoPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams
   const subcategory = params.category ?? ''
   const search = params.search ?? ''
@@ -42,7 +42,7 @@ export default async function ExpressionsPage({ searchParams }: { searchParams: 
   let query = supabase
     .from('it_glossary')
     .select('*', { count: 'exact' })
-    .eq('category', 'expression')
+    .eq('category', 'keigo')
     .order('created_at', { ascending: true })
 
   if (subcategory) {
@@ -68,8 +68,8 @@ export default async function ExpressionsPage({ searchParams }: { searchParams: 
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ビジネス表現</h1>
-        <p className="mt-1 text-gray-500 dark:text-gray-400">IT現場で使えるビジネス表現を学習しましょう</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">敬語</h1>
+        <p className="mt-1 text-gray-500 dark:text-gray-400">敬語の変換規則・よくある間違い・ウチソトを学習しましょう</p>
       </div>
 
       <BusinessGlossaryClient
@@ -80,7 +80,7 @@ export default async function ExpressionsPage({ searchParams }: { searchParams: 
         currentPage={page}
         totalPages={totalPages}
         totalCount={count ?? 0}
-        basePath="/japanese/business/expressions"
+        basePath="/japanese/business/keigo"
         offset={offset}
         masteredIds={masteredIds}
         mastery={mastery}

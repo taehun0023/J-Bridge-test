@@ -21,6 +21,7 @@ export type QuizType =
   | 'jlpt_grammar'
   | 'jlpt_reading'
   | 'jlpt_listening'
+  | 'jlpt_kanji'
   | 'it_terminology'
   | 'role_play_scenario'
   | 'attitude_culture'
@@ -28,6 +29,7 @@ export type QuizType =
   | 'framework'
   | 'sentence_pattern'
   | 'business_expression'
+  | 'keigo'
   | 'cs_knowledge'
 
 export type SubmissionStatus =

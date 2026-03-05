@@ -1,261 +1,371 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import dynamic from 'next/dynamic'
-import Badge from '@/components/ui/Badge'
 import Card from '@/components/ui/Card'
-import { createFeedback } from '@/app/actions/admin/feedback'
-import { recalculateAllScores } from '@/app/actions/scores'
-import { getRelevantAxes, AXIS_DISPLAY_LABELS } from '@/lib/assessment-config'
-import type { AxisKey } from '@/lib/assessment-config'
+import { getWeaknessReport, getMenteeAssignments, getAssignmentDetail, generateAIPrompt } from '@/app/actions/admin/weakness-report'
+import type { ScoreTrendPoint, ErrorRateItem, MenteeAssignment, AssignmentDetailData } from '@/app/actions/admin/weakness-report'
+import { getCategoryLabel, getSubcategoryLabel, getContentLevelLabel } from '@/lib/assignment-categories'
+import { ClipboardCopy, Check, Sparkles, X } from 'lucide-react'
 
-const RadarChart = dynamic(() => import('@/components/dashboard/RadarChart'), { ssr: false })
+const ScoreTrendChart = dynamic(() => import('@/components/charts/ScoreTrendChart'), { ssr: false })
+const ErrorRateChart = dynamic(() => import('@/components/charts/ErrorRateChart'), { ssr: false })
 
 interface User {
   id: string
   full_name: string | null
   email: string
-  role: string
-  coding_rank: string
-  jlpt_level: string | null
-  is_japanese: boolean
 }
 
-interface SkillData {
-  jlpt: number
-  itJapanese: number
-  core: number
-  framework: number
-  attitude: number
-  isJapanese: boolean
+const statusColors: Record<string, string> = {
+  pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+  in_progress: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  completed: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+  awaiting_confirmation: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+  overdue: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
 }
 
-interface Feedback {
-  id: string
-  user_id: string
-  category: string
-  content: string
-  created_at: string
-  user: { full_name: string | null } | null
-}
-
-const categoryLabels: Record<string, string> = {
-  seikatsu: '生活日本語',
-  business_jp: 'ビジネス日本語',
-  cs: 'CS知識',
-  dev: '開発実務能力',
-  business_lit: 'ビジネスリテラシー',
+const statusLabels: Record<string, string> = {
+  pending: '待機',
+  in_progress: '進行中',
+  completed: '完了',
+  awaiting_confirmation: '確認待ち',
+  overdue: '期限超過',
 }
 
 export default function AdminReportsClient({
   users,
-  skillMap,
-  feedbacks,
   userRole,
+  initialUserId,
 }: {
   users: User[]
-  skillMap: Record<string, SkillData>
-  feedbacks: Feedback[]
   userRole: string
+  initialUserId?: string
 }) {
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
-  const [showFeedbackForm, setShowFeedbackForm] = useState(false)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [scoreTrend, setScoreTrend] = useState<ScoreTrendPoint[]>([])
+  const [errorRates, setErrorRates] = useState<ErrorRateItem[]>([])
+  const [assignments, setAssignments] = useState<MenteeAssignment[]>([])
   const [pending, startTransition] = useTransition()
-  const [message, setMessage] = useState<string | null>(null)
-  const selectedUser = users.find(u => u.id === selectedUserId)
-  const selectedSkills = selectedUserId ? skillMap[selectedUserId] : null
-  const userFeedbacks = feedbacks.filter(f => f.user_id === selectedUserId)
+  const [error, setError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+  const [modalAssignment, setModalAssignment] = useState<MenteeAssignment | null>(null)
+  const [detailData, setDetailData] = useState<AssignmentDetailData | null>(null)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const initialLoaded = useRef(false)
 
-  const isJapanese = selectedSkills?.isJapanese ?? false
-  const relevantAxes = getRelevantAxes(isJapanese)
-  const axisCount = relevantAxes.length
-
-  function handleFeedback(formData: FormData) {
-    startTransition(async () => {
-      try {
-        const result = await createFeedback(formData)
-        if ('error' in result) setMessage(result.error ?? 'エラーが発生しました')
-        else {
-          setMessage('フィードバックが登録されました')
-          setShowFeedbackForm(false)
-        }
-      } catch (e) {
-        console.error('[handleFeedback] Error:', e)
-        setMessage('フィードバック登録中にエラーが発生しました')
+  useEffect(() => {
+    if (initialUserId && !initialLoaded.current) {
+      initialLoaded.current = true
+      const userExists = users.some(u => u.id === initialUserId)
+      if (userExists) {
+        handleSelect(initialUserId)
       }
-      setTimeout(() => setMessage(null), 5000)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialUserId])
+
+  function handleSelect(userId: string) {
+    setSelectedId(userId)
+    setError(null)
+    startTransition(async () => {
+      const [reportResult, assignResult] = await Promise.all([
+        getWeaknessReport(userId),
+        getMenteeAssignments(userId),
+      ])
+      if ('error' in reportResult) {
+        setError(reportResult.error ?? 'エラーが発生しました')
+        setScoreTrend([])
+        setErrorRates([])
+      } else {
+        setScoreTrend(reportResult.scoreTrend)
+        setErrorRates(reportResult.errorRates)
+      }
+      if ('error' in assignResult) {
+        setAssignments([])
+      } else {
+        setAssignments(assignResult.assignments)
+      }
     })
   }
 
-  function handleRecalcAll() {
+  function handleCopyPrompt() {
+    if (!selectedId) return
     startTransition(async () => {
-      const result = await recalculateAllScores()
-      if (result.error) setMessage(result.error)
-      else setMessage(`${result.processed}名のスコアを再計算しました`)
-      setTimeout(() => setMessage(null), 5000)
+      const result = await generateAIPrompt(selectedId)
+      if ('error' in result) {
+        setError(result.error ?? 'エラーが発生しました')
+        return
+      }
+      await navigator.clipboard.writeText(result.prompt)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
     })
   }
 
-  const radarScores: Record<AxisKey, number> = selectedSkills
-    ? {
-        jlpt: selectedSkills.jlpt,
-        itJapanese: selectedSkills.itJapanese,
-        coreProgramming: selectedSkills.core,
-        framework: selectedSkills.framework,
-        attitudeCulture: selectedSkills.attitude,
+  function handleCardClick(a: MenteeAssignment) {
+    setModalAssignment(a)
+    setDetailData(null)
+    setDetailLoading(true)
+    getAssignmentDetail(a.id).then(result => {
+      if ('error' in result) {
+        setDetailData(null)
+      } else {
+        setDetailData({ masteryTrend: result.masteryTrend, quizResults: result.quizResults })
       }
-    : { jlpt: 0, itJapanese: 0, coreProgramming: 0, framework: 0, attitudeCulture: 0 }
+      setDetailLoading(false)
+    })
+  }
+
+  const selectedUser = users.find(u => u.id === selectedId)
 
   return (
-    <div className="mt-6">
-      <div className="mb-4">
-        <a
-          href="/admin/reports/weakness"
-          className="inline-flex items-center gap-1 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-2 text-sm font-medium text-indigo-400 hover:bg-indigo-500/20 transition-colors"
-        >
-          弱点分析レポート →
-        </a>
-      </div>
+    <div className="mt-6 space-y-6">
+      {/* User select dropdown */}
+      <select
+        value={selectedId ?? ''}
+        onChange={e => {
+          const val = e.target.value
+          if (val) handleSelect(val)
+          else setSelectedId(null)
+        }}
+        className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+      >
+        <option value="">{userRole === 'mentor' ? 'メンティーを選択...' : '社員を選択...'}</option>
+        {users.map(u => (
+          <option key={u.id} value={u.id}>
+            {u.full_name ?? u.email}
+          </option>
+        ))}
+      </select>
 
-      {message && (
-        <div className="mb-4 rounded-xl bg-indigo-500/10 px-4 py-3 text-sm text-indigo-400 ring-1 ring-indigo-500/20">{message}</div>
+      {error && (
+        <div className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-400 ring-1 ring-red-500/20">
+          {error}
+        </div>
       )}
 
-      <div className="mb-4">
-        <button
-          onClick={handleRecalcAll}
-          disabled={pending}
-          className="rounded-xl border border-gray-200 dark:border-white/[0.08] px-4 py-2 text-sm font-medium text-zinc-400 hover:bg-white/5 dark:hover:bg-white/5 hover:bg-zinc-50 disabled:opacity-50 transition-colors"
-        >
-          {pending ? '再計算中...' : '全体スコア再計算'}
-        </button>
-      </div>
+      {pending && (
+        <Card>
+          <div className="py-12 text-center text-sm text-zinc-500">読み込み中...</div>
+        </Card>
+      )}
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* User list */}
-        <div className="lg:col-span-1">
-          <Card title={userRole === 'mentor' ? 'メンティー一覧' : '社員一覧'}>
-            <div className="max-h-[600px] space-y-1 overflow-y-auto">
-              {users.map(user => (
-                <button
-                  key={user.id}
-                  onClick={() => setSelectedUserId(user.id)}
-                  className={`w-full rounded-xl px-3 py-2.5 text-left transition-colors ${
-                    selectedUserId === user.id
-                      ? 'bg-indigo-500/10 text-indigo-400'
-                      : 'hover:bg-white/5 dark:hover:bg-white/5 hover:bg-zinc-50'
-                  }`}
-                >
-                  <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                    {user.full_name ?? user.email}
-                  </p>
-                  <div className="mt-0.5 flex items-center gap-2">
-                    <Badge label={user.coding_rank} variant="coding_rank" />
-                    {user.jlpt_level && <Badge label={user.jlpt_level} variant="jlpt" />}
-                    {user.is_japanese && (
-                      <span className="text-xs text-amber-400">JP</span>
-                    )}
-                    <span className="text-xs text-zinc-500">{user.role}</span>
-                  </div>
-                </button>
-              ))}
-              {users.length === 0 && (
-                <p className="py-4 text-center text-sm text-zinc-500">
-                  {userRole === 'mentor' ? 'メンティーがいません' : '社員がいません'}
-                </p>
-              )}
-            </div>
-          </Card>
-        </div>
-
-        {/* Detail view */}
-        <div className="lg:col-span-2 space-y-6">
-          {selectedUser && selectedSkills ? (
-            <>
-              <Card title={`${selectedUser.full_name ?? selectedUser.email} - ${axisCount}軸チャート`}>
-                <div className="mx-auto max-w-md">
-                  <RadarChart scores={radarScores} isJapanese={isJapanese} />
-                </div>
-                <div className={`mt-4 grid grid-cols-${axisCount} gap-2 text-center`}>
-                  {relevantAxes.map((key) => {
-                    const scoreVal = radarScores[key]
-                    return (
-                      <div key={key}>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400">{AXIS_DISPLAY_LABELS[key]}</p>
-                        <p className="text-sm font-mono font-bold text-zinc-900 dark:text-zinc-100">{scoreVal}</p>
+      {selectedUser && !pending ? (
+        <>
+          {/* Assignment cards */}
+          {assignments.length > 0 && (
+            <Card title="学習課題">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {assignments.map(a => {
+                  const totalQuizzes = a.required_quiz_ids.length
+                  const passedQuizzes = a.passed_quiz_ids.length
+                  const isOverdue = a.due_date && new Date(a.due_date) < new Date() && a.status !== 'completed'
+                  return (
+                    <button key={a.id} onClick={() => handleCardClick(a)} className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800/50 text-left transition-colors hover:border-indigo-400 hover:ring-1 hover:ring-indigo-400/30 cursor-pointer w-full">
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 line-clamp-1">{a.title}</h4>
+                        <span className={`shrink-0 inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${statusColors[a.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                          {statusLabels[a.status] ?? a.status}
+                        </span>
                       </div>
-                    )
-                  })}
-                </div>
-              </Card>
+                      <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                        {getCategoryLabel(a.category)} &gt; {getSubcategoryLabel(a.category, a.subcategory)}
+                        {a.content_level && ` (${getContentLevelLabel(a.category, a.content_level)})`}
+                      </p>
 
-              {/* Feedback */}
-              <Card title="フィードバック">
-                <div className="mb-4">
-                  <button
-                    onClick={() => setShowFeedbackForm(!showFeedbackForm)}
-                    className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
-                  >
-                    {showFeedbackForm ? 'キャンセル' : '+ フィードバック作成'}
-                  </button>
-                </div>
+                      {/* Mastery progress */}
+                      {a.mastery.total > 0 && (
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+                            <span>学習</span>
+                            <span>{a.mastery.pct}%</span>
+                          </div>
+                          <div className="mt-1 h-1.5 w-full rounded-full bg-zinc-200 dark:bg-zinc-600">
+                            <div
+                              className="h-1.5 rounded-full bg-amber-500 transition-all"
+                              style={{ width: `${a.mastery.pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
 
-                {showFeedbackForm && (
-                  <form action={handleFeedback} className="mb-4 rounded-xl border border-white/[0.08] dark:border-white/[0.08] border-gray-200 p-4">
-                    <input type="hidden" name="user_id" value={selectedUserId ?? ''} />
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div>
-                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">カテゴリ</label>
-                        <select name="category"
-                          className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-gray-700 dark:text-white">
-                          {Object.entries(categoryLabels).map(([key, label]) => (
-                            <option key={key} value={key} className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white">{label}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    <div className="mt-3">
-                      <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">内容 *</label>
-                      <textarea name="content" required rows={3}
-                        className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-gray-700 dark:text-white" />
-                    </div>
-                    <button type="submit" disabled={pending}
-                      className="mt-3 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors">
-                      {pending ? '登録中...' : '登録'}
+                      {/* Quiz progress */}
+                      {totalQuizzes > 0 && (
+                        <div className="mt-2">
+                          <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+                            <span>テスト</span>
+                            <span>{passedQuizzes}/{totalQuizzes}</span>
+                          </div>
+                          <div className="mt-1 h-1.5 w-full rounded-full bg-zinc-200 dark:bg-zinc-600">
+                            <div
+                              className="h-1.5 rounded-full bg-indigo-500 transition-all"
+                              style={{ width: `${totalQuizzes > 0 ? Math.round((passedQuizzes / totalQuizzes) * 100) : 0}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Due date */}
+                      {a.due_date && (
+                        <p className={`mt-2 text-xs ${isOverdue ? 'font-medium text-red-500 dark:text-red-400' : 'text-zinc-400 dark:text-zinc-500'}`}>
+                          期限: {new Date(a.due_date).toLocaleDateString('ja-JP')}
+                        </p>
+                      )}
                     </button>
-                  </form>
-                )}
-
-                <div className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">
-                  {userFeedbacks.map(fb => (
-                    <div key={fb.id} className="py-3">
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex rounded-full bg-zinc-500/10 px-2 py-0.5 text-xs font-medium text-zinc-400 ring-1 ring-zinc-500/20">
-                          {categoryLabels[fb.category] ?? fb.category}
-                        </span>
-                        <span className="text-xs text-zinc-500">
-                          {new Date(fb.created_at).toLocaleDateString('ja-JP')}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">{fb.content}</p>
-                    </div>
-                  ))}
-                  {userFeedbacks.length === 0 && (
-                    <p className="py-4 text-center text-sm text-zinc-500">フィードバックがありません</p>
-                  )}
-                </div>
-              </Card>
-            </>
-          ) : (
-            <Card>
-              <div className="py-12 text-center text-sm text-zinc-500">
-                {userRole === 'mentor' ? '左の一覧からメンティーを選択してください' : '左の一覧から社員を選択してください'}
+                  )
+                })}
               </div>
             </Card>
           )}
-        </div>
-      </div>
 
+          <Card title={`${selectedUser.full_name ?? selectedUser.email} - スコア推移`}>
+            <ScoreTrendChart data={scoreTrend} />
+          </Card>
+
+          <Card title="カテゴリ別誤答率">
+            <ErrorRateChart data={errorRates} />
+            {errorRates.length > 0 && (
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                <div className="flex items-center gap-1.5 text-xs text-zinc-500">
+                  <span className="inline-block h-2.5 w-2.5 rounded-full bg-red-500" />
+                  50%超
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-zinc-500">
+                  <span className="inline-block h-2.5 w-2.5 rounded-full bg-amber-500" />
+                  30-50%
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-zinc-500">
+                  <span className="inline-block h-2.5 w-2.5 rounded-full bg-green-500" />
+                  30%未満
+                </div>
+              </div>
+            )}
+          </Card>
+
+          <div className="flex justify-end">
+            <button
+              onClick={handleCopyPrompt}
+              disabled={pending}
+              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+            >
+              {copied ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  コピー完了
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  <ClipboardCopy className="h-4 w-4" />
+                  AIプロンプトをコピー
+                </>
+              )}
+            </button>
+          </div>
+        </>
+      ) : !pending && !selectedUser ? (
+        <Card>
+          <div className="py-12 text-center text-sm text-zinc-500">
+            {userRole === 'mentor' ? 'メンティーを選択してください' : '社員を選択してください'}
+          </div>
+        </Card>
+      ) : null}
+
+      {/* Assignment Detail Modal */}
+      {modalAssignment && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setModalAssignment(null)}>
+          <div className="relative mx-4 w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl dark:bg-zinc-900" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setModalAssignment(null)} className="absolute right-4 top-4 rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{modalAssignment.title}</h3>
+              <span className={`shrink-0 inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${statusColors[modalAssignment.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                {statusLabels[modalAssignment.status] ?? modalAssignment.status}
+              </span>
+            </div>
+
+            {detailLoading ? (
+              <div className="py-12 text-center text-sm text-zinc-500">読み込み中...</div>
+            ) : detailData ? (
+              <div className="mt-5 space-y-6">
+                {/* Mastery Trend (7 days) */}
+                <div>
+                  <h4 className="text-sm font-medium text-zinc-700 dark:text-zinc-300">学習進捗 (7日間)</h4>
+                  {(() => {
+                    const BAR_MAX_H = 64
+                    const maxCount = Math.max(...detailData.masteryTrend.map(d => d.count), 1)
+                    const dayLabels = ['日', '月', '火', '水', '木', '金', '土']
+                    return (
+                      <div className="mt-3 flex items-end gap-2" style={{ height: BAR_MAX_H + 36 }}>
+                        {detailData.masteryTrend.map(d => {
+                          const date = new Date(d.day + 'T00:00:00')
+                          const label = dayLabels[date.getDay()]
+                          const barH = d.count > 0 ? Math.max(Math.round((d.count / maxCount) * BAR_MAX_H), 6) : 3
+                          return (
+                            <div key={d.day} className="flex flex-1 flex-col items-center justify-end" style={{ height: BAR_MAX_H + 36 }}>
+                              <span className="mb-1 text-[11px] font-medium text-zinc-600 dark:text-zinc-300">{d.count > 0 ? d.count : ''}</span>
+                              <div
+                                className={`w-full max-w-[36px] rounded-t-md transition-all ${d.count > 0 ? 'bg-amber-500' : 'bg-zinc-200 dark:bg-zinc-700'}`}
+                                style={{ height: barH }}
+                              />
+                              <span className="mt-1.5 text-[11px] text-zinc-400">{label}</span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )
+                  })()}
+                  <p className="mt-2 text-xs text-zinc-500">
+                    7日間合計: +{detailData.masteryTrend.reduce((sum, d) => sum + d.count, 0)}件
+                  </p>
+                </div>
+
+                {/* Quiz Results */}
+                {detailData.quizResults.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-zinc-700 dark:text-zinc-300">テスト結果</h4>
+                    <div className="mt-2 divide-y divide-zinc-100 dark:divide-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+                      {detailData.quizResults.map(qr => (
+                        <div key={qr.quizId} className="flex items-center justify-between px-4 py-3">
+                          <span className="text-sm text-zinc-800 dark:text-zinc-200 line-clamp-1 mr-3">{qr.quizTitle}</span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {qr.completedAt ? (
+                              <>
+                                <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{qr.latestScore}点</span>
+                                <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${qr.passed ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+                                  {qr.passed ? '合格' : '不合格'}
+                                </span>
+                                {qr.attemptId && (
+                                  <a
+                                    href={`/dashboard/history/${qr.attemptId}?role=mentor`}
+                                    className="text-xs text-indigo-500 hover:text-indigo-400 hover:underline"
+                                    onClick={e => e.stopPropagation()}
+                                  >
+                                    レビュー
+                                  </a>
+                                )}
+                              </>
+                            ) : (
+                              <span className="inline-flex rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                                未受験
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="py-12 text-center text-sm text-zinc-500">データの取得に失敗しました</div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -50,6 +50,7 @@ export async function createGlossaryItem(data: GlossaryFormData) {
   revalidatePath('/japanese/business/glossary')
   revalidatePath('/japanese/business/expressions')
   revalidatePath('/japanese/business/sentence-patterns')
+  revalidatePath('/japanese/business/keigo')
   return { success: true }
 }
 
@@ -92,6 +93,7 @@ export async function updateGlossaryItem(id: string, data: GlossaryFormData) {
   revalidatePath('/japanese/business/glossary')
   revalidatePath('/japanese/business/expressions')
   revalidatePath('/japanese/business/sentence-patterns')
+  revalidatePath('/japanese/business/keigo')
   return { success: true }
 }
 
@@ -195,6 +197,7 @@ export async function revertGlossaryChange(auditLogId: string) {
   revalidatePath('/japanese/business/glossary')
   revalidatePath('/japanese/business/expressions')
   revalidatePath('/japanese/business/sentence-patterns')
+  revalidatePath('/japanese/business/keigo')
   return { success: true }
 }
 
@@ -224,5 +227,6 @@ export async function deleteGlossaryItem(id: string) {
   revalidatePath('/japanese/business/glossary')
   revalidatePath('/japanese/business/expressions')
   revalidatePath('/japanese/business/sentence-patterns')
+  revalidatePath('/japanese/business/keigo')
   return { success: true }
 }

@@ -60,6 +60,7 @@ export const categoryChildren: Record<string, {
       { href: '/japanese/business/glossary', label: 'ビジネス語彙', description: 'ビジネス・IT現場の専門用語' },
       { href: '/japanese/business/sentence-patterns', label: '文章パターン', description: '日本語の文章パターン' },
       { href: '/japanese/business/expressions', label: 'ビジネス表現', description: 'ビジネスで使える表現' },
+      { href: '/japanese/business/keigo', label: '敬語', description: '敬語の変換規則・よくある間違い' },
       { href: '/japanese/business/shared-vocab', label: 'みんなの単語帳', description: 'みんなで作る共有単語帳' },
     ],
   },
@@ -109,7 +110,7 @@ export const mainNavItems: NavItem[] = [
 ]
 
 export const adminNavItems: AdminNavItem[] = [
-  { href: '/admin', label: 'ダッシュボード', icon: LayoutDashboard, allowedRoles: ['admin'] },
+  { href: '/admin', label: 'ダッシュボード', icon: LayoutDashboard, allowedRoles: ['admin', 'mentor'] },
   { href: '/mentor', label: 'メンティ管理', icon: Users, allowedRoles: ['mentor'] },
   { href: '/admin/users', label: 'ユーザー管理', icon: Users, allowedRoles: ['admin'] },
   { href: '/admin/mentors', label: 'メンター管理', icon: UserCog, allowedRoles: ['admin'] },

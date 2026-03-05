@@ -15,7 +15,7 @@ export default async function AdminDashboardPage() {
 
   if (currentProfile?.role !== 'admin') redirect('/dashboard')
 
-  // Parallel data fetching
+  // --- Admin: full stats ---
   const fourWeeksAgo = new Date()
   fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28)
   const fourWeeksAgoISO = fourWeeksAgo.toISOString()
@@ -69,8 +69,6 @@ export default async function AdminDashboardPage() {
   const courses = coursesRes.data ?? []
 
   // --- Server-side aggregation ---
-
-  // 1. User stats
   const now = new Date()
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
   const userStats = {
@@ -83,7 +81,6 @@ export default async function AdminDashboardPage() {
     recentSignups: profiles.filter(p => new Date(p.created_at) >= sevenDaysAgo).length,
   }
 
-  // 2. Exam health
   const examHealth = {
     active: examCycles.filter(e => e.status === 'active').length,
     pending: examCycles.filter(e => e.status === 'pending').length,
@@ -94,7 +91,6 @@ export default async function AdminDashboardPage() {
     total: examCycles.length,
   }
 
-  // 3. Weekly activity (4-week buckets)
   const weeklyActivity: { week: string; quizAttempts: number; codeSubmissions: number }[] = []
   for (let i = 3; i >= 0; i--) {
     const weekStart = new Date(now)
@@ -121,7 +117,6 @@ export default async function AdminDashboardPage() {
     weeklyActivity.push({ week: label, quizAttempts: quizCount, codeSubmissions: codeCount })
   }
 
-  // 4. Content metrics
   const contentMetrics = {
     coursesTotal: courses.length,
     coursesPublished: courses.filter(c => c.is_published).length,
@@ -129,7 +124,6 @@ export default async function AdminDashboardPage() {
     glossary: glossaryRes.count ?? 0,
   }
 
-  // 5. Task overview
   const taskOverview = {
     pending: learningAssignments.filter(t => t.status === 'pending').length,
     inProgress: learningAssignments.filter(t => t.status === 'in_progress').length,
@@ -137,7 +131,6 @@ export default async function AdminDashboardPage() {
     overdue: learningAssignments.filter(t => t.status === 'overdue').length,
   }
 
-  // 6. Mentor workload
   const mentorMap = new Map<string, { name: string; count: number }>()
   for (const row of mentorMenteeData) {
     const profile = row.profiles as unknown as { full_name: string | null } | null
@@ -153,7 +146,6 @@ export default async function AdminDashboardPage() {
     .map(m => ({ mentorName: m.name, menteeCount: m.count }))
     .sort((a, b) => b.menteeCount - a.menteeCount)
 
-  // 7. Recent audit log
   const recentAuditLog = auditLogData.map(entry => {
     const profile = entry.profiles as unknown as { full_name: string | null; email: string } | null
     return {
@@ -165,7 +157,6 @@ export default async function AdminDashboardPage() {
     }
   })
 
-  // 8. Unread notifications
   const unreadNotifications = notificationsRes.count ?? 0
 
   return (

@@ -63,7 +63,7 @@ export default function ReadingPassageList({ items, level, masteredIds = [], onT
               <button
                 onClick={(e) => handleToggle(e, item.id)}
                 title={localMastered.has(item.id) ? '学習完了' : '未完了'}
-                className="shrink-0"
+                className="-m-1.5 shrink-0 p-1.5"
               >
                 {localMastered.has(item.id) ? (
                   <svg className="h-5 w-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">

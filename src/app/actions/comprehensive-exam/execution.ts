@@ -55,21 +55,24 @@ export async function startExam(examId: string) {
       }
     }
 
-    // For step 4 (dev), get user's target_coding_area
+    // For step 4 (dev) or step 5 (business-lit), get user profile info
     let targetCodingArea: string | null = null
-    if (step === 4) {
+    let isJapanese: boolean | undefined
+    if (step === 4 || step === 5) {
       const { data: profile } = await serviceClient
         .from('profiles')
-        .select('target_coding_area')
+        .select('target_coding_area, is_japanese')
         .eq('id', user.id)
         .single()
       targetCodingArea = profile?.target_coding_area ?? null
+      isJapanese = profile?.is_japanese ?? undefined
     }
 
     const questions = await fetchRandomAssessmentQuestions(
       quizIds.length === 1 ? quizIds[0] : quizIds,
       step,
-      targetCodingArea
+      targetCodingArea,
+      isJapanese
     )
 
     if (questions.length === 0) {
@@ -218,19 +221,22 @@ export async function loadExamQuestions(examId: string) {
     }
 
     let targetCodingArea: string | null = null
-    if (step === 4) {
+    let isJapanese: boolean | undefined
+    if (step === 4 || step === 5) {
       const { data: profile } = await serviceClient
         .from('profiles')
-        .select('target_coding_area')
+        .select('target_coding_area, is_japanese')
         .eq('id', user.id)
         .single()
       targetCodingArea = profile?.target_coding_area ?? null
+      isJapanese = profile?.is_japanese ?? undefined
     }
 
     const questions = await fetchRandomAssessmentQuestions(
       quizIds.length === 1 ? quizIds[0] : quizIds,
       step,
-      targetCodingArea
+      targetCodingArea,
+      isJapanese
     )
     if (questions.length === 0) return { error: '出題可能な問題がありません' }
 

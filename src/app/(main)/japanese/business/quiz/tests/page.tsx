@@ -14,12 +14,13 @@ interface Quiz {
   questions_per_attempt: number | null
 }
 
-const CATEGORY_ORDER = ['it_terminology', 'sentence_pattern', 'business_expression']
+const CATEGORY_ORDER = ['it_terminology', 'sentence_pattern', 'business_expression', 'keigo']
 
 const CATEGORY_TITLES: Record<string, string> = {
   it_terminology: 'ビジネス語彙テスト',
   sentence_pattern: '文章パターンテスト',
   business_expression: 'ビジネス表現テスト',
+  keigo: '敬語テスト',
 }
 
 export default async function BusinessQuizTestsPage({

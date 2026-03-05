@@ -48,6 +48,25 @@ export default async function FeedbackPage() {
     feedback_replies(id, user_id, content, created_at, updated_at, user:profiles!feedback_replies_user_id_fkey(full_name))
   `
 
+  // Fetch target users for feedback creation (admin/mentor only)
+  let feedbackTargetUsers: { id: string; full_name: string | null; email: string }[] = []
+  if (role === 'admin') {
+    const { data: targets } = await supabase
+      .from('profiles')
+      .select('id, full_name, email')
+      .in('role', ['mentee', 'mentor'])
+      .order('full_name')
+    feedbackTargetUsers = (targets ?? []).map(p => ({ id: p.id, full_name: p.full_name ?? null, email: p.email ?? '' }))
+  } else if (role === 'mentor' && cleanupClient) {
+    const { data: assignments } = await cleanupClient
+      .from('mentor_mentee_assignments')
+      .select('mentee:profiles!mentor_mentee_assignments_mentee_id_fkey(id, full_name, email)')
+      .eq('mentor_id', user.id)
+    feedbackTargetUsers = (assignments ?? [])
+      .map(a => a.mentee as unknown as { id: string; full_name: string | null; email: string })
+      .filter(Boolean)
+  }
+
   let feedbacks
   if (role === 'mentee') {
     // Mentee: only received feedbacks
@@ -107,6 +126,7 @@ export default async function FeedbackPage() {
         })) as FeedbackItem[]}
         currentUserId={user.id}
         userRole={role}
+        feedbackTargetUsers={feedbackTargetUsers}
       />
     </div>
   )

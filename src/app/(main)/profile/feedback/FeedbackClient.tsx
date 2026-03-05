@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import Card from '@/components/ui/Card'
-import { updateFeedback, deleteFeedback } from '@/app/actions/admin/feedback'
+import { createFeedback, updateFeedback, deleteFeedback } from '@/app/actions/admin/feedback'
 import { createFeedbackReply, updateFeedbackReply, deleteFeedbackReply, bulkDeleteFeedbacks } from '@/app/actions/feedback'
 
 const categoryLabels: Record<string, string> = {
@@ -40,16 +40,25 @@ interface FeedbackItem {
   feedback_replies: Reply[]
 }
 
+interface FeedbackTargetUser {
+  id: string
+  full_name: string | null
+  email: string
+}
+
 interface Props {
   feedbacks: FeedbackItem[]
   currentUserId: string
   userRole: string
+  feedbackTargetUsers: FeedbackTargetUser[]
 }
 
-export default function FeedbackClient({ feedbacks, currentUserId, userRole }: Props) {
+export default function FeedbackClient({ feedbacks, currentUserId, userRole, feedbackTargetUsers }: Props) {
   const canBulkDelete = userRole === 'admin'
+  const canCreate = userRole === 'admin' || userRole === 'mentor'
   const [message, setMessage] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
+  const [showCreateForm, setShowCreateForm] = useState(false)
 
   function showMessage(msg: string) {
     setMessage(msg)
@@ -65,11 +74,96 @@ export default function FeedbackClient({ feedbacks, currentUserId, userRole }: P
     })
   }
 
+  function handleCreateFeedback(formData: FormData) {
+    startTransition(async () => {
+      try {
+        const result = await createFeedback(formData)
+        if ('error' in result) showMessage(result.error ?? 'エラーが発生しました')
+        else {
+          showMessage('フィードバックが登録されました')
+          setShowCreateForm(false)
+        }
+      } catch (e) {
+        console.error('[handleCreateFeedback] Error:', e)
+        showMessage('フィードバック登録中にエラーが発生しました')
+      }
+    })
+  }
+
   return (
     <div>
       {message && (
         <div className="mb-4 rounded-xl bg-indigo-500/10 px-4 py-3 text-sm text-indigo-400 ring-1 ring-indigo-500/20">
           {message}
+        </div>
+      )}
+
+      {/* Create feedback form (admin/mentor) */}
+      {canCreate && feedbackTargetUsers.length > 0 && (
+        <div className="mb-6">
+          {!showCreateForm ? (
+            <button
+              onClick={() => setShowCreateForm(true)}
+              className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+            >
+              + フィードバック作成
+            </button>
+          ) : (
+            <Card>
+              <h3 className="mb-4 text-sm font-semibold text-zinc-900 dark:text-white">フィードバック作成</h3>
+              <form action={handleCreateFeedback} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">対象ユーザー *</label>
+                  <select
+                    name="user_id"
+                    required
+                    className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="">ユーザーを選択...</option>
+                    {feedbackTargetUsers.map(u => (
+                      <option key={u.id} value={u.id}>{u.full_name ?? u.email}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">カテゴリ</label>
+                  <select
+                    name="category"
+                    className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-gray-700 dark:text-white"
+                  >
+                    {Object.entries(categoryLabels).map(([key, label]) => (
+                      <option key={key} value={key}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">内容 *</label>
+                  <textarea
+                    name="content"
+                    required
+                    rows={3}
+                    className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={pending}
+                    className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+                  >
+                    {pending ? '登録中...' : '登録'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateForm(false)}
+                    className="rounded-xl border border-gray-200 dark:border-white/[0.08] px-4 py-2 text-sm font-medium text-zinc-400 hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              </form>
+            </Card>
+          )}
         </div>
       )}
 
@@ -100,6 +194,7 @@ export default function FeedbackClient({ feedbacks, currentUserId, userRole }: P
               key={fb.id}
               feedback={fb}
               currentUserId={currentUserId}
+              userRole={userRole}
               pending={pending}
               startTransition={startTransition}
               showMessage={showMessage}
@@ -118,12 +213,14 @@ export default function FeedbackClient({ feedbacks, currentUserId, userRole }: P
 function FeedbackCard({
   feedback,
   currentUserId,
+  userRole,
   pending,
   startTransition,
   showMessage,
 }: {
   feedback: FeedbackItem
   currentUserId: string
+  userRole: string
   pending: boolean
   startTransition: (cb: () => void) => void
   showMessage: (msg: string) => void
@@ -138,6 +235,7 @@ function FeedbackCard({
   const senderName = feedback.admin?.full_name ?? '不明'
   const receiverName = feedback.user?.full_name ?? '不明'
   const isFeedbackAuthor = feedback.admin?.id === currentUserId
+  const isAdmin = userRole === 'admin'
   const replyCount = feedback.feedback_replies?.length ?? 0
 
   function handleUpdateFeedback() {
@@ -206,14 +304,16 @@ function FeedbackCard({
             {new Date(feedback.created_at).toLocaleDateString('ja-JP')}
           </span>
         </div>
-        {isFeedbackAuthor && (
+        {(isFeedbackAuthor || isAdmin) && (
           <div className="flex gap-1 shrink-0">
-            <button
-              onClick={() => { setEditingFeedback(true); setEditFeedbackText(feedback.content) }}
-              className="rounded-lg px-2 py-1 text-xs text-zinc-400 hover:bg-white/5 dark:hover:bg-white/5 hover:bg-zinc-50 transition-colors"
-            >
-              編集
-            </button>
+            {isFeedbackAuthor && (
+              <button
+                onClick={() => { setEditingFeedback(true); setEditFeedbackText(feedback.content) }}
+                className="rounded-lg px-2 py-1 text-xs text-zinc-400 hover:bg-white/5 dark:hover:bg-white/5 hover:bg-zinc-50 transition-colors"
+              >
+                編集
+              </button>
+            )}
             <button
               onClick={handleDeleteFeedback}
               disabled={pending}

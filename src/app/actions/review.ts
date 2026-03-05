@@ -177,6 +177,87 @@ export async function getCompExamReview(examId: string): Promise<{ data?: Review
 
 const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000
 
+export async function getMentorQuizAttemptReview(attemptId: string): Promise<{ data?: ReviewData; error?: string }> {
+  const auth = await requireAdminOrMentor()
+  if ('error' in auth) return { error: auth.error }
+  const { supabase, user, profile } = auth
+
+  const serviceClient = createServiceRoleClient()
+  const queryClient = serviceClient ?? supabase
+
+  // Fetch the quiz attempt (no user_id filter — mentor views mentee's attempt)
+  const { data: attempt } = await queryClient
+    .from('quiz_attempts')
+    .select('id, quiz_id, score, completed_at, user_id, quizzes(title)')
+    .eq('id', attemptId)
+    .single()
+
+  if (!attempt) return { error: '試験結果が見つかりません' }
+  if (!attempt.completed_at) return { error: '未完了の試験です' }
+
+  // Authorization: admin bypasses, mentor must be assigned to this mentee
+  if (profile.role !== 'admin') {
+    const { data: assignment } = await supabase
+      .from('mentor_mentee_assignments')
+      .select('id')
+      .eq('mentor_id', user.id)
+      .eq('mentee_id', attempt.user_id)
+      .single()
+
+    if (!assignment) return { error: '担当メンティではありません' }
+  }
+
+  // Fetch answers
+  const { data: answers } = await queryClient
+    .from('quiz_answers')
+    .select('question_id, selected_option_id, is_correct, sort_order')
+    .eq('attempt_id', attemptId)
+    .order('sort_order', { ascending: true, nullsFirst: false })
+
+  if (!answers || answers.length === 0) return { error: '回答データが見つかりません' }
+
+  const questionIds = answers.map(a => a.question_id)
+  const { data: questions } = await queryClient
+    .from('quiz_questions')
+    .select('id, question_text, quiz_question_options(id, option_text, is_correct, sort_order)')
+    .in('id', questionIds)
+
+  if (!questions) return { error: '問題データが見つかりません' }
+
+  const qMap = new Map(questions.map(q => [q.id, q]))
+  const orderedQuestions = answers.map(a => qMap.get(a.question_id)).filter(Boolean) as typeof questions
+  const answerMap = new Map(answers.map(a => [a.question_id, a]))
+
+  const reviewQuestions: ReviewQuestion[] = orderedQuestions.map(q => {
+    const answer = answerMap.get(q.id)
+    const options = (q.quiz_question_options as { id: string; option_text: string; is_correct: boolean; sort_order: number }[])
+      .sort((a, b) => a.sort_order - b.sort_order)
+    const correctOption = options.find(o => o.is_correct)
+
+    return {
+      questionId: q.id,
+      questionText: q.question_text,
+      options: options.map(o => ({ id: o.id, option_text: o.option_text })),
+      selectedOptionId: answer?.selected_option_id ?? '',
+      correctOptionId: correctOption?.id ?? '',
+      isCorrect: answer?.is_correct ?? false,
+    }
+  })
+
+  const quizzesRaw = attempt.quizzes
+  const quizObj = Array.isArray(quizzesRaw) ? quizzesRaw[0] : quizzesRaw
+  const quizTitle = (quizObj as { title: string } | null)?.title ?? 'クイズ'
+
+  return {
+    data: {
+      questions: reviewQuestions,
+      title: quizTitle,
+      score: attempt.score,
+      completedAt: attempt.completed_at,
+    },
+  }
+}
+
 export async function getMentorCompExamReview(examId: string): Promise<{ data?: ReviewData; error?: string }> {
   const auth = await requireAdminOrMentor()
   if ('error' in auth) return { error: auth.error }

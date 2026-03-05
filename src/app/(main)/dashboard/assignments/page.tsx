@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Card from '@/components/ui/Card'
 import { ASSIGNMENT_CATEGORIES, getCategoryLabel, getSubcategoryLabel, getContentUrl, getReadingTotalCount, getContentLevelLabel, getQuizUrl } from '@/lib/assignment-categories'
+import { resolveQuizIdsForAssignment } from '@/app/actions/learning-assignments'
 import { AlertTriangle, ArrowLeft, BookOpen, CheckCircle2, Clock, GraduationCap, Lock } from 'lucide-react'
 import OverdueReasonForm from './OverdueReasonForm'
 import { detectAndMarkOverdue } from '@/app/actions/learning-assignments'
@@ -40,91 +41,10 @@ export default async function AssignmentsPage() {
     .eq('assigned_to', user.id)
     .order('created_at', { ascending: false })
 
-  // Resolve quizzes for assignments with empty required_quiz_ids (backfill)
-  // Also re-resolve seikatsu assignments to ensure all quiz types are included
+  // Resolve quizzes dynamically for all assignments (always use latest quiz list)
   const resolvedQuizIdsMap: Record<string, string[]> = {}
-  const emptyAssignments = (assignments ?? []).filter(a =>
-    (a.required_quiz_ids ?? []).length === 0 || a.category === 'seikatsu' || a.category === 'business-jp'
-  )
-
-  for (const a of emptyAssignments) {
-    const catConfig = ASSIGNMENT_CATEGORIES[a.category]
-    if (!catConfig) continue
-
-    const isLevelOnly = catConfig.levelOnly === true
-    let resolvedIds: string[] = []
-
-    if (isLevelOnly && catConfig.quizTypes) {
-      // Fetch pool quizzes only (4 per level: 語彙/文法/読解/聴解)
-      let poolQuery = supabase
-        .from('quizzes')
-        .select('id')
-        .in('quiz_type', catConfig.quizTypes)
-        .eq('is_pool', true)
-
-      if (a.content_level) {
-        poolQuery = poolQuery.ilike('title', `${a.content_level}%`)
-      }
-
-      const { data: poolQuizzes } = await poolQuery.order('created_at')
-      resolvedIds = (poolQuizzes ?? []).map(q => q.id)
-    } else {
-      const subcatConfig = catConfig.subcategories[a.subcategory]
-      if (!subcatConfig) continue
-
-      if (subcatConfig.courseSubcategory && a.content_level) {
-        const { data: courses } = await supabase
-          .from('courses')
-          .select('id')
-          .eq('subcategory', subcatConfig.courseSubcategory)
-          .eq('difficulty', a.content_level)
-          .eq('is_published', true)
-
-        if (courses?.length) {
-          const courseIds = courses.map(c => c.id)
-          const { data: lessons } = await supabase
-            .from('lessons')
-            .select('id')
-            .in('course_id', courseIds)
-
-          if (lessons?.length) {
-            const lessonIds = lessons.map(l => l.id)
-            const { data: quizzes } = await supabase
-              .from('quizzes')
-              .select('id')
-              .in('lesson_id', lessonIds)
-              .order('created_at')
-
-            resolvedIds = (quizzes ?? []).map(q => q.id)
-          }
-        }
-      } else if (subcatConfig.quizType) {
-        let query = supabase
-          .from('quizzes')
-          .select('id')
-          .eq('quiz_type', subcatConfig.quizType)
-
-        // For business-jp, only include pool quizzes (comprehension tests)
-        if (a.category === 'business-jp') {
-          query = query.eq('is_pool', true)
-        }
-
-        if (a.content_level) {
-          query = query.eq('content_level', a.content_level)
-        }
-
-        if (subcatConfig.titlePatterns?.length) {
-          const orFilter = subcatConfig.titlePatterns
-            .map(p => `title.ilike.${p}`)
-            .join(',')
-          query = query.or(orFilter)
-        }
-
-        const { data: quizzes } = await query.order('created_at')
-        resolvedIds = (quizzes ?? []).map(q => q.id)
-      }
-    }
-
+  for (const a of assignments ?? []) {
+    const resolvedIds = await resolveQuizIdsForAssignment(a.category, a.subcategory, a.content_level, supabase)
     if (resolvedIds.length > 0) {
       const existingIds = a.required_quiz_ids ?? []
       const needsUpdate = resolvedIds.length !== existingIds.length
@@ -263,6 +183,7 @@ export default async function AssignmentsPage() {
       glossary: ['business', 'it', 'dev'],
       'sentence-patterns': ['sentence_pattern'],
       expressions: ['expression'],
+      keigo: ['keigo'],
     }
 
     const neededSubcats = [...new Set(bizJpAssignments.map(a => a.subcategory))]

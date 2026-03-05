@@ -13,6 +13,8 @@ interface LevelProgress {
   readingTotal: number
   listeningMastered: number
   listeningTotal: number
+  kanjiMastered: number
+  kanjiTotal: number
 }
 
 interface Props {
@@ -42,9 +44,9 @@ const LEVEL_BORDERS: Record<string, string> = {
 }
 
 function getOverallProgress(p: LevelProgress): number {
-  const total = p.vocabTotal + p.grammarTotal + p.readingTotal + p.listeningTotal
+  const total = p.vocabTotal + p.grammarTotal + p.readingTotal + p.listeningTotal + p.kanjiTotal
   if (total === 0) return 0
-  const mastered = p.vocabMastered + p.grammarMastered + p.readingMastered + p.listeningMastered
+  const mastered = p.vocabMastered + p.grammarMastered + p.readingMastered + p.listeningMastered + p.kanjiMastered
   return Math.round((mastered / total) * 100)
 }
 
@@ -137,11 +139,12 @@ export default function JlptTestBlock({ levelProgress, bypassLock = false, examL
               </div>
 
               {/* Category breakdown */}
-              <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400 sm:grid-cols-4">
+              <div className="mt-3 grid grid-cols-3 gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400 sm:grid-cols-5">
                 <span>語彙 {progress.vocabMastered}/{progress.vocabTotal}</span>
                 <span>文法 {progress.grammarMastered}/{progress.grammarTotal}</span>
                 <span>読解 {progress.readingMastered}/{progress.readingTotal}</span>
                 <span>聴解 {progress.listeningMastered}/{progress.listeningTotal}</span>
+                <span>漢字 {progress.kanjiMastered}/{progress.kanjiTotal}</span>
               </div>
 
               {/* Action */}

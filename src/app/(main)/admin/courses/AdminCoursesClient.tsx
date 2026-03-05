@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState, useTransition, useEffect, useCallback } from 'react'
+import React, { useState, useTransition, useEffect, useCallback, useRef } from 'react'
 import Badge from '@/components/ui/Badge'
-import { createQuestion, updateQuestion, deleteQuestion, toggleQuestionPublished } from '@/app/actions/admin/questions'
+import { createQuestion, updateQuestion, deleteQuestion, toggleQuestionPublished, fetchQuestionsForQuizIds } from '@/app/actions/admin/questions'
 import { resolveQuestionClaims } from '@/app/actions/claims'
 import { useRouter } from 'next/navigation'
 
@@ -45,6 +45,8 @@ interface AxisConfig {
   label: string
   assessmentQuizId: string
   practiceTypes: PracticeType[]
+  assessmentCount: number
+  practiceCount: number
   totalCount: number
 }
 
@@ -56,12 +58,15 @@ interface OptionFormData {
 const categoryLabels: Record<string, string> = {
   vocab: '語彙',
   vocabulary: '語彙',
+  kanji: '漢字',
+  jlpt_kanji: '漢字',
   grammar: '文法',
   reading: '読解',
   listening: '聴解',
   fill_blank: '穴埋め',
   sentence_pattern: '文章パターン',
   business_expression: 'ビジネス表現',
+  keigo: '敬語',
   algorithm: 'アルゴリズム',
   data_structure: 'データ構造',
   os: 'OS',
@@ -117,10 +122,8 @@ const TRADITIONAL_DIFFICULTY_OPTIONS = [
 ]
 
 export default function AdminCoursesClient({
-  questions,
   axes,
 }: {
-  questions: QuestionData[]
   axes: AxisConfig[]
 }) {
   const router = useRouter()
@@ -135,14 +138,50 @@ export default function AdminCoursesClient({
     claimsOnly: false,
   })
 
+  // ── On-demand question loading ──
+  const [questions, setQuestions] = useState<QuestionData[]>([])
+  const [loading, setLoading] = useState(false)
+  // Track what we've loaded: "step:section"
+  const loadedRef = useRef<string | null>(null)
+
+  const currentAxis = axes.find(a => a.step === selectedStep)!
+  const hasPractice = currentAxis.practiceTypes.length > 0
+
+  // Load questions when step/section changes
+  useEffect(() => {
+    const key = `${selectedStep}:${activeSection}`
+    if (loadedRef.current === key) return
+
+    const quizIds = activeSection === 'assessment'
+      ? [currentAxis.assessmentQuizId]
+      : currentAxis.practiceTypes.flatMap(pt => pt.quizIds)
+
+    if (quizIds.length === 0) {
+      setQuestions([])
+      loadedRef.current = key
+      return
+    }
+
+    setLoading(true)
+    fetchQuestionsForQuizIds(quizIds).then(result => {
+      setQuestions(result.questions ?? [])
+      loadedRef.current = key
+      setLoading(false)
+    })
+  }, [selectedStep, activeSection, currentAxis])
+
+  // Invalidate cache on mutation (force reload)
+  function invalidateCache() {
+    loadedRef.current = null
+  }
+
   // Modal states
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingQuestion, setEditingQuestion] = useState<QuestionData | null>(null)
   const [claimDetailId, setClaimDetailId] = useState<string | null>(null)
-  // Which section the form is for: 'assessment' or 'practice'
   const [formSection, setFormSection] = useState<'assessment' | 'practice'>('assessment')
 
-  // Form state for add/edit
+  // Form state
   const [formText, setFormText] = useState('')
   const [formDifficulty, setFormDifficulty] = useState('中級')
   const [formCategory, setFormCategory] = useState('')
@@ -159,22 +198,10 @@ export default function AdminCoursesClient({
     setTimeout(() => setMessage(null), 3000)
   }
 
-  const currentAxis = axes.find(a => a.step === selectedStep)!
-  const hasPractice = currentAxis.practiceTypes.length > 0
-
-  // Determine difficulty options based on context
-  function getDifficultyOptions(section: 'assessment' | 'practice'): { value: string; label: string }[] {
-    // Step 1 (JLPT) uses N-levels for both assessment and practice
+  function getDifficultyOptions(): { value: string; label: string }[] {
     if (currentAxis.step === 1) return N_LEVEL_OPTIONS
     return TRADITIONAL_DIFFICULTY_OPTIONS
   }
-
-  // Assessment questions
-  const assessmentQuestions = questions.filter(q => q.quiz_id === currentAxis.assessmentQuizId)
-
-  // Practice questions grouped by quiz type
-  const practiceQuizIdSet = new Set(currentAxis.practiceTypes.flatMap(pt => pt.quizIds))
-  const allPracticeQuestions = questions.filter(q => practiceQuizIdSet.has(q.quiz_id))
 
   // Apply filters
   function applyFilters(qs: QuestionData[]): QuestionData[] {
@@ -200,11 +227,8 @@ export default function AdminCoursesClient({
     return filtered
   }
 
-  const filteredAssessment = applyFilters(assessmentQuestions)
-  const filteredPractice = applyFilters(allPracticeQuestions)
-
-  // Difficulty options for the active section's filter dropdown
-  const activeDifficultyOptions = getDifficultyOptions(activeSection)
+  const filteredQuestions = applyFilters(questions)
+  const activeDifficultyOptions = getDifficultyOptions()
 
   // Quiz type → default question_category mapping
   const quizTypeToCategoryMap: Record<string, string> = {
@@ -212,16 +236,15 @@ export default function AdminCoursesClient({
     jlpt_grammar: 'grammar',
     jlpt_reading: 'reading',
     jlpt_listening: 'listening',
+    jlpt_kanji: 'jlpt_kanji',
   }
 
-  // Reverse map: category → quizType (for deriving quiz ID from category)
   const categoryToQuizTypeMap: Record<string, string> = {}
   currentAxis.practiceTypes.forEach(pt => {
     const cat = quizTypeToCategoryMap[pt.quizType]
     if (cat) categoryToQuizTypeMap[cat] = pt.quizType
   })
 
-  // Practice categories derived from practice types (for the form dropdown)
   const practiceCategories = currentAxis.practiceTypes
     .map(pt => ({ value: quizTypeToCategoryMap[pt.quizType] ?? pt.quizType, label: pt.label }))
     .filter(c => c.value)
@@ -243,7 +266,6 @@ export default function AdminCoursesClient({
   }
 
   function openEditForm(q: QuestionData) {
-    // Determine section from quiz_id
     const isAssessment = q.quiz_id === currentAxis.assessmentQuizId
     setFormSection(isAssessment ? 'assessment' : 'practice')
     setFormText(q.question_text)
@@ -269,7 +291,6 @@ export default function AdminCoursesClient({
     setEditingQuestion(null)
   }, [])
 
-  // ESC key handler for modal
   useEffect(() => {
     if (!showAddForm) return
     function handleKeyDown(e: KeyboardEvent) {
@@ -279,7 +300,6 @@ export default function AdminCoursesClient({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [showAddForm, closeForm])
 
-  // ESC key handler for claim detail modal
   useEffect(() => {
     if (!claimDetailId) return
     function handleKeyDown(e: KeyboardEvent) {
@@ -301,7 +321,6 @@ export default function AdminCoursesClient({
     })
   }
 
-  // Quiz ID for creating new questions (derive from category for practice)
   function getCreateQuizId(): string | undefined {
     if (formSection === 'assessment') return currentAxis.assessmentQuizId
     const quizType = categoryToQuizTypeMap[formCategory]
@@ -340,6 +359,7 @@ export default function AdminCoursesClient({
       else {
         showMsg(editingQuestion ? '問題を更新しました' : '問題を追加しました')
         closeForm()
+        invalidateCache()
       }
     })
   }
@@ -348,7 +368,10 @@ export default function AdminCoursesClient({
     startTransition(async () => {
       const result = await toggleQuestionPublished(q.id, !q.is_published)
       if (result.error) showMsg(result.error)
-      else showMsg(q.is_published ? '非公開にしました' : '公開しました')
+      else {
+        showMsg(q.is_published ? '非公開にしました' : '公開しました')
+        invalidateCache()
+      }
     })
   }
 
@@ -357,7 +380,10 @@ export default function AdminCoursesClient({
     startTransition(async () => {
       const result = await deleteQuestion(q.id)
       if (result.error) showMsg(result.error)
-      else showMsg('問題を削除しました')
+      else {
+        showMsg('問題を削除しました')
+        invalidateCache()
+      }
     })
   }
 
@@ -369,16 +395,14 @@ export default function AdminCoursesClient({
       } else {
         showMsg('クレームを全件解決しました')
         setClaimDetailId(null)
+        invalidateCache()
         router.refresh()
       }
     })
   }
 
-  // Unique categories for current section
-  const currentSectionQuestions = formSection === 'assessment' ? assessmentQuestions : allPracticeQuestions
-  const uniqueCategories = [...new Set(currentSectionQuestions.map(q => q.question_category).filter(Boolean) as string[])]
-
-  const formDifficultyOptions = getDifficultyOptions(formSection)
+  const uniqueCategories = [...new Set(questions.map(q => q.question_category).filter(Boolean) as string[])]
+  const formDifficultyOptions = getDifficultyOptions()
 
   // Render question row
   function renderQuestionRow(q: QuestionData) {
@@ -443,16 +467,8 @@ export default function AdminCoursesClient({
     )
   }
 
-  // Unique categories for the current section's filter dropdown
-  function getSectionCategories(section: 'assessment' | 'practice'): string[] {
-    const qs = section === 'assessment' ? assessmentQuestions : allPracticeQuestions
-    return [...new Set(qs.map(q => q.question_category).filter(Boolean) as string[])]
-  }
-
-  // Render toolbar for a section
+  // Render toolbar
   function renderToolbar(section: 'assessment' | 'practice') {
-    const sectionCategories = getSectionCategories(section)
-
     return (
       <div className="flex flex-wrap items-center gap-3">
         <button
@@ -474,14 +490,14 @@ export default function AdminCoursesClient({
           <option value="__null__">未設定</option>
         </select>
 
-        {sectionCategories.length > 0 && (
+        {uniqueCategories.length > 0 && (
           <select
             value={filters.category}
             onChange={e => setFilters(f => ({ ...f, category: e.target.value }))}
             className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
           >
             <option value="">全カテゴリ</option>
-            {sectionCategories.map(cat => (
+            {uniqueCategories.map(cat => (
               <option key={cat} value={cat}>{categoryLabels[cat] ?? cat}</option>
             ))}
           </select>
@@ -506,11 +522,13 @@ export default function AdminCoursesClient({
           />
           クレームあり
         </label>
+        <span className="text-sm text-gray-500 dark:text-gray-400">
+          {filteredQuestions.length}件 表示中
+        </span>
       </div>
     )
   }
 
-  // Render table header
   function renderTableHead() {
     return (
       <thead className="bg-gray-50 dark:bg-gray-700">
@@ -523,6 +541,71 @@ export default function AdminCoursesClient({
           <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400">操作</th>
         </tr>
       </thead>
+    )
+  }
+
+  function renderLoadingState() {
+    return (
+      <div className="py-12 text-center">
+        <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">読み込み中...</p>
+      </div>
+    )
+  }
+
+  function renderQuestionTable() {
+    if (loading) return renderLoadingState()
+
+    if (activeSection === 'practice' && hasPractice) {
+      // Group by practice type with separator rows
+      return (
+        <div className="mt-3 rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              {renderTableHead()}
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                {currentAxis.practiceTypes.map(pt => {
+                  const ptQuizIdSet = new Set(pt.quizIds)
+                  const ptQuestions = filteredQuestions.filter(q => ptQuizIdSet.has(q.quiz_id))
+                  const allPtQuestions = questions.filter(q => ptQuizIdSet.has(q.quiz_id))
+                  return (
+                    <React.Fragment key={pt.quizType}>
+                      <tr>
+                        <td
+                          colSpan={6}
+                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700"
+                        >
+                          {pt.label} ({allPtQuestions.length}問)
+                        </td>
+                      </tr>
+                      {ptQuestions.map(q => renderQuestionRow(q))}
+                    </React.Fragment>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+          {filteredQuestions.length === 0 && (
+            <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">問題がありません</div>
+          )}
+        </div>
+      )
+    }
+
+    return (
+      <div className="mt-3 rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            {renderTableHead()}
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              {filteredQuestions.map(q => renderQuestionRow(q))}
+            </tbody>
+          </table>
+        </div>
+        {filteredQuestions.length === 0 && !loading && (
+          <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">問題がありません</div>
+        )}
+      </div>
     )
   }
 
@@ -562,7 +645,7 @@ export default function AdminCoursesClient({
         ))}
       </div>
 
-      {/* ── Section Toggle Tabs (Step 1, 2 only) ── */}
+      {/* Section Toggle Tabs */}
       {hasPractice && (
         <div className="mt-6 flex border-b border-gray-200 dark:border-gray-700">
           <button
@@ -579,7 +662,7 @@ export default function AdminCoursesClient({
                 ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400'
                 : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
             }`}>
-              {assessmentQuestions.length}
+              {currentAxis.assessmentCount}
             </span>
           </button>
           <button
@@ -596,81 +679,29 @@ export default function AdminCoursesClient({
                 ? 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400'
                 : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
             }`}>
-              {allPracticeQuestions.length}
+              {currentAxis.practiceCount}
             </span>
           </button>
         </div>
       )}
 
-      {/* ── Assessment Section ── */}
-      {activeSection === 'assessment' && (
-        <div className={hasPractice ? 'mt-4' : 'mt-6'}>
-          {!hasPractice && (
-            <h2 className="flex items-center gap-2 text-base font-semibold text-gray-900 dark:text-white">
-              総合試験
-              <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400">
-                {assessmentQuestions.length}問
-              </span>
-            </h2>
-          )}
+      {/* Content */}
+      <div className={hasPractice ? 'mt-4' : 'mt-6'}>
+        {!hasPractice && (
+          <h2 className="flex items-center gap-2 text-base font-semibold text-gray-900 dark:text-white">
+            総合試験
+            <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400">
+              {currentAxis.assessmentCount}問
+            </span>
+          </h2>
+        )}
 
-          <div className={hasPractice ? '' : 'mt-3'}>
-            {renderToolbar('assessment')}
-          </div>
-
-          <div className="mt-3 rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                {renderTableHead()}
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                  {filteredAssessment.map(q => renderQuestionRow(q))}
-                </tbody>
-              </table>
-            </div>
-            {filteredAssessment.length === 0 && (
-              <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">問題がありません</div>
-            )}
-          </div>
+        <div className={hasPractice ? '' : 'mt-3'}>
+          {renderToolbar(activeSection)}
         </div>
-      )}
 
-      {/* ── Practice Section ── */}
-      {hasPractice && activeSection === 'practice' && (
-        <div className="mt-4">
-          {renderToolbar('practice')}
-
-          <div className="mt-3 rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                {renderTableHead()}
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                  {currentAxis.practiceTypes.map(pt => {
-                    const ptQuizIdSet = new Set(pt.quizIds)
-                    const ptQuestions = filteredPractice.filter(q => ptQuizIdSet.has(q.quiz_id))
-                    return (
-                      <React.Fragment key={pt.quizType}>
-                        {/* Category separator row */}
-                        <tr>
-                          <td
-                            colSpan={6}
-                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700"
-                          >
-                            {pt.label} ({questions.filter(q => ptQuizIdSet.has(q.quiz_id)).length}問)
-                          </td>
-                        </tr>
-                        {ptQuestions.map(q => renderQuestionRow(q))}
-                      </React.Fragment>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-            {filteredPractice.length === 0 && (
-              <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">問題がありません</div>
-            )}
-          </div>
-        </div>
-      )}
+        {renderQuestionTable()}
+      </div>
 
       {/* Claim Detail Modal */}
       {claimDetailId && (() => {
@@ -728,7 +759,7 @@ export default function AdminCoursesClient({
         )
       })()}
 
-      {/* ── Edit/Add Modal Overlay ── */}
+      {/* Edit/Add Modal */}
       {showAddForm && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"

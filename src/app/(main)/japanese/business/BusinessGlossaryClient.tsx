@@ -46,21 +46,21 @@ const GLOSSARY_CATEGORY_OPTIONS = [
 ]
 
 const EXPRESSION_SUBCATEGORY_OPTIONS = [
-  { key: 'request', label: '依頼' },
-  { key: 'report', label: '報告' },
-  { key: 'confirm', label: '確認' },
-  { key: 'apology', label: '謝罪' },
-  { key: 'greeting', label: '挨拶' },
-  { key: 'interview', label: '面接' },
-  { key: 'phone', label: '電話' },
+  { key: 'request', label: '依頼・確認' },
+  { key: 'report', label: '報告・連絡' },
+  { key: 'manner', label: '挨拶・応対' },
 ]
 
 const SENTENCE_PATTERN_SUBCATEGORY_OPTIONS = [
-  { key: 'email', label: 'ビジネスメール' },
-  { key: 'horenso', label: '報連相' },
-  { key: 'meeting', label: '会議' },
-  { key: 'document', label: 'ドキュメント' },
-  { key: 'daily', label: '日常業務' },
+  { key: 'request', label: '依頼・調整' },
+  { key: 'report', label: '報告・共有' },
+  { key: 'response', label: '対応・応答' },
+]
+
+const KEIGO_SUBCATEGORY_OPTIONS = [
+  { key: 'rule', label: '変換規則' },
+  { key: 'mistake', label: 'よくある間違い' },
+  { key: 'uchi_soto', label: 'ウチ・ソト' },
 ]
 
 interface Props {
@@ -99,14 +99,17 @@ export default function BusinessGlossaryClient({
 
   const isGlossaryPage = basePath?.includes('glossary') && !basePath?.includes('expressions') && !basePath?.includes('sentence-patterns')
   const isExpressionsPage = basePath?.includes('expressions')
+  const isKeigoPage = basePath?.includes('keigo')
 
   function getDefaultAddForm(): AddFormState {
     if (isGlossaryPage) {
       return { term_ja: '', reading: '', term_ko: '', term_en: '', category: 'business', subcategory: '', description: '', example_sentence: '' }
     } else if (isExpressionsPage) {
       return { term_ja: '', reading: '', term_ko: '', term_en: '', category: 'expression', subcategory: 'request', description: '', example_sentence: '' }
+    } else if (isKeigoPage) {
+      return { term_ja: '', reading: '', term_ko: '', term_en: '', category: 'keigo', subcategory: 'rule', description: '', example_sentence: '' }
     } else {
-      return { term_ja: '', reading: '', term_ko: '', term_en: '', category: 'sentence_pattern', subcategory: 'email', description: '', example_sentence: '' }
+      return { term_ja: '', reading: '', term_ko: '', term_en: '', category: 'sentence_pattern', subcategory: 'request', description: '', example_sentence: '' }
     }
   }
 
@@ -157,6 +160,14 @@ export default function BusinessGlossaryClient({
     if (basePath.includes('expressions')) {
       return generateGlossaryQuiz({
         category: 'expression',
+        subcategory: activeCategory || undefined,
+        rangeStart: start,
+        rangeEnd: end,
+        questionCount: count,
+      })
+    } else if (basePath.includes('keigo')) {
+      return generateGlossaryQuiz({
+        category: 'keigo',
         subcategory: activeCategory || undefined,
         rangeStart: start,
         rangeEnd: end,
@@ -300,7 +311,7 @@ export default function BusinessGlossaryClient({
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">サブカテゴリ</label>
                 <select value={addForm.subcategory} onChange={e => setAddForm({ ...addForm, subcategory: e.target.value })}
                   className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white">
-                  {(isExpressionsPage ? EXPRESSION_SUBCATEGORY_OPTIONS : SENTENCE_PATTERN_SUBCATEGORY_OPTIONS).map(c => (
+                  {(isKeigoPage ? KEIGO_SUBCATEGORY_OPTIONS : isExpressionsPage ? EXPRESSION_SUBCATEGORY_OPTIONS : SENTENCE_PATTERN_SUBCATEGORY_OPTIONS).map(c => (
                     <option key={c.key} value={c.key}>{c.label}</option>
                   ))}
                 </select>

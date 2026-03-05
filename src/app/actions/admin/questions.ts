@@ -154,6 +154,97 @@ export async function deleteQuestion(questionId: string) {
   return { success: true }
 }
 
+// ── On-demand question fetching for admin content management ──
+
+interface QuestionResult {
+  id: string
+  quiz_id: string
+  question_text: string
+  question_type: string
+  difficulty: string | null
+  question_category: string | null
+  explanation: string | null
+  is_published: boolean
+  sort_order: number
+  options: { id: string; option_text: string; is_correct: boolean; sort_order: number }[]
+  claim_count: number
+  claim_details: { userName: string; reason: string | null; createdAt: string }[]
+}
+
+/**
+ * Fetch questions for a specific set of quiz IDs (on-demand).
+ * Used by admin content management to avoid loading all questions at once.
+ */
+export async function fetchQuestionsForQuizIds(quizIds: string[]): Promise<{ questions: QuestionResult[]; error?: string }> {
+  const auth = await requireAdminOrTechMentor()
+  if ('error' in auth) return { questions: [], error: auth.error }
+
+  const serviceClient = createServiceRoleClient()
+  if (!serviceClient) return { questions: [], error: ERR.SERVICE_KEY_MISSING }
+
+  // Fetch questions in batches of 1 quiz ID at a time
+  // Supabase counts joined rows toward the response limit (~1000 rows),
+  // so a quiz with 250 questions × 4 options = 1000 rows already hits the cap.
+  type QRow = {
+    id: string; quiz_id: string; question_text: string; question_type: string;
+    difficulty: string | null; question_category: string | null; explanation: string | null;
+    is_published: boolean; sort_order: number;
+    quiz_question_options: { id: string; option_text: string; is_correct: boolean; sort_order: number }[]
+  }
+  let allQuestions: QRow[] = []
+  for (const qid of quizIds) {
+    const { data } = await serviceClient
+      .from('quiz_questions')
+      .select('id, quiz_id, question_text, question_type, difficulty, question_category, explanation, is_published, sort_order, quiz_question_options(id, option_text, is_correct, sort_order)')
+      .eq('quiz_id', qid)
+      .order('sort_order')
+    if (data) allQuestions = [...allQuestions, ...(data as unknown as QRow[])]
+  }
+
+  // Fetch claims for these questions
+  const questionIds = allQuestions.map(q => q.id)
+  type ClaimRow = { question_id: string; claim_reason: string | null; profiles: { full_name: string | null } | null; created_at: string }
+  let claimsData: ClaimRow[] = []
+  const CLAIM_BATCH = 100
+  for (let i = 0; i < questionIds.length; i += CLAIM_BATCH) {
+    const batch = questionIds.slice(i, i + CLAIM_BATCH)
+    const { data } = await serviceClient
+      .from('question_claims')
+      .select('question_id, claim_reason, profiles:user_id(full_name), created_at')
+      .in('question_id', batch)
+    if (data) claimsData = [...claimsData, ...(data as unknown as ClaimRow[])]
+  }
+
+  // Aggregate claims
+  const claimMap: Record<string, { count: number; details: { userName: string; reason: string | null; createdAt: string }[] }> = {}
+  for (const c of claimsData) {
+    if (!claimMap[c.question_id]) claimMap[c.question_id] = { count: 0, details: [] }
+    claimMap[c.question_id].count++
+    claimMap[c.question_id].details.push({
+      userName: (c.profiles as { full_name: string | null } | null)?.full_name ?? '不明',
+      reason: c.claim_reason,
+      createdAt: c.created_at,
+    })
+  }
+
+  const questions: QuestionResult[] = allQuestions.map(q => ({
+    id: q.id,
+    quiz_id: q.quiz_id,
+    question_text: q.question_text,
+    question_type: q.question_type,
+    difficulty: q.difficulty,
+    question_category: q.question_category,
+    explanation: q.explanation,
+    is_published: q.is_published,
+    sort_order: q.sort_order,
+    options: (q.quiz_question_options ?? []).sort((a, b) => a.sort_order - b.sort_order),
+    claim_count: claimMap[q.id]?.count ?? 0,
+    claim_details: claimMap[q.id]?.details ?? [],
+  }))
+
+  return { questions }
+}
+
 export async function toggleQuestionPublished(questionId: string, isPublished: boolean) {
   const auth = await requireAdminOrTechMentor()
   if ('error' in auth) return { error: auth.error } as const

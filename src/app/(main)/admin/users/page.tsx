@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import Link from 'next/link'
 import Card from '@/components/ui/Card'
 import AdminUsersClient from './AdminUsersClient'
 
@@ -31,8 +32,18 @@ export default async function AdminUsersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ユーザー管理</h1>
-      <p className="mt-1 text-gray-500 dark:text-gray-400">アカウント作成及び役割管理</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ユーザー管理</h1>
+          <p className="mt-1 text-gray-500 dark:text-gray-400">アカウント作成及び役割管理</p>
+        </div>
+        <Link
+          href="/admin/mentors"
+          className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-colors"
+        >
+          メンター管理
+        </Link>
+      </div>
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Card>

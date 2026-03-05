@@ -225,7 +225,8 @@ async function fetchStep2BusinessStyle(quizIds: string | string[]): Promise<Ques
 export async function fetchRandomAssessmentQuestions(
   quizIds: string | string[],
   step: number,
-  targetCodingArea?: string | null
+  targetCodingArea?: string | null,
+  isJapanese?: boolean
 ): Promise<QuestionWithOptions[]> {
   if (step === 1) {
     // 生活日本語: JLPT-style (grammar 30 + reading 15 + listening 15 = 60)
@@ -247,13 +248,11 @@ export async function fetchRandomAssessmentQuestions(
   }
 
   if (step === 5) {
-    // ビジネスリテラシー: 4 categories weighted selection (30 total)
-    const weights: Record<string, number> = {
-      business_manner: 8,
-      communication: 8,
-      cross_culture: 7,
-      security: 7,
-    }
+    // ビジネスリテラシー: weighted category selection (30 total)
+    // Japanese users: exclude cross_culture (한국↔일본 문화차이 → 일본인에게 불필요)
+    const weights: Record<string, number> = isJapanese
+      ? { business_manner: 10, communication: 10, security: 10 }
+      : { business_manner: 8, communication: 8, cross_culture: 7, security: 7 }
     const result = await fetchRandomByWeightedCategory(quizIds, weights)
     // Fallback to difficulty-based if categories not yet tagged
     if (result.length > 0) return result
