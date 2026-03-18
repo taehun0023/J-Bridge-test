@@ -139,10 +139,11 @@ export function getQuizUrl(
       return `/cs/quiz/${quizId}`
     case 'core_programming':
     case 'framework':
+      // Pool quizzes go to /dev/quiz/, course quizzes go to course lesson
       if (courseId && lessonId) {
         return `/courses/${courseId}/lessons/${lessonId}/quiz/${quizId}`
       }
-      return '/dev'
+      return `/dev/quiz/${quizId}`
     case 'attitude_culture':
       if (title && title.includes('セキュリティ')) {
         return `/business-literacy/security/quiz/${quizId}`

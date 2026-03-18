@@ -39,18 +39,25 @@ function parseListeningQuestion(text: string): { script: string; question: strin
   return { script, question }
 }
 
-/** Inline TTS player for listening questions */
-function ListeningPlayer({ script }: { script: string }) {
+/** Inline TTS player for listening questions — play state lifted to parent */
+function ListeningPlayer({ script, questionId, alreadyPlayed, onPlayed }: {
+  script: string
+  questionId: string
+  alreadyPlayed: boolean
+  onPlayed: (questionId: string) => void
+}) {
   const [playing, setPlaying] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [playCount, setPlayCount] = useState(0)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const blobUrlRef = useRef<string | null>(null)
-
-  const MAX_PLAYS = 1
+  const playingRef = useRef(false)
+  const busyRef = useRef(false)
+  const onPlayedRef = useRef(onPlayed)
+  onPlayedRef.current = onPlayed
 
   const handlePlay = async () => {
-    if (playCount >= MAX_PLAYS || playing) return
+    if (alreadyPlayed || busyRef.current) return
+    busyRef.current = true
 
     setLoading(true)
     try {
@@ -66,10 +73,12 @@ function ListeningPlayer({ script }: { script: string }) {
       const audio = new Audio(url)
       audioRef.current = audio
       audio.onended = () => {
+        playingRef.current = false
         setPlaying(false)
-        setPlayCount(c => c + 1)
+        onPlayedRef.current(questionId)
       }
       audio.play()
+      playingRef.current = true
       setPlaying(true)
     } catch {
       console.error('TTS playback failed')
@@ -78,21 +87,25 @@ function ListeningPlayer({ script }: { script: string }) {
     }
   }
 
-  // Cleanup
+  // Cleanup on unmount only: pause audio, mark as played if was playing
   useEffect(() => {
     return () => {
-      if (audioRef.current) audioRef.current.pause()
+      if (audioRef.current) {
+        audioRef.current.pause()
+        if (playingRef.current) {
+          onPlayedRef.current(questionId)
+        }
+      }
       if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current)
     }
-  }, [])
-
-  const canPlay = playCount < MAX_PLAYS
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questionId])
 
   return (
     <div className="mb-4 flex items-center gap-3 rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-3">
       <button
         onClick={handlePlay}
-        disabled={loading || !canPlay || playing}
+        disabled={loading || alreadyPlayed || playing}
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
       >
         {loading || playing ? (
@@ -109,7 +122,7 @@ function ListeningPlayer({ script }: { script: string }) {
           聴解問題 — 音声を聞いてから回答してください
         </p>
         <p className="text-xs text-indigo-500/70 dark:text-indigo-400/60">
-          再生回数: {playCount}/{MAX_PLAYS}
+          {alreadyPlayed ? '再生済み (1/1)' : '再生回数: 0/1'}
         </p>
       </div>
     </div>
@@ -152,6 +165,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   const [claimForms, setClaimForms] = useState<Set<string>>(new Set())
   const [claimReasons, setClaimReasons] = useState<Record<string, string>>({})
   const [claimError, setClaimError] = useState<string | null>(null)
+  const [playedListeningIds, setPlayedListeningIds] = useState<Set<string>>(new Set())
 
   const totalQuestions = questions.length
   const currentQuestion = questions[currentIndex]
@@ -737,7 +751,13 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
         return (
           <div className="rounded-2xl border border-gray-200/60 bg-white/80 backdrop-blur-md p-6 dark:border-white/[0.08] dark:bg-white/[0.03]">
             {isListening && parsed && (
-              <ListeningPlayer key={currentQuestion.id} script={parsed.script} />
+              <ListeningPlayer
+                key={currentQuestion.id}
+                script={parsed.script}
+                questionId={currentQuestion.id}
+                alreadyPlayed={playedListeningIds.has(currentQuestion.id)}
+                onPlayed={id => setPlayedListeningIds(prev => new Set(prev).add(id))}
+              />
             )}
             <QuizQuestion
               questionNumber={currentIndex + 1}

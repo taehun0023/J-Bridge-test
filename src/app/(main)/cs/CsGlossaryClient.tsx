@@ -32,7 +32,6 @@ interface Props {
   offset: number
   masteredIds: string[]
   mastery: string
-  categoryLabel: string
 }
 
 const DIFFICULTY_TABS = [
@@ -48,7 +47,7 @@ const MASTERY_FILTERS = [
 
 export default function CsGlossaryClient({
   items, category, activeDifficulty, search, currentPage, totalPages, totalCount,
-  basePath, offset, masteredIds, mastery, categoryLabel,
+  basePath, offset, masteredIds, mastery,
 }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -131,15 +130,6 @@ export default function CsGlossaryClient({
             範囲クイズ
           </button>
         </div>
-      </div>
-
-      <div className="mt-3">
-        <a
-          href={`/cs/quiz?category=${category}`}
-          className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-        >
-          {categoryLabel}テストに挑戦 &rarr;
-        </a>
       </div>
 
       <div className="mt-4 rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">

@@ -1,0 +1,164 @@
+---
+lesson_id: DEV-SQL-02-01
+title: "스키마 읽기와 JOIN 결과 예측"
+module: DEV-SQL-02
+level: intermediate
+est_minutes: 18
+tags: [sql, schema, join, inner-join, left-join, static-content]
+---
+
+## 1) 학습 목표
+
+- 테이블 스키마(컬럼 타입, 제약조건, 관계)를 읽고 이해할 수 있다.
+- INNER JOIN, LEFT JOIN, RIGHT JOIN의 차이를 정확히 설명할 수 있다.
+- JOIN 결과 행 수를 테이블 데이터로부터 예측할 수 있다.
+- 외래 키 제약과 NULL 허용의 관계를 이해할 수 있다.
+
+## 2) 업무 맥락
+
+일본 IT 현장에서는 기존 시스템의 데이터베이스를 이해하는 것이 첫 번째 업무가 되는 경우가 많다. 테이블 정의서(스키마)를 읽어 테이블 간 관계를 파악하고, 필요한 데이터를 올바르게 JOIN으로 결합하는 능력은 일상적으로 요구된다. JOIN 종류를 잘못 사용하면 데이터 누락이나 중복이 발생하여 리포트나 배치 처리 오류로 이어진다.
+
+## 3) 핵심 설명
+
+**스키마 읽기:**
+
+```sql
+CREATE TABLE departments (
+    id          INT PRIMARY KEY AUTO_INCREMENT,
+    name        VARCHAR(100) NOT NULL,
+    location    VARCHAR(50),
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE employees (
+    id            INT PRIMARY KEY AUTO_INCREMENT,
+    name          VARCHAR(100) NOT NULL,
+    department_id INT,
+    salary        DECIMAL(10,2) NOT NULL,
+    hire_date     DATE NOT NULL,
+    FOREIGN KEY (department_id) REFERENCES departments(id)
+);
+```
+
+스키마에서 읽어야 할 포인트:
+- **PRIMARY KEY**: 각 행을 고유하게 식별한다. `id` 컬럼이 기본 키이다.
+- **NOT NULL**: NULL을 허용하지 않는다. `name`은 필수지만 `location`은 NULL 가능이다.
+- **FOREIGN KEY**: `employees.department_id`가 `departments.id`를 참조한다. 이것이 테이블 간의 관계이다.
+- **department_id에 NOT NULL이 없다**: 부서 미배속 사원(department_id = NULL)이 존재할 수 있다.
+
+**샘플 데이터:**
+
+departments 테이블:
+| id | name | location |
+|----|------|----------|
+| 1 | 영업부 | 도쿄 |
+| 2 | 개발부 | 오사카 |
+| 3 | 인사부 | 도쿄 |
+
+employees 테이블:
+| id | name | department_id | salary |
+|----|------|---------------|--------|
+| 1 | 다나카 | 1 | 350000 |
+| 2 | 사토 | 2 | 420000 |
+| 3 | 스즈키 | 1 | 380000 |
+| 4 | 다카하시 | NULL | 300000 |
+
+**INNER JOIN — 양쪽 테이블에 일치하는 데이터만 반환:**
+
+```sql
+SELECT e.name, d.name AS dept_name
+FROM employees e
+INNER JOIN departments d ON e.department_id = d.id;
+```
+
+결과: 3행 (다나카-영업부, 사토-개발부, 스즈키-영업부). 다카하시는 department_id=NULL이므로 제외된다. 인사부는 사원이 없으므로 결과에 나타나지 않는다.
+
+**LEFT JOIN — 왼쪽 테이블의 모든 행을 유지:**
+
+```sql
+SELECT e.name, d.name AS dept_name
+FROM employees e
+LEFT JOIN departments d ON e.department_id = d.id;
+```
+
+결과: 4행. 다카하시도 포함되지만 dept_name은 NULL이 된다.
+
+**RIGHT JOIN — 오른쪽 테이블의 모든 행을 유지:**
+
+```sql
+SELECT e.name, d.name AS dept_name
+FROM employees e
+RIGHT JOIN departments d ON e.department_id = d.id;
+```
+
+결과: 4행. 인사부도 포함되지만 e.name은 NULL이 된다. 다카하시는 포함되지 않는다.
+
+**JOIN 결과 행 수 예측 규칙:**
+- INNER JOIN: 결합 조건에 일치하는 행만. 일치하지 않는 행은 사라진다.
+- LEFT JOIN: 왼쪽 테이블의 행 수 이상. 오른쪽에 일치가 없으면 NULL로 채워진다.
+- 1대다 관계: 1측의 1행이 다측의 N행에 일치하면 N행이 출력된다.
+
+**여러 테이블 JOIN:**
+
+```sql
+SELECT e.name, d.name AS dept_name, p.title AS project_title
+FROM employees e
+INNER JOIN departments d ON e.department_id = d.id
+LEFT JOIN projects p ON e.id = p.assignee_id;
+```
+
+INNER JOIN으로 부서 미배속자를 제외한 후, LEFT JOIN으로 프로젝트 정보를 결합한다. 프로젝트가 미할당인 사원도 NULL로 결과에 포함된다.
+
+## 4) 실무 해석 시나리오
+
+### 시나리오 A
+"전 사원 목록에 부서명을 붙여서 표시해주세요"라는 요건이 있다.
+```sql
+-- 안1: INNER JOIN
+SELECT e.name, d.name FROM employees e INNER JOIN departments d ON e.department_id = d.id;
+-- 안2: LEFT JOIN
+SELECT e.name, d.name FROM employees e LEFT JOIN departments d ON e.department_id = d.id;
+```
+- 해석: "전 사원"이 요건이므로 부서 미배속 사원도 포함해야 한다. INNER JOIN에서는 다카하시가 사라지므로 부정확하다. LEFT JOIN이 올바른 선택이다.
+
+### 시나리오 B
+"사원이 한 명도 없는 부서를 찾고 싶다"라는 요건이 있다.
+```sql
+SELECT d.name
+FROM departments d
+LEFT JOIN employees e ON d.id = e.department_id
+WHERE e.id IS NULL;
+```
+- 해석: departments를 왼쪽 테이블로 하여 LEFT JOIN하고, employees 측이 NULL인 행(=사원이 한 명도 없는 부서)을 `WHERE e.id IS NULL`로 추출한다. 이 패턴은 "존재하지 않는 데이터의 검출"에 자주 사용된다.
+
+## 5) 자주 하는 실수
+
+1. 요건에 맞지 않는 JOIN 종류를 선택한다.
+"전 사원 표시"에 INNER JOIN을 사용하면 부서 미배속자가 사라진다. 요건을 잘 읽고 JOIN 종류를 선택한다.
+
+2. JOIN 결합 조건을 잘못 쓴다.
+`ON e.department_id = d.id` 대신 `ON e.id = d.id`로 쓰면 의미 없는 결합이 된다. 외래 키 관계에 기반하여 결합 조건을 작성한다.
+
+3. 1대다 JOIN에서 행 수가 늘어나는 것을 인지하지 못한다.
+1명의 사원이 3개 프로젝트에 참여하면, JOIN하면 3행으로 늘어난다. 집계 시 COUNT나 SUM이 부풀어오르는 원인이 된다.
+
+4. NULL 비교에 `=`를 사용한다.
+`WHERE department_id = NULL`은 항상 FALSE가 된다. `WHERE department_id IS NULL`을 사용한다.
+
+5. 스키마의 NULL 허용 여부를 간과한다.
+외래 키 컬럼이 NULL 허용인지 여부에 따라 JOIN 결과가 달라진다. 스키마 정의를 반드시 확인한다.
+
+## 6) 확인 질문
+
+1. INNER JOIN과 LEFT JOIN의 결과 차이는 무엇인가?
+2. 외래 키 제약의 역할은 무엇인가?
+3. 1대다 JOIN에서 결과 행 수는 어떻게 되는가?
+4. "존재하지 않는 데이터의 검출"에는 어떤 JOIN 패턴을 사용하는가?
+5. NULL 값 비교에는 어떤 구문을 사용하는가? `= NULL`이 안 되는 이유는?
+
+## 7) 문항 발췌 메모
+
+- 사실형 후보: JOIN 종류별 동작 정의, PRIMARY KEY/FOREIGN KEY의 역할
+- 판단형 후보: 요건에 따른 JOIN 종류 선택, NULL 허용 컬럼의 영향 판단
+- 시나리오형 후보: 샘플 데이터와 SQL로부터 JOIN 결과 행 수 예측, 스키마 도면에서 관계 읽기
+- 오답 유도 포인트: INNER JOIN과 LEFT JOIN의 결과 행 수 혼동, NULL 비교에서 등호 사용

@@ -1,0 +1,16 @@
+module:
+  id: DEV-PY-01
+  title: Python - Python Basics and Script-Oriented Reasoning
+  level: foundation
+  description: "정적 해설형 콘텐츠로 Python 스크립트의 구조와 실행 흐름, 기본 문법을 읽고 해석하는 방법을 설명한다."
+  subject: python
+  content_mode: static-interpretive
+  outcomes:
+    - "Python 스크립트의 기본 구조(모듈, 함수, if __name__ 패턴)를 설명할 수 있다."
+    - "들여쓰기 기반 블록 구조를 읽고 실행 흐름을 추적할 수 있다."
+    - "기본 데이터 타입(str, int, list, dict)의 특성을 설명할 수 있다."
+  lessons:
+    - id: DEV-PY-01-01
+      title: "Python 스크립트의 구조와 실행 흐름 읽기"
+      est_minutes: 18
+      tags: [python, script-structure, indentation, data-types, static-content]

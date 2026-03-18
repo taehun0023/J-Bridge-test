@@ -1,0 +1,44 @@
+{
+  "lesson_id": "DEV-SB-02-01",
+  "category": "dev-practical-skills",
+  "subject": "spring-boot",
+  "topic": "layered-architecture",
+  "summary": "Explains the responsibilities of Controller, Service, and Repository layers in Spring Boot, how data flows through a REST request lifecycle, dependency direction rules, and DTO/Entity separation.",
+  "key_points": [
+    "Controller handles HTTP request/response only; Service holds business logic; Repository manages data access.",
+    "Dependencies flow one way: Controller → Service → Repository — never in reverse.",
+    "DTOs and Entities should be separated to decouple API contracts from database schema."
+  ],
+  "misconceptions": [
+    "It is acceptable to call Repository directly from Controller for simple queries.",
+    "Service layer should build ResponseEntity objects for the HTTP response.",
+    "Business validation logic belongs in the Repository layer close to the data."
+  ],
+  "check_questions": [
+    "What is each layer's responsibility in the Controller-Service-Repository pattern?",
+    "Why should Controller not call Repository directly?",
+    "Which layer is responsible for transaction management and why?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Each layer's responsibility: Controller (HTTP), Service (business logic), Repository (data access)",
+      "Dependency direction rule: upper layers depend on lower layers, not the reverse"
+    ],
+    "practical_judgment_candidates": [
+      "Deciding where to place stock-check logic (Service, not Repository or Controller)",
+      "Choosing whether to return Entity or DTO from a Service method"
+    ],
+    "error_interpretation_candidates": [
+      "Circular dependency error when two Services inject each other",
+      "NullPointerException from Controller returning null instead of proper error response"
+    ],
+    "scenario_candidates": [
+      "Reviewing code where Controller directly queries the database and identifying the violation",
+      "Tracing a POST request through all three layers to identify where validation occurs"
+    ],
+    "common_wrong_answer_patterns": [
+      "Believing skipping the Service layer is fine for read-only endpoints",
+      "Thinking ResponseEntity belongs in the Service layer"
+    ]
+  }
+}

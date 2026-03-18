@@ -1,0 +1,173 @@
+---
+lesson_id: DEV-JS-03-01
+title: "DOM 조작과 이벤트 처리 패턴 읽기"
+module: DEV-JS-03
+level: intermediate
+language: ko
+est_minutes: 18
+tags: [javascript, dom, events, bubbling, delegation, static-content]
+---
+
+## 1) 학습 목표
+
+- DOM 요소 선택 방법(querySelector, getElementById 등)을 상황에 맞게 사용할 수 있다.
+- DOM 요소의 생성, 변경, 삭제 기본 조작을 설명할 수 있다.
+- 이벤트 버블링과 캡처링의 전파 순서를 추적할 수 있다.
+- 이벤트 위임(Event Delegation) 패턴의 장점과 구현 방법을 설명할 수 있다.
+
+## 2) 업무 맥락
+
+프론트엔드 개발에서는 사용자 조작에 따라 UI를 동적으로 갱신해야 한다. React나 Vue 같은 프레임워크가 주류이더라도 내부적으로는 DOM 조작이 이루어지며, 디버깅 시에는 DOM API 지식이 필요하다. 또한 레거시 시스템 유지보수나 라이브러리 소스 코드 독해에서도 DOM 조작과 이벤트 처리 이해는 필수다.
+
+## 3) 핵심 설명
+
+### DOM 요소 선택
+
+```javascript
+// 단일 요소 선택
+const header = document.getElementById("main-header");
+const firstBtn = document.querySelector(".btn-primary");
+
+// 복수 요소 선택
+const allItems = document.querySelectorAll(".list-item");
+const forms = document.getElementsByTagName("form");
+```
+
+`querySelector`/`querySelectorAll`은 CSS 셀렉터를 사용할 수 있어 유연성이 높다. `getElementById`는 가장 빠르지만 ID로만 검색할 수 있다. `querySelectorAll`은 정적인 NodeList를 반환하고, `getElementsByTagName`은 라이브 HTMLCollection을 반환한다는 점에 주의해야 한다.
+
+### DOM 요소 조작
+
+```javascript
+// 요소 생성 및 추가
+const li = document.createElement("li");
+li.textContent = "새 항목";
+li.classList.add("list-item");
+document.getElementById("task-list").appendChild(li);
+
+// 요소 변경
+const title = document.querySelector("h1");
+title.textContent = "업데이트된 제목";
+title.style.color = "blue";
+title.setAttribute("data-status", "active");
+
+// 요소 삭제
+const old = document.querySelector(".deprecated");
+old.parentNode.removeChild(old);
+// 또는
+old.remove();
+```
+
+`textContent`는 XSS 공격을 방지하는 안전한 방법이며, `innerHTML`은 HTML로 해석되므로 사용자 입력에는 사용하면 안 된다.
+
+### 이벤트 버블링과 캡처링
+
+이벤트는 3가지 페이즈로 전파된다.
+
+1. **캡처링 페이즈**: DOM 트리의 위에서 아래로
+2. **타겟 페이즈**: 이벤트가 발생한 요소
+3. **버블링 페이즈**: DOM 트리의 아래에서 위로
+
+```javascript
+// 버블링 (기본값)
+document.querySelector(".child").addEventListener("click", (e) => {
+  console.log("child clicked");
+});
+
+document.querySelector(".parent").addEventListener("click", (e) => {
+  console.log("parent clicked"); // child 클릭 시에도 실행됨
+});
+
+// 캡처링
+document.querySelector(".parent").addEventListener("click", (e) => {
+  console.log("parent capture");
+}, true); // 세 번째 인수 true로 캡처 페이즈
+```
+
+child를 클릭하면: `parent capture → child clicked → parent clicked` 순서로 실행된다.
+
+### 이벤트 위임 패턴
+
+동적으로 추가되는 요소에도 대응하기 위해 부모 요소에 이벤트 리스너를 설정한다.
+
+```javascript
+// 나쁜 예: 각 li에 개별 리스너 설정
+document.querySelectorAll("li").forEach(li => {
+  li.addEventListener("click", handleClick);
+});
+// → 나중에 추가된 li에는 리스너가 없음
+
+// 좋은 예: 이벤트 위임
+document.getElementById("task-list").addEventListener("click", (e) => {
+  const li = e.target.closest("li");
+  if (!li) return;
+  handleClick(li);
+});
+// → 동적으로 추가된 li에도 대응
+```
+
+`e.target`은 이벤트가 발생한 실제 요소, `e.currentTarget`은 리스너가 등록된 요소다. `closest()`는 가장 가까운 조상 요소를 검색한다.
+
+## 4) 실무 해석 시나리오
+
+### 시나리오 A
+```javascript
+document.getElementById("form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const data = new FormData(e.target);
+  fetch("/api/submit", {
+    method: "POST",
+    body: data
+  });
+});
+```
+- 읽기 포인트:
+  - `preventDefault()`로 폼의 기본 제출(페이지 이동)을 막고 있다.
+  - `FormData`로 폼 내 모든 입력값을 자동 수집하고 있다.
+  - fetch로 API에 비동기 전송하고 있다.
+
+### 시나리오 B
+```javascript
+document.addEventListener("click", (e) => {
+  if (e.target.matches("[data-action='delete']")) {
+    const row = e.target.closest("tr");
+    row.remove();
+  }
+});
+```
+- 해석:
+  - document 레벨에서 이벤트 위임을 하고 있다.
+  - `data-action="delete"` 속성을 가진 요소의 클릭만 처리한다.
+  - `closest("tr")`로 가장 가까운 테이블 행을 얻어 삭제한다.
+  - 동적으로 추가된 행에도 대응할 수 있는 설계다.
+
+## 5) 자주 하는 실수
+
+1. `innerHTML`에 사용자 입력을 그대로 삽입한다.
+XSS 공격 위험이 있다. `textContent` 또는 적절한 새니타이즈를 사용해야 한다.
+
+2. 동적 요소에 직접 이벤트 리스너를 붙인다.
+나중에 추가된 요소에는 리스너가 설정되지 않는다. 이벤트 위임을 사용해야 한다.
+
+3. `e.target`과 `e.currentTarget`을 혼동한다.
+`e.target`은 클릭된 실제 요소, `e.currentTarget`은 리스너가 등록된 요소다.
+
+4. `querySelectorAll`의 반환값을 배열로 취급한다.
+NodeList는 배열이 아니므로 `map` 등의 메서드가 없다. `Array.from()`으로 변환하거나 `forEach`를 사용한다.
+
+5. `stopPropagation()`을 남용해 이벤트 전파를 멈춘다.
+다른 리스너가 동작하지 않게 되는 부작용이 있다. 정말 필요한 경우에만 사용한다.
+
+## 6) 확인 질문
+
+1. `querySelector`와 `getElementById`의 차이는 무엇인가?
+2. 이벤트 버블링과 캡처링의 전파 순서는 어떻게 되어 있는가?
+3. 이벤트 위임의 장점은 무엇인가?
+4. `e.target`과 `e.currentTarget`의 차이는 무엇인가?
+5. `innerHTML`을 사용할 때의 보안 위험은 무엇인가?
+
+## 7) 문항 발췌 메모
+
+- 사실형 후보: 이벤트 전파의 3페이즈, NodeList vs HTMLCollection 차이
+- 판단형 후보: textContent vs innerHTML 적절한 선택, 이벤트 위임 적용 판단
+- 시나리오형 후보: 버블링 순서 추적, 이벤트 위임 코드의 동작 예측
+- 오답 유도 포인트: e.target과 e.currentTarget 혼동, querySelectorAll 반환값을 배열로 오인

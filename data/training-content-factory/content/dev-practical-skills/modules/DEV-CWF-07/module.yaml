@@ -1,0 +1,16 @@
+module:
+  id: DEV-CWF-07
+  title: Common Workplace Fundamentals - Documentation Reading
+  level: foundation
+  description: "정적 해설형 콘텐츠로 기술 문서(README, API 문서, 위키)를 효과적으로 읽는 방법을 설명한다."
+  subject: common-workplace-fundamentals
+  content_mode: static-interpretive
+  outcomes:
+    - "기술 문서의 종류와 각각의 목적을 설명할 수 있다."
+    - "문서에서 필요한 정보를 빠르게 찾는 전략을 설명할 수 있다."
+    - "문서가 오래되었거나 불완전할 때 대처 방법을 설명할 수 있다."
+  lessons:
+    - id: DEV-CWF-07-01
+      title: "기술 문서를 효과적으로 읽고 필요한 정보 찾기"
+      est_minutes: 18
+      tags: [common-workplace-fundamentals, documentation, readme, api-docs, static-content]

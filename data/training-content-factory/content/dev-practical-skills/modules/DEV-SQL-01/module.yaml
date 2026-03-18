@@ -1,0 +1,16 @@
+module:
+  id: DEV-SQL-01
+  title: SQL - Query Writing and Result Interpretation
+  level: foundation
+  description: "정적 해설형 콘텐츠로 SELECT 쿼리의 구조를 읽고 실행 결과를 예측하는 방법을 설명한다."
+  subject: sql
+  content_mode: static-interpretive
+  outcomes:
+    - "SELECT 문의 기본 구조(SELECT, FROM, WHERE, ORDER BY)를 설명할 수 있다."
+    - "집계 함수(COUNT, SUM, AVG)와 GROUP BY의 관계를 설명할 수 있다."
+    - "쿼리 결과를 보고 어떤 데이터가 반환되는지 예측할 수 있다."
+  lessons:
+    - id: DEV-SQL-01-01
+      title: "SELECT 쿼리를 읽고 결과를 예측하는 방법"
+      est_minutes: 18
+      tags: [sql, select, where, group-by, aggregate, static-content]

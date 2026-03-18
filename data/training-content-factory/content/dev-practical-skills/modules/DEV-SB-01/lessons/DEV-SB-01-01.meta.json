@@ -1,0 +1,43 @@
+{
+  "lesson_id": "DEV-SB-01-01",
+  "category": "dev-practical-skills",
+  "subject": "spring-boot",
+  "topic": "project-structure-dependency-injection",
+  "summary": "Explains Spring Boot project directory structure, dependency injection principles, and stereotype annotations for reading and navigating backend projects.",
+  "key_points": [
+    "Spring Boot projects follow a layered structure: controller, service, repository, model.",
+    "Dependency injection lets the framework create and wire objects — reducing coupling.",
+    "Constructor injection is preferred over field injection for testability and clarity."
+  ],
+  "misconceptions": [
+    "@Component and @Service have completely different runtime behavior.",
+    "Field injection with @Autowired is the standard approach.",
+    "Classes outside the base package are automatically scanned."
+  ],
+  "check_questions": [
+    "What is dependency injection and why is it useful?",
+    "What is the difference between @Service and @Repository?",
+    "Why is constructor injection preferred over field injection?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Role of each Spring stereotype annotation",
+      "Definition and purpose of dependency injection"
+    ],
+    "practical_judgment_candidates": [
+      "Choosing constructor injection vs field injection",
+      "Identifying which layer should contain business logic"
+    ],
+    "error_interpretation_candidates": [
+      "Diagnosing NoSuchBeanDefinitionException from missing annotations"
+    ],
+    "scenario_candidates": [
+      "Tracing request flow from Controller to Service to Repository",
+      "Missing annotation causing injection failure"
+    ],
+    "common_wrong_answer_patterns": [
+      "Treating @Component and @Service as functionally different",
+      "Assuming all classes in the project are auto-scanned"
+    ]
+  }
+}

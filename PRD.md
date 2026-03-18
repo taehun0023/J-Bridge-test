@@ -187,7 +187,7 @@
 | Language | TypeScript |
 | Styling | Tailwind CSS |
 | Backend/DB | Supabase (Auth, DB, Storage) |
-| Chart | Chart.js + react-chartjs-2 |
+| Chart | Recharts 3 |
 | SSR Auth | @supabase/ssr |
 | Validation | zod |
 | Code Editor | @monaco-editor/react |

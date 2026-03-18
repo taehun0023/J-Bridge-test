@@ -53,7 +53,14 @@ async function fetchAllQuestions(quizIds: string | string[]): Promise<QuestionWi
 
   const { data, error } = await query
   if (error || !data) return []
-  return data as unknown as QuestionWithOptions[]
+  // Deduplicate by question_text — same content can exist in both assessment and practice quizzes
+  const seen = new Set<string>()
+  return (data as unknown as QuestionWithOptions[]).filter(q => {
+    const key = q.question_text.trim()
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 }
 
 /** Balanced random selection by difficulty */
@@ -221,6 +228,91 @@ async function fetchStep2BusinessStyle(quizIds: string | string[]): Promise<Ques
   return result
 }
 
+/** Step 3 CS Knowledge selection: category-weighted + difficulty-distributed.
+ *  Uses STEP3_DIFFICULTY_RATIOS within each category from CS_KNOWLEDGE_WEIGHTS. */
+async function fetchStep3CsStyle(quizIds: string | string[]): Promise<QuestionWithOptions[]> {
+  const { CS_KNOWLEDGE_WEIGHTS, STEP3_DIFFICULTY_RATIOS } = await import('@/lib/assessment-config')
+  const allQuestions = await fetchAllQuestions(quizIds)
+
+  const result: QuestionWithOptions[] = []
+  const usedIds = new Set<string>()
+
+  for (const [category, targetCount] of Object.entries(CS_KNOWLEDGE_WEIGHTS)) {
+    const categoryPool = allQuestions.filter(q => q.question_category === category)
+    if (categoryPool.length === 0) continue
+
+    const picked: QuestionWithOptions[] = []
+
+    for (const [difficulty, ratio] of Object.entries(STEP3_DIFFICULTY_RATIOS)) {
+      const count = Math.round(targetCount * ratio)
+      const pool = shuffle(categoryPool.filter(q => q.difficulty === difficulty && !usedIds.has(q.id)))
+      const selected = pool.slice(0, count)
+      selected.forEach(q => usedIds.add(q.id))
+      picked.push(...selected)
+    }
+
+    // Rounding error correction: fill shortfall from remaining pool
+    if (picked.length < targetCount) {
+      const remaining = shuffle(categoryPool.filter(q => !usedIds.has(q.id)))
+      const needed = remaining.slice(0, targetCount - picked.length)
+      needed.forEach(q => usedIds.add(q.id))
+      picked.push(...needed)
+    }
+
+    result.push(...shuffle(picked))
+  }
+
+  return result.length > 0 ? result : fetchRandomByDifficulty(quizIds, 30)
+}
+
+/** Step 4 Dev Practical selection: language-group category-weighted + difficulty-distributed. */
+async function fetchStep4DevStyle(quizIds: string | string[], targetCodingArea: string | null): Promise<QuestionWithOptions[]> {
+  const {
+    STEP4_CATEGORY_WEIGHTS_JAVA, STEP4_CATEGORY_WEIGHTS_JS, STEP4_DIFFICULTY_RATIOS, getLanguageCategories,
+  } = await import('@/lib/assessment-config')
+
+  const categories = getLanguageCategories(4, targetCodingArea)
+  if (!categories) return fetchRandomByDifficulty(quizIds, 30)
+
+  const weights = targetCodingArea === 'java' ? STEP4_CATEGORY_WEIGHTS_JAVA : STEP4_CATEGORY_WEIGHTS_JS
+  const allQuestions = await fetchAllQuestions(quizIds)
+  const filtered = allQuestions.filter(q => categories.includes(q.question_category ?? ''))
+
+  const result: QuestionWithOptions[] = []
+  const usedIds = new Set<string>()
+
+  for (const [category, targetCount] of Object.entries(weights)) {
+    const categoryPool = filtered.filter(q => q.question_category === category)
+    if (categoryPool.length === 0) continue
+
+    const picked: QuestionWithOptions[] = []
+
+    for (const [difficulty, ratio] of Object.entries(STEP4_DIFFICULTY_RATIOS)) {
+      const count = Math.round(targetCount * ratio)
+      const pool = shuffle(categoryPool.filter(q => q.difficulty === difficulty && !usedIds.has(q.id)))
+      const selected = pool.slice(0, count)
+      selected.forEach(q => usedIds.add(q.id))
+      picked.push(...selected)
+    }
+
+    if (picked.length < targetCount) {
+      const remaining = shuffle(categoryPool.filter(q => !usedIds.has(q.id)))
+      const needed = remaining.slice(0, targetCount - picked.length)
+      needed.forEach(q => usedIds.add(q.id))
+      picked.push(...needed)
+    }
+
+    result.push(...shuffle(picked))
+  }
+
+  if (result.length > 0) return shuffle(result)
+
+  // Fallback: language group selection
+  const langResult = await fetchRandomByLanguageGroup(quizIds, categories, 30)
+  if (langResult.length > 0) return langResult
+  return fetchRandomByDifficulty(quizIds, 30)
+}
+
 /** Fetch random assessment questions based on step and optional target coding area */
 export async function fetchRandomAssessmentQuestions(
   quizIds: string | string[],
@@ -229,44 +321,29 @@ export async function fetchRandomAssessmentQuestions(
   isJapanese?: boolean
 ): Promise<QuestionWithOptions[]> {
   if (step === 1) {
-    // 生活日本語: JLPT-style (grammar 30 + reading 15 + listening 15 = 60)
     return fetchStep1JlptStyle(quizIds)
   }
 
   if (step === 2) {
-    // ビジネス日本語: weighted category + difficulty selection (15 per category = 60 total)
     return fetchStep2BusinessStyle(quizIds)
   }
 
   if (step === 3) {
-    // CS知識: weighted category selection
-    const { CS_KNOWLEDGE_WEIGHTS } = await import('@/lib/assessment-config')
-    const result = await fetchRandomByWeightedCategory(quizIds, CS_KNOWLEDGE_WEIGHTS)
-    // Fallback to difficulty-based if categories not yet tagged
-    if (result.length > 0) return result
-    return fetchRandomByDifficulty(quizIds, 30)
+    return fetchStep3CsStyle(quizIds)
+  }
+
+  if (step === 4) {
+    return fetchStep4DevStyle(quizIds, targetCodingArea ?? null)
   }
 
   if (step === 5) {
     // ビジネスリテラシー: weighted category selection (30 total)
-    // Japanese users: exclude cross_culture (한국↔일본 문화차이 → 일본인에게 불필요)
     const weights: Record<string, number> = isJapanese
       ? { business_manner: 10, communication: 10, security: 10 }
       : { business_manner: 8, communication: 8, cross_culture: 7, security: 7 }
     const result = await fetchRandomByWeightedCategory(quizIds, weights)
-    // Fallback to difficulty-based if categories not yet tagged
     if (result.length > 0) return result
     return fetchRandomByDifficulty(quizIds, 30)
-  }
-
-  // Step 4 (開発実務能力): use language grouping if available
-  if (step === 4 && targetCodingArea) {
-    const { getLanguageCategories } = await import('@/lib/assessment-config')
-    const categories = getLanguageCategories(step, targetCodingArea)
-    if (categories) {
-      const result = await fetchRandomByLanguageGroup(quizIds, categories, 30)
-      if (result.length > 0) return result
-    }
   }
 
   // Fallback: 30 questions by difficulty

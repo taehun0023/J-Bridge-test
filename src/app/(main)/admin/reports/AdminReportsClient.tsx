@@ -3,13 +3,21 @@
 import { useEffect, useRef, useState, useTransition } from 'react'
 import dynamic from 'next/dynamic'
 import Card from '@/components/ui/Card'
+import TabBar from '@/components/ui/TabBar'
 import { getWeaknessReport, getMenteeAssignments, getAssignmentDetail, generateAIPrompt } from '@/app/actions/admin/weakness-report'
-import type { ScoreTrendPoint, ErrorRateItem, MenteeAssignment, AssignmentDetailData } from '@/app/actions/admin/weakness-report'
+import type { ExamScorePoint, ExamErrorRate, MenteeAssignment, AssignmentDetailData } from '@/app/actions/admin/weakness-report'
+
+const EXAM_CATEGORY_GROUPS = {
+  nihongo: ['seikatsu', 'business-jp'],
+  kaihatsu: ['cs', 'dev'],
+  'business-lit': ['business-lit'],
+} as const
+type TabKey = keyof typeof EXAM_CATEGORY_GROUPS
 import { getCategoryLabel, getSubcategoryLabel, getContentLevelLabel } from '@/lib/assignment-categories'
 import { ClipboardCopy, Check, Sparkles, X } from 'lucide-react'
 
-const ScoreTrendChart = dynamic(() => import('@/components/charts/ScoreTrendChart'), { ssr: false })
-const ErrorRateChart = dynamic(() => import('@/components/charts/ErrorRateChart'), { ssr: false })
+const ScoreBarChart = dynamic(() => import('@/components/charts/ScoreBarChart'), { ssr: false })
+const ErrorRateTrendChart = dynamic(() => import('@/components/charts/ErrorRateTrendChart'), { ssr: false })
 
 interface User {
   id: string
@@ -43,9 +51,13 @@ export default function AdminReportsClient({
   initialUserId?: string
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [scoreTrend, setScoreTrend] = useState<ScoreTrendPoint[]>([])
-  const [errorRates, setErrorRates] = useState<ErrorRateItem[]>([])
+  const [examScores, setExamScores] = useState<ExamScorePoint[]>([])
+  const [examErrorRates, setExamErrorRates] = useState<ExamErrorRate[]>([])
   const [assignments, setAssignments] = useState<MenteeAssignment[]>([])
+  const [scoreTab, setScoreTab] = useState<TabKey>('nihongo')
+  const [errorTab, setErrorTab] = useState<TabKey>('nihongo')
+  const [nihongoScoreSub, setNihongoScoreSub] = useState<'all' | 'seikatsu' | 'business-jp'>('all')
+  const [nihongoErrorSub, setNihongoErrorSub] = useState<'all' | 'seikatsu' | 'business-jp'>('all')
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
@@ -75,11 +87,11 @@ export default function AdminReportsClient({
       ])
       if ('error' in reportResult) {
         setError(reportResult.error ?? 'エラーが発生しました')
-        setScoreTrend([])
-        setErrorRates([])
+        setExamScores([])
+        setExamErrorRates([])
       } else {
-        setScoreTrend(reportResult.scoreTrend)
-        setErrorRates(reportResult.errorRates)
+        setExamScores(reportResult.examScores)
+        setExamErrorRates(reportResult.examErrorRates)
       }
       if ('error' in assignResult) {
         setAssignments([])
@@ -116,6 +128,21 @@ export default function AdminReportsClient({
       setDetailLoading(false)
     })
   }
+
+  function getFilterCategories(tab: TabKey, sub: string): string[] {
+    if (tab === 'nihongo') {
+      if (sub === 'seikatsu') return ['seikatsu']
+      if (sub === 'business-jp') return ['business-jp']
+      return ['seikatsu', 'business-jp']
+    }
+    return [...EXAM_CATEGORY_GROUPS[tab]]
+  }
+
+  const nihongoSubButtons = [
+    { key: 'all' as const, label: '全体' },
+    { key: 'seikatsu' as const, label: '生活日本語' },
+    { key: 'business-jp' as const, label: 'ビジネス日本語' },
+  ]
 
   const selectedUser = users.find(u => u.id === selectedId)
 
@@ -220,27 +247,76 @@ export default function AdminReportsClient({
           )}
 
           <Card title={`${selectedUser.full_name ?? selectedUser.email} - スコア推移`}>
-            <ScoreTrendChart data={scoreTrend} />
-          </Card>
-
-          <Card title="カテゴリ別誤答率">
-            <ErrorRateChart data={errorRates} />
-            {errorRates.length > 0 && (
-              <div className="mt-4 grid grid-cols-3 gap-2">
-                <div className="flex items-center gap-1.5 text-xs text-zinc-500">
-                  <span className="inline-block h-2.5 w-2.5 rounded-full bg-red-500" />
-                  50%超
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-zinc-500">
-                  <span className="inline-block h-2.5 w-2.5 rounded-full bg-amber-500" />
-                  30-50%
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-zinc-500">
-                  <span className="inline-block h-2.5 w-2.5 rounded-full bg-green-500" />
-                  30%未満
-                </div>
+            <TabBar
+              tabs={[
+                { key: 'nihongo', label: '日本語' },
+                { key: 'kaihatsu', label: '開発' },
+                { key: 'business-lit', label: 'ビジネスリテラシー' },
+              ]}
+              activeKey={scoreTab}
+              onChange={k => { setScoreTab(k as TabKey); setNihongoScoreSub('all') }}
+            />
+            {scoreTab === 'nihongo' && (
+              <div className="mt-2 flex gap-1.5">
+                {nihongoSubButtons.map(sub => (
+                  <button
+                    key={sub.key}
+                    onClick={() => setNihongoScoreSub(sub.key)}
+                    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                      nihongoScoreSub === sub.key
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600'
+                    }`}
+                  >
+                    {sub.label}
+                  </button>
+                ))}
               </div>
             )}
+            <div className="mt-4">
+              <ScoreBarChart
+                data={examScores.filter(s =>
+                  getFilterCategories(scoreTab, nihongoScoreSub).includes(s.category)
+                )}
+              />
+            </div>
+          </Card>
+
+          <Card title="誤答率推移">
+            <TabBar
+              tabs={[
+                { key: 'nihongo', label: '日本語' },
+                { key: 'kaihatsu', label: '開発' },
+                { key: 'business-lit', label: 'ビジネスリテラシー' },
+              ]}
+              activeKey={errorTab}
+              onChange={k => { setErrorTab(k as TabKey); setNihongoErrorSub('all') }}
+            />
+            {errorTab === 'nihongo' && (
+              <div className="mt-2 flex gap-1.5">
+                {nihongoSubButtons.map(sub => (
+                  <button
+                    key={sub.key}
+                    onClick={() => setNihongoErrorSub(sub.key)}
+                    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                      nihongoErrorSub === sub.key
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600'
+                    }`}
+                  >
+                    {sub.label}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="mt-4">
+              <ErrorRateTrendChart
+                data={examErrorRates.filter(e =>
+                  getFilterCategories(errorTab, nihongoErrorSub).includes(e.examCategory)
+                )}
+                aggregated={errorTab === 'nihongo' && nihongoErrorSub === 'all'}
+              />
+            </div>
           </Card>
 
           <div className="flex justify-end">

@@ -1,0 +1,169 @@
+---
+lesson_id: DEV-SQL-03-01
+title: "トランザクションとインデックス、本番SQL注意点"
+module: DEV-SQL-03
+level: advanced
+language: ja
+est_minutes: 18
+tags: [sql, transaction, index, acid, operational-safety, static-content]
+---
+
+## 1) 学習目標
+
+- ACID特性の各要素を説明できる。
+- COMMIT/ROLLBACKの動作とトランザクションのライフサイクルを理解できる。
+- インデックスがクエリパフォーマンスに与える影響を説明できる。
+- 本番環境で危険なSQLパターンを識別し、安全な代替手段を提示できる。
+
+## 2) 業務コンテキスト
+
+日本のIT現場では、本番データベースに対する操作は厳格なレビューが求められる。トランザクションを理解しないまま本番でUPDATEやDELETEを実行し、データ不整合を起こす事故は珍しくない。また、インデックスの有無がクエリ速度を100倍以上変えることがあり、パフォーマンス問題の調査でインデックスの知識は必須である。
+
+## 3) 要点解説
+
+**ACID特性：**
+
+トランザクションが保証すべき4つの特性である。
+
+| 特性 | 説明 | 例 |
+|------|------|-----|
+| Atomicity（原子性） | 全操作が成功するか、全て取り消されるか | 送金：引き落としと入金が両方成功、または両方失敗 |
+| Consistency（一貫性） | トランザクション前後でデータの整合性が保たれる | 残高がマイナスにならない制約 |
+| Isolation（分離性） | 同時実行されるトランザクション同士が干渉しない | 同時に同じ行を更新しても結果が矛盾しない |
+| Durability（永続性） | COMMITされたデータはシステム障害後も失われない | COMMIT後にサーバーがダウンしてもデータは残る |
+
+**COMMIT/ROLLBACKの基本動作：**
+
+```sql
+-- トランザクションの基本フロー
+BEGIN;  -- トランザクション開始
+
+UPDATE accounts SET balance = balance - 10000 WHERE id = 1;
+UPDATE accounts SET balance = balance + 10000 WHERE id = 2;
+
+-- 問題なければ確定
+COMMIT;
+
+-- 問題があれば全て取り消し
+-- ROLLBACK;
+```
+
+`BEGIN`でトランザクションを開始し、`COMMIT`で確定、`ROLLBACK`で全操作を取り消す。COMMIT前であれば、途中のすべての変更を元に戻せる。
+
+**本番で危険なSQLパターン：**
+
+```sql
+-- 危険1: WHERE句なしのUPDATE（全行更新）
+UPDATE employees SET salary = 0;
+-- ↑ 全社員の給与が0になる
+
+-- 安全: 必ずWHERE句を付ける
+UPDATE employees SET salary = 0 WHERE id = 5;
+
+-- 危険2: WHERE句なしのDELETE（全行削除）
+DELETE FROM employees;
+-- ↑ 全社員データが消える
+
+-- 危険3: トランザクションなしで複数テーブルを更新
+UPDATE orders SET status = 'cancelled' WHERE id = 100;
+UPDATE inventory SET quantity = quantity + 1 WHERE product_id = 50;
+-- ↑ 1つ目が成功して2つ目が失敗すると不整合
+
+-- 安全: トランザクションで囲む
+BEGIN;
+UPDATE orders SET status = 'cancelled' WHERE id = 100;
+UPDATE inventory SET quantity = quantity + 1 WHERE product_id = 50;
+COMMIT;
+```
+
+**本番SQL実行の安全手順：**
+1. まずSELECTで対象行を確認する。
+2. BEGIN でトランザクションを開始する。
+3. UPDATE/DELETEを実行する。
+4. SELECTで結果を確認する。
+5. 問題なければCOMMIT、問題があればROLLBACK。
+
+**インデックスの基本：**
+
+```sql
+-- インデックスなし：全行を順番にスキャン（フルテーブルスキャン）
+SELECT * FROM employees WHERE department_id = 2;
+-- 100万行あれば100万行をチェックする
+
+-- インデックスを作成
+CREATE INDEX idx_employees_department ON employees(department_id);
+
+-- インデックスあり：該当行に直接アクセス
+SELECT * FROM employees WHERE department_id = 2;
+-- ツリー構造で高速に該当行を見つける
+```
+
+インデックスは本の索引のようなものである。特定の値を持つ行を高速に見つけるためのデータ構造で、B-Treeが最も一般的である。
+
+**インデックスの効果と代償：**
+- 効果：WHERE句、JOIN、ORDER BYのパフォーマンスが大幅に向上する。
+- 代償：INSERT/UPDATE/DELETE時にインデックスも更新するため、書き込み速度がやや低下する。ストレージも消費する。
+- 原則：読み取りが多いカラム、WHERE句やJOINで頻繁に使うカラムにインデックスを作成する。
+
+**EXPLAIN文でクエリの実行計画を確認する：**
+
+```sql
+EXPLAIN SELECT * FROM employees WHERE department_id = 2;
+-- type: ALL → フルテーブルスキャン（インデックス未使用）
+-- type: ref → インデックス使用
+
+EXPLAIN SELECT * FROM employees WHERE name LIKE '%田中%';
+-- LIKE文の先頭にワイルドカードがあるとインデックスが使えない
+```
+
+## 4) 実務解釈シナリオ
+
+### シナリオ A
+本番環境で以下のSQLを実行するようレビュー依頼が来た。
+```sql
+UPDATE products SET price = price * 1.1 WHERE category = 'electronics';
+```
+- チェックポイント：
+  - まず`SELECT COUNT(*) FROM products WHERE category = 'electronics';`で対象行数を確認する。
+  - BEGIN/COMMIT で囲んで実行し、結果を確認してからCOMMITする。
+  - categoryカラムにインデックスがあるか確認する。なければ全行スキャンとなり、大量データの場合はロック時間が長くなる。
+
+### シナリオ B
+「ユーザー検索が遅い」というパフォーマンス報告がある。
+```sql
+SELECT * FROM users WHERE email = 'tanaka@example.com';
+-- 実行時間: 3.2秒（100万行）
+```
+- 解釈：emailカラムにインデックスがない可能性が高い。`EXPLAIN`で確認し、`CREATE INDEX idx_users_email ON users(email);`を作成すれば、検索時間はミリ秒単位に短縮される。emailはユニークであることが多いため、`UNIQUE INDEX`が適切な場合もある。
+
+## 5) よくあるミス
+
+1. WHERE句なしでUPDATE/DELETEを実行する。
+必ずWHERE句を付け、事前にSELECTで対象行を確認する。本番環境では最も危険なミスである。
+
+2. トランザクションを使わずに複数テーブルを更新する。
+複数テーブルにまたがる更新はBEGIN/COMMITで囲む。途中でエラーが発生した場合にROLLBACKできるようにする。
+
+3. 全カラムにインデックスを作成する。
+インデックスは書き込み性能を低下させる。WHERE句やJOINで頻繁に使うカラムにのみ作成する。
+
+4. LIKE文の先頭にワイルドカードを使い、インデックスが効かないことに気づかない。
+`LIKE '%keyword%'`はインデックスを使用できない。`LIKE 'keyword%'`は使用できる。全文検索が必要なら専用の仕組みを使う。
+
+5. COMMITを忘れてセッションを閉じる。
+トランザクション内でCOMMITせずにセッションを切断すると、データベースによってはROLLBACKされる。明示的にCOMMITまたはROLLBACKを行う。
+
+## 6) 確認質問
+
+1. ACID特性の各要素を簡潔に説明せよ。
+2. 本番環境でUPDATEを安全に実行する手順は何か？
+3. インデックスがクエリパフォーマンスを向上させる仕組みは何か？
+4. インデックスの代償（デメリット）は何か？
+5. LIKE文でインデックスが使えるケースと使えないケースの違いは何か？
+
+## 7) 出題抽出メモ
+
+- 事実型候補：ACID各特性の定義、COMMIT/ROLLBACKの動作
+- 判断型候補：本番SQLレビューでの危険パターン識別、インデックス作成の判断基準
+- シナリオ型候補：WHERE句なしUPDATEの影響範囲予測、EXPLAINの結果からパフォーマンス問題を診断
+- 誤答誘導ポイント：全カラムにインデックスを作るのが最善と誤認、LIKE先頭ワイルドカードでもインデックスが使えると誤認

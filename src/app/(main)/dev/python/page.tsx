@@ -1,5 +1,11 @@
-import PlaceholderPage from '@/components/ui/PlaceholderPage'
+import { notFound } from 'next/navigation'
+import DevStaticSubjectPage from '@/components/dev/DevStaticSubjectPage'
+import { getDevSubjectContent } from '@/lib/dev-content'
 
-export default function PythonPage() {
-  return <PlaceholderPage title="Python" category="dev-python" />
+export default async function PythonPage() {
+  const subject = await getDevSubjectContent('python')
+
+  if (!subject) notFound()
+
+  return <DevStaticSubjectPage subject={subject} />
 }

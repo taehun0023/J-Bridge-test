@@ -1,0 +1,46 @@
+{
+  "lesson_id": "CSK-NW-01-01",
+  "category": "cs-knowledge",
+  "subject": "networking",
+  "topic": "http-over-tcp",
+  "default_language": "ja",
+  "available_languages": [
+    "ja",
+    "ko"
+  ],
+  "summary": "HTTPとTCPの役割差を階層観点で説明し、混同しやすい点を整理する。",
+  "key_points": [
+    "HTTPは要求と応答の意味や形式を定めるアプリケーション層の規約である",
+    "TCPはデータ転送の順序性と信頼性を扱う転送層の規約である",
+    "HTTPは何を頼みどう表現するかを扱う"
+  ],
+  "misconceptions": [
+    "HTTPがそのままTCPだという誤解",
+    "ポート番号だけ分かれば階層区分は不要だという誤解",
+    "HTTP性能問題は必ずアプリコードの問題だという誤解"
+  ],
+  "check_questions": [
+    "HTTPとTCPを分けて理解する理由は何か",
+    "要求メッセージ形式と転送信頼性はそれぞれどの層の関心か",
+    "同じHTTP要求でも体感差が出る理由は何か",
+    "HTTPSが加わると階層説明はどう広がるか"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "HTTPは要求と応答の意味や形式を定めるアプリケーション層の規約である",
+      "TCPはデータ転送の順序性と信頼性を扱う転送層の規約である"
+    ],
+    "concept_contrast_candidates": [
+      "HTTPは何を頼みどう表現するかを扱う",
+      "TCPはデータがどう順序と信頼性を保って移動するかを扱う"
+    ],
+    "scenario_candidates": [
+      "層別責任を問う概念型文項に展開できる",
+      "性能問題を層別に分解するシナリオ型文項候補になる"
+    ],
+    "common_wrong_answer_patterns": [
+      "HTTPがそのままTCPだという誤解",
+      "ポート番号だけ分かれば階層区分は不要だという誤解"
+    ]
+  }
+}

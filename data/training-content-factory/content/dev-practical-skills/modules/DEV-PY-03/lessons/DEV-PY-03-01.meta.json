@@ -1,0 +1,44 @@
+{
+  "lesson_id": "DEV-PY-03-01",
+  "category": "dev-practical-skills",
+  "subject": "python",
+  "topic": "file-io-exceptions",
+  "summary": "Explains Python file I/O using the with statement, try/except/else/finally execution flow, exception hierarchy best practices, and common encoding pitfalls.",
+  "key_points": [
+    "The with statement automates resource cleanup — files are closed even when exceptions occur.",
+    "try/except/else/finally execute in a specific order: else runs only on success, finally runs always.",
+    "Catching overly broad exceptions (except Exception) hides bugs and can prevent program termination."
+  ],
+  "misconceptions": [
+    "The else block in try/except runs regardless of whether an exception occurred.",
+    "except Exception is a safe catch-all that handles errors gracefully.",
+    "Omitting the encoding parameter defaults to UTF-8 on all platforms."
+  ],
+  "check_questions": [
+    "What resource management problem does the with statement solve?",
+    "In what order do try/except/else/finally blocks execute?",
+    "Why is TOCTOU a concern when checking file existence before opening?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "File open modes: r (read), w (overwrite), a (append), x (exclusive create)",
+      "try/except/else/finally execution order and the role of each block"
+    ],
+    "practical_judgment_candidates": [
+      "Deciding between broad and specific exception catching",
+      "Choosing TOCTOU-safe file access patterns over exists-then-open"
+    ],
+    "error_interpretation_candidates": [
+      "Diagnosing UnicodeDecodeError caused by omitting encoding parameter",
+      "Identifying resource leak from missing with statement when exception occurs"
+    ],
+    "scenario_candidates": [
+      "Config file reader that gracefully handles missing or corrupted JSON",
+      "Windows script failing on UTF-8 CSV due to default cp932 encoding"
+    ],
+    "common_wrong_answer_patterns": [
+      "Believing else block executes after exception handling completes",
+      "Assuming except Exception is safe because it does not catch BaseException"
+    ]
+  }
+}

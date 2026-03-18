@@ -5,6 +5,7 @@ import { requireAdminOrTechMentor } from '@/lib/auth-helpers'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { logAuditEvent } from '@/app/actions/audit'
 import { ERR } from '@/lib/action-types'
+import { getCacheKey, BUCKET } from '@/lib/tts-utils'
 
 interface QuestionOptionData {
   option_text: string
@@ -103,10 +104,12 @@ export async function updateQuestion(questionId: string, data: QuestionFormData)
   if (error) return { error: error.message }
 
   // Delete existing options and re-insert
-  await serviceClient
+  const { error: optDeleteError } = await serviceClient
     .from('quiz_question_options')
     .delete()
     .eq('question_id', questionId)
+
+  if (optDeleteError) return { error: '選択肢の削除に失敗しました: ' + optDeleteError.message }
 
   const optionRows = data.options.map((opt, i) => ({
     question_id: questionId,
@@ -120,6 +123,12 @@ export async function updateQuestion(questionId: string, data: QuestionFormData)
     .insert(optionRows)
 
   if (optError) return { error: optError.message }
+
+  // Clean up old TTS cache if question text changed (listening questions)
+  if (oldData && oldData.question_text !== data.question_text) {
+    const oldHash = getCacheKey(oldData.question_text.replace(/\\n/g, '\n'), 1.0)
+    serviceClient.storage.from(BUCKET).remove([`${oldHash}.mp3`]).catch(() => {})
+  }
 
   await logAuditEvent(auth.user.id, 'update', 'quiz_questions', questionId, oldData, { ...data })
 
@@ -147,6 +156,12 @@ export async function deleteQuestion(questionId: string) {
     .eq('id', questionId)
 
   if (error) return { error: error.message }
+
+  // Clean up TTS cache for deleted question
+  if (oldData?.question_text) {
+    const oldHash = getCacheKey(oldData.question_text.replace(/\\n/g, '\n'), 1.0)
+    serviceClient.storage.from(BUCKET).remove([`${oldHash}.mp3`]).catch(() => {})
+  }
 
   await logAuditEvent(auth.user.id, 'delete', 'quiz_questions', questionId, oldData, null)
 
@@ -243,6 +258,169 @@ export async function fetchQuestionsForQuizIds(quizIds: string[]): Promise<{ que
   }))
 
   return { questions }
+}
+
+// ── Paginated question fetching for admin content management ──
+
+interface QuestionPageFilters {
+  difficulty?: string | null   // '__null__' → null filter, '' → all
+  category?: string | null
+  published?: 'published' | 'unpublished' | ''
+  claimsOnly?: boolean
+}
+
+interface QuestionPageResult {
+  questions: QuestionResult[]
+  totalCount: number
+  hasMore: boolean
+  error?: string
+}
+
+const PAGE_SIZE_DEFAULT = 200
+
+export async function fetchQuestionsPage(
+  quizIds: string[],
+  filters: QuestionPageFilters,
+  offset: number,
+  limit: number = PAGE_SIZE_DEFAULT
+): Promise<QuestionPageResult> {
+  const auth = await requireAdminOrTechMentor()
+  if ('error' in auth) return { questions: [], totalCount: 0, hasMore: false, error: auth.error }
+
+  const serviceClient = createServiceRoleClient()
+  if (!serviceClient) return { questions: [], totalCount: 0, hasMore: false, error: ERR.SERVICE_KEY_MISSING }
+
+  if (quizIds.length === 0) return { questions: [], totalCount: 0, hasMore: false }
+
+  // If claimsOnly, first get claimed question IDs
+  let claimedIds: string[] | null = null
+  if (filters.claimsOnly) {
+    const { data: claimRows } = await serviceClient
+      .from('question_claims')
+      .select('question_id')
+    claimedIds = [...new Set((claimRows ?? []).map(r => (r as { question_id: string }).question_id))]
+    if (claimedIds.length === 0) return { questions: [], totalCount: 0, hasMore: false }
+  }
+
+  // Build base query builder function (reused for count + data)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function applyFilters(query: any) {
+    let q = query.in('quiz_id', quizIds)
+    if (filters.difficulty === '__null__') {
+      q = q.is('difficulty', null)
+    } else if (filters.difficulty) {
+      q = q.eq('difficulty', filters.difficulty)
+    }
+    if (filters.category) {
+      q = q.eq('question_category', filters.category)
+    }
+    if (filters.published === 'published') {
+      q = q.eq('is_published', true)
+    } else if (filters.published === 'unpublished') {
+      q = q.eq('is_published', false)
+    }
+    if (claimedIds) {
+      q = q.in('id', claimedIds)
+    }
+    return q
+  }
+
+  // Step 1: Count query
+  const countQuery = applyFilters(
+    serviceClient.from('quiz_questions').select('id', { count: 'exact', head: true })
+  )
+  const { count } = await countQuery
+  const totalCount = count ?? 0
+
+  if (totalCount === 0 || offset >= totalCount) {
+    return { questions: [], totalCount, hasMore: false }
+  }
+
+  // Step 2: Question query (no options join to avoid 1000-row limit)
+  const dataQuery = applyFilters(
+    serviceClient.from('quiz_questions').select('id, quiz_id, question_text, question_type, difficulty, question_category, explanation, is_published, sort_order')
+  )
+  const { data: questionRows } = await dataQuery
+    .order('sort_order')
+    .range(offset, offset + limit - 1)
+
+  if (!questionRows || questionRows.length === 0) {
+    return { questions: [], totalCount, hasMore: false }
+  }
+
+  type QRow = {
+    id: string; quiz_id: string; question_text: string; question_type: string;
+    difficulty: string | null; question_category: string | null; explanation: string | null;
+    is_published: boolean; sort_order: number;
+  }
+  const rows = questionRows as unknown as QRow[]
+  const questionIds = rows.map(q => q.id)
+
+  // Step 3: Batch fetch options + claims for this page's questions
+  type OptRow = { question_id: string; id: string; option_text: string; is_correct: boolean; sort_order: number }
+  let allOptions: OptRow[] = []
+  const OPT_BATCH = 50 // ~50 questions × 4 options = 200 rows, well under 1000
+  for (let i = 0; i < questionIds.length; i += OPT_BATCH) {
+    const batch = questionIds.slice(i, i + OPT_BATCH)
+    const { data } = await serviceClient
+      .from('quiz_question_options')
+      .select('question_id, id, option_text, is_correct, sort_order')
+      .in('question_id', batch)
+      .order('sort_order')
+    if (data) allOptions = [...allOptions, ...(data as unknown as OptRow[])]
+  }
+
+  type ClaimRow = { question_id: string; claim_reason: string | null; profiles: { full_name: string | null } | null; created_at: string }
+  let claimsData: ClaimRow[] = []
+  const CLAIM_BATCH = 100
+  for (let i = 0; i < questionIds.length; i += CLAIM_BATCH) {
+    const batch = questionIds.slice(i, i + CLAIM_BATCH)
+    const { data } = await serviceClient
+      .from('question_claims')
+      .select('question_id, claim_reason, profiles:user_id(full_name), created_at')
+      .in('question_id', batch)
+    if (data) claimsData = [...claimsData, ...(data as unknown as ClaimRow[])]
+  }
+
+  // Aggregate options by question
+  const optionMap: Record<string, OptRow[]> = {}
+  for (const o of allOptions) {
+    if (!optionMap[o.question_id]) optionMap[o.question_id] = []
+    optionMap[o.question_id].push(o)
+  }
+
+  // Aggregate claims by question
+  const claimMap: Record<string, { count: number; details: { userName: string; reason: string | null; createdAt: string }[] }> = {}
+  for (const c of claimsData) {
+    if (!claimMap[c.question_id]) claimMap[c.question_id] = { count: 0, details: [] }
+    claimMap[c.question_id].count++
+    claimMap[c.question_id].details.push({
+      userName: (c.profiles as { full_name: string | null } | null)?.full_name ?? '不明',
+      reason: c.claim_reason,
+      createdAt: c.created_at,
+    })
+  }
+
+  const questions: QuestionResult[] = rows.map(q => ({
+    id: q.id,
+    quiz_id: q.quiz_id,
+    question_text: q.question_text,
+    question_type: q.question_type,
+    difficulty: q.difficulty,
+    question_category: q.question_category,
+    explanation: q.explanation,
+    is_published: q.is_published,
+    sort_order: q.sort_order,
+    options: (optionMap[q.id] ?? []).sort((a, b) => a.sort_order - b.sort_order),
+    claim_count: claimMap[q.id]?.count ?? 0,
+    claim_details: claimMap[q.id]?.details ?? [],
+  }))
+
+  return {
+    questions,
+    totalCount,
+    hasMore: offset + rows.length < totalCount,
+  }
 }
 
 export async function toggleQuestionPublished(questionId: string, isPublished: boolean) {

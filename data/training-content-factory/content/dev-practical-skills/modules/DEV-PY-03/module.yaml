@@ -1,0 +1,16 @@
+module:
+  id: DEV-PY-03
+  title: Python - File I/O, Error Handling, and Practical Usage
+  level: advanced
+  description: "정적 해설형 콘텐츠로 파일 입출력, 예외 처리, 실무에서 자주 마주치는 Python 패턴을 설명한다."
+  subject: python
+  content_mode: static-interpretive
+  outcomes:
+    - "with 문을 사용한 파일 입출력 패턴을 읽고 설명할 수 있다."
+    - "try/except 구조에서 예외 흐름을 추적할 수 있다."
+    - "실무에서 흔히 발생하는 Python 에러의 원인을 설명할 수 있다."
+  lessons:
+    - id: DEV-PY-03-01
+      title: "파일 입출력과 예외 처리 패턴 읽기"
+      est_minutes: 18
+      tags: [python, file-io, exception-handling, with-statement, static-content]

@@ -1,0 +1,16 @@
+module:
+  id: DEV-JAVA-01
+  title: Java - Language Basics and Code Reading
+  level: foundation
+  description: "정적 해설형 콘텐츠로 Java 소스 코드의 구조를 읽고 실행 흐름을 추적하는 기초를 설명한다."
+  subject: java
+  content_mode: static-interpretive
+  outcomes:
+    - "Java 소스 파일의 기본 구조(패키지, 임포트, 클래스, 메서드)를 설명할 수 있다."
+    - "기본 타입과 참조 타입의 차이를 설명할 수 있다."
+    - "제어 흐름(조건문, 반복문)을 읽고 실행 결과를 예측할 수 있다."
+  lessons:
+    - id: DEV-JAVA-01-01
+      title: "Java 소스를 읽을 때 먼저 확인해야 할 것들"
+      est_minutes: 18
+      tags: [java, code-reading, class-structure, types, static-content]

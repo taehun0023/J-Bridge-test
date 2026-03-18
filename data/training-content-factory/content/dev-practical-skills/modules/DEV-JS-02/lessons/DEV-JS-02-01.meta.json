@@ -1,0 +1,44 @@
+{
+  "lesson_id": "DEV-JS-02-01",
+  "category": "dev-practical-skills",
+  "subject": "javascript",
+  "topic": "async-flow",
+  "summary": "Traces execution order of callbacks, Promises, and async/await in JavaScript, covering the event loop, microtask vs macrotask priority, and error handling patterns for asynchronous code.",
+  "key_points": [
+    "Promises have three states (pending, fulfilled, rejected) and transition only once.",
+    "await pauses the async function and yields control back to the caller; execution resumes as a microtask.",
+    "Microtasks (Promise.then) always execute before macrotasks (setTimeout) in the event loop."
+  ],
+  "misconceptions": [
+    "setTimeout with 0ms delay executes before Promise.then callbacks.",
+    "Omitting await still gives you the resolved value from an async function.",
+    "Promise.all continues even if one promise rejects."
+  ],
+  "check_questions": [
+    "What are the three states of a Promise and when does each transition occur?",
+    "Why does a Promise.then callback run before a setTimeout(fn, 0) callback?",
+    "What is the difference between Promise.all and Promise.allSettled?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Promise states: pending, fulfilled, rejected — each transitions exactly once.",
+      "Microtasks execute before macrotasks within the same event loop tick."
+    ],
+    "practical_judgment_candidates": [
+      "Choosing between sequential await in a loop vs Promise.all for parallel execution.",
+      "Selecting Promise.all vs Promise.allSettled based on failure independence."
+    ],
+    "error_interpretation_candidates": [
+      "Unhandled Promise rejection caused by missing .catch or try-catch.",
+      "Undefined value from using a Promise object without await."
+    ],
+    "scenario_candidates": [
+      "Predicting console.log output order with mixed sync, Promise.then, and setTimeout code.",
+      "Tracing data flow through an async function with multiple await calls."
+    ],
+    "common_wrong_answer_patterns": [
+      "Assuming setTimeout(fn, 0) runs before Promise microtasks.",
+      "Treating the return value of an async function as a plain value instead of a Promise."
+    ]
+  }
+}

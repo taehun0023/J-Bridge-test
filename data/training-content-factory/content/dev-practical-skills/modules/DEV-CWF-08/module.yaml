@@ -1,0 +1,16 @@
+module:
+  id: DEV-CWF-08
+  title: Common Workplace Fundamentals - Delivery and Reporting
+  level: foundation
+  description: "정적 해설형 콘텐츠로 작업 완료 보고와 인수인계 문서 작성의 기본을 설명한다."
+  subject: common-workplace-fundamentals
+  content_mode: static-interpretive
+  outcomes:
+    - "작업 완료 보고에 포함해야 할 핵심 정보를 설명할 수 있다."
+    - "인수인계 시 전달해야 할 맥락 정보를 구분할 수 있다."
+    - "진행 상황 보고와 완료 보고의 차이를 설명할 수 있다."
+  lessons:
+    - id: DEV-CWF-08-01
+      title: "작업 완료 보고와 인수인계 문서의 기본"
+      est_minutes: 18
+      tags: [common-workplace-fundamentals, delivery, reporting, handover, static-content]

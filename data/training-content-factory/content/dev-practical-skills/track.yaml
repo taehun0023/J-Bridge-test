@@ -1,0 +1,149 @@
+track:
+  id: DEV-PRACTICAL-SKILLS
+  title: Development Practical Skills
+  level_order: [foundation, intermediate, advanced]
+  content_mode: static-interpretive
+  assessment_policy:
+    standalone_understanding_test: false
+    question_extraction_from_lessons: true
+  modules:
+    # ── Common Workplace Fundamentals (CWF) ──
+    - id: DEV-CWF-01
+      title: Common Workplace Fundamentals - Error Report Reading
+      level: foundation
+      order: 10
+    - id: DEV-CWF-02
+      title: Common Workplace Fundamentals - Version Control Basics
+      level: foundation
+      order: 11
+    - id: DEV-CWF-03
+      title: Common Workplace Fundamentals - Issue and Task Reading
+      level: foundation
+      order: 12
+    - id: DEV-CWF-04
+      title: Common Workplace Fundamentals - Environment and Configuration
+      level: foundation
+      order: 13
+    - id: DEV-CWF-05
+      title: Common Workplace Fundamentals - API Request and Response Reading
+      level: foundation
+      order: 14
+    - id: DEV-CWF-06
+      title: Common Workplace Fundamentals - Code Review Basics
+      level: foundation
+      order: 15
+    - id: DEV-CWF-07
+      title: Common Workplace Fundamentals - Documentation Reading
+      level: foundation
+      order: 16
+    - id: DEV-CWF-08
+      title: Common Workplace Fundamentals - Delivery and Reporting
+      level: foundation
+      order: 17
+    # ── Java ──
+    - id: DEV-JAVA-01
+      title: Java - Language Basics and Code Reading
+      level: foundation
+      order: 110
+    - id: DEV-JAVA-02
+      title: Java - Object-Oriented Reasoning in Practice
+      level: intermediate
+      order: 111
+    - id: DEV-JAVA-03
+      title: Java - Error and Exception Interpretation
+      level: intermediate
+      order: 112
+    - id: DEV-JAVA-04
+      title: Java - Collections, Streams, and Practical Boundaries
+      level: advanced
+      order: 113
+    # ── JavaScript ──
+    - id: DEV-JS-01
+      title: JavaScript - Language Basics and Runtime Behavior
+      level: foundation
+      order: 210
+    - id: DEV-JS-02
+      title: JavaScript - Asynchronous Flow and Promise Reasoning
+      level: intermediate
+      order: 211
+    - id: DEV-JS-03
+      title: JavaScript - DOM, Events, and Browser Behavior
+      level: intermediate
+      order: 212
+    - id: DEV-JS-04
+      title: JavaScript - Modules, Scope, and Common Work Situations
+      level: advanced
+      order: 213
+    # ── Python ──
+    - id: DEV-PY-01
+      title: Python - Python Basics and Script-Oriented Reasoning
+      level: foundation
+      order: 310
+    - id: DEV-PY-02
+      title: Python - Data Handling Patterns and Standard Library
+      level: intermediate
+      order: 311
+    - id: DEV-PY-03
+      title: Python - File I/O, Error Handling, and Practical Usage
+      level: advanced
+      order: 312
+    # ── SQL ──
+    - id: DEV-SQL-01
+      title: SQL - Query Writing and Result Interpretation
+      level: foundation
+      order: 410
+    - id: DEV-SQL-02
+      title: SQL - Schema Reading and JOIN Reasoning
+      level: intermediate
+      order: 411
+    - id: DEV-SQL-03
+      title: SQL - Transactions, Indexes, and Operational Caution
+      level: advanced
+      order: 412
+    # ── Spring Boot ──
+    - id: DEV-SB-01
+      title: Spring Boot - Application Structure and Dependency Injection
+      level: foundation
+      order: 510
+    - id: DEV-SB-02
+      title: Spring Boot - Controller-Service-Repository Roles
+      level: intermediate
+      order: 511
+    - id: DEV-SB-03
+      title: Spring Boot - Configuration and Profile Management
+      level: intermediate
+      order: 512
+    - id: DEV-SB-04
+      title: Spring Boot - Data Access, Transactions, and Backend Reasoning
+      level: advanced
+      order: 513
+    # ── React ──
+    - id: DEV-REACT-01
+      title: React - Component Thinking and JSX Basics
+      level: foundation
+      order: 610
+    - id: DEV-REACT-02
+      title: React - State, Props, and Data Flow
+      level: intermediate
+      order: 611
+    - id: DEV-REACT-03
+      title: React - Hooks and Side Effects
+      level: intermediate
+      order: 612
+    - id: DEV-REACT-04
+      title: React - Rendering Behavior and Performance Reasoning
+      level: advanced
+      order: 613
+    # ── Next.js ──
+    - id: DEV-NEXT-01
+      title: Next.js - App Router Structure and File Conventions
+      level: foundation
+      order: 710
+    - id: DEV-NEXT-02
+      title: Next.js - Server and Client Component Boundaries
+      level: intermediate
+      order: 711
+    - id: DEV-NEXT-03
+      title: Next.js - Data Fetching, Caching, and Project Organization
+      level: advanced
+      order: 712

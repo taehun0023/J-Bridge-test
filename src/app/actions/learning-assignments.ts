@@ -43,36 +43,74 @@ export async function resolveQuizIdsForAssignment(
   const subcatConfig = catConfig.subcategories[subcategory]
   if (!subcatConfig) return []
 
-  if (subcatConfig.courseSubcategory && contentLevel) {
-    const { data: courses } = await client
-      .from('courses')
-      .select('id')
-      .eq('subcategory', subcatConfig.courseSubcategory)
-      .eq('difficulty', contentLevel)
-      .eq('is_published', true)
-
-    if (courses?.length) {
-      const courseIds = courses.map(c => c.id)
-      const { data: lessons } = await client
-        .from('lessons')
+  if (subcatConfig.courseSubcategory) {
+    // Dev with level: resolve course-based quizzes
+    if (contentLevel) {
+      const { data: courses } = await client
+        .from('courses')
         .select('id')
-        .in('course_id', courseIds)
+        .eq('subcategory', subcatConfig.courseSubcategory)
+        .eq('difficulty', contentLevel)
+        .eq('is_published', true)
 
-      if (lessons?.length) {
-        const lessonIds = lessons.map(l => l.id)
-        const { data: quizzes } = await client
-          .from('quizzes')
+      if (courses?.length) {
+        const courseIds = courses.map(c => c.id)
+        const { data: lessons } = await client
+          .from('lessons')
           .select('id')
-          .in('lesson_id', lessonIds)
-          .order('created_at')
+          .in('course_id', courseIds)
 
-        return (quizzes ?? []).map(q => q.id)
+        if (lessons?.length) {
+          const lessonIds = lessons.map(l => l.id)
+          const { data: quizzes } = await client
+            .from('quizzes')
+            .select('id')
+            .in('lesson_id', lessonIds)
+            .order('created_at')
+
+          return (quizzes ?? []).map(q => q.id)
+        }
       }
+      return []
+    }
+
+    // Dev without level: resolve pool quizzes for the quiz type
+    if (subcatConfig.quizType) {
+      const { data } = await client
+        .from('quizzes')
+        .select('id')
+        .eq('quiz_type', subcatConfig.quizType)
+        .eq('is_pool', true)
+        .order('created_at')
+      return (data ?? []).map(q => q.id)
     }
     return []
   }
 
   if (subcatConfig.quizType) {
+    // CS and Dev categories: resolve pool quizzes
+    if (category === 'cs' || category === 'dev') {
+      const { data } = await client
+        .from('quizzes')
+        .select('id, title')
+        .eq('quiz_type', subcatConfig.quizType)
+        .eq('is_pool', true)
+        .order('created_at')
+
+      // Filter by title pattern if specified (CS subcategories use titlePatterns)
+      if (subcatConfig.titlePatterns?.length && data?.length) {
+        const filtered = data.filter(q => {
+          return subcatConfig.titlePatterns!.some(p => {
+            const keyword = p.replace(/%/g, '')
+            return (q as unknown as { title: string }).title?.includes(keyword)
+          })
+        })
+        if (filtered.length > 0) return filtered.map(q => q.id)
+      }
+
+      return (data ?? []).map(q => q.id)
+    }
+
     let query = client
       .from('quizzes')
       .select('id')

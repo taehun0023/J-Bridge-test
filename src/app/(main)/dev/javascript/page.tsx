@@ -1,5 +1,11 @@
-import PlaceholderPage from '@/components/ui/PlaceholderPage'
+import { notFound } from 'next/navigation'
+import DevStaticSubjectPage from '@/components/dev/DevStaticSubjectPage'
+import { getDevSubjectContent } from '@/lib/dev-content'
 
-export default function JavaScriptPage() {
-  return <PlaceholderPage title="JavaScript" category="dev-javascript" />
+export default async function JavaScriptPage() {
+  const subject = await getDevSubjectContent('javascript')
+
+  if (!subject) notFound()
+
+  return <DevStaticSubjectPage subject={subject} />
 }

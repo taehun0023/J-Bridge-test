@@ -1,0 +1,16 @@
+module:
+  id: DEV-JAVA-04
+  title: Java - Collections, Streams, and Practical Boundaries
+  level: advanced
+  description: "정적 해설형 콘텐츠로 컬렉션 프레임워크와 Stream API의 실무 사용 패턴과 주의점을 설명한다."
+  subject: java
+  content_mode: static-interpretive
+  outcomes:
+    - "List, Set, Map의 특성과 사용 기준을 설명할 수 있다."
+    - "Stream API의 기본 연산(filter, map, collect)을 읽고 결과를 예측할 수 있다."
+    - "컬렉션 사용 시 흔한 실수와 성능 주의점을 설명할 수 있다."
+  lessons:
+    - id: DEV-JAVA-04-01
+      title: "컬렉션과 Stream API의 실무 사용 패턴"
+      est_minutes: 18
+      tags: [java, collections, stream-api, list, map, static-content]

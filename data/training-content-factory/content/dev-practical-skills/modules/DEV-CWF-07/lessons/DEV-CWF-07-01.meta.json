@@ -1,0 +1,43 @@
+{
+  "lesson_id": "DEV-CWF-07-01",
+  "category": "dev-practical-skills",
+  "subject": "common-workplace-fundamentals",
+  "topic": "documentation-reading",
+  "summary": "Explains the types of technical documentation, strategies for finding information efficiently, and how to handle outdated or incomplete docs.",
+  "key_points": [
+    "Different document types serve different purposes — match your goal to the right type.",
+    "Use TOC navigation, search, and code examples to find information quickly.",
+    "When docs are outdated, source code and commit logs are the most reliable references."
+  ],
+  "misconceptions": [
+    "You should read documentation from beginning to end.",
+    "Blog posts and Stack Overflow answers are more reliable than official docs.",
+    "If documentation is missing, guessing is the best approach."
+  ],
+  "check_questions": [
+    "What are the main types of technical documentation and their purposes?",
+    "Why is it important to check the documentation version?",
+    "What is the most accurate information source when docs are outdated?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Types of technical documentation and their purposes (README, API reference, tutorial, etc.)",
+      "Strategies for efficient documentation reading (TOC, search, code examples)"
+    ],
+    "practical_judgment_candidates": [
+      "Choosing the right type of documentation for a given task",
+      "Deciding what to do when official documentation is outdated"
+    ],
+    "error_interpretation_candidates": [
+      "Recognizing that an API call fails because the wrong documentation version was referenced"
+    ],
+    "scenario_candidates": [
+      "Integrating an external payment API using official docs",
+      "Discovering internal framework docs are outdated and inconsistent with code"
+    ],
+    "common_wrong_answer_patterns": [
+      "Prioritizing blog posts over official documentation",
+      "Skipping version verification when referencing documentation"
+    ]
+  }
+}

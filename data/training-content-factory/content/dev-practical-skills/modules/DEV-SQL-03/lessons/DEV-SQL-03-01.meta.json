@@ -1,0 +1,44 @@
+{
+  "lesson_id": "DEV-SQL-03-01",
+  "category": "dev-practical-skills",
+  "subject": "sql",
+  "topic": "transactions-indexes",
+  "summary": "Covers ACID properties, COMMIT/ROLLBACK transaction lifecycle, index impact on query performance, and dangerous SQL patterns to avoid in production environments.",
+  "key_points": [
+    "ACID guarantees atomicity, consistency, isolation, and durability for database transactions.",
+    "Indexes dramatically speed up reads (WHERE, JOIN, ORDER BY) but slow down writes and consume storage.",
+    "Production SQL safety requires: SELECT first, wrap in BEGIN/COMMIT, verify before COMMIT."
+  ],
+  "misconceptions": [
+    "Creating indexes on every column improves overall database performance.",
+    "LIKE '%keyword%' can use a B-Tree index for fast lookups.",
+    "UPDATE/DELETE without WHERE clause only affects the current row being viewed."
+  ],
+  "check_questions": [
+    "What are the four ACID properties and what does each guarantee?",
+    "What is the safe procedure for executing UPDATE statements in production?",
+    "When does a leading wildcard in LIKE prevent index usage?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "ACID: Atomicity (all-or-nothing), Consistency (constraints maintained), Isolation (concurrent safety), Durability (survives crashes)",
+      "BEGIN starts a transaction; COMMIT confirms changes; ROLLBACK undoes all changes"
+    ],
+    "practical_judgment_candidates": [
+      "Reviewing a production UPDATE statement for safety (WHERE clause, transaction, row count check)",
+      "Deciding which columns benefit from indexing based on query patterns"
+    ],
+    "error_interpretation_candidates": [
+      "Data inconsistency after multi-table update without transaction when second statement fails",
+      "Slow query caused by full table scan due to missing index on WHERE column"
+    ],
+    "scenario_candidates": [
+      "Predict the impact of running UPDATE without WHERE on a production table",
+      "Given EXPLAIN output showing 'ALL' scan type, recommend the appropriate index to create"
+    ],
+    "common_wrong_answer_patterns": [
+      "Believing indexes should be added to all columns for best performance",
+      "Thinking LIKE with leading wildcard still uses B-Tree index"
+    ]
+  }
+}

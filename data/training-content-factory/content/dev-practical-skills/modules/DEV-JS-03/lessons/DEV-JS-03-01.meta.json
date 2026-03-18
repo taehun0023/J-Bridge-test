@@ -1,0 +1,44 @@
+{
+  "lesson_id": "DEV-JS-03-01",
+  "category": "dev-practical-skills",
+  "subject": "javascript",
+  "topic": "dom-events",
+  "summary": "Covers DOM element selection and manipulation, event propagation phases (capturing, target, bubbling), and the event delegation pattern for handling dynamic elements efficiently.",
+  "key_points": [
+    "Events propagate in three phases: capturing (top-down), target, and bubbling (bottom-up).",
+    "Event delegation attaches a single listener to a parent to handle events on dynamic child elements.",
+    "Use textContent instead of innerHTML for user input to prevent XSS vulnerabilities."
+  ],
+  "misconceptions": [
+    "e.target and e.currentTarget always refer to the same element.",
+    "querySelectorAll returns a standard JavaScript array.",
+    "Event listeners on existing elements automatically apply to dynamically added children."
+  ],
+  "check_questions": [
+    "What are the three phases of event propagation in the DOM?",
+    "Why is event delegation preferred over attaching listeners to individual dynamic elements?",
+    "What is the security risk of using innerHTML with user-provided content?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Event propagation has three phases: capturing, target, and bubbling.",
+      "querySelectorAll returns a static NodeList; getElementsByTagName returns a live HTMLCollection."
+    ],
+    "practical_judgment_candidates": [
+      "Choosing textContent over innerHTML when rendering user input.",
+      "Deciding whether to use event delegation or direct listeners based on dynamic content."
+    ],
+    "error_interpretation_candidates": [
+      "XSS vulnerability from injecting unsanitized HTML via innerHTML.",
+      "Event listener not firing on dynamically added elements due to missing delegation."
+    ],
+    "scenario_candidates": [
+      "Predicting the order of console.log outputs in a bubbling/capturing example.",
+      "Reading an event delegation handler to determine which clicks are processed."
+    ],
+    "common_wrong_answer_patterns": [
+      "Confusing e.target (actual clicked element) with e.currentTarget (listener element).",
+      "Assuming querySelectorAll results support array methods like map directly."
+    ]
+  }
+}

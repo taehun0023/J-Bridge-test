@@ -1,0 +1,180 @@
+---
+lesson_id: DEV-PY-02-01
+title: "リスト内包表記とディクショナリ活用パターン"
+module: DEV-PY-02
+level: intermediate
+language: ja
+est_minutes: 18
+tags: [python, list-comprehension, dictionary, standard-library, static-content]
+---
+
+## 1) 学習目標
+
+- リスト内包表記の構文と使いどころを説明できる。
+- ジェネレータ式との違いとメモリ効率の観点を説明できる。
+- ディクショナリの基本操作と `defaultdict`、`Counter` の使い分けを説明できる。
+- `itertools` の主要関数（`chain`、`groupby`、`product`）の用途を説明できる。
+
+## 2) 業務コンテキスト
+
+データ処理スクリプトやAPI応答の加工では、リストやディクショナリの変換処理が頻繁に発生する。forループで書くと10行かかる処理がリスト内包表記なら1行で済む場合がある。一方、可読性を犠牲にする過度なネストは保守性を下げる。実務では「読みやすさ」と「簡潔さ」のバランス判断が求められる。
+
+## 3) 要点解説
+
+### リスト内包表記
+
+リスト内包表記は `[式 for 変数 in イテラブル if 条件]` の形式で、新しいリストを生成する。
+
+```python
+# 基本形: 偶数だけ2乗
+squares = [x ** 2 for x in range(10) if x % 2 == 0]
+# [0, 4, 16, 36, 64]
+```
+
+ネストも可能だが、2重を超えると可読性が著しく低下する。
+
+```python
+# 2重ネスト: 行列の平坦化
+matrix = [[1, 2], [3, 4], [5, 6]]
+flat = [val for row in matrix for val in row]
+# [1, 2, 3, 4, 5, 6]
+```
+
+### ジェネレータ式
+
+`()` で囲むとジェネレータになる。リスト全体をメモリに保持せず、要素を逐次生成する。大量データ処理ではメモリ効率が重要になる。
+
+```python
+# メモリ効率: 100万件でもメモリ消費は最小限
+total = sum(x ** 2 for x in range(1_000_000))
+```
+
+### ディクショナリ活用
+
+ディクショナリ内包表記でキーと値を同時に変換できる。
+
+```python
+prices = {"apple": 100, "banana": 200, "cherry": 300}
+# 値段を1.1倍にした新しいdict
+updated = {k: int(v * 1.1) for k, v in prices.items()}
+```
+
+`get` メソッドはキーが存在しない場合のデフォルト値を指定できる。`KeyError` を防ぐ基本パターンだ。
+
+```python
+config = {"timeout": 30}
+retry = config.get("retry_count", 3)  # キーがなければ 3
+```
+
+### 標準ライブラリ: collections
+
+`defaultdict` はキーが存在しないとき自動的にデフォルト値を生成する。集計処理で便利だ。
+
+```python
+from collections import defaultdict, Counter
+
+# グループ化
+groups = defaultdict(list)
+for name, dept in [("Tanaka", "dev"), ("Sato", "sales"), ("Suzuki", "dev")]:
+    groups[dept].append(name)
+# {'dev': ['Tanaka', 'Suzuki'], 'sales': ['Sato']}
+
+# 出現回数カウント
+words = ["api", "db", "api", "cache", "db", "api"]
+count = Counter(words)
+# Counter({'api': 3, 'db': 2, 'cache': 1})
+```
+
+### 標準ライブラリ: itertools
+
+`chain` は複数のイテラブルを連結する。`groupby` はソート済みデータをキーごとにグループ化する。
+
+```python
+from itertools import chain, groupby
+
+# 複数リストを連結
+combined = list(chain([1, 2], [3, 4], [5]))
+# [1, 2, 3, 4, 5]
+
+# groupby はソート済みデータが前提
+data = sorted([("dev", "Tanaka"), ("sales", "Sato"), ("dev", "Suzuki")])
+for key, group in groupby(data, key=lambda x: x[0]):
+    print(key, list(group))
+```
+
+## 4) 実務解釈シナリオ
+
+### シナリオ A
+
+```python
+logs = [
+    {"level": "ERROR", "msg": "timeout"},
+    {"level": "INFO", "msg": "started"},
+    {"level": "ERROR", "msg": "connection refused"},
+    {"level": "WARN", "msg": "slow query"},
+]
+errors = [log["msg"] for log in logs if log["level"] == "ERROR"]
+```
+
+- 読み取り:
+  - `logs` リストからレベルが `"ERROR"` のものだけを抽出し、メッセージだけの新しいリストを作成している。
+  - forループで書くと4行必要な処理が1行で済んでいる。
+  - フィルタリングと射影（特定フィールドの抽出）を同時に行うのがリスト内包表記の典型的なパターンだ。
+
+### シナリオ B
+
+```python
+from collections import defaultdict
+
+access_log = [
+    ("user1", "/api/data"),
+    ("user2", "/api/login"),
+    ("user1", "/api/login"),
+    ("user1", "/api/data"),
+]
+
+paths_per_user = defaultdict(set)
+for user, path in access_log:
+    paths_per_user[user].add(path)
+
+# ユーザーごとのユニークパス数
+summary = {user: len(paths) for user, paths in paths_per_user.items()}
+# {'user1': 2, 'user2': 1}
+```
+
+- 解釈:
+  - `defaultdict(set)` により、キーが初めて登場した時点で自動的に空の `set` が作られる。
+  - `set` を使うことで重複URLを自動排除している。
+  - 最後のディクショナリ内包表記でユーザーごとのアクセスパス数を集計している。
+
+## 5) よくあるミス
+
+1. リスト内包表記を3重以上ネストして可読性を失う。
+2重までが限度で、それ以上はforループに展開するほうが保守性が高い。
+
+2. ジェネレータ式を複数回イテレートしようとする。
+ジェネレータは一度消費すると空になる。複数回使いたい場合はリストに変換するか、関数で再生成する。
+
+3. `groupby` をソートせずに使い、期待通りにグループ化されない。
+`itertools.groupby` は連続する同一キーをグループ化するため、事前ソートが必須だ。
+
+4. `defaultdict` のデフォルトファクトリを誤って `list()` と書く（正しくは `list`）。
+`defaultdict(list())` はエラーになる。コーラブルを渡す必要がある。
+
+5. 辞書の `.keys()` や `.values()` がリストだと思い込む。
+Python 3ではビューオブジェクトであり、リスト操作（インデックスアクセスなど）は直接できない。
+
+## 6) 確認質問
+
+1. リスト内包表記とforループで同じ結果を得る場合、内包表記を選ぶ基準は何か？
+2. ジェネレータ式がリスト内包表記よりメモリ効率が良い理由は何か？
+3. `defaultdict(int)` と `Counter` の使い分けはどう判断するか？
+4. `groupby` を使う前にソートが必要な理由は何か？
+5. ディクショナリの `get` メソッドと `[]` アクセスの違いは何か？
+
+## 7) 出題抽出メモ
+
+- 事実型候補: リスト内包表記の構文要素、ジェネレータとリストのメモリ挙動の違い
+- 判断型候補: 内包表記の可読性限界（ネスト深さ）の判断、`defaultdict` vs 通常の `dict` の選択
+- シナリオ型候補: ジェネレータ再利用による空結果、`groupby` 未ソートデータでの予想外グループ化
+- 誤答誘導ポイント: ジェネレータは何度でもイテレートできると誤認、`dict.keys()` がリストだと誤認

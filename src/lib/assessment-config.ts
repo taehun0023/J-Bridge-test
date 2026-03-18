@@ -72,7 +72,8 @@ export const STEP2_DIFFICULTY_RATIOS: Record<string, number> = {
 export const ASSESSMENT_CONTENT_QUIZ_TYPES: Record<number, string[]> = {
   1: ['jlpt_grammar', 'jlpt_reading', 'jlpt_listening'],
   2: ['it_terminology', 'sentence_pattern', 'business_expression', 'keigo'],
-  // 3, 4 are separate tasks (CS / dev)
+  3: ['cs_knowledge'],
+  4: ['core_programming', 'framework'],
 }
 
 /**
@@ -82,6 +83,8 @@ export const ASSESSMENT_CONTENT_QUIZ_TYPES: Record<number, string[]> = {
 export const ADMIN_CONTENT_QUIZ_TYPES: Record<number, string[]> = {
   1: ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening', 'jlpt_kanji'],
   2: ['it_terminology', 'sentence_pattern', 'business_expression', 'keigo'],
+  3: ['cs_knowledge'],
+  4: ['core_programming', 'framework'],
 }
 
 /** Practice (理解度テスト) quiz type labels for admin content management */
@@ -95,6 +98,30 @@ export const PRACTICE_QUIZ_TYPE_LABELS: Record<string, string> = {
   sentence_pattern: '文章パターン(練習)',
   business_expression: 'ビジネス表現(練習)',
   keigo: '敬語(練習)',
+  cs_knowledge: 'CS知識(練習)',
+  core_programming: 'コア言語(練習)',
+  framework: 'フレームワーク(練習)',
+}
+
+/** Pool quiz IDs for CS Knowledge (Step 3) comprehension tests */
+export const CS_POOL_QUIZ_IDS: Record<string, string> = {
+  algorithm: 'g0000001-0000-0000-0000-000000000001',
+  data_structure: 'g0000001-0000-0000-0000-000000000002',
+  basic_theory: 'g0000001-0000-0000-0000-000000000003',
+  database: 'g0000001-0000-0000-0000-000000000004',
+  network: 'g0000001-0000-0000-0000-000000000005',
+  os: 'g0000001-0000-0000-0000-000000000006',
+  security: 'g0000001-0000-0000-0000-000000000007',
+}
+
+/** Pool quiz IDs for Development Skills (Step 4) comprehension tests */
+export const DEV_POOL_QUIZ_IDS: Record<string, string> = {
+  java_core: 'h0000001-0000-0000-0000-000000000001',
+  spring_boot: 'h0000001-0000-0000-0000-000000000002',
+  sql: 'h0000001-0000-0000-0000-000000000003',
+  javascript_core: 'h0000001-0000-0000-0000-000000000004',
+  react: 'h0000001-0000-0000-0000-000000000005',
+  sql_shared: 'h0000001-0000-0000-0000-000000000006',
 }
 
 /** Pool quiz IDs — per category × level for level-specific random-draw tests */
@@ -147,6 +174,8 @@ export const BJ_POOL_QUIZ_IDS: Record<string, string> = {
 export const ALL_PRACTICE_QUIZ_TYPES = [
   'jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening', 'jlpt_kanji',
   'it_terminology', 'sentence_pattern', 'business_expression', 'keigo',
+  'cs_knowledge',
+  'core_programming', 'framework',
 ] as const
 
 /** comprehensive_exams.category → assessment step (radar axis) mapping */
@@ -248,6 +277,28 @@ export const CS_KNOWLEDGE_WEIGHTS: Record<string, number> = {
   network: 4,
   os: 3,
   security: 3,
+}
+
+/** Step 3 difficulty distribution: easy 20%, medium 40%, hard 40% */
+export const STEP3_DIFFICULTY_RATIOS: Record<string, number> = {
+  easy: 0.2,
+  medium: 0.4,
+  hard: 0.4,
+}
+
+/** Step 4 category weights by language track */
+export const STEP4_CATEGORY_WEIGHTS_JAVA: Record<string, number> = {
+  java_core: 10, spring_boot: 8, sql: 6, java_code: 6,
+}
+export const STEP4_CATEGORY_WEIGHTS_JS: Record<string, number> = {
+  javascript_core: 10, react: 8, sql: 6, javascript_code: 6,
+}
+
+/** Step 4 difficulty distribution: easy 20%, medium 40%, hard 40% */
+export const STEP4_DIFFICULTY_RATIOS: Record<string, number> = {
+  easy: 0.2,
+  medium: 0.4,
+  hard: 0.4,
 }
 
 // Step 4 (開発実務能力): language-specific groups

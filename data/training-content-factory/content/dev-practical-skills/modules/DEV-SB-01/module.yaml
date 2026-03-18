@@ -1,0 +1,16 @@
+module:
+  id: DEV-SB-01
+  title: Spring Boot - Application Structure and Dependency Injection
+  level: foundation
+  description: "정적 해설형 콘텐츠로 Spring Boot 프로젝트의 디렉토리 구조와 의존성 주입(DI) 원리를 설명한다."
+  subject: spring-boot
+  content_mode: static-interpretive
+  outcomes:
+    - "Spring Boot 프로젝트의 기본 디렉토리 구조를 설명할 수 있다."
+    - "의존성 주입(DI)의 개념과 @Autowired의 동작 방식을 설명할 수 있다."
+    - "@Component, @Service, @Repository 어노테이션의 역할을 구분할 수 있다."
+  lessons:
+    - id: DEV-SB-01-01
+      title: "Spring Boot 프로젝트 구조와 의존성 흐름 읽기"
+      est_minutes: 18
+      tags: [spring-boot, project-structure, dependency-injection, annotation, static-content]

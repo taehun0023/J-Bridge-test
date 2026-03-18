@@ -1,0 +1,16 @@
+module:
+  id: DEV-REACT-02
+  title: React - State, Props, and Data Flow
+  level: intermediate
+  description: "정적 해설형 콘텐츠로 State와 Props의 차이, 단방향 데이터 흐름을 읽고 추적하는 방법을 설명한다."
+  subject: react
+  content_mode: static-interpretive
+  outcomes:
+    - "State와 Props의 차이와 각각의 역할을 설명할 수 있다."
+    - "단방향 데이터 흐름(부모→자식)을 코드에서 추적할 수 있다."
+    - "State 변경이 리렌더링을 일으키는 원리를 설명할 수 있다."
+  lessons:
+    - id: DEV-REACT-02-01
+      title: "State와 Props로 데이터가 흐르는 방식"
+      est_minutes: 18
+      tags: [react, state, props, data-flow, re-render, static-content]

@@ -1,0 +1,163 @@
+---
+lesson_id: DEV-SB-02-01
+title: "Controller-Service-Repositoryの各レイヤーの役割とデータの流れ"
+module: DEV-SB-02
+level: intermediate
+language: ja
+est_minutes: 18
+tags: [spring-boot, controller, service, repository, layered-architecture, static-content]
+---
+
+## 1) 学習目標
+
+- Controller・Service・Repositoryの各レイヤーが担う責任を正確に説明できる。
+- HTTPリクエストが受信されてからレスポンスが返されるまでのデータの流れを追跡できる。
+- レイヤー間の依存方向ルール（上位→下位のみ依存）を説明できる。
+- DTOとEntityの使い分けとレイヤー間のデータ変換の目的を理解できる。
+
+## 2) 業務コンテキスト
+
+日本のIT現場では、チーム開発時に「この機能はどのレイヤーに書くべきか」という判断が頻繁に求められる。レイヤードアーキテクチャを正しく理解しないと、Controller内にSQL呼び出しを書いたり、Service内にHTTPレスポンス処理を記述する混乱が生じる。特に既存プロジェクトに途中参加する場合、コードのどこを見れば何がわかるかを素早く判断するために、各レイヤーの責任境界を明確に把握する必要がある。
+
+## 3) 要点解説
+
+Spring Bootの標準的なレイヤードアーキテクチャは3層で構成される。
+
+**Controller層** — HTTPリクエストの受信とレスポンスの返却を担当する。ビジネスロジックは持たず、リクエストのバリデーションとServiceへの委譲が主な役割である。
+
+**Service層** — ビジネスロジックの実装を担当する。複数のRepositoryを組み合わせた処理、条件分岐、計算などはここに記述する。トランザクション管理もService層の責任である。
+
+**Repository層** — データベースへのアクセスを担当する。CRUDの基本操作と、必要に応じたカスタムクエリを提供する。
+
+典型的なREST APIのリクエスト処理フローを以下に示す。
+
+```java
+// 1. Controller — リクエスト受信・レスポンス返却
+@RestController
+@RequestMapping("/api/orders")
+public class OrderController {
+    private final OrderService orderService;
+
+    public OrderController(OrderService orderService) {
+        this.orderService = orderService;
+    }
+
+    @PostMapping
+    public ResponseEntity<OrderResponse> createOrder(
+            @Valid @RequestBody OrderRequest request) {
+        OrderResponse response = orderService.createOrder(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+}
+
+// 2. Service — ビジネスロジック
+@Service
+@Transactional
+public class OrderService {
+    private final OrderRepository orderRepository;
+    private final ProductRepository productRepository;
+
+    public OrderService(OrderRepository orderRepository,
+                        ProductRepository productRepository) {
+        this.orderRepository = orderRepository;
+        this.productRepository = productRepository;
+    }
+
+    public OrderResponse createOrder(OrderRequest request) {
+        Product product = productRepository.findById(request.getProductId())
+            .orElseThrow(() -> new ProductNotFoundException(request.getProductId()));
+
+        if (product.getStock() < request.getQuantity()) {
+            throw new InsufficientStockException(product.getId());
+        }
+
+        product.decreaseStock(request.getQuantity());
+        Order order = Order.create(product, request.getQuantity());
+        Order saved = orderRepository.save(order);
+
+        return OrderResponse.from(saved);
+    }
+}
+
+// 3. Repository — データアクセス
+@Repository
+public interface OrderRepository extends JpaRepository<Order, Long> {
+    List<Order> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
+}
+```
+
+**依存方向のルール：** Controller → Service → Repository の方向にのみ依存する。Repository がControllerを参照したり、ServiceがControllerを参照することはない。この一方向の依存により、下位レイヤーの変更が上位に影響を与えにくくなる。
+
+**DTOとEntityの分離：** Controller層ではDTO（OrderRequest/OrderResponse）を使い、Repository層ではEntity（Order）を使う。Service層でDTOとEntityの変換を行うことで、API仕様の変更がデータベース構造に影響しないようにする。
+
+## 4) 実務解釈シナリオ
+
+### シナリオ A
+```java
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+    private final UserRepository userRepository;
+
+    @GetMapping("/{id}")
+    public User getUser(@PathVariable Long id) {
+        return userRepository.findById(id).orElse(null);
+    }
+}
+```
+- 問題点：ControllerがRepositoryを直接呼び出している。Service層を経由していないため、後からバリデーションやキャッシュなどのビジネスロジックを追加する際にControllerを修正する必要が生じる。また、`null`を返すとクライアント側でNullPointerExceptionの原因になる。
+
+### シナリオ B
+```java
+@Service
+public class ReportService {
+    private final SalesRepository salesRepository;
+    private final ExpenseRepository expenseRepository;
+
+    public ReportService(SalesRepository salesRepo,
+                         ExpenseRepository expenseRepo) {
+        this.salesRepository = salesRepo;
+        this.expenseRepository = expenseRepo;
+    }
+
+    public MonthlyReport generateReport(YearMonth month) {
+        List<Sale> sales = salesRepository.findByMonth(month);
+        List<Expense> expenses = expenseRepository.findByMonth(month);
+        BigDecimal profit = calculateProfit(sales, expenses);
+        return new MonthlyReport(month, sales.size(), profit);
+    }
+}
+```
+- 解釈：複数のRepositoryを組み合わせて利益を計算するビジネスロジックがService層に正しく配置されている。Controllerはこのメソッドを呼び出すだけでよく、レポート生成の詳細を知る必要がない。
+
+## 5) よくあるミス
+
+1. ControllerでRepositoryを直接呼び出す。
+Service層を省略すると、ビジネスロジックの追加時にControllerが肥大化する。必ずService層を経由する。
+
+2. Service層にHTTPレスポンスの組み立てを記述する。
+`ResponseEntity`や`HttpStatus`はController層の責任である。ServiceはDTOまたはドメインオブジェクトを返すべきである。
+
+3. Repository層にビジネスロジックを記述する。
+「在庫が足りなければエラー」のような判断はService層で行う。Repositoryはデータの取得・保存のみを担当する。
+
+4. 循環依存を作る。
+ServiceAがServiceBを、ServiceBがServiceAを注入すると起動時にエラーとなる。依存方向を整理するか、イベントを使用して疎結合にする。
+
+5. DTOとEntityを区別せずに使う。
+EntityをそのままAPIレスポンスに返すと、データベースのカラム変更がAPI仕様に直接影響する。必ずDTOに変換する。
+
+## 6) 確認質問
+
+1. Controller・Service・Repositoryのそれぞれの責任は何か？
+2. なぜControllerからRepositoryを直接呼び出すべきではないのか？
+3. レイヤー間の依存方向はどの方向が正しいか？その理由は？
+4. DTOとEntityを分離する目的は何か？
+5. トランザクション管理はどのレイヤーの責任か？その理由は？
+
+## 7) 出題抽出メモ
+
+- 事実型候補：各レイヤーの責任定義、依存方向ルール
+- 判断型候補：ビジネスロジックをどのレイヤーに配置すべきか、DTO変換の適切な場所
+- シナリオ型候補：ControllerがRepositoryを直接呼び出すコードの問題指摘、複数Repository連携コードのレイヤー判断
+- 誤答誘導ポイント：ServiceとControllerの責任境界の混同、Repository内でのロジック記述を正しいと誤認

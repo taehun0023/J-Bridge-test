@@ -1,0 +1,46 @@
+{
+  "lesson_id": "CSK-SC-01-01",
+  "category": "cs-knowledge",
+  "subject": "security",
+  "topic": "authentication-vs-authorization",
+  "default_language": "ja",
+  "available_languages": [
+    "ja",
+    "ko"
+  ],
+  "summary": "認証と認可を区別し、保安設計でそれぞれが担う責任を説明する。",
+  "key_points": [
+    "認証は利用者が誰かを確認する過程である",
+    "認可はその利用者が何をしてよいか判断する過程である",
+    "認証はidentity中心であり、認可はpermission中心である"
+  ],
+  "misconceptions": [
+    "ログインできればすべて許可されうるという誤解",
+    "画面ボタンを隠せば認可が十分だという誤解",
+    "管理者かどうかだけ見れば権限設計が終わるという誤解"
+  ],
+  "check_questions": [
+    "認証と認可を入れ替えて説明すると何が危険か",
+    "ログイン済み利用者でも拒否される理由は何か",
+    "ボタン非表示だけではなぜ認可にならないか",
+    "API水準の権限検査が必要な理由は何か"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "認証は利用者が誰かを確認する過程である",
+      "認可はその利用者が何をしてよいか判断する過程である"
+    ],
+    "concept_contrast_candidates": [
+      "認証はidentity中心であり、認可はpermission中心である",
+      "ログイン成功は認証結果であって資源アクセス許可を意味しない"
+    ],
+    "scenario_candidates": [
+      "権限漏れ事例を解釈するシナリオ型文項候補になる",
+      "ログインと許可判定を分ける概念型文項へ展開できる"
+    ],
+    "common_wrong_answer_patterns": [
+      "ログインできればすべて許可されうるという誤解",
+      "画面ボタンを隠せば認可が十分だという誤解"
+    ]
+  }
+}

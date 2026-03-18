@@ -1,0 +1,92 @@
+---
+lesson_id: DEV-SQL-01-01
+title: "SELECTクエリを読んで結果を予測する方法"
+module: DEV-SQL-01
+language: ja
+level: foundation
+est_minutes: 18
+tags: [sql, select, where, group-by, aggregate, static-content]
+---
+
+## 1) 学習目標
+
+- SELECT文の基本句（SELECT、FROM、WHERE、ORDER BY、LIMIT）の役割を説明できる。
+- 集計関数（COUNT、SUM、AVG、MAX、MIN）とGROUP BYの関係を説明できる。
+- 与えられたクエリとサンプルデータから結果を予測できる。
+- WHEREとHAVINGの違いを説明できる。
+
+## 2) 業務コンテキスト
+
+実務においてデータベースはほぼすべてのアプリケーションの核心である。サービス障害調査、データ確認、レポート生成など様々な場面でSQLクエリを読んで結果を予測する能力が求められる。複雑なクエリを書くことよりも、他の人が書いたクエリを正確に読むことが先である。
+
+## 3) 要点解説
+
+SQLのSELECT文はデータを取得する基本コマンドである。実行順序を理解することが重要である。
+
+**論理的実行順序**：FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT。この順序を知ればクエリの各句がどのデータに適用されるかを正確に追跡できる。
+
+`FROM`は対象テーブルを指定する。`WHERE`は行をフィルタリングする。`GROUP BY`は残った行をグループにまとめる。`HAVING`はグループをフィルタリングする。`SELECT`は出力するカラムを決定する。`ORDER BY`は結果をソートし、`LIMIT`は出力行数を制限する。
+
+**WHERE vs HAVING**：`WHERE`はグループ化前に個別の行をフィルタリングし、`HAVING`はグループ化後にグループをフィルタリングする。`WHERE`では集計関数を使用できないが、`HAVING`では使用できる。
+
+**集計関数**：`COUNT(*)`は行数、`SUM(column)`は合計、`AVG(column)`は平均、`MAX`/`MIN`は最大値/最小値を返す。集計関数は`GROUP BY`と共に使用するとグループごとの結果を計算する。
+
+**NULLの注意点**：集計関数は`NULL`を無視する。`COUNT(*)`はすべての行を数えるが、`COUNT(column)`は該当カラムがNULLでない行のみを数える。この違いを知らなければ結果を誤って予測する可能性がある。
+
+## 4) 実務解釈シナリオ
+
+### シナリオ A
+```sql
+SELECT department, COUNT(*) AS member_count
+FROM employees
+WHERE status = 'active'
+GROUP BY department
+HAVING COUNT(*) >= 5
+ORDER BY member_count DESC;
+```
+- 読み取り順序：
+  1. `employees`テーブルから
+  2. `status`が`'active'`の行のみフィルタリングし
+  3. `department`別にグループ化した後
+  4. メンバーが5人以上の部署のみ残し
+  5. 人数の降順でソートする。
+- 結果：在籍中の社員が5人以上の部署とその人数が降順で出力される。
+
+### シナリオ B
+```sql
+SELECT COUNT(*), COUNT(email)
+FROM users;
+```
+- 解釈：
+  - `COUNT(*)`は全行数を返す。
+  - `COUNT(email)`は`email`がNULLでない行のみを数える。
+  - もし100人のユーザーのうち10人のメールがNULLであれば、結果は`100, 90`となる。
+
+## 5) よくあるミス
+
+1. SELECTの記述順序を実行順序と誤解する。
+SELECTは最初に書くが、実際にはほぼ最後に実行される。実行順序を知らなければWHEREとHAVINGの違いを理解できない。
+
+2. WHERE句で集計関数を使用する。
+`WHERE COUNT(*) > 5`はエラーである。集計結果でフィルタリングするには`HAVING`を使用しなければならない。
+
+3. COUNT(*)とCOUNT(column)を同じだと考える。
+NULLがあるカラムでは結果が異なる。意図に合ったものを選択すべきである。
+
+4. GROUP BYなしで集計関数と通常カラムを混ぜて使う。
+`SELECT name, COUNT(*) FROM users`はほとんどのDBMSでエラーとなる。
+
+## 6) 確認質問
+
+1. SQL SELECT文の論理的実行順序は何か？
+2. WHEREとHAVINGの違いは何か、それぞれいつ使用するか？
+3. COUNT(*)とCOUNT(column)の違いは何か？
+4. GROUP BYなしで集計関数と通常カラムを一緒にSELECTできるか？
+5. ORDER BY DESCは何を意味するか？
+
+## 7) 出題抽出メモ
+
+- 事実型候補：SELECTの実行順序、集計関数のNULL処理
+- 判断型候補：WHERE vs HAVINGの使用適切性
+- シナリオ型候補：与えられたデータとクエリから結果を予測
+- 誤答誘導ポイント：SELECTの記述順序を実行順序と誤認、COUNT(*) = COUNT(column)と誤認

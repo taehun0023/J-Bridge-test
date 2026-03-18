@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import {
   ResponsiveContainer,
   PieChart,
@@ -9,21 +8,14 @@ import {
   Tooltip,
   Legend,
 } from 'recharts'
+import { useDarkMode } from '@/lib/hooks/useDarkMode'
 
 interface UserRoleChartProps {
   data: { name: string; value: number; color: string }[]
 }
 
 export default function UserRoleChart({ data }: UserRoleChartProps) {
-  const [isDark, setIsDark] = useState(false)
-
-  useEffect(() => {
-    const check = () => setIsDark(document.documentElement.classList.contains('dark'))
-    check()
-    const observer = new MutationObserver(check)
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
-    return () => observer.disconnect()
-  }, [])
+  const isDark = useDarkMode()
 
   if (data.every(d => d.value === 0)) {
     return (

@@ -1,0 +1,43 @@
+{
+  "lesson_id": "DEV-PY-01-01",
+  "category": "dev-practical-skills",
+  "subject": "python",
+  "topic": "script-structure-execution-flow",
+  "summary": "Explains Python script structure, indentation-based blocks, the if __name__ pattern, and basic data type characteristics for reading and understanding code.",
+  "key_points": [
+    "Python uses indentation to define code blocks — no braces.",
+    "The if __name__ == '__main__' pattern separates script execution from import usage.",
+    "Mutable default arguments are shared across function calls — a classic Python pitfall."
+  ],
+  "misconceptions": [
+    "Mixing tabs and spaces in indentation works fine in Python 3.",
+    "A default list argument creates a new list on each function call.",
+    "Strings in Python can be modified in place."
+  ],
+  "check_questions": [
+    "Why does Python use indentation instead of braces?",
+    "What happens when a mutable object is used as a default argument?",
+    "What is the purpose of the if __name__ == '__main__' guard?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Mutable vs immutable data types in Python",
+      "Role of if __name__ == '__main__'"
+    ],
+    "practical_judgment_candidates": [
+      "Identifying unsafe default argument patterns",
+      "Choosing between list and tuple for a use case"
+    ],
+    "error_interpretation_candidates": [
+      "Diagnosing IndentationError and TabError"
+    ],
+    "scenario_candidates": [
+      "Mutable default argument causing accumulated state",
+      "Unexpected code execution on module import"
+    ],
+    "common_wrong_answer_patterns": [
+      "Assuming default list is freshly created per call",
+      "Believing strings can be modified via index assignment"
+    ]
+  }
+}

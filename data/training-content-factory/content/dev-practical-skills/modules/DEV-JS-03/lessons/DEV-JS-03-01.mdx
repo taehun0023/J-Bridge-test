@@ -1,0 +1,173 @@
+---
+lesson_id: DEV-JS-03-01
+title: "DOM操作とイベント処理パターンの読み取り"
+module: DEV-JS-03
+level: intermediate
+language: ja
+est_minutes: 18
+tags: [javascript, dom, events, bubbling, delegation, static-content]
+---
+
+## 1) 学習目標
+
+- DOM要素の選択方法（querySelector, getElementById等）を使い分けられる。
+- DOM要素の作成・変更・削除の基本操作を説明できる。
+- イベントのバブリングとキャプチャリングの伝播順序を追跡できる。
+- イベント委任（Event Delegation）パターンのメリットと実装方法を説明できる。
+
+## 2) 業務コンテキスト
+
+フロントエンド開発では、ユーザーの操作に応じてUIを動的に更新する必要がある。ReactやVueなどのフレームワークが主流であっても、内部的にはDOM操作が行われており、デバッグ時にはDOM APIの知識が必要になる。また、レガシーシステムの保守やライブラリのソースコード読解でも、DOM操作とイベント処理の理解は不可欠である。
+
+## 3) 要点解説
+
+### DOM要素の選択
+
+```javascript
+// 単一要素の選択
+const header = document.getElementById("main-header");
+const firstBtn = document.querySelector(".btn-primary");
+
+// 複数要素の選択
+const allItems = document.querySelectorAll(".list-item");
+const forms = document.getElementsByTagName("form");
+```
+
+`querySelector`/`querySelectorAll`はCSSセレクタを使えるため柔軟性が高い。`getElementById`は最も高速だが、IDでしか検索できない。`querySelectorAll`は静的なNodeListを返し、`getElementsByTagName`はライブなHTMLCollectionを返す点に注意。
+
+### DOM要素の操作
+
+```javascript
+// 要素の作成と追加
+const li = document.createElement("li");
+li.textContent = "新しい項目";
+li.classList.add("list-item");
+document.getElementById("task-list").appendChild(li);
+
+// 要素の変更
+const title = document.querySelector("h1");
+title.textContent = "更新されたタイトル";
+title.style.color = "blue";
+title.setAttribute("data-status", "active");
+
+// 要素の削除
+const old = document.querySelector(".deprecated");
+old.parentNode.removeChild(old);
+// または
+old.remove();
+```
+
+`textContent`はXSS攻撃を防ぐ安全な方法であり、`innerHTML`はHTMLとして解釈されるためユーザー入力には使用してはならない。
+
+### イベントのバブリングとキャプチャリング
+
+イベントは3つのフェーズで伝播する。
+
+1. **キャプチャリングフェーズ**: DOMツリーの上から下へ
+2. **ターゲットフェーズ**: イベントが発生した要素
+3. **バブリングフェーズ**: DOMツリーの下から上へ
+
+```javascript
+// バブリング（デフォルト）
+document.querySelector(".child").addEventListener("click", (e) => {
+  console.log("child clicked");
+});
+
+document.querySelector(".parent").addEventListener("click", (e) => {
+  console.log("parent clicked"); // childクリック時にも実行される
+});
+
+// キャプチャリング
+document.querySelector(".parent").addEventListener("click", (e) => {
+  console.log("parent capture");
+}, true); // 第3引数trueでキャプチャフェーズ
+```
+
+childをクリックすると: `parent capture → child clicked → parent clicked`の順で実行される。
+
+### イベント委任パターン
+
+動的に追加される要素にも対応するため、親要素にイベントリスナーを設定する。
+
+```javascript
+// 悪い例：各liに個別にリスナーを設定
+document.querySelectorAll("li").forEach(li => {
+  li.addEventListener("click", handleClick);
+});
+// → 後から追加されたliにはリスナーがない
+
+// 良い例：イベント委任
+document.getElementById("task-list").addEventListener("click", (e) => {
+  const li = e.target.closest("li");
+  if (!li) return;
+  handleClick(li);
+});
+// → 動的に追加されたliにも対応する
+```
+
+`e.target`はイベントが発生した実際の要素、`e.currentTarget`はリスナーが登録された要素である。`closest()`は最も近い祖先要素を検索する。
+
+## 4) 実務解釈シナリオ
+
+### シナリオ A
+```javascript
+document.getElementById("form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const data = new FormData(e.target);
+  fetch("/api/submit", {
+    method: "POST",
+    body: data
+  });
+});
+```
+- 読み取りポイント:
+  - `preventDefault()`でフォームのデフォルト送信（ページ遷移）を防いでいる。
+  - `FormData`でフォーム内の全入力値を自動収集している。
+  - fetchでAPIに非同期送信している。
+
+### シナリオ B
+```javascript
+document.addEventListener("click", (e) => {
+  if (e.target.matches("[data-action='delete']")) {
+    const row = e.target.closest("tr");
+    row.remove();
+  }
+});
+```
+- 解釈:
+  - documentレベルでイベント委任を行っている。
+  - `data-action="delete"`属性を持つ要素のクリックのみを処理する。
+  - `closest("tr")`で最も近いテーブル行を取得し、削除する。
+  - 動的に追加された行にも対応できる設計。
+
+## 5) よくあるミス
+
+1. `innerHTML`にユーザー入力をそのまま挿入する。
+XSS攻撃のリスクがある。`textContent`または適切なサニタイズを使用すべき。
+
+2. 動的要素に直接イベントリスナーを付ける。
+後から追加された要素にはリスナーが設定されない。イベント委任を使うべき。
+
+3. `e.target`と`e.currentTarget`を混同する。
+`e.target`はクリックされた実際の要素、`e.currentTarget`はリスナーが登録された要素。
+
+4. `querySelectorAll`の戻り値を配列として扱う。
+NodeListは配列ではないため、`map`等のメソッドがない。`Array.from()`で変換するか、`forEach`を使用する。
+
+5. `stopPropagation()`を乱用してイベント伝播を止める。
+他のリスナーが動作しなくなる副作用がある。本当に必要な場合のみ使用する。
+
+## 6) 確認質問
+
+1. `querySelector`と`getElementById`の違いは何か？
+2. イベントのバブリングとキャプチャリングの伝播順序はどうなっているか？
+3. イベント委任のメリットは何か？
+4. `e.target`と`e.currentTarget`の違いは何か？
+5. `innerHTML`を使用する際のセキュリティリスクは何か？
+
+## 7) 出題抽出メモ
+
+- 事実型候補: イベント伝播の3フェーズ、NodeList vs HTMLCollectionの違い
+- 判断型候補: textContent vs innerHTMLの適切な選択、イベント委任の適用判断
+- シナリオ型候補: バブリング順序の追跡、イベント委任コードの動作予測
+- 誤答誘導ポイント: e.targetとe.currentTargetの混同、querySelectorAllの戻り値を配列と誤認

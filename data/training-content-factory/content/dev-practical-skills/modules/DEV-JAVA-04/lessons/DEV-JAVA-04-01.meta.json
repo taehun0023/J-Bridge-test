@@ -1,0 +1,44 @@
+{
+  "lesson_id": "DEV-JAVA-04-01",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "collections-streams",
+  "summary": "Covers Java collection types (List, Set, Map) selection criteria, Stream API pipeline operations (filter, map, collect, groupingBy), and performance considerations for real-world data processing.",
+  "key_points": [
+    "Choose collections based on uniqueness, ordering, and access pattern requirements.",
+    "Stream intermediate operations are lazy-evaluated; processing only runs when a terminal operation is invoked.",
+    "Streams are single-use; parallelStream has thread-safety and overhead trade-offs."
+  ],
+  "misconceptions": [
+    "A Stream can be reused after a terminal operation.",
+    "parallelStream() is always faster than a sequential stream.",
+    "Collectors.toList() always returns a mutable list."
+  ],
+  "check_questions": [
+    "When should you choose HashSet over ArrayList?",
+    "What does lazy evaluation mean in the context of Stream intermediate operations?",
+    "What is the difference between map and flatMap in Stream API?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "ArrayList provides O(1) index access; HashSet provides O(1) contains check.",
+      "Stream intermediate operations are lazy; terminal operations trigger execution."
+    ],
+    "practical_judgment_candidates": [
+      "Selecting the appropriate collection type for a deduplication task.",
+      "Choosing between Stream and for-loop for a small dataset transformation."
+    ],
+    "error_interpretation_candidates": [
+      "IllegalStateException from reusing a consumed Stream.",
+      "UnsupportedOperationException from adding to an unmodifiable list returned by toList()."
+    ],
+    "scenario_candidates": [
+      "Tracing the output of a filter-map-collect pipeline on sample data.",
+      "Predicting the result type and content of a groupingBy collector."
+    ],
+    "common_wrong_answer_patterns": [
+      "Assuming Stream can be iterated multiple times like a Collection.",
+      "Believing parallelStream always improves performance regardless of data size."
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+module:
+  id: CSK-AL-01
+  title: "アルゴリズム判断の基本"
+  default_language: ja
+  level: foundation
+  description: "探索、整列、再帰のような頻出テーマを前提条件と選択基準中心で説明する。"
+  subject: algorithms
+  content_mode: static-interpretive
+  outcomes:
+    - "探索と整列の前提条件を説明できる"
+    - "計算量だけでなく入力特性もあわせて判断できる"
+    - "再帰的思考と反復的思考を比較できる"
+  lessons:
+    - id: CSK-AL-01-01
+      title: "線形探索と二分探索はどの条件で使い分けるのか"
+      est_minutes: 18
+      tags: ["algorithms", "search", "binary-search"]
+    - id: CSK-AL-01-02
+      title: "ソートでは何を基準に手法を選ぶのか"
+      est_minutes: 19
+      tags: ["algorithms", "sorting", "complexity"]

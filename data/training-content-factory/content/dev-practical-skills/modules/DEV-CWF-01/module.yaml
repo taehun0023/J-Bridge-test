@@ -1,0 +1,16 @@
+module:
+  id: DEV-CWF-01
+  title: Common Workplace Fundamentals - Error Report Reading
+  level: foundation
+  description: "정적 해설형 콘텐츠로 오류 보고서를 읽는 순서와 정보 우선순위를 설명한다."
+  subject: common-workplace-fundamentals
+  content_mode: static-interpretive
+  outcomes:
+    - "오류 보고서에서 먼저 확인해야 할 정보를 설명할 수 있다."
+    - "증상과 원인을 구분해 읽는 방법을 설명할 수 있다."
+    - "좋지 않은 보고와 좋은 보고의 차이를 판단할 수 있다."
+  lessons:
+    - id: DEV-CWF-01-01
+      title: "도움을 요청하기 전에 오류 보고서를 어떻게 읽어야 하는가"
+      est_minutes: 18
+      tags: [common-workplace-fundamentals, error-report, logs, communication, static-content]

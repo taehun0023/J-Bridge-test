@@ -1,0 +1,44 @@
+{
+  "lesson_id": "DEV-SQL-02-01",
+  "category": "dev-practical-skills",
+  "subject": "sql",
+  "topic": "schema-joins",
+  "summary": "Teaches how to read table schemas (column types, constraints, relationships), understand INNER/LEFT/RIGHT JOIN differences, and predict JOIN result row counts from sample data.",
+  "key_points": [
+    "INNER JOIN returns only matching rows from both tables; LEFT JOIN preserves all rows from the left table.",
+    "Foreign key columns that allow NULL affect JOIN results — unmatched rows appear only with outer joins.",
+    "In one-to-many JOINs, result rows multiply by the number of matching rows on the many side."
+  ],
+  "misconceptions": [
+    "INNER JOIN and LEFT JOIN always return the same number of rows.",
+    "WHERE column = NULL correctly filters for NULL values.",
+    "JOIN result row count is always equal to the larger table's row count."
+  ],
+  "check_questions": [
+    "What is the difference between INNER JOIN and LEFT JOIN results?",
+    "How do you detect rows that have no matching data in a related table?",
+    "Why does NULL comparison with = always evaluate to FALSE?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "INNER JOIN returns only rows where the join condition matches in both tables",
+      "PRIMARY KEY uniquely identifies each row; FOREIGN KEY references another table's primary key"
+    ],
+    "practical_judgment_candidates": [
+      "Choosing LEFT JOIN over INNER JOIN when the requirement says 'all employees'",
+      "Recognizing that a nullable FK column means some rows won't match in an INNER JOIN"
+    ],
+    "error_interpretation_candidates": [
+      "Query returns fewer rows than expected because INNER JOIN drops unmatched rows",
+      "Aggregation (COUNT/SUM) inflated due to one-to-many JOIN producing duplicate rows"
+    ],
+    "scenario_candidates": [
+      "Given sample data and a SQL query, predict the exact number of result rows",
+      "Given a schema diagram, identify which JOIN type satisfies a business requirement"
+    ],
+    "common_wrong_answer_patterns": [
+      "Confusing LEFT JOIN and INNER JOIN result row counts",
+      "Using = NULL instead of IS NULL for NULL comparison"
+    ]
+  }
+}

@@ -1,0 +1,127 @@
+---
+lesson_id: DEV-REACT-01-01
+title: "コンポーネントでUIを分離する考え方"
+module: DEV-REACT-01
+language: ja
+level: foundation
+est_minutes: 18
+tags: [react, component, jsx, function-component, static-content]
+---
+
+## 1) 学習目標
+
+- Reactコンポーネントとは何か、なぜUIをコンポーネントに分けるのか説明できる。
+- 関数コンポーネントの基本構造を読んで理解できる。
+- JSX文法がHTMLと異なる点を区別できる。
+- コンポーネントを分離する基準を説明できる。
+
+## 2) 業務コンテキスト
+
+フロントエンドプロジェクトに投入されると、数十〜数百のコンポーネントファイルに直面することになる。各コンポーネントが画面のどの部分を担当しているかを素早く把握するには、「UIを独立した部品に分ける考え方」を理解する必要がある。コンポーネント分離の原理を知らなければ、どこでどのコードを修正すべきか見つけることが難しい。
+
+## 3) 要点解説
+
+Reactコンポーネントは**UIの独立した部品**である。各コンポーネントは自分が担当する画面領域を定義し、再利用できる。
+
+関数コンポーネントの基本形は以下の通りである：
+
+```jsx
+function Greeting({ name }) {
+  return <h1>Hello, {name}!</h1>;
+}
+```
+
+この関数は`name`というデータを受け取ってUIを返す。Reactではこれがすなわちコンポーネントである。
+
+**JSX**はJavaScriptの中でHTMLに似た文法を使えるようにする拡張である。ただし、いくつかの違いがある：
+- HTMLの`class`はJSXでは`className`である。
+- HTMLの`for`はJSXでは`htmlFor`である。
+- JSXではすべてのタグを閉じなければならない。`<img>`は`<img />`と書く必要がある。
+- JavaScript式は`{}`で囲む。`{name}`、`{count + 1}`など。
+
+**コンポーネント分離の基準**：
+- 繰り返されるUIパターンが見えたら別のコンポーネントとして抽出する。
+- 独立して変更される可能性がある領域は分離する。
+- 一つのコンポーネントが多すぎる役割を持つ場合は分離を検討する。
+- 再利用性よりも**可読性と保守性**が分離の第一の理由である。
+
+## 4) 実務解釈シナリオ
+
+### シナリオ A
+```jsx
+function UserCard({ user }) {
+  return (
+    <div className="card">
+      <img src={user.avatar} alt={user.name} />
+      <h2>{user.name}</h2>
+      <p>{user.email}</p>
+    </div>
+  );
+}
+
+function UserList({ users }) {
+  return (
+    <div>
+      {users.map(user => (
+        <UserCard key={user.id} user={user} />
+      ))}
+    </div>
+  );
+}
+```
+- 読み取りポイント：
+  - `UserCard`はユーザー1人の情報を表示するコンポーネントである。
+  - `UserList`は`UserCard`を繰り返しレンダリングする。
+  - `key={user.id}`はReactがリストの各項目を識別するために必要である。
+  - データ（`user`）は親から子へpropsを通じて渡される。
+
+### シナリオ B
+```jsx
+// 分離前：一つのコンポーネントがすべてを処理
+function Dashboard() {
+  return (
+    <div>
+      <header><h1>Dashboard</h1><nav>...</nav></header>
+      <main>
+        <div className="stats">...</div>
+        <div className="chart">...</div>
+        <div className="table">...</div>
+      </main>
+      <footer>...</footer>
+    </div>
+  );
+}
+```
+- 解釈：
+  - header、stats、chart、table、footerがすべて一つのコンポーネントにある。
+  - それぞれ独立して変更される可能性があるため、別のコンポーネントに分離すれば保守が容易になる。
+  - 分離後：`<Header />`、`<StatsPanel />`、`<ChartSection />`、`<DataTable />`、`<Footer />`
+
+## 5) よくあるミス
+
+1. JSXで`class`をそのまま使用する。
+JSXでは`className`を使用しなければならない。`class`はJavaScriptの予約語であるためである。
+
+2. リストレンダリングで`key`を省略したり、インデックスをkeyとして使用する。
+`key`がなければReactは項目を効率的に更新できない。インデックスの代わりに一意のIDを使用すべきである。
+
+3. 一つのコンポーネントに多すぎる役割を入れる。
+200行を超えるコンポーネントは分離を検討すべきである。ただし、無条件に小さく分けることが正解ではない。
+
+4. コンポーネント名を小文字で始める。
+Reactは小文字で始まるタグをHTML要素として認識する。コンポーネントは必ず大文字で始めなければならない。
+
+## 6) 確認質問
+
+1. Reactにおけるコンポーネントとは何か？
+2. JSXで`class`の代わりに`className`を使用する理由は何か？
+3. リストレンダリングにおける`key`の役割は何か？
+4. コンポーネントを分離する基準は何か？
+5. コンポーネント名が大文字で始まらなければならない理由は何か？
+
+## 7) 出題抽出メモ
+
+- 事実型候補：JSXとHTMLの違い、コンポーネントの定義
+- 判断型候補：コンポーネント分離が必要な状況の判断
+- シナリオ型候補：コードからコンポーネント構造を読みデータフローを把握
+- 誤答誘導ポイント：class vs className の混同、keyにインデックスを使用することを正しいと誤認

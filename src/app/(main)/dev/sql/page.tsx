@@ -1,11 +1,11 @@
-import SubcourseListPage from '@/components/ui/SubcourseListPage'
+import { notFound } from 'next/navigation'
+import DevStaticSubjectPage from '@/components/dev/DevStaticSubjectPage'
+import { getDevSubjectContent } from '@/lib/dev-content'
 
-export default function SqlPage() {
-  return (
-    <SubcourseListPage
-      title="SQL"
-      description="データベース操作言語"
-      subcategory="sql"
-    />
-  )
+export default async function SqlPage() {
+  const subject = await getDevSubjectContent('sql')
+
+  if (!subject) notFound()
+
+  return <DevStaticSubjectPage subject={subject} />
 }

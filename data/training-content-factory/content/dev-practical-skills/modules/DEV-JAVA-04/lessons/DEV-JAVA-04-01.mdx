@@ -1,0 +1,142 @@
+---
+lesson_id: DEV-JAVA-04-01
+title: "コレクションとStream APIの実務使用パターン"
+module: DEV-JAVA-04
+level: advanced
+language: ja
+est_minutes: 18
+tags: [java, collections, stream-api, list, map, static-content]
+---
+
+## 1) 学習目標
+
+- List、Set、Mapの特性を比較し、場面に応じた選択基準を説明できる。
+- Stream APIのfilter、map、collectパイプラインを読んで処理内容を追跡できる。
+- Streamとforループでどちらが適切かを判断できる。
+- Stream使用時のパフォーマンス上の注意点を3つ以上説明できる。
+
+## 2) 業務コンテキスト
+
+業務アプリケーションでは大量のデータを検索・変換・集約する処理が頻繁に発生する。例えば、受注一覧から特定条件のデータを抽出し、CSVに変換して出力するような処理である。Java 8以降のStream APIを使えば、こうした処理を宣言的に書ける。しかしStreamを誤用するとパフォーマンスが劣化したり、可読性が低下したりする。実務コードを正確に読むためには、コレクションの特性とStreamの動作原理の理解が不可欠である。
+
+## 3) 要点解説
+
+### コレクションの選択基準
+
+| コレクション | 特性 | 主な用途 |
+|---|---|---|
+| `ArrayList` | 順序あり、インデックスアクセスO(1) | 一覧表示、順次処理 |
+| `LinkedList` | 先頭・末尾の挿入/削除O(1) | キュー実装 |
+| `HashSet` | 重複不可、順序なし、検索O(1) | 一意性チェック |
+| `TreeSet` | 重複不可、ソート済み | 範囲検索 |
+| `HashMap` | キー→値マッピング、検索O(1) | キャッシュ、ルックアップ |
+| `TreeMap` | キーでソート済み | ソート済みマッピング |
+
+選択の基本原則：重複を許すか→List/Set、順序が必要か→ArrayList/LinkedList or TreeSet/TreeMap、キーで検索するか→Map。
+
+### Stream APIの基本パイプライン
+
+Streamは**ソース→中間操作→終端操作**の3段階で構成される。
+
+```java
+List<Order> highValueOrders = orders.stream()          // ソース
+    .filter(o -> o.getAmount() > 10000)                // 中間操作：条件フィルタ
+    .sorted(Comparator.comparing(Order::getCreatedAt)) // 中間操作：ソート
+    .collect(Collectors.toList());                      // 終端操作：リストに収集
+```
+
+中間操作は**遅延評価**される。終端操作が呼ばれるまで実際の処理は実行されない。
+
+### よく使うStream操作
+
+```java
+// map: 要素の変換
+List<String> names = users.stream()
+    .map(User::getName)
+    .collect(Collectors.toList());
+
+// flatMap: ネストしたコレクションの平坦化
+List<String> allTags = articles.stream()
+    .flatMap(a -> a.getTags().stream())
+    .distinct()
+    .collect(Collectors.toList());
+
+// groupingBy: グループ化
+Map<String, List<Order>> byStatus = orders.stream()
+    .collect(Collectors.groupingBy(Order::getStatus));
+
+// reduce: 集約
+int totalAmount = orders.stream()
+    .mapToInt(Order::getAmount)
+    .sum();
+```
+
+### パフォーマンスの注意点
+
+1. **短いリスト（10件以下）にStreamを使うメリットは薄い。** forループの方がオーバーヘッドが少ない。
+2. **parallelStream()は慎重に使う。** スレッドプール共有による予期せぬ遅延や、状態を持つ操作での競合が発生する。
+3. **Streamは再利用できない。** 一度終端操作を呼ぶと同じStreamインスタンスは使えない。
+
+## 4) 実務解釈シナリオ
+
+### シナリオ A
+```java
+Map<String, Long> categoryCount = products.stream()
+    .filter(p -> p.getPrice() > 0)
+    .collect(Collectors.groupingBy(
+        Product::getCategory,
+        Collectors.counting()
+    ));
+```
+- 読み取りポイント:
+  - 価格が0以下の無効な商品を除外している。
+  - カテゴリ別に商品数を集計している。
+  - 結果は`Map<String, Long>`で、キーがカテゴリ名、値が件数。
+
+### シナリオ B
+```java
+Optional<User> admin = users.stream()
+    .filter(u -> "ADMIN".equals(u.getRole()))
+    .findFirst();
+
+admin.ifPresentOrElse(
+    u -> log.info("Admin found: {}", u.getName()),
+    () -> log.warn("No admin user exists")
+);
+```
+- 解釈:
+  - `findFirst()`はStreamの最初にマッチした要素を`Optional`で返す。
+  - `ifPresentOrElse`で存在/不在の両方を処理している。
+  - `"ADMIN".equals(u.getRole())`はnull安全な比較パターン。`u.getRole().equals("ADMIN")`だとroleがnullの場合にNPEが発生する。
+
+## 5) よくあるミス
+
+1. Streamを変数に保持して再利用しようとする。
+Streamは一度しか消費できない。再度使用すると`IllegalStateException`が発生する。
+
+2. `collect(Collectors.toList())`の戻り値を変更可能と仮定する。
+Java 16以降の`toList()`は不変リストを返す。要素の追加が必要なら`Collectors.toCollection(ArrayList::new)`を使う。
+
+3. parallelStream()を常に高速だと思い込む。
+小さなデータセットではスレッド管理のオーバーヘッドの方が大きい。
+
+4. Stream内で外部の変数を変更する（副作用）。
+`forEach`内で外部リストにaddするのはスレッドセーフではなく、バグの原因になる。`collect`で結果を受け取るべき。
+
+5. `Optional.get()`を検証なしで呼ぶ。
+値が存在しない場合に`NoSuchElementException`が発生する。`orElse`や`ifPresent`を使うべき。
+
+## 6) 確認質問
+
+1. ArrayList、HashSet、HashMapはそれぞれどのような場面で選択すべきか？
+2. Streamの中間操作が遅延評価されるとはどういう意味か？
+3. `map`と`flatMap`の違いは何か？
+4. parallelStream()を使用する際に注意すべき点は何か？
+5. `Optional`を安全に扱うための方法を2つ挙げよ。
+
+## 7) 出題抽出メモ
+
+- 事実型候補: コレクション型の特性比較、Streamの遅延評価の仕組み
+- 判断型候補: コレクション型の選択判断、Stream vs forループの選択
+- シナリオ型候補: Streamパイプラインの出力結果を追跡する、groupingByの結果型を推定する
+- 誤答誘導ポイント: Streamの再利用可能と誤認、parallelStreamが常に高速と誤認、toList()結果が変更可能と誤認

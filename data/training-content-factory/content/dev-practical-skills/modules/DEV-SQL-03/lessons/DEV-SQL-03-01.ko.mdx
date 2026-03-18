@@ -1,0 +1,168 @@
+---
+lesson_id: DEV-SQL-03-01
+title: "트랜잭션과 인덱스, 운영 SQL 주의점"
+module: DEV-SQL-03
+level: advanced
+est_minutes: 18
+tags: [sql, transaction, index, acid, operational-safety, static-content]
+---
+
+## 1) 학습 목표
+
+- ACID 특성의 각 요소를 설명할 수 있다.
+- COMMIT/ROLLBACK의 동작과 트랜잭션 라이프사이클을 이해할 수 있다.
+- 인덱스가 쿼리 성능에 미치는 영향을 설명할 수 있다.
+- 운영 환경에서 위험한 SQL 패턴을 식별하고 안전한 대안을 제시할 수 있다.
+
+## 2) 업무 맥락
+
+일본 IT 현장에서는 운영 데이터베이스에 대한 조작은 엄격한 리뷰가 요구된다. 트랜잭션을 이해하지 못한 채 운영에서 UPDATE나 DELETE를 실행하여 데이터 불일치를 일으키는 사고는 드물지 않다. 또한 인덱스의 유무가 쿼리 속도를 100배 이상 바꿀 수 있어, 성능 문제 조사 시 인덱스 지식은 필수다.
+
+## 3) 핵심 설명
+
+**ACID 특성:**
+
+트랜잭션이 보장해야 할 4가지 특성이다.
+
+| 특성 | 설명 | 예시 |
+|------|------|------|
+| Atomicity (원자성) | 모든 연산이 성공하거나, 전부 취소되거나 | 송금: 출금과 입금이 모두 성공 또는 모두 실패 |
+| Consistency (일관성) | 트랜잭션 전후에 데이터 정합성이 유지됨 | 잔액이 마이너스가 되지 않는 제약 |
+| Isolation (격리성) | 동시 실행되는 트랜잭션끼리 간섭하지 않음 | 동시에 같은 행을 수정해도 결과가 모순 없음 |
+| Durability (지속성) | COMMIT된 데이터는 시스템 장애 후에도 유실되지 않음 | COMMIT 후 서버가 다운되어도 데이터는 남음 |
+
+**COMMIT/ROLLBACK 기본 동작:**
+
+```sql
+-- 트랜잭션 기본 흐름
+BEGIN;  -- 트랜잭션 시작
+
+UPDATE accounts SET balance = balance - 10000 WHERE id = 1;
+UPDATE accounts SET balance = balance + 10000 WHERE id = 2;
+
+-- 문제없으면 확정
+COMMIT;
+
+-- 문제가 있으면 전부 취소
+-- ROLLBACK;
+```
+
+`BEGIN`으로 트랜잭션을 시작하고, `COMMIT`으로 확정, `ROLLBACK`으로 모든 연산을 취소한다. COMMIT 전이라면 중간의 모든 변경을 되돌릴 수 있다.
+
+**운영에서 위험한 SQL 패턴:**
+
+```sql
+-- 위험1: WHERE절 없는 UPDATE (전체 행 갱신)
+UPDATE employees SET salary = 0;
+-- ↑ 전 사원의 급여가 0이 된다
+
+-- 안전: 반드시 WHERE절을 붙인다
+UPDATE employees SET salary = 0 WHERE id = 5;
+
+-- 위험2: WHERE절 없는 DELETE (전체 행 삭제)
+DELETE FROM employees;
+-- ↑ 전 사원 데이터가 삭제된다
+
+-- 위험3: 트랜잭션 없이 여러 테이블을 갱신
+UPDATE orders SET status = 'cancelled' WHERE id = 100;
+UPDATE inventory SET quantity = quantity + 1 WHERE product_id = 50;
+-- ↑ 첫 번째가 성공하고 두 번째가 실패하면 불일치
+
+-- 안전: 트랜잭션으로 감싼다
+BEGIN;
+UPDATE orders SET status = 'cancelled' WHERE id = 100;
+UPDATE inventory SET quantity = quantity + 1 WHERE product_id = 50;
+COMMIT;
+```
+
+**운영 SQL 실행 안전 절차:**
+1. 먼저 SELECT로 대상 행을 확인한다.
+2. BEGIN으로 트랜잭션을 시작한다.
+3. UPDATE/DELETE를 실행한다.
+4. SELECT로 결과를 확인한다.
+5. 문제없으면 COMMIT, 문제있으면 ROLLBACK.
+
+**인덱스 기본:**
+
+```sql
+-- 인덱스 없음: 전체 행을 순차 스캔 (풀 테이블 스캔)
+SELECT * FROM employees WHERE department_id = 2;
+-- 100만 행이면 100만 행을 체크한다
+
+-- 인덱스 생성
+CREATE INDEX idx_employees_department ON employees(department_id);
+
+-- 인덱스 있음: 해당 행에 직접 접근
+SELECT * FROM employees WHERE department_id = 2;
+-- 트리 구조로 고속으로 해당 행을 찾는다
+```
+
+인덱스는 책의 색인과 같다. 특정 값을 가진 행을 고속으로 찾기 위한 데이터 구조로, B-Tree가 가장 일반적이다.
+
+**인덱스의 효과와 대가:**
+- 효과: WHERE절, JOIN, ORDER BY의 성능이 크게 향상된다.
+- 대가: INSERT/UPDATE/DELETE 시 인덱스도 갱신하므로 쓰기 속도가 다소 저하된다. 스토리지도 소비한다.
+- 원칙: 읽기가 많은 컬럼, WHERE절이나 JOIN에서 자주 쓰는 컬럼에 인덱스를 생성한다.
+
+**EXPLAIN문으로 쿼리 실행 계획 확인:**
+
+```sql
+EXPLAIN SELECT * FROM employees WHERE department_id = 2;
+-- type: ALL → 풀 테이블 스캔 (인덱스 미사용)
+-- type: ref → 인덱스 사용
+
+EXPLAIN SELECT * FROM employees WHERE name LIKE '%다나카%';
+-- LIKE문 앞에 와일드카드가 있으면 인덱스를 사용할 수 없다
+```
+
+## 4) 실무 해석 시나리오
+
+### 시나리오 A
+운영 환경에서 아래 SQL을 실행해달라는 리뷰 요청이 왔다.
+```sql
+UPDATE products SET price = price * 1.1 WHERE category = 'electronics';
+```
+- 체크 포인트:
+  - 먼저 `SELECT COUNT(*) FROM products WHERE category = 'electronics';`로 대상 행 수를 확인한다.
+  - BEGIN/COMMIT으로 감싸서 실행하고, 결과를 확인한 후 COMMIT한다.
+  - category 컬럼에 인덱스가 있는지 확인한다. 없으면 전체 행 스캔이 되어 대량 데이터의 경우 락 시간이 길어진다.
+
+### 시나리오 B
+"사용자 검색이 느리다"는 성능 보고가 있다.
+```sql
+SELECT * FROM users WHERE email = 'tanaka@example.com';
+-- 실행 시간: 3.2초 (100만 행)
+```
+- 해석: email 컬럼에 인덱스가 없을 가능성이 높다. `EXPLAIN`으로 확인하고, `CREATE INDEX idx_users_email ON users(email);`을 생성하면 검색 시간이 밀리초 단위로 단축된다. email은 고유한 경우가 많으므로 `UNIQUE INDEX`가 적절할 수도 있다.
+
+## 5) 자주 하는 실수
+
+1. WHERE절 없이 UPDATE/DELETE를 실행한다.
+반드시 WHERE절을 붙이고, 사전에 SELECT로 대상 행을 확인한다. 운영 환경에서 가장 위험한 실수다.
+
+2. 트랜잭션을 사용하지 않고 여러 테이블을 갱신한다.
+여러 테이블에 걸친 갱신은 BEGIN/COMMIT으로 감싼다. 중간에 에러 발생 시 ROLLBACK할 수 있게 한다.
+
+3. 모든 컬럼에 인덱스를 생성한다.
+인덱스는 쓰기 성능을 저하시킨다. WHERE절이나 JOIN에서 자주 사용하는 컬럼에만 생성한다.
+
+4. LIKE문 앞에 와일드카드를 사용하면서 인덱스가 안 먹히는 것을 모른다.
+`LIKE '%keyword%'`는 인덱스를 사용할 수 없다. `LIKE 'keyword%'`는 사용 가능하다. 전문 검색이 필요하면 전용 기능을 사용한다.
+
+5. COMMIT을 잊고 세션을 닫는다.
+트랜잭션 내에서 COMMIT하지 않고 세션을 끊으면, 데이터베이스에 따라 ROLLBACK될 수 있다. 명시적으로 COMMIT 또는 ROLLBACK을 수행한다.
+
+## 6) 확인 질문
+
+1. ACID 특성의 각 요소를 간결히 설명하시오.
+2. 운영 환경에서 UPDATE를 안전하게 실행하는 절차는?
+3. 인덱스가 쿼리 성능을 향상시키는 구조는 무엇인가?
+4. 인덱스의 대가(단점)는 무엇인가?
+5. LIKE문에서 인덱스가 사용 가능한 경우와 불가능한 경우의 차이는?
+
+## 7) 문항 발췌 메모
+
+- 사실형 후보: ACID 각 특성의 정의, COMMIT/ROLLBACK의 동작
+- 판단형 후보: 운영 SQL 리뷰에서의 위험 패턴 식별, 인덱스 생성 판단 기준
+- 시나리오형 후보: WHERE절 없는 UPDATE의 영향 범위 예측, EXPLAIN 결과로 성능 문제 진단
+- 오답 유도 포인트: 모든 컬럼에 인덱스를 만드는 것이 최선이라 오인, LIKE 앞 와일드카드에도 인덱스가 먹힌다고 오인

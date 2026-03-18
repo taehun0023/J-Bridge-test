@@ -1,0 +1,43 @@
+{
+  "lesson_id": "DEV-REACT-01-01",
+  "category": "dev-practical-skills",
+  "subject": "react",
+  "topic": "component-thinking-jsx-basics",
+  "summary": "Explains React component concept, JSX syntax differences from HTML, and guidelines for component separation in frontend projects.",
+  "key_points": [
+    "React components are independent, reusable pieces of UI defined as functions.",
+    "JSX differs from HTML: className instead of class, self-closing tags required, JS expressions in {}.",
+    "Component separation improves readability and maintainability — split by independent change areas."
+  ],
+  "misconceptions": [
+    "JSX and HTML use exactly the same attribute names.",
+    "Array index is a good key for list rendering.",
+    "Every small piece of UI must be its own component."
+  ],
+  "check_questions": [
+    "What is a React component?",
+    "Why does JSX use className instead of class?",
+    "What is the role of key in list rendering?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Differences between JSX and HTML syntax",
+      "Definition of a React component"
+    ],
+    "practical_judgment_candidates": [
+      "Deciding when to split a component",
+      "Choosing appropriate key values for lists"
+    ],
+    "error_interpretation_candidates": [
+      "Understanding warnings from missing key props"
+    ],
+    "scenario_candidates": [
+      "Reading component hierarchy to trace data flow",
+      "Identifying an oversized component that needs splitting"
+    ],
+    "common_wrong_answer_patterns": [
+      "Using class instead of className in JSX",
+      "Assuming array index is always a valid key"
+    ]
+  }
+}

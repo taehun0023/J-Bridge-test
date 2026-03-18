@@ -55,10 +55,10 @@ export async function startExam(examId: string) {
       }
     }
 
-    // For step 4 (dev) or step 5 (business-lit), get user profile info
+    // For steps 3-5, get user profile info (targetCodingArea for step 4, isJapanese for step 5)
     let targetCodingArea: string | null = null
     let isJapanese: boolean | undefined
-    if (step === 4 || step === 5) {
+    if (step >= 3) {
       const { data: profile } = await serviceClient
         .from('profiles')
         .select('target_coding_area, is_japanese')
@@ -222,7 +222,7 @@ export async function loadExamQuestions(examId: string) {
 
     let targetCodingArea: string | null = null
     let isJapanese: boolean | undefined
-    if (step === 4 || step === 5) {
+    if (step >= 3) {
       const { data: profile } = await serviceClient
         .from('profiles')
         .select('target_coding_area, is_japanese')

@@ -1,0 +1,44 @@
+{
+  "lesson_id": "DEV-CWF-08-01",
+  "category": "dev-practical-skills",
+  "subject": "common-workplace-fundamentals",
+  "topic": "delivery-reporting",
+  "summary": "Explains what information to include in completion reports and handover documents, and the difference between progress and completion reporting.",
+  "key_points": [
+    "A completion report must include what was done, how, test results, remaining issues, and references.",
+    "Handover documents capture context that code alone cannot convey — background, decisions, and operational notes.",
+    "Separate facts from assumptions in all reports."
+  ],
+  "misconceptions": [
+    "Saying 'done' without details is an acceptable completion report.",
+    "Handover documents only need to explain the code, not the reasoning behind it.",
+    "It is better to hide blockers than to report them early."
+  ],
+  "check_questions": [
+    "What five pieces of information should a completion report contain?",
+    "What is the key difference between a progress report and a completion report?",
+    "Why should handover documents include background and decision rationale?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Five required elements of a completion report (what, how, verification, remaining, references)",
+      "Difference between progress reporting and completion reporting"
+    ],
+    "practical_judgment_candidates": [
+      "Identifying what is missing from an incomplete completion report",
+      "Deciding what context information to include in a handover document"
+    ],
+    "error_interpretation_candidates": [
+      "Recognizing that a vague report forces unnecessary follow-up questions",
+      "Understanding why mixing facts and assumptions leads to wrong decisions"
+    ],
+    "scenario_candidates": [
+      "Vague completion report with no test results or remaining issues",
+      "Handover of a 3-month project to a new developer"
+    ],
+    "common_wrong_answer_patterns": [
+      "Omitting remaining issues and limitations from reports",
+      "Writing handover docs that describe code but not the reasoning behind decisions"
+    ]
+  }
+}

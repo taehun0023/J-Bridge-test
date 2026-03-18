@@ -1,0 +1,165 @@
+---
+lesson_id: DEV-SQL-02-01
+title: "スキーマの読み方とJOIN結果の予測"
+module: DEV-SQL-02
+level: intermediate
+language: ja
+est_minutes: 18
+tags: [sql, schema, join, inner-join, left-join, static-content]
+---
+
+## 1) 学習目標
+
+- テーブルスキーマ（カラム型、制約、リレーション）を読んで理解できる。
+- INNER JOIN・LEFT JOIN・RIGHT JOINの違いを正確に説明できる。
+- JOINの結果行数をテーブルデータから予測できる。
+- 外部キー制約とNULL許容の関係を理解できる。
+
+## 2) 業務コンテキスト
+
+日本のIT現場では、既存システムのデータベースを理解することが最初の業務となることが多い。テーブル定義書（スキーマ）を読んでテーブル間の関係を把握し、必要なデータを正しくJOINで結合する能力は日常的に求められる。JOINの種類を誤ると、データの欠損や重複が発生し、レポートやバッチ処理の不具合につながる。
+
+## 3) 要点解説
+
+**スキーマの読み方：**
+
+```sql
+CREATE TABLE departments (
+    id          INT PRIMARY KEY AUTO_INCREMENT,
+    name        VARCHAR(100) NOT NULL,
+    location    VARCHAR(50),
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE employees (
+    id            INT PRIMARY KEY AUTO_INCREMENT,
+    name          VARCHAR(100) NOT NULL,
+    department_id INT,
+    salary        DECIMAL(10,2) NOT NULL,
+    hire_date     DATE NOT NULL,
+    FOREIGN KEY (department_id) REFERENCES departments(id)
+);
+```
+
+スキーマから読み取るべきポイント：
+- **PRIMARY KEY**：各行を一意に識別する。`id`カラムが主キーである。
+- **NOT NULL**：NULLを許容しない。`name`は必須だが、`location`はNULL可能である。
+- **FOREIGN KEY**：`employees.department_id`が`departments.id`を参照する。これがテーブル間のリレーションである。
+- **department_idにNOT NULLがない**：部署未配属の社員（department_id = NULL）が存在しうる。
+
+**サンプルデータ：**
+
+departments テーブル：
+| id | name | location |
+|----|------|----------|
+| 1 | 営業部 | 東京 |
+| 2 | 開発部 | 大阪 |
+| 3 | 人事部 | 東京 |
+
+employees テーブル：
+| id | name | department_id | salary |
+|----|------|---------------|--------|
+| 1 | 田中 | 1 | 350000 |
+| 2 | 佐藤 | 2 | 420000 |
+| 3 | 鈴木 | 1 | 380000 |
+| 4 | 高橋 | NULL | 300000 |
+
+**INNER JOIN — 両テーブルに一致するデータのみ返す：**
+
+```sql
+SELECT e.name, d.name AS dept_name
+FROM employees e
+INNER JOIN departments d ON e.department_id = d.id;
+```
+
+結果：3行（田中-営業部、佐藤-開発部、鈴木-営業部）。高橋はdepartment_id=NULLなので除外される。人事部は社員がいないので結果に出ない。
+
+**LEFT JOIN — 左テーブルの全行を保持する：**
+
+```sql
+SELECT e.name, d.name AS dept_name
+FROM employees e
+LEFT JOIN departments d ON e.department_id = d.id;
+```
+
+結果：4行。高橋も含まれるが、dept_nameはNULLになる。
+
+**RIGHT JOIN — 右テーブルの全行を保持する：**
+
+```sql
+SELECT e.name, d.name AS dept_name
+FROM employees e
+RIGHT JOIN departments d ON e.department_id = d.id;
+```
+
+結果：4行。人事部も含まれるが、e.nameはNULLになる。高橋は含まれない。
+
+**JOIN結果の行数予測ルール：**
+- INNER JOIN：結合条件に一致する行のみ。一致しない行は消える。
+- LEFT JOIN：左テーブルの行数以上。右テーブルに一致がなければNULLで埋まる。
+- 1対多の関係：1側の1行が多側のN行に一致すると、N行が出力される。
+
+**複数テーブルのJOIN：**
+
+```sql
+SELECT e.name, d.name AS dept_name, p.title AS project_title
+FROM employees e
+INNER JOIN departments d ON e.department_id = d.id
+LEFT JOIN projects p ON e.id = p.assignee_id;
+```
+
+INNER JOINで部署未配属者を除外した後、LEFT JOINでプロジェクト情報を結合する。プロジェクトが未割当の社員もNULLで結果に含まれる。
+
+## 4) 実務解釈シナリオ
+
+### シナリオ A
+「全社員の一覧に部署名を付けて表示してほしい」という要件がある。
+```sql
+-- 案1: INNER JOIN
+SELECT e.name, d.name FROM employees e INNER JOIN departments d ON e.department_id = d.id;
+-- 案2: LEFT JOIN
+SELECT e.name, d.name FROM employees e LEFT JOIN departments d ON e.department_id = d.id;
+```
+- 解釈：「全社員」が要件なので、部署未配属の社員も含める必要がある。INNER JOINでは高橋が消えるため不正確。LEFT JOINが正しい選択である。
+
+### シナリオ B
+「社員が1人もいない部署を見つけたい」という要件がある。
+```sql
+SELECT d.name
+FROM departments d
+LEFT JOIN employees e ON d.id = e.department_id
+WHERE e.id IS NULL;
+```
+- 解釈：departmentsを左テーブルにしてLEFT JOINし、employees側がNULLの行（=社員が1人もいない部署）を`WHERE e.id IS NULL`で抽出する。このパターンは「存在しないデータの検出」によく使用される。
+
+## 5) よくあるミス
+
+1. 要件に合わないJOINの種類を選択する。
+「全社員を表示」にINNER JOINを使うと、部署未配属者が消える。要件をよく読んでJOINの種類を選ぶ。
+
+2. JOINの結合条件を誤る。
+`ON e.department_id = d.id`の代わりに`ON e.id = d.id`とすると、意味のない結合になる。外部キーの関係に基づいて結合条件を書く。
+
+3. 1対多のJOINで行数が増えることに気づかない。
+1人の社員が3つのプロジェクトに参加している場合、JOINすると3行に増える。集計時にCOUNTやSUMが膨らむ原因となる。
+
+4. NULLの比較で`=`を使う。
+`WHERE department_id = NULL`は常にFALSEとなる。`WHERE department_id IS NULL`を使用する。
+
+5. スキーマのNULL許容を見落とす。
+外部キーカラムがNULL許容かどうかで、JOINの結果が変わる。スキーマ定義を必ず確認する。
+
+## 6) 確認質問
+
+1. INNER JOINとLEFT JOINの結果の違いは何か？
+2. 外部キー制約の役割は何か？
+3. 1対多のJOINで結果行数はどうなるか？
+4. 「存在しないデータの検出」にはどのJOINパターンを使うか？
+5. NULL値の比較にはどのような構文を使うか？`= NULL`が使えない理由は？
+
+## 7) 出題抽出メモ
+
+- 事実型候補：JOIN種類別の動作定義、PRIMARY KEY/FOREIGN KEYの役割
+- 判断型候補：要件に応じたJOIN種類の選択、NULL許容カラムの影響判断
+- シナリオ型候補：サンプルデータとSQLからJOIN結果の行数を予測、スキーマ図からリレーションを読み取る
+- 誤答誘導ポイント：INNER JOINとLEFT JOINの結果行数の混同、NULL比較でのイコール使用

@@ -1,0 +1,45 @@
+{
+  "lesson_id": "DEV-NEXT-02-01",
+  "category": "dev-practical-skills",
+  "subject": "nextjs",
+  "topic": "server-client-component-boundaries",
+  "summary": "Explains the differences between Server Components and Client Components in Next.js App Router, the role of 'use client' directive, available APIs for each type, and composition patterns.",
+  "key_points": [
+    "All components in App Router are Server Components by default — 'use client' opts into client rendering.",
+    "'use client' creates a boundary: all children imported by the file become client components.",
+    "Server Components can access databases and server-only APIs; Client Components can use hooks and browser APIs."
+  ],
+  "misconceptions": [
+    "Every component needs 'use client' to work in the browser.",
+    "Client Components can import and use server-only modules like database clients.",
+    "Functions can be passed as props from Server Components to Client Components."
+  ],
+  "check_questions": [
+    "What is the default component type in App Router?",
+    "What happens if you import a server-only module in a 'use client' file?",
+    "How do you pass server data to a client component?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Default component type in App Router is Server Component",
+      "APIs available in Server vs Client Components"
+    ],
+    "practical_judgment_candidates": [
+      "Deciding which parts of a page should be Client Components",
+      "Choosing where to place the 'use client' boundary"
+    ],
+    "error_interpretation_candidates": [
+      "Build error from importing server module in client component",
+      "Runtime error from using useState in a server component"
+    ],
+    "scenario_candidates": [
+      "Reading component code to identify server/client boundary issues",
+      "Data flow pattern: server fetch → client render via props"
+    ],
+    "common_wrong_answer_patterns": [
+      "Believing 'use client' is required for every component",
+      "Thinking client components can directly query databases",
+      "Assuming functions can be serialized as props across the boundary"
+    ]
+  }
+}

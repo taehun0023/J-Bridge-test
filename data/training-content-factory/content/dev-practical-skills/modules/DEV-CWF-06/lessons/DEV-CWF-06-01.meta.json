@@ -1,0 +1,43 @@
+{
+  "lesson_id": "DEV-CWF-06-01",
+  "category": "dev-practical-skills",
+  "subject": "common-workplace-fundamentals",
+  "topic": "code-review",
+  "summary": "Explains the key perspectives for conducting code reviews, how to write constructive comments, and how to respond to review feedback professionally.",
+  "key_points": [
+    "Review for correctness, readability, maintainability, security, and performance.",
+    "Constructive comments include what is wrong, why it matters, and how to fix it.",
+    "Treat feedback as directed at the code, not at you personally."
+  ],
+  "misconceptions": [
+    "Code review is only about formatting and naming conventions.",
+    "All review comments carry the same level of importance.",
+    "Disagreeing with a review comment is unprofessional."
+  ],
+  "check_questions": [
+    "What are the five main perspectives to check during code review?",
+    "What three elements should a constructive review comment contain?",
+    "How should you respond when you disagree with a review comment?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Five categories of code review focus (correctness, readability, maintainability, security, performance)",
+      "Difference between [must] and [nit] comment labels"
+    ],
+    "practical_judgment_candidates": [
+      "Distinguishing a constructive comment from a vague or unhelpful one",
+      "Deciding whether a review comment warrants a code change or a discussion"
+    ],
+    "error_interpretation_candidates": [
+      "Identifying what makes a review comment vague and how to improve it"
+    ],
+    "scenario_candidates": [
+      "Vague performance complaint with no specific cause or suggestion",
+      "Security-critical SQL injection finding marked as [must]"
+    ],
+    "common_wrong_answer_patterns": [
+      "Believing that only formatting issues matter in code review",
+      "Treating review feedback as a personal attack rather than code feedback"
+    ]
+  }
+}

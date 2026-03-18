@@ -1,0 +1,44 @@
+{
+  "lesson_id": "DEV-REACT-04-01",
+  "category": "dev-practical-skills",
+  "subject": "react",
+  "topic": "rendering-performance",
+  "summary": "Explains React re-render conditions (state change, parent re-render, context change), React.memo shallow comparison, useMemo/useCallback memoization, and a measure-first optimization workflow.",
+  "key_points": [
+    "React re-renders on state change, parent re-render, or context change — even when Props haven't changed.",
+    "React.memo skips re-render when Props are shallowly equal; inline object literals defeat this optimization.",
+    "useCallback is only effective when the child component is wrapped in React.memo — otherwise the child re-renders regardless."
+  ],
+  "misconceptions": [
+    "useCallback alone prevents child re-renders without React.memo.",
+    "Every component should be wrapped in React.memo for better performance.",
+    "useMemo and useCallback have no cost — they are always beneficial."
+  ],
+  "check_questions": [
+    "What are the three conditions that trigger a React component re-render?",
+    "Why does passing an inline object literal defeat React.memo?",
+    "When is it appropriate to add React.memo to a component?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Three re-render triggers: state change, parent re-render, context change",
+      "React.memo uses shallow equality (===) to compare Props"
+    ],
+    "practical_judgment_candidates": [
+      "Deciding whether React.memo is warranted for a given component",
+      "Evaluating if useMemo/useCallback adds value vs. unnecessary complexity"
+    ],
+    "error_interpretation_candidates": [
+      "React.memo not preventing re-renders due to inline object Props",
+      "useCallback without React.memo having no performance benefit"
+    ],
+    "scenario_candidates": [
+      "Large table where only one row changes — memo + useCallback prevents 99 unnecessary re-renders",
+      "Dashboard with useMemo preventing expensive chart data recomputation on unrelated state change"
+    ],
+    "common_wrong_answer_patterns": [
+      "Believing useCallback alone stops child re-renders without React.memo",
+      "Assuming React.memo should be applied universally to all components"
+    ]
+  }
+}

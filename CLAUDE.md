@@ -49,7 +49,7 @@ npm run lint       # run linter (eslint 9)
 - Components should be small and separated
 - Use intuitive, descriptive variable names
 - DB naming: snake_case tables/columns, UUID PK, TIMESTAMPTZ timestamps
-- Server Actions in `src/app/actions/` (17 files)
+- Server Actions in `src/app/actions/` (36 files)
 - Database schema details in DB_Schema.md, PRD in PRD.md
 - Content sourcing strategy in docs/content_strategy.md
 - Architecture analysis in docs/architecture/ (10-part series)
@@ -59,8 +59,8 @@ npm run lint       # run linter (eslint 9)
 ```
 src/
   app/
-    (main)/          # 13 route groups (admin, dashboard, coding, japanese, exam, etc.)
-    actions/         # Server Actions (admin/, comprehensive-exam/ domain dirs + single files)
+    (main)/          # 15 route groups (admin, dashboard, coding, japanese, exam, business-literacy, ranking, etc.)
+    actions/         # Server Actions (admin/ 9, comprehensive-exam/ 5, root 24 — 36 files total)
     api/             # API routes (tts, admin/tts-precache, judge0 proxy)
   components/        # Shared UI components
   lib/
@@ -75,21 +75,21 @@ src/
     scoring/         # 5-axis score calculation (pure functions + DB fetch/write)
 ```
 
-## DB Schema Summary (49 migrations, 42 tables)
+## DB Schema Summary (107 migrations, 48 tables)
 
 | Category | Tables |
 |---|---|
-| User & Skills (7) | profiles, japanese_skills, coding_skills, attitude_culture_skills, dispatch_readiness_scores, enrollments, lesson_progress |
+| User & Skills (9) | profiles, japanese_skills, coding_skills, attitude_culture_skills, dispatch_readiness_scores, enrollments, lesson_progress, personal_vocab, shared_vocab_submissions |
 | Content (7) | courses, lessons, lesson_resources, coding_problems, coding_test_cases, projects, project_requirements |
 | Quiz (5) | quizzes, quiz_questions, quiz_question_options, quiz_attempts, quiz_answers |
 | Code Submission (2) | code_submissions, code_reviews |
-| Japanese Content (5) | jlpt_vocabulary, jlpt_grammar, jlpt_reading_passages, jlpt_listening_scripts, it_glossary |
+| Japanese Content (6) | jlpt_vocabulary, jlpt_grammar, jlpt_reading_passages, jlpt_listening_scripts, jlpt_kanji, it_glossary |
 | CS Knowledge (1) | cs_terms |
 | Coding Rank Exams (3) | coding_skill_exams, coding_exam_problems (junction), coding_exam_attempts |
 | Ranking System (2) | ranking_seasons, user_rankings |
-| Admin/Mentor (3) | task_assignments, admin_feedbacks, feedback_replies |
+| Admin/Mentor (4) | task_assignments, admin_feedbacks, feedback_replies, audit_log |
 | Mentor-Mentee & Notifications (2) | mentor_mentee_assignments, notifications |
-| Learning & Comprehensive Exam (3) | learning_assignments, comprehensive_exams, comprehensive_exam_answers |
+| Learning & Comprehensive Exam (4) | learning_assignments, exam_cycles, comprehensive_exams, comprehensive_exam_answers |
 | Access & Interaction (3) | content_access_requests, question_claims, user_mastered_items |
 
 **5-Axis Radar Chart:** JLPT → IT Japanese → Core Programming → Framework → Attitude/Culture

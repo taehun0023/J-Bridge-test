@@ -1,0 +1,16 @@
+module:
+  id: DEV-CWF-02
+  title: Common Workplace Fundamentals - Version Control Basics
+  level: foundation
+  description: "정적 해설형 콘텐츠로 Git 기본 명령과 커밋 메시지 읽기, 브랜치 전략의 기초를 설명한다."
+  subject: common-workplace-fundamentals
+  content_mode: static-interpretive
+  outcomes:
+    - "Git의 기본 명령(add, commit, push, pull)의 역할을 설명할 수 있다."
+    - "커밋 메시지에서 변경 의도와 범위를 파악할 수 있다."
+    - "브랜치 전략의 기초 개념을 설명할 수 있다."
+  lessons:
+    - id: DEV-CWF-02-01
+      title: "Git 기본 명령과 커밋 메시지 읽기"
+      est_minutes: 18
+      tags: [common-workplace-fundamentals, version-control, git, commit-message, static-content]

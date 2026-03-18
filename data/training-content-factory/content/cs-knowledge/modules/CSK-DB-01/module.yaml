@@ -1,0 +1,21 @@
+module:
+  id: CSK-DB-01
+  title: "データベース核心概念"
+  default_language: ja
+  level: foundation
+  description: "インデックス、トランザクションのような基礎頻出テーマを整理する。"
+  subject: database
+  content_mode: static-interpretive
+  outcomes:
+    - "インデックスの利点とコストを説明できる"
+    - "トランザクションの目的とACIDを説明できる"
+    - "正規化や結合の役割を区別できる"
+  lessons:
+    - id: CSK-DB-01-01
+      title: "インデックスはなぜ読み取りを助け書き込みを重くするのか"
+      est_minutes: 20
+      tags: ["database", "index", "query"]
+    - id: CSK-DB-01-02
+      title: "トランザクションとACIDは何を守るのか"
+      est_minutes: 19
+      tags: ["database", "transaction", "acid"]

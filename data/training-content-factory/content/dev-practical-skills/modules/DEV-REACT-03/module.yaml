@@ -1,0 +1,16 @@
+module:
+  id: DEV-REACT-03
+  title: React - Hooks and Side Effects
+  level: intermediate
+  description: "정적 해설형 콘텐츠로 useEffect, useState 등 React Hooks의 동작 원리와 실무 패턴을 설명한다."
+  subject: react
+  content_mode: static-interpretive
+  outcomes:
+    - "useState와 useEffect의 동작 원리를 설명할 수 있다."
+    - "useEffect의 의존성 배열이 실행 시점을 결정하는 방식을 설명할 수 있다."
+    - "클린업 함수의 역할과 필요한 상황을 설명할 수 있다."
+  lessons:
+    - id: DEV-REACT-03-01
+      title: "useEffect와 의존성 배열의 동작 원리"
+      est_minutes: 18
+      tags: [react, hooks, useEffect, useState, cleanup, static-content]

@@ -1,0 +1,44 @@
+{
+  "lesson_id": "DEV-REACT-02-01",
+  "category": "dev-practical-skills",
+  "subject": "react",
+  "topic": "state-props-flow",
+  "summary": "Explains React State and Props, unidirectional data flow, the useState hook, callback-based child-to-parent communication, and how state changes trigger re-renders.",
+  "key_points": [
+    "State is mutable component-internal data managed via useState; Props are read-only data passed from parent to child.",
+    "Data flows one way (parent to child); child-to-parent communication uses callback functions passed as Props.",
+    "State updates are asynchronous and trigger re-renders of the component and all its children."
+  ],
+  "misconceptions": [
+    "Props can be modified by child components.",
+    "State updates are synchronous — the new value is available immediately after calling the setter.",
+    "Copying Props into local State keeps the local value in sync with the parent."
+  ],
+  "check_questions": [
+    "What is the difference between State and Props in React?",
+    "How does a child component communicate data back to its parent?",
+    "Why should State be placed in the nearest common ancestor of the components that need it?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "useState returns a [value, setter] tuple; the setter triggers re-render",
+      "React enforces unidirectional data flow — parent to child only"
+    ],
+    "practical_judgment_candidates": [
+      "Deciding which component should own a piece of State (lifting state up)",
+      "Evaluating whether copying Props into State is appropriate for a given use case"
+    ],
+    "error_interpretation_candidates": [
+      "UI not updating because State was mutated directly instead of using the setter",
+      "Stale value logged after setState due to asynchronous batching"
+    ],
+    "scenario_candidates": [
+      "Search page with shared query State lifted to the parent component",
+      "Todo list using immutable update pattern with map and spread"
+    ],
+    "common_wrong_answer_patterns": [
+      "Believing Props are writable by child components",
+      "Assuming setState is synchronous and the new value is immediately available"
+    ]
+  }
+}

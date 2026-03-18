@@ -1,0 +1,16 @@
+module:
+  id: DEV-CWF-04
+  title: Common Workplace Fundamentals - Environment and Configuration
+  level: foundation
+  description: "정적 해설형 콘텐츠로 개발·스테이징·운영 환경 분리와 설정 파일 읽기를 설명한다."
+  subject: common-workplace-fundamentals
+  content_mode: static-interpretive
+  outcomes:
+    - "개발, 스테이징, 운영 환경의 차이와 분리 이유를 설명할 수 있다."
+    - "환경 변수와 설정 파일의 역할을 구분할 수 있다."
+    - "설정 관련 장애의 원인을 추론할 수 있다."
+  lessons:
+    - id: DEV-CWF-04-01
+      title: "개발·스테이징·운영 환경 분리와 설정 파일 읽기"
+      est_minutes: 18
+      tags: [common-workplace-fundamentals, environment, configuration, env-variables, static-content]

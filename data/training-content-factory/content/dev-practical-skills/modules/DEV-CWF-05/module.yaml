@@ -1,0 +1,16 @@
+module:
+  id: DEV-CWF-05
+  title: Common Workplace Fundamentals - API Request and Response Reading
+  level: foundation
+  description: "정적 해설형 콘텐츠로 HTTP 요청과 응답 구조를 읽고 상태 코드를 해석하는 방법을 설명한다."
+  subject: common-workplace-fundamentals
+  content_mode: static-interpretive
+  outcomes:
+    - "HTTP 요청의 구성 요소(메서드, 헤더, 바디)를 설명할 수 있다."
+    - "상태 코드(2xx, 4xx, 5xx)의 의미를 구분할 수 있다."
+    - "API 응답에서 에러 메시지를 읽고 원인을 추론할 수 있다."
+  lessons:
+    - id: DEV-CWF-05-01
+      title: "HTTP 요청·응답 구조와 상태 코드 해석"
+      est_minutes: 18
+      tags: [common-workplace-fundamentals, api, http, status-code, static-content]

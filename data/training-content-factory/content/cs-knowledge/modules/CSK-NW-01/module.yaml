@@ -1,0 +1,21 @@
+module:
+  id: CSK-NW-01
+  title: "ネットワーク階層と通信理解"
+  default_language: ja
+  level: foundation
+  description: "HTTP、TCP、DNSのような基礎概念を階層観点で整理する。"
+  subject: networking
+  content_mode: static-interpretive
+  outcomes:
+    - "HTTPとTCPの役割を区別できる"
+    - "名前解決と経路決定の違いを説明できる"
+    - "ステートレス性とセッション管理の関係を理解できる"
+  lessons:
+    - id: CSK-NW-01-01
+      title: "HTTPはTCPの上で何をしているのか"
+      est_minutes: 18
+      tags: ["networking", "http", "tcp"]
+    - id: CSK-NW-01-02
+      title: "DNSとルーティングは何が違うのか"
+      est_minutes: 18
+      tags: ["networking", "dns", "routing"]

@@ -1,0 +1,122 @@
+---
+lesson_id: DEV-NEXT-01-01
+title: "App Routerのファイル規則とルーティング構造の読み方"
+module: DEV-NEXT-01
+level: foundation
+language: ja
+est_minutes: 18
+tags: [nextjs, app-router, file-conventions, routing, static-content]
+---
+
+## 1) 学習目標
+
+- Next.js App Routerの主要ファイル規則（page.tsx、layout.tsx、loading.tsx、error.tsx）を説明できる。
+- フォルダ構造がURLパスにマッピングされる仕組みを説明できる。
+- 動的ルート（[param]）とルートグループ（(group)）の役割を区別できる。
+- layout.tsxのネスト構造がレンダリングに与える影響を説明できる。
+
+## 2) 業務コンテキスト
+
+Next.jsプロジェクトに参画すると、まず最初に`app/`ディレクトリのフォルダ構造を読む必要がある。App Routerではフォルダ名がそのままURLパスとなり、特定の名前のファイル（page.tsx、layout.tsxなど）がそれぞれ決められた役割を担う。この規則を知らなければ、「このページはどこにあるのか」「このレイアウトはどこまで適用されるのか」を把握できない。
+
+## 3) 要点解説
+
+Next.js App Routerは**ファイルシステムベースのルーティング**を採用している。`app/`ディレクトリ内のフォルダ構造がURL構造と1:1で対応する。
+
+**主要ファイル規則**：
+- `page.tsx`：該当パスのUIを定義する。このファイルがなければURLでアクセスできない。
+- `layout.tsx`：該当パスとその配下のパスに共通で適用されるレイアウト。ページ遷移時にも維持される。
+- `loading.tsx`：非同期ローディング中に表示されるUI。React Suspenseと連動する。
+- `error.tsx`：エラー発生時に表示されるUI。エラーバウンダリ（Error Boundary）を自動的に生成する。
+- `not-found.tsx`：404ページをカスタマイズする。
+
+**フォルダとURLのマッピング例**：
+```
+app/
+├── page.tsx              → /
+├── about/
+│   └── page.tsx          → /about
+├── blog/
+│   ├── page.tsx          → /blog
+│   └── [slug]/
+│       └── page.tsx      → /blog/hello-world（動的）
+├── (marketing)/
+│   └── pricing/
+│       └── page.tsx      → /pricing（グループはURLに含まれない）
+```
+
+**動的ルート** `[param]`はURLの一部を変数として受け取る。`/blog/[slug]`は`/blog/hello-world`、`/blog/nextjs-guide`などすべてのパスにマッチし、`slug`の値をコンポーネント内で使用できる。
+
+**ルートグループ** `(name)`はURLに影響を与えず、ファイルを論理的にまとめる。`(marketing)/pricing`のURLは`/pricing`であり、`/(marketing)/pricing`ではない。
+
+**layout.tsxのネスト**：上位フォルダのlayoutが先にレンダリングされ、下位フォルダのlayoutがその中にネストされる。ルートlayout（app/layout.tsx）はすべてのページに適用される。
+
+## 4) 実務解釈シナリオ
+
+### シナリオ A
+```
+app/
+├── layout.tsx          // グローバルナビゲーション
+├── (main)/
+│   ├── layout.tsx      // サイドバー付きレイアウト
+│   ├── dashboard/
+│   │   └── page.tsx    // /dashboard
+│   └── settings/
+│       └── page.tsx    // /settings
+└── (auth)/
+    ├── layout.tsx      // ログイン専用レイアウト（サイドバーなし）
+    ├── login/
+    │   └── page.tsx    // /login
+    └── register/
+        └── page.tsx    // /register
+```
+- 読み取りポイント：
+  - `(main)`と`(auth)`はルートグループであり、URLには表示されない。
+  - `/dashboard`と`/settings`はサイドバー付きレイアウトを共有する。
+  - `/login`と`/register`はサイドバーなしの別レイアウトを使用する。
+  - ルートlayout.tsxはすべてのページに適用される。
+
+### シナリオ B
+```
+app/blog/[slug]/page.tsx
+```
+```tsx
+export default async function BlogPost({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  // slugを使用してデータを取得
+  return <article><h1>{slug}</h1></article>;
+}
+```
+- 解釈：
+  - `/blog/nextjs-guide`にアクセスすると、`slug`は`"nextjs-guide"`になる。
+  - 動的セグメントの値は`params` propとして渡される。
+  - この値でデータベースやAPIから該当記事を取得できる。
+
+## 5) よくあるミス
+
+1. page.tsxを作成せずフォルダだけ作り、URLアクセスを期待する。
+フォルダがあってもpage.tsxがなければ、そのパスにはアクセスできない（404）。
+
+2. ルートグループがURLに含まれると思い込む。
+`(group)`形式のフォルダはURL構造に影響を与えない。純粋にファイル整理の目的である。
+
+3. layout.tsxのネスト構造を理解していない。
+下位のlayoutは上位のlayoutの中にレンダリングされる。これを知らないと、レイアウトが二重に適用されているように見えることがある。
+
+4. 動的ルートのパラメータ名をフォルダ名と異なるものにする。
+`[slug]`フォルダのパラメータは必ず`slug`という名前でアクセスしなければならない。
+
+## 6) 確認質問
+
+1. App Routerにおけるpage.tsx、layout.tsx、loading.tsxの役割はそれぞれ何か？
+2. フォルダ構造はURLにどのようにマッピングされるか？
+3. 動的ルート`[param]`とルートグループ`(group)`の違いは何か？
+4. layout.tsxのネストはどのように動作するか？
+5. page.tsxが存在しないフォルダにアクセスするとどうなるか？
+
+## 7) 出題抽出メモ
+
+- 事実型候補：App Routerファイル規則（page、layout、loading、error）、フォルダ-URLマッピング
+- 判断型候補：ルートグループの使用が適切な状況の判断
+- シナリオ型候補：フォルダ構造を見てURLとレイアウト適用範囲を予測する
+- 誤答誘導ポイント：ルートグループがURLに含まれると誤認、page.tsxなしでもアクセス可能と誤認

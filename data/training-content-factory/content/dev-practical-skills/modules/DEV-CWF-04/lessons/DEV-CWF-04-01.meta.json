@@ -1,0 +1,44 @@
+{
+  "lesson_id": "DEV-CWF-04-01",
+  "category": "dev-practical-skills",
+  "subject": "common-workplace-fundamentals",
+  "topic": "environment-configuration",
+  "summary": "Explains the separation of development, staging, and production environments and how to read configuration files and environment variables.",
+  "key_points": [
+    "Environments are separated to protect production data and services.",
+    "Secret values belong in environment variables, not in committed code.",
+    "Configuration priority order determines which setting takes effect."
+  ],
+  "misconceptions": [
+    "It is safe to commit .env files to version control.",
+    "All environments can share the same configuration values.",
+    "If code works locally, it will work the same way after deployment."
+  ],
+  "check_questions": [
+    "Why should environments be separated?",
+    "Why must .env files be added to .gitignore?",
+    "What should you check first when a deployment fails with a missing env var error?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Purpose and differences of development, staging, and production environments",
+      "Configuration priority order (defaults < config file < .env < OS env < CLI args)"
+    ],
+    "practical_judgment_candidates": [
+      "Diagnosing a deployment failure caused by missing environment variables",
+      "Deciding appropriate log level for each environment"
+    ],
+    "error_interpretation_candidates": [
+      "Reading a 'missing environment variable' error after staging deployment",
+      "Identifying the cause of sensitive data appearing in production logs"
+    ],
+    "scenario_candidates": [
+      "API works locally but returns 500 on staging due to missing secret",
+      "Production logs exposing user data due to debug log level"
+    ],
+    "common_wrong_answer_patterns": [
+      "Believing .env files are automatically deployed with the code",
+      "Confusing .env file priority with OS environment variable priority"
+    ]
+  }
+}

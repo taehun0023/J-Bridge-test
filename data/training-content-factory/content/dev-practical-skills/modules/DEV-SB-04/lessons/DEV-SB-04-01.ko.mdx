@@ -1,0 +1,179 @@
+---
+lesson_id: DEV-SB-04-01
+title: "JPA 데이터 접근과 트랜잭션 관리 읽기"
+module: DEV-SB-04
+level: advanced
+est_minutes: 18
+tags: [spring-boot, jpa, transaction, n-plus-one, lazy-loading, static-content]
+---
+
+## 1) 학습 목표
+
+- Spring Data JPA의 Repository 기본 패턴을 읽고 이해할 수 있다.
+- @Transactional의 동작 원리와 전파(Propagation) 규칙을 설명할 수 있다.
+- N+1 문제의 발생 원인과 해결 방법을 설명할 수 있다.
+- 지연 로딩(Lazy Loading)과 즉시 로딩(Eager Loading)의 차이와 주의점을 설명할 수 있다.
+
+## 2) 업무 맥락
+
+일본 IT 현장의 Spring Boot 프로젝트에서는 데이터베이스 접근에 JPA를 사용하는 경우가 매우 많다. 그러나 JPA는 편리한 반면, N+1 문제나 지연 로딩 예외 등 이해 부족으로 인한 성능 문제와 런타임 에러가 빈발한다. 기존 코드의 리뷰나 장애 조사 시 이러한 문제를 간파하는 능력이 요구된다.
+
+## 3) 핵심 설명
+
+**Spring Data JPA Repository 기본 패턴:**
+
+```java
+// Entity 정의
+@Entity
+@Table(name = "employees")
+public class Employee {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String name;
+    private String department;
+
+    @OneToMany(mappedBy = "employee", fetch = FetchType.LAZY)
+    private List<Task> tasks;
+}
+
+// Repository 정의 — 인터페이스만으로 CRUD 사용 가능
+public interface EmployeeRepository extends JpaRepository<Employee, Long> {
+
+    // 메서드명으로 쿼리 자동 생성
+    List<Employee> findByDepartment(String department);
+
+    // 커스텀 쿼리
+    @Query("SELECT e FROM Employee e WHERE e.name LIKE %:keyword%")
+    List<Employee> searchByName(@Param("keyword") String keyword);
+}
+```
+
+Spring Data JPA는 `JpaRepository`를 상속하는 것만으로 `save`, `findById`, `findAll`, `delete` 등의 기본 연산을 사용할 수 있다. 메서드명의 명명 규칙을 따르면 SQL 없이 쿼리가 자동 생성된다.
+
+**@Transactional의 동작:**
+
+```java
+@Service
+public class TransferService {
+    private final AccountRepository accountRepository;
+
+    @Transactional
+    public void transfer(Long fromId, Long toId, BigDecimal amount) {
+        Account from = accountRepository.findById(fromId)
+            .orElseThrow(() -> new AccountNotFoundException(fromId));
+        Account to = accountRepository.findById(toId)
+            .orElseThrow(() -> new AccountNotFoundException(toId));
+
+        from.withdraw(amount);   // 잔고 부족이면 예외
+        to.deposit(amount);
+
+        accountRepository.save(from);
+        accountRepository.save(to);
+        // 메서드 정상 종료 → 자동 COMMIT
+        // RuntimeException 발생 → 자동 ROLLBACK
+    }
+}
+```
+
+`@Transactional`을 붙이면 메서드 시작 시 트랜잭션이 시작되고, 정상 종료 시 COMMIT, RuntimeException 발생 시 ROLLBACK된다. 체크 예외(Exception)는 기본적으로 ROLLBACK되지 않는다는 점에 주의해야 한다.
+
+**전파(Propagation)의 주요 패턴:**
+- `REQUIRED` (기본값): 기존 트랜잭션이 있으면 참여, 없으면 새로 생성.
+- `REQUIRES_NEW`: 항상 새 트랜잭션 생성. 기존 트랜잭션은 일시 중지됨.
+- `MANDATORY`: 기존 트랜잭션이 필수. 없으면 예외 발생.
+
+**N+1 문제:**
+
+```java
+// N+1이 발생하는 코드
+List<Employee> employees = employeeRepository.findAll(); // 1회 쿼리
+for (Employee emp : employees) {
+    System.out.println(emp.getTasks().size()); // 직원마다 1회씩 쿼리 발행
+}
+// 직원이 100명이면 총 101회 쿼리가 발행된다
+```
+
+`@OneToMany(fetch = FetchType.LAZY)`인 경우, 연관 엔티티는 접근 시에야 비로소 DB에 질의한다. 루프 내에서 접근하면 N건의 부모 엔티티에 대해 N회의 추가 쿼리가 발행된다.
+
+**N+1 해결책:**
+
+```java
+// 해결책1: Fetch Join
+@Query("SELECT e FROM Employee e JOIN FETCH e.tasks")
+List<Employee> findAllWithTasks();
+
+// 해결책2: @EntityGraph
+@EntityGraph(attributePaths = {"tasks"})
+List<Employee> findAll();
+```
+
+Fetch Join 또는 `@EntityGraph`를 사용하면 1회 쿼리로 연관 엔티티도 함께 가져올 수 있다.
+
+**지연 로딩 예외(LazyInitializationException):**
+
+트랜잭션 밖에서 지연 로딩된 컬렉션에 접근하면 `LazyInitializationException`이 발생한다. Service 메서드에 Transactional을 붙이거나, 필요한 데이터를 트랜잭션 내에서 DTO로 변환하여 반환한다.
+
+## 4) 실무 해석 시나리오
+
+### 시나리오 A
+```java
+@Service
+public class ReportService {
+    @Transactional(readOnly = true)
+    public List<EmployeeDto> getEmployeeReport() {
+        List<Employee> employees = employeeRepository.findAll();
+        return employees.stream()
+            .map(e -> new EmployeeDto(e.getName(), e.getTasks().size()))
+            .collect(Collectors.toList());
+    }
+}
+```
+- 해석: `readOnly = true`는 읽기 전용 트랜잭션을 나타내며, JPA의 더티 체크가 비활성화되어 성능이 향상된다. 그러나 `findAll()`로 전체 직원을 가져온 후 `e.getTasks().size()`로 N+1 문제가 발생한다. Fetch Join을 사용하여 1회 쿼리로 가져와야 한다. `@Transactional`이 있으므로 `LazyInitializationException`은 발생하지 않지만 성능 문제가 남는다.
+
+### 시나리오 B
+```java
+@Service
+public class OrderService {
+    @Transactional
+    public void processOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId).orElseThrow();
+        order.setStatus(OrderStatus.PROCESSING);
+        // save()를 호출하지 않았지만, 트랜잭션 종료 시 자동으로 UPDATE된다
+    }
+}
+```
+- 해석: JPA의 더티 체크 기능으로 인해, 트랜잭션 내에서 Entity의 필드를 변경하면 트랜잭션 COMMIT 시 자동으로 UPDATE 쿼리가 발행된다. 명시적으로 `save()`를 호출하지 않아도 변경은 반영된다. 이것은 JPA 초보자가 놓치기 쉬운 포인트다.
+
+## 5) 자주 하는 실수
+
+1. N+1 문제를 인지하지 못하고 루프 내에서 지연 로딩을 실행한다.
+운영 환경에서 데이터가 늘어나면 급격히 성능이 악화된다. SQL 로그(`spring.jpa.show-sql=true`)로 발행 쿼리 수를 확인하는 습관을 들인다.
+
+2. 체크 예외로 ROLLBACK된다고 착각한다.
+`@Transactional`은 기본적으로 RuntimeException만 ROLLBACK한다. 체크 예외에서도 ROLLBACK하려면 `@Transactional(rollbackFor = Exception.class)`를 지정한다.
+
+3. 트랜잭션 밖에서 지연 로딩 컬렉션에 접근한다.
+Controller에서 직접 Entity를 반환하면, JSON 변환 시 LazyInitializationException이 발생한다. Service 계층에서 DTO로 변환하여 반환한다.
+
+4. @Transactional을 private 메서드에 붙인다.
+Spring의 프록시 방식에서는 private 메서드의 @Transactional은 무시된다. public 메서드에 붙여야 한다.
+
+5. 같은 클래스 내 메서드 호출에서 트랜잭션 전파가 안 되는 것을 모른다.
+자기 호출(`this.method()`)에서는 프록시를 경유하지 않으므로 @Transactional이 적용되지 않는다. 별도 Bean으로 분리해야 한다.
+
+## 6) 확인 질문
+
+1. @Transactional이 붙은 메서드에서 예외가 발생하면 언제 ROLLBACK되는가?
+2. N+1 문제란 무엇인가? 어떻게 방지할 수 있는가?
+3. Fetch Join과 EntityGraph의 목적은 무엇인가?
+4. JPA의 더티 체크란 무엇인가? 왜 save() 없이도 업데이트가 반영되는가?
+5. @Transactional(readOnly = true)을 지정하는 이점은 무엇인가?
+
+## 7) 문항 발췌 메모
+
+- 사실형 후보: @Transactional의 기본 ROLLBACK 대상, FetchType.LAZY의 동작
+- 판단형 후보: N+1 문제의 검출과 Fetch Join 적용 판단, readOnly 트랜잭션 적용 장면
+- 시나리오형 후보: 루프 내 지연 로딩이 실행되는 코드의 문제 지적, save() 없이 업데이트가 반영되는 이유 설명
+- 오답 유도 포인트: 체크 예외에서도 기본 ROLLBACK된다고 오인, private 메서드의 @Transactional이 유효하다고 오인

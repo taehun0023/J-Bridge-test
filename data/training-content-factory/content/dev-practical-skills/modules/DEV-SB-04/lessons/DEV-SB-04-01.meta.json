@@ -1,0 +1,44 @@
+{
+  "lesson_id": "DEV-SB-04-01",
+  "category": "dev-practical-skills",
+  "subject": "spring-boot",
+  "topic": "jpa-transactions",
+  "summary": "Covers Spring Data JPA repository patterns, @Transactional behavior and propagation rules, N+1 problem causes and solutions (Fetch Join, EntityGraph), and lazy vs eager loading pitfalls.",
+  "key_points": [
+    "@Transactional auto-commits on success and rolls back on RuntimeException (not checked exceptions by default).",
+    "N+1 problem occurs when lazy-loaded collections are accessed in a loop — solved with Fetch Join or @EntityGraph.",
+    "JPA dirty checking automatically persists entity field changes at transaction commit without explicit save()."
+  ],
+  "misconceptions": [
+    "@Transactional rolls back on all exceptions including checked exceptions by default.",
+    "@Transactional works on private methods the same as public methods.",
+    "You must always call save() to persist changes to a managed entity within a transaction."
+  ],
+  "check_questions": [
+    "What is the N+1 problem and how can it be prevented?",
+    "When does @Transactional trigger a rollback by default?",
+    "What is JPA dirty checking and why does it allow updates without calling save()?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Default rollback behavior of @Transactional (RuntimeException only, not checked exceptions)",
+      "FetchType.LAZY loads related entities only when accessed, not at query time"
+    ],
+    "practical_judgment_candidates": [
+      "Identifying N+1 queries in code that loops over entities with lazy collections",
+      "Choosing between Fetch Join and @EntityGraph for solving N+1"
+    ],
+    "error_interpretation_candidates": [
+      "LazyInitializationException when accessing lazy collection outside transaction",
+      "Silent data loss when @Transactional on private method is ignored by Spring proxy"
+    ],
+    "scenario_candidates": [
+      "Code review: loop accessing lazy collection — count total SQL queries issued",
+      "Entity field modified without save() — explain why the change persists"
+    ],
+    "common_wrong_answer_patterns": [
+      "Believing checked exceptions cause automatic rollback with @Transactional",
+      "Thinking @Transactional on private methods works via Spring AOP proxy"
+    ]
+  }
+}

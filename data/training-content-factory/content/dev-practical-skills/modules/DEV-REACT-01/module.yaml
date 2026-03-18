@@ -1,0 +1,16 @@
+module:
+  id: DEV-REACT-01
+  title: React - Component Thinking and JSX Basics
+  level: foundation
+  description: "정적 해설형 콘텐츠로 React 컴포넌트의 개념과 JSX 문법을 읽고 해석하는 방법을 설명한다."
+  subject: react
+  content_mode: static-interpretive
+  outcomes:
+    - "React 컴포넌트의 개념과 함수형 컴포넌트 구조를 설명할 수 있다."
+    - "JSX 문법과 HTML의 차이를 구분할 수 있다."
+    - "컴포넌트 분리의 기준과 이점을 설명할 수 있다."
+  lessons:
+    - id: DEV-REACT-01-01
+      title: "컴포넌트로 UI를 분리하는 사고방식"
+      est_minutes: 18
+      tags: [react, component, jsx, function-component, static-content]

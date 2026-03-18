@@ -1,0 +1,43 @@
+{
+  "lesson_id": "DEV-CWF-01-01",
+  "category": "dev-practical-skills",
+  "subject": "common-workplace-fundamentals",
+  "topic": "error-report-reading",
+  "summary": "Explains how to read and structure an error report before escalating or asking for help.",
+  "key_points": [
+    "Separate symptom, reproduction path, environment, and cause hypothesis.",
+    "Do not confuse a guessed cause with an observed failure.",
+    "A useful report reduces investigation cost for the team."
+  ],
+  "misconceptions": [
+    "A vague statement of failure is enough to begin debugging.",
+    "The guessed cause should be written as if it is already proven.",
+    "Environment details are optional in most reports."
+  ],
+  "check_questions": [
+    "What should be read first in an error report?",
+    "Why does environment information matter?",
+    "How is a symptom different from a cause hypothesis?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Essential fields of a useful error report",
+      "Difference between symptom and cause"
+    ],
+    "practical_judgment_candidates": [
+      "Choosing the better report",
+      "Deciding what information is still missing"
+    ],
+    "error_interpretation_candidates": [
+      "Reading logs without overcommitting to a cause"
+    ],
+    "scenario_candidates": [
+      "Vague report with no reproduction path",
+      "Well-structured 500 error report after deployment"
+    ],
+    "common_wrong_answer_patterns": [
+      "Treating guesses as confirmed facts",
+      "Ignoring environment and timing information"
+    ]
+  }
+}

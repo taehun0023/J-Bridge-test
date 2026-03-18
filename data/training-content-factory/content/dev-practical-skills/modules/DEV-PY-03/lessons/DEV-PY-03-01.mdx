@@ -1,0 +1,194 @@
+---
+lesson_id: DEV-PY-03-01
+title: "ファイル入出力と例外処理パターンの読み取り"
+module: DEV-PY-03
+level: advanced
+language: ja
+est_minutes: 18
+tags: [python, file-io, exception-handling, with-statement, static-content]
+---
+
+## 1) 学習目標
+
+- `with` 文によるファイル入出力の仕組みとリソース管理を説明できる。
+- `try/except/else/finally` の各ブロックの役割と実行順序を説明できる。
+- 例外の階層構造と、広すぎる例外キャッチの危険性を説明できる。
+- 実務でよく発生するファイル関連エラー（`FileNotFoundError`、`PermissionError`、エンコーディングエラー）の原因を特定できる。
+
+## 2) 業務コンテキスト
+
+バッチ処理やデータ連携では、CSVやJSONファイルの読み書きが日常的に発生する。ファイルを開いたまま例外が発生するとリソースリークにつながり、本番環境で深刻な問題を引き起こす。`with` 文によるコンテキストマネージャと適切な例外処理は、堅牢なスクリプトを書くための基本スキルだ。
+
+## 3) 要点解説
+
+### with文とコンテキストマネージャ
+
+`with` 文はリソースの確保と解放を自動化する。ファイルの場合、ブロックを抜けると自動的に `close()` が呼ばれる。
+
+```python
+# with文: ブロック終了時に自動close
+with open("data.csv", "r", encoding="utf-8") as f:
+    lines = f.readlines()
+# ここではfは既にclose済み
+
+# with文なし（非推奨）: close忘れのリスク
+f = open("data.csv", "r")
+lines = f.readlines()
+f.close()  # 例外発生時にここに到達しない可能性がある
+```
+
+複数ファイルを同時に扱う場合もネストせずに書ける。
+
+```python
+with open("input.txt", "r") as src, open("output.txt", "w") as dst:
+    for line in src:
+        dst.write(line.upper())
+```
+
+### ファイル読み書きモード
+
+| モード | 説明 |
+|--------|------|
+| `"r"` | 読み取り（デフォルト）。ファイルが存在しないと `FileNotFoundError` |
+| `"w"` | 書き込み。既存内容を上書き |
+| `"a"` | 追記。既存内容の末尾に追加 |
+| `"x"` | 排他的作成。ファイルが既に存在すると `FileExistsError` |
+
+### try/except/else/finally
+
+```python
+try:
+    with open("config.json", "r") as f:
+        data = json.load(f)
+except FileNotFoundError:
+    print("設定ファイルが見つかりません")
+    data = {}
+except json.JSONDecodeError as e:
+    print(f"JSONパースエラー: {e}")
+    data = {}
+else:
+    # 例外が発生しなかった場合のみ実行
+    print(f"設定を読み込みました: {len(data)}件")
+finally:
+    # 例外の有無にかかわらず必ず実行
+    print("処理完了")
+```
+
+**実行順序のポイント:**
+- `try` ブロックで例外が発生 → 該当する `except` → `finally`
+- `try` ブロックが正常完了 → `else` → `finally`
+- `finally` は `return` 文があっても必ず実行される
+
+### 例外の階層と適切なキャッチ
+
+```python
+# 悪い例: 全ての例外をキャッチ
+try:
+    result = process_file(path)
+except Exception:  # KeyboardInterrupt等も隠してしまう
+    pass
+
+# 良い例: 具体的な例外を指定
+try:
+    result = process_file(path)
+except (FileNotFoundError, PermissionError) as e:
+    logger.error(f"ファイルアクセスエラー: {e}")
+    raise
+```
+
+`except Exception` や裸の `except:` は、デバッグ困難なバグの原因になる。予期する例外を具体的にキャッチし、予期しない例外は上位に伝播させるのが原則だ。
+
+### エンコーディング問題
+
+```python
+# Windows環境でのよくある問題
+with open("data.csv", "r", encoding="utf-8") as f:  # 明示的にUTF-8
+    content = f.read()
+
+# BOM付きUTF-8ファイルの処理
+with open("data.csv", "r", encoding="utf-8-sig") as f:
+    content = f.read()
+```
+
+`encoding` を省略するとOSのデフォルトエンコーディングが使われる。Windows環境では `cp932`（Shift_JIS系）になり、UTF-8ファイルの読み込みで `UnicodeDecodeError` が発生する。
+
+## 4) 実務解釈シナリオ
+
+### シナリオ A
+
+```python
+import csv
+from pathlib import Path
+
+def load_users(filepath: str) -> list[dict]:
+    path = Path(filepath)
+    if not path.exists():
+        return []
+
+    with open(path, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        return [row for row in reader]
+```
+
+- 読み取り:
+  - `Path.exists()` で事前チェックしているが、チェックとオープンの間にファイルが削除される可能性がある（TOCTOU問題）。
+  - 実務では `try/except FileNotFoundError` のほうが堅牢だ。
+  - `csv.DictReader` はヘッダー行をキーとしたディクショナリのリストを返す。
+
+### シナリオ B
+
+```python
+import json
+
+def update_config(path: str, key: str, value: str) -> bool:
+    try:
+        with open(path, "r") as f:
+            config = json.load(f)
+    except FileNotFoundError:
+        config = {}
+    except json.JSONDecodeError:
+        return False  # 壊れたファイルは上書きしない
+
+    config[key] = value
+
+    with open(path, "w") as f:
+        json.dump(config, f, indent=2, ensure_ascii=False)
+    return True
+```
+
+- 解釈:
+  - ファイルが存在しない場合は空の辞書から始める（新規作成）。
+  - JSONが壊れている場合は `False` を返して上書きを防ぐ（データ保護）。
+  - 書き込み時の `ensure_ascii=False` は日本語をそのまま保存するために必要。
+
+## 5) よくあるミス
+
+1. `with` 文を使わずにファイルを開き、例外発生時にリソースリークする。
+`finally` で `close()` する方法もあるが、`with` 文が最もシンプルで安全だ。
+
+2. `except Exception` で全ての例外を握り潰す。
+`KeyboardInterrupt` や `SystemExit` まで捕まえてしまい、プログラムの停止すらできなくなる場合がある。
+
+3. `encoding` パラメータを省略してOS依存の挙動になる。
+特にWindows環境でUTF-8ファイルを読むとき、明示的に `encoding="utf-8"` を指定しないと `UnicodeDecodeError` が発生する。
+
+4. `else` ブロックの実行タイミングを誤解する。
+`else` は `try` が正常完了した場合にのみ実行される。`finally` とは異なる。
+
+5. ファイルの存在チェック後にオープンする（TOCTOU問題）。
+`Path.exists()` で確認してからオープンするまでの間にファイルが変更・削除される可能性がある。`try/except` でオープンするほうが安全だ。
+
+## 6) 確認質問
+
+1. `with` 文を使うとリソース管理がどう改善されるか？
+2. `try/except/else/finally` の各ブロックはどの順序で実行されるか？
+3. `except Exception` が危険な理由は何か？
+4. ファイルの `encoding` を省略するとどのような問題が起きるか？
+5. TOCTOU問題とは何か、ファイル操作でどう回避するか？
+
+## 7) 出題抽出メモ
+
+- 事実型候補: ファイルオープンモードの違い（r/w/a/x）、try/except/else/finallyの実行順序
+- 判断型候補: 広い例外キャッチの適切性判断、TOCTOU vs try/except の選択
+- シナリオ型候補: エンコーディング未指定によるUnicodeDecodeError、with文なしでの例外時リソースリーク
+- 誤答誘導ポイント: elseブロックが例外発生時にも実行されると誤認、except Exceptionが安全だと誤認

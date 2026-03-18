@@ -1,0 +1,43 @@
+{
+  "lesson_id": "DEV-CWF-03-01",
+  "category": "dev-practical-skills",
+  "subject": "common-workplace-fundamentals",
+  "topic": "issue-tracking",
+  "summary": "Explains how to read issue trackers to identify task scope, priority labels, and the relationship between issues and pull requests.",
+  "key_points": [
+    "Read acceptance criteria to determine the exact scope of work.",
+    "Priority determines when to act; Severity determines impact level.",
+    "Always link PRs to issues for traceability."
+  ],
+  "misconceptions": [
+    "Reading only the issue title is enough to understand the task.",
+    "Severity and Priority mean the same thing.",
+    "It is fine to start work when acceptance criteria are vague."
+  ],
+  "check_questions": [
+    "What is the most important element in an issue description?",
+    "What is the difference between Priority and Severity?",
+    "What should you do first when acceptance criteria are missing?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Standard components of an issue (title, description, labels, milestone, assignee)",
+      "Priority level definitions (P0 through P3)"
+    ],
+    "practical_judgment_candidates": [
+      "Deciding whether to start work when acceptance criteria are ambiguous",
+      "Choosing correct priority-based response timing"
+    ],
+    "error_interpretation_candidates": [
+      "Identifying missing information in an incomplete issue report"
+    ],
+    "scenario_candidates": [
+      "Bug issue with no acceptance criteria and P1 label",
+      "Feature issue with clear acceptance criteria and P2 label"
+    ],
+    "common_wrong_answer_patterns": [
+      "Confusing Severity with Priority when deciding work order",
+      "Assuming the issue title alone defines the full scope"
+    ]
+  }
+}

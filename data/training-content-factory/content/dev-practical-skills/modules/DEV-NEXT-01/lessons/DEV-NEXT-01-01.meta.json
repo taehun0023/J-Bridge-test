@@ -1,0 +1,43 @@
+{
+  "lesson_id": "DEV-NEXT-01-01",
+  "category": "dev-practical-skills",
+  "subject": "nextjs",
+  "topic": "app-router-file-conventions",
+  "summary": "Explains Next.js App Router file conventions, folder-to-URL mapping, dynamic routes, route groups, and layout nesting for navigating project structure.",
+  "key_points": [
+    "App Router uses file-system-based routing — folder structure maps to URL paths.",
+    "Special files (page.tsx, layout.tsx, loading.tsx, error.tsx) each serve a specific role.",
+    "Route groups (parentheses) organize files without affecting URLs; dynamic routes (brackets) capture URL segments."
+  ],
+  "misconceptions": [
+    "A folder without page.tsx still creates a routable URL.",
+    "Route groups like (marketing) appear in the URL path.",
+    "Layout files only affect the immediate page, not nested routes."
+  ],
+  "check_questions": [
+    "What is the role of page.tsx vs layout.tsx in App Router?",
+    "How do dynamic route segments [param] work?",
+    "What happens when you access a path with no page.tsx?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "App Router file naming conventions and their roles",
+      "Folder-to-URL mapping rules"
+    ],
+    "practical_judgment_candidates": [
+      "Deciding when to use a route group vs a regular folder",
+      "Choosing where to place a layout for shared navigation"
+    ],
+    "error_interpretation_candidates": [
+      "Understanding 404 errors from missing page.tsx"
+    ],
+    "scenario_candidates": [
+      "Reading folder structure to predict URLs and layout scope",
+      "Dynamic route parameter extraction from URL"
+    ],
+    "common_wrong_answer_patterns": [
+      "Assuming route groups are part of the URL",
+      "Believing a folder alone creates a routable page"
+    ]
+  }
+}

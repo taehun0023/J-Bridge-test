@@ -1,0 +1,46 @@
+{
+  "lesson_id": "CSK-BT-01-02",
+  "category": "cs-knowledge",
+  "subject": "basic-theory",
+  "topic": "character-encoding-and-numeric-representation",
+  "default_language": "ja",
+  "available_languages": [
+    "ja",
+    "ko"
+  ],
+  "summary": "文字コードと整数・浮動小数点表現を通じて、同じデータでも解釈によって意味が変わることを理解する。",
+  "key_points": [
+    "文字コードは文字と番号の対応表であり、Unicodeはその代表的な体系である",
+    "整数は離散的な値を比較的そのまま保持しやすい",
+    "ASCIIは範囲が狭いが単純で、Unicodeは多言語を扱いやすい"
+  ],
+  "misconceptions": [
+    "Unicodeを使えば文字化けが完全になくなるという誤解",
+    "小数は常に正確に保存できるという誤解",
+    "表示結果が同じなら内部表現も同じという誤解"
+  ],
+  "check_questions": [
+    "文字コードが違うと同じバイト列でも表示が変わるのはなぜか",
+    "整数と浮動小数点はどのような用途で使い分けるか",
+    "0.1のような値が誤差を生みやすいのはなぜか",
+    "文字列長とバイト数が一致しないケースはどんなときか"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "文字コードは文字と番号の対応表であり、Unicodeはその代表的な体系である",
+      "整数は離散的な値を比較的そのまま保持しやすい"
+    ],
+    "concept_contrast_candidates": [
+      "ASCIIは範囲が狭いが単純で、Unicodeは多言語を扱いやすい",
+      "整数は厳密さを重視しやすく、浮動小数点は範囲と近似を重視する"
+    ],
+    "scenario_candidates": [
+      "整数と浮動小数点の違いを比較する文項候補になる",
+      "文字化け事例を解釈するシナリオ型文項へ拡張できる"
+    ],
+    "common_wrong_answer_patterns": [
+      "Unicodeを使えば文字化けが完全になくなるという誤解",
+      "小数は常に正確に保存できるという誤解"
+    ]
+  }
+}

@@ -1,0 +1,162 @@
+---
+lesson_id: DEV-SB-02-01
+title: "Controller-Service-Repository 계층별 역할과 흐름"
+module: DEV-SB-02
+level: intermediate
+est_minutes: 18
+tags: [spring-boot, controller, service, repository, layered-architecture, static-content]
+---
+
+## 1) 학습 목표
+
+- Controller, Service, Repository 각 계층이 담당하는 책임을 정확히 설명할 수 있다.
+- HTTP 요청이 수신되어 응답이 반환되기까지의 데이터 흐름을 추적할 수 있다.
+- 계층 간 의존 방향 규칙(상위→하위만 의존)을 설명할 수 있다.
+- DTO와 Entity의 사용 구분과 계층 간 데이터 변환의 목적을 이해할 수 있다.
+
+## 2) 업무 맥락
+
+일본 IT 현장에서는 팀 개발 시 "이 기능은 어느 계층에 작성해야 하는가"라는 판단이 빈번히 요구된다. 레이어드 아키텍처를 올바르게 이해하지 못하면, Controller 안에 SQL 호출을 쓰거나 Service에 HTTP 응답 처리를 기술하는 혼란이 발생한다. 특히 기존 프로젝트에 중간 합류할 때, 코드의 어디를 보면 무엇을 알 수 있는지 빠르게 판단하려면 각 계층의 책임 경계를 명확히 파악해야 한다.
+
+## 3) 핵심 설명
+
+Spring Boot의 표준 레이어드 아키텍처는 3계층으로 구성된다.
+
+**Controller 계층** — HTTP 요청 수신과 응답 반환을 담당한다. 비즈니스 로직을 갖지 않으며, 요청 검증과 Service로의 위임이 주요 역할이다.
+
+**Service 계층** — 비즈니스 로직 구현을 담당한다. 여러 Repository를 조합한 처리, 조건 분기, 계산 등을 여기에 작성한다. 트랜잭션 관리도 Service 계층의 책임이다.
+
+**Repository 계층** — 데이터베이스 접근을 담당한다. CRUD 기본 연산과 필요에 따른 커스텀 쿼리를 제공한다.
+
+전형적인 REST API 요청 처리 흐름을 아래에 보여준다.
+
+```java
+// 1. Controller — 요청 수신, 응답 반환
+@RestController
+@RequestMapping("/api/orders")
+public class OrderController {
+    private final OrderService orderService;
+
+    public OrderController(OrderService orderService) {
+        this.orderService = orderService;
+    }
+
+    @PostMapping
+    public ResponseEntity<OrderResponse> createOrder(
+            @Valid @RequestBody OrderRequest request) {
+        OrderResponse response = orderService.createOrder(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+}
+
+// 2. Service — 비즈니스 로직
+@Service
+@Transactional
+public class OrderService {
+    private final OrderRepository orderRepository;
+    private final ProductRepository productRepository;
+
+    public OrderService(OrderRepository orderRepository,
+                        ProductRepository productRepository) {
+        this.orderRepository = orderRepository;
+        this.productRepository = productRepository;
+    }
+
+    public OrderResponse createOrder(OrderRequest request) {
+        Product product = productRepository.findById(request.getProductId())
+            .orElseThrow(() -> new ProductNotFoundException(request.getProductId()));
+
+        if (product.getStock() < request.getQuantity()) {
+            throw new InsufficientStockException(product.getId());
+        }
+
+        product.decreaseStock(request.getQuantity());
+        Order order = Order.create(product, request.getQuantity());
+        Order saved = orderRepository.save(order);
+
+        return OrderResponse.from(saved);
+    }
+}
+
+// 3. Repository — 데이터 접근
+@Repository
+public interface OrderRepository extends JpaRepository<Order, Long> {
+    List<Order> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
+}
+```
+
+**의존 방향 규칙:** Controller → Service → Repository 방향으로만 의존한다. Repository가 Controller를 참조하거나, Service가 Controller를 참조하는 일은 없다. 이 단방향 의존으로 인해 하위 계층의 변경이 상위에 영향을 미치기 어렵다.
+
+**DTO와 Entity 분리:** Controller 계층에서는 DTO(OrderRequest/OrderResponse)를 사용하고, Repository 계층에서는 Entity(Order)를 사용한다. Service 계층에서 DTO와 Entity 간 변환을 수행하여 API 사양 변경이 데이터베이스 구조에 영향을 주지 않도록 한다.
+
+## 4) 실무 해석 시나리오
+
+### 시나리오 A
+```java
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+    private final UserRepository userRepository;
+
+    @GetMapping("/{id}")
+    public User getUser(@PathVariable Long id) {
+        return userRepository.findById(id).orElse(null);
+    }
+}
+```
+- 문제점: Controller가 Repository를 직접 호출한다. Service 계층을 경유하지 않으므로, 나중에 검증이나 캐시 등 비즈니스 로직을 추가할 때 Controller를 수정해야 한다. 또한 `null`을 반환하면 클라이언트 측에서 NullPointerException 원인이 된다.
+
+### 시나리오 B
+```java
+@Service
+public class ReportService {
+    private final SalesRepository salesRepository;
+    private final ExpenseRepository expenseRepository;
+
+    public ReportService(SalesRepository salesRepo,
+                         ExpenseRepository expenseRepo) {
+        this.salesRepository = salesRepo;
+        this.expenseRepository = expenseRepo;
+    }
+
+    public MonthlyReport generateReport(YearMonth month) {
+        List<Sale> sales = salesRepository.findByMonth(month);
+        List<Expense> expenses = expenseRepository.findByMonth(month);
+        BigDecimal profit = calculateProfit(sales, expenses);
+        return new MonthlyReport(month, sales.size(), profit);
+    }
+}
+```
+- 해석: 여러 Repository를 조합하여 이익을 계산하는 비즈니스 로직이 Service 계층에 올바르게 배치되어 있다. Controller는 이 메서드를 호출하기만 하면 되고, 보고서 생성의 세부 사항을 알 필요가 없다.
+
+## 5) 자주 하는 실수
+
+1. Controller에서 Repository를 직접 호출한다.
+Service 계층을 생략하면 비즈니스 로직 추가 시 Controller가 비대해진다. 반드시 Service 계층을 경유한다.
+
+2. Service 계층에 HTTP 응답 조립을 작성한다.
+`ResponseEntity`나 `HttpStatus`는 Controller 계층의 책임이다. Service는 DTO 또는 도메인 객체를 반환해야 한다.
+
+3. Repository 계층에 비즈니스 로직을 작성한다.
+"재고가 부족하면 에러"와 같은 판단은 Service 계층에서 한다. Repository는 데이터의 조회/저장만 담당한다.
+
+4. 순환 의존을 만든다.
+ServiceA가 ServiceB를, ServiceB가 ServiceA를 주입하면 기동 시 에러가 발생한다. 의존 방향을 정리하거나 이벤트를 사용하여 느슨하게 결합한다.
+
+5. DTO와 Entity를 구분 없이 사용한다.
+Entity를 그대로 API 응답에 반환하면 데이터베이스 컬럼 변경이 API 사양에 직접 영향을 미친다. 반드시 DTO로 변환한다.
+
+## 6) 확인 질문
+
+1. Controller, Service, Repository 각각의 책임은 무엇인가?
+2. 왜 Controller에서 Repository를 직접 호출하면 안 되는가?
+3. 계층 간 의존 방향은 어느 방향이 올바른가? 그 이유는?
+4. DTO와 Entity를 분리하는 목적은 무엇인가?
+5. 트랜잭션 관리는 어느 계층의 책임인가? 그 이유는?
+
+## 7) 문항 발췌 메모
+
+- 사실형 후보: 각 계층의 책임 정의, 의존 방향 규칙
+- 판단형 후보: 비즈니스 로직을 어느 계층에 배치해야 하는가, DTO 변환의 적절한 위치
+- 시나리오형 후보: Controller가 Repository를 직접 호출하는 코드의 문제 지적, 다수 Repository 연계 코드의 계층 판단
+- 오답 유도 포인트: Service와 Controller의 책임 경계 혼동, Repository 내 로직 기술을 올바르다고 오인

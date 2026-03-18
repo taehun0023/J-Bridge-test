@@ -1,0 +1,16 @@
+module:
+  id: DEV-CWF-06
+  title: Common Workplace Fundamentals - Code Review Basics
+  level: foundation
+  description: "정적 해설형 콘텐츠로 코드 리뷰에서 확인해야 할 관점과 피드백 작성법을 설명한다."
+  subject: common-workplace-fundamentals
+  content_mode: static-interpretive
+  outcomes:
+    - "코드 리뷰에서 확인해야 할 핵심 관점을 설명할 수 있다."
+    - "건설적인 리뷰 코멘트의 특징을 구분할 수 있다."
+    - "리뷰 피드백을 받았을 때 대응 방법을 설명할 수 있다."
+  lessons:
+    - id: DEV-CWF-06-01
+      title: "코드 리뷰에서 무엇을 어떻게 확인해야 하는가"
+      est_minutes: 18
+      tags: [common-workplace-fundamentals, code-review, feedback, static-content]

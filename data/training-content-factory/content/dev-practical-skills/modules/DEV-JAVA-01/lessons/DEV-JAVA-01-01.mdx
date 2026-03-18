@@ -1,0 +1,97 @@
+---
+lesson_id: DEV-JAVA-01-01
+title: "Javaソースを読む際にまず確認すべきこと"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 18
+tags: [java, code-reading, class-structure, types, static-content]
+---
+
+## 1) 学習目標
+
+- Javaソースファイルの基本構成（パッケージ宣言、インポート、クラス定義）を説明できる。
+- 基本型（primitive）と参照型（reference）の違いを説明できる。
+- メソッドシグネチャを読んで入力と出力を把握できる。
+- アクセス修飾子（public, private, protected）の役割を説明できる。
+
+## 2) 業務コンテキスト
+
+実務で新しいプロジェクトに配属されると、まず行うのが既存コードを読むことである。Javaプロジェクトではファイル1つがクラス1つに対応し、パッケージ構造がディレクトリ構造と一致する。このルールを知っていればプロジェクト内で目的のコードを素早く見つけられる。逆にこの構造を知らなければ、数百のファイルの中で迷うことになる。
+
+## 3) 要点解説
+
+Javaソースファイルは3つの部分で構成される。
+
+第一に、**パッケージ宣言**である。`package com.example.service;`は、このファイルがプロジェクト内のどこに位置するかを示す。パッケージはディレクトリパスと1:1で対応する。
+
+第二に、**インポート文**である。他のパッケージのクラスを使用するには`import`文で宣言する。インポートを見れば、このクラスがどのような外部依存性を持つか素早く把握できる。
+
+第三に、**クラス定義**である。クラスの中にはフィールド（データ）とメソッド（動作）がある。メソッドシグネチャ`public String getUserName(int userId)`を読めば、アクセス範囲（public）、戻り値の型（String）、メソッド名（getUserName）、パラメータ（int userId）を一目で把握できる。
+
+基本型（`int`, `boolean`, `double`など）は値そのものを格納し、参照型（`String`, `List`, ユーザー定義クラス）はオブジェクトのアドレスを格納する。この違いは比較演算（`==` vs `equals`）で重要になる。基本型は`==`で値を比較できるが、参照型は`equals`メソッドを使用しなければ内容を比較できない。
+
+## 4) 実務解釈シナリオ
+
+### シナリオ A
+```java
+package com.example.user;
+
+import com.example.util.StringHelper;
+
+public class UserService {
+    private String defaultRole = "viewer";
+
+    public String assignRole(String userId, String role) {
+        if (role == null) {
+            return defaultRole;
+        }
+        return StringHelper.normalize(role);
+    }
+}
+```
+- 読み取りポイント:
+  - パッケージ`com.example.user`からユーザー関連サービスであることが分かる。
+  - `StringHelper`をインポートしているため、文字列処理ユーティリティに依存している。
+  - `assignRole`は`role`がnullの場合デフォルト値を返し、それ以外は正規化して返す。
+
+### シナリオ B
+```java
+String a = new String("hello");
+String b = new String("hello");
+System.out.println(a == b);      // false
+System.out.println(a.equals(b)); // true
+```
+- 解釈:
+  - `==`は参照（アドレス）を比較するためfalseである。
+  - `equals`は内容を比較するためtrueである。
+  - この違いを知らなければ、文字列比較のバグが頻繁に発生する。
+
+## 5) よくあるミス
+
+1. 参照型を`==`で比較する。
+`String`や`Integer`のような参照型は`equals`で比較しなければならない。`==`は同じオブジェクトかどうかのみを確認する。
+
+2. パッケージ構造を無視してファイルを探す。
+パッケージとディレクトリが対応するというルールを知っていれば、目的のクラスを素早く見つけられる。
+
+3. インポート文を飛ばしてコードを読む。
+インポートを見れば、このクラスがどの外部モジュールに依存しているかすぐに分かる。
+
+4. アクセス修飾子を無視する。
+`private`メソッドはクラス内部からのみ呼び出し可能であり、外部からは使用できない。
+
+## 6) 確認質問
+
+1. Javaソースファイルの3つの基本構成要素は何か？
+2. `package`宣言はプロジェクト構造でどのような役割を果たすか？
+3. `==`と`equals`の違いは何か、いつそれぞれを使用すべきか？
+4. メソッドシグネチャから読み取れる4つの情報は何か？
+5. インポート文を先に確認するとどのような情報が得られるか？
+
+## 7) 出題抽出メモ
+
+- 事実型候補: Javaソースファイルの構成要素、基本型と参照型の違い
+- 判断型候補: == vs equals の使用適切性の判断
+- シナリオ型候補: コードからパッケージとインポートを見て依存関係を把握
+- 誤答誘導ポイント: 参照型の==比較を値比較と誤認、privateメソッドを外部から呼び出し可能と誤認

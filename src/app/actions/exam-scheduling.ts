@@ -214,7 +214,7 @@ async function createExamCycle(
   userId: string,
   cycleNumber: number,
   isJapanese: boolean
-): Promise<ExamCycleInfo> {
+): Promise<ExamCycleInfo | null> {
   const now = new Date()
   const deadline = new Date(now.getTime() + CYCLE_INTERVAL_DAYS * 24 * 60 * 60 * 1000)
 
@@ -232,7 +232,7 @@ async function createExamCycle(
     .single()
 
   if (!cycle) {
-    throw new Error('Failed to create exam cycle')
+    return null
   }
 
   // Create comprehensive_exam records

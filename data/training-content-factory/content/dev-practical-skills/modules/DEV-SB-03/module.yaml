@@ -1,0 +1,16 @@
+module:
+  id: DEV-SB-03
+  title: Spring Boot - Configuration and Profile Management
+  level: intermediate
+  description: "정적 해설형 콘텐츠로 application.yml/properties 설정과 프로필(dev, prod) 관리 방법을 설명한다."
+  subject: spring-boot
+  content_mode: static-interpretive
+  outcomes:
+    - "application.yml과 application.properties의 구조를 읽을 수 있다."
+    - "프로필(dev, staging, prod)별 설정 분리 방식을 설명할 수 있다."
+    - "@Value와 @ConfigurationProperties의 차이를 설명할 수 있다."
+  lessons:
+    - id: DEV-SB-03-01
+      title: "설정 파일과 프로필 관리 방식 읽기"
+      est_minutes: 18
+      tags: [spring-boot, configuration, profiles, yaml, properties, static-content]

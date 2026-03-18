@@ -1,0 +1,21 @@
+module:
+  id: CSK-BT-01
+  title: "情報表現と数値の基礎"
+  default_language: ja
+  level: foundation
+  description: "ビット、バイト、文字コード、数値表現のような基礎概念を静的な解説で理解する。"
+  subject: basic-theory
+  content_mode: static-interpretive
+  outcomes:
+    - "ビット、バイト、文字コードの役割を説明できる"
+    - "2進数と10進数の対応を読み取れる"
+    - "数値表現で生じる誤差や制約を判断できる"
+  lessons:
+    - id: CSK-BT-01-01
+      title: "2進数とビットは何を表しているのか"
+      est_minutes: 18
+      tags: ["basic-theory", "binary", "bit", "byte"]
+    - id: CSK-BT-01-02
+      title: "文字コードと数値表現で何が起きるのか"
+      est_minutes: 20
+      tags: ["basic-theory", "encoding", "unicode", "number"]

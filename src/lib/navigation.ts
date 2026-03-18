@@ -72,6 +72,7 @@ export const categoryChildren: Record<string, {
       { href: '/cs/algorithms', label: 'アルゴリズム', description: 'ソート、探索、再帰、計算量、動的計画法' },
       { href: '/cs/data-structures', label: 'データ構造', description: '配列、リスト、スタック、キュー、ツリー、ハッシュ' },
       { href: '/cs/computer-architecture', label: 'コンピュータシステム', description: 'CPU、メモリ、プロセス、OS機能' },
+      { href: '/cs/operating-systems', label: 'オペレーティングシステム', description: 'プロセス、スレッド、スケジューリング、資源管理' },
       { href: '/cs/database', label: 'データベース', description: '正規化、SQL理論、トランザクション、ER図' },
       { href: '/cs/networking', label: 'ネットワーク', description: 'OSI/TCP/IP、プロトコル、ルーティング' },
       { href: '/cs/security', label: 'セキュリティ', description: '暗号化、認証、攻撃手法、セキュリティ対策' },
@@ -81,6 +82,7 @@ export const categoryChildren: Record<string, {
     title: '開発実務能力',
     description: 'プログラミング言語とフレームワークを学習しましょう',
     children: [
+      { href: '/dev/cwf', label: '共通業務基礎', description: 'エラー報告・バージョン管理・コードレビューの基礎' },
       { href: '/dev/java', label: 'Java', description: 'エンタープライズ開発の基盤' },
       { href: '/dev/javascript', label: 'JavaScript', description: 'Web開発の必須言語' },
       { href: '/dev/spring-boot', label: 'Spring Boot', description: 'Javaバックエンドフレームワーク' },

@@ -1,0 +1,159 @@
+---
+lesson_id: DEV-JAVA-02-01
+title: "継承とインターフェースが実務コードで使われる方法を読む"
+module: DEV-JAVA-02
+level: intermediate
+language: ja
+est_minutes: 18
+tags: [java, oop, inheritance, interface, polymorphism, static-content]
+---
+
+## 1) 学習目標
+
+- クラスの継承関係を見て、メソッド呼び出しがどのクラスで実行されるかを追跡できる。
+- インターフェースと抽象クラスの違いを説明し、それぞれの使い分け基準を判断できる。
+- ポリモーフィズム（多態性）が実務コードでどのように活用されるかを読み取れる。
+- `@Override`アノテーションの意味と、オーバーライドされたメソッドの実行順序を説明できる。
+
+## 2) 業務コンテキスト
+
+実務のJavaプロジェクトでは、共通ロジックを親クラスにまとめ、個別ロジックをサブクラスで実装する設計が頻繁に登場する。例えば、通知サービスで共通のバリデーションを親クラスに定義し、メール・SMS・プッシュ通知をそれぞれサブクラスで実装するパターンである。この構造を読めなければ、処理がどこで実行されているかを把握できず、バグの原因追跡に時間がかかる。
+
+## 3) 要点解説
+
+### 継承の基本構造
+
+Javaの`extends`キーワードでクラスを継承する。サブクラスは親クラスのフィールドとメソッドを引き継ぐ。
+
+```java
+public class Animal {
+    protected String name;
+
+    public String speak() {
+        return "...";
+    }
+}
+
+public class Dog extends Animal {
+    @Override
+    public String speak() {
+        return name + "がワンと鳴く";
+    }
+}
+```
+
+`Dog`のインスタンスで`speak()`を呼ぶと、`Dog`のメソッドが実行される。これがメソッドオーバーライドである。`@Override`アノテーションは「親クラスのメソッドを上書きしている」ことをコンパイラに伝え、シグネチャのミスを防止する。
+
+### インターフェースと抽象クラス
+
+**インターフェース**は「何ができるか」を定義する契約である。実装の詳細は持たない。
+
+```java
+public interface Notifiable {
+    void send(String message, String recipient);
+}
+```
+
+**抽象クラス**は「共通ロジック＋未実装部分」を持つ。
+
+```java
+public abstract class BaseNotifier {
+    protected boolean validate(String recipient) {
+        return recipient != null && !recipient.isEmpty();
+    }
+
+    public abstract void send(String message, String recipient);
+}
+```
+
+使い分けの基準は明確である。共通の実装コードを共有したい場合は抽象クラス、複数の型に共通の能力を持たせたい場合はインターフェースを選ぶ。Javaではクラスの多重継承はできないが、インターフェースは複数実装できる。
+
+### ポリモーフィズムの活用
+
+親クラスやインターフェース型の変数でサブクラスのインスタンスを扱うのが多態性である。
+
+```java
+List<Notifiable> notifiers = List.of(
+    new EmailNotifier(),
+    new SmsNotifier(),
+    new PushNotifier()
+);
+
+for (Notifiable n : notifiers) {
+    n.send("サーバー復旧完了", recipient);
+}
+```
+
+`notifiers`リストの各要素は異なるクラスだが、共通の`send`メソッドで統一的に扱える。新しい通知手段を追加する場合も、`Notifiable`を実装するクラスを1つ追加するだけで済む。
+
+## 4) 実務解釈シナリオ
+
+### シナリオ A
+```java
+public interface PaymentProcessor {
+    PaymentResult process(Order order);
+}
+
+public class CreditCardProcessor implements PaymentProcessor {
+    @Override
+    public PaymentResult process(Order order) {
+        // クレジットカード決済ロジック
+        return new PaymentResult(true, "CREDIT");
+    }
+}
+
+public class PaymentService {
+    private final PaymentProcessor processor;
+
+    public PaymentService(PaymentProcessor processor) {
+        this.processor = processor;
+    }
+
+    public PaymentResult pay(Order order) {
+        return processor.process(order);
+    }
+}
+```
+- 読み取りポイント:
+  - `PaymentService`はインターフェース型のフィールドを持つため、具体的な決済方法に依存しない。
+  - コンストラクタで注入されるため、テスト時にモックを渡せる。
+  - 新しい決済方法（コンビニ決済等）は`PaymentProcessor`を実装するだけで追加できる。
+
+### シナリオ B
+```java
+Animal animal = new Dog();
+animal.speak(); // → "nullがワンと鳴く"（nameが未設定の場合）
+```
+- 解釈:
+  - 変数の型は`Animal`だが、実行されるのは`Dog`の`speak()`である。
+  - コンパイル時の型ではなく、実行時のインスタンスの型でメソッドが決まる。
+  - `name`が初期化されていないため`null`になっている点もバグの原因になる。
+
+## 5) よくあるミス
+
+1. 親クラスの型で宣言した変数でサブクラス固有のメソッドを呼ぼうとする。
+`Animal animal = new Dog();`の場合、`animal`で呼べるのは`Animal`に定義されたメソッドのみである。`Dog`固有メソッドはキャストが必要。
+
+2. `@Override`を付けずにオーバーライドしようとし、シグネチャを間違える。
+戻り値の型やパラメータが微妙に異なると、新しいメソッドの定義になり、親のメソッドが実行されてしまう。
+
+3. インターフェースと抽象クラスの使い分けを理解せず、常に抽象クラスを選ぶ。
+多重実装が必要な場面でインターフェースを使わないと、設計の柔軟性が失われる。
+
+4. `super`キーワードを忘れて親クラスの処理をスキップする。
+コンストラクタやオーバーライドメソッドで`super()`や`super.method()`を呼ばないと、親の初期化や共通処理が実行されない。
+
+## 6) 確認質問
+
+1. `extends`と`implements`の違いは何か？
+2. `@Override`アノテーションを付ける理由は何か？
+3. インターフェースと抽象クラスはそれぞれどのような場面で使い分けるか？
+4. ポリモーフィズムにより、コードの拡張性はどのように向上するか？
+5. 親クラス型の変数でサブクラスのインスタンスを参照する場合、どのクラスのメソッドが実行されるか？
+
+## 7) 出題抽出メモ
+
+- 事実型候補: インターフェースと抽象クラスの定義上の違い、多重継承の制約
+- 判断型候補: インターフェースと抽象クラスの使い分け判断
+- シナリオ型候補: 継承関係のコードからメソッド呼び出し先の追跡、DI（依存性注入）パターンの読み取り
+- 誤答誘導ポイント: コンパイル時の型と実行時の型の混同、@Overrideなしのシグネチャミス

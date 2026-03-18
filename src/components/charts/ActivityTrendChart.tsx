@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import {
   ResponsiveContainer,
   BarChart,
@@ -11,21 +10,14 @@ import {
   Tooltip,
   Legend,
 } from 'recharts'
+import { useDarkMode } from '@/lib/hooks/useDarkMode'
 
 interface ActivityTrendChartProps {
   data: { week: string; quizAttempts: number; codeSubmissions: number }[]
 }
 
 export default function ActivityTrendChart({ data }: ActivityTrendChartProps) {
-  const [isDark, setIsDark] = useState(false)
-
-  useEffect(() => {
-    const check = () => setIsDark(document.documentElement.classList.contains('dark'))
-    check()
-    const observer = new MutationObserver(check)
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
-    return () => observer.disconnect()
-  }, [])
+  const isDark = useDarkMode()
 
   const gridStroke = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
   const labelFill = isDark ? '#a1a1aa' : '#52525b'

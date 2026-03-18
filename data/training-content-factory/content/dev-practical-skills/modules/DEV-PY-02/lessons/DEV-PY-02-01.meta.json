@@ -1,0 +1,44 @@
+{
+  "lesson_id": "DEV-PY-02-01",
+  "category": "dev-practical-skills",
+  "subject": "python",
+  "topic": "data-handling",
+  "summary": "Covers list comprehensions, generator expressions, dictionary patterns, and standard library tools (collections, itertools) for efficient data handling in Python.",
+  "key_points": [
+    "List comprehensions provide concise syntax for filtering and transforming sequences — limit nesting to 2 levels.",
+    "Generator expressions yield items lazily, consuming minimal memory for large datasets but can only be iterated once.",
+    "defaultdict and Counter from collections simplify grouping and counting patterns that otherwise require boilerplate."
+  ],
+  "misconceptions": [
+    "Generator expressions can be iterated multiple times like lists.",
+    "itertools.groupby works on unsorted data the same way as SQL GROUP BY.",
+    "dict.keys() returns a plain list in Python 3."
+  ],
+  "check_questions": [
+    "When should you prefer a generator expression over a list comprehension?",
+    "Why must data be sorted before using itertools.groupby?",
+    "What happens if you pass list() instead of list to defaultdict?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Syntax elements of list comprehension: expression, variable, iterable, optional condition",
+      "Generator expressions produce items lazily and are exhausted after one pass"
+    ],
+    "practical_judgment_candidates": [
+      "Deciding when list comprehension nesting harms readability vs. helps conciseness",
+      "Choosing between defaultdict(int) and Counter for frequency counting"
+    ],
+    "error_interpretation_candidates": [
+      "Diagnosing empty results from reusing an exhausted generator",
+      "Unexpected groupby output due to unsorted input"
+    ],
+    "scenario_candidates": [
+      "Processing server logs with list comprehension to extract error messages",
+      "Using defaultdict(set) to aggregate unique access paths per user"
+    ],
+    "common_wrong_answer_patterns": [
+      "Assuming generators can be iterated multiple times without re-creation",
+      "Believing dict.keys() supports index-based access in Python 3"
+    ]
+  }
+}

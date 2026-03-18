@@ -1,0 +1,21 @@
+module:
+  id: CSK-OS-01
+  title: "オペレーティングシステムの実行モデル"
+  default_language: ja
+  level: foundation
+  description: "プロセス、スレッド、スケジューリングのような基本実行概念を静的な解説で扱う。"
+  subject: operating-systems
+  content_mode: static-interpretive
+  outcomes:
+    - "プロセスとスレッドの違いを説明できる"
+    - "文脈切り替えとスケジューリングの必要性を説明できる"
+    - "OSの実行モデルを段階的に解釈できる"
+  lessons:
+    - id: CSK-OS-01-01
+      title: "プロセスとスレッドはどう違うのか"
+      est_minutes: 18
+      tags: ["operating-systems", "process", "thread"]
+    - id: CSK-OS-01-02
+      title: "スケジューリングと文脈切り替えは何をしているのか"
+      est_minutes: 19
+      tags: ["operating-systems", "scheduling", "context-switch"]

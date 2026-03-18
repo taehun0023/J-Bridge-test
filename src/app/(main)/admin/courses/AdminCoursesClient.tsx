@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition, useEffect, useCallback, useRef } from 'react'
 import Badge from '@/components/ui/Badge'
-import { createQuestion, updateQuestion, deleteQuestion, toggleQuestionPublished, fetchQuestionsForQuizIds } from '@/app/actions/admin/questions'
+import { createQuestion, updateQuestion, deleteQuestion, toggleQuestionPublished, fetchQuestionsPage } from '@/app/actions/admin/questions'
 import { resolveQuestionClaims } from '@/app/actions/claims'
 import { useRouter } from 'next/navigation'
 
@@ -131,6 +131,7 @@ export default function AdminCoursesClient({
   const [activeSection, setActiveSection] = useState<'assessment' | 'practice'>('assessment')
   const [pending, startTransition] = useTransition()
   const [message, setMessage] = useState<string | null>(null)
+  const [messageType, setMessageType] = useState<'success' | 'error'>('success')
   const [filters, setFilters] = useState<FilterState>({
     difficulty: '',
     published: '',
@@ -138,41 +139,103 @@ export default function AdminCoursesClient({
     claimsOnly: false,
   })
 
-  // ── On-demand question loading ──
+  // ── Paginated question loading ──
+  const PAGE_SIZE = 200
   const [questions, setQuestions] = useState<QuestionData[]>([])
+  const [totalCount, setTotalCount] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
   const [loading, setLoading] = useState(false)
-  // Track what we've loaded: "step:section"
+  const [loadingMore, setLoadingMore] = useState(false)
+  // Track what we've loaded: "step:section:filters"
   const loadedRef = useRef<string | null>(null)
+  const sentinelRef = useRef<HTMLDivElement>(null)
 
   const currentAxis = axes.find(a => a.step === selectedStep)!
   const hasPractice = currentAxis.practiceTypes.length > 0
 
-  // Load questions when step/section changes
-  useEffect(() => {
-    const key = `${selectedStep}:${activeSection}`
-    if (loadedRef.current === key) return
-
-    const quizIds = activeSection === 'assessment'
+  const getQuizIds = useCallback(() => {
+    return activeSection === 'assessment'
       ? [currentAxis.assessmentQuizId]
       : currentAxis.practiceTypes.flatMap(pt => pt.quizIds)
+  }, [activeSection, currentAxis])
 
+  const loadPage = useCallback(async (quizIds: string[], filtersArg: FilterState, offset: number, append: boolean) => {
     if (quizIds.length === 0) {
       setQuestions([])
-      loadedRef.current = key
+      setTotalCount(0)
+      setHasMore(false)
       return
     }
 
-    setLoading(true)
-    fetchQuestionsForQuizIds(quizIds).then(result => {
-      setQuestions(result.questions ?? [])
-      loadedRef.current = key
-      setLoading(false)
-    })
-  }, [selectedStep, activeSection, currentAxis])
+    if (append) setLoadingMore(true)
+    else setLoading(true)
 
-  // Invalidate cache on mutation (force reload)
+    const result = await fetchQuestionsPage(quizIds, {
+      difficulty: filtersArg.difficulty || undefined,
+      category: filtersArg.category || undefined,
+      published: (filtersArg.published as 'published' | 'unpublished' | '') || '',
+      claimsOnly: filtersArg.claimsOnly,
+    }, offset, PAGE_SIZE)
+
+    if (append) {
+      setQuestions(prev => [...prev, ...(result.questions ?? [])])
+    } else {
+      setQuestions(result.questions ?? [])
+    }
+    setTotalCount(result.totalCount)
+    setHasMore(result.hasMore)
+
+    if (append) setLoadingMore(false)
+    else setLoading(false)
+  }, [])
+
+  // Load questions when step/section changes
+  const filterSkipRef = useRef(false)
+  useEffect(() => {
+    const key = `${selectedStep}:${activeSection}`
+    if (loadedRef.current === key) return
+    loadedRef.current = key
+
+    // Skip next filter effect since step/section change resets filters
+    filterSkipRef.current = true
+    const quizIds = getQuizIds()
+    loadPage(quizIds, { difficulty: '', published: '', category: '', claimsOnly: false }, 0, false)
+  }, [selectedStep, activeSection, getQuizIds, loadPage])
+
+  // Reload when filters change (skip on step/section changes which reset filters)
+  const filterInitRef = useRef(false)
+  useEffect(() => {
+    if (!filterInitRef.current) {
+      filterInitRef.current = true
+      return
+    }
+    if (filterSkipRef.current) {
+      filterSkipRef.current = false
+      return
+    }
+    const quizIds = getQuizIds()
+    loadPage(quizIds, filters, 0, false)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.difficulty, filters.published, filters.category, filters.claimsOnly])
+
+  // Infinite scroll observer
+  useEffect(() => {
+    if (!sentinelRef.current || !hasMore) return
+    const observer = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore && !loadingMore) {
+        const quizIds = getQuizIds()
+        loadPage(quizIds, filters, questions.length, true)
+      }
+    }, { threshold: 0.1 })
+    observer.observe(sentinelRef.current)
+    return () => observer.disconnect()
+  }, [hasMore, loadingMore, questions.length, filters, getQuizIds, loadPage])
+
+  // Invalidate cache on mutation (force reload from offset 0)
   function invalidateCache() {
-    loadedRef.current = null
+    loadedRef.current = `${selectedStep}:${activeSection}`
+    const quizIds = getQuizIds()
+    loadPage(quizIds, filters, 0, false)
   }
 
   // Modal states
@@ -193,41 +256,26 @@ export default function AdminCoursesClient({
     { option_text: '', is_correct: false },
   ])
 
-  function showMsg(msg: string) {
+  function showMsg(msg: string, type: 'success' | 'error' = 'success') {
     setMessage(msg)
+    setMessageType(type)
     setTimeout(() => setMessage(null), 3000)
   }
 
+  const CS_DEV_DIFFICULTY_OPTIONS = [
+    { value: 'easy', label: 'ブロンズ' },
+    { value: 'medium', label: 'シルバー' },
+    { value: 'hard', label: 'ゴールド' },
+  ]
+
   function getDifficultyOptions(): { value: string; label: string }[] {
     if (currentAxis.step === 1) return N_LEVEL_OPTIONS
+    if (currentAxis.step === 3 || currentAxis.step === 4) return CS_DEV_DIFFICULTY_OPTIONS
     return TRADITIONAL_DIFFICULTY_OPTIONS
   }
 
-  // Apply filters
-  function applyFilters(qs: QuestionData[]): QuestionData[] {
-    let filtered = qs
-    if (filters.difficulty) {
-      if (filters.difficulty === '__null__') {
-        filtered = filtered.filter(q => q.difficulty === null)
-      } else {
-        filtered = filtered.filter(q => q.difficulty === filters.difficulty)
-      }
-    }
-    if (filters.category) {
-      filtered = filtered.filter(q => q.question_category === filters.category)
-    }
-    if (filters.published === 'published') {
-      filtered = filtered.filter(q => q.is_published)
-    } else if (filters.published === 'unpublished') {
-      filtered = filtered.filter(q => !q.is_published)
-    }
-    if (filters.claimsOnly) {
-      filtered = filtered.filter(q => q.claim_count > 0)
-    }
-    return filtered
-  }
-
-  const filteredQuestions = applyFilters(questions)
+  // Server-side filtering — questions state already contains filtered results
+  const filteredQuestions = questions
   const activeDifficultyOptions = getDifficultyOptions()
 
   // Quiz type → default question_category mapping
@@ -329,13 +377,13 @@ export default function AdminCoursesClient({
   }
 
   function handleSubmitForm() {
-    if (!formText.trim()) { showMsg('問題テキストを入力してください'); return }
-    if (formSection === 'practice' && !formCategory) { showMsg('カテゴリを選択してください'); return }
+    if (!formText.trim()) { showMsg('問題テキストを入力してください', 'error'); return }
+    if (formSection === 'practice' && !formCategory) { showMsg('カテゴリを選択してください', 'error'); return }
     const validOptions = formOptions.filter(o => o.option_text.trim())
-    if (validOptions.length < 2) { showMsg('選択肢を最低2つ入力してください'); return }
-    if (!validOptions.some(o => o.is_correct)) { showMsg('正解を1つ選択してください'); return }
+    if (validOptions.length < 2) { showMsg('選択肢を最低2つ入力してください', 'error'); return }
+    if (!validOptions.some(o => o.is_correct)) { showMsg('正解を1つ選択してください', 'error'); return }
     const createQuizId = getCreateQuizId()
-    if (!createQuizId) { showMsg('クイズIDが見つかりません'); return }
+    if (!createQuizId) { showMsg('クイズIDが見つかりません', 'error'); return }
 
     const data = {
       question_text: formText.trim(),
@@ -355,9 +403,9 @@ export default function AdminCoursesClient({
         ? await updateQuestion(editingQuestion.id, data)
         : await createQuestion(createQuizId, data)
 
-      if (result.error) showMsg(result.error)
+      if (result.error) showMsg(result.error, 'error')
       else {
-        showMsg(editingQuestion ? '問題を更新しました' : '問題を追加しました')
+        showMsg(editingQuestion ? '問題を更新しました' : '問題を追加しました', 'success')
         closeForm()
         invalidateCache()
       }
@@ -367,9 +415,9 @@ export default function AdminCoursesClient({
   function handleTogglePublished(q: QuestionData) {
     startTransition(async () => {
       const result = await toggleQuestionPublished(q.id, !q.is_published)
-      if (result.error) showMsg(result.error)
+      if (result.error) showMsg(result.error, 'error')
       else {
-        showMsg(q.is_published ? '非公開にしました' : '公開しました')
+        showMsg(q.is_published ? '非公開にしました' : '公開しました', 'success')
         invalidateCache()
       }
     })
@@ -379,9 +427,9 @@ export default function AdminCoursesClient({
     if (!confirm(`この問題を削除しますか？\n「${q.question_text.slice(0, 50)}...」`)) return
     startTransition(async () => {
       const result = await deleteQuestion(q.id)
-      if (result.error) showMsg(result.error)
+      if (result.error) showMsg(result.error, 'error')
       else {
-        showMsg('問題を削除しました')
+        showMsg('問題を削除しました', 'success')
         invalidateCache()
       }
     })
@@ -391,9 +439,9 @@ export default function AdminCoursesClient({
     startTransition(async () => {
       const result = await resolveQuestionClaims(questionId)
       if (result.error) {
-        showMsg(result.error)
+        showMsg(result.error, 'error')
       } else {
-        showMsg('クレームを全件解決しました')
+        showMsg('クレームを全件解決しました', 'success')
         setClaimDetailId(null)
         invalidateCache()
         router.refresh()
@@ -523,7 +571,7 @@ export default function AdminCoursesClient({
           クレームあり
         </label>
         <span className="text-sm text-gray-500 dark:text-gray-400">
-          {filteredQuestions.length}件 表示中
+          {filteredQuestions.length} / {totalCount}件 表示中
         </span>
       </div>
     )
@@ -553,44 +601,19 @@ export default function AdminCoursesClient({
     )
   }
 
+  function renderSentinel() {
+    if (!hasMore) return null
+    return (
+      <div ref={sentinelRef} className="py-4 text-center">
+        {loadingMore && (
+          <div className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+        )}
+      </div>
+    )
+  }
+
   function renderQuestionTable() {
     if (loading) return renderLoadingState()
-
-    if (activeSection === 'practice' && hasPractice) {
-      // Group by practice type with separator rows
-      return (
-        <div className="mt-3 rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              {renderTableHead()}
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                {currentAxis.practiceTypes.map(pt => {
-                  const ptQuizIdSet = new Set(pt.quizIds)
-                  const ptQuestions = filteredQuestions.filter(q => ptQuizIdSet.has(q.quiz_id))
-                  const allPtQuestions = questions.filter(q => ptQuizIdSet.has(q.quiz_id))
-                  return (
-                    <React.Fragment key={pt.quizType}>
-                      <tr>
-                        <td
-                          colSpan={6}
-                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700"
-                        >
-                          {pt.label} ({allPtQuestions.length}問)
-                        </td>
-                      </tr>
-                      {ptQuestions.map(q => renderQuestionRow(q))}
-                    </React.Fragment>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-          {filteredQuestions.length === 0 && (
-            <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">問題がありません</div>
-          )}
-        </div>
-      )
-    }
 
     return (
       <div className="mt-3 rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
@@ -605,6 +628,7 @@ export default function AdminCoursesClient({
         {filteredQuestions.length === 0 && !loading && (
           <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">問題がありません</div>
         )}
+        {renderSentinel()}
       </div>
     )
   }
@@ -612,7 +636,13 @@ export default function AdminCoursesClient({
   return (
     <div className="mt-6">
       {message && (
-        <div className="mb-4 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">{message}</div>
+        <div className={`fixed inset-x-0 top-6 z-50 mx-auto w-fit animate-bounce rounded-lg border px-4 py-3 text-sm font-medium shadow-lg ${
+          messageType === 'error'
+            ? 'border-red-300 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300'
+            : 'border-green-300 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-900/30 dark:text-green-300'
+        }`}>
+          {messageType === 'error' ? '⚠ ' : '✓ '}{message}
+        </div>
       )}
 
       {/* 5-Axis Card Navigation */}

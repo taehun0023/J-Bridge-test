@@ -1,0 +1,21 @@
+module:
+  id: CSK-CA-01
+  title: "コンピュータ構造の動作理解"
+  default_language: ja
+  level: foundation
+  description: "CPU、メモリ、キャッシュのような基礎構造を静的な解説で整理する。"
+  subject: computer-architecture
+  content_mode: static-interpretive
+  outcomes:
+    - "CPU、メモリ、ストレージの役割を区別できる"
+    - "キャッシュが必要な理由を説明できる"
+    - "命令実行の流れを段階的に解釈できる"
+  lessons:
+    - id: CSK-CA-01-01
+      title: "CPU・メモリ・ストレージの役割はどう違うのか"
+      est_minutes: 18
+      tags: ["computer-architecture", "cpu", "memory", "storage"]
+    - id: CSK-CA-01-02
+      title: "キャッシュと局所性はなぜ性能に効くのか"
+      est_minutes: 19
+      tags: ["computer-architecture", "cache", "locality", "performance"]

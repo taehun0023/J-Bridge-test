@@ -1,0 +1,21 @@
+module:
+  id: CSK-SC-01
+  title: "セキュリティ核心概念の境界"
+  default_language: ja
+  level: foundation
+  description: "認証と認可、パスワード保存、暗号化基礎のような混同しやすい概念を区別する。"
+  subject: security
+  content_mode: static-interpretive
+  outcomes:
+    - "認証と認可の違いを説明できる"
+    - "パスワード保存原則を理解できる"
+    - "対称鍵と公開鍵暗号の役割を区別できる"
+  lessons:
+    - id: CSK-SC-01-01
+      title: "認証と認可はなぜ混同してはいけないのか"
+      est_minutes: 18
+      tags: ["security", "authentication", "authorization"]
+    - id: CSK-SC-01-02
+      title: "ハッシュ化と暗号化は何が違うのか"
+      est_minutes: 19
+      tags: ["security", "hash", "encryption", "password"]

@@ -1,0 +1,44 @@
+{
+  "lesson_id": "DEV-JS-04-01",
+  "category": "dev-practical-skills",
+  "subject": "javascript",
+  "topic": "modules-closures",
+  "summary": "Explains ES Modules vs CommonJS differences, closure mechanics and practical use patterns, and the four this-binding rules including arrow function lexical this behavior.",
+  "key_points": [
+    "ES Modules use static imports enabling tree-shaking; CommonJS uses dynamic require.",
+    "Closures allow functions to retain access to their definition-scope variables, enabling data encapsulation.",
+    "Arrow functions inherit this from their lexical scope and cannot be rebound with bind/call/apply."
+  ],
+  "misconceptions": [
+    "Arrow function this can be changed using bind, call, or apply.",
+    "Using var in a for loop preserves each iteration's value in closures.",
+    "require and import can be freely mixed within the same file."
+  ],
+  "check_questions": [
+    "What are the key differences between ES Modules and CommonJS?",
+    "How does a closure enable data encapsulation in JavaScript?",
+    "Why does an arrow function inside setTimeout preserve the correct this?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "ES Modules are statically analyzed at compile time; CommonJS is resolved at runtime.",
+      "The four this-binding rules are: default, implicit, explicit (call/apply/bind), and new."
+    ],
+    "practical_judgment_candidates": [
+      "Choosing between arrow function and regular function for a class method callback.",
+      "Deciding when to use bind vs arrow function to fix this context."
+    ],
+    "error_interpretation_candidates": [
+      "TypeError from this being undefined in a detached method callback.",
+      "Closure in a var-based loop capturing only the final loop value."
+    ],
+    "scenario_candidates": [
+      "Tracing which variables a closure retains in a factory function.",
+      "Determining the value of this in nested function calls with mixed arrow and regular functions."
+    ],
+    "common_wrong_answer_patterns": [
+      "Believing bind can override an arrow function's lexical this.",
+      "Assuming var in a for loop creates a new scope per iteration like let does."
+    ]
+  }
+}

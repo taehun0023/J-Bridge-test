@@ -1,0 +1,43 @@
+{
+  "lesson_id": "DEV-JAVA-01-01",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "language-basics-code-reading",
+  "summary": "Explains how to read Java source file structure including packages, imports, class definitions, and the difference between primitive and reference types.",
+  "key_points": [
+    "Java source files consist of package declaration, imports, and class definition.",
+    "Primitive types store values directly; reference types store object addresses.",
+    "Method signatures reveal access level, return type, name, and parameters."
+  ],
+  "misconceptions": [
+    "Using == to compare String values works the same as equals.",
+    "Package structure has no relation to directory structure.",
+    "Import statements are not important for understanding code dependencies."
+  ],
+  "check_questions": [
+    "What are the three main sections of a Java source file?",
+    "When should you use equals instead of == in Java?",
+    "What information can you extract from a method signature?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Components of a Java source file",
+      "Difference between primitive and reference types"
+    ],
+    "practical_judgment_candidates": [
+      "Choosing == vs equals for comparison",
+      "Identifying class dependencies from imports"
+    ],
+    "error_interpretation_candidates": [
+      "Diagnosing String comparison bugs"
+    ],
+    "scenario_candidates": [
+      "Reading a class to identify its dependencies and role",
+      "Unexpected false from String == comparison"
+    ],
+    "common_wrong_answer_patterns": [
+      "Assuming == compares content for reference types",
+      "Ignoring access modifiers when tracing method calls"
+    ]
+  }
+}

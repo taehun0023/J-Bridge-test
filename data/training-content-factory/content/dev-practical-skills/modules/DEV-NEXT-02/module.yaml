@@ -1,0 +1,16 @@
+module:
+  id: DEV-NEXT-02
+  title: Next.js - Server and Client Component Boundaries
+  level: intermediate
+  description: "정적 해설형 콘텐츠로 서버 컴포넌트와 클라이언트 컴포넌트의 경계와 사용 기준을 설명한다."
+  subject: nextjs
+  content_mode: static-interpretive
+  outcomes:
+    - "서버 컴포넌트와 클라이언트 컴포넌트의 차이를 설명할 수 있다."
+    - "'use client' 지시문의 역할과 경계 설정 방식을 설명할 수 있다."
+    - "각 컴포넌트 유형에서 사용할 수 있는 API를 구분할 수 있다."
+  lessons:
+    - id: DEV-NEXT-02-01
+      title: "서버 컴포넌트와 클라이언트 컴포넌트의 경계"
+      est_minutes: 18
+      tags: [nextjs, server-component, client-component, use-client, static-content]

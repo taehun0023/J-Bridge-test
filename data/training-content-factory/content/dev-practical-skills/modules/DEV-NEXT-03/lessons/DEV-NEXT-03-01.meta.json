@@ -1,0 +1,46 @@
+{
+  "lesson_id": "DEV-NEXT-03-01",
+  "category": "dev-practical-skills",
+  "subject": "nextjs",
+  "topic": "data-fetching-caching-project-organization",
+  "summary": "Explains Next.js data fetching patterns in Server Components, caching layers (Request Memoization, Data Cache, Full Route Cache), revalidation strategies, static vs dynamic rendering, and project organization patterns for large codebases.",
+  "key_points": [
+    "Server Components can fetch data directly with async/await — no need for separate API routes.",
+    "Next.js has three caching layers: Request Memoization, Data Cache, and Full Route Cache.",
+    "Dynamic functions (cookies, headers) automatically switch rendering from static to dynamic."
+  ],
+  "misconceptions": [
+    "All pages are dynamically rendered by default.",
+    "Disabling cache on all fetches is a best practice.",
+    "Data is always fresh without explicit revalidation settings."
+  ],
+  "check_questions": [
+    "What are the three caching layers in Next.js and what does each cache?",
+    "What conditions trigger dynamic rendering instead of static?",
+    "Why should independent data fetches use Promise.all?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Three caching layers and their roles",
+      "Conditions that trigger dynamic rendering",
+      "revalidate and cache: 'no-store' behavior"
+    ],
+    "practical_judgment_candidates": [
+      "Choosing the right caching strategy for a given use case",
+      "Deciding between static and dynamic rendering for a page"
+    ],
+    "error_interpretation_candidates": [
+      "Stale data due to missing revalidation configuration",
+      "Performance issues from sequential (waterfall) data fetching"
+    ],
+    "scenario_candidates": [
+      "Reading code to determine if a page is statically or dynamically rendered",
+      "Identifying waterfall patterns and suggesting parallel fetch optimization"
+    ],
+    "common_wrong_answer_patterns": [
+      "Believing all pages are dynamic by default",
+      "Thinking cache: 'no-store' should be used everywhere",
+      "Assuming cookies() usage has no effect on rendering strategy"
+    ]
+  }
+}

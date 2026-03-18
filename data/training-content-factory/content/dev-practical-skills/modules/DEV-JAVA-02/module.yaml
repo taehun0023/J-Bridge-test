@@ -1,0 +1,16 @@
+module:
+  id: DEV-JAVA-02
+  title: Java - Object-Oriented Reasoning in Practice
+  level: intermediate
+  description: "정적 해설형 콘텐츠로 상속, 인터페이스, 다형성이 실무 코드에서 어떻게 사용되는지 해석하는 방법을 설명한다."
+  subject: java
+  content_mode: static-interpretive
+  outcomes:
+    - "상속 관계에서 메서드 호출이 어떤 클래스의 구현을 실행하는지 추적할 수 있다."
+    - "인터페이스와 추상 클래스의 역할 차이를 설명할 수 있다."
+    - "다형성이 코드 유연성에 기여하는 방식을 설명할 수 있다."
+  lessons:
+    - id: DEV-JAVA-02-01
+      title: "상속과 인터페이스가 실무 코드에서 사용되는 방식 읽기"
+      est_minutes: 18
+      tags: [java, oop, inheritance, interface, polymorphism, static-content]

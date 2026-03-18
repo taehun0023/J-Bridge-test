@@ -6,24 +6,33 @@ import { ERR } from '@/lib/action-types'
 import { getReadingTotalCount } from '@/lib/assignment-categories'
 import { resolveQuizIdsForAssignment } from '@/app/actions/learning-assignments'
 
-export interface ScoreTrendPoint {
-  cycleNumber: number
+export interface ExamScorePoint {
+  examId: string
+  category: string
+  categoryLabel: string
+  score: number
   completedAt: string
-  scores: Record<string, number | null>
 }
 
-export interface ErrorRateItem {
-  questionCategory: string
-  label: string
-  totalAnswered: number
-  incorrectCount: number
-  errorRate: number
+export interface ExamErrorRate {
+  examId: string
+  examCategory: string
+  completedAt: string
+  categories: {
+    questionCategory: string
+    label: string
+    totalAnswered: number
+    incorrectCount: number
+    errorRate: number
+  }[]
 }
 
-export interface WeaknessReportData {
-  scoreTrend: ScoreTrendPoint[]
-  errorRates: ErrorRateItem[]
-}
+const EXAM_CATEGORY_GROUPS = {
+  nihongo: ['seikatsu', 'business-jp'],
+  kaihatsu: ['cs', 'dev'],
+  'business-lit': ['business-lit'],
+} as const
+
 
 const categoryLabels: Record<string, string> = {
   seikatsu: '生活日本語',
@@ -45,8 +54,21 @@ const categoryLabels: Record<string, string> = {
   javascript_core: 'JavaScript基礎',
   react: 'React',
   sql: 'SQL',
-  java_code: 'Javaコード',
+  java_code: 'Javaコード読解',
   db_design: 'DB設計',
+  vocabulary: '語彙(ビジネス)',
+  sentence_pattern: '文型(ビジネス)',
+  business_expression: 'ビジネス表現',
+  keigo: '敬語',
+  basic_theory: '基本理論',
+  database: 'データベース',
+  security: 'セキュリティ',
+  business_manner: 'ビジネスマナー',
+  communication: 'コミュニケーション',
+  cross_culture: '異文化理解',
+  java: 'Java',
+  javascript: 'JavaScript',
+  javascript_code: 'JavaScriptコード読解',
 }
 
 /**
@@ -82,80 +104,66 @@ export async function getWeaknessReport(userId: string) {
   const hasAccess = await verifyMentorAccess(auth.user.id, userId, auth.profile.role, serviceClient)
   if (!hasAccess) return { error: ERR.FORBIDDEN }
 
-  // ── Score Trend ──
-  // 1. Get completed cycles
-  const { data: cycles } = await serviceClient
-    .from('exam_cycles')
-    .select('id, cycle_number, created_at, completed_at')
-    .eq('user_id', userId)
-    .eq('status', 'completed')
-    .order('cycle_number', { ascending: true })
-
-  const scoreTrend: ScoreTrendPoint[] = []
-
-  if (cycles && cycles.length > 0) {
-    // 2. Get all comprehensive exams for this user
-    const { data: exams } = await serviceClient
-      .from('comprehensive_exams')
-      .select('id, category, subcategory, status, score, requested_at')
-      .eq('user_id', userId)
-      .eq('subcategory', 'comprehensive')
-      .in('status', ['completed', 'failed'])
-      .order('requested_at', { ascending: true })
-
-    // 3. Map exams to cycles by timestamp
-    for (const cycle of cycles) {
-      const cycleExams = (exams ?? []).filter(e =>
-        e.requested_at >= cycle.created_at &&
-        (!cycle.completed_at || e.requested_at <= cycle.completed_at)
-      )
-
-      // Deduplicate by category (keep highest priority)
-      const STATUS_PRIORITY: Record<string, number> = { completed: 4, failed: 3 }
-      const byCategory = new Map<string, typeof cycleExams[number]>()
-      for (const e of cycleExams) {
-        const existing = byCategory.get(e.category)
-        if (!existing || (STATUS_PRIORITY[e.status] ?? 0) > (STATUS_PRIORITY[existing.status] ?? 0)) {
-          byCategory.set(e.category, e)
-        }
-      }
-
-      const scores: Record<string, number | null> = {}
-      for (const [cat, exam] of byCategory) {
-        scores[cat] = exam.score
-      }
-
-      scoreTrend.push({
-        cycleNumber: cycle.cycle_number,
-        completedAt: cycle.completed_at ?? cycle.created_at,
-        scores,
-      })
-    }
-  }
-
-  // ── Error Rates ──
-  // 1. Get all comprehensive exams for user
-  const { data: allExams } = await serviceClient
+  // ── Score Trend (per exam, date-based) ──
+  const { data: exams } = await serviceClient
     .from('comprehensive_exams')
-    .select('id')
+    .select('id, category, status, score, completed_at')
     .eq('user_id', userId)
+    .eq('subcategory', 'comprehensive')
     .in('status', ['completed', 'failed'])
+    .not('score', 'is', null)
+    .order('completed_at', { ascending: true })
 
-  const errorRates: ErrorRateItem[] = []
+  // Group by (category, date), keep best score per day
+  const rawScores: ExamScorePoint[] = (exams ?? []).map(e => ({
+    examId: e.id,
+    category: e.category,
+    categoryLabel: categoryLabels[e.category] ?? e.category,
+    score: e.score as number,
+    completedAt: e.completed_at ?? '',
+  }))
+  const scoreMap = new Map<string, ExamScorePoint>()
+  for (const s of rawScores) {
+    const key = `${s.category}|${s.completedAt.slice(0, 10)}`
+    const existing = scoreMap.get(key)
+    if (!existing || s.score > existing.score) scoreMap.set(key, s)
+  }
+  const examScores = [...scoreMap.values()]
+    .sort((a, b) => a.completedAt.localeCompare(b.completedAt))
 
-  if (allExams && allExams.length > 0) {
+  // ── Error Rates (per exam) ──
+  const { data: allExamsRaw } = await serviceClient
+    .from('comprehensive_exams')
+    .select('id, category, completed_at, score')
+    .eq('user_id', userId)
+    .eq('subcategory', 'comprehensive')
+    .in('status', ['completed', 'failed'])
+    .order('completed_at', { ascending: true })
+
+  // Deduplicate: keep only the best-score exam per (category, date)
+  const bestExamMap = new Map<string, typeof allExamsRaw extends (infer T)[] | null ? T : never>()
+  for (const e of allExamsRaw ?? []) {
+    const key = `${e.category}|${(e.completed_at ?? '').slice(0, 10)}`
+    const existing = bestExamMap.get(key)
+    if (!existing || (e.score ?? 0) > (existing.score ?? 0)) bestExamMap.set(key, e)
+  }
+  const allExams = [...bestExamMap.values()]
+    .sort((a, b) => (a.completed_at ?? '').localeCompare(b.completed_at ?? ''))
+
+  const examErrorRates: ExamErrorRate[] = []
+
+  if (allExams.length > 0) {
     const examIds = allExams.map(e => e.id)
 
-    // 2. Get all answers
+    // Get all answers with exam_id
     const { data: answers } = await serviceClient
       .from('comprehensive_exam_answers')
-      .select('question_id, is_correct')
+      .select('exam_id, question_id, is_correct')
       .in('exam_id', examIds)
 
     if (answers && answers.length > 0) {
       const questionIds = [...new Set(answers.map(a => a.question_id))]
 
-      // 3. Get question categories
       const { data: questions } = await serviceClient
         .from('quiz_questions')
         .select('id, question_category')
@@ -168,33 +176,50 @@ export async function getWeaknessReport(userId: string) {
         }
       }
 
-      // 4. Aggregate by category
-      const stats = new Map<string, { total: number; incorrect: number }>()
+      // Group answers by exam_id
+      const answersByExam = new Map<string, typeof answers>()
       for (const a of answers) {
-        const cat = questionCategoryMap.get(a.question_id)
-        if (!cat) continue
-        const s = stats.get(cat) ?? { total: 0, incorrect: 0 }
-        s.total++
-        if (!a.is_correct) s.incorrect++
-        stats.set(cat, s)
+        const arr = answersByExam.get(a.exam_id) ?? []
+        arr.push(a)
+        answersByExam.set(a.exam_id, arr)
       }
 
-      for (const [cat, s] of stats) {
-        errorRates.push({
-          questionCategory: cat,
-          label: categoryLabels[cat] ?? cat,
-          totalAnswered: s.total,
-          incorrectCount: s.incorrect,
-          errorRate: Math.round((s.incorrect / s.total) * 100),
+      for (const exam of allExams) {
+        const examAnswers = answersByExam.get(exam.id)
+        if (!examAnswers || examAnswers.length === 0) continue
+
+        // Aggregate by question_category
+        const stats = new Map<string, { total: number; incorrect: number }>()
+        for (const a of examAnswers) {
+          const cat = questionCategoryMap.get(a.question_id)
+          if (!cat) continue
+          const s = stats.get(cat) ?? { total: 0, incorrect: 0 }
+          s.total++
+          if (!a.is_correct) s.incorrect++
+          stats.set(cat, s)
+        }
+
+        const categories = [...stats.entries()]
+          .map(([cat, s]) => ({
+            questionCategory: cat,
+            label: categoryLabels[cat] ?? cat,
+            totalAnswered: s.total,
+            incorrectCount: s.incorrect,
+            errorRate: Math.round((s.incorrect / s.total) * 100),
+          }))
+          .sort((a, b) => b.errorRate - a.errorRate)
+
+        examErrorRates.push({
+          examId: exam.id,
+          examCategory: exam.category,
+          completedAt: exam.completed_at ?? '',
+          categories,
         })
       }
-
-      // Sort by error rate descending
-      errorRates.sort((a, b) => b.errorRate - a.errorRate)
     }
   }
 
-  return { success: true, scoreTrend, errorRates }
+  return { success: true, examScores, examErrorRates }
 }
 
 export interface MenteeAssignment {
@@ -479,7 +504,7 @@ export async function generateAIPrompt(userId: string) {
   const reportResult = await getWeaknessReport(userId)
   if ('error' in reportResult) return { error: reportResult.error ?? 'エラーが発生しました' }
 
-  const { scoreTrend, errorRates } = reportResult
+  const { examScores, examErrorRates } = reportResult
 
   // Get user name
   const serviceClient = createServiceRoleClient()
@@ -495,21 +520,40 @@ export async function generateAIPrompt(userId: string) {
 
   let prompt = `# ${userName}の学習弱点分析レポート\n\n`
 
-  if (scoreTrend.length > 0) {
-    prompt += '## サイクル別スコア推移\n'
-    for (const point of scoreTrend) {
-      const date = new Date(point.completedAt).toLocaleDateString('ja-JP')
-      prompt += `\n### サイクル ${point.cycleNumber} (${date})\n`
-      for (const [cat, score] of Object.entries(point.scores)) {
-        prompt += `- ${categoryLabels[cat] ?? cat}: ${score ?? '未受験'}点\n`
+  // Group scores by nihongo/kaihatsu/business-lit
+  const scoreGroups: [string, ExamScorePoint[]][] = [
+    ['日本語', examScores.filter(s => (EXAM_CATEGORY_GROUPS.nihongo as readonly string[]).includes(s.category))],
+    ['開発', examScores.filter(s => (EXAM_CATEGORY_GROUPS.kaihatsu as readonly string[]).includes(s.category))],
+    ['ビジネスリテラシー', examScores.filter(s => (EXAM_CATEGORY_GROUPS['business-lit'] as readonly string[]).includes(s.category))],
+  ]
+
+  for (const [groupLabel, groupScores] of scoreGroups) {
+    if (groupScores.length > 0) {
+      prompt += `\n## ${groupLabel}スコア推移\n`
+      for (const s of groupScores) {
+        const date = new Date(s.completedAt).toLocaleDateString('ja-JP')
+        prompt += `- ${date} ${s.categoryLabel}: ${s.score}点\n`
       }
     }
   }
 
-  if (errorRates.length > 0) {
-    prompt += '\n## カテゴリ別誤答率\n'
-    for (const item of errorRates) {
-      prompt += `- ${item.label}: ${item.errorRate}% (${item.incorrectCount}/${item.totalAnswered}問)\n`
+  // Error rates grouped by nihongo/kaihatsu/business-lit
+  const errorGroups: [string, ExamErrorRate[]][] = [
+    ['日本語', examErrorRates.filter(e => (EXAM_CATEGORY_GROUPS.nihongo as readonly string[]).includes(e.examCategory))],
+    ['開発', examErrorRates.filter(e => (EXAM_CATEGORY_GROUPS.kaihatsu as readonly string[]).includes(e.examCategory))],
+    ['ビジネスリテラシー', examErrorRates.filter(e => (EXAM_CATEGORY_GROUPS['business-lit'] as readonly string[]).includes(e.examCategory))],
+  ]
+
+  for (const [groupLabel, groupErrors] of errorGroups) {
+    if (groupErrors.length > 0) {
+      prompt += `\n## ${groupLabel}誤答率推移\n`
+      for (const exam of groupErrors) {
+        const date = new Date(exam.completedAt).toLocaleDateString('ja-JP')
+        prompt += `\n### ${date} (${categoryLabels[exam.examCategory] ?? exam.examCategory})\n`
+        for (const cat of exam.categories) {
+          prompt += `- ${cat.label}: ${cat.errorRate}% (${cat.incorrectCount}/${cat.totalAnswered}問)\n`
+        }
+      }
     }
   }
 

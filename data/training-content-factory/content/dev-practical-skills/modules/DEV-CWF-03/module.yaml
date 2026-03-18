@@ -1,0 +1,16 @@
+module:
+  id: DEV-CWF-03
+  title: Common Workplace Fundamentals - Issue and Task Reading
+  level: foundation
+  description: "정적 해설형 콘텐츠로 이슈 트래커와 태스크 카드에서 작업 범위와 우선순위를 읽는 방법을 설명한다."
+  subject: common-workplace-fundamentals
+  content_mode: static-interpretive
+  outcomes:
+    - "이슈 제목과 설명에서 작업 범위를 파악할 수 있다."
+    - "우선순위와 라벨의 의미를 읽을 수 있다."
+    - "이슈와 PR의 관계를 설명할 수 있다."
+  lessons:
+    - id: DEV-CWF-03-01
+      title: "이슈 트래커에서 작업 범위와 우선순위 읽기"
+      est_minutes: 18
+      tags: [common-workplace-fundamentals, issue-tracking, task-management, static-content]

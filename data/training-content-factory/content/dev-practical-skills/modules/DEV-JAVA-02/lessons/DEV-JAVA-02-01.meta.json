@@ -1,0 +1,44 @@
+{
+  "lesson_id": "DEV-JAVA-02-01",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "oop-reasoning",
+  "summary": "Explains how inheritance, interfaces, and polymorphism are used in real-world Java code, including method dispatch tracing and design trade-offs between abstract classes and interfaces.",
+  "key_points": [
+    "Method calls on overridden methods resolve to the runtime instance type, not the declared variable type.",
+    "Interfaces define capability contracts without implementation; abstract classes share common logic with subclasses.",
+    "Polymorphism allows uniform handling of different implementations through a shared type."
+  ],
+  "misconceptions": [
+    "The declared variable type determines which overridden method runs at runtime.",
+    "Abstract classes and interfaces are interchangeable with no practical difference.",
+    "Omitting @Override has no consequences when overriding a parent method."
+  ],
+  "check_questions": [
+    "What is the difference between extends and implements in Java?",
+    "When should you choose an interface over an abstract class?",
+    "If a variable is declared as a parent type but holds a subclass instance, which class's method executes?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Java does not support multiple class inheritance but allows multiple interface implementation.",
+      "@Override annotation triggers a compile-time check for correct method signature."
+    ],
+    "practical_judgment_candidates": [
+      "Choosing between interface and abstract class for a notification system design.",
+      "Deciding when to use super() in an overridden method."
+    ],
+    "error_interpretation_candidates": [
+      "A method override silently becomes a new method due to a parameter type mismatch.",
+      "NullPointerException caused by uninitialized inherited field."
+    ],
+    "scenario_candidates": [
+      "Tracing which send() implementation executes in a polymorphic list iteration.",
+      "Reading a DI-based service class to identify its concrete dependency."
+    ],
+    "common_wrong_answer_patterns": [
+      "Confusing compile-time type with runtime type for method dispatch.",
+      "Believing a subclass-specific method can be called through a parent-type variable without casting."
+    ]
+  }
+}

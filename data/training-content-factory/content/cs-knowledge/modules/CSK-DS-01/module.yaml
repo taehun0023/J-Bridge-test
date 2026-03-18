@@ -1,0 +1,21 @@
+module:
+  id: CSK-DS-01
+  title: "データ構造の選択基準"
+  default_language: ja
+  level: foundation
+  description: "配列、連結リスト、スタック、キューのような頻出構造を静的な解説で整理する。"
+  subject: data-structures
+  content_mode: static-interpretive
+  outcomes:
+    - "代表的なデータ構造のアクセス特性と更新特性を説明できる"
+    - "問題状況に応じたデータ構造の選択基準を示せる"
+    - "似た構造を比較して誤解を減らせる"
+  lessons:
+    - id: CSK-DS-01-01
+      title: "配列と連結リストは何が違うのか"
+      est_minutes: 20
+      tags: ["data-structures", "array", "linked-list", "complexity"]
+    - id: CSK-DS-01-02
+      title: "スタックとキューはどの場面で使い分けるのか"
+      est_minutes: 18
+      tags: ["data-structures", "stack", "queue", "order"]

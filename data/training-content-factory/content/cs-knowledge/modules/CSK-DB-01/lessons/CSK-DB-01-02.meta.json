@@ -1,0 +1,46 @@
+{
+  "lesson_id": "CSK-DB-01-02",
+  "category": "cs-knowledge",
+  "subject": "database",
+  "topic": "transaction-and-acid",
+  "default_language": "ja",
+  "available_languages": [
+    "ja",
+    "ko"
+  ],
+  "summary": "トランザクションの目的とACID性質を一貫したデータ処理の観点で説明する。",
+  "key_points": [
+    "トランザクションは一連の変更を一つの作業単位として扱う考え方である",
+    "Atomicity、Consistency、Isolation、Durabilityは異なる危険を扱う",
+    "Atomicityは全部成功か全部失敗かに近く、Durabilityは完了後の保持に近い"
+  ],
+  "misconceptions": [
+    "ACIDがあれば性能や拡張性は考えなくてよいという誤解",
+    "トランザクションはINSERTを束ねるときだけ使うという誤解",
+    "隔離レベル差は実務では体感できないという誤解"
+  ],
+  "check_questions": [
+    "部分失敗が残るとどんな問題が起きるか",
+    "AtomicityとConsistencyはどう違うか",
+    "同時実行環境でIsolationが必要な理由は何か",
+    "Durabilityはどんな事態を防ぐ性質か"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "トランザクションは一連の変更を一つの作業単位として扱う考え方である",
+      "Atomicity、Consistency、Isolation、Durabilityは異なる危険を扱う"
+    ],
+    "concept_contrast_candidates": [
+      "Atomicityは全部成功か全部失敗かに近く、Durabilityは完了後の保持に近い",
+      "Consistencyは規則維持の観点で、Isolationは同時実行干渉制御の観点である"
+    ],
+    "scenario_candidates": [
+      "部分失敗シナリオを解釈する判断型文項候補になる",
+      "トランザクション目的を問う概念型文項に展開できる"
+    ],
+    "common_wrong_answer_patterns": [
+      "ACIDがあれば性能や拡張性は考えなくてよいという誤解",
+      "トランザクションはINSERTを束ねるときだけ使うという誤解"
+    ]
+  }
+}

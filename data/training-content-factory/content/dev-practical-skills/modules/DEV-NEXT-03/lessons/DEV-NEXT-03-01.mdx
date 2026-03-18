@@ -1,0 +1,256 @@
+---
+lesson_id: DEV-NEXT-03-01
+title: "データフェッチ戦略とキャッシュ、プロジェクト構成"
+module: DEV-NEXT-03
+level: advanced
+language: ja
+est_minutes: 18
+tags: [nextjs, data-fetching, caching, revalidation, project-structure, static-content]
+---
+
+## 1) 学習目標
+
+- サーバーコンポーネントでのデータフェッチパターンと注意点を説明できる。
+- Next.jsのキャッシュ階層（Request Memoization、Data Cache、Full Route Cache）を説明できる。
+- 静的レンダリングと動的レンダリングの違いと切り替え条件を説明できる。
+- 大規模プロジェクトでのフォルダ構成パターンを説明できる。
+
+## 2) 業務コンテキスト
+
+Next.jsプロジェクトでデータを取得する方法は、パフォーマンスとユーザー体験に直接影響を与える。サーバーコンポーネントでデータをフェッチする際、キャッシュがどのように動作するのか、いつ静的/動的レンダリングが選択されるのかを理解していないと、「データが更新されない」や「ビルド時間が非常に長い」といった問題に直面する。また、プロジェクトが大きくなるとフォルダ構成戦略が保守性を左右する。
+
+## 3) 要点解説
+
+### サーバーコンポーネントでのデータフェッチ
+
+サーバーコンポーネントは`async/await`で直接データを取得できる。APIルートを別途作成する必要がない。
+
+```tsx
+// app/users/page.tsx（サーバーコンポーネント）
+export default async function UsersPage() {
+  const res = await fetch('https://api.example.com/users');
+  const users = await res.json();
+
+  return (
+    <ul>
+      {users.map((user: { id: string; name: string }) => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+データベースに直接クエリすることも可能である：
+
+```tsx
+import { createClient } from '@/lib/supabase/server';
+
+export default async function UsersPage() {
+  const supabase = await createClient();
+  const { data: users } = await supabase.from('profiles').select('*');
+  return <UserList users={users ?? []} />;
+}
+```
+
+### 並列データフェッチ
+
+複数のデータを同時に取得する場合は`Promise.all`を使用して並列実行する。逐次実行より合計待機時間が短くなる。
+
+```tsx
+export default async function DashboardPage() {
+  const [users, stats, notifications] = await Promise.all([
+    fetchUsers(),
+    fetchStats(),
+    fetchNotifications(),
+  ]);
+
+  return (
+    <div>
+      <UserSection users={users} />
+      <StatsSection stats={stats} />
+      <NotificationSection notifications={notifications} />
+    </div>
+  );
+}
+```
+
+### Next.jsキャッシュ階層
+
+Next.jsは複数段階のキャッシュを提供する：
+
+**1. Request Memoization**：同一レンダリング過程で同じ`fetch`リクエストが複数回呼び出されると、実際のリクエストは1回だけ実行され、結果が再利用される。同じページ内の複数コンポーネントが同じデータを必要とする場合に有用である。
+
+**2. Data Cache**：`fetch`リクエストの結果をサーバーに永続的にキャッシュする。再検証（revalidation）戦略で更新周期を制御する。
+
+**3. Full Route Cache**：ビルド時に静的レンダリングされたページのHTMLとRSC Payloadをキャッシュする。
+
+### 再検証戦略
+
+```tsx
+// 時間ベースの再検証：60秒ごとにキャッシュを更新
+const res = await fetch('https://api.example.com/data', {
+  next: { revalidate: 60 }
+});
+
+// キャッシュ無効化：リクエストごとに新たにフェッチ
+const res = await fetch('https://api.example.com/data', {
+  cache: 'no-store'
+});
+```
+
+ページ単位で再検証周期を設定することも可能である：
+
+```tsx
+// app/blog/page.tsx
+export const revalidate = 3600; // 1時間ごとに再検証
+```
+
+### 静的レンダリング vs 動的レンダリング
+
+**静的レンダリング**（デフォルト）：ビルド時にHTMLを生成する。すべてのユーザーに同じ内容を表示するページに適している。
+
+**動的レンダリング**：リクエストごとにHTMLを生成する。以下の条件で自動的に動的レンダリングに切り替わる：
+- `cookies()`、`headers()`、`searchParams`の使用
+- `cache: 'no-store'`でのfetch呼び出し
+- 動的ルートで`generateStaticParams`が未定義の場合
+
+```tsx
+import { cookies } from 'next/headers';
+
+// cookies()を使用すると自動的に動的レンダリング
+export default async function ProfilePage() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('session');
+  // ...
+}
+```
+
+### 大規模プロジェクトのフォルダ構成パターン
+
+プロジェクトが大きくなると、コードを体系的に構成することが重要になる。実務でよく使用されるパターン：
+
+**パターン1：機能別グルーピング（ルートグループ活用）**
+```
+app/
+├── (admin)/         # 管理者機能
+│   ├── layout.tsx
+│   ├── users/
+│   └── settings/
+├── (main)/          # 一般ユーザー機能
+│   ├── layout.tsx
+│   ├── dashboard/
+│   └── profile/
+```
+
+**パターン2：コンポーネントコロケーション（関連ファイルを一緒に配置）**
+```
+app/dashboard/
+├── page.tsx
+├── DashboardClient.tsx    # このページ専用のクライアントコンポーネント
+├── StatsChart.tsx         # このページ専用のチャートコンポーネント
+└── loading.tsx
+```
+
+**パターン3：共有コードの分離**
+```
+src/
+├── app/              # ルーティング（ページ、レイアウト）
+├── components/       # 共有UIコンポーネント
+├── lib/              # ユーティリティ、設定
+├── modules/          # ドメインロジック（ビジネスルール）
+└── app/actions/      # Server Actions
+```
+
+## 4) 実務解釈シナリオ
+
+### シナリオ A
+```tsx
+// app/products/page.tsx
+export const revalidate = 300; // 5分
+
+export default async function ProductsPage() {
+  const res = await fetch('https://api.example.com/products');
+  const products = await res.json();
+
+  return <ProductList products={products} />;
+}
+```
+```tsx
+// app/products/[id]/page.tsx
+export default async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const res = await fetch(`https://api.example.com/products/${id}`, {
+    cache: 'no-store'
+  });
+  const product = await res.json();
+
+  return <ProductView product={product} />;
+}
+```
+- 読み取りポイント：
+  - 商品一覧（`/products`）は5分ごとに再検証される静的ページである。頻繁に変更されないリストに適している。
+  - 商品詳細（`/products/[id]`）は`cache: 'no-store'`でリクエストごとに最新データを取得する。在庫などリアルタイム情報が重要な場合に適している。
+  - 同じドメイン（products）でもページごとにキャッシュ戦略が異なることがある。
+
+### シナリオ B
+```tsx
+// lib/queries.ts
+export async function fetchUserProfile(userId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('profiles')
+    .select('*, japanese_skills(*), coding_skills(*)')
+    .eq('id', userId)
+    .single();
+  return data;
+}
+
+// app/dashboard/page.tsx
+import { fetchUserProfile } from '@/lib/queries';
+import { requireAuth } from '@/lib/auth-helpers';
+
+export default async function DashboardPage() {
+  const user = await requireAuth();
+  const profile = await fetchUserProfile(user.id);
+
+  return <DashboardClient profile={profile} />;
+}
+```
+- 解釈：
+  - データ取得ロジックを`lib/queries.ts`に分離して再利用性を高めたパターンである。
+  - `requireAuth()`で認証を確認し、認証済みユーザーのプロフィールを取得する。
+  - 内部的に`cookies()`を使用する`requireAuth`のため、このページは自動的に動的レンダリングとなる。
+  - サーバーで取得したデータをクライアントコンポーネントにpropsとして渡す標準パターンである。
+
+## 5) よくあるミス
+
+1. すべてのページでキャッシュを無効化（`cache: 'no-store'`）する。
+キャッシュをすべて無効にするとパフォーマンス上の利点を失う。リアルタイム性が必要なデータだけを選択的に無効化すべきである。
+
+2. 逐次的にデータをフェッチしてウォーターフォール（waterfall）を発生させる。
+独立したデータリクエストは`Promise.all`で並列実行すべきである。逐次実行は合計待機時間を不必要に長くする。
+
+3. 動的関数（`cookies()`、`headers()`）を使用しながら静的レンダリングを期待する。
+動的関数を使用すると自動的に動的レンダリングに切り替わる。意図的なものかどうかを確認する必要がある。
+
+4. クライアントコンポーネントで直接データベースを取得しようとする。
+データフェッチはサーバーコンポーネントやServer Actionで行い、結果のみをクライアントに渡すべきである。
+
+5. `revalidate`値を設定せずにデータが更新されないと困惑する。
+デフォルトで`fetch`は結果をキャッシュする。データの更新が必要な場合は`revalidate`時間を明示するか、`cache: 'no-store'`を使用する必要がある。
+
+## 6) 確認質問
+
+1. サーバーコンポーネントでのデータフェッチとAPIルート経由のフェッチの違いは何か？
+2. `Promise.all`を使用した並列フェッチが逐次フェッチより有利な理由は何か？
+3. Next.jsの3つのキャッシュ階層（Request Memoization、Data Cache、Full Route Cache）をそれぞれ説明せよ。
+4. 静的レンダリングから動的レンダリングに自動切り替えされる条件は何か？
+5. 大規模プロジェクトでルートグループとコロケーションパターンを使用する理由は何か？
+
+## 7) 出題抽出メモ
+
+- 事実型候補：キャッシュ階層の種類と役割、静的/動的レンダリング切り替え条件
+- 判断型候補：与えられた要件での適切なキャッシュ戦略の選択、revalidate値の設定判断
+- シナリオ型候補：コードを見て静的/動的レンダリングの判定、パフォーマンス問題の原因特定（ウォーターフォールなど）
+- 誤答誘導ポイント：すべてのページがデフォルトで動的であると誤認、cache: 'no-store'なしでも常に最新データと誤認

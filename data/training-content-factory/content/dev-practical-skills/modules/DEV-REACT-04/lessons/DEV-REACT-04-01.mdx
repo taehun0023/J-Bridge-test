@@ -1,0 +1,245 @@
+---
+lesson_id: DEV-REACT-04-01
+title: "再レンダリング条件とパフォーマンス最適化判断"
+module: DEV-REACT-04
+level: advanced
+language: ja
+est_minutes: 18
+tags: [react, rendering, memo, useMemo, useCallback, performance, static-content]
+---
+
+## 1) 学習目標
+
+- Reactの再レンダリングが発生する条件を3つ説明できる。
+- `React.memo` の動作原理と適用すべき場面を判断できる。
+- `useMemo` と `useCallback` の違いと使いどころを説明できる。
+- 不要な再レンダリングを特定する方法を説明できる。
+
+## 2) 業務コンテキスト
+
+アプリケーションの規模が大きくなると、不要な再レンダリングがパフォーマンス問題の原因になる。しかし、過度な最適化は可読性を下げ、バグの原因にもなる。「計測してから最適化する」という原則のもと、どの場面で最適化が有効かを判断できることが実務で求められる。
+
+## 3) 要点解説
+
+### 再レンダリングの3つの条件
+
+Reactコンポーネントが再レンダリングされるのは以下の3つの場合だ。
+
+1. **State変更:** `setState` が呼ばれた
+2. **親の再レンダリング:** 親コンポーネントが再レンダリングされると、子も再レンダリングされる（Propsが変わらなくても）
+3. **Contextの変更:** `useContext` で購読しているContextの値が変わった
+
+```tsx
+function Parent() {
+  const [count, setCount] = useState(0);
+  // countが変わると Parent → 全ての子が再レンダリング
+  return (
+    <div>
+      <p>{count}</p>
+      <button onClick={() => setCount(c => c + 1)}>+1</button>
+      <ExpensiveChild />  {/* Propsなしでも再レンダリングされる */}
+    </div>
+  );
+}
+```
+
+### React.memo
+
+`React.memo` は、Propsが変わらない場合に再レンダリングをスキップする高階コンポーネントだ。
+
+```tsx
+const ExpensiveChild = React.memo(function ExpensiveChild({ data }: Props) {
+  // 重い計算やDOM操作
+  return <div>{/* ... */}</div>;
+});
+```
+
+**Propsの比較はshallow equality（浅い比較）** で行われる。オブジェクトや配列は参照が変わると「異なる」と判断される。
+
+```tsx
+function Parent() {
+  const [count, setCount] = useState(0);
+
+  // 問題: 毎回新しいオブジェクトが生成される → memoが無効化
+  const style = { color: "red" };
+
+  return <MemoChild style={style} />;  // 毎回再レンダリングされる
+}
+```
+
+### useMemo
+
+`useMemo` は計算結果をメモ化する。依存配列の値が変わらない限り、前回の結果を再利用する。
+
+```tsx
+function ProductList({ products, filter }: Props) {
+  // filterが変わったときだけフィルタリングを再実行
+  const filtered = useMemo(
+    () => products.filter(p => p.category === filter),
+    [products, filter]
+  );
+
+  return (
+    <ul>
+      {filtered.map(p => <li key={p.id}>{p.name}</li>)}
+    </ul>
+  );
+}
+```
+
+**オブジェクト参照の安定化にも使える:**
+
+```tsx
+function Parent() {
+  const [count, setCount] = useState(0);
+
+  // useMemoで参照を安定化 → MemoChildの再レンダリングを防止
+  const style = useMemo(() => ({ color: "red" }), []);
+
+  return <MemoChild style={style} />;
+}
+```
+
+### useCallback
+
+`useCallback` は関数をメモ化する。`useMemo(() => fn, deps)` の糖衣構文だ。
+
+```tsx
+function TodoApp() {
+  const [todos, setTodos] = useState<Todo[]>([]);
+
+  // useCallbackで関数参照を安定化
+  const handleDelete = useCallback((id: number) => {
+    setTodos(prev => prev.filter(t => t.id !== id));
+  }, []);  // 依存なし: setTodosは安定している
+
+  return <TodoList todos={todos} onDelete={handleDelete} />;
+}
+
+const TodoList = React.memo(function TodoList({ todos, onDelete }: Props) {
+  return (
+    <ul>
+      {todos.map(t => (
+        <li key={t.id}>
+          {t.text}
+          <button onClick={() => onDelete(t.id)}>削除</button>
+        </li>
+      ))}
+    </ul>
+  );
+});
+```
+
+**重要:** `useCallback` は `React.memo` と組み合わせて初めて意味がある。`React.memo` なしの子に安定した関数を渡しても、親の再レンダリングで子は必ず再レンダリングされる。
+
+### 最適化の判断フロー
+
+```
+1. パフォーマンス問題があるか？ → No → 最適化不要
+2. React DevToolsで再レンダリングを確認
+3. 不要な再レンダリングの原因を特定
+4. React.memo + useMemo/useCallback で対処
+5. 効果を計測して確認
+```
+
+## 4) 実務解釈シナリオ
+
+### シナリオ A
+
+```tsx
+function Dashboard() {
+  const [selectedTab, setSelectedTab] = useState("overview");
+  const [data, setData] = useState<DashboardData | null>(null);
+
+  const chartData = useMemo(
+    () => data ? computeChartData(data) : [],
+    [data]
+  );
+
+  return (
+    <div>
+      <TabBar selected={selectedTab} onChange={setSelectedTab} />
+      <Chart data={chartData} />
+      <DataTable data={data} />
+    </div>
+  );
+}
+```
+
+- 読み取り:
+  - `chartData` は `data` が変わったときだけ再計算される。`selectedTab` の変更では再計算されない。
+  - `computeChartData` が重い処理の場合、`useMemo` により不要な再計算を防いでいる。
+  - ただし `Chart` と `DataTable` は `React.memo` なしなので、`selectedTab` の変更でも再レンダリングされる。
+
+### シナリオ B
+
+```tsx
+const UserRow = React.memo(function UserRow({
+  user,
+  onEdit,
+}: {
+  user: User;
+  onEdit: (id: string) => void;
+}) {
+  console.log("UserRow render:", user.id);
+  return (
+    <tr>
+      <td>{user.name}</td>
+      <td><button onClick={() => onEdit(user.id)}>編集</button></td>
+    </tr>
+  );
+});
+
+function UserTable({ users }: { users: User[] }) {
+  const handleEdit = useCallback((id: string) => {
+    // 編集モーダルを開く
+  }, []);
+
+  return (
+    <table>
+      <tbody>
+        {users.map(u => (
+          <UserRow key={u.id} user={u} onEdit={handleEdit} />
+        ))}
+      </tbody>
+    </table>
+  );
+}
+```
+
+- 解釈:
+  - `UserRow` は `React.memo` で囲まれているため、Props（`user` と `onEdit`）が変わらない限り再レンダリングされない。
+  - `handleEdit` は `useCallback` で安定化されている。これがないと毎回新しい関数が生成され、`React.memo` が無効化される。
+  - 100行のテーブルで1行だけ変わった場合、変わった行だけが再レンダリングされる。
+
+## 5) よくあるミス
+
+1. `React.memo` なしで `useCallback` / `useMemo` を使う。
+子コンポーネントが `React.memo` で囲まれていなければ、参照の安定化は再レンダリング防止に寄与しない。
+
+2. 全てのコンポーネントに `React.memo` を適用する。
+浅い比較のコストが再レンダリングのコストを上回る場合がある。重いコンポーネントに限定すべきだ。
+
+3. `useMemo` / `useCallback` の依存配列が不正確。
+依存配列の間違いはstale closureや予期しない挙動の原因になる。
+
+4. パフォーマンス問題がないのに最適化する。
+過度な最適化は可読性を下げ、バグの温床になる。計測が先だ。
+
+5. オブジェクトリテラルをJSXに直接書いて `React.memo` を無効化する。
+`<Component style={{ color: "red" }} />` は毎回新しいオブジェクトを生成する。
+
+## 6) 確認質問
+
+1. Reactの再レンダリングが発生する3つの条件は何か？
+2. `React.memo` はどのような比較方法でPropsの変更を判断するか？
+3. `useMemo` と `useCallback` の違いは何か？
+4. `useCallback` が `React.memo` なしでは意味がない理由は何か？
+5. パフォーマンス最適化を行う前に最初にすべきことは何か？
+
+## 7) 出題抽出メモ
+
+- 事実型候補: 再レンダリングの3条件、React.memoの浅い比較の仕組み
+- 判断型候補: React.memo適用の要否判断、useMemo/useCallbackが有効な場面の識別
+- シナリオ型候補: オブジェクトリテラル直書きによるmemo無効化、useCallbackなしで毎回新しい関数が生成される問題
+- 誤答誘導ポイント: useCallbackだけでReact.memoなしでも再レンダリングを防げると誤認、全コンポーネントにReact.memoを適用すべきと誤認

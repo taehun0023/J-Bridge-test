@@ -1,11 +1,11 @@
-import SubcourseListPage from '@/components/ui/SubcourseListPage'
+import { notFound } from 'next/navigation'
+import DevStaticSubjectPage from '@/components/dev/DevStaticSubjectPage'
+import { getDevSubjectContent } from '@/lib/dev-content'
 
-export default function JavaPage() {
-  return (
-    <SubcourseListPage
-      title="Java"
-      description="エンタープライズ開発の基盤"
-      subcategory="java"
-    />
-  )
+export default async function JavaPage() {
+  const subject = await getDevSubjectContent('java')
+
+  if (!subject) notFound()
+
+  return <DevStaticSubjectPage subject={subject} />
 }

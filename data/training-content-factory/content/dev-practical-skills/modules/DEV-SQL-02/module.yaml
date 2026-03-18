@@ -1,0 +1,16 @@
+module:
+  id: DEV-SQL-02
+  title: SQL - Schema Reading and JOIN Reasoning
+  level: intermediate
+  description: "정적 해설형 콘텐츠로 테이블 스키마를 읽고 JOIN의 종류와 결과를 해석하는 방법을 설명한다."
+  subject: sql
+  content_mode: static-interpretive
+  outcomes:
+    - "테이블 스키마에서 컬럼 타입, 제약 조건, 관계를 읽을 수 있다."
+    - "INNER JOIN, LEFT JOIN, RIGHT JOIN의 차이를 설명할 수 있다."
+    - "JOIN 쿼리의 결과 행 수를 예측할 수 있다."
+  lessons:
+    - id: DEV-SQL-02-01
+      title: "스키마 읽기와 JOIN 결과 예측"
+      est_minutes: 18
+      tags: [sql, schema, join, inner-join, left-join, static-content]

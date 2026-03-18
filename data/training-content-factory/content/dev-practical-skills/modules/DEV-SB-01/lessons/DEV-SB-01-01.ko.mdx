@@ -1,0 +1,125 @@
+---
+lesson_id: DEV-SB-01-01
+title: "Spring Boot 프로젝트 구조와 의존성 흐름 읽기"
+module: DEV-SB-01
+level: foundation
+est_minutes: 18
+tags: [spring-boot, project-structure, dependency-injection, annotation, static-content]
+---
+
+## 1) 학습 목표
+
+- Spring Boot 프로젝트의 기본 디렉토리 구조를 설명할 수 있다.
+- 의존성 주입(DI)이 무엇이고 왜 사용하는지 설명할 수 있다.
+- @Component, @Service, @Repository, @Controller 어노테이션의 역할을 구분할 수 있다.
+- Bean 등록과 주입 흐름을 코드에서 추적할 수 있다.
+
+## 2) 업무 맥락
+
+일본 IT 현장에서 Spring Boot는 가장 널리 사용되는 백엔드 프레임워크 중 하나다. 신규 프로젝트에 투입되면 가장 먼저 프로젝트의 디렉토리 구조를 파악하고, 어떤 클래스가 어떤 역할을 하는지 어노테이션을 통해 빠르게 읽어야 한다. 의존성 주입을 이해하지 못하면 "이 객체가 어디서 만들어져서 여기에 들어왔는지"를 추적할 수 없다.
+
+## 3) 핵심 설명
+
+Spring Boot 프로젝트는 일반적으로 다음과 같은 구조를 가진다.
+
+```
+src/main/java/com/example/project/
+├── ProjectApplication.java    // 진입점 (@SpringBootApplication)
+├── controller/                // 요청 처리 계층
+├── service/                   // 비즈니스 로직 계층
+├── repository/                // 데이터 접근 계층
+├── model/ (또는 entity/)      // 데이터 모델
+└── config/                    // 설정 클래스
+src/main/resources/
+├── application.yml            // 설정 파일
+└── static/, templates/        // 정적 리소스
+```
+
+**의존성 주입(DI)**은 객체를 직접 생성하지 않고, 프레임워크가 필요한 객체를 만들어서 넣어주는 방식이다. 이렇게 하면 클래스 간 결합도가 낮아지고 테스트가 쉬워진다.
+
+Spring에서 DI는 어노테이션으로 동작한다.
+- `@Component`: 일반적인 Spring 관리 Bean으로 등록한다.
+- `@Service`: 비즈니스 로직 계층의 Bean. 기능적으로 @Component와 같지만 역할을 명시한다.
+- `@Repository`: 데이터 접근 계층의 Bean. 데이터 접근 예외를 Spring 예외로 변환해준다.
+- `@Controller` / `@RestController`: HTTP 요청을 처리하는 계층의 Bean.
+
+이 어노테이션이 붙은 클래스는 애플리케이션 시작 시 자동으로 Bean으로 등록되고, `@Autowired`나 생성자 주입을 통해 다른 Bean에 주입된다.
+
+**생성자 주입**이 현재 권장 방식이다. 클래스에 `final` 필드와 생성자가 하나만 있으면 `@Autowired` 없이도 자동 주입된다.
+
+## 4) 실무 해석 시나리오
+
+### 시나리오 A
+```java
+@Service
+public class UserService {
+    private final UserRepository userRepository;
+
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    public User findById(Long id) {
+        return userRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+}
+```
+- 읽기 포인트:
+  - `@Service`로 비즈니스 로직 계층임을 알 수 있다.
+  - 생성자 주입으로 `UserRepository`를 받는다. Spring이 자동으로 주입한다.
+  - `findById`는 Repository에 위임하고, 없으면 예외를 던진다.
+  - `UserRepository`가 어떤 구현인지는 이 코드만으로는 알 수 없다 — 별도로 찾아야 한다.
+
+### 시나리오 B
+```java
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUser(@PathVariable Long id) {
+        User user = userService.findById(id);
+        return ResponseEntity.ok(user);
+    }
+}
+```
+- 해석:
+  - `@RestController`로 REST API 엔드포인트를 처리하는 계층이다.
+  - `/api/users/{id}`에 GET 요청이 오면 `getUser` 메서드가 실행된다.
+  - Controller → Service → Repository 순서로 호출이 흐른다.
+  - Controller는 비즈니스 로직을 직접 구현하지 않고 Service에 위임한다.
+
+## 5) 자주 하는 실수
+
+1. 어노테이션 없이 클래스를 만들고 주입이 안 된다고 당황한다.
+Spring이 관리하려면 @Component, @Service 등의 어노테이션이 반드시 필요하다.
+
+2. 필드 주입(@Autowired를 필드에 직접 사용)을 남용한다.
+필드 주입은 테스트하기 어렵고 의존성이 숨겨진다. 생성자 주입을 사용해야 한다.
+
+3. Controller에 비즈니스 로직을 직접 작성한다.
+Controller는 요청/응답 처리만 담당하고, 로직은 Service에 위임해야 한다.
+
+4. 패키지 스캔 범위를 벗어난 곳에 클래스를 만든다.
+@SpringBootApplication이 있는 패키지와 그 하위 패키지만 자동 스캔된다.
+
+## 6) 확인 질문
+
+1. 의존성 주입(DI)이란 무엇이고, 왜 직접 객체를 생성하는 것보다 나은가?
+2. @Service와 @Repository의 차이는 무엇인가?
+3. 생성자 주입이 필드 주입보다 권장되는 이유는 무엇인가?
+4. @SpringBootApplication 어노테이션의 역할은 무엇인가?
+5. Controller에서 비즈니스 로직을 직접 구현하면 어떤 문제가 생기는가?
+
+## 7) 문항 발췌 메모
+
+- 사실형 후보: Spring 어노테이션별 역할, DI의 정의
+- 판단형 후보: 필드 주입 vs 생성자 주입 적절성
+- 시나리오형 후보: 코드에서 Bean 주입 흐름 추적, 어노테이션 누락 시 발생하는 문제
+- 오답 유도 포인트: @Component와 @Service를 기능적으로 완전히 다른 것으로 오인, 패키지 스캔 범위 무시

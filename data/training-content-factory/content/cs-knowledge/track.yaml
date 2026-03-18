@@ -1,0 +1,51 @@
+﻿track:
+  id: CS-KNOWLEDGE
+  title: "CS知識"
+  default_language: ja
+  supported_languages: [ja, ko]
+  level_order: [foundation, intermediate, advanced]
+  content_mode: static-interpretive
+  assessment_policy:
+    standalone_understanding_test: false
+    question_extraction_from_lessons: true
+  modules:
+    - id: CSK-BT-01
+      title: "情報表現と数値の基礎"
+      subject: basic-theory
+      level: foundation
+      order: 10
+    - id: CSK-DS-01
+      title: "データ構造の選択基準"
+      subject: data-structures
+      level: foundation
+      order: 20
+    - id: CSK-AL-01
+      title: "アルゴリズム判断の基本"
+      subject: algorithms
+      level: foundation
+      order: 30
+    - id: CSK-CA-01
+      title: "コンピュータ構造の動作理解"
+      subject: computer-architecture
+      level: foundation
+      order: 40
+    - id: CSK-OS-01
+      title: "オペレーティングシステムの実行モデル"
+      subject: operating-systems
+      level: foundation
+      order: 50
+    - id: CSK-DB-01
+      title: "データベース核心概念"
+      subject: database
+      level: foundation
+      order: 60
+    - id: CSK-NW-01
+      title: "ネットワーク階層と通信理解"
+      subject: networking
+      level: foundation
+      order: 70
+    - id: CSK-SC-01
+      title: "セキュリティ核心概念の境界"
+      subject: security
+      level: foundation
+      order: 80

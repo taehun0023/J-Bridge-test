@@ -1,0 +1,44 @@
+{
+  "lesson_id": "DEV-REACT-03-01",
+  "category": "dev-practical-skills",
+  "subject": "react",
+  "topic": "hooks-effects",
+  "summary": "Explains useEffect hook behavior, dependency array patterns (empty, specified, omitted), cleanup functions for resource management, and async handling including race condition prevention.",
+  "key_points": [
+    "useEffect runs after render; the dependency array controls when it re-runs — empty means mount-only, specified means on-change, omitted means every render.",
+    "Cleanup functions returned from useEffect run before the next effect and on unmount — essential for timers, listeners, and connections.",
+    "The useEffect callback cannot be async directly; define an inner async function and call it instead."
+  ],
+  "misconceptions": [
+    "The useEffect callback can be declared as async directly.",
+    "An empty dependency array [] means the effect runs on every render.",
+    "Omitting a dependency from the array has no consequences if the value rarely changes."
+  ],
+  "check_questions": [
+    "What are the three dependency array patterns and when does each cause the effect to run?",
+    "When exactly does a cleanup function execute?",
+    "How does the cancelled flag pattern prevent race conditions in async effects?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Three dependency array patterns: [] (mount), [dep] (on change), omitted (every render)",
+      "Cleanup function runs before next effect execution and on component unmount"
+    ],
+    "practical_judgment_candidates": [
+      "Determining which values belong in the dependency array",
+      "Identifying side effects that require cleanup (timers, event listeners, WebSocket)"
+    ],
+    "error_interpretation_candidates": [
+      "Infinite loop caused by omitting dependency array on an effect that calls setState",
+      "Memory leak from missing cleanup on setInterval or addEventListener"
+    ],
+    "scenario_candidates": [
+      "WebSocket notification counter with proper cleanup on unmount",
+      "Search component with race condition prevention using cancelled flag"
+    ],
+    "common_wrong_answer_patterns": [
+      "Believing useEffect callback can be async without an inner function",
+      "Assuming empty dependency array means the effect fires on every render"
+    ]
+  }
+}

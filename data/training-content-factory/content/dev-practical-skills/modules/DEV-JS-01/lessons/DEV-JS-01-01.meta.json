@@ -1,0 +1,43 @@
+{
+  "lesson_id": "DEV-JS-01-01",
+  "category": "dev-practical-skills",
+  "subject": "javascript",
+  "topic": "runtime-behavior-scope",
+  "summary": "Explains JavaScript variable declarations (var/let/const), scoping rules, hoisting, and implicit type coercion for reading and debugging code.",
+  "key_points": [
+    "var has function scope; let and const have block scope.",
+    "Hoisting moves declarations up but var initializes as undefined while let throws ReferenceError (TDZ).",
+    "Implicit type coercion causes unexpected results — prefer explicit conversions and ===."
+  ],
+  "misconceptions": [
+    "var and let can always be used interchangeably.",
+    "const prevents any modification to the assigned value including object properties.",
+    "== and === behave the same way for all comparisons."
+  ],
+  "check_questions": [
+    "What is the difference between var, let, and const scoping?",
+    "Why does a setTimeout loop with var print the same value?",
+    "When should === be used instead of ==?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Scoping rules for var, let, and const",
+      "Hoisting behavior differences"
+    ],
+    "practical_judgment_candidates": [
+      "Choosing between == and === in comparisons",
+      "Deciding whether var-to-let replacement is safe"
+    ],
+    "error_interpretation_candidates": [
+      "Understanding ReferenceError from TDZ"
+    ],
+    "scenario_candidates": [
+      "setTimeout loop output prediction with var vs let",
+      "Unexpected string concatenation from type coercion"
+    ],
+    "common_wrong_answer_patterns": [
+      "Assuming const makes objects immutable",
+      "Confusing hoisting behavior of var and let"
+    ]
+  }
+}

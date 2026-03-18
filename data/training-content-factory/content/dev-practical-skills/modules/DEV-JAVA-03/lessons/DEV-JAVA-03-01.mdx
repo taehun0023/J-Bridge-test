@@ -1,0 +1,145 @@
+---
+lesson_id: DEV-JAVA-03-01
+title: "Java例外階層とスタックトレースの読み方"
+module: DEV-JAVA-03
+level: intermediate
+language: ja
+est_minutes: 18
+tags: [java, exception, stack-trace, error-handling, static-content]
+---
+
+## 1) 学習目標
+
+- Javaの例外階層（Throwable → Error / Exception → RuntimeException）を説明できる。
+- checked例外とunchecked例外の違いと、それぞれの処理義務を説明できる。
+- スタックトレースを読んで、例外の発生箇所と呼び出し経路を特定できる。
+- try-catch-finallyの実行順序を正確に追跡できる。
+
+## 2) 業務コンテキスト
+
+本番環境で障害が発生すると、最初に確認するのがログに出力されたスタックトレースである。スタックトレースを正しく読めれば、障害の原因箇所を数分で特定できる。逆に読めなければ、コードを1行ずつ追う非効率な調査になる。また、checked例外とunchecked例外の違いを理解していないと、コンパイルエラーの対処やエラーハンドリング設計で判断を誤る。
+
+## 3) 要点解説
+
+### 例外階層
+
+Javaの例外はすべて`Throwable`を継承する。大きく2つに分かれる。
+
+- **Error**: JVMレベルの致命的問題（`OutOfMemoryError`等）。アプリケーションコードで捕捉すべきではない。
+- **Exception**: アプリケーションレベルの例外。さらに2つに分かれる。
+  - **checked例外**（`Exception`直系）: コンパイラが処理を強制する。`IOException`, `SQLException`など。
+  - **unchecked例外**（`RuntimeException`系）: コンパイラは強制しない。`NullPointerException`, `IllegalArgumentException`など。
+
+```java
+// checked例外 — 呼び出し元でtry-catchまたはthrows宣言が必須
+public String readFile(String path) throws IOException {
+    return Files.readString(Path.of(path));
+}
+
+// unchecked例外 — 宣言不要だが発生する可能性はある
+public int divide(int a, int b) {
+    return a / b; // b==0でArithmeticException
+}
+```
+
+### スタックトレースの読み方
+
+スタックトレースは**下から上へ**読む。最下部が呼び出しの起点、最上部が例外の発生箇所である。
+
+```
+Exception in thread "main" java.lang.NullPointerException: Cannot invoke "String.length()"
+    at com.example.service.UserService.validateName(UserService.java:25)
+    at com.example.service.UserService.createUser(UserService.java:12)
+    at com.example.Main.main(Main.java:8)
+```
+
+この場合、`Main.main()`→`UserService.createUser()`→`UserService.validateName()`の順に呼び出され、25行目で`NullPointerException`が発生している。メッセージから`String.length()`をnullオブジェクトに対して呼んだことが分かる。
+
+### try-catch-finallyの実行順序
+
+```java
+try {
+    String result = riskyOperation();
+    System.out.println(result);
+} catch (IOException e) {
+    System.out.println("IOエラー: " + e.getMessage());
+} catch (Exception e) {
+    System.out.println("その他エラー: " + e.getMessage());
+} finally {
+    System.out.println("必ず実行される");
+}
+```
+
+catchブロックは**上から順に**マッチングされる。具体的な例外を先に、汎用的な例外を後に書く。finallyブロックは例外の有無に関わらず必ず実行される。リソースのクローズに使われることが多いが、Java 7以降は`try-with-resources`が推奨される。
+
+```java
+try (var reader = new BufferedReader(new FileReader(path))) {
+    return reader.readLine();
+} // 自動的にreader.close()が呼ばれる
+```
+
+## 4) 実務解釈シナリオ
+
+### シナリオ A
+```
+Caused by: java.sql.SQLException: Connection refused
+    at com.mysql.cj.jdbc.ConnectionImpl.createNewIO(ConnectionImpl.java:826)
+    at com.example.dao.UserDao.findById(UserDao.java:34)
+    at com.example.service.UserService.getUser(UserService.java:18)
+```
+- 読み取りポイント:
+  - `Caused by`は連鎖例外の根本原因を示す。
+  - `SQLException: Connection refused`からDB接続の問題であることが分かる。
+  - アプリケーションコード側は`UserDao.java:34`が最初の接点であり、ここにDB接続ロジックがある。
+
+### シナリオ B
+```java
+public void processOrder(Order order) {
+    try {
+        validate(order);
+        save(order);
+    } catch (ValidationException e) {
+        log.warn("バリデーション失敗: {}", e.getMessage());
+        throw e; // 再スロー
+    } catch (Exception e) {
+        log.error("予期せぬエラー", e);
+        throw new ServiceException("注文処理に失敗", e);
+    }
+}
+```
+- 解釈:
+  - `ValidationException`は警告ログを残してそのまま再スローしている。呼び出し元が処理する設計。
+  - その他の例外は`ServiceException`でラップして再スローしている。原因例外を`e`としてチェーンしている点が重要。
+  - この設計により、呼び出し元は`ServiceException`だけをcatchすればよい。
+
+## 5) よくあるミス
+
+1. catchブロックで汎用的な`Exception`を先に書く。
+`catch (Exception e)`を先に書くと、すべての例外がそこで捕捉され、具体的なcatchブロックに到達しない。
+
+2. スタックトレースを上からだけ読む。
+`Caused by`セクションに根本原因があることを見逃す。
+
+3. checked例外をcatchで握りつぶす。
+空のcatchブロック（`catch (Exception e) {}`）はバグの原因を隠蔽する最悪のパターンである。
+
+4. finallyブロックでreturn文を書く。
+tryブロックのreturn値をfinallyのreturnが上書きしてしまい、予想外の戻り値になる。
+
+5. 例外メッセージにユーザー入力を含める際のセキュリティリスク。
+スタックトレースがログに出力されるため、パスワード等の機密情報を例外メッセージに含めてはならない。
+
+## 6) 確認質問
+
+1. checked例外とunchecked例外の違いは何か？
+2. スタックトレースはどの方向から読むべきか、その理由は？
+3. `Caused by`セクションは何を示しているか？
+4. catchブロックの順序が重要な理由は何か？
+5. try-with-resourcesが従来のtry-finallyより推奨される理由は何か？
+
+## 7) 出題抽出メモ
+
+- 事実型候補: 例外階層の構造、checked vs uncheckedの定義
+- 判断型候補: 例外の種類に応じたハンドリング方針の選択
+- シナリオ型候補: スタックトレースから障害原因を特定する、catchブロックの実行順序を追跡する
+- 誤答誘導ポイント: catch順序の逆転による到達不能コード、finallyでのreturnによる戻り値上書き

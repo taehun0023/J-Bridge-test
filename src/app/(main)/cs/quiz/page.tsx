@@ -1,11 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
-import Link from 'next/link'
-import Badge from '@/components/ui/Badge'
+import { redirect } from 'next/navigation'
 import EmptyState from '@/components/ui/EmptyState'
+import PracticeQuizCard from '@/components/quiz/PracticeQuizCard'
 
-interface SearchParams {
-  category?: string
-}
+export const dynamic = 'force-dynamic'
 
 interface Quiz {
   id: string
@@ -13,136 +11,101 @@ interface Quiz {
   quiz_type: string
   passing_score: number
   time_limit_minutes: number | null
+  questions_per_attempt: number | null
 }
 
-const CATEGORY_MAP: Record<string, { label: string; keyword: string }> = {
-  basic_theory: { label: '基礎理論', keyword: '基礎理論' },
-  algorithms: { label: 'アルゴリズム', keyword: 'アルゴリズム' },
-  data_structures: { label: 'データ構造', keyword: 'データ構造' },
-  computer_architecture: { label: 'コンピュータシステム', keyword: 'コンピュータシステム' },
-  database: { label: 'データベース', keyword: 'データベース' },
-  networking: { label: 'ネットワーク', keyword: 'ネットワーク' },
-  security: { label: 'セキュリティ', keyword: 'セキュリティ' },
+const POOL_CATEGORY_ORDER = ['algorithm', 'data_structure', 'basic_theory', 'database', 'network', 'os', 'security']
+
+const POOL_CATEGORY_LABELS: Record<string, string> = {
+  algorithm: 'アルゴリズム',
+  data_structure: 'データ構造',
+  basic_theory: '基礎理論',
+  database: 'データベース',
+  network: 'ネットワーク',
+  os: 'OS',
+  security: 'セキュリティ',
 }
 
-const ALL_SECTIONS = [
-  ...Object.values(CATEGORY_MAP),
-  { label: '総合', keyword: '総合' },
-]
-
-export default async function CsQuizListPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const params = await searchParams
-  const categoryFilter = params.category ?? ''
+export default async function CsQuizListPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>
+}) {
+  const { category } = await searchParams
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
-  const { data: quizzes } = await supabase
+  let userRole: string | null = null
+  const { data: prof } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  userRole = prof?.role ?? null
+
+  // Fetch CS pool quizzes only
+  const { data: poolQuizzes } = await supabase
     .from('quizzes')
     .select('*')
     .eq('quiz_type', 'cs_knowledge')
-    .eq('is_assessment', false)
+    .eq('is_pool', true)
     .order('created_at', { ascending: true })
 
-  let attemptMap: Record<string, { score: number; passed: boolean }> = {}
-  if (user && quizzes?.length) {
+  // Fetch user's latest completed attempts
+  let attemptMap: Record<string, { id: string; score: number; passed: boolean; retake_request_status: string | null }> = {}
+  if (poolQuizzes?.length) {
     const { data: attempts } = await supabase
       .from('quiz_attempts')
-      .select('quiz_id, score, passed')
+      .select('id, quiz_id, score, passed, retake_request_status')
       .eq('user_id', user.id)
+      .in('quiz_id', poolQuizzes.map(q => q.id))
       .not('completed_at', 'is', null)
-      .order('score', { ascending: false })
+      .order('completed_at', { ascending: false })
 
     attempts?.forEach((a) => {
-      if (!attemptMap[a.quiz_id] || a.score > attemptMap[a.quiz_id].score) {
-        attemptMap[a.quiz_id] = { score: a.score, passed: a.passed }
+      if (!attemptMap[a.quiz_id]) {
+        attemptMap[a.quiz_id] = { id: a.id, score: a.score, passed: a.passed, retake_request_status: a.retake_request_status }
       }
     })
   }
 
-  function renderQuizCard(quiz: Quiz) {
-    const attempt = attemptMap[quiz.id]
-    return (
-      <Link
-        key={quiz.id}
-        href={`/cs/quiz/${quiz.id}`}
-        className="group rounded-xl border border-gray-200 bg-white p-5 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
-      >
-        <div className="flex items-start justify-between">
-          <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 dark:text-white">
-            {quiz.title}
-          </h3>
-          {attempt && (
-            <Badge
-              label={attempt.passed ? '合格' : '不合格'}
-              variant="default"
-            />
-          )}
-        </div>
-        <div className="mt-3 flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-          {quiz.time_limit_minutes && (
-            <span>制限時間 {quiz.time_limit_minutes}分</span>
-          )}
-          <span>合格 {quiz.passing_score}点</span>
-        </div>
-        {attempt && (
-          <div className="mt-2 text-sm">
-            <span className={attempt.passed ? 'text-green-600' : 'text-red-600'}>
-              最高点: {attempt.score}点
-            </span>
-          </div>
-        )}
-      </Link>
-    )
-  }
-
-  const allQuizzes = quizzes ?? []
+  // Sort by category order and optionally filter
+  let quizzes = (poolQuizzes ?? []).sort((a: Quiz, b: Quiz) => {
+    const aIdx = POOL_CATEGORY_ORDER.findIndex(cat => a.title.includes(POOL_CATEGORY_LABELS[cat] ?? ''))
+    const bIdx = POOL_CATEGORY_ORDER.findIndex(cat => b.title.includes(POOL_CATEGORY_LABELS[cat] ?? ''))
+    return (aIdx === -1 ? 99 : aIdx) - (bIdx === -1 ? 99 : bIdx)
+  })
 
   // Filter by category if specified
-  const mapped = CATEGORY_MAP[categoryFilter]
-  const filteredSections = mapped
-    ? [mapped]
-    : ALL_SECTIONS
+  if (category && POOL_CATEGORY_LABELS[category]) {
+    quizzes = quizzes.filter((q: Quiz) => q.title.includes(POOL_CATEGORY_LABELS[category]))
+  }
 
-  const sections = filteredSections.map(section => ({
-    ...section,
-    quizzes: allQuizzes.filter(q => q.title.includes(section.keyword)),
-  })).filter(s => s.quizzes.length > 0)
-
-  const pageTitle = mapped ? `${mapped.label} テスト` : 'CS知識 テスト'
-  const pageDesc = mapped
-    ? `${mapped.label}のテストに挑戦しましょう`
-    : 'ITパスポート・基本情報技術者試験のCS知識テストに挑戦しましょう'
+  const pageTitle = (category && POOL_CATEGORY_LABELS[category])
+    ? `CS知識 ${POOL_CATEGORY_LABELS[category]}テスト`
+    : 'CS知識 理解度テスト'
 
   return (
     <div>
       <div className="mb-6">
-        <div className="flex items-center gap-3">
-          {mapped && (
-            <Link
-              href="/cs/quiz"
-              className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              ← 全テスト
-            </Link>
-          )}
-        </div>
-        <h1 className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{pageTitle}</h1>
-        <p className="mt-1 text-gray-500 dark:text-gray-400">{pageDesc}</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{pageTitle}</h1>
+        <p className="mt-1 text-gray-500 dark:text-gray-400">ランダム出題・難易度別配分で出題されます</p>
       </div>
 
-      {sections.length === 0 ? (
+      {quizzes.length === 0 ? (
         <EmptyState title="テストはありません" description="まだ登録されたテストはありません" icon="📝" />
       ) : (
-        <div className="space-y-8">
-          {sections.map(section => (
-            <div key={section.label}>
-              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">{section.label}</h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {section.quizzes.map(renderQuizCard)}
-              </div>
-            </div>
-          ))}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {quizzes.map((quiz: Quiz) => {
+            const attempt = attemptMap[quiz.id] ?? null
+            return (
+              <PracticeQuizCard
+                key={quiz.id}
+                quiz={quiz}
+                attempt={attempt}
+                quizHref={`/cs/quiz/${quiz.id}`}
+                userRole={userRole}
+              />
+            )
+          })}
         </div>
       )}
     </div>

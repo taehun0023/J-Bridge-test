@@ -1,0 +1,44 @@
+{
+  "lesson_id": "DEV-CWF-05-01",
+  "category": "dev-practical-skills",
+  "subject": "common-workplace-fundamentals",
+  "topic": "http-api",
+  "summary": "Explains the structure of HTTP requests and responses, HTTP methods, and how to interpret status codes to diagnose API errors.",
+  "key_points": [
+    "HTTP requests consist of a request line, headers, and an optional body.",
+    "Status codes indicate error ownership: 4xx is client-side, 5xx is server-side.",
+    "Always check both the status code and the response body to diagnose errors."
+  ],
+  "misconceptions": [
+    "401 and 403 mean the same thing.",
+    "A 5xx error can be fixed by changing the client request.",
+    "GET requests can reliably include a request body."
+  ],
+  "check_questions": [
+    "What are the three main parts of an HTTP request?",
+    "What is the difference between status codes 401 and 403?",
+    "If you receive a 5xx error, whose side has the problem?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "HTTP method purposes (GET, POST, PUT, PATCH, DELETE)",
+      "Status code categories and their meanings (2xx, 4xx, 5xx)"
+    ],
+    "practical_judgment_candidates": [
+      "Determining error ownership from a status code",
+      "Choosing the correct HTTP method for a given operation"
+    ],
+    "error_interpretation_candidates": [
+      "Reading a 422 validation error response to identify the failing field",
+      "Distinguishing 401 from 403 in an authentication flow"
+    ],
+    "scenario_candidates": [
+      "User registration returning 422 due to short password",
+      "GET request returning 401 because of missing auth token"
+    ],
+    "common_wrong_answer_patterns": [
+      "Confusing 401 (authentication) with 403 (authorization)",
+      "Attempting to fix a 500 error by modifying the client request"
+    ]
+  }
+}

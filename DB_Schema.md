@@ -1,8 +1,8 @@
 # J-Bridge Database Schema
 
-Supabase (PostgreSQL) 기반 DB 스키마. 총 42개 테이블 (+ coding_exam_problems junction).
+Supabase (PostgreSQL) 기반 DB 스키마. 총 48개 테이블 (+ coding_exam_problems junction).
 
-> **Migration 기준:** `00001` ~ `00049` (2025-05 기준)
+> **Migration 기준:** `00001` ~ `00105` (2026-03 기준)
 
 ## ERD 개요
 

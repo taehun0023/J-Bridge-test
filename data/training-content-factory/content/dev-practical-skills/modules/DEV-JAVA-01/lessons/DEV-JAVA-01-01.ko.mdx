@@ -1,0 +1,96 @@
+---
+lesson_id: DEV-JAVA-01-01
+title: "Java 소스를 읽을 때 먼저 확인해야 할 것들"
+module: DEV-JAVA-01
+level: foundation
+est_minutes: 18
+tags: [java, code-reading, class-structure, types, static-content]
+---
+
+## 1) 학습 목표
+
+- Java 소스 파일의 기본 구성(패키지 선언, 임포트, 클래스 정의)을 설명할 수 있다.
+- 기본 타입(primitive)과 참조 타입(reference)의 차이를 설명할 수 있다.
+- 메서드 시그니처를 읽고 입력과 출력을 파악할 수 있다.
+- 접근 제어자(public, private, protected)의 역할을 설명할 수 있다.
+
+## 2) 업무 맥락
+
+실무에서 새 프로젝트에 투입되면 가장 먼저 하는 일이 기존 코드를 읽는 것이다. Java 프로젝트는 파일 하나가 클래스 하나에 대응하고, 패키지 구조가 디렉토리 구조와 일치한다. 이 규칙을 알면 프로젝트에서 원하는 코드를 빠르게 찾을 수 있다. 반대로 이 구조를 모르면 수백 개의 파일 사이에서 길을 잃게 된다.
+
+## 3) 핵심 설명
+
+Java 소스 파일은 세 부분으로 구성된다.
+
+첫째, **패키지 선언**이다. `package com.example.service;`는 이 파일이 프로젝트 내 어디에 위치하는지를 나타낸다. 패키지는 디렉토리 경로와 1:1로 대응한다.
+
+둘째, **임포트 문**이다. 다른 패키지의 클래스를 사용하려면 `import` 문으로 선언한다. 임포트를 보면 이 클래스가 어떤 외부 의존성을 가지는지 빠르게 파악할 수 있다.
+
+셋째, **클래스 정의**다. 클래스 안에는 필드(데이터)와 메서드(동작)가 있다. 메서드 시그니처 `public String getUserName(int userId)`를 읽으면 접근 범위(public), 반환 타입(String), 메서드 이름(getUserName), 매개변수(int userId)를 한눈에 파악할 수 있다.
+
+기본 타입(`int`, `boolean`, `double` 등)은 값 자체를 저장하고, 참조 타입(`String`, `List`, 사용자 정의 클래스)은 객체의 주소를 저장한다. 이 차이는 비교 연산(`==` vs `equals`)에서 중요해진다. 기본 타입은 `==`로 값을 비교할 수 있지만, 참조 타입은 `equals` 메서드를 사용해야 내용을 비교할 수 있다.
+
+## 4) 실무 해석 시나리오
+
+### 시나리오 A
+```java
+package com.example.user;
+
+import com.example.util.StringHelper;
+
+public class UserService {
+    private String defaultRole = "viewer";
+
+    public String assignRole(String userId, String role) {
+        if (role == null) {
+            return defaultRole;
+        }
+        return StringHelper.normalize(role);
+    }
+}
+```
+- 읽기 포인트:
+  - 패키지 `com.example.user`로 사용자 관련 서비스임을 알 수 있다.
+  - `StringHelper`를 임포트하므로 문자열 처리 유틸리티에 의존한다.
+  - `assignRole`은 `role`이 null이면 기본값을 반환하고, 아니면 정규화해서 반환한다.
+
+### 시나리오 B
+```java
+String a = new String("hello");
+String b = new String("hello");
+System.out.println(a == b);      // false
+System.out.println(a.equals(b)); // true
+```
+- 해석:
+  - `==`는 참조(주소)를 비교하므로 false다.
+  - `equals`는 내용을 비교하므로 true다.
+  - 이 차이를 모르면 문자열 비교 버그가 자주 발생한다.
+
+## 5) 자주 하는 실수
+
+1. 참조 타입을 `==`로 비교한다.
+`String`이나 `Integer` 같은 참조 타입은 `equals`로 비교해야 한다. `==`는 같은 객체인지만 확인한다.
+
+2. 패키지 구조를 무시하고 파일을 찾는다.
+패키지와 디렉토리가 대응한다는 규칙을 알면 원하는 클래스를 빠르게 찾을 수 있다.
+
+3. 임포트 문을 건너뛰고 코드를 읽는다.
+임포트를 보면 이 클래스가 어떤 외부 모듈에 의존하는지 바로 알 수 있다.
+
+4. 접근 제어자를 무시한다.
+`private` 메서드는 클래스 내부에서만 호출 가능하므로 외부에서 사용할 수 없다.
+
+## 6) 확인 질문
+
+1. Java 소스 파일의 세 가지 기본 구성 요소는 무엇인가?
+2. `package` 선언은 프로젝트 구조에서 어떤 역할을 하는가?
+3. `==`와 `equals`의 차이는 무엇이고, 언제 각각을 사용해야 하는가?
+4. 메서드 시그니처에서 읽을 수 있는 정보 네 가지는 무엇인가?
+5. 임포트 문을 먼저 확인하면 어떤 정보를 얻을 수 있는가?
+
+## 7) 문항 발췌 메모
+
+- 사실형 후보: Java 소스 파일 구성 요소, 기본 타입과 참조 타입의 차이
+- 판단형 후보: == vs equals 사용 적절성 판단
+- 시나리오형 후보: 코드에서 패키지와 임포트를 보고 의존 관계 파악
+- 오답 유도 포인트: 참조 타입 == 비교를 값 비교로 오인, private 메서드 외부 호출 가능으로 오인

@@ -1,0 +1,43 @@
+{
+  "lesson_id": "DEV-CWF-02-01",
+  "category": "dev-practical-skills",
+  "subject": "common-workplace-fundamentals",
+  "topic": "version-control-basics",
+  "summary": "Explains Git basic commands, commit message reading, and fundamental branch strategy for workplace collaboration.",
+  "key_points": [
+    "Understand the role of add, commit, push, pull in the Git workflow.",
+    "Read commit messages to identify change intent and scope.",
+    "Use feature branches to keep the main branch stable."
+  ],
+  "misconceptions": [
+    "A one-word commit message like 'fix' is sufficient.",
+    "Working directly on main branch is acceptable for small changes.",
+    "Conflicts can be resolved by always accepting your own changes."
+  ],
+  "check_questions": [
+    "What is the difference between git add and git commit?",
+    "Why is a feature branch strategy important?",
+    "What makes a commit message useful for future investigation?"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "Role of each Git basic command in the workflow",
+      "Purpose of the staging area"
+    ],
+    "practical_judgment_candidates": [
+      "Evaluating commit message quality",
+      "Deciding when to create a separate branch"
+    ],
+    "error_interpretation_candidates": [
+      "Understanding merge conflict markers and resolution"
+    ],
+    "scenario_candidates": [
+      "Vague commit message with no context",
+      "Conflict after pushing without pulling first"
+    ],
+    "common_wrong_answer_patterns": [
+      "Confusing add and commit functions",
+      "Assuming direct main branch work is safe"
+    ]
+  }
+}
