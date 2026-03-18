@@ -127,9 +127,11 @@ export async function checkAndCreateExamCycle(
     return await createExamCycle(serviceClient, userId, 1, isJapanese)
   }
 
-  // Check if 14 days have passed since last completion
+  // Check if 14 days have passed since last completion (date-only comparison, ignoring time)
   const completedAt = new Date(lastCompleted.completed_at ?? lastCompleted.created_at)
-  const daysSinceCompletion = (Date.now() - completedAt.getTime()) / (1000 * 60 * 60 * 24)
+  const completedDateOnly = new Date(completedAt.getFullYear(), completedAt.getMonth(), completedAt.getDate())
+  const todayDateOnly = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())
+  const daysSinceCompletion = (todayDateOnly.getTime() - completedDateOnly.getTime()) / (1000 * 60 * 60 * 24)
 
   if (daysSinceCompletion >= CYCLE_INTERVAL_DAYS) {
     // Time for a new cycle
@@ -319,6 +321,43 @@ export async function tryCompleteActiveCycle(userId: string): Promise<boolean> {
 }
 
 /**
+ * Reset the last completed cycle's completed_at to now.
+ * Called when a retake exam is completed outside of a cycle,
+ * so the next auto-cycle starts 14 days from the retake date.
+ */
+export async function resetCycleCompletedAt(userId: string): Promise<void> {
+  const serviceClient = createServiceRoleClient()
+  if (!serviceClient) return
+
+  // Only update if there's no active cycle (retake happened outside a cycle)
+  const { data: activeCycle } = await serviceClient
+    .from('exam_cycles')
+    .select('id')
+    .eq('user_id', userId)
+    .in('status', ['pending', 'in_progress'])
+    .limit(1)
+    .maybeSingle()
+
+  if (activeCycle) return // Active cycle exists, don't reset
+
+  const { data: lastCompleted } = await serviceClient
+    .from('exam_cycles')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('status', 'completed')
+    .order('cycle_number', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!lastCompleted) return
+
+  await serviceClient
+    .from('exam_cycles')
+    .update({ completed_at: new Date().toISOString() })
+    .eq('id', lastCompleted.id)
+}
+
+/**
  * Get the next scheduled exam date for a user.
  */
 export async function getNextExamDate(userId: string): Promise<string | null> {
@@ -336,7 +375,8 @@ export async function getNextExamDate(userId: string): Promise<string | null> {
 
   if (!lastCompleted?.completed_at) return null
 
+  // Date-only calculation: next exam available at the start of the day, 14 days after completion date
   const completedDate = new Date(lastCompleted.completed_at)
-  const nextDate = new Date(completedDate.getTime() + CYCLE_INTERVAL_DAYS * 24 * 60 * 60 * 1000)
-  return nextDate.toISOString()
+  const nextDateOnly = new Date(completedDate.getFullYear(), completedDate.getMonth(), completedDate.getDate() + CYCLE_INTERVAL_DAYS)
+  return nextDateOnly.toISOString()
 }

@@ -1,16 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
-import { createHash } from 'crypto'
 import { env } from '@/lib/env'
+import { BUCKET, getCacheKey, synthesize, synthesizeWithDialogue, narratorVoice } from '@/lib/tts-utils'
 
-const BUCKET = 'tts-cache'
 const BATCH_SIZE = 10
-
-const narratorVoice = { name: 'ja-JP-Neural2-B', ssmlGender: 'FEMALE' }
-
-function getCacheKey(text: string, speed: number): string {
-  return createHash('sha256').update(`${text}__${speed}`).digest('hex')
-}
 
 /** Extract the TTS script portion from a listening quiz question_text.
  *  Tries 質問： marker first (QuizTaker), then \n\n split (ExamClient). */
@@ -252,31 +245,18 @@ export async function POST(request: NextRequest) {
     })
   }
 
+  // Sources that contain dialogue scripts (need multi-voice synthesis)
+  const DIALOGUE_SOURCES: SourceName[] = ['jlpt_listening', 'listening_quiz']
+  const useDialogue = DIALOGUE_SOURCES.includes(sourceName)
+
   let newlyCached = 0
   let errors = 0
 
   for (const item of batch) {
     try {
-      const response = await fetch(
-        `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            input: { text: item.text },
-            voice: { languageCode: 'ja-JP', ...narratorVoice },
-            audioConfig: { audioEncoding: 'MP3', speakingRate: 1.0 },
-          }),
-        }
-      )
-
-      if (!response.ok) {
-        errors++
-        continue
-      }
-
-      const data = await response.json()
-      const audioBuffer = Buffer.from(data.audioContent, 'base64')
+      const audioBuffer = useDialogue
+        ? await synthesizeWithDialogue(apiKey, item.text, 1.0)
+        : await synthesize(apiKey, item.text, narratorVoice, 1.0)
 
       await storageClient.storage
         .from(BUCKET)

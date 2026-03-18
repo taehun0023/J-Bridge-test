@@ -99,11 +99,17 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
   const [showForm, setShowForm] = useState(false)
   const [pending, startTransition] = useTransition()
   const [message, setMessage] = useState<string | null>(null)
+  const [messageType, setMessageType] = useState<'success' | 'error'>('success')
 
   // Cascade form state
   const [selectedCategory, setSelectedCategory] = useState('')
   const [selectedSubcategory, setSelectedSubcategory] = useState('')
   const [selectedAssignee, setSelectedAssignee] = useState('')
+
+  // Search/filter state
+  const [searchName, setSearchName] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [approvalSearchName, setApprovalSearchName] = useState('')
 
   // Overdue handling state
   const [reassignDate, setReassignDate] = useState<Record<string, string>>({})
@@ -113,9 +119,10 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
   const [devLevelLocks, setDevLevelLocks] = useState<Record<string, boolean>>({})
   const [loadingLevels, setLoadingLevels] = useState(false)
 
-  function showMsg(msg: string) {
+  function showMsg(msg: string, type: 'success' | 'error' = 'success') {
     setMessage(msg)
-    setTimeout(() => setMessage(null), 3000)
+    setMessageType(type)
+    setTimeout(() => setMessage(null), 4000)
   }
 
   const catConfig = selectedCategory ? ASSIGNMENT_CATEGORIES[selectedCategory] : null
@@ -138,7 +145,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
   async function handleCreateLearning(formData: FormData) {
     startTransition(async () => {
       const result = await createLearningAssignment(formData)
-      if (result.error) showMsg(result.error)
+      if (result.error) showMsg(result.error, 'error')
       else {
         showMsg('学習課題を配信しました')
         setShowForm(false)
@@ -153,7 +160,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
   function handleConfirmAssignment(id: string) {
     startTransition(async () => {
       const result = await confirmAssignment(id)
-      if (result.error) showMsg(result.error)
+      if (result.error) showMsg(result.error, 'error')
       else showMsg('確認完了しました')
     })
   }
@@ -162,17 +169,17 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
     if (!confirm('学習課題を削除しますか？')) return
     startTransition(async () => {
       const result = await deleteLearningAssignment(id)
-      if (result.error) showMsg(result.error)
+      if (result.error) showMsg(result.error, 'error')
       else showMsg('削除されました')
     })
   }
 
   function handleReassign(id: string) {
     const newDate = reassignDate[id]
-    if (!newDate) { showMsg('新しい期限を入力してください'); return }
+    if (!newDate) { showMsg('新しい期限を入力してください', 'error'); return }
     startTransition(async () => {
       const result = await reassignAssignment(id, newDate)
-      if (result.error) showMsg(result.error)
+      if (result.error) showMsg(result.error, 'error')
       else {
         showMsg('再配信しました')
         setReassignDate(prev => { const n = { ...prev }; delete n[id]; return n })
@@ -198,7 +205,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
   function handleApproveExam(examId: string) {
     startTransition(async () => {
       const result = await approveExam(examId)
-      if (result.error) showMsg(result.error)
+      if (result.error) showMsg(result.error, 'error')
       else showMsg('試験を承認しました')
     })
   }
@@ -207,7 +214,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
     if (!confirm('試験リクエストを拒否しますか？')) return
     startTransition(async () => {
       const result = await denyExam(examId)
-      if (result.error) showMsg(result.error)
+      if (result.error) showMsg(result.error, 'error')
       else showMsg('試験を拒否しました')
     })
   }
@@ -216,7 +223,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
     if (!confirm('この試験リクエストを削除しますか？関連する回答データも削除されます。')) return
     startTransition(async () => {
       const result = await deleteExam(examId)
-      if (result.error) showMsg(result.error)
+      if (result.error) showMsg(result.error, 'error')
       else showMsg('試験を削除しました')
     })
   }
@@ -224,7 +231,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
   function handleApproveQuizRetake(attemptId: string) {
     startTransition(async () => {
       const result = await approveQuizRetake(attemptId)
-      if (result.error) showMsg(result.error)
+      if (result.error) showMsg(result.error, 'error')
       else showMsg('再試験を承認しました')
     })
   }
@@ -233,7 +240,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
     if (!confirm('再試験リクエストを拒否しますか？')) return
     startTransition(async () => {
       const result = await denyQuizRetake(attemptId)
-      if (result.error) showMsg(result.error)
+      if (result.error) showMsg(result.error, 'error')
       else showMsg('再試験を拒否しました')
     })
   }
@@ -245,6 +252,21 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
     return Math.round((passed / total) * 100)
   }
 
+  // Filtered data
+  const filteredAssignments = learningAssignments.filter(la => {
+    const nameMatch = !searchName || (la.assignee as { full_name: string | null } | null)?.full_name?.toLowerCase().includes(searchName.toLowerCase())
+    const statusMatch = statusFilter === 'all' || la.status === statusFilter
+    return nameMatch && statusMatch
+  })
+
+  const filteredExamRequests = examRequests.filter(e => {
+    return !approvalSearchName || (e.user as { full_name: string | null } | null)?.full_name?.toLowerCase().includes(approvalSearchName.toLowerCase())
+  })
+
+  const filteredRetakeRequests = quizRetakeRequests.filter(r => {
+    return !approvalSearchName || r.user_name.toLowerCase().includes(approvalSearchName.toLowerCase())
+  })
+
   const pendingApprovals = examRequests.filter(e => e.status === 'requested').length + quizRetakeRequests.length
 
   const tabs = [
@@ -255,7 +277,15 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
   return (
     <div className="mt-6">
       {message && (
-        <div className="mb-4 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">{message}</div>
+        <div className="fixed inset-x-0 top-6 z-50 mx-auto w-fit animate-bounce">
+          <div className={`rounded-xl px-6 py-4 text-base font-bold shadow-lg ${
+            messageType === 'error'
+              ? 'border-2 border-red-400 bg-red-50 text-red-700 dark:border-red-500 dark:bg-red-900/80 dark:text-red-200'
+              : 'border-2 border-green-400 bg-green-50 text-green-700 dark:border-green-500 dark:bg-green-900/80 dark:text-green-200'
+          }`}>
+            {messageType === 'error' ? '⚠ ' : '✓ '}{message}
+          </div>
+        </div>
       )}
 
       {/* Tabs */}
@@ -397,8 +427,36 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
             </form>
           )}
 
+          {/* Filter bar */}
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <input
+              type="text"
+              placeholder="対象者名で検索..."
+              value={searchName}
+              onChange={e => setSearchName(e.target.value)}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+            />
+            <select
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+            >
+              <option value="all">全て</option>
+              <option value="pending">待機</option>
+              <option value="in_progress">進行中</option>
+              <option value="completed">完了</option>
+              <option value="awaiting_confirmation">確認待ち</option>
+              <option value="overdue">期限超過</option>
+            </select>
+            {(searchName || statusFilter !== 'all') && (
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {filteredAssignments.length}/{learningAssignments.length}件
+              </span>
+            )}
+          </div>
+
           {/* Learning assignments table */}
-          <div className="mt-4 rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+          <div className="mt-3 rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-gray-700">
@@ -414,7 +472,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                  {learningAssignments.map(la => {
+                  {filteredAssignments.map(la => {
                     const progress = getProgressPercent(la)
                     const totalQuizzes = la.required_quiz_ids?.length ?? 0
                     const passedQuizzes = la.passed_quiz_ids?.length ?? 0
@@ -549,8 +607,10 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
                 </tbody>
               </table>
             </div>
-            {learningAssignments.length === 0 && (
-              <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">学習課題がありません</div>
+            {filteredAssignments.length === 0 && (
+              <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+                {learningAssignments.length === 0 ? '学習課題がありません' : '該当する課題がありません'}
+              </div>
             )}
           </div>
         </>
@@ -559,6 +619,17 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
       {/* Approvals Tab */}
       {activeTab === 'approvals' && (
         <div className="space-y-6">
+          {/* Approval search bar */}
+          <div className="flex items-center gap-3">
+            <input
+              type="text"
+              placeholder="ユーザー名で検索..."
+              value={approvalSearchName}
+              onChange={e => setApprovalSearchName(e.target.value)}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+            />
+          </div>
+
           {/* Comprehensive Exam Requests */}
           <div>
             <h3 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">総合試験リクエスト</h3>
@@ -575,7 +646,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                    {examRequests.map(exam => (
+                    {filteredExamRequests.map(exam => (
                       <tr key={exam.id}>
                         <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
                           {(exam.user as { full_name: string | null } | null)?.full_name ?? '-'}
@@ -626,8 +697,10 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
                   </tbody>
                 </table>
               </div>
-              {examRequests.length === 0 && (
-                <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">試験リクエストがありません</div>
+              {filteredExamRequests.length === 0 && (
+                <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+                  {examRequests.length === 0 ? '試験リクエストがありません' : '該当するリクエストがありません'}
+                </div>
               )}
             </div>
           </div>
@@ -648,7 +721,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                    {quizRetakeRequests.map(req => (
+                    {filteredRetakeRequests.map(req => (
                       <tr key={req.id}>
                         <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
                           {req.user_name}
@@ -685,8 +758,10 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
                   </tbody>
                 </table>
               </div>
-              {quizRetakeRequests.length === 0 && (
-                <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">再試験リクエストがありません</div>
+              {filteredRetakeRequests.length === 0 && (
+                <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+                  {quizRetakeRequests.length === 0 ? '再試験リクエストがありません' : '該当するリクエストがありません'}
+                </div>
               )}
             </div>
           </div>

@@ -126,6 +126,24 @@ export async function createLearningAssignment(formData: FormData) {
     return { error: 'レベルを選択してください' }
   }
 
+  // Check for existing completed assignment with same category/subcategory/level
+  let duplicateQuery = supabase
+    .from('learning_assignments')
+    .select('id, status')
+    .eq('assigned_to', assignedTo)
+    .eq('category', category)
+    .eq('subcategory', isLevelOnly ? 'all' : subcategory)
+    .eq('status', 'completed')
+
+  if (contentLevel) {
+    duplicateQuery = duplicateQuery.eq('content_level', contentLevel)
+  }
+
+  const { data: existing } = await duplicateQuery.limit(1)
+  if (existing && existing.length > 0) {
+    return { error: 'この対象者には同じカテゴリ・レベルの完了済み課題が既に存在します' }
+  }
+
   // Find matching quizzes based on category/subcategory/level
   const queryClient = createServiceRoleClient() ?? supabase
   const requiredQuizIds = await resolveQuizIdsForAssignment(category, subcategory, contentLevel, queryClient)
@@ -211,7 +229,7 @@ export async function checkAssignmentProgress(userId: string, quizId: string) {
     .from('learning_assignments')
     .select('*')
     .eq('assigned_to', userId)
-    .in('status', ['pending', 'in_progress'])
+    .in('status', ['pending', 'in_progress', 'overdue'])
     .contains('required_quiz_ids', [quizId])
 
   if (!assignments || assignments.length === 0) return

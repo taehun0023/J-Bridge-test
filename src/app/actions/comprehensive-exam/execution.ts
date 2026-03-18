@@ -5,7 +5,7 @@ import { requireAuth } from '@/lib/auth-helpers'
 import { ASSIGNMENT_CATEGORIES } from '@/lib/assignment-categories'
 import { notifyMentorsOf, getUserDisplayName } from '@/lib/notification-helpers'
 import { recalculateUserScores } from '@/modules/scoring'
-import { tryCompleteActiveCycle } from '@/app/actions/exam-scheduling'
+import { tryCompleteActiveCycle, resetCycleCompletedAt } from '@/app/actions/exam-scheduling'
 import { COMP_EXAM_CATEGORY_TO_STEP, ASSESSMENT_QUIZ_IDS, ASSESSMENT_CONTENT_QUIZ_TYPES, ASSESSMENT_TOTAL_QUESTIONS, ASSESSMENT_TIME_LIMITS } from '@/lib/assessment-config'
 import { fetchRandomAssessmentQuestions } from '@/lib/supabase/queries/assessments'
 
@@ -339,6 +339,9 @@ export async function submitExam(
 
     if (exam.subcategory === 'comprehensive') {
       await tryCompleteActiveCycle(user.id)
+      // Retake outside cycle: reset last completed cycle's completed_at to now
+      // so next auto-cycle starts 14 days from this retake, not the original completion
+      await resetCycleCompletedAt(user.id)
     }
 
     const userName = await getUserDisplayName(user.id)
@@ -422,6 +425,9 @@ export async function submitExam(
   // Instead, find the active cycle by user_id.
   if (exam.subcategory === 'comprehensive') {
     await tryCompleteActiveCycle(user.id)
+    // Retake outside cycle: reset last completed cycle's completed_at to now
+    // so next auto-cycle starts 14 days from this retake, not the original completion
+    await resetCycleCompletedAt(user.id)
   }
 
   // Notify mentor(s) about result

@@ -1,7 +1,7 @@
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import Card from '@/components/ui/Card'
 import AdminTasksClient from './AdminTasksClient'
-import { detectAndMarkOverdue, updateLearningStatuses } from '@/app/actions/learning-assignments'
+import { detectAndMarkOverdue, updateLearningStatuses, resolveQuizIdsForAssignment } from '@/app/actions/learning-assignments'
 import { getReadingTotalCount } from '@/lib/assignment-categories'
 
 export default async function AdminTasksPage() {
@@ -27,13 +27,20 @@ export default async function AdminTasksPage() {
     .order('created_at', { ascending: false })
     .limit(100)
 
-  // Fetch comprehensive exam requests
+  // Fetch comprehensive exam requests (mentee only — exclude admin/mentor self-requests)
   const { data: examRequests } = await supabase
     .from('comprehensive_exams')
-    .select('*, user:profiles!comprehensive_exams_user_id_fkey(full_name, email)')
+    .select('*, user:profiles!comprehensive_exams_user_id_fkey(full_name, email, role)')
     .in('status', ['requested', 'approved', 'in_progress'])
     .order('requested_at', { ascending: false })
     .limit(50)
+    .then(res => ({
+      ...res,
+      data: (res.data ?? []).filter(e => {
+        const role = (e.user as unknown as { role: string } | null)?.role
+        return role === 'mentee'
+      }),
+    }))
 
   // Fetch quiz retake requests
   const { data: rawRetakeRequests } = await supabase
@@ -92,11 +99,23 @@ export default async function AdminTasksPage() {
   if (serviceClient && (learningAssignments ?? []).length > 0) {
     const allUserIds = [...new Set((learningAssignments ?? []).map(a => a.assigned_to))]
 
-    // Fetch all mastered items for all relevant users (service role bypasses RLS)
-    const { data: allMastered } = await serviceClient
-      .from('user_mastered_items')
-      .select('user_id, item_type, item_id')
-      .in('user_id', allUserIds)
+    // Fetch all mastered items for all relevant users (paginated to bypass 1000-row default limit)
+    const allMastered: { user_id: string; item_type: string; item_id: string }[] = []
+    const PAGE_SIZE = 1000
+    for (const uid of allUserIds) {
+      let offset = 0
+      while (true) {
+        const { data: batch } = await serviceClient
+          .from('user_mastered_items')
+          .select('user_id, item_type, item_id')
+          .eq('user_id', uid)
+          .range(offset, offset + PAGE_SIZE - 1)
+        if (!batch || batch.length === 0) break
+        allMastered.push(...batch)
+        if (batch.length < PAGE_SIZE) break
+        offset += PAGE_SIZE
+      }
+    }
 
     // Build user mastery lookup: userId → item_type → Set<item_id>
     const userMastery = new Map<string, Map<string, Set<string>>>()
@@ -203,7 +222,85 @@ export default async function AdminTasksPage() {
       learningProgress[la.id] = {
         mastered,
         total,
-        pct: total > 0 ? Math.round((mastered / total) * 100) : 0,
+        pct: total > 0 ? (mastered > 0 ? Math.max(1, Math.round((mastered / total) * 100)) : 0) : 0,
+      }
+    }
+  }
+
+  // Re-resolve empty required_quiz_ids + sync passed_quiz_ids for all non-completed assignments
+  if (serviceClient && (learningAssignments ?? []).length > 0) {
+    // Step 1: Re-resolve empty required_quiz_ids
+    const emptyQuizAssignments = (learningAssignments ?? []).filter(
+      a => !a.required_quiz_ids || a.required_quiz_ids.length === 0
+    )
+    for (const a of emptyQuizAssignments) {
+      const resolved = await resolveQuizIdsForAssignment(a.category, a.subcategory, a.content_level, serviceClient)
+      if (resolved.length > 0) {
+        a.required_quiz_ids = resolved
+      }
+    }
+
+    // Step 2: Sync passed_quiz_ids using each quiz's actual passing_score
+    const needsSync = (learningAssignments ?? []).filter(
+      a => a.required_quiz_ids && a.required_quiz_ids.length > 0 && a.status !== 'completed'
+    )
+
+    // Collect all quiz IDs to fetch passing_score in one query
+    const allQuizIds = [...new Set(needsSync.flatMap(a => a.required_quiz_ids ?? []))]
+    const passingScoreMap = new Map<string, number>()
+    if (allQuizIds.length > 0) {
+      const { data: quizScores } = await serviceClient
+        .from('quizzes')
+        .select('id, passing_score')
+        .in('id', allQuizIds)
+      for (const q of quizScores ?? []) {
+        passingScoreMap.set(q.id, q.passing_score ?? 70)
+      }
+    }
+
+    for (const a of needsSync) {
+      // Fetch best score per quiz for this user
+      const { data: attempts } = await serviceClient
+        .from('quiz_attempts')
+        .select('quiz_id, score')
+        .eq('user_id', a.assigned_to)
+        .in('quiz_id', a.required_quiz_ids)
+
+      // Group by quiz_id, take max score
+      const bestScores = new Map<string, number>()
+      for (const att of attempts ?? []) {
+        const cur = bestScores.get(att.quiz_id) ?? 0
+        if (att.score > cur) bestScores.set(att.quiz_id, att.score)
+      }
+
+      // Check pass using each quiz's passing_score
+      const passedIds = [...bestScores.entries()]
+        .filter(([qid, score]) => score >= (passingScoreMap.get(qid) ?? 70))
+        .map(([qid]) => qid)
+
+      const currentPassed = a.passed_quiz_ids ?? []
+      const needsUpdate = passedIds.length !== currentPassed.length ||
+        passedIds.some(id => !currentPassed.includes(id))
+
+      // Check if all quizzes are now passed
+      const allCompleted = a.required_quiz_ids.length > 0 &&
+        a.required_quiz_ids.every((id: string) => passedIds.includes(id))
+
+      if (needsUpdate || emptyQuizAssignments.includes(a) || allCompleted) {
+        const updateData: Record<string, unknown> = {
+          required_quiz_ids: a.required_quiz_ids,
+          passed_quiz_ids: passedIds,
+        }
+        if (allCompleted && a.status !== 'completed') {
+          updateData.status = 'completed'
+          updateData.completed_at = new Date().toISOString()
+        }
+        await serviceClient
+          .from('learning_assignments')
+          .update(updateData)
+          .eq('id', a.id)
+        a.passed_quiz_ids = passedIds
+        if (allCompleted) a.status = 'completed'
       }
     }
   }
