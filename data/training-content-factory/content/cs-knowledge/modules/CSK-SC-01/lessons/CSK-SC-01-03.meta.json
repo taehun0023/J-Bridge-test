@@ -1,0 +1,44 @@
+{
+  "lesson_id": "CSK-SC-01-03",
+  "category": "cs-knowledge",
+  "subject": "security",
+  "topic": "web-vulnerabilities",
+  "default_language": "ja",
+  "available_languages": ["ja", "ko"],
+  "summary": "XSS・SQLインジェクション・CSRFの仕組みと防御策、多層防御の考え方を学ぶ",
+  "key_points": [
+    "XSSは格納型と反射型があり、出力エスケープ・CSP・サニタイズで防御する",
+    "SQLインジェクションはプリペアドステートメントで防ぎ、動的SQL構築を避ける",
+    "CSRFはCSRFトークン・SameSite Cookie・Referer検証で防御する"
+  ],
+  "misconceptions": [
+    "フロントエンドでバリデーションすれば安全（ブラウザ開発者ツールで回避可能、サーバサイド検証が必須）",
+    "自社サイトは小規模だから攻撃されない（自動化ツールは規模を問わず無差別にスキャンする）",
+    "HTTPSを使えばXSSやSQLインジェクションは防げる（HTTPSは通信暗号化でありアプリ層の脆弱性とは無関係）"
+  ],
+  "check_questions": [
+    "格納型XSSと反射型XSSの違いを攻撃経路の観点から説明してください",
+    "プリペアドステートメントがSQLインジェクションを防げる理由は何ですか",
+    "CSRFトークンはどのような仕組みで不正リクエストを防止しますか",
+    "多層防御の考え方をWeb脆弱性対策に当てはめて説明してください"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "XSSの格納型はDBに保存されたスクリプトが全ユーザに影響する",
+      "SQLインジェクション対策にはプリペアドステートメントが最も効果的である"
+    ],
+    "concept_contrast_candidates": [
+      "XSS（クライアント側スクリプト実行）vs CSRF（サーバ側リクエスト偽造）",
+      "入力バリデーション（侵入防止）vs 出力エスケープ（実行防止）"
+    ],
+    "scenario_candidates": [
+      "掲示板に投稿されたスクリプトが他のユーザに影響する脆弱性の特定",
+      "ログインフォームで認証バイパスが発生する原因の特定"
+    ],
+    "common_wrong_answer_patterns": [
+      "HTTPSがアプリケーション層の脆弱性を防ぐと誤解する",
+      "フロントエンドバリデーションだけで十分と考える"
+    ]
+  },
+  "difficulty": "foundation"
+}

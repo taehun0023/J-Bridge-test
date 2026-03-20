@@ -1,8 +1,8 @@
 module:
   id: DEV-JS-02
-  title: JavaScript - Asynchronous Flow and Promise Reasoning
+  title: JavaScript - 非同期フローとPromise
   level: intermediate
-  description: "정적 해설형 콘텐츠로 콜백, Promise, async/await의 실행 순서를 읽고 추적하는 방법을 설명한다."
+  description: "コールバック・Promise・async/awaitの実行順序を読み追跡する方法を解説する。"
   subject: javascript
   content_mode: static-interpretive
   outcomes:

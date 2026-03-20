@@ -107,7 +107,21 @@
       "Bash(ls -la \"C:\\\\Users\\\\zenoa\\\\Desktop\\\\Programming\\\\edu_cha\\\\src\\\\app\\\\\\(main\\)\\\\dev\")",
       "Bash(find \"C:\\\\Users\\\\zenoa\\\\Desktop\\\\Programming\\\\edu_cha\\\\src\\\\app\\\\\\(main\\)\\\\dev\" -name \"page.tsx\" -o -name \"[[]*.tsx\" | head -20)",
       "Bash(ls -la \"C:\\\\Users\\\\zenoa\\\\Desktop\\\\Programming\\\\edu_cha\\\\src\\\\app\\\\\\(main\\)\\\\dev\\\\cwf\")",
-      "Bash(ls -la \"C:\\\\Users\\\\zenoa\\\\Desktop\\\\Programming\\\\edu_cha\\\\src\\\\app\\\\\\(main\\)\\\\dev\\\\lessons\")"
+      "Bash(ls -la \"C:\\\\Users\\\\zenoa\\\\Desktop\\\\Programming\\\\edu_cha\\\\src\\\\app\\\\\\(main\\)\\\\dev\\\\lessons\")",
+      "Read(//c/Users/zenoa/Desktop/Programming/edu_cha/**)",
+      "Bash(iconv -f UTF-8 -t UTF-8 /c/Users/zenoa/Desktop/Programming/edu_cha/data/training-content-factory/content/cs-knowledge/modules/CSK-BT-01/module.yaml)",
+      "Bash(git checkout:*)",
+      "Bash(xxd data/training-content-factory/content/cs-knowledge/modules/CSK-AL-01/lessons/CSK-AL-01-03.mdx)",
+      "Bash(while read:*)",
+      "Bash(do if:*)",
+      "Bash(then echo:*)",
+      "Bash(fi)",
+      "Bash(xxd)",
+      "Bash(git config:*)",
+      "Bash(xxd \"C:/Users/zenoa/Desktop/Programming/edu_cha/data/training-content-factory/content/cs-knowledge/modules/CSK-BT-01/lessons/CSK-BT-01-03.mdx\")",
+      "Bash(do head:*)",
+      "Bash(xxd \"C:/Users/zenoa/Desktop/Programming/edu_cha/data/training-content-factory/content/cs-knowledge/modules/CSK-BT-01/lessons/CSK-BT-01-01.stage.json\")",
+      "Bash(do node:*)"
     ]
   }
 }

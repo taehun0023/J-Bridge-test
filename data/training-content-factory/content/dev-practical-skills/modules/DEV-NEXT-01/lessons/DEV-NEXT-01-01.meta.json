@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "nextjs",
   "topic": "app-router-file-conventions",
-  "summary": "Explains Next.js App Router file conventions, folder-to-URL mapping, dynamic routes, route groups, and layout nesting for navigating project structure.",
+  "summary": "Next.js App Routerのファイル規約、フォルダ-URL対応、動的ルート、ルートグループ、レイアウトのネストを解説する。",
   "key_points": [
-    "App Router uses file-system-based routing — folder structure maps to URL paths.",
-    "Special files (page.tsx, layout.tsx, loading.tsx, error.tsx) each serve a specific role.",
-    "Route groups (parentheses) organize files without affecting URLs; dynamic routes (brackets) capture URL segments."
+    "App Routerはファイルシステムベースのルーティングを使用し、フォルダ構造がURLパスに対応する。",
+    "特殊ファイル（page.tsx、layout.tsx、loading.tsx、error.tsx）はそれぞれ特定の役割を持つ。",
+    "ルートグループ（丸括弧）はURLに影響せずファイルを整理し、動的ルート（角括弧）はURLセグメントをキャプチャする。"
   ],
   "misconceptions": [
     "A folder without page.tsx still creates a routable URL.",

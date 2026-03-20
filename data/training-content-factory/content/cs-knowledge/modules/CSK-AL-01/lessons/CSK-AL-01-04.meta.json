@@ -1,0 +1,46 @@
+{
+  "lesson_id": "CSK-AL-01-04",
+  "category": "cs-knowledge",
+  "subject": "algorithms",
+  "topic": "complexity-and-tradeoff",
+  "default_language": "ja",
+  "available_languages": ["ja", "ko"],
+  "summary": "Big-O 記法による計算量の評価、代表的な計算量クラス（O(1)〜O(n²)）、時間と空間のトレードオフを学ぶ",
+  "key_points": [
+    "Big-O は入力サイズ n に対する最悪計算量の増加率を表し、定数項・低次項は無視する",
+    "O(1)・O(log n)・O(n)・O(n log n)・O(n²) の違いは n が大きくなるほど劇的に広がる",
+    "メモ化やキャッシュは空間を犠牲にして時間を改善するトレードオフである",
+    "Big-O は最悪ケース、Big-Ω は最良ケース、Big-Θ は平均的な増加率を示す",
+    "同じ計算量でもキャッシュ効率や定数係数の違いで実測性能は異なる"
+  ],
+  "misconceptions": [
+    "Big-O は実行時間そのものではなく増加率を示す指標である",
+    "n が小さい場合は定数項の影響で O(n²) が O(n) より速いこともある",
+    "同じ O(n log n) でもキャッシュ効率や定数係数で実測性能は大きく異なる"
+  ],
+  "check_questions": [
+    "Big-O 記法で定数項と低次の項を無視する理由を述べよ",
+    "O(log n) のアルゴリズムの具体例を 1 つ挙げ、なぜ対数時間になるか説明せよ",
+    "メモ化（Memoization）は時間と空間のどちらを犠牲にして、どちらを改善するか？",
+    "最悪計算量を基準にする理由を、システム運用の観点から説明せよ"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "二分探索の計算量は O(log n) である",
+      "マージソートの時間計算量は O(n log n)、空間計算量は O(n) である"
+    ],
+    "concept_contrast_candidates": [
+      "Big-O（最悪・上限）vs Big-Ω（最良・下限）vs Big-Θ（平均）",
+      "時間優先（キャッシュ使用）vs 空間優先（インプレース処理）"
+    ],
+    "scenario_candidates": [
+      "メモリに余裕がある場合とない場合でアルゴリズム選択がどう変わるかを問う",
+      "n が小さいケースで O(n²) アルゴリズムを選ぶ合理性を問う"
+    ],
+    "common_wrong_answer_patterns": [
+      "Big-O を実行時間の絶対値だと誤解する",
+      "計算量のオーダーが同じなら実測性能も同じだと誤答する"
+    ]
+  },
+  "difficulty": "foundation"
+}

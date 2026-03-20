@@ -40,9 +40,9 @@ const DIFFICULTY_TABS = [
 ]
 
 const MASTERY_FILTERS = [
-  { key: '', label: '全て' },
-  { key: 'mastered', label: '暗記済み' },
-  { key: 'unmastered', label: '未暗記' },
+  { key: '', label: 'すべて' },
+  { key: 'mastered', label: '習得済み' },
+  { key: 'unmastered', label: '未習得' },
 ]
 
 export default function CsGlossaryClient({
@@ -93,7 +93,7 @@ export default function CsGlossaryClient({
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="日本語/韓国語/英語で検索..."
+            placeholder="用語名・韓国語・英語で検索"
             className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           <button
@@ -121,7 +121,7 @@ export default function CsGlossaryClient({
         </div>
 
         <div className="ml-auto flex items-center gap-3">
-          <span className="text-sm text-gray-500 dark:text-gray-400">{totalCount}語</span>
+          <span className="text-sm text-gray-500 dark:text-gray-400">{totalCount}件</span>
           <button
             onClick={() => setShowQuiz(true)}
             disabled={totalCount === 0}
@@ -134,7 +134,7 @@ export default function CsGlossaryClient({
 
       <div className="mt-4 rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
         {items.length === 0 ? (
-          <EmptyState title="用語がありません" description="検索条件を変更してください" icon="📖" />
+          <EmptyState title="用語が見つかりません" description="検索条件やフィルターを変更してください。" icon="📚" />
         ) : (
           <GlossaryTable items={items} offset={offset} masteredIds={masteredIds} itemType="cs_term" />
         )}

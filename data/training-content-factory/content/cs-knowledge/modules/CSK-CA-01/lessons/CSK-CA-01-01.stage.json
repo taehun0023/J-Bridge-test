@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "ja": {
+    "hook": {
+      "title": "コンピュータの三大構成要素",
+      "prompt": "PCを動かしている「頭脳」「作業台」「倉庫」はそれぞれ何でしょうか？",
+      "takeaway": "CPU・メモリ・ストレージの役割と関係性を理解し、性能への影響を説明できるようになります"
+    },
+    "steps": [
+      {
+        "id": "computer-architecture-01-concept-1",
+        "type": "concept",
+        "title": "CPUの役割",
+        "body": "CPU（Central Processing Unit）はコンピュータの頭脳です。命令の読み込み（フェッチ）、解読（デコード）、実行（エクセキュート）を高速に繰り返します。",
+        "bullets": [
+          "クロック周波数が高いほど1秒あたりの命令処理数が多い",
+          "複数コアを持つことで並列処理が可能になる"
+        ]
+      },
+      {
+        "id": "computer-architecture-01-mini-1",
+        "type": "mini_check",
+        "title": "確認1",
+        "prompt": "CPUが命令を処理する基本サイクルの順序として正しいものはどれですか？",
+        "options": [
+          { "id": "A", "text": "フェッチ → デコード → エクセキュート" },
+          { "id": "B", "text": "デコード → フェッチ → エクセキュート" },
+          { "id": "C", "text": "エクセキュート → フェッチ → デコード" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "CPUはまずメモリから命令を読み込み（フェッチ）、その内容を解読（デコード）し、最後に実行（エクセキュート）します。"
+      },
+      {
+        "id": "computer-architecture-01-concept-2",
+        "type": "concept",
+        "title": "メモリとストレージ",
+        "body": "メモリ（RAM）は高速だが揮発性の作業領域、ストレージ（HDD/SSD）は低速だが永続的な保存領域です。CPUはメモリを介してデータにアクセスします。",
+        "bullets": [
+          "RAM：電源を切るとデータが消える、ナノ秒単位のアクセス速度",
+          "ストレージ：電源を切ってもデータが残る、ミリ秒単位のアクセス速度"
+        ]
+      },
+      {
+        "id": "computer-architecture-01-mini-2",
+        "type": "mini_check",
+        "title": "確認2",
+        "prompt": "RAMの特徴として正しいものはどれですか？",
+        "options": [
+          { "id": "A", "text": "高速だが揮発性で、電源を切るとデータが消える" },
+          { "id": "B", "text": "低速だが永続的で、電源を切ってもデータが残る" },
+          { "id": "C", "text": "CPUの内部にあり、命令を直接実行する" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "RAM（主記憶装置）は高速なデータアクセスが可能ですが揮発性のため、電源断でデータが失われます。"
+      },
+      {
+        "id": "computer-architecture-01-worked",
+        "type": "worked_example",
+        "title": "具体例：アプリ起動時のデータの流れ",
+        "situation": "ユーザーがアプリケーションを起動する際、CPU・メモリ・ストレージがどう連携するかを追います。",
+        "reasoning": [
+          "ストレージ（SSD）からアプリのプログラムファイルを読み込む",
+          "読み込んだデータをメモリ（RAM）にロードする",
+          "CPUがメモリ上の命令をフェッチして実行を開始する",
+          "処理結果は一旦メモリに保持され、保存時にストレージに書き戻す"
+        ],
+        "takeaway": "ストレージ→メモリ→CPUの流れを理解すると、どこがボトルネックになるか判断しやすくなります"
+      },
+      {
+        "id": "computer-architecture-01-mini-3",
+        "type": "mini_check",
+        "title": "確認3",
+        "prompt": "アプリ起動時、プログラムが最初に読み込まれるのはどこからですか？",
+        "options": [
+          { "id": "A", "text": "ストレージ（SSD/HDD）からメモリにロードされる" },
+          { "id": "B", "text": "CPUのレジスタに直接ロードされる" },
+          { "id": "C", "text": "メモリからストレージにコピーされる" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "プログラムはストレージに永続保存されており、実行時にメモリにロードされてからCPUが命令を処理します。"
+      },
+      {
+        "id": "computer-architecture-01-apply-1",
+        "type": "apply_check",
+        "title": "応用1",
+        "prompt": "PCの動作が遅い原因を調べたところ、メモリ使用率が常に95%以上でした。最も効果的な対策はどれですか？",
+        "options": [
+          { "id": "A", "text": "RAMを増設してメモリ不足を解消する" },
+          { "id": "B", "text": "ストレージをHDDからSSDに交換する" },
+          { "id": "C", "text": "CPUをより高クロックのものに交換する" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "メモリ使用率が高い場合、OSはストレージをスワップ領域として使うため大幅に遅くなります。RAM増設が最も効果的です。"
+      },
+      {
+        "id": "computer-architecture-01-apply-2",
+        "type": "apply_check",
+        "title": "応用2",
+        "prompt": "動画編集ソフトでプレビュー再生がカクつきますが、最終レンダリングは正常に完了します。ボトルネックとして最も疑わしいのはどこですか？",
+        "options": [
+          { "id": "A", "text": "メモリ（リアルタイム処理に必要なデータを保持しきれない）" },
+          { "id": "B", "text": "ストレージ（最終ファイルの書き込みが遅い）" },
+          { "id": "C", "text": "CPU（計算能力が根本的に不足）" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "プレビューはリアルタイムでデータをメモリに展開する必要があり、メモリ不足だと処理が追いつかずカクつきが発生します。"
+      },
+      {
+        "id": "computer-architecture-01-summary",
+        "type": "summary",
+        "title": "学んだこと",
+        "bullets": [
+          "CPUは命令をフェッチ→デコード→エクセキュートのサイクルで処理する",
+          "メモリ（RAM）は高速・揮発性の作業領域",
+          "ストレージは低速・永続的な保存領域",
+          "性能問題はCPU・メモリ・ストレージのどこがボトルネックかを見極めて対処する"
+        ]
+      }
+    ],
+    "referenceLabel": "参考ノートを見る"
+  },
+  "ko": {
+    "hook": {
+      "title": "컴퓨터의 3대 구성 요소",
+      "prompt": "PC를 움직이는 '두뇌', '작업대', '창고'는 각각 무엇일까요?",
+      "takeaway": "CPU, 메모리, 스토리지의 역할과 관계를 이해하고 성능에 대한 영향을 설명할 수 있게 됩니다"
+    },
+    "steps": [
+      {
+        "id": "computer-architecture-01-concept-1",
+        "type": "concept",
+        "title": "CPU의 역할",
+        "body": "CPU(Central Processing Unit)는 컴퓨터의 두뇌입니다. 명령어의 읽기(Fetch), 해독(Decode), 실행(Execute)을 고속으로 반복합니다.",
+        "bullets": [
+          "클럭 주파수가 높을수록 초당 명령 처리 수가 많다",
+          "여러 코어를 갖추면 병렬 처리가 가능해진다"
+        ]
+      },
+      {
+        "id": "computer-architecture-01-mini-1",
+        "type": "mini_check",
+        "title": "확인1",
+        "prompt": "CPU가 명령을 처리하는 기본 사이클의 올바른 순서는 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "Fetch → Decode → Execute" },
+          { "id": "B", "text": "Decode → Fetch → Execute" },
+          { "id": "C", "text": "Execute → Fetch → Decode" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "CPU는 먼저 메모리에서 명령어를 읽고(Fetch), 그 내용을 해독(Decode)한 뒤, 마지막으로 실행(Execute)합니다."
+      },
+      {
+        "id": "computer-architecture-01-concept-2",
+        "type": "concept",
+        "title": "메모리와 스토리지",
+        "body": "메모리(RAM)는 고속이지만 휘발성인 작업 영역이고, 스토리지(HDD/SSD)는 저속이지만 영구적인 저장 영역입니다. CPU는 메모리를 통해 데이터에 접근합니다.",
+        "bullets": [
+          "RAM: 전원을 끄면 데이터가 사라짐, 나노초 단위의 접근 속도",
+          "스토리지: 전원을 꺼도 데이터가 남음, 밀리초 단위의 접근 속도"
+        ]
+      },
+      {
+        "id": "computer-architecture-01-mini-2",
+        "type": "mini_check",
+        "title": "확인2",
+        "prompt": "RAM의 특징으로 올바른 것은 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "고속이지만 휘발성이라 전원을 끄면 데이터가 사라진다" },
+          { "id": "B", "text": "저속이지만 영구적이라 전원을 꺼도 데이터가 남는다" },
+          { "id": "C", "text": "CPU 내부에 있으며 명령을 직접 실행한다" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "RAM(주기억장치)은 고속 데이터 접근이 가능하지만 휘발성이므로 전원 차단 시 데이터가 소실됩니다."
+      },
+      {
+        "id": "computer-architecture-01-worked",
+        "type": "worked_example",
+        "title": "구체적 예: 앱 실행 시 데이터의 흐름",
+        "situation": "사용자가 애플리케이션을 실행할 때 CPU, 메모리, 스토리지가 어떻게 연동하는지 따라갑니다.",
+        "reasoning": [
+          "스토리지(SSD)에서 앱의 프로그램 파일을 읽어온다",
+          "읽어온 데이터를 메모리(RAM)에 로드한다",
+          "CPU가 메모리 위의 명령어를 Fetch하여 실행을 시작한다",
+          "처리 결과는 일단 메모리에 보관되고, 저장 시 스토리지에 다시 쓴다"
+        ],
+        "takeaway": "스토리지→메모리→CPU의 흐름을 이해하면, 어디가 병목인지 판단하기 쉬워집니다"
+      },
+      {
+        "id": "computer-architecture-01-mini-3",
+        "type": "mini_check",
+        "title": "확인3",
+        "prompt": "앱 실행 시, 프로그램이 처음 읽히는 곳은 어디인가요?",
+        "options": [
+          { "id": "A", "text": "스토리지(SSD/HDD)에서 메모리로 로드된다" },
+          { "id": "B", "text": "CPU의 레지스터에 직접 로드된다" },
+          { "id": "C", "text": "메모리에서 스토리지로 복사된다" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "프로그램은 스토리지에 영구 저장되어 있으며, 실행 시 메모리에 로드된 후 CPU가 명령을 처리합니다."
+      },
+      {
+        "id": "computer-architecture-01-apply-1",
+        "type": "apply_check",
+        "title": "응용1",
+        "prompt": "PC 동작이 느린 원인을 조사했더니 메모리 사용률이 항상 95% 이상이었습니다. 가장 효과적인 대책은 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "RAM을 증설하여 메모리 부족을 해소한다" },
+          { "id": "B", "text": "스토리지를 HDD에서 SSD로 교체한다" },
+          { "id": "C", "text": "CPU를 더 높은 클럭의 것으로 교체한다" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "메모리 사용률이 높으면 OS가 스토리지를 스왑 영역으로 사용하므로 크게 느려집니다. RAM 증설이 가장 효과적입니다."
+      },
+      {
+        "id": "computer-architecture-01-apply-2",
+        "type": "apply_check",
+        "title": "응용2",
+        "prompt": "영상 편집 소프트웨어에서 미리보기 재생이 끊기지만, 최종 렌더링은 정상 완료됩니다. 병목으로 가장 의심되는 곳은 어디인가요?",
+        "options": [
+          { "id": "A", "text": "메모리 (실시간 처리에 필요한 데이터를 다 담지 못함)" },
+          { "id": "B", "text": "스토리지 (최종 파일 쓰기가 느림)" },
+          { "id": "C", "text": "CPU (계산 능력이 근본적으로 부족)" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "미리보기는 실시간으로 데이터를 메모리에 전개해야 하며, 메모리 부족 시 처리가 따라가지 못해 끊김이 발생합니다."
+      },
+      {
+        "id": "computer-architecture-01-summary",
+        "type": "summary",
+        "title": "배운 내용",
+        "bullets": [
+          "CPU는 명령어를 Fetch→Decode→Execute 사이클로 처리한다",
+          "메모리(RAM)는 고속/휘발성 작업 영역",
+          "스토리지는 저속/영구적 저장 영역",
+          "성능 문제는 CPU/메모리/스토리지 중 어디가 병목인지 파악하여 대처한다"
+        ]
+      }
+    ],
+    "referenceLabel": "참고 노트 보기"
+  }
+}

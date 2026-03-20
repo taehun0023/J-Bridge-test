@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "ja": {
+    "hook": {
+      "title": "HTTPはTCPの上で何をしているのか",
+      "prompt": "ブラウザでURLを入力してからページが表示されるまで、データはどの層をどう通るのでしょうか？",
+      "takeaway": "HTTPとTCPの役割分担を理解し、レイヤー構造でトラブルシューティングできるようになります"
+    },
+    "steps": [
+      {
+        "id": "networking-01-concept-1",
+        "type": "concept",
+        "title": "概念1",
+        "body": "TCP/IPモデルはネットワーク通信を4つの層に分けます。アプリケーション層（HTTP）、トランスポート層（TCP）、インターネット層（IP）、ネットワークインターフェース層です。各層は下位層のサービスを利用し、自分の責務だけに集中します。",
+        "bullets": [
+          "HTTPはアプリケーション層のプロトコルで「何を送るか」を定義する",
+          "TCPはトランスポート層で「確実に届ける」ことを保証する"
+        ]
+      },
+      {
+        "id": "networking-01-mini-1",
+        "type": "mini_check",
+        "title": "確認1",
+        "prompt": "HTTPが動作するのはTCP/IPモデルのどの層ですか？",
+        "options": [
+          {"id": "A", "text": "アプリケーション層"},
+          {"id": "B", "text": "トランスポート層"},
+          {"id": "C", "text": "インターネット層"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "HTTPはアプリケーション層のプロトコルです。TCPがトランスポート層、IPがインターネット層に対応します。"
+      },
+      {
+        "id": "networking-01-concept-2",
+        "type": "concept",
+        "title": "概念2",
+        "body": "HTTPリクエストが送信されるまでに、まずTCPの3ウェイハンドシェイク（SYN→SYN-ACK→ACK）でコネクションが確立されます。その上でHTTPリクエスト/レスポンスがやり取りされ、完了後にTCPコネクションが閉じられます。",
+        "bullets": [
+          "TCPコネクション確立後に初めてHTTPデータが流れる",
+          "HTTP/1.1ではKeep-Aliveで接続を再利用できる"
+        ]
+      },
+      {
+        "id": "networking-01-mini-2",
+        "type": "mini_check",
+        "title": "確認2",
+        "prompt": "HTTPリクエストの送信前にTCPが行うことは何ですか？",
+        "options": [
+          {"id": "A", "text": "3ウェイハンドシェイクでコネクションを確立する"},
+          {"id": "B", "text": "DNSでドメインを解決する"},
+          {"id": "C", "text": "SSLの証明書を検証する"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "TCPはSYN→SYN-ACK→ACKの3ウェイハンドシェイクでコネクションを確立してから、データ転送を開始します。"
+      },
+      {
+        "id": "networking-01-worked",
+        "type": "worked_example",
+        "title": "具体例",
+        "situation": "Webアプリが突然レスポンスを返さなくなった。curlでリクエストしても応答がない。",
+        "reasoning": [
+          "まずping（ICMP/IP層）でサーバーへの疎通を確認する",
+          "pingが通ればIP層は正常。次にtelnet 80番ポートでTCP接続を試みる",
+          "TCP接続が成功すればトランスポート層は正常。HTTP層の問題を疑う",
+          "TCP接続がタイムアウトならファイアウォールやサービス停止を確認する"
+        ],
+        "takeaway": "レイヤーを下から順に切り分けることで、障害箇所を効率的に特定できます"
+      },
+      {
+        "id": "networking-01-mini-3",
+        "type": "mini_check",
+        "title": "確認3",
+        "prompt": "サーバーにpingは通るがHTTPレスポンスがない場合、最も疑うべき層はどこですか？",
+        "options": [
+          {"id": "A", "text": "トランスポート層またはアプリケーション層"},
+          {"id": "B", "text": "インターネット層"},
+          {"id": "C", "text": "ネットワークインターフェース層"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "pingが通ればIP層は正常です。TCPポートへの接続やHTTPプロセスの状態を確認すべきです。"
+      },
+      {
+        "id": "networking-01-apply-1",
+        "type": "apply_check",
+        "title": "応用1",
+        "prompt": "HTTP/2がTCPの代わりにQUIC（UDP上）を使うHTTP/3が登場した理由として最も適切なのはどれですか？",
+        "options": [
+          {"id": "A", "text": "TCPのハンドシェイクによる接続遅延を削減するため"},
+          {"id": "B", "text": "UDPの方がデータの信頼性が高いため"},
+          {"id": "C", "text": "HTTPはTCPなしでも動作できるため"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "TCP+TLSのハンドシェイクは複数ラウンドトリップを要します。QUICは接続確立を高速化しつつ、独自に信頼性を実現します。"
+      },
+      {
+        "id": "networking-01-apply-2",
+        "type": "apply_check",
+        "title": "応用2",
+        "prompt": "WebSocket通信が確立された後、HTTPの役割はどうなりますか？",
+        "options": [
+          {"id": "A", "text": "最初のハンドシェイクのみで使われ、以降はTCP上で独自プロトコルが動く"},
+          {"id": "B", "text": "すべての通信がHTTPリクエスト/レスポンスで行われる"},
+          {"id": "C", "text": "HTTPは使われず、最初からTCPで直接通信する"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "WebSocketはHTTPアップグレードリクエストで接続を確立した後、TCP上で双方向の独自フレーム通信に切り替わります。"
+      },
+      {
+        "id": "networking-01-summary",
+        "type": "summary",
+        "title": "学んだこと",
+        "bullets": [
+          "TCP/IPモデルは4層に分かれ、HTTPはアプリケーション層、TCPはトランスポート層で動作する",
+          "HTTPリクエストの前にTCPの3ウェイハンドシェイクが必要",
+          "レイヤーを下から切り分けることで障害の原因を効率的に特定できる",
+          "HTTP/3やWebSocketなど、レイヤー構造の理解が新技術の把握にも役立つ"
+        ]
+      }
+    ],
+    "referenceLabel": "参考ノートを見る"
+  },
+  "ko": {
+    "hook": {
+      "title": "HTTP는 TCP 위에서 무엇을 하는가",
+      "prompt": "브라우저에 URL을 입력하고 페이지가 표시되기까지, 데이터는 어떤 계층을 어떻게 통과할까요?",
+      "takeaway": "HTTP와 TCP의 역할 분담을 이해하고, 레이어 구조로 트러블슈팅할 수 있게 됩니다"
+    },
+    "steps": [
+      {
+        "id": "networking-01-concept-1",
+        "type": "concept",
+        "title": "개념1",
+        "body": "TCP/IP 모델은 네트워크 통신을 4개 계층으로 나눕니다. 애플리케이션 계층(HTTP), 전송 계층(TCP), 인터넷 계층(IP), 네트워크 인터페이스 계층입니다. 각 계층은 하위 계층의 서비스를 이용하며, 자신의 책임에만 집중합니다.",
+        "bullets": [
+          "HTTP는 애플리케이션 계층의 프로토콜로 '무엇을 보낼지'를 정의한다",
+          "TCP는 전송 계층에서 '확실히 전달'하는 것을 보장한다"
+        ]
+      },
+      {
+        "id": "networking-01-mini-1",
+        "type": "mini_check",
+        "title": "확인1",
+        "prompt": "HTTP가 동작하는 것은 TCP/IP 모델의 어느 계층인가요?",
+        "options": [
+          {"id": "A", "text": "애플리케이션 계층"},
+          {"id": "B", "text": "전송 계층"},
+          {"id": "C", "text": "인터넷 계층"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "HTTP는 애플리케이션 계층의 프로토콜입니다. TCP가 전송 계층, IP가 인터넷 계층에 해당합니다."
+      },
+      {
+        "id": "networking-01-concept-2",
+        "type": "concept",
+        "title": "개념2",
+        "body": "HTTP 요청이 전송되기 전에, 먼저 TCP의 3-way 핸드셰이크(SYN→SYN-ACK→ACK)로 커넥션이 수립됩니다. 그 위에서 HTTP 요청/응답이 교환되고, 완료 후 TCP 커넥션이 닫힙니다.",
+        "bullets": [
+          "TCP 커넥션이 수립된 후에야 HTTP 데이터가 흐른다",
+          "HTTP/1.1에서는 Keep-Alive로 연결을 재사용할 수 있다"
+        ]
+      },
+      {
+        "id": "networking-01-mini-2",
+        "type": "mini_check",
+        "title": "확인2",
+        "prompt": "HTTP 요청 전송 전에 TCP가 수행하는 것은 무엇인가요?",
+        "options": [
+          {"id": "A", "text": "3-way 핸드셰이크로 커넥션을 수립한다"},
+          {"id": "B", "text": "DNS로 도메인을 해석한다"},
+          {"id": "C", "text": "SSL 인증서를 검증한다"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "TCP는 SYN→SYN-ACK→ACK의 3-way 핸드셰이크로 커넥션을 수립한 후 데이터 전송을 시작합니다."
+      },
+      {
+        "id": "networking-01-worked",
+        "type": "worked_example",
+        "title": "구체적 예시",
+        "situation": "웹 앱이 갑자기 응답을 반환하지 않게 되었다. curl로 요청해도 응답이 없다.",
+        "reasoning": [
+          "먼저 ping(ICMP/IP 계층)으로 서버와의 연결을 확인한다",
+          "ping이 되면 IP 계층은 정상. 다음으로 telnet 80번 포트로 TCP 연결을 시도한다",
+          "TCP 연결이 성공하면 전송 계층은 정상. HTTP 계층의 문제를 의심한다",
+          "TCP 연결이 타임아웃되면 방화벽이나 서비스 중단을 확인한다"
+        ],
+        "takeaway": "레이어를 아래부터 순서대로 나누어 확인하면 장애 원인을 효율적으로 파악할 수 있습니다"
+      },
+      {
+        "id": "networking-01-mini-3",
+        "type": "mini_check",
+        "title": "확인3",
+        "prompt": "서버에 ping은 되지만 HTTP 응답이 없는 경우, 가장 의심해야 할 계층은 어디인가요?",
+        "options": [
+          {"id": "A", "text": "전송 계층 또는 애플리케이션 계층"},
+          {"id": "B", "text": "인터넷 계층"},
+          {"id": "C", "text": "네트워크 인터페이스 계층"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "ping이 되면 IP 계층은 정상입니다. TCP 포트 연결이나 HTTP 프로세스 상태를 확인해야 합니다."
+      },
+      {
+        "id": "networking-01-apply-1",
+        "type": "apply_check",
+        "title": "응용1",
+        "prompt": "HTTP/2가 TCP 대신 QUIC(UDP 기반)를 사용하는 HTTP/3가 등장한 이유로 가장 적절한 것은?",
+        "options": [
+          {"id": "A", "text": "TCP 핸드셰이크로 인한 연결 지연을 줄이기 위해"},
+          {"id": "B", "text": "UDP가 데이터 신뢰성이 더 높기 때문에"},
+          {"id": "C", "text": "HTTP는 TCP 없이도 동작할 수 있기 때문에"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "TCP+TLS 핸드셰이크는 여러 라운드트립이 필요합니다. QUIC는 연결 수립을 고속화하면서 자체적으로 신뢰성을 구현합니다."
+      },
+      {
+        "id": "networking-01-apply-2",
+        "type": "apply_check",
+        "title": "응용2",
+        "prompt": "WebSocket 통신이 확립된 후, HTTP의 역할은 어떻게 되나요?",
+        "options": [
+          {"id": "A", "text": "최초 핸드셰이크에서만 사용되고, 이후에는 TCP 위에서 독자적 프로토콜이 동작한다"},
+          {"id": "B", "text": "모든 통신이 HTTP 요청/응답으로 이루어진다"},
+          {"id": "C", "text": "HTTP는 사용되지 않고, 처음부터 TCP로 직접 통신한다"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "WebSocket은 HTTP 업그레이드 요청으로 연결을 수립한 후, TCP 위에서 양방향의 독자적 프레임 통신으로 전환됩니다."
+      },
+      {
+        "id": "networking-01-summary",
+        "type": "summary",
+        "title": "배운 내용",
+        "bullets": [
+          "TCP/IP 모델은 4계층으로 나뉘며, HTTP는 애플리케이션 계층, TCP는 전송 계층에서 동작한다",
+          "HTTP 요청 전에 TCP의 3-way 핸드셰이크가 필요하다",
+          "레이어를 아래부터 나누어 확인하면 장애 원인을 효율적으로 파악할 수 있다",
+          "HTTP/3나 WebSocket 등 레이어 구조의 이해가 신기술 파악에도 도움이 된다"
+        ]
+      }
+    ],
+    "referenceLabel": "참고 노트 보기"
+  }
+}

@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "javascript",
   "topic": "async-flow",
-  "summary": "Traces execution order of callbacks, Promises, and async/await in JavaScript, covering the event loop, microtask vs macrotask priority, and error handling patterns for asynchronous code.",
+  "summary": "コールバック・Promise・async/awaitの実行順序、イベントループ、マイクロタスクとマクロタスクの優先順位、非同期エラー処理パターンを解説する。",
   "key_points": [
-    "Promises have three states (pending, fulfilled, rejected) and transition only once.",
-    "await pauses the async function and yields control back to the caller; execution resumes as a microtask.",
-    "Microtasks (Promise.then) always execute before macrotasks (setTimeout) in the event loop."
+    "Promiseにはpending・fulfilled・rejectedの3状態があり、遷移は一度きりである。",
+    "awaitはasync関数を一時停止し呼び出し元に制御を返す。再開はマイクロタスクとして実行される。",
+    "マイクロタスク（Promise.then）はイベントループにおいて常にマクロタスク（setTimeout）より先に実行される。"
   ],
   "misconceptions": [
     "setTimeout with 0ms delay executes before Promise.then callbacks.",

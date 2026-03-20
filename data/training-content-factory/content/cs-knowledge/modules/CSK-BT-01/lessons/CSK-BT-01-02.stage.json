@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "ja": {
+    "hook": {
+      "title": "文字と数値の内部表現",
+      "prompt": "コンピュータは「A」という文字をどうやって記憶しているのでしょうか？",
+      "takeaway": "文字コードの仕組みと、整数・浮動小数点の内部表現の違いを理解する"
+    },
+    "steps": [
+      {
+        "id": "basic-theory-02-concept-1",
+        "type": "concept",
+        "title": "文字コードとは",
+        "body": "文字コードは、文字と数値の対応表です。ASCIIでは英数字・記号を7ビット（128種）で表し、Unicodeは世界中の文字を統一的に扱います。UTF-8はUnicodeの可変長エンコーディングで、ASCII互換性を持ちながら日本語も表現できます。",
+        "bullets": [
+          "ASCII: 'A'=65, 'a'=97, '0'=48 — 英数字は1バイト",
+          "UTF-8: 英数字1バイト、日本語3バイト。Webの標準エンコーディング"
+        ]
+      },
+      {
+        "id": "basic-theory-02-mini-1",
+        "type": "mini_check",
+        "title": "確認1",
+        "prompt": "UTF-8で日本語の「あ」を表現するのに必要なバイト数は？",
+        "options": [
+          { "id": "A", "text": "3バイト" },
+          { "id": "B", "text": "1バイト" },
+          { "id": "C", "text": "2バイト" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "UTF-8では日本語のひらがな・カタカナ・漢字は3バイトで表現されます。ASCII文字は1バイトです。"
+      },
+      {
+        "id": "basic-theory-02-concept-2",
+        "type": "concept",
+        "title": "整数と浮動小数点数",
+        "body": "コンピュータは整数と小数を全く異なる方法で格納します。整数型（int）はビット列をそのまま2進数として解釈し、浮動小数点型（float/double）は符号・指数・仮数の3部分に分けて格納します。",
+        "bullets": [
+          "int（32ビット）: 約±21億の範囲、小数は扱えない",
+          "double（64ビット）: 非常に大きな数や小数を扱えるが、丸め誤差が生じうる"
+        ]
+      },
+      {
+        "id": "basic-theory-02-mini-2",
+        "type": "mini_check",
+        "title": "確認2",
+        "prompt": "整数型と浮動小数点型の最大の違いは？",
+        "options": [
+          { "id": "A", "text": "格納方式が異なり、浮動小数点は符号・指数・仮数に分かれる" },
+          { "id": "B", "text": "使用するメモリ量だけが違う" },
+          { "id": "C", "text": "整数型の方が常に高速" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "整数型はビット列を直接2進数として解釈しますが、浮動小数点型は符号ビット・指数部・仮数部の3つに分けて格納します。"
+      },
+      {
+        "id": "basic-theory-02-worked",
+        "type": "worked_example",
+        "title": "文字化けの仕組み",
+        "situation": "Shift_JISで書かれたファイルをUTF-8として開くと文字化けが起こる場面を考えてみましょう。",
+        "reasoning": [
+          "Shift_JISでは「日」は2バイト（0x93FA）で表現される",
+          "UTF-8として同じバイト列を読むと、別の文字として解釈される",
+          "結果、意味不明な文字列（文字化け）が表示される",
+          "解決策：ファイルのエンコーディングを正しく指定して開き直す"
+        ],
+        "takeaway": "文字化けの原因は、書き込み時と読み取り時のエンコーディングの不一致。現在はUTF-8に統一する流れが主流"
+      },
+      {
+        "id": "basic-theory-02-mini-3",
+        "type": "mini_check",
+        "title": "確認3",
+        "prompt": "文字化けが起こる根本原因は？",
+        "options": [
+          { "id": "A", "text": "書き込み時と読み取り時の文字コードが一致していない" },
+          { "id": "B", "text": "ファイルが破損している" },
+          { "id": "C", "text": "フォントがインストールされていない" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "文字コードは文字と数値の対応表なので、異なる対応表で読むと別の文字として解釈され、文字化けになります。"
+      },
+      {
+        "id": "basic-theory-02-apply-1",
+        "type": "apply_check",
+        "title": "応用1",
+        "prompt": "JSON APIのレスポンスにContent-Type: application/json; charset=utf-8を指定する理由は？",
+        "options": [
+          { "id": "A", "text": "クライアントが正しいエンコーディングで文字列を解釈できるようにするため" },
+          { "id": "B", "text": "データの圧縮率を上げるため" },
+          { "id": "C", "text": "セキュリティ上の要件を満たすため" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "charset指定がないとクライアントが別のエンコーディングで解釈し、日本語などが文字化けする可能性があります。"
+      },
+      {
+        "id": "basic-theory-02-apply-2",
+        "type": "apply_check",
+        "title": "応用2",
+        "prompt": "金額計算にfloat型ではなくint型（円単位）やBigDecimal型を使うべき理由は？",
+        "options": [
+          { "id": "A", "text": "浮動小数点の丸め誤差で金額が正確に表現できないため" },
+          { "id": "B", "text": "float型はメモリを多く消費するため" },
+          { "id": "C", "text": "float型は負の数を扱えないため" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "0.1を2進数で正確に表現できないため、float計算では微小な誤差が蓄積します。金額は正確性が重要なのでint型やBigDecimalを使います。"
+      },
+      {
+        "id": "basic-theory-02-summary",
+        "type": "summary",
+        "title": "学んだこと",
+        "bullets": [
+          "文字コードは文字と数値の対応表（ASCII, Unicode/UTF-8）",
+          "文字化けはエンコーディングの不一致が原因",
+          "整数型と浮動小数点型は内部表現が根本的に異なる",
+          "浮動小数点には丸め誤差があり、金額計算には不向き"
+        ]
+      }
+    ],
+    "referenceLabel": "参考ノートを見る"
+  },
+  "ko": {
+    "hook": {
+      "title": "문자와 숫자의 내부 표현",
+      "prompt": "컴퓨터는 'A'라는 문자를 어떻게 기억하고 있을까요?",
+      "takeaway": "문자 코드의 구조와, 정수·부동소수점의 내부 표현 차이를 이해한다"
+    },
+    "steps": [
+      {
+        "id": "basic-theory-02-concept-1",
+        "type": "concept",
+        "title": "개념1",
+        "body": "문자 코드는 문자와 숫자의 대응표입니다. ASCII에서는 영숫자·기호를 7비트(128종)로 표현하고, Unicode는 전 세계 문자를 통일적으로 다룹니다. UTF-8은 Unicode의 가변 길이 인코딩으로, ASCII 호환성을 유지하면서 한국어도 표현할 수 있습니다.",
+        "bullets": [
+          "ASCII: 'A'=65, 'a'=97, '0'=48 — 영숫자는 1바이트",
+          "UTF-8: 영숫자 1바이트, 한국어/일본어 3바이트. 웹의 표준 인코딩"
+        ]
+      },
+      {
+        "id": "basic-theory-02-mini-1",
+        "type": "mini_check",
+        "title": "확인1",
+        "prompt": "UTF-8에서 일본어 「あ」를 표현하는 데 필요한 바이트 수는?",
+        "options": [
+          { "id": "A", "text": "3바이트" },
+          { "id": "B", "text": "1바이트" },
+          { "id": "C", "text": "2바이트" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "UTF-8에서는 일본어의 히라가나·가타카나·한자는 3바이트로 표현됩니다. ASCII 문자는 1바이트입니다."
+      },
+      {
+        "id": "basic-theory-02-concept-2",
+        "type": "concept",
+        "title": "개념2",
+        "body": "컴퓨터는 정수와 소수를 완전히 다른 방법으로 저장합니다. 정수형(int)은 비트열을 그대로 2진수로 해석하고, 부동소수점형(float/double)은 부호·지수·가수 3부분으로 나누어 저장합니다.",
+        "bullets": [
+          "int(32비트): 약 ±21억 범위, 소수는 다룰 수 없음",
+          "double(64비트): 매우 큰 수나 소수를 다룰 수 있지만, 반올림 오차가 발생할 수 있음"
+        ]
+      },
+      {
+        "id": "basic-theory-02-mini-2",
+        "type": "mini_check",
+        "title": "확인2",
+        "prompt": "정수형과 부동소수점형의 가장 큰 차이는?",
+        "options": [
+          { "id": "A", "text": "저장 방식이 다르며, 부동소수점은 부호·지수·가수로 나뉜다" },
+          { "id": "B", "text": "사용하는 메모리 양만 다르다" },
+          { "id": "C", "text": "정수형이 항상 더 빠르다" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "정수형은 비트열을 직접 2진수로 해석하지만, 부동소수점형은 부호 비트·지수부·가수부 3개로 나누어 저장합니다."
+      },
+      {
+        "id": "basic-theory-02-worked",
+        "type": "worked_example",
+        "title": "구체적 예시",
+        "situation": "Shift_JIS로 작성된 파일을 UTF-8로 열면 글자가 깨지는 상황을 생각해 봅시다.",
+        "reasoning": [
+          "Shift_JIS에서 「日」은 2바이트(0x93FA)로 표현된다",
+          "UTF-8로 같은 바이트열을 읽으면, 다른 문자로 해석된다",
+          "결과적으로 의미 불명의 문자열(문자 깨짐)이 표시된다",
+          "해결책: 파일의 인코딩을 올바르게 지정하여 다시 연다"
+        ],
+        "takeaway": "문자 깨짐의 원인은 쓰기 시와 읽기 시의 인코딩 불일치. 현재는 UTF-8로 통일하는 추세"
+      },
+      {
+        "id": "basic-theory-02-mini-3",
+        "type": "mini_check",
+        "title": "확인3",
+        "prompt": "문자 깨짐이 발생하는 근본 원인은?",
+        "options": [
+          { "id": "A", "text": "쓰기 시와 읽기 시의 문자 코드가 일치하지 않기 때문" },
+          { "id": "B", "text": "파일이 손상되었기 때문" },
+          { "id": "C", "text": "폰트가 설치되어 있지 않기 때문" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "문자 코드는 문자와 숫자의 대응표이므로, 다른 대응표로 읽으면 다른 문자로 해석되어 글자가 깨집니다."
+      },
+      {
+        "id": "basic-theory-02-apply-1",
+        "type": "apply_check",
+        "title": "응용1",
+        "prompt": "JSON API 응답에 Content-Type: application/json; charset=utf-8을 지정하는 이유는?",
+        "options": [
+          { "id": "A", "text": "클라이언트가 올바른 인코딩으로 문자열을 해석할 수 있도록 하기 위해" },
+          { "id": "B", "text": "데이터의 압축률을 높이기 위해" },
+          { "id": "C", "text": "보안상의 요건을 충족하기 위해" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "charset 지정이 없으면 클라이언트가 다른 인코딩으로 해석하여, 한국어 등이 깨질 가능성이 있습니다."
+      },
+      {
+        "id": "basic-theory-02-apply-2",
+        "type": "apply_check",
+        "title": "응용2",
+        "prompt": "금액 계산에 float형이 아닌 int형(원 단위)이나 BigDecimal형을 사용해야 하는 이유는?",
+        "options": [
+          { "id": "A", "text": "부동소수점의 반올림 오차로 금액을 정확히 표현할 수 없기 때문" },
+          { "id": "B", "text": "float형은 메모리를 많이 소비하기 때문" },
+          { "id": "C", "text": "float형은 음수를 다룰 수 없기 때문" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "0.1을 2진수로 정확히 표현할 수 없어서, float 계산에서는 미세한 오차가 누적됩니다. 금액은 정확성이 중요하므로 int형이나 BigDecimal을 사용합니다."
+      },
+      {
+        "id": "basic-theory-02-summary",
+        "type": "summary",
+        "title": "배운 내용",
+        "bullets": [
+          "문자 코드는 문자와 숫자의 대응표 (ASCII, Unicode/UTF-8)",
+          "문자 깨짐은 인코딩 불일치가 원인",
+          "정수형과 부동소수점형은 내부 표현이 근본적으로 다르다",
+          "부동소수점에는 반올림 오차가 있어 금액 계산에는 부적합"
+        ]
+      }
+    ],
+    "referenceLabel": "참고 노트 보기"
+  }
+}

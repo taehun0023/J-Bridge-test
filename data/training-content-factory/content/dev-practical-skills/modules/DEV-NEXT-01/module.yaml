@@ -1,8 +1,8 @@
 module:
   id: DEV-NEXT-01
-  title: Next.js - App Router Structure and File Conventions
+  title: Next.js - App Routerの構造とファイル規約
   level: foundation
-  description: "정적 해설형 콘텐츠로 Next.js App Router의 파일 규칙과 라우팅 구조를 읽고 해석하는 방법을 설명한다."
+  description: "Next.js App Routerのファイル規約とルーティング構造の読み方を解説する。"
   subject: nextjs
   content_mode: static-interpretive
   outcomes:

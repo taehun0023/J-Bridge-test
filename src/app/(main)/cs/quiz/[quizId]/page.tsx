@@ -2,7 +2,17 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import QuizTaker from '@/components/japanese/QuizTaker'
 import { shuffleArray } from '@/lib/shuffle'
-import { STEP3_DIFFICULTY_RATIOS } from '@/lib/assessment-config'
+import {
+  getCsQuizSetByQuizId,
+  getCsQuizSetUnlockState,
+  getCsCourseIdForQuiz,
+  getCsQuizCategoryFromQuiz,
+  getCsQuizListHref,
+  getCsQuizUnlockState,
+  getCsQuestionCategoryForPoolQuiz,
+  getDifficultyRatiosForCsQuiz,
+} from '@/lib/cs-quiz'
+import { getAllCsCoursesWithProgress } from '@/lib/cs-course'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,22 +20,37 @@ interface Params {
   quizId: string
 }
 
+interface SafeOption {
+  id: string
+  option_text: string
+  sort_order: number
+}
+
+interface QuestionRow {
+  id: string
+  question_text: string
+  explanation: string | null
+  points: number
+  sort_order: number
+  difficulty: string | null
+  quiz_question_options_safe: SafeOption[]
+}
+
 export default async function CsQuizPage({ params }: { params: Promise<Params> }) {
   const { quizId } = await params
   const supabase = await createClient()
 
-  const { data: quiz } = await supabase
-    .from('quizzes')
-    .select('*')
-    .eq('id', quizId)
-    .single()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
+  const { data: quiz } = await supabase.from('quizzes').select('*').eq('id', quizId).single()
   if (!quiz) notFound()
 
-  const backUrl = '/cs/quiz'
+  const quizSet = getCsQuizSetByQuizId(quiz.id)
+  const quizCategory = getCsQuizCategoryFromQuiz(quiz.id, quiz.title)
+  const backUrl = getCsQuizListHref(quizCategory)
 
-  // 1-attempt guard for mentees
-  const { data: { user } } = await supabase.auth.getUser()
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
@@ -33,7 +58,40 @@ export default async function CsQuizPage({ params }: { params: Promise<Params> }
       .eq('id', user.id)
       .single()
 
-    if (profile?.role === 'mentee') {
+    const isMentee = profile?.role === 'mentee'
+    const isAdmin = profile?.role === 'admin'
+    const isBypass = profile?.role === 'admin' || profile?.role === 'mentor'
+
+    if (!isBypass) {
+      const courseId = getCsCourseIdForQuiz(quiz.id, quiz.title)
+
+      if (courseId) {
+        const courses = await getAllCsCoursesWithProgress(supabase, user.id, isBypass)
+        const course = courses.find((item) => item.id === courseId)
+
+        if (quizSet && quizCategory) {
+          const unlocks = getCsQuizSetUnlockState(
+            quizCategory,
+            course?.completedLessons ?? 0,
+            course?.totalLessons ?? 0
+          )
+          const currentUnlock = unlocks.find((item) => item.quizId === quizId)
+          if (!currentUnlock?.unlocked) {
+            redirect(backUrl)
+          }
+        } else {
+          const unlockState = getCsQuizUnlockState(
+            course?.completedLessons ?? 0,
+            course?.totalLessons ?? 0
+          )
+          if (!unlockState.unlocked) {
+            redirect(backUrl)
+          }
+        }
+      }
+    }
+
+    if (isMentee) {
       const { data: existingAttempt } = await supabase
         .from('quiz_attempts')
         .select('id, retake_request_status')
@@ -50,22 +108,9 @@ export default async function CsQuizPage({ params }: { params: Promise<Params> }
     }
   }
 
-  type SafeOption = { id: string; option_text: string; sort_order: number }
-  type QuestionRow = {
-    id: string
-    question_text: string
-    explanation: string | null
-    points: number
-    sort_order: number
-    difficulty: string | null
-    quiz_question_options_safe: SafeOption[]
-  }
-
   let questions: QuestionRow[]
 
-  // Pool quiz: draw random questions with difficulty ratio (easy 20% / medium 40% / hard 40%)
   if (quiz.is_pool && quiz.questions_per_attempt) {
-    // 1. Find source quiz IDs (same quiz_type, non-pool, non-assessment)
     const { data: sourceQuizzes } = await supabase
       .from('quizzes')
       .select('id')
@@ -73,111 +118,111 @@ export default async function CsQuizPage({ params }: { params: Promise<Params> }
       .eq('is_pool', false)
       .eq('is_assessment', false)
 
-    const sourceIds = (sourceQuizzes ?? []).map(q => q.id)
+    const sourceIds = (sourceQuizzes ?? []).map((item) => item.id)
 
     if (sourceIds.length === 0) {
       questions = []
     } else {
-      // 2. Fetch all published questions from source quizzes
-      // Filter by question_category matching the pool quiz's category
-      const poolCategory = getCategoryFromTitle(quiz.title)
+      const poolCategory = getCsQuestionCategoryForPoolQuiz(quiz.id, quiz.title)
 
-      let questionQuery = supabase
+      let query = supabase
         .from('quiz_questions')
-        .select('id, question_text, explanation, points, sort_order, difficulty, quiz_question_options_safe(id, option_text, sort_order)')
+        .select(
+          'id, question_text, explanation, points, sort_order, difficulty, quiz_question_options_safe(id, option_text, sort_order)'
+        )
         .in('quiz_id', sourceIds)
         .eq('is_published', true)
 
       if (poolCategory) {
-        questionQuery = questionQuery.eq('question_category', poolCategory)
+        query = query.eq('question_category', poolCategory)
       }
 
-      const { data: allQuestions } = await questionQuery
-
-      // 3. Group by difficulty
+      const { data: allQuestions } = await query
+      const ratios = getDifficultyRatiosForCsQuiz(quiz.id)
       const byDifficulty = new Map<string, QuestionRow[]>()
-      for (const q of (allQuestions ?? []) as QuestionRow[]) {
-        const d = q.difficulty ?? 'medium'
-        if (!byDifficulty.has(d)) byDifficulty.set(d, [])
-        byDifficulty.get(d)!.push(q)
+
+      for (const question of (allQuestions ?? []) as QuestionRow[]) {
+        const difficulty = question.difficulty ?? 'medium'
+        if (!byDifficulty.has(difficulty)) byDifficulty.set(difficulty, [])
+        byDifficulty.get(difficulty)?.push(question)
       }
 
-      // 4. Select proportionally by difficulty ratio
-      const total = quiz.questions_per_attempt
       const selected: QuestionRow[] = []
       const usedIds = new Set<string>()
 
-      for (const [diff, ratio] of Object.entries(STEP3_DIFFICULTY_RATIOS)) {
-        const target = Math.round(total * ratio)
-        const pool = shuffleArray(byDifficulty.get(diff) ?? [])
-        for (const q of pool) {
-          if (usedIds.has(q.id)) continue
-          if (selected.filter(s => (s.difficulty ?? 'medium') === diff).length >= target) break
-          selected.push(q)
-          usedIds.add(q.id)
+      for (const [difficulty, ratio] of Object.entries(ratios)) {
+        const targetCount = Math.round(quiz.questions_per_attempt * ratio)
+        const pool = shuffleArray(byDifficulty.get(difficulty) ?? [])
+
+        for (const question of pool) {
+          if (usedIds.has(question.id)) continue
+          if (
+            selected.filter((item) => (item.difficulty ?? 'medium') === difficulty).length >=
+            targetCount
+          ) {
+            break
+          }
+
+          selected.push(question)
+          usedIds.add(question.id)
         }
       }
 
-      // 5. Rounding fix — fill remaining from any difficulty
-      if (selected.length < total) {
-        const remaining = ((allQuestions ?? []) as QuestionRow[]).filter(q => !usedIds.has(q.id))
-        for (const q of shuffleArray(remaining)) {
-          if (selected.length >= total) break
-          selected.push(q)
-          usedIds.add(q.id)
+      if (selected.length < quiz.questions_per_attempt) {
+        const remaining = ((allQuestions ?? []) as QuestionRow[]).filter(
+          (question) => !usedIds.has(question.id)
+        )
+
+        for (const question of shuffleArray(remaining)) {
+          if (selected.length >= quiz.questions_per_attempt) break
+          selected.push(question)
+          usedIds.add(question.id)
         }
       }
 
-      // 6. Shuffle everything and shuffle options
-      questions = shuffleArray(selected).map(q => ({
-        ...q,
-        quiz_question_options_safe: shuffleArray(q.quiz_question_options_safe)
-          .map((opt, i) => ({ ...opt, sort_order: i + 1 })),
+      questions = shuffleArray(selected).map((question) => ({
+        ...question,
+        quiz_question_options_safe: shuffleArray(question.quiz_question_options_safe).map(
+          (option, index) => ({
+            ...option,
+            sort_order: index + 1,
+          })
+        ),
       }))
     }
   } else {
-    // Standard quiz: fetch questions directly
     const { data: rawQuestions } = await supabase
       .from('quiz_questions')
-      .select('id, question_text, explanation, points, sort_order, quiz_question_options_safe(id, option_text, sort_order)')
+      .select(
+        'id, question_text, explanation, points, sort_order, quiz_question_options_safe(id, option_text, sort_order)'
+      )
       .eq('quiz_id', quizId)
       .eq('is_published', true)
       .order('sort_order', { ascending: true })
 
-    questions = shuffleArray((rawQuestions ?? []).map(q => ({
-      ...q,
-      quiz_question_options_safe: shuffleArray(
-        (q as { quiz_question_options_safe: SafeOption[] }).quiz_question_options_safe
-      ).map((opt, i) => ({ ...opt, sort_order: i + 1 })),
-    }))) as QuestionRow[]
+    questions = shuffleArray(
+      (rawQuestions ?? []).map((question) => ({
+        ...question,
+        quiz_question_options_safe: shuffleArray(
+          (question as { quiz_question_options_safe: SafeOption[] }).quiz_question_options_safe
+        ).map((option, index) => ({
+          ...option,
+          sort_order: index + 1,
+        })),
+      }))
+    ) as QuestionRow[]
   }
-
-  const sessionKey = crypto.randomUUID()
 
   return (
     <QuizTaker
-      quiz={quiz}
+      quiz={{
+        ...quiz,
+        title: quizSet?.title ?? quiz.title,
+      }}
       questions={questions}
       backUrl={backUrl}
       hideRetry
-      sessionKey={sessionKey}
+      sessionKey={crypto.randomUUID()}
     />
   )
-}
-
-/** Extract question_category from pool quiz title */
-function getCategoryFromTitle(title: string): string | null {
-  const mapping: Record<string, string> = {
-    'アルゴリズム': 'algorithm',
-    'データ構造': 'data_structure',
-    '基礎理論': 'basic_theory',
-    'データベース': 'database',
-    'ネットワーク': 'network',
-    'OS': 'os',
-    'セキュリティ': 'security',
-  }
-  for (const [keyword, category] of Object.entries(mapping)) {
-    if (title.includes(keyword)) return category
-  }
-  return null
 }

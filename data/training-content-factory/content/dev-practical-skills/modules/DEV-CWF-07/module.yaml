@@ -1,8 +1,8 @@
 module:
   id: DEV-CWF-07
-  title: Common Workplace Fundamentals - Documentation Reading
+  title: 共通業務基礎 - ドキュメントの読み方
   level: foundation
-  description: "정적 해설형 콘텐츠로 기술 문서(README, API 문서, 위키)를 효과적으로 읽는 방법을 설명한다."
+  description: "技術文書（README、APIドキュメント、Wiki）を効果的に読む方法を解説する。"
   subject: common-workplace-fundamentals
   content_mode: static-interpretive
   outcomes:

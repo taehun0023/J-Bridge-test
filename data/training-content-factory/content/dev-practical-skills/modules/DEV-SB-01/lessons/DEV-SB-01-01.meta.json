@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "spring-boot",
   "topic": "project-structure-dependency-injection",
-  "summary": "Explains Spring Boot project directory structure, dependency injection principles, and stereotype annotations for reading and navigating backend projects.",
+  "summary": "Spring Bootプロジェクトのディレクトリ構造、依存性注入の原理、ステレオタイプアノテーションを解説する。",
   "key_points": [
-    "Spring Boot projects follow a layered structure: controller, service, repository, model.",
-    "Dependency injection lets the framework create and wire objects — reducing coupling.",
-    "Constructor injection is preferred over field injection for testability and clarity."
+    "Spring Bootプロジェクトは階層構造に従う：controller、service、repository、model。",
+    "依存性注入により、フレームワークがオブジェクトの生成と接続を行い、結合度を低減する。",
+    "テスト容易性と明確性の観点から、フィールド注入よりコンストラクタ注入が推奨される。"
   ],
   "misconceptions": [
     "@Component and @Service have completely different runtime behavior.",

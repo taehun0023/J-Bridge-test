@@ -1,8 +1,8 @@
 module:
   id: DEV-JS-03
-  title: JavaScript - DOM, Events, and Browser Behavior
+  title: JavaScript - DOM・イベント・ブラウザ動作
   level: intermediate
-  description: "정적 해설형 콘텐츠로 DOM 조작과 이벤트 처리 패턴을 읽고 동작을 예측하는 방법을 설명한다."
+  description: "DOM操作とイベント処理パターンを読み、動作を予測する方法を解説する。"
   subject: javascript
   content_mode: static-interpretive
   outcomes:

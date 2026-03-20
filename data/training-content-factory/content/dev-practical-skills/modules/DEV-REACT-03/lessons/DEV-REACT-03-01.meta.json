@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "react",
   "topic": "hooks-effects",
-  "summary": "Explains useEffect hook behavior, dependency array patterns (empty, specified, omitted), cleanup functions for resource management, and async handling including race condition prevention.",
+  "summary": "useEffectの動作、依存配列パターン、クリーンアップ関数、非同期処理と競合状態の防止を解説する。",
   "key_points": [
-    "useEffect runs after render; the dependency array controls when it re-runs — empty means mount-only, specified means on-change, omitted means every render.",
-    "Cleanup functions returned from useEffect run before the next effect and on unmount — essential for timers, listeners, and connections.",
-    "The useEffect callback cannot be async directly; define an inner async function and call it instead."
+    "useEffectはレンダー後に実行され、依存配列が再実行タイミングを制御する — 空配列はマウント時のみ、指定ありは変更時、省略は毎回レンダー時。",
+    "useEffectから返されるクリーンアップ関数は次のエフェクト実行前とアンマウント時に実行され、タイマー・リスナー・接続の解除に不可欠。",
+    "useEffectのコールバックは直接asyncにできない。内部にasync関数を定義して呼び出す必要がある。"
   ],
   "misconceptions": [
     "The useEffect callback can be declared as async directly.",

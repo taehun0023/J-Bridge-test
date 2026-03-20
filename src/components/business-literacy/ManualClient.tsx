@@ -23,6 +23,10 @@ interface Props {
   quizLocked?: boolean
 }
 
+function stripLeadingNumbering(title: string) {
+  return title.replace(/^\s*\d+\.\s*/u, '').trim()
+}
+
 export default function ManualClient({
   sections,
   masteredIds: initialMasteredIds,
@@ -234,7 +238,7 @@ function SubsectionItem({
           : <Circle className="h-4 w-4 shrink-0 text-zinc-300 dark:text-zinc-600" />
         }
         <span className="flex-1 text-sm font-medium text-zinc-800 dark:text-zinc-200">
-          {sub.title}
+          {stripLeadingNumbering(sub.title)}
         </span>
         {isExpanded
           ? <ChevronDown className="h-4 w-4 text-zinc-400" />

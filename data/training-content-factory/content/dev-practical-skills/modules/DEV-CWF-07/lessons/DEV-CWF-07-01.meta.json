@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "common-workplace-fundamentals",
   "topic": "documentation-reading",
-  "summary": "Explains the types of technical documentation, strategies for finding information efficiently, and how to handle outdated or incomplete docs.",
+  "summary": "技術文書の種類、効率的な情報検索戦略、古い・不完全なドキュメントへの対処法を解説する。",
   "key_points": [
-    "Different document types serve different purposes — match your goal to the right type.",
-    "Use TOC navigation, search, and code examples to find information quickly.",
-    "When docs are outdated, source code and commit logs are the most reliable references."
+    "文書の種類ごとに目的が異なる — 目的に合った種類を選ぶ。",
+    "目次・検索・コード例を活用して素早く情報を見つける。",
+    "ドキュメントが古い場合、ソースコードとコミットログが最も信頼できる情報源となる。"
   ],
   "misconceptions": [
     "You should read documentation from beginning to end.",

@@ -1,10 +1,21 @@
-import { notFound } from 'next/navigation'
-import CsStaticSubjectPage from '@/components/cs/CsStaticSubjectPage'
-import { getCsSubjectContent } from '@/lib/cs-content'
+import CsSubjectRoutePage from '@/components/cs/CsSubjectRoutePage'
 
-export default async function BasicTheoryPage() {
-  const subject = await getCsSubjectContent('basic-theory')
-  if (!subject) notFound()
-
-  return <CsStaticSubjectPage subject={subject} />
+export default async function BasicTheoryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    tab?: string
+    difficulty?: string
+    search?: string
+    page?: string
+    mastery?: string
+  }>
+}) {
+  return (
+    <CsSubjectRoutePage
+      slug="basic-theory"
+      pathname="/cs/basic-theory"
+      searchParams={searchParams}
+    />
+  )
 }

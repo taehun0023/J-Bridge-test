@@ -1,8 +1,8 @@
 module:
   id: DEV-CWF-04
-  title: Common Workplace Fundamentals - Environment and Configuration
+  title: 共通業務基礎 - 環境と設定
   level: foundation
-  description: "정적 해설형 콘텐츠로 개발·스테이징·운영 환경 분리와 설정 파일 읽기를 설명한다."
+  description: "開発・ステージング・本番環境の分離と設定ファイルの読み方を解説する。"
   subject: common-workplace-fundamentals
   content_mode: static-interpretive
   outcomes:

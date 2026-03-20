@@ -3,6 +3,9 @@ import { notFound, redirect } from 'next/navigation'
 import QuizTaker from '@/components/japanese/QuizTaker'
 import { shuffleArray } from '@/lib/shuffle'
 import { STEP4_DIFFICULTY_RATIOS } from '@/lib/assessment-config'
+import { getDevQuizDef, getDevQuizUnlockState } from '@/lib/dev-quiz'
+import { getDevCourseBySubject } from '@/lib/dev-course'
+import type { DevSubjectSlug } from '@/lib/dev-content'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,33 +25,48 @@ export default async function DevQuizPage({ params }: { params: Promise<Params> 
 
   if (!quiz) notFound()
 
-  // Determine track from quiz title for backUrl context preservation
-  const track = getTrackFromTitle(quiz.title)
-  const backUrl = `/dev/quiz${track ? `?track=${track}` : ''}`
+  const backUrl = '/dev/quiz'
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  const isBypass = profile?.role === 'admin' || profile?.role === 'mentor'
+
+  const def = getDevQuizDef(quizId)
+
+  // Quiz lock check for mentees
+  if (!isBypass && def) {
+    const slug = def.courseId.replace(/^dev-/, '') as DevSubjectSlug
+    const course = await getDevCourseBySubject(supabase, slug, user.id)
+    const unlockState = getDevQuizUnlockState(
+      course?.completedLessons ?? 0,
+      course?.totalLessons ?? 0
+    )
+    if (!unlockState.unlocked) {
+      redirect(backUrl)
+    }
+  }
 
   // 1-attempt guard for mentees
-  const { data: { user } } = await supabase.auth.getUser()
-  if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
+  if (!isBypass && profile?.role === 'mentee') {
+    const { data: existingAttempt } = await supabase
+      .from('quiz_attempts')
+      .select('id, retake_request_status')
+      .eq('user_id', user.id)
+      .eq('quiz_id', quizId)
+      .not('completed_at', 'is', null)
+      .order('completed_at', { ascending: false })
+      .limit(1)
       .single()
 
-    if (profile?.role === 'mentee') {
-      const { data: existingAttempt } = await supabase
-        .from('quiz_attempts')
-        .select('id, retake_request_status')
-        .eq('user_id', user.id)
-        .eq('quiz_id', quizId)
-        .not('completed_at', 'is', null)
-        .order('completed_at', { ascending: false })
-        .limit(1)
-        .single()
-
-      if (existingAttempt && existingAttempt.retake_request_status !== 'approved') {
-        redirect(backUrl)
-      }
+    if (existingAttempt && existingAttempt.retake_request_status !== 'approved') {
+      redirect(backUrl)
     }
   }
 
@@ -80,8 +98,7 @@ export default async function DevQuizPage({ params }: { params: Promise<Params> 
     if (sourceIds.length === 0) {
       questions = []
     } else {
-      // Filter by question_category matching the pool quiz's category
-      const poolCategory = getCategoryFromTitle(quiz.title)
+      const questionCategory = def?.questionCategory ?? null
 
       let questionQuery = supabase
         .from('quiz_questions')
@@ -89,8 +106,8 @@ export default async function DevQuizPage({ params }: { params: Promise<Params> 
         .in('quiz_id', sourceIds)
         .eq('is_published', true)
 
-      if (poolCategory) {
-        questionQuery = questionQuery.eq('question_category', poolCategory)
+      if (questionCategory) {
+        questionQuery = questionQuery.eq('question_category', questionCategory)
       }
 
       const { data: allQuestions } = await questionQuery
@@ -153,6 +170,26 @@ export default async function DevQuizPage({ params }: { params: Promise<Params> 
     }))) as QuestionRow[]
   }
 
+  if (questions.length === 0) {
+    return (
+      <div className="mx-auto max-w-lg py-20 text-center">
+        <p className="text-4xl">📝</p>
+        <h1 className="mt-4 text-xl font-bold text-gray-900 dark:text-white">
+          問題がまだ登録されていません
+        </h1>
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+          この科目の問題プールは現在準備中です。しばらくお待ちください。
+        </p>
+        <a
+          href={backUrl}
+          className="mt-6 inline-block rounded-lg bg-orange-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-orange-500"
+        >
+          テスト一覧に戻る
+        </a>
+      </div>
+    )
+  }
+
   const sessionKey = crypto.randomUUID()
 
   return (
@@ -164,28 +201,4 @@ export default async function DevQuizPage({ params }: { params: Promise<Params> 
       sessionKey={sessionKey}
     />
   )
-}
-
-/** Determine track (java/javascript) from quiz title */
-function getTrackFromTitle(title: string): string | null {
-  if (title.includes('Java基礎') || title.includes('Spring Boot')) return 'java'
-  if (title.includes('JavaScript') || title.includes('React')) return 'javascript'
-  // SQL is shared between tracks — default to java
-  if (title.includes('SQL')) return 'java'
-  return null
-}
-
-/** Extract question_category from pool quiz title */
-function getCategoryFromTitle(title: string): string | null {
-  const mapping: Record<string, string> = {
-    'Java基礎': 'java_core',
-    'Spring Boot': 'spring_boot',
-    'JavaScript基礎': 'javascript_core',
-    'React': 'react',
-  }
-  for (const [keyword, category] of Object.entries(mapping)) {
-    if (title.includes(keyword)) return category
-  }
-  if (title.includes('SQL')) return 'sql'
-  return null
 }

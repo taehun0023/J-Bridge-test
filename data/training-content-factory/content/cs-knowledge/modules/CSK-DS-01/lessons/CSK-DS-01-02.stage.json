@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "ja": {
+    "hook": {
+      "title": "積み上げる vs 列に並ぶ",
+      "prompt": "ブラウザの「戻る」ボタンと、コンビニのレジ待ちの行列。共通するデータ構造は何でしょう？",
+      "takeaway": "スタック（LIFO）とキュー（FIFO）の動作原理と、実際のシステムでの使い分けを理解する"
+    },
+    "steps": [
+      {
+        "id": "data-structures-02-concept-1",
+        "type": "concept",
+        "title": "スタック（LIFO）",
+        "body": "スタックは「後入れ先出し（Last In, First Out）」の構造です。お皿を積み重ねるように、最後に入れたものが最初に取り出されます。push（追加）とpop（取り出し）はどちらも O(1) です。",
+        "bullets": [
+          "push: スタックの一番上に要素を追加する",
+          "pop: スタックの一番上から要素を取り出す。途中の要素には直接アクセスできない"
+        ]
+      },
+      {
+        "id": "data-structures-02-mini-1",
+        "type": "mini_check",
+        "title": "確認1",
+        "prompt": "スタックに A, B, C の順でpushした後、popするとどの要素が出てくる？",
+        "options": [
+          { "id": "A", "text": "C（最後に入れたものが最初に出る = LIFO）" },
+          { "id": "B", "text": "A（最初に入れたものが最初に出る）" },
+          { "id": "C", "text": "B（真ん中の要素）" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "スタックはLIFO（後入れ先出し）なので、最後にpushしたCが最初にpopされます。"
+      },
+      {
+        "id": "data-structures-02-concept-2",
+        "type": "concept",
+        "title": "キュー（FIFO）",
+        "body": "キューは「先入れ先出し（First In, First Out）」の構造です。コンビニのレジのように、最初に並んだ人が最初に処理されます。enqueue（追加）とdequeue（取り出し）はどちらも O(1) です。",
+        "bullets": [
+          "enqueue: キューの末尾に要素を追加する",
+          "dequeue: キューの先頭から要素を取り出す。割り込みはできない"
+        ]
+      },
+      {
+        "id": "data-structures-02-mini-2",
+        "type": "mini_check",
+        "title": "確認2",
+        "prompt": "キューにA, B, Cの順でenqueueした後、dequeueするとどの要素が出てくる？",
+        "options": [
+          { "id": "A", "text": "A（最初に入れたものが最初に出る = FIFO）" },
+          { "id": "B", "text": "C（最後に入れたものが最初に出る）" },
+          { "id": "C", "text": "B（真ん中の要素）" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "キューはFIFO（先入れ先出し）なので、最初にenqueueしたAが最初にdequeueされます。"
+      },
+      {
+        "id": "data-structures-02-worked",
+        "type": "worked_example",
+        "title": "関数呼び出しとコールスタック",
+        "situation": "main()がfuncA()を呼び、funcA()がfuncB()を呼ぶ場面で、コールスタックがどう動くか追ってみましょう。",
+        "reasoning": [
+          "main()の実行開始 → スタックに main のフレームをpush",
+          "funcA()を呼ぶ → スタックに funcA のフレームをpush（mainの上に積まれる）",
+          "funcB()を呼ぶ → スタックに funcB のフレームをpush（funcAの上に積まれる）",
+          "funcB()が終了 → funcBをpop、funcAに制御が戻る。funcAが終了 → pop、mainに戻る"
+        ],
+        "takeaway": "関数呼び出しはスタック構造で管理される。再帰が深すぎるとスタックオーバーフローが起きる理由はここにある"
+      },
+      {
+        "id": "data-structures-02-mini-3",
+        "type": "mini_check",
+        "title": "確認3",
+        "prompt": "再帰呼び出しが深すぎるとStackOverflowエラーが起きる理由は？",
+        "options": [
+          { "id": "A", "text": "関数呼び出しごとにスタックにフレームが積まれ、メモリ上限を超えるため" },
+          { "id": "B", "text": "キューがいっぱいになるため" },
+          { "id": "C", "text": "CPUの計算速度が追いつかないため" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "各関数呼び出しはコールスタックにフレームを積みます。再帰が深すぎるとフレームが蓄積し、スタック領域のメモリ上限を超えてエラーになります。"
+      },
+      {
+        "id": "data-structures-02-apply-1",
+        "type": "apply_check",
+        "title": "応用1",
+        "prompt": "Webサーバーでリクエストを受け付けた順番に処理するには、どのデータ構造が適切？",
+        "options": [
+          { "id": "A", "text": "キュー — 先に到着したリクエストを先に処理する（FIFO）" },
+          { "id": "B", "text": "スタック — 最新のリクエストを優先処理する（LIFO）" },
+          { "id": "C", "text": "配列 — インデックスでリクエストを管理する" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "リクエストを受付順に処理するのはFIFOの原則です。キュー（メッセージキューなど）を使って公平に処理します。"
+      },
+      {
+        "id": "data-structures-02-apply-2",
+        "type": "apply_check",
+        "title": "応用2",
+        "prompt": "括弧の対応チェック「({[]})」が正しいかを検証するのに適したデータ構造は？",
+        "options": [
+          { "id": "A", "text": "スタック — 開き括弧をpushし、閉じ括弧が来たらpopして対応を確認する" },
+          { "id": "B", "text": "キュー — 括弧を順番に処理するため" },
+          { "id": "C", "text": "連結リスト — 括弧をノードとして繋げるため" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "最も内側の括弧から順に閉じるのはLIFOの性質です。開き括弧をpushし、対応する閉じ括弧でpopして一致を確認します。"
+      },
+      {
+        "id": "data-structures-02-summary",
+        "type": "summary",
+        "title": "学んだこと",
+        "bullets": [
+          "スタックはLIFO（後入れ先出し）で、push/popが O(1)",
+          "キューはFIFO（先入れ先出し）で、enqueue/dequeueが O(1)",
+          "関数呼び出しはスタック（コールスタック）で管理される",
+          "タスク処理にはキュー、括弧チェックや履歴管理にはスタックが適切"
+        ]
+      }
+    ],
+    "referenceLabel": "参考ノートを見る"
+  },
+  "ko": {
+    "hook": {
+      "title": "쌓기 vs 줄 서기",
+      "prompt": "브라우저의 「뒤로」 버튼과 편의점 계산대의 대기열. 공통되는 자료구조는 무엇일까요?",
+      "takeaway": "스택(LIFO)과 큐(FIFO)의 동작 원리와, 실제 시스템에서의 사용 구분을 이해한다"
+    },
+    "steps": [
+      {
+        "id": "data-structures-02-concept-1",
+        "type": "concept",
+        "title": "개념1",
+        "body": "스택은 「후입선출(Last In, First Out)」 구조입니다. 접시를 쌓아 올리듯, 마지막에 넣은 것이 가장 먼저 꺼내집니다. push(추가)와 pop(꺼내기)은 모두 O(1)입니다.",
+        "bullets": [
+          "push: 스택 맨 위에 요소를 추가한다",
+          "pop: 스택 맨 위에서 요소를 꺼낸다. 중간 요소에는 직접 접근할 수 없다"
+        ]
+      },
+      {
+        "id": "data-structures-02-mini-1",
+        "type": "mini_check",
+        "title": "확인1",
+        "prompt": "스택에 A, B, C 순서로 push한 후 pop하면 어떤 요소가 나올까?",
+        "options": [
+          { "id": "A", "text": "C (마지막에 넣은 것이 먼저 나온다 = LIFO)" },
+          { "id": "B", "text": "A (처음에 넣은 것이 먼저 나온다)" },
+          { "id": "C", "text": "B (가운데 요소)" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "스택은 LIFO(후입선출)이므로, 마지막에 push한 C가 먼저 pop됩니다."
+      },
+      {
+        "id": "data-structures-02-concept-2",
+        "type": "concept",
+        "title": "개념2",
+        "body": "큐는 「선입선출(First In, First Out)」 구조입니다. 편의점 계산대처럼 먼저 줄을 선 사람이 먼저 처리됩니다. enqueue(추가)와 dequeue(꺼내기)는 모두 O(1)입니다.",
+        "bullets": [
+          "enqueue: 큐의 맨 뒤에 요소를 추가한다",
+          "dequeue: 큐의 맨 앞에서 요소를 꺼낸다. 새치기는 불가"
+        ]
+      },
+      {
+        "id": "data-structures-02-mini-2",
+        "type": "mini_check",
+        "title": "확인2",
+        "prompt": "큐에 A, B, C 순서로 enqueue한 후 dequeue하면 어떤 요소가 나올까?",
+        "options": [
+          { "id": "A", "text": "A (먼저 넣은 것이 먼저 나온다 = FIFO)" },
+          { "id": "B", "text": "C (마지막에 넣은 것이 먼저 나온다)" },
+          { "id": "C", "text": "B (가운데 요소)" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "큐는 FIFO(선입선출)이므로, 처음에 enqueue한 A가 먼저 dequeue됩니다."
+      },
+      {
+        "id": "data-structures-02-worked",
+        "type": "worked_example",
+        "title": "구체적 예시",
+        "situation": "main()이 funcA()를 호출하고, funcA()가 funcB()를 호출하는 상황에서 콜 스택이 어떻게 동작하는지 따라가 봅시다.",
+        "reasoning": [
+          "main() 실행 시작 → 스택에 main 프레임을 push",
+          "funcA() 호출 → 스택에 funcA 프레임을 push (main 위에 쌓임)",
+          "funcB() 호출 → 스택에 funcB 프레임을 push (funcA 위에 쌓임)",
+          "funcB() 종료 → funcB를 pop, funcA로 제어 반환. funcA 종료 → pop, main으로 반환"
+        ],
+        "takeaway": "함수 호출은 스택 구조로 관리된다. 재귀가 너무 깊으면 스택 오버플로가 발생하는 이유가 바로 이것"
+      },
+      {
+        "id": "data-structures-02-mini-3",
+        "type": "mini_check",
+        "title": "확인3",
+        "prompt": "재귀 호출이 너무 깊으면 StackOverflow 에러가 발생하는 이유는?",
+        "options": [
+          { "id": "A", "text": "함수 호출마다 스택에 프레임이 쌓여, 메모리 한도를 초과하기 때문" },
+          { "id": "B", "text": "큐가 가득 차기 때문" },
+          { "id": "C", "text": "CPU의 계산 속도가 따라가지 못하기 때문" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "각 함수 호출은 콜 스택에 프레임을 쌓습니다. 재귀가 너무 깊으면 프레임이 누적되어 스택 영역의 메모리 한도를 초과하여 에러가 발생합니다."
+      },
+      {
+        "id": "data-structures-02-apply-1",
+        "type": "apply_check",
+        "title": "응용1",
+        "prompt": "웹 서버에서 요청을 받은 순서대로 처리하려면 어떤 자료구조가 적절한가?",
+        "options": [
+          { "id": "A", "text": "큐 — 먼저 도착한 요청을 먼저 처리 (FIFO)" },
+          { "id": "B", "text": "스택 — 최신 요청을 우선 처리 (LIFO)" },
+          { "id": "C", "text": "배열 — 인덱스로 요청을 관리" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "요청을 접수 순서대로 처리하는 것은 FIFO 원칙입니다. 큐(메시지 큐 등)를 사용하여 공정하게 처리합니다."
+      },
+      {
+        "id": "data-structures-02-apply-2",
+        "type": "apply_check",
+        "title": "응용2",
+        "prompt": "괄호 대응 검사 「({[]})」가 올바른지 검증하기에 적합한 자료구조는?",
+        "options": [
+          { "id": "A", "text": "스택 — 여는 괄호를 push하고, 닫는 괄호가 오면 pop하여 대응을 확인" },
+          { "id": "B", "text": "큐 — 괄호를 순서대로 처리하기 위해" },
+          { "id": "C", "text": "연결 리스트 — 괄호를 노드로 연결하기 위해" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "가장 안쪽 괄호부터 순서대로 닫는 것은 LIFO 성질입니다. 여는 괄호를 push하고, 대응하는 닫는 괄호로 pop하여 일치를 확인합니다."
+      },
+      {
+        "id": "data-structures-02-summary",
+        "type": "summary",
+        "title": "배운 내용",
+        "bullets": [
+          "스택은 LIFO(후입선출)로, push/pop이 O(1)",
+          "큐는 FIFO(선입선출)로, enqueue/dequeue가 O(1)",
+          "함수 호출은 스택(콜 스택)으로 관리된다",
+          "작업 처리에는 큐, 괄호 검사나 이력 관리에는 스택이 적합"
+        ]
+      }
+    ],
+    "referenceLabel": "참고 노트 보기"
+  }
+}

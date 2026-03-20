@@ -1,8 +1,8 @@
 module:
   id: DEV-NEXT-02
-  title: Next.js - Server and Client Component Boundaries
+  title: Next.js - ServerとClientコンポーネントの境界
   level: intermediate
-  description: "정적 해설형 콘텐츠로 서버 컴포넌트와 클라이언트 컴포넌트의 경계와 사용 기준을 설명한다."
+  description: "サーバーコンポーネントとクライアントコンポーネントの境界と使い分けを解説する。"
   subject: nextjs
   content_mode: static-interpretive
   outcomes:

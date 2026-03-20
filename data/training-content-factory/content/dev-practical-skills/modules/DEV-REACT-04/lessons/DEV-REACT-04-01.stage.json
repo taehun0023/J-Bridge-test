@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "ja": {
+    "hook": {
+      "title": "再レンダリングを理解し、最適化を判断する",
+      "prompt": "親コンポーネントのState変更で、関係ない子コンポーネントまで再レンダリングされるのはなぜでしょうか？",
+      "takeaway": "再レンダリングの条件、React.memo、useMemo、useCallbackの正しい使い方と判断基準を理解できるようになります"
+    },
+    "steps": [
+      {
+        "id": "react-04-concept-1",
+        "type": "concept",
+        "title": "再レンダリングの3つの条件",
+        "body": "Reactコンポーネントが再レンダリングされるのは3つの場合です。State変更（setStateの呼び出し）、親の再レンダリング（Propsが変わらなくても発生）、Contextの値の変更です。",
+        "bullets": [
+          "親が再レンダリングされると子はPropsが変わらなくてもすべて再レンダリングされる",
+          "再レンダリング自体は必ずしも悪くなく、問題が発生してから最適化するのがReactの基本方針"
+        ]
+      },
+      {
+        "id": "react-04-mini-1",
+        "type": "mini_check",
+        "title": "確認1",
+        "prompt": "親コンポーネントのStateが変わった場合、Propsが変わらない子コンポーネントはどうなりますか？",
+        "options": [
+          { "id": "A", "text": "Propsが変わらないので再レンダリングされない" },
+          { "id": "B", "text": "再レンダリングされる（React.memoなしの場合）" },
+          { "id": "C", "text": "Stateを持っている子だけが再レンダリングされる" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "React.memoなしでは、親が再レンダリングされると子はPropsが変わらなくてもすべて再レンダリングされます。これがReactのデフォルト動作です。"
+      },
+      {
+        "id": "react-04-concept-2",
+        "type": "concept",
+        "title": "React.memoとuseMemo / useCallback",
+        "body": "React.memoはPropsの浅い比較（shallow equality）で再レンダリングをスキップする高階コンポーネントです。useMemoは計算結果を、useCallbackは関数をメモ化します。useCallbackはReact.memoと組み合わせて初めて意味があります。",
+        "bullets": [
+          "オブジェクトリテラルをJSXに直接書くと毎回新しい参照が生成され、React.memoが無効化される",
+          "全てのコンポーネントにReact.memoを適用するのは逆効果（浅い比較のコストが加算される）"
+        ]
+      },
+      {
+        "id": "react-04-mini-2",
+        "type": "mini_check",
+        "title": "確認2",
+        "prompt": "useCallbackをReact.memoなしの子コンポーネントに渡すとどうなりますか？",
+        "options": [
+          { "id": "A", "text": "子コンポーネントの再レンダリングが防止される" },
+          { "id": "B", "text": "関数参照は安定するが、React.memoなしでは再レンダリング防止に寄与しない" },
+          { "id": "C", "text": "エラーが発生する" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "useCallbackで関数参照を安定させても、子がReact.memoで囲まれていなければ親の再レンダリング時に子も必ず再レンダリングされます。useCallbackはReact.memoとセットで使って初めて意味があります。"
+      },
+      {
+        "id": "react-04-worked",
+        "type": "worked_example",
+        "title": "具体例：大規模テーブルの最適化",
+        "situation": "100行のUserTableで1行だけ変更された際、全行が再レンダリングされてパフォーマンスが低下している場面を考えます。",
+        "reasoning": [
+          "UserRowコンポーネントをReact.memoで囲み、Propsが変わった行だけ再レンダリングされるようにする",
+          "handleEdit関数をuseCallbackでメモ化し、毎回新しい関数が生成されるのを防ぐ",
+          "React.memoとuseCallbackの組み合わせにより、変更がない行の再レンダリングがスキップされる",
+          "React DevToolsで再レンダリング回数を計測し、最適化の効果を確認する"
+        ],
+        "takeaway": "最適化はReact DevToolsで問題を計測してから適用し、React.memoとuseCallbackをセットで使うのが基本です"
+      },
+      {
+        "id": "react-04-mini-3",
+        "type": "mini_check",
+        "title": "確認3",
+        "prompt": "React.memoのPropsの比較方法はどれですか？",
+        "options": [
+          { "id": "A", "text": "深い比較（deep equality）で全プロパティを再帰的に比較する" },
+          { "id": "B", "text": "浅い比較（shallow equality）でオブジェクト参照を比較する" },
+          { "id": "C", "text": "JSON.stringify()で文字列化して比較する" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "React.memoは浅い比較（shallow equality）でPropsを比較します。オブジェクトや配列は参照が変わると「異なる」と判断されるため、useMemoで参照を安定化する必要がある場合があります。"
+      },
+      {
+        "id": "react-04-apply-1",
+        "type": "apply_check",
+        "title": "応用1",
+        "prompt": "<MemoChild style={{ color: 'red' }} />と書くとReact.memoが無効化されます。その理由と対策はどれですか？",
+        "options": [
+          { "id": "A", "text": "文字列のPropsに変えるべき" },
+          { "id": "B", "text": "オブジェクトリテラルが毎回新しい参照を生成するため、useMemoで参照を安定化する" },
+          { "id": "C", "text": "React.memoの代わりにuseEffectを使う" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "JSXに直接書いたオブジェクトリテラルは毎回のレンダリングで新しいオブジェクトが生成され、浅い比較で「異なる」と判断されます。useMemo(() => ({ color: 'red' }), [])で参照を安定させるのが対策です。"
+      },
+      {
+        "id": "react-04-apply-2",
+        "type": "apply_check",
+        "title": "応用2",
+        "prompt": "パフォーマンス問題が報告されていないコンポーネントに対してReact.memoを適用すべきですか？",
+        "options": [
+          { "id": "A", "text": "すべてのコンポーネントにReact.memoを適用するのがベストプラクティス" },
+          { "id": "B", "text": "問題が発生する前に予防的に最適化すべき" },
+          { "id": "C", "text": "計測して問題が確認されてから適用すべき（過度な最適化は可読性低下とバグの温床）" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "「計測してから最適化する」がReactの基本原則です。React.memoの浅い比較にもコストがあり、不要な場所に適用すると可読性が下がり、バグの温床になります。"
+      },
+      {
+        "id": "react-04-summary",
+        "type": "summary",
+        "title": "学んだこと",
+        "bullets": [
+          "再レンダリングはState変更、親の再レンダリング、Context変更の3条件で発生する",
+          "React.memoは浅い比較でPropsが変わらない場合の再レンダリングをスキップする",
+          "useCallbackはReact.memoと組み合わせて初めて再レンダリング防止に効果がある",
+          "最適化はReact DevToolsで計測してから適用し、過度な最適化は避ける"
+        ]
+      }
+    ],
+    "referenceLabel": "参考ノートを見る"
+  },
+  "ko": {
+    "hook": {
+      "title": "리렌더링을 이해하고 최적화를 판단하기",
+      "prompt": "부모 컴포넌트의 State 변경으로, 관련 없는 자식 컴포넌트까지 리렌더링되는 이유는 무엇일까요?",
+      "takeaway": "리렌더링 조건, React.memo, useMemo, useCallback의 올바른 사용법과 판단 기준을 이해할 수 있게 됩니다"
+    },
+    "steps": [
+      {
+        "id": "react-04-concept-1",
+        "type": "concept",
+        "title": "리렌더링의 3가지 조건",
+        "body": "React 컴포넌트가 리렌더링되는 것은 3가지 경우입니다. State 변경(setState 호출), 부모의 리렌더링(Props가 바뀌지 않아도 발생), Context 값의 변경입니다.",
+        "bullets": [
+          "부모가 리렌더링되면 자식은 Props가 바뀌지 않아도 모두 리렌더링된다",
+          "리렌더링 자체가 반드시 나쁜 것은 아니며, 문제가 발생한 후 최적화하는 것이 React의 기본 방침"
+        ]
+      },
+      {
+        "id": "react-04-mini-1",
+        "type": "mini_check",
+        "title": "확인1",
+        "prompt": "부모 컴포넌트의 State가 바뀌면, Props가 변하지 않는 자식 컴포넌트는 어떻게 되나요?",
+        "options": [
+          { "id": "A", "text": "Props가 바뀌지 않으므로 리렌더링되지 않는다" },
+          { "id": "B", "text": "리렌더링된다(React.memo 없는 경우)" },
+          { "id": "C", "text": "State를 가진 자식만 리렌더링된다" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "React.memo 없이는 부모가 리렌더링되면 자식은 Props가 바뀌지 않아도 모두 리렌더링됩니다. 이것이 React의 기본 동작입니다."
+      },
+      {
+        "id": "react-04-concept-2",
+        "type": "concept",
+        "title": "React.memo와 useMemo / useCallback",
+        "body": "React.memo는 Props의 얕은 비교(shallow equality)로 리렌더링을 건너뛰는 고차 컴포넌트입니다. useMemo는 계산 결과를, useCallback은 함수를 메모이제이션합니다. useCallback은 React.memo와 조합해야 비로소 의미가 있습니다.",
+        "bullets": [
+          "객체 리터럴을 JSX에 직접 작성하면 매번 새 참조가 생성되어 React.memo가 무효화된다",
+          "모든 컴포넌트에 React.memo를 적용하면 역효과(얕은 비교 비용이 추가됨)"
+        ]
+      },
+      {
+        "id": "react-04-mini-2",
+        "type": "mini_check",
+        "title": "확인2",
+        "prompt": "useCallback을 React.memo 없는 자식 컴포넌트에 전달하면 어떻게 되나요?",
+        "options": [
+          { "id": "A", "text": "자식 컴포넌트의 리렌더링이 방지된다" },
+          { "id": "B", "text": "함수 참조는 안정되지만, React.memo 없이는 리렌더링 방지에 기여하지 않는다" },
+          { "id": "C", "text": "에러가 발생한다" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "useCallback으로 함수 참조를 안정시켜도 자식이 React.memo로 감싸져 있지 않으면 부모 리렌더링 시 자식도 반드시 리렌더링됩니다. useCallback은 React.memo와 세트로 사용해야 의미가 있습니다."
+      },
+      {
+        "id": "react-04-worked",
+        "type": "worked_example",
+        "title": "구체적 예: 대규모 테이블 최적화",
+        "situation": "100행의 UserTable에서 1행만 변경되었는데 전체 행이 리렌더링되어 성능이 저하되는 상황을 생각합니다.",
+        "reasoning": [
+          "UserRow 컴포넌트를 React.memo로 감싸 Props가 바뀐 행만 리렌더링되도록 한다",
+          "handleEdit 함수를 useCallback으로 메모이제이션하여 매번 새 함수가 생성되는 것을 방지한다",
+          "React.memo와 useCallback의 조합으로 변경 없는 행의 리렌더링이 건너뛰어진다",
+          "React DevTools로 리렌더링 횟수를 측정하여 최적화 효과를 확인한다"
+        ],
+        "takeaway": "최적화는 React DevTools로 문제를 측정한 후 적용하고, React.memo와 useCallback을 세트로 사용하는 것이 기본입니다"
+      },
+      {
+        "id": "react-04-mini-3",
+        "type": "mini_check",
+        "title": "확인3",
+        "prompt": "React.memo의 Props 비교 방법은 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "깊은 비교(deep equality)로 모든 프로퍼티를 재귀적으로 비교" },
+          { "id": "B", "text": "얕은 비교(shallow equality)로 객체 참조를 비교" },
+          { "id": "C", "text": "JSON.stringify()로 문자열화하여 비교" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "React.memo는 얕은 비교(shallow equality)로 Props를 비교합니다. 객체나 배열은 참조가 바뀌면 '다르다'고 판단되므로, useMemo로 참조를 안정화해야 하는 경우가 있습니다."
+      },
+      {
+        "id": "react-04-apply-1",
+        "type": "apply_check",
+        "title": "응용1",
+        "prompt": "<MemoChild style={{ color: 'red' }} />로 작성하면 React.memo가 무효화됩니다. 그 이유와 대책은 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "문자열 Props로 변경해야 한다" },
+          { "id": "B", "text": "객체 리터럴이 매번 새 참조를 생성하므로, useMemo로 참조를 안정화한다" },
+          { "id": "C", "text": "React.memo 대신 useEffect를 사용한다" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "JSX에 직접 작성한 객체 리터럴은 매 렌더링마다 새 객체가 생성되어 얕은 비교에서 '다르다'고 판단됩니다. useMemo(() => ({ color: 'red' }), [])로 참조를 안정시키는 것이 대책입니다."
+      },
+      {
+        "id": "react-04-apply-2",
+        "type": "apply_check",
+        "title": "응용2",
+        "prompt": "성능 문제가 보고되지 않은 컴포넌트에 React.memo를 적용해야 하나요?",
+        "options": [
+          { "id": "A", "text": "모든 컴포넌트에 React.memo를 적용하는 것이 베스트 프랙티스" },
+          { "id": "B", "text": "문제가 발생하기 전에 예방적으로 최적화해야 한다" },
+          { "id": "C", "text": "측정하여 문제가 확인된 후에 적용해야 한다(과도한 최적화는 가독성 저하와 버그의 원인)" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "'측정한 후 최적화한다'가 React의 기본 원칙입니다. React.memo의 얕은 비교에도 비용이 있으며, 불필요한 곳에 적용하면 가독성이 떨어지고 버그의 원인이 됩니다."
+      },
+      {
+        "id": "react-04-summary",
+        "type": "summary",
+        "title": "배운 내용",
+        "bullets": [
+          "리렌더링은 State 변경, 부모의 리렌더링, Context 변경의 3가지 조건에서 발생한다",
+          "React.memo는 얕은 비교로 Props가 바뀌지 않은 경우의 리렌더링을 건너뛴다",
+          "useCallback은 React.memo와 조합해야 비로소 리렌더링 방지에 효과가 있다",
+          "최적화는 React DevTools로 측정 후 적용하고, 과도한 최적화는 피한다"
+        ]
+      }
+    ],
+    "referenceLabel": "참고 노트 보기"
+  }
+}

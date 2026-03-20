@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "sql",
   "topic": "schema-joins",
-  "summary": "Teaches how to read table schemas (column types, constraints, relationships), understand INNER/LEFT/RIGHT JOIN differences, and predict JOIN result row counts from sample data.",
+  "summary": "テーブルスキーマの読み方、INNER/LEFT/RIGHT JOINの違い、サンプルデータからのJOIN結果行数の予測方法を解説する。",
   "key_points": [
-    "INNER JOIN returns only matching rows from both tables; LEFT JOIN preserves all rows from the left table.",
-    "Foreign key columns that allow NULL affect JOIN results — unmatched rows appear only with outer joins.",
-    "In one-to-many JOINs, result rows multiply by the number of matching rows on the many side."
+    "INNER JOINは両テーブルの一致する行のみを返し、LEFT JOINは左テーブルの全行を保持する。",
+    "NULLを許容する外部キー列はJOIN結果に影響する — 一致しない行は外部結合でのみ表示される。",
+    "1対多のJOINでは、多側の一致行数に応じて結果行が増加する。"
   ],
   "misconceptions": [
     "INNER JOIN and LEFT JOIN always return the same number of rows.",

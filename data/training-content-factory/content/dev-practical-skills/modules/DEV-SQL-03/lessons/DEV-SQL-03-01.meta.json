@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "sql",
   "topic": "transactions-indexes",
-  "summary": "Covers ACID properties, COMMIT/ROLLBACK transaction lifecycle, index impact on query performance, and dangerous SQL patterns to avoid in production environments.",
+  "summary": "ACID特性、COMMIT/ROLLBACKのトランザクションライフサイクル、インデックスのパフォーマンス影響、本番環境で避けるべき危険なSQLパターンを解説する。",
   "key_points": [
-    "ACID guarantees atomicity, consistency, isolation, and durability for database transactions.",
-    "Indexes dramatically speed up reads (WHERE, JOIN, ORDER BY) but slow down writes and consume storage.",
-    "Production SQL safety requires: SELECT first, wrap in BEGIN/COMMIT, verify before COMMIT."
+    "ACIDはデータベーストランザクションの原子性・一貫性・分離性・永続性を保証する。",
+    "インデックスは読み取り（WHERE, JOIN, ORDER BY）を大幅に高速化するが、書き込みを遅くしストレージを消費する。",
+    "本番SQLの安全運用：まずSELECTで確認、BEGIN/COMMITで囲む、COMMIT前に結果を検証する。"
   ],
   "misconceptions": [
     "Creating indexes on every column improves overall database performance.",

@@ -1,8 +1,8 @@
 module:
   id: DEV-JAVA-04
-  title: Java - Collections, Streams, and Practical Boundaries
+  title: Java - コレクション・Stream・実務の境界
   level: advanced
-  description: "정적 해설형 콘텐츠로 컬렉션 프레임워크와 Stream API의 실무 사용 패턴과 주의점을 설명한다."
+  description: "コレクションフレームワークとStream APIの実務パターンと注意点を解説する。"
   subject: java
   content_mode: static-interpretive
   outcomes:

@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "java",
   "topic": "language-basics-code-reading",
-  "summary": "Explains how to read Java source file structure including packages, imports, class definitions, and the difference between primitive and reference types.",
+  "summary": "パッケージ・インポート・クラス定義を含むJavaソースファイルの構造と、プリミティブ型・参照型の違いを解説する。",
   "key_points": [
-    "Java source files consist of package declaration, imports, and class definition.",
-    "Primitive types store values directly; reference types store object addresses.",
-    "Method signatures reveal access level, return type, name, and parameters."
+    "Javaソースファイルはパッケージ宣言・インポート・クラス定義で構成される。",
+    "プリミティブ型は値を直接保持し、参照型はオブジェクトのアドレスを保持する。",
+    "メソッドシグネチャからアクセスレベル・戻り値型・名前・引数を読み取れる。"
   ],
   "misconceptions": [
     "Using == to compare String values works the same as equals.",

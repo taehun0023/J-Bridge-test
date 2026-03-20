@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "ja": {
+    "hook": {
+      "title": "フォルダ構造がURLになる仕組み",
+      "prompt": "Next.jsプロジェクトでは、なぜファイルを作るだけでページが公開されるのでしょうか？",
+      "takeaway": "App Routerのファイル規則、フォルダとURLのマッピング、動的ルートとルートグループの使い分けを理解できるようになります"
+    },
+    "steps": [
+      {
+        "id": "next-01-concept-1",
+        "type": "concept",
+        "title": "主要ファイル規則",
+        "body": "App RouterはファイルシステムベースのルーティングでURLとフォルダが1:1対応します。page.tsxはそのパスのUIを定義し、layout.tsxは配下に共通適用されるレイアウトを定義します。page.tsxがなければそのURLにはアクセスできません。",
+        "bullets": [
+          "loading.tsxはローディング中のUI、error.tsxはエラー時のUIを自動生成する",
+          "layout.tsxはページ遷移時にも維持され、上位のlayoutが下位をネストする"
+        ]
+      },
+      {
+        "id": "next-01-mini-1",
+        "type": "mini_check",
+        "title": "確認1",
+        "prompt": "app/about/フォルダにpage.tsxがない場合、/aboutにアクセスするとどうなりますか？",
+        "options": [
+          { "id": "A", "text": "空白ページが表示される" },
+          { "id": "B", "text": "404エラーが返される" },
+          { "id": "C", "text": "layout.tsxの内容だけが表示される" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "page.tsxがなければそのパスにはアクセスできず、404エラーが返されます。フォルダだけではURLとして公開されません。"
+      },
+      {
+        "id": "next-01-concept-2",
+        "type": "concept",
+        "title": "動的ルートとルートグループ",
+        "body": "動的ルート[param]はURLの一部を変数として受け取り、/blog/[slug]は任意のスラッグにマッチします。ルートグループ(name)はURLに影響を与えず、ファイルを論理的にまとめるだけです。",
+        "bullets": [
+          "動的ルートのパラメータ名はフォルダ名と一致させる必要がある（[slug]ならslug）",
+          "ルートグループを使えば同じURL構造で異なるレイアウトを適用できる"
+        ]
+      },
+      {
+        "id": "next-01-mini-2",
+        "type": "mini_check",
+        "title": "確認2",
+        "prompt": "app/(marketing)/pricing/page.tsxのURLパスはどれですか？",
+        "options": [
+          { "id": "A", "text": "/(marketing)/pricing" },
+          { "id": "B", "text": "/marketing/pricing" },
+          { "id": "C", "text": "/pricing" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "ルートグループ(marketing)はURLに含まれません。括弧で囲まれたフォルダ名はURL構造に影響を与えず、ファイル整理の目的だけで使用されます。"
+      },
+      {
+        "id": "next-01-worked",
+        "type": "worked_example",
+        "title": "具体例：認証と一般ページのレイアウト分離",
+        "situation": "ダッシュボードにはサイドバー付きレイアウトを適用し、ログインページにはサイドバーなしのシンプルなレイアウトを使いたい場面を考えます。",
+        "reasoning": [
+          "(main)ルートグループにdashboardとsettingsを配置し、サイドバー付きlayout.tsxを適用する",
+          "(auth)ルートグループにloginとregisterを配置し、サイドバーなしのlayout.tsxを適用する",
+          "URLは/dashboard、/settings、/login、/registerとなり、(main)や(auth)はURLに含まれない",
+          "ルートlayout.tsx（app/layout.tsx）はすべてのページに共通適用される"
+        ],
+        "takeaway": "ルートグループを使うことで、URLを変えずにページの論理的なグルーピングと異なるレイアウトの適用が可能です"
+      },
+      {
+        "id": "next-01-mini-3",
+        "type": "mini_check",
+        "title": "確認3",
+        "prompt": "layout.tsxのネスト構造について正しいのはどれですか？",
+        "options": [
+          { "id": "A", "text": "下位のlayoutが上位のlayoutを上書きする" },
+          { "id": "B", "text": "最も近いlayoutだけが適用される" },
+          { "id": "C", "text": "上位のlayoutの中に下位のlayoutがネストしてレンダリングされる" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "layout.tsxは上位から下位へネストされます。ルートlayoutが最初にレンダリングされ、その中に下位のlayoutが順に配置されます。上書きではなく入れ子構造です。"
+      },
+      {
+        "id": "next-01-apply-1",
+        "type": "apply_check",
+        "title": "応用1",
+        "prompt": "app/blog/[slug]/page.tsxで/blog/nextjs-guideにアクセスした場合、slugの値は何ですか？",
+        "options": [
+          { "id": "A", "text": "blog" },
+          { "id": "B", "text": "nextjs-guide" },
+          { "id": "C", "text": "[slug]" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "動的ルート[slug]はURLの該当部分を変数として受け取ります。/blog/nextjs-guideにアクセスすると、slugは\"nextjs-guide\"になります。"
+      },
+      {
+        "id": "next-01-apply-2",
+        "type": "apply_check",
+        "title": "応用2",
+        "prompt": "管理者ページと一般ページでレイアウトを分けつつ、URLにグループ名を含めたくない場合、どの方法が適切ですか？",
+        "options": [
+          { "id": "A", "text": "app/admin/とapp/main/フォルダをそのまま作る" },
+          { "id": "B", "text": "app/(admin)/とapp/(main)/ルートグループで分ける" },
+          { "id": "C", "text": "1つのlayout.tsxで条件分岐する" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "ルートグループ(admin)と(main)を使えば、URLに影響を与えずにフォルダを論理的に分けて、それぞれ異なるlayout.tsxを適用できます。"
+      },
+      {
+        "id": "next-01-summary",
+        "type": "summary",
+        "title": "学んだこと",
+        "bullets": [
+          "App Routerではフォルダ構造がURLと1:1対応し、page.tsxがなければ404になる",
+          "layout.tsxは配下のすべてのページに適用され、上位から下位へネストされる",
+          "動的ルート[param]はURLの一部を変数として受け取る",
+          "ルートグループ(name)はURLに影響せず、レイアウト分離やファイル整理に使える"
+        ]
+      }
+    ],
+    "referenceLabel": "参考ノートを見る"
+  },
+  "ko": {
+    "hook": {
+      "title": "폴더 구조가 URL이 되는 구조",
+      "prompt": "Next.js 프로젝트에서는 왜 파일을 만드는 것만으로 페이지가 공개되는 걸까요?",
+      "takeaway": "App Router의 파일 규칙, 폴더와 URL 매핑, 동적 라우트와 라우트 그룹의 사용법을 이해할 수 있게 됩니다"
+    },
+    "steps": [
+      {
+        "id": "next-01-concept-1",
+        "type": "concept",
+        "title": "주요 파일 규칙",
+        "body": "App Router는 파일 시스템 기반 라우팅으로 URL과 폴더가 1:1 대응합니다. page.tsx는 해당 경로의 UI를 정의하고, layout.tsx는 하위에 공통 적용되는 레이아웃을 정의합니다. page.tsx가 없으면 해당 URL에 접근할 수 없습니다.",
+        "bullets": [
+          "loading.tsx는 로딩 중 UI, error.tsx는 에러 시 UI를 자동 생성한다",
+          "layout.tsx는 페이지 전환 시에도 유지되며, 상위 layout이 하위를 중첩한다"
+        ]
+      },
+      {
+        "id": "next-01-mini-1",
+        "type": "mini_check",
+        "title": "확인1",
+        "prompt": "app/about/ 폴더에 page.tsx가 없는 경우, /about에 접근하면 어떻게 되나요?",
+        "options": [
+          { "id": "A", "text": "빈 페이지가 표시된다" },
+          { "id": "B", "text": "404 에러가 반환된다" },
+          { "id": "C", "text": "layout.tsx 내용만 표시된다" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "page.tsx가 없으면 해당 경로에 접근할 수 없어 404 에러가 반환됩니다. 폴더만으로는 URL로 공개되지 않습니다."
+      },
+      {
+        "id": "next-01-concept-2",
+        "type": "concept",
+        "title": "동적 라우트와 라우트 그룹",
+        "body": "동적 라우트 [param]은 URL의 일부를 변수로 받으며, /blog/[slug]는 임의의 슬러그에 매칭됩니다. 라우트 그룹 (name)은 URL에 영향을 주지 않고 파일을 논리적으로 묶기만 합니다.",
+        "bullets": [
+          "동적 라우트의 파라미터명은 폴더명과 일치해야 한다([slug]이면 slug)",
+          "라우트 그룹을 사용하면 같은 URL 구조에서 서로 다른 레이아웃을 적용할 수 있다"
+        ]
+      },
+      {
+        "id": "next-01-mini-2",
+        "type": "mini_check",
+        "title": "확인2",
+        "prompt": "app/(marketing)/pricing/page.tsx의 URL 경로는 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "/(marketing)/pricing" },
+          { "id": "B", "text": "/marketing/pricing" },
+          { "id": "C", "text": "/pricing" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "라우트 그룹 (marketing)은 URL에 포함되지 않습니다. 괄호로 감싼 폴더명은 URL 구조에 영향을 주지 않으며, 파일 정리 목적으로만 사용됩니다."
+      },
+      {
+        "id": "next-01-worked",
+        "type": "worked_example",
+        "title": "구체적 예: 인증과 일반 페이지의 레이아웃 분리",
+        "situation": "대시보드에는 사이드바가 있는 레이아웃을, 로그인 페이지에는 사이드바 없는 심플한 레이아웃을 사용하고 싶은 상황을 생각합니다.",
+        "reasoning": [
+          "(main) 라우트 그룹에 dashboard와 settings를 배치하고 사이드바 포함 layout.tsx를 적용한다",
+          "(auth) 라우트 그룹에 login과 register를 배치하고 사이드바 없는 layout.tsx를 적용한다",
+          "URL은 /dashboard, /settings, /login, /register가 되며 (main)이나 (auth)는 URL에 포함되지 않는다",
+          "루트 layout.tsx(app/layout.tsx)는 모든 페이지에 공통 적용된다"
+        ],
+        "takeaway": "라우트 그룹을 사용하면 URL을 변경하지 않고 페이지의 논리적 그룹핑과 서로 다른 레이아웃 적용이 가능합니다"
+      },
+      {
+        "id": "next-01-mini-3",
+        "type": "mini_check",
+        "title": "확인3",
+        "prompt": "layout.tsx의 중첩 구조에 대해 올바른 것은 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "하위 layout이 상위 layout을 덮어쓴다" },
+          { "id": "B", "text": "가장 가까운 layout만 적용된다" },
+          { "id": "C", "text": "상위 layout 안에 하위 layout이 중첩되어 렌더링된다" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "layout.tsx는 상위에서 하위로 중첩됩니다. 루트 layout이 먼저 렌더링되고 그 안에 하위 layout이 순서대로 배치됩니다. 덮어쓰기가 아닌 중첩 구조입니다."
+      },
+      {
+        "id": "next-01-apply-1",
+        "type": "apply_check",
+        "title": "응용1",
+        "prompt": "app/blog/[slug]/page.tsx에서 /blog/nextjs-guide에 접근한 경우, slug의 값은 무엇인가요?",
+        "options": [
+          { "id": "A", "text": "blog" },
+          { "id": "B", "text": "nextjs-guide" },
+          { "id": "C", "text": "[slug]" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "동적 라우트 [slug]는 URL의 해당 부분을 변수로 받습니다. /blog/nextjs-guide에 접근하면 slug는 \"nextjs-guide\"가 됩니다."
+      },
+      {
+        "id": "next-01-apply-2",
+        "type": "apply_check",
+        "title": "응용2",
+        "prompt": "관리자 페이지와 일반 페이지의 레이아웃을 나누면서 URL에 그룹명을 포함하고 싶지 않을 때, 어떤 방법이 적절한가요?",
+        "options": [
+          { "id": "A", "text": "app/admin/과 app/main/ 폴더를 그대로 만든다" },
+          { "id": "B", "text": "app/(admin)/과 app/(main)/ 라우트 그룹으로 나눈다" },
+          { "id": "C", "text": "하나의 layout.tsx에서 조건 분기한다" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "라우트 그룹 (admin)과 (main)을 사용하면 URL에 영향을 주지 않으면서 폴더를 논리적으로 나누고 각각 다른 layout.tsx를 적용할 수 있습니다."
+      },
+      {
+        "id": "next-01-summary",
+        "type": "summary",
+        "title": "배운 내용",
+        "bullets": [
+          "App Router에서는 폴더 구조가 URL과 1:1 대응하며, page.tsx가 없으면 404가 된다",
+          "layout.tsx는 하위 모든 페이지에 적용되며 상위에서 하위로 중첩된다",
+          "동적 라우트 [param]은 URL의 일부를 변수로 받는다",
+          "라우트 그룹 (name)은 URL에 영향 없이 레이아웃 분리와 파일 정리에 사용할 수 있다"
+        ]
+      }
+    ],
+    "referenceLabel": "참고 노트 보기"
+  }
+}

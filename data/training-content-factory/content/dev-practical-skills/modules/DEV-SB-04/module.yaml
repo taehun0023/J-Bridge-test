@@ -1,8 +1,8 @@
 module:
   id: DEV-SB-04
-  title: Spring Boot - Data Access, Transactions, and Backend Reasoning
+  title: Spring Boot - データアクセス・トランザクション・バックエンド推論
   level: advanced
-  description: "정적 해설형 콘텐츠로 JPA/MyBatis 데이터 접근 패턴과 트랜잭션 관리의 실무 주의점을 설명한다."
+  description: "JPA/MyBatisのデータアクセスパターンとトランザクション管理の実務注意点を解説する。"
   subject: spring-boot
   content_mode: static-interpretive
   outcomes:

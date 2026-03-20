@@ -1,8 +1,8 @@
 module:
   id: DEV-SB-02
-  title: Spring Boot - Controller-Service-Repository Roles
+  title: Spring Boot - Controller-Service-Repositoryの役割
   level: intermediate
-  description: "정적 해설형 콘텐츠로 Controller-Service-Repository 계층 구조에서 각 계층의 역할과 데이터 흐름을 설명한다."
+  description: "Controller-Service-Repository各層の役割とデータフローを解説する。"
   subject: spring-boot
   content_mode: static-interpretive
   outcomes:

@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "python",
   "topic": "file-io-exceptions",
-  "summary": "Explains Python file I/O using the with statement, try/except/else/finally execution flow, exception hierarchy best practices, and common encoding pitfalls.",
+  "summary": "with文によるファイルI/O、try/except/else/finallyの実行フロー、例外階層のベストプラクティス、エンコーディングの落とし穴を解説する。",
   "key_points": [
-    "The with statement automates resource cleanup — files are closed even when exceptions occur.",
-    "try/except/else/finally execute in a specific order: else runs only on success, finally runs always.",
-    "Catching overly broad exceptions (except Exception) hides bugs and can prevent program termination."
+    "with文はリソースの後処理を自動化する — 例外が発生してもファイルは確実に閉じられる。",
+    "try/except/else/finallyは特定の順序で実行される：elseは成功時のみ、finallyは常に実行される。",
+    "広すぎる例外キャッチ（except Exception）はバグを隠し、プログラムの正常終了を妨げる可能性がある。"
   ],
   "misconceptions": [
     "The else block in try/except runs regardless of whether an exception occurred.",

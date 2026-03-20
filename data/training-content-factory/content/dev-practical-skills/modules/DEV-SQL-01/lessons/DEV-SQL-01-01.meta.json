@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "sql",
   "topic": "query-reading-result-prediction",
-  "summary": "Explains SELECT query structure, logical execution order, aggregate functions, and GROUP BY/HAVING for reading queries and predicting results.",
+  "summary": "SELECTクエリの構造・論理実行順序・集約関数・GROUP BY/HAVINGの読み方と結果予測を解説する。",
   "key_points": [
-    "SQL logical execution order: FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT.",
-    "WHERE filters rows before grouping; HAVING filters groups after grouping.",
-    "COUNT(*) counts all rows; COUNT(column) ignores NULLs."
+    "SQLの論理実行順序：FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT。",
+    "WHEREはグループ化前に行をフィルタし、HAVINGはグループ化後にグループをフィルタする。",
+    "COUNT(*)は全行をカウントし、COUNT(column)はNULLを無視する。"
   ],
   "misconceptions": [
     "SQL executes in the order it is written (SELECT first).",

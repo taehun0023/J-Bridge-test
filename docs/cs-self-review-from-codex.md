@@ -14,58 +14,42 @@
 
 ## Findings
 
-### 1. The CS hub still depends on broken navigation copy for visible category labels and descriptions
-- Severity: medium
-- Evidence:
-  - [navigation.ts](C:\Users\zenoa\Desktop\Programming\edu_cha\src\lib\navigation.ts)
-  - [page.tsx](C:\Users\zenoa\Desktop\Programming\edu_cha\src\app\(main)\cs\page.tsx:7)
-  - [page.tsx](C:\Users\zenoa\Desktop\Programming\edu_cha\src\app\(main)\cs\page.tsx:16)
-- Explanation:
-  - The CS hub uses `categoryChildren['cs']` as its source of title, description, and child-card labels.
-  - That reuse is structurally correct, but the existing navigation copy is already corrupted, so the new CS hub inherits the same visible text issues.
-- Assessment:
-  - This is not a loader bug.
-  - It is still a user-facing quality issue in the CS implementation because the new surface was left dependent on broken source text.
-
-### 2. The Japanese/Korean switching feature works, but it is only local UI state
-- Severity: medium
-- Evidence:
-  - [LessonContentToggle.tsx](C:\Users\zenoa\Desktop\Programming\edu_cha\src\components\ui\LessonContentToggle.tsx)
-  - [CsStaticLessonPage.tsx](C:\Users\zenoa\Desktop\Programming\edu_cha\src\components\cs\CsStaticLessonPage.tsx:32)
-- Explanation:
-  - The language toggle switches the rendered lesson body between `contentJa` and `contentKo`.
-  - However, the selected language is not reflected in URL params, search params, or persisted state.
-  - Refreshing the page or sharing the lesson URL does not preserve the chosen language.
-- Assessment:
-  - The feature is implemented and usable.
-  - But from a website-flow perspective it is still a lightweight toggle, not a fully integrated language state.
-
-### 3. The static CS hub was introduced, but the relationship with the legacy quiz flow is still only partially organized
-- Severity: medium
-- Evidence:
-  - [page.tsx](C:\Users\zenoa\Desktop\Programming\edu_cha\src\app\(main)\cs\page.tsx)
-  - [CsTestBlock.tsx](C:\Users\zenoa\Desktop\Programming\edu_cha\src\components\cs\CsTestBlock.tsx)
-  - [quiz/page.tsx](C:\Users\zenoa\Desktop\Programming\edu_cha\src\app\(main)\cs\quiz\page.tsx)
-- Explanation:
-  - The CS hub is now lesson-centric.
-  - The older quiz system still exists and is still reachable as a separate assessment flow.
-  - This is not a direct contradiction, but the user-facing information architecture is not fully explained or unified yet.
-- Assessment:
-  - No immediate functional conflict is visible.
-  - The product flow is still split between “static lesson learning” and “legacy quiz surface” without a strong bridge.
-
-### 4. Subject ordering in the CS loader is currently implicit
+### 1. The Japanese/Korean switching feature is now reflected in the lesson URL, but only for the CS static lesson flow
 - Severity: low
 - Evidence:
-  - [cs-content.ts](C:\Users\zenoa\Desktop\Programming\edu_cha\src\lib\cs-content.ts:155)
+  - [LessonContentToggle.tsx](C:\Users\zenoa\Desktop\Programming\edu_cha\src\components\ui\LessonContentToggle.tsx)
+  - [page.tsx](C:\Users\zenoa\Desktop\Programming\edu_cha\src\app\(main)\cs\lessons\[lessonId]\page.tsx)
+  - [CsStaticLessonPage.tsx](C:\Users\zenoa\Desktop\Programming\edu_cha\src\components\cs\CsStaticLessonPage.tsx)
 - Explanation:
-  - `getAllCsSubjectContents()` relies on the object order of `SUBJECT_CONFIG`.
-  - The content track already has explicit module ordering in `track.yaml`, but that order is not read by the loader.
+  - The selected lesson language is now reflected in `?lang=ja|ko`, so refresh and URL sharing preserve the CS lesson language state.
+  - This improvement is scoped to the CS static lesson surface and is not a site-wide language-state model.
 - Assessment:
-  - This is not a current runtime problem.
-  - It is a structural weakness if the content set grows or ordering rules change later.
+  - The earlier CS-specific integration gap is resolved.
+  - If the product later wants a global language-state pattern, that should be designed centrally rather than inferred from this feature.
 
-### 5. Existing shared patterns were reused, but the CS layer was not fully merged into the older course/progress architecture
+### 2. The static CS hub and subject pages now link into the legacy quiz flow, but the overall product model is still dual-track
+- Severity: low
+- Evidence:
+  - [page.tsx](C:\Users\zenoa\Desktop\Programming\edu_cha\src\app\(main)\cs\page.tsx)
+  - [CsStaticSubjectPage.tsx](C:\Users\zenoa\Desktop\Programming\edu_cha\src\components\cs\CsStaticSubjectPage.tsx)
+  - [quiz/page.tsx](C:\Users\zenoa\Desktop\Programming\edu_cha\src\app\(main)\cs\quiz\page.tsx)
+- Explanation:
+  - The CS hub and each subject page now provide direct links into the quiz list, so the user no longer has to infer that the quiz surface exists separately.
+  - Even so, the lesson surface and quiz surface still represent two adjacent models rather than one fully unified progression model.
+- Assessment:
+  - The bridge is now adequate for navigation.
+  - A deeper product unification would still be a later design task, not a blocker.
+
+### 3. Subject ordering in the CS loader is now explicit
+- Severity: resolved
+- Evidence:
+  - [cs-content.ts](C:\Users\zenoa\Desktop\Programming\edu_cha\src\lib\cs-content.ts)
+- Explanation:
+  - The loader now uses an explicit `SUBJECT_ORDER` array instead of relying on JavaScript object entry order.
+- Assessment:
+  - This issue is closed.
+
+### 4. Existing shared patterns were reused, but the CS layer is still not fully merged into the older course/progress architecture
 - Severity: low
 - Evidence:
   - [CsStaticSubjectPage.tsx](C:\Users\zenoa\Desktop\Programming\edu_cha\src\components\cs\CsStaticSubjectPage.tsx)
@@ -83,19 +67,19 @@
 - Static CS content is now present across all intended subjects.
 - The CS route structure is connected to filesystem-based lesson loading.
 - Japanese lesson bodies and Korean alternate lesson bodies are both loaded correctly.
+- CS lesson metadata now includes normalized extraction fields and difficulty values.
+- CS lesson URLs can preserve `lang=ja|ko` state.
 - Type-level verification passed:
   - `tsc --noEmit` completed successfully during self-check.
 - The lesson toggle UI contains valid Japanese/Korean labels and the lesson files contain valid Japanese/Korean section headings.
 
 ## Self Assessment
 - The implementation is functionally viable.
-- It is not yet the final polished version of the CS product surface.
-- The biggest remaining weaknesses are not loader correctness but:
-  - broken inherited navigation copy
-  - incomplete language-state integration
-  - incomplete explanation of the static lesson flow versus legacy quiz flow
+- The main correctness issues found in self-review are now resolved.
+- The biggest remaining weakness is architectural rather than local implementation detail:
+  - CS still lives as a parallel static lesson layer rather than a full course/progress integration.
 
 ## Suggested Follow-Up Order
-1. Fix the CS-visible navigation copy and hub-facing text sources.
-2. Decide whether lesson language should be reflected in URL/search params.
-3. Clarify or redesign the relationship between static CS lessons and the legacy quiz entry flow.
+1. Decide whether CS should remain a static sidecar system or be merged into the course/progress model.
+2. Update the CS work-instruction document so its language/file-structure assumptions match the implemented direction.
+3. If needed, add stronger progress-aware bridges between lesson reading and quiz-taking.

@@ -91,7 +91,7 @@ export default function GlossaryTable({ items, offset = 0, masteredIds = [], ite
         setEditMessage({ type: 'error', text: result.error })
         setTimeout(() => setEditMessage(null), 3000)
       } else {
-        setEditMessage({ type: 'success', text: '更新しました' })
+        setEditMessage({ type: 'success', text: '保存しました' })
         setTimeout(() => setEditMessage(null), 3000)
         setEditingId(null)
         router.refresh()
@@ -123,23 +123,23 @@ export default function GlossaryTable({ items, offset = 0, masteredIds = [], ite
         <thead className="bg-gray-50 dark:bg-gray-700">
           <tr>
             <th className="w-12 px-3 py-3 text-center text-xs font-medium uppercase text-gray-500 dark:text-gray-400">番号</th>
-            <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">日本語</th>
+            <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">用語</th>
             <th className="w-10 px-4 py-3"></th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100 bg-white dark:divide-gray-700 dark:bg-gray-800">
           {items.map((item, index) => (
             <Fragment key={item.id}>
-              <tr className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}>
+              <tr className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}>
                 <td className="px-3 py-3 text-center text-xs text-gray-400 dark:text-gray-500">
                   {offset + index + 1}
                 </td>
-                <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white max-w-md">
+                <td className="max-w-md px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={(e) => handleToggleMastery(e, item.id)}
                       className={`shrink-0 ${isPending ? 'opacity-50' : ''}`}
-                      title={localMastered.has(item.id) ? '暗記済み' : '未暗記'}
+                      title={localMastered.has(item.id) ? '習得済み' : '未習得'}
                     >
                       {localMastered.has(item.id) ? (
                         <svg className="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 24 24">
@@ -156,9 +156,7 @@ export default function GlossaryTable({ items, offset = 0, masteredIds = [], ite
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <button
-                    className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
-                  >
+                  <button className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
                     <svg
                       className={`h-4 w-4 transition-transform ${expandedId === item.id ? 'rotate-180' : ''}`}
                       fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -173,9 +171,9 @@ export default function GlossaryTable({ items, offset = 0, masteredIds = [], ite
                   <td colSpan={3} className="bg-gray-50 px-4 py-3 dark:bg-gray-700">
                     {editingId === item.id ? (
                       <div>
-                        <div className="grid gap-2 sm:grid-cols-2 text-sm">
+                        <div className="grid gap-2 text-sm sm:grid-cols-2">
                           <div>
-                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">日本語 *</label>
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">用語 *</label>
                             <input type="text" value={editForm.term_ja} onChange={e => setEditForm({ ...editForm, term_ja: e.target.value })} className={inputClass} />
                           </div>
                           <div>
@@ -203,14 +201,14 @@ export default function GlossaryTable({ items, offset = 0, masteredIds = [], ite
                           <button
                             onClick={() => handleSaveEdit(item)}
                             disabled={isPending || !editForm.term_ja || !editForm.term_ko}
-                            className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+                            className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-500 disabled:opacity-50"
                           >
                             <Check className="h-3.5 w-3.5" />
                             {isPending ? '保存中...' : '保存'}
                           </button>
                           <button
                             onClick={() => setEditingId(null)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
+                            className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
                           >
                             <X className="h-3.5 w-3.5" />
                             キャンセル
@@ -248,10 +246,10 @@ export default function GlossaryTable({ items, offset = 0, masteredIds = [], ite
                           )}
                         </dl>
                         {canManage && (
-                          <div className="mt-3 flex gap-2 border-t border-gray-200 dark:border-gray-600 pt-3">
+                          <div className="mt-3 flex gap-2 border-t border-gray-200 pt-3 dark:border-gray-600">
                             <button
                               onClick={() => startEdit(item)}
-                              className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-500/10 transition-colors"
+                              className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-indigo-600 transition-colors hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-500/10"
                             >
                               <Pencil className="h-3.5 w-3.5" />
                               編集
@@ -259,7 +257,7 @@ export default function GlossaryTable({ items, offset = 0, masteredIds = [], ite
                             <button
                               onClick={() => handleDelete(item.id)}
                               disabled={isPending}
-                              className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 disabled:opacity-50 transition-colors"
+                              className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 disabled:opacity-50"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                               削除

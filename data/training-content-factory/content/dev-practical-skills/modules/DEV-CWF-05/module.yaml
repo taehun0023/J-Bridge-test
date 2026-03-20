@@ -1,8 +1,8 @@
 module:
   id: DEV-CWF-05
-  title: Common Workplace Fundamentals - API Request and Response Reading
+  title: 共通業務基礎 - APIリクエストとレスポンスの読み方
   level: foundation
-  description: "정적 해설형 콘텐츠로 HTTP 요청과 응답 구조를 읽고 상태 코드를 해석하는 방법을 설명한다."
+  description: "HTTPリクエストとレスポンスの構造を読み、ステータスコードを解釈する方法を解説する。"
   subject: common-workplace-fundamentals
   content_mode: static-interpretive
   outcomes:

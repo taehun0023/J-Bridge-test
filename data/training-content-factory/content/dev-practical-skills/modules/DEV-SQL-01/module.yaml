@@ -1,8 +1,8 @@
 module:
   id: DEV-SQL-01
-  title: SQL - Query Writing and Result Interpretation
+  title: SQL - クエリ作成と結果の解釈
   level: foundation
-  description: "정적 해설형 콘텐츠로 SELECT 쿼리의 구조를 읽고 실행 결과를 예측하는 방법을 설명한다."
+  description: "SELECTクエリの構造を読み、実行結果を予測する方法を解説する。"
   subject: sql
   content_mode: static-interpretive
   outcomes:

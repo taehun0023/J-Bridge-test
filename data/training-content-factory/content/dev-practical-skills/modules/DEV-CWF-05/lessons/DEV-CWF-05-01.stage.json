@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "ja": {
+    "hook": {
+      "title": "ステータスコードが教えてくれること",
+      "prompt": "APIが401を返しています。問題はあなたのコード？それともサーバー？ステータスコードだけで問題の所在が分かります。",
+      "takeaway": "HTTPリクエスト・レスポンスの構造とステータスコードの意味を理解し、APIエラーの原因を素早く特定する力を身につけます"
+    },
+    "steps": [
+      {
+        "id": "cwf-05-concept-1",
+        "type": "concept",
+        "title": "HTTPリクエストの3要素とメソッドの使い分け",
+        "body": "HTTPリクエストはリクエストライン（メソッド・パス）、ヘッダー（認証情報・データ形式）、ボディ（送信データ）の3部分で構成されます。GETはデータ取得、POSTは新規作成、PUTは全体更新、DELETEは削除に使い、GETには通常ボディがありません。",
+        "bullets": [
+          "ヘッダーには認証トークンやContent-Typeなどのメタ情報が含まれる",
+          "GETリクエストのパラメータはクエリストリングで渡すのが原則"
+        ]
+      },
+      {
+        "id": "cwf-05-mini-1",
+        "type": "mini_check",
+        "title": "確認1",
+        "prompt": "新しいユーザーを登録するAPIリクエストに適切なHTTPメソッドはどれですか？",
+        "options": [
+          { "id": "A", "text": "GET" },
+          { "id": "B", "text": "DELETE" },
+          { "id": "C", "text": "POST" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "POSTはデータの新規作成に使用するメソッドです。GETはデータ取得、DELETEはデータ削除に使います。ユーザー登録は新規作成なのでPOSTが適切です。"
+      },
+      {
+        "id": "cwf-05-concept-2",
+        "type": "concept",
+        "title": "ステータスコードの分類：2xx / 4xx / 5xx",
+        "body": "ステータスコードの最初の桁がカテゴリを示します。2xxは成功、4xxはクライアント側のエラー（リクエストに問題あり）、5xxはサーバー側のエラーです。4xxなら自分が送ったリクエストを見直し、5xxならサーバー側に問題があると判断できます。",
+        "bullets": [
+          "401は認証失敗（トークンなし/期限切れ）、403は権限不足（認証済みだが許可なし）",
+          "422はデータ形式は正しいがバリデーションエラー、400はリクエスト形式自体が不正"
+        ]
+      },
+      {
+        "id": "cwf-05-mini-2",
+        "type": "mini_check",
+        "title": "確認2",
+        "prompt": "401 Unauthorizedと403 Forbiddenの違いとして正しいものはどれですか？",
+        "options": [
+          { "id": "A", "text": "401はサーバーエラー、403はクライアントエラー" },
+          { "id": "B", "text": "401は認証失敗、403は認証済みだが権限がない" },
+          { "id": "C", "text": "401はリソースが存在しない、403はリソースが削除された" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "401は「誰なのか分からない」（認証失敗）であり、403は「誰かは分かるが権限がない」（認可失敗）です。両方とも4xxのクライアントエラーです。"
+      },
+      {
+        "id": "cwf-05-worked",
+        "type": "worked_example",
+        "title": "具体例：422バリデーションエラーの解釈",
+        "situation": "ユーザー登録APIを呼び出すと、422 Unprocessable Entityが返り、レスポンスボディに{\"error\":{\"code\":\"VALIDATION_ERROR\",\"message\":\"Password must be at least 8 characters\",\"field\":\"password\"}}と表示されています。",
+        "reasoning": [
+          "422はデータ形式は正しいがバリデーションに失敗したことを意味する",
+          "レスポンスボディのfieldがpasswordなので、パスワードの入力値に問題がある",
+          "メッセージから、パスワードが8文字未満であることが原因と分かる",
+          "4xxなのでサーバー側の問題ではなく、送信データを修正すれば解決する"
+        ],
+        "takeaway": "ステータスコードで大分類（クライアント/サーバー）を判断し、レスポンスボディで具体的な原因を特定するのが基本です"
+      },
+      {
+        "id": "cwf-05-mini-3",
+        "type": "mini_check",
+        "title": "確認3",
+        "prompt": "500 Internal Server Errorが返された場合、最初にすべきことは何ですか？",
+        "options": [
+          { "id": "A", "text": "リクエストのパラメータを変えて再送信する" },
+          { "id": "B", "text": "5xxはサーバー側の問題なので、サーバーのログを確認する" },
+          { "id": "C", "text": "認証トークンを更新して再送信する" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "5xxはサーバー側の問題であり、リクエストを変えても解決しない可能性が高いです。サーバーのエラーログを確認して原因を特定することが先決です。"
+      },
+      {
+        "id": "cwf-05-apply-1",
+        "type": "apply_check",
+        "title": "応用1",
+        "prompt": "ユーザー一覧取得のGETリクエストが401を返しています。Authorization: Bearerヘッダーにトークンが含まれている場合、次に確認すべきことは何ですか？",
+        "options": [
+          { "id": "A", "text": "サーバーの再起動が必要か確認する" },
+          { "id": "B", "text": "GETではなくPOSTに変更する" },
+          { "id": "C", "text": "トークンの有効期限が切れていないか確認する" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "トークンがヘッダーに含まれているにもかかわらず401が返るため、トークンの有効期限切れが最も疑われます。期限を確認し、必要なら再取得します。"
+      },
+      {
+        "id": "cwf-05-apply-2",
+        "type": "apply_check",
+        "title": "応用2",
+        "prompt": "JSONデータを送信するPOSTリクエストで400 Bad Requestが返りました。Content-Typeヘッダーがapplication/x-www-form-urlencodedになっています。原因は何ですか？",
+        "options": [
+          { "id": "A", "text": "POSTメソッドの使い方が間違っている" },
+          { "id": "B", "text": "Content-Typeとデータ形式の不一致でサーバーが正しくパースできない" },
+          { "id": "C", "text": "サーバーがPOSTを受け付けていない" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "JSONデータを送るにはContent-Type: application/jsonが必要です。x-www-form-urlencodedの場合、サーバーはフォームデータとして解釈しようとし、パースに失敗します。"
+      },
+      {
+        "id": "cwf-05-summary",
+        "type": "summary",
+        "title": "学んだこと",
+        "bullets": [
+          "HTTPリクエストはリクエストライン・ヘッダー・ボディの3部分で構成される",
+          "4xxはクライアント側の問題、5xxはサーバー側の問題と判断できる",
+          "401は認証失敗、403は権限不足で、両者は明確に異なるエラー",
+          "ステータスコードで大分類を判断し、レスポンスボディで具体的原因を特定する"
+        ]
+      }
+    ],
+    "referenceLabel": "参考ノートを見る"
+  },
+  "ko": {
+    "hook": {
+      "title": "상태 코드가 알려주는 것",
+      "prompt": "API가 401을 반환하고 있습니다. 문제는 당신의 코드? 아니면 서버? 상태 코드만으로 문제의 소재를 알 수 있습니다.",
+      "takeaway": "HTTP 요청·응답의 구조와 상태 코드의 의미를 이해하고, API 에러의 원인을 신속히 특정하는 능력을 키웁니다"
+    },
+    "steps": [
+      {
+        "id": "cwf-05-concept-1",
+        "type": "concept",
+        "title": "HTTP 요청의 3요소와 메서드 구분",
+        "body": "HTTP 요청은 요청 라인(메서드·경로), 헤더(인증 정보·데이터 형식), 바디(전송 데이터)의 3부분으로 구성됩니다. GET은 데이터 조회, POST는 신규 생성, PUT은 전체 수정, DELETE는 삭제에 사용하며 GET에는 보통 바디가 없습니다.",
+        "bullets": [
+          "헤더에는 인증 토큰이나 Content-Type 등의 메타 정보가 포함된다",
+          "GET 요청의 파라미터는 쿼리 스트링으로 전달하는 것이 원칙"
+        ]
+      },
+      {
+        "id": "cwf-05-mini-1",
+        "type": "mini_check",
+        "title": "확인1",
+        "prompt": "새로운 사용자를 등록하는 API 요청에 적절한 HTTP 메서드는 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "GET" },
+          { "id": "B", "text": "DELETE" },
+          { "id": "C", "text": "POST" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "POST는 데이터의 신규 생성에 사용하는 메서드입니다. GET은 데이터 조회, DELETE는 데이터 삭제에 사용합니다. 사용자 등록은 신규 생성이므로 POST가 적절합니다."
+      },
+      {
+        "id": "cwf-05-concept-2",
+        "type": "concept",
+        "title": "상태 코드 분류: 2xx / 4xx / 5xx",
+        "body": "상태 코드의 첫 번째 자리가 카테고리를 나타냅니다. 2xx는 성공, 4xx는 클라이언트 측 에러(요청에 문제 있음), 5xx는 서버 측 에러입니다. 4xx이면 보낸 요청을 검토하고, 5xx이면 서버 측에 문제가 있다고 판단할 수 있습니다.",
+        "bullets": [
+          "401은 인증 실패(토큰 없음/만료), 403은 권한 부족(인증 완료지만 허가 없음)",
+          "422는 데이터 형식은 맞지만 유효성 검증 에러, 400은 요청 형식 자체가 잘못됨"
+        ]
+      },
+      {
+        "id": "cwf-05-mini-2",
+        "type": "mini_check",
+        "title": "확인2",
+        "prompt": "401 Unauthorized와 403 Forbidden의 차이로 올바른 것은 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "401은 서버 에러, 403은 클라이언트 에러" },
+          { "id": "B", "text": "401은 인증 실패, 403은 인증 완료지만 권한이 없음" },
+          { "id": "C", "text": "401은 리소스가 존재하지 않음, 403은 리소스가 삭제됨" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "401은 '누구인지 모르겠다'(인증 실패)이고, 403은 '누구인지는 알지만 권한이 없다'(인가 실패)입니다. 둘 다 4xx 클라이언트 에러입니다."
+      },
+      {
+        "id": "cwf-05-worked",
+        "type": "worked_example",
+        "title": "구체적 예: 422 유효성 검증 에러 해석",
+        "situation": "사용자 등록 API를 호출하면 422 Unprocessable Entity가 반환되고, 응답 본문에 {\"error\":{\"code\":\"VALIDATION_ERROR\",\"message\":\"Password must be at least 8 characters\",\"field\":\"password\"}}가 표시됩니다.",
+        "reasoning": [
+          "422는 데이터 형식은 맞지만 유효성 검증에 실패했음을 의미한다",
+          "응답 본문의 field가 password이므로 비밀번호 입력값에 문제가 있다",
+          "메시지로부터 비밀번호가 8자 미만인 것이 원인임을 알 수 있다",
+          "4xx이므로 서버 측 문제가 아니라 전송 데이터를 수정하면 해결된다"
+        ],
+        "takeaway": "상태 코드로 대분류(클라이언트/서버)를 판단하고, 응답 본문으로 구체적 원인을 특정하는 것이 기본입니다"
+      },
+      {
+        "id": "cwf-05-mini-3",
+        "type": "mini_check",
+        "title": "확인3",
+        "prompt": "500 Internal Server Error가 반환된 경우, 가장 먼저 해야 할 일은 무엇인가요?",
+        "options": [
+          { "id": "A", "text": "요청 파라미터를 바꿔서 재전송한다" },
+          { "id": "B", "text": "5xx는 서버 측 문제이므로 서버 로그를 확인한다" },
+          { "id": "C", "text": "인증 토큰을 갱신하여 재전송한다" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "5xx는 서버 측 문제이므로 요청을 바꿔도 해결되지 않을 가능성이 높습니다. 서버의 에러 로그를 확인하여 원인을 특정하는 것이 우선입니다."
+      },
+      {
+        "id": "cwf-05-apply-1",
+        "type": "apply_check",
+        "title": "응용1",
+        "prompt": "사용자 목록 조회 GET 요청이 401을 반환합니다. Authorization: Bearer 헤더에 토큰이 포함되어 있을 때, 다음으로 확인해야 할 것은?",
+        "options": [
+          { "id": "A", "text": "서버 재시작이 필요한지 확인한다" },
+          { "id": "B", "text": "GET이 아니라 POST로 변경한다" },
+          { "id": "C", "text": "토큰의 유효기간이 만료되지 않았는지 확인한다" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "토큰이 헤더에 포함되어 있는데도 401이 반환되므로 토큰 유효기간 만료가 가장 의심됩니다. 기간을 확인하고 필요하면 재발급합니다."
+      },
+      {
+        "id": "cwf-05-apply-2",
+        "type": "apply_check",
+        "title": "응용2",
+        "prompt": "JSON 데이터를 전송하는 POST 요청에서 400 Bad Request가 반환되었습니다. Content-Type 헤더가 application/x-www-form-urlencoded로 되어 있습니다. 원인은 무엇인가요?",
+        "options": [
+          { "id": "A", "text": "POST 메서드 사용법이 잘못되었다" },
+          { "id": "B", "text": "Content-Type과 데이터 형식의 불일치로 서버가 올바르게 파싱할 수 없다" },
+          { "id": "C", "text": "서버가 POST를 받지 않는다" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "JSON 데이터를 보내려면 Content-Type: application/json이 필요합니다. x-www-form-urlencoded이면 서버가 폼 데이터로 해석하려 하여 파싱에 실패합니다."
+      },
+      {
+        "id": "cwf-05-summary",
+        "type": "summary",
+        "title": "배운 내용",
+        "bullets": [
+          "HTTP 요청은 요청 라인·헤더·바디의 3부분으로 구성된다",
+          "4xx는 클라이언트 측 문제, 5xx는 서버 측 문제로 판단할 수 있다",
+          "401은 인증 실패, 403은 권한 부족으로 둘은 명확히 다른 에러",
+          "상태 코드로 대분류를 판단하고 응답 본문으로 구체적 원인을 특정한다"
+        ]
+      }
+    ],
+    "referenceLabel": "참고 노트 보기"
+  }
+}

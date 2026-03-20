@@ -1,0 +1,46 @@
+{
+  "lesson_id": "CSK-AL-01-03",
+  "category": "cs-knowledge",
+  "subject": "algorithms",
+  "topic": "recursion-divide-graph",
+  "default_language": "ja",
+  "available_languages": ["ja", "ko"],
+  "summary": "再帰の仕組み（ベースケース・コールスタック）、分割統治法（マージソート）、グラフ探索（BFS／DFS）の基礎と、それらの相互関係を学ぶ",
+  "key_points": [
+    "再帰はベースケースがなければスタックオーバーフローになる",
+    "分割統治は Divide → Conquer → Combine の 3 ステップで問題を解く",
+    "BFS はキューで最短経路を保証し、DFS はスタック（再帰）で深く探索する",
+    "再帰とループはどちらも繰り返しだが、メモリ消費パターンが異なる",
+    "BFS と DFS はともに O(V + E) だが、用途が異なる"
+  ],
+  "misconceptions": [
+    "再帰は常にループより遅いわけではなく、問題構造次第で十分高速になる",
+    "分割統治はソート以外にも最近接点対や行列積など多様な問題に適用できる",
+    "BFS と DFS の計算量は同じオーダー O(V + E) であり、大きく異なるわけではない"
+  ],
+  "check_questions": [
+    "再帰関数にベースケースがない場合、何が起こるか？",
+    "マージソートにおける Divide・Conquer・Combine の各ステップを簡潔に説明せよ",
+    "BFS で最短経路が保証される理由を、探索順序の観点から述べよ",
+    "DFS を再帰で実装する場合、コールスタックはどのような役割を果たすか？"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "再帰関数にはベースケース（終了条件）が必須である",
+      "マージソートの時間計算量は O(n log n) である"
+    ],
+    "concept_contrast_candidates": [
+      "BFS（幅優先）は最短経路保証あり vs DFS（深さ優先）は最短経路保証なし",
+      "再帰はコールスタックを消費する vs ループは消費しない"
+    ],
+    "scenario_candidates": [
+      "ベースケースのない再帰関数を実行したときの挙動を問う",
+      "最短経路を求める場面で BFS と DFS のどちらを選ぶかを問う"
+    ],
+    "common_wrong_answer_patterns": [
+      "再帰は常にループより非効率だと誤答する",
+      "BFS と DFS の計算量が異なると誤答する"
+    ]
+  },
+  "difficulty": "foundation"
+}

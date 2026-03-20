@@ -1,11 +1,15 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import DevStaticSubjectPage from '@/components/dev/DevStaticSubjectPage'
-import { getDevSubjectContent } from '@/lib/dev-content'
+import { getDevCourseBySubject } from '@/lib/dev-course'
+import { createClient } from '@/lib/supabase/server'
 
 export default async function JavaPage() {
-  const subject = await getDevSubjectContent('java')
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
-  if (!subject) notFound()
+  const course = await getDevCourseBySubject(supabase, 'java', user.id)
+  if (!course) notFound()
 
-  return <DevStaticSubjectPage subject={subject} />
+  return <DevStaticSubjectPage course={course} subjectLabel="Java" quizCategory="java" />
 }

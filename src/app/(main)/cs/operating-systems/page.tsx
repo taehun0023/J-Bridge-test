@@ -1,10 +1,21 @@
-import { notFound } from 'next/navigation'
-import CsStaticSubjectPage from '@/components/cs/CsStaticSubjectPage'
-import { getCsSubjectContent } from '@/lib/cs-content'
+import CsSubjectRoutePage from '@/components/cs/CsSubjectRoutePage'
 
-export default async function OperatingSystemsPage() {
-  const subject = await getCsSubjectContent('operating-systems')
-  if (!subject) notFound()
-
-  return <CsStaticSubjectPage subject={subject} />
+export default async function OperatingSystemsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    tab?: string
+    difficulty?: string
+    search?: string
+    page?: string
+    mastery?: string
+  }>
+}) {
+  return (
+    <CsSubjectRoutePage
+      slug="operating-systems"
+      pathname="/cs/operating-systems"
+      searchParams={searchParams}
+    />
+  )
 }

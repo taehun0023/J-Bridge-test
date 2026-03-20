@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "spring-boot",
   "topic": "configuration-profiles",
-  "summary": "Covers Spring Boot configuration files (application.yml/properties), profile-based environment separation (dev/staging/prod), @Value vs @ConfigurationProperties, and configuration precedence rules.",
+  "summary": "Spring Bootの設定ファイル、Profile別環境分離、@Valueと@ConfigurationPropertiesの比較、設定の優先順位を解説する。",
   "key_points": [
-    "Profile-specific files (application-{profile}.yml) override base application.yml for environment separation.",
-    "@ConfigurationProperties is preferred over @Value for type-safe, grouped configuration binding.",
-    "Configuration precedence: command-line args > environment variables > profile YAML > base YAML."
+    "Profile固有ファイル（application-{profile}.yml）がベースのapplication.ymlを上書きし、環境分離を実現する。",
+    "型安全でグループ化された設定バインディングには、@Valueより@ConfigurationPropertiesが推奨される。",
+    "設定の優先順位：コマンドライン引数 > 環境変数 > Profile YAML > ベースYAML。"
   ],
   "misconceptions": [
     "application.yml is completely ignored when a profile-specific file exists.",

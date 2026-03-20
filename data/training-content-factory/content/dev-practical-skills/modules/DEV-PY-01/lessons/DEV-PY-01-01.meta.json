@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "python",
   "topic": "script-structure-execution-flow",
-  "summary": "Explains Python script structure, indentation-based blocks, the if __name__ pattern, and basic data type characteristics for reading and understanding code.",
+  "summary": "Pythonスクリプトの構造、インデントによるブロック、if __name__パターン、基本データ型の特性を解説する。",
   "key_points": [
-    "Python uses indentation to define code blocks — no braces.",
-    "The if __name__ == '__main__' pattern separates script execution from import usage.",
-    "Mutable default arguments are shared across function calls — a classic Python pitfall."
+    "Pythonはインデントでコードブロックを定義する — 波括弧は使わない。",
+    "if __name__ == '__main__' パターンは、スクリプト実行時とインポート時の動作を分離する。",
+    "ミュータブルなデフォルト引数は関数呼び出し間で共有される — Pythonの典型的な落とし穴。"
   ],
   "misconceptions": [
     "Mixing tabs and spaces in indentation works fine in Python 3.",

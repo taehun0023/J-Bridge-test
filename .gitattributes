@@ -1,0 +1,4 @@
+# Force LF line endings for training content files to prevent encoding corruption on Windows
+data/training-content-factory/**/*.yaml text eol=lf
+data/training-content-factory/**/*.json text eol=lf
+data/training-content-factory/**/*.mdx text eol=lf

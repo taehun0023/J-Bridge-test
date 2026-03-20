@@ -1,10 +1,21 @@
-import { notFound } from 'next/navigation'
-import CsStaticSubjectPage from '@/components/cs/CsStaticSubjectPage'
-import { getCsSubjectContent } from '@/lib/cs-content'
+import CsSubjectRoutePage from '@/components/cs/CsSubjectRoutePage'
 
-export default async function NetworkingPage() {
-  const subject = await getCsSubjectContent('networking')
-  if (!subject) notFound()
-
-  return <CsStaticSubjectPage subject={subject} />
+export default async function NetworkingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    tab?: string
+    difficulty?: string
+    search?: string
+    page?: string
+    mastery?: string
+  }>
+}) {
+  return (
+    <CsSubjectRoutePage
+      slug="networking"
+      pathname="/cs/networking"
+      searchParams={searchParams}
+    />
+  )
 }

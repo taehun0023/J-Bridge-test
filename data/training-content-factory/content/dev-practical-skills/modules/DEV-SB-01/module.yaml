@@ -1,8 +1,8 @@
 module:
   id: DEV-SB-01
-  title: Spring Boot - Application Structure and Dependency Injection
+  title: Spring Boot - アプリケーション構造とDI
   level: foundation
-  description: "정적 해설형 콘텐츠로 Spring Boot 프로젝트의 디렉토리 구조와 의존성 주입(DI) 원리를 설명한다."
+  description: "Spring Bootプロジェクトのディレクトリ構造と依存性注入（DI）の原理を解説する。"
   subject: spring-boot
   content_mode: static-interpretive
   outcomes:

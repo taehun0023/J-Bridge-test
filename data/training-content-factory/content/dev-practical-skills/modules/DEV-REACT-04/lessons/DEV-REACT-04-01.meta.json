@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "react",
   "topic": "rendering-performance",
-  "summary": "Explains React re-render conditions (state change, parent re-render, context change), React.memo shallow comparison, useMemo/useCallback memoization, and a measure-first optimization workflow.",
+  "summary": "Reactの再レンダー条件、React.memoの浅い比較、useMemo/useCallbackのメモ化、計測優先の最適化ワークフローを解説する。",
   "key_points": [
-    "React re-renders on state change, parent re-render, or context change — even when Props haven't changed.",
-    "React.memo skips re-render when Props are shallowly equal; inline object literals defeat this optimization.",
-    "useCallback is only effective when the child component is wrapped in React.memo — otherwise the child re-renders regardless."
+    "Reactはstate変更、親の再レンダー、context変更時に再レンダーする — Propsが変わっていなくても実行される。",
+    "React.memoはPropsが浅い比較で等しい場合に再レンダーをスキップするが、インラインオブジェクトリテラルはこの最適化を無効にする。",
+    "useCallbackは子コンポーネントがReact.memoでラップされている場合のみ有効 — そうでなければ子は常に再レンダーされる。"
   ],
   "misconceptions": [
     "useCallback alone prevents child re-renders without React.memo.",

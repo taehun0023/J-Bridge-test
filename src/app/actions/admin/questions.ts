@@ -273,10 +273,38 @@ interface QuestionPageResult {
   questions: QuestionResult[]
   totalCount: number
   hasMore: boolean
+  availableCategories: string[]
   error?: string
 }
 
+const CS_ADMIN_CATEGORY_GROUPS: Record<string, string[]> = {
+  basic_theory: ['basic_theory', 'basic_theory_check_1', 'basic_theory_check_2', 'basic_theory_final'],
+  data_structure: ['data_structure', 'data_structure_check_1', 'data_structure_check_2', 'data_structure_final'],
+  algorithm: ['algorithm', 'algorithm_check_1', 'algorithm_check_2', 'algorithm_final'],
+  computer_architecture: [
+    'computer_architecture',
+    'computer_architecture_check_1',
+    'computer_architecture_check_2',
+    'computer_architecture_final',
+  ],
+  database: ['database', 'database_check_1', 'database_check_2', 'database_final'],
+  network: ['network', 'network_check_1', 'network_check_2', 'network_final'],
+  os: ['os', 'os_check_1', 'os_check_2', 'os_final'],
+  security: ['security', 'security_check_1', 'security_check_2', 'security_final'],
+}
+
+function getAdminCategoryFilterValues(category: string | null | undefined): string[] | null {
+  if (!category) return null
+  if (category === '__legacy_unclassified__') return null
+  if (category.startsWith('__cs_subject__:')) {
+    const subject = category.replace('__cs_subject__:', '')
+    return CS_ADMIN_CATEGORY_GROUPS[subject] ?? [subject]
+  }
+  return [category]
+}
+
 const PAGE_SIZE_DEFAULT = 200
+const CATEGORY_SCAN_BATCH_SIZE = 1000
 
 export async function fetchQuestionsPage(
   quizIds: string[],
@@ -285,12 +313,13 @@ export async function fetchQuestionsPage(
   limit: number = PAGE_SIZE_DEFAULT
 ): Promise<QuestionPageResult> {
   const auth = await requireAdminOrTechMentor()
-  if ('error' in auth) return { questions: [], totalCount: 0, hasMore: false, error: auth.error }
+  if ('error' in auth) return { questions: [], totalCount: 0, hasMore: false, availableCategories: [], error: auth.error }
 
   const serviceClient = createServiceRoleClient()
-  if (!serviceClient) return { questions: [], totalCount: 0, hasMore: false, error: ERR.SERVICE_KEY_MISSING }
+  if (!serviceClient) return { questions: [], totalCount: 0, hasMore: false, availableCategories: [], error: ERR.SERVICE_KEY_MISSING }
+  const client = serviceClient
 
-  if (quizIds.length === 0) return { questions: [], totalCount: 0, hasMore: false }
+  if (quizIds.length === 0) return { questions: [], totalCount: 0, hasMore: false, availableCategories: [] }
 
   // If claimsOnly, first get claimed question IDs
   let claimedIds: string[] | null = null
@@ -299,20 +328,29 @@ export async function fetchQuestionsPage(
       .from('question_claims')
       .select('question_id')
     claimedIds = [...new Set((claimRows ?? []).map(r => (r as { question_id: string }).question_id))]
-    if (claimedIds.length === 0) return { questions: [], totalCount: 0, hasMore: false }
+    if (claimedIds.length === 0) return { questions: [], totalCount: 0, hasMore: false, availableCategories: [] }
   }
 
   // Build base query builder function (reused for count + data)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function applyFilters(query: any) {
+  function applyFilters(query: any, includeCategory: boolean = true) {
     let q = query.in('quiz_id', quizIds)
     if (filters.difficulty === '__null__') {
       q = q.is('difficulty', null)
     } else if (filters.difficulty) {
       q = q.eq('difficulty', filters.difficulty)
     }
-    if (filters.category) {
-      q = q.eq('question_category', filters.category)
+    if (includeCategory && filters.category) {
+      if (filters.category === '__legacy_unclassified__') {
+        q = q.or('question_category.is.null')
+      } else {
+        const categoryValues = getAdminCategoryFilterValues(filters.category)
+        if (categoryValues && categoryValues.length === 1) {
+          q = q.eq('question_category', categoryValues[0])
+        } else if (categoryValues && categoryValues.length > 1) {
+          q = q.in('question_category', categoryValues)
+        }
+      }
     }
     if (filters.published === 'published') {
       q = q.eq('is_published', true)
@@ -325,6 +363,31 @@ export async function fetchQuestionsPage(
     return q
   }
 
+  async function fetchAvailableCategories(): Promise<string[]> {
+    const categorySet = new Set<string>()
+    let scanOffset = 0
+
+    while (true) {
+      const categoryQuery = applyFilters(
+        client.from('quiz_questions').select('question_category'),
+        false
+      )
+      const { data } = await categoryQuery.range(scanOffset, scanOffset + CATEGORY_SCAN_BATCH_SIZE - 1)
+      const rows = (data ?? []) as { question_category: string | null }[]
+
+      for (const row of rows) {
+        if (row.question_category) categorySet.add(row.question_category)
+      }
+
+      if (rows.length < CATEGORY_SCAN_BATCH_SIZE) break
+      scanOffset += CATEGORY_SCAN_BATCH_SIZE
+    }
+
+    return [...categorySet]
+  }
+
+  const availableCategories = await fetchAvailableCategories()
+
   // Step 1: Count query
   const countQuery = applyFilters(
     serviceClient.from('quiz_questions').select('id', { count: 'exact', head: true })
@@ -333,7 +396,7 @@ export async function fetchQuestionsPage(
   const totalCount = count ?? 0
 
   if (totalCount === 0 || offset >= totalCount) {
-    return { questions: [], totalCount, hasMore: false }
+    return { questions: [], totalCount, hasMore: false, availableCategories }
   }
 
   // Step 2: Question query (no options join to avoid 1000-row limit)
@@ -345,7 +408,7 @@ export async function fetchQuestionsPage(
     .range(offset, offset + limit - 1)
 
   if (!questionRows || questionRows.length === 0) {
-    return { questions: [], totalCount, hasMore: false }
+    return { questions: [], totalCount, hasMore: false, availableCategories }
   }
 
   type QRow = {
@@ -420,6 +483,7 @@ export async function fetchQuestionsPage(
     questions,
     totalCount,
     hasMore: offset + rows.length < totalCount,
+    availableCategories,
   }
 }
 

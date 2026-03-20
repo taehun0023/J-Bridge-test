@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "java",
   "topic": "collections-streams",
-  "summary": "Covers Java collection types (List, Set, Map) selection criteria, Stream API pipeline operations (filter, map, collect, groupingBy), and performance considerations for real-world data processing.",
+  "summary": "Javaコレクション（List・Set・Map）の選択基準、Stream APIパイプライン操作、実務データ処理のパフォーマンス考慮点を解説する。",
   "key_points": [
-    "Choose collections based on uniqueness, ordering, and access pattern requirements.",
-    "Stream intermediate operations are lazy-evaluated; processing only runs when a terminal operation is invoked.",
-    "Streams are single-use; parallelStream has thread-safety and overhead trade-offs."
+    "一意性・順序・アクセスパターンの要件に基づいてコレクションを選択する。",
+    "Streamの中間操作は遅延評価され、終端操作が呼び出されたときにのみ処理が実行される。",
+    "Streamは使い捨てであり、parallelStreamにはスレッド安全性とオーバーヘッドのトレードオフがある。"
   ],
   "misconceptions": [
     "A Stream can be reused after a terminal operation.",

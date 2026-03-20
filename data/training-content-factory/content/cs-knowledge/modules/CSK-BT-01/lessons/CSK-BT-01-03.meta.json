@@ -1,0 +1,44 @@
+{
+  "lesson_id": "CSK-BT-01-03",
+  "category": "cs-knowledge",
+  "subject": "basic-theory",
+  "topic": "integer-and-overflow",
+  "default_language": "ja",
+  "available_languages": ["ja", "ko"],
+  "summary": "コンピュータにおける整数表現（signed/unsigned・2の補数）とオーバーフローの仕組み・危険性を学ぶ",
+  "key_points": [
+    "unsigned整数は全ビットを値に使い、signed整数はMSBを符号に使う（2の補数方式）",
+    "2の補数は「ビット反転＋1」で負の数を表し、加算回路だけで減算も処理できる",
+    "同じビットパターンでもsigned/unsignedで解釈が異なる（0xFFは255または−1）"
+  ],
+  "misconceptions": [
+    "オーバーフローはエラーで止まると思いがちだが、C/Javaでは静かに不正値が使われ続ける",
+    "unsignedは負の数がないから安全だと思いがちだが、0−1で最大値にラップアラウンドする",
+    "64ビット整数なら実質オーバーフローしないと思いがちだが、金融計算や暗号処理では溢れる可能性がある"
+  ],
+  "check_questions": [
+    "8ビットsigned整数の表現範囲は何か？2の補数方式で答えよ",
+    "unsigned整数で0−1を実行するとどうなるか、8ビットの場合で説明せよ",
+    "CとPythonで整数オーバーフローの扱いがどう異なるか比較せよ",
+    "Ariane 5事故で問題になったオーバーフローの原因を簡潔に説明せよ"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "8ビットsigned整数の範囲は−128〜127、unsignedは0〜255",
+      "2の補数方式ではビット反転＋1で負の数を求める"
+    ],
+    "concept_contrast_candidates": [
+      "signed整数とunsigned整数の表現範囲と解釈の違い",
+      "整数オーバーフローと浮動小数点アンダーフローの違い"
+    ],
+    "scenario_candidates": [
+      "unsigned変数で0から1を引いた場合にラップアラウンドが起きるシナリオ",
+      "64ビット整数でも金融計算の累積でオーバーフローが起きるシナリオ"
+    ],
+    "common_wrong_answer_patterns": [
+      "オーバーフローが常にランタイムエラーになると回答する",
+      "unsignedなら負の値が生じないので安全と回答する"
+    ]
+  },
+  "difficulty": "foundation"
+}

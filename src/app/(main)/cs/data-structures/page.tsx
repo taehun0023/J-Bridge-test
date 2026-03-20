@@ -1,10 +1,21 @@
-import { notFound } from 'next/navigation'
-import CsStaticSubjectPage from '@/components/cs/CsStaticSubjectPage'
-import { getCsSubjectContent } from '@/lib/cs-content'
+import CsSubjectRoutePage from '@/components/cs/CsSubjectRoutePage'
 
-export default async function DataStructuresPage() {
-  const subject = await getCsSubjectContent('data-structures')
-  if (!subject) notFound()
-
-  return <CsStaticSubjectPage subject={subject} />
+export default async function DataStructuresPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    tab?: string
+    difficulty?: string
+    search?: string
+    page?: string
+    mastery?: string
+  }>
+}) {
+  return (
+    <CsSubjectRoutePage
+      slug="data-structures"
+      pathname="/cs/data-structures"
+      searchParams={searchParams}
+    />
+  )
 }

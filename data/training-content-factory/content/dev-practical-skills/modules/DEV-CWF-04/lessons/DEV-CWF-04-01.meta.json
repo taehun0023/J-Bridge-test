@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "common-workplace-fundamentals",
   "topic": "environment-configuration",
-  "summary": "Explains the separation of development, staging, and production environments and how to read configuration files and environment variables.",
+  "summary": "開発・ステージング・本番環境の分離と設定ファイル・環境変数の読み方を解説する。",
   "key_points": [
-    "Environments are separated to protect production data and services.",
-    "Secret values belong in environment variables, not in committed code.",
-    "Configuration priority order determines which setting takes effect."
+    "本番データとサービスを保護するために環境を分離する。",
+    "秘密情報はコミットされるコードではなく環境変数に格納する。",
+    "設定の優先順位によってどの値が適用されるかが決まる。"
   ],
   "misconceptions": [
     "It is safe to commit .env files to version control.",

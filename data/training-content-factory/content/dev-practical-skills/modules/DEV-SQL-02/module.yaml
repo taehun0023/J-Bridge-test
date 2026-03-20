@@ -1,8 +1,8 @@
 module:
   id: DEV-SQL-02
-  title: SQL - Schema Reading and JOIN Reasoning
+  title: SQL - スキーマの読み方とJOINの推論
   level: intermediate
-  description: "정적 해설형 콘텐츠로 테이블 스키마를 읽고 JOIN의 종류와 결과를 해석하는 방법을 설명한다."
+  description: "テーブルスキーマを読み、JOINの種類と結果を解釈する方法を解説する。"
   subject: sql
   content_mode: static-interpretive
   outcomes:

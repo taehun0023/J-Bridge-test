@@ -1,0 +1,44 @@
+{
+  "lesson_id": "CSK-BT-01-04",
+  "category": "cs-knowledge",
+  "subject": "basic-theory",
+  "topic": "floating-point-and-error",
+  "default_language": "ja",
+  "available_languages": ["ja", "ko"],
+  "summary": "IEEE 754浮動小数点数の構造と丸め誤差の仕組み、比較の注意点と対策を学ぶ",
+  "key_points": [
+    "IEEE 754は符号（1ビット）＋指数部＋仮数部で浮動小数点数を表現する",
+    "0.1は2進数で循環小数になるため、有限ビットでは必ず丸め誤差が発生する",
+    "浮動小数点は広範囲を表現できるが、固定小数点は指定桁数で正確な計算が可能"
+  ],
+  "misconceptions": [
+    "doubleを使えば誤差はなくなると思いがちだが、2進の丸め誤差は倍精度でも発生する",
+    "0.1+0.2==0.3がfalseになるのは言語のバグだと思いがちだが、IEEE 754の正しい動作である",
+    "NaN==NaNがtrueだと思いがちだが、IEEE 754ではNaNはいかなる値とも等しくない"
+  ],
+  "check_questions": [
+    "IEEE 754倍精度浮動小数点数の3つの構成要素とそれぞれのビット数を答えよ",
+    "0.1+0.2が0.3にならない理由を丸め誤差の観点から説明せよ",
+    "浮動小数点数の等値比較で==を使うべきでない理由と代替手法を述べよ",
+    "金融計算でfloat/doubleの代わりに使うべき型と、その理由を説明せよ"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "IEEE 754倍精度は符号1ビット・指数11ビット・仮数52ビットで構成される",
+      "0.1は2進数で0.0001100110011...の循環小数になる"
+    ],
+    "concept_contrast_candidates": [
+      "浮動小数点と固定小数点の精度・範囲のトレードオフ",
+      "単精度（約7桁）と倍精度（約15桁）の有効数字の違い"
+    ],
+    "scenario_candidates": [
+      "金融システムでfloatを使って累積計算した際に1円ずれるシナリオ",
+      "浮動小数点の==比較でループが終了しないシナリオ"
+    ],
+    "common_wrong_answer_patterns": [
+      "倍精度なら丸め誤差が発生しないと回答する",
+      "NaN==NaNがtrueと回答する"
+    ]
+  },
+  "difficulty": "foundation"
+}

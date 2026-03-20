@@ -1,8 +1,8 @@
 module:
   id: DEV-CWF-06
-  title: Common Workplace Fundamentals - Code Review Basics
+  title: 共通業務基礎 - コードレビューの基本
   level: foundation
-  description: "정적 해설형 콘텐츠로 코드 리뷰에서 확인해야 할 관점과 피드백 작성법을 설명한다."
+  description: "コードレビューで確認すべき観点とフィードバックの書き方を解説する。"
   subject: common-workplace-fundamentals
   content_mode: static-interpretive
   outcomes:

@@ -1,8 +1,8 @@
 module:
   id: DEV-JAVA-01
-  title: Java - Language Basics and Code Reading
+  title: Java - 言語基礎とコードリーディング
   level: foundation
-  description: "정적 해설형 콘텐츠로 Java 소스 코드의 구조를 읽고 실행 흐름을 추적하는 기초를 설명한다."
+  description: "Javaソースコードの構造を読み、実行フローを追跡する基礎を解説する。"
   subject: java
   content_mode: static-interpretive
   outcomes:

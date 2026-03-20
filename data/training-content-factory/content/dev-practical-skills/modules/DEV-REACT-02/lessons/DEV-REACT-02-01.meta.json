@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "react",
   "topic": "state-props-flow",
-  "summary": "Explains React State and Props, unidirectional data flow, the useState hook, callback-based child-to-parent communication, and how state changes trigger re-renders.",
+  "summary": "StateとProps、単方向データフロー、useStateフック、コールバックによる子→親通信、state変更によるリレンダーを解説する。",
   "key_points": [
-    "State is mutable component-internal data managed via useState; Props are read-only data passed from parent to child.",
-    "Data flows one way (parent to child); child-to-parent communication uses callback functions passed as Props.",
-    "State updates are asynchronous and trigger re-renders of the component and all its children."
+    "StateはuseStateで管理されるコンポーネント内部の可変データ、Propsは親から子へ渡される読み取り専用データである。",
+    "データは一方向（親→子）に流れ、子→親の通信にはPropsとして渡されたコールバック関数を使用する。",
+    "Stateの更新は非同期で行われ、コンポーネントとそのすべての子コンポーネントの再レンダーを引き起こす。"
   ],
   "misconceptions": [
     "Props can be modified by child components.",

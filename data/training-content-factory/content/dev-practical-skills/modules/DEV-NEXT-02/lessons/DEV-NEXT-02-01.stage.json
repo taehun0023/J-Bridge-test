@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "ja": {
+    "hook": {
+      "title": "サーバーとクライアントの境界を見極める",
+      "prompt": "Next.jsでは、なぜ一部のコンポーネントだけに'use client'を書くのでしょうか？",
+      "takeaway": "サーバーコンポーネントとクライアントコンポーネントの違い、境界設定のルール、組み合わせパターンを理解できるようになります"
+    },
+    "steps": [
+      {
+        "id": "next-02-concept-1",
+        "type": "concept",
+        "title": "サーバーコンポーネントとクライアントコンポーネント",
+        "body": "App Routerではデフォルトでサーバーコンポーネントです。サーバーでのみ実行され、DBクエリやファイルアクセスが可能ですが、useStateやonClickは使用できません。'use client'を宣言するとクライアントコンポーネントになり、フックやイベントハンドラが使えます。",
+        "bullets": [
+          "サーバーコンポーネント：async/await対応、DB直接クエリ可能、フック・イベントハンドラ不可",
+          "クライアントコンポーネント：useState等のフック使用可能、サーバー専用モジュールのimport不可"
+        ]
+      },
+      {
+        "id": "next-02-mini-1",
+        "type": "mini_check",
+        "title": "確認1",
+        "prompt": "App Routerにおけるコンポーネントのデフォルトタイプはどれですか？",
+        "options": [
+          { "id": "A", "text": "クライアントコンポーネント" },
+          { "id": "B", "text": "サーバーコンポーネント" },
+          { "id": "C", "text": "ファイルごとに指定が必須" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "App Routerでは'use client'を宣言しないすべてのコンポーネントがデフォルトでサーバーコンポーネントです。クライアントに切り替えるには明示的に'use client'が必要です。"
+      },
+      {
+        "id": "next-02-concept-2",
+        "type": "concept",
+        "title": "境界設定とchildrenパターン",
+        "body": "'use client'は境界（boundary）を作り、そのファイルからimportする子コンポーネントも自動的にクライアントコンポーネントになります。そのため'use client'はツリーの末端に配置するのが望ましいです。children propでサーバーコンポーネントを渡すことも可能です。",
+        "bullets": [
+          "サーバー→クライアントへのpropsはシリアライズ可能な値のみ（関数は渡せない）",
+          "page.tsxに'use client'を宣言するとページ全体がクライアントバンドルに含まれる"
+        ]
+      },
+      {
+        "id": "next-02-mini-2",
+        "type": "mini_check",
+        "title": "確認2",
+        "prompt": "クライアントコンポーネントでサーバー専用モジュール（DBクライアント）をimportするとどうなりますか？",
+        "options": [
+          { "id": "A", "text": "クライアントでも正常に動作する" },
+          { "id": "B", "text": "ビルド時にエラーが発生する" },
+          { "id": "C", "text": "実行時にエラーが発生する" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "'use client'ファイルでサーバー専用モジュールをimportするとビルドエラーが発生します。データはサーバーコンポーネントで取得してpropsとして渡す必要があります。"
+      },
+      {
+        "id": "next-02-worked",
+        "type": "worked_example",
+        "title": "具体例：データフェッチとチャート表示の分離",
+        "situation": "ダッシュボードでDBからデータを取得し、そのデータをRechartsでチャート表示する場面を考えます。",
+        "reasoning": [
+          "page.tsxをサーバーコンポーネントのまま維持し、DBから直接データを取得する",
+          "チャートコンポーネント（StatsChart）はブラウザレンダリングが必要なため'use client'を宣言する",
+          "取得したデータをシリアライズ可能なpropsとしてStatsChartに渡す",
+          "データフェッチはサーバー、チャート描画はクライアントと責務を分離する"
+        ],
+        "takeaway": "サーバーでデータを取得し、インタラクションが必要な部分だけをクライアントコンポーネントとして分離するのが標準パターンです"
+      },
+      {
+        "id": "next-02-mini-3",
+        "type": "mini_check",
+        "title": "確認3",
+        "prompt": "'use client'をコンポーネントツリーの末端に配置すべき理由はどれですか？",
+        "options": [
+          { "id": "A", "text": "末端以外では動作しないため" },
+          { "id": "B", "text": "コードの可読性を上げるため" },
+          { "id": "C", "text": "上位に配置すると配下のすべてがクライアントバンドルに含まれるため" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "'use client'から importされるすべての子が自動的にクライアントコンポーネントになるため、上位に配置するとクライアントバンドルが不必要に大きくなります。インタラクションが必要な部分だけを末端で分離するのが最適です。"
+      },
+      {
+        "id": "next-02-apply-1",
+        "type": "apply_check",
+        "title": "応用1",
+        "prompt": "サーバーコンポーネントでuseStateを使おうとするとどうなりますか？正しい対処法はどれですか？",
+        "options": [
+          { "id": "A", "text": "サーバーでも動作するので問題ない" },
+          { "id": "B", "text": "エラーになる。useState が必要な部分を別のクライアントコンポーネントに分離する" },
+          { "id": "C", "text": "エラーになる。page.tsx全体に'use client'を宣言する" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "サーバーコンポーネントではReactフックは使用できません。フックが必要な部分だけを別のクライアントコンポーネントとして分離するのが正しい対処法です。page.tsx全体をクライアントにするのは過度な対応です。"
+      },
+      {
+        "id": "next-02-apply-2",
+        "type": "apply_check",
+        "title": "応用2",
+        "prompt": "サーバーコンポーネントからクライアントコンポーネントに関数をpropsとして渡そうとした場合、どうなりますか？",
+        "options": [
+          { "id": "A", "text": "関数はシリアライズできないためエラーが発生する" },
+          { "id": "B", "text": "正常に渡される" },
+          { "id": "C", "text": "自動的にServer Actionに変換される" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "関数はシリアライズできないため、サーバーからクライアントへのpropsとして渡すことはできません。Server Actionsを使用するか、クライアント内部で関数を定義する必要があります。"
+      },
+      {
+        "id": "next-02-summary",
+        "type": "summary",
+        "title": "学んだこと",
+        "bullets": [
+          "App Routerのデフォルトはサーバーコンポーネントで、'use client'で切り替える",
+          "サーバーではDB直接クエリが可能だがフック不可、クライアントはその逆",
+          "'use client'は境界を作り配下のimportもクライアントになるため末端に配置する",
+          "サーバーでデータ取得→シリアライズ可能な値でクライアントに渡すのが標準パターン"
+        ]
+      }
+    ],
+    "referenceLabel": "参考ノートを見る"
+  },
+  "ko": {
+    "hook": {
+      "title": "서버와 클라이언트의 경계를 판단하기",
+      "prompt": "Next.js에서는 왜 일부 컴포넌트에만 'use client'를 작성하는 걸까요?",
+      "takeaway": "서버 컴포넌트와 클라이언트 컴포넌트의 차이, 경계 설정 규칙, 조합 패턴을 이해할 수 있게 됩니다"
+    },
+    "steps": [
+      {
+        "id": "next-02-concept-1",
+        "type": "concept",
+        "title": "서버 컴포넌트와 클라이언트 컴포넌트",
+        "body": "App Router에서는 기본적으로 서버 컴포넌트입니다. 서버에서만 실행되어 DB 쿼리나 파일 접근이 가능하지만, useState나 onClick은 사용할 수 없습니다. 'use client'를 선언하면 클라이언트 컴포넌트가 되어 훅과 이벤트 핸들러를 사용할 수 있습니다.",
+        "bullets": [
+          "서버 컴포넌트: async/await 대응, DB 직접 쿼리 가능, 훅·이벤트 핸들러 불가",
+          "클라이언트 컴포넌트: useState 등 훅 사용 가능, 서버 전용 모듈 import 불가"
+        ]
+      },
+      {
+        "id": "next-02-mini-1",
+        "type": "mini_check",
+        "title": "확인1",
+        "prompt": "App Router에서 컴포넌트의 기본 타입은 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "클라이언트 컴포넌트" },
+          { "id": "B", "text": "서버 컴포넌트" },
+          { "id": "C", "text": "파일마다 지정이 필수" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "App Router에서는 'use client'를 선언하지 않은 모든 컴포넌트가 기본적으로 서버 컴포넌트입니다. 클라이언트로 전환하려면 명시적으로 'use client'가 필요합니다."
+      },
+      {
+        "id": "next-02-concept-2",
+        "type": "concept",
+        "title": "경계 설정과 children 패턴",
+        "body": "'use client'는 경계(boundary)를 만들며, 해당 파일에서 import하는 자식 컴포넌트도 자동으로 클라이언트 컴포넌트가 됩니다. 따라서 'use client'는 트리의 말단에 배치하는 것이 바람직합니다. children prop으로 서버 컴포넌트를 전달하는 것도 가능합니다.",
+        "bullets": [
+          "서버→클라이언트로의 props는 직렬화 가능한 값만 가능(함수는 전달 불가)",
+          "page.tsx에 'use client'를 선언하면 페이지 전체가 클라이언트 번들에 포함된다"
+        ]
+      },
+      {
+        "id": "next-02-mini-2",
+        "type": "mini_check",
+        "title": "확인2",
+        "prompt": "클라이언트 컴포넌트에서 서버 전용 모듈(DB 클라이언트)을 import하면 어떻게 되나요?",
+        "options": [
+          { "id": "A", "text": "클라이언트에서도 정상 동작한다" },
+          { "id": "B", "text": "빌드 시 에러가 발생한다" },
+          { "id": "C", "text": "런타임에 에러가 발생한다" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "'use client' 파일에서 서버 전용 모듈을 import하면 빌드 에러가 발생합니다. 데이터는 서버 컴포넌트에서 취득하여 props로 전달해야 합니다."
+      },
+      {
+        "id": "next-02-worked",
+        "type": "worked_example",
+        "title": "구체적 예: 데이터 페치와 차트 표시 분리",
+        "situation": "대시보드에서 DB로부터 데이터를 취득하고 Recharts로 차트를 표시하는 상황을 생각합니다.",
+        "reasoning": [
+          "page.tsx를 서버 컴포넌트로 유지하고 DB에서 직접 데이터를 취득한다",
+          "차트 컴포넌트(StatsChart)는 브라우저 렌더링이 필요하므로 'use client'를 선언한다",
+          "취득한 데이터를 직렬화 가능한 props로 StatsChart에 전달한다",
+          "데이터 페치는 서버, 차트 그리기는 클라이언트로 책임을 분리한다"
+        ],
+        "takeaway": "서버에서 데이터를 취득하고 인터랙션이 필요한 부분만 클라이언트 컴포넌트로 분리하는 것이 표준 패턴입니다"
+      },
+      {
+        "id": "next-02-mini-3",
+        "type": "mini_check",
+        "title": "확인3",
+        "prompt": "'use client'를 컴포넌트 트리의 말단에 배치해야 하는 이유는 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "말단 이외에서는 동작하지 않기 때문" },
+          { "id": "B", "text": "코드 가독성을 높이기 위해" },
+          { "id": "C", "text": "상위에 배치하면 하위 전체가 클라이언트 번들에 포함되기 때문" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "'use client'에서 import하는 모든 자식이 자동으로 클라이언트 컴포넌트가 되므로, 상위에 배치하면 클라이언트 번들이 불필요하게 커집니다. 인터랙션이 필요한 부분만 말단에서 분리하는 것이 최적입니다."
+      },
+      {
+        "id": "next-02-apply-1",
+        "type": "apply_check",
+        "title": "응용1",
+        "prompt": "서버 컴포넌트에서 useState를 사용하려고 하면 어떻게 되나요? 올바른 대처법은 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "서버에서도 동작하므로 문제없다" },
+          { "id": "B", "text": "에러가 발생한다. useState가 필요한 부분을 별도 클라이언트 컴포넌트로 분리한다" },
+          { "id": "C", "text": "에러가 발생한다. page.tsx 전체에 'use client'를 선언한다" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "서버 컴포넌트에서는 React 훅을 사용할 수 없습니다. 훅이 필요한 부분만 별도 클라이언트 컴포넌트로 분리하는 것이 올바른 대처법입니다. page.tsx 전체를 클라이언트로 만드는 것은 과도한 대응입니다."
+      },
+      {
+        "id": "next-02-apply-2",
+        "type": "apply_check",
+        "title": "응용2",
+        "prompt": "서버 컴포넌트에서 클라이언트 컴포넌트로 함수를 props로 전달하려고 하면 어떻게 되나요?",
+        "options": [
+          { "id": "A", "text": "함수는 직렬화할 수 없으므로 에러가 발생한다" },
+          { "id": "B", "text": "정상적으로 전달된다" },
+          { "id": "C", "text": "자동으로 Server Action으로 변환된다" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "함수는 직렬화할 수 없기 때문에 서버에서 클라이언트로의 props로 전달할 수 없습니다. Server Actions를 사용하거나 클라이언트 내부에서 함수를 정의해야 합니다."
+      },
+      {
+        "id": "next-02-summary",
+        "type": "summary",
+        "title": "배운 내용",
+        "bullets": [
+          "App Router의 기본은 서버 컴포넌트이며, 'use client'로 전환한다",
+          "서버에서는 DB 직접 쿼리가 가능하지만 훅 불가, 클라이언트는 그 반대",
+          "'use client'는 경계를 만들어 하위 import도 클라이언트가 되므로 말단에 배치한다",
+          "서버에서 데이터 취득→직렬화 가능한 값으로 클라이언트에 전달하는 것이 표준 패턴"
+        ]
+      }
+    ],
+    "referenceLabel": "참고 노트 보기"
+  }
+}

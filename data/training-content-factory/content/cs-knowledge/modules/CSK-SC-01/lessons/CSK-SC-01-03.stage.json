@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "ja": {
+    "hook": {
+      "title": "Web脆弱性",
+      "prompt": "ユーザーが入力欄に<script>タグを入れたら何が起きるか、想像できますか？",
+      "takeaway": "XSS・SQLインジェクション・CSRFの仕組みと防御策を理解し、安全なWebアプリを開発できるようになります"
+    },
+    "steps": [
+      {
+        "id": "security-03-concept-1",
+        "type": "concept",
+        "title": "概念1",
+        "body": "XSS（クロスサイトスクリプティング）は、攻撃者が悪意のあるスクリプトをWebページに注入し、他のユーザーのブラウザで実行させる攻撃です。反射型（URLパラメータ経由）、格納型（DB保存後に表示）、DOM型（クライアント側JS処理）の3種類があります。",
+        "bullets": [
+          "対策：出力時のHTMLエスケープ、Content-Security-Policy（CSP）ヘッダーの設定",
+          "格納型XSSは被害が永続化するため最も危険"
+        ]
+      },
+      {
+        "id": "security-03-mini-1",
+        "type": "mini_check",
+        "title": "確認1",
+        "prompt": "XSS攻撃を防ぐ最も基本的な対策はどれですか？",
+        "options": [
+          {"id": "A", "text": "ユーザー入力を出力する際にHTMLエスケープを行う"},
+          {"id": "B", "text": "HTTPSを使用する"},
+          {"id": "C", "text": "データベースを暗号化する"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "HTMLエスケープにより、<script>のような特殊文字が文字列として表示され、スクリプトとして実行されなくなります。"
+      },
+      {
+        "id": "security-03-concept-2",
+        "type": "concept",
+        "title": "概念2",
+        "body": "SQLインジェクションは、ユーザー入力をSQL文に直接埋め込むことで、攻撃者が任意のSQLを実行する攻撃です。CSRFはユーザーがログイン中のサイトに対して、悪意あるサイトから意図しないリクエストを送信させる攻撃です。",
+        "bullets": [
+          "SQLi対策：プリペアドステートメント（パラメータ化クエリ）を使用",
+          "CSRF対策：CSRFトークンの検証、SameSite Cookieの設定"
+        ]
+      },
+      {
+        "id": "security-03-mini-2",
+        "type": "mini_check",
+        "title": "確認2",
+        "prompt": "SQLインジェクションの防御策として最も効果的なのはどれですか？",
+        "options": [
+          {"id": "A", "text": "プリペアドステートメント（パラメータ化クエリ）を使用する"},
+          {"id": "B", "text": "入力文字数を制限する"},
+          {"id": "C", "text": "エラーメッセージを非表示にする"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "プリペアドステートメントはSQL文とパラメータを分離するため、入力値がSQL構文として解釈されることを根本的に防ぎます。"
+      },
+      {
+        "id": "security-03-worked",
+        "type": "worked_example",
+        "title": "具体例",
+        "situation": "ECサイトの検索機能で、検索キーワードがそのままHTMLに埋め込まれていた。ユーザーが検索欄にスクリプトを入力すると他のユーザーのCookieが盗まれる。",
+        "reasoning": [
+          "これは反射型XSS。URLパラメータの値がエスケープなしでHTMLに出力されている",
+          "まず出力箇所をすべて洗い出し、テンプレートエンジンの自動エスケープを有効にする",
+          "Content-Security-Policyヘッダーでインラインスクリプトの実行を制限する",
+          "多層防御（Defense in Depth）の考え方で複数の対策を重ねる"
+        ],
+        "takeaway": "Webセキュリティは単一の対策ではなく、多層防御で複数の防御策を重ねることが重要です"
+      },
+      {
+        "id": "security-03-mini-3",
+        "type": "mini_check",
+        "title": "確認3",
+        "prompt": "CSRFトークンが有効な理由として正しいものはどれですか？",
+        "options": [
+          {"id": "A", "text": "攻撃者は正規サイトが発行したトークンを知ることができないから"},
+          {"id": "B", "text": "トークンがあるとHTTPS通信が強制されるから"},
+          {"id": "C", "text": "トークンによりユーザーの認証が行われるから"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "CSRFトークンはサーバーがセッションごとに生成するランダムな値です。攻撃者のサイトからはこのトークンを取得できないため、不正リクエストを検知できます。"
+      },
+      {
+        "id": "security-03-apply-1",
+        "type": "apply_check",
+        "title": "応用1",
+        "prompt": "React/Next.jsアプリでXSS対策として自動的に適用されている仕組みはどれですか？",
+        "options": [
+          {"id": "A", "text": "JSXがデフォルトで変数をHTMLエスケープして出力する"},
+          {"id": "B", "text": "React RouterがURLパラメータを検証する"},
+          {"id": "C", "text": "Next.jsがすべてのAPIリクエストを暗号化する"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "ReactのJSXは変数を出力する際にデフォルトでHTMLエスケープします。ただしdangerouslySetInnerHTMLを使う場合はこの保護が無効になるため注意が必要です。"
+      },
+      {
+        "id": "security-03-apply-2",
+        "type": "apply_check",
+        "title": "応用2",
+        "prompt": "ORMを使っていればSQLインジェクションは完全に防げると言えますか？",
+        "options": [
+          {"id": "A", "text": "いいえ。生SQLを書く機能やrawクエリを使う場合は依然としてリスクがある"},
+          {"id": "B", "text": "はい。ORMはすべてのクエリを安全に処理する"},
+          {"id": "C", "text": "ORMはSQLインジェクションとは無関係"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "ORMの標準的なメソッドはパラメータ化されていますが、rawクエリやカスタムSQL構築を使う場合はSQLインジェクションのリスクが残ります。"
+      },
+      {
+        "id": "security-03-summary",
+        "type": "summary",
+        "title": "学んだこと",
+        "bullets": [
+          "XSSはHTMLエスケープ＋CSPで防ぎ、格納型が最も危険",
+          "SQLインジェクションはプリペアドステートメントで根本的に防ぐ",
+          "CSRFはトークン検証＋SameSite Cookieで対策する",
+          "多層防御の考え方で複数の対策を組み合わせることが重要"
+        ]
+      }
+    ],
+    "referenceLabel": "参考ノートを見る"
+  },
+  "ko": {
+    "hook": {
+      "title": "웹 취약점",
+      "prompt": "사용자가 입력란에 <script> 태그를 넣으면 무슨 일이 벌어지는지 상상할 수 있나요?",
+      "takeaway": "XSS·SQL 인젝션·CSRF의 메커니즘과 방어책을 이해하고, 안전한 웹 앱을 개발할 수 있게 됩니다"
+    },
+    "steps": [
+      {
+        "id": "security-03-concept-1",
+        "type": "concept",
+        "title": "개념1",
+        "body": "XSS(크로스 사이트 스크립팅)는 공격자가 악의적인 스크립트를 웹 페이지에 주입하여, 다른 사용자의 브라우저에서 실행시키는 공격입니다. 반사형(URL 파라미터 경유), 저장형(DB 저장 후 표시), DOM형(클라이언트 측 JS 처리)의 3종류가 있습니다.",
+        "bullets": [
+          "대책: 출력 시 HTML 이스케이프, Content-Security-Policy(CSP) 헤더 설정",
+          "저장형 XSS는 피해가 영속화되므로 가장 위험하다"
+        ]
+      },
+      {
+        "id": "security-03-mini-1",
+        "type": "mini_check",
+        "title": "확인1",
+        "prompt": "XSS 공격을 막는 가장 기본적인 대책은?",
+        "options": [
+          {"id": "A", "text": "사용자 입력을 출력할 때 HTML 이스케이프를 수행한다"},
+          {"id": "B", "text": "HTTPS를 사용한다"},
+          {"id": "C", "text": "데이터베이스를 암호화한다"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "HTML 이스케이프에 의해 <script> 같은 특수 문자가 문자열로 표시되어, 스크립트로 실행되지 않게 됩니다."
+      },
+      {
+        "id": "security-03-concept-2",
+        "type": "concept",
+        "title": "개념2",
+        "body": "SQL 인젝션은 사용자 입력을 SQL문에 직접 삽입함으로써, 공격자가 임의의 SQL을 실행하는 공격입니다. CSRF는 사용자가 로그인 중인 사이트에 대해 악의적인 사이트에서 의도치 않은 요청을 보내게 하는 공격입니다.",
+        "bullets": [
+          "SQLi 대책: 프리페어드 스테이트먼트(파라미터화 쿼리) 사용",
+          "CSRF 대책: CSRF 토큰 검증, SameSite Cookie 설정"
+        ]
+      },
+      {
+        "id": "security-03-mini-2",
+        "type": "mini_check",
+        "title": "확인2",
+        "prompt": "SQL 인젝션의 방어책으로 가장 효과적인 것은?",
+        "options": [
+          {"id": "A", "text": "프리페어드 스테이트먼트(파라미터화 쿼리)를 사용한다"},
+          {"id": "B", "text": "입력 문자 수를 제한한다"},
+          {"id": "C", "text": "오류 메시지를 숨긴다"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "프리페어드 스테이트먼트는 SQL문과 파라미터를 분리하므로, 입력값이 SQL 구문으로 해석되는 것을 근본적으로 방지합니다."
+      },
+      {
+        "id": "security-03-worked",
+        "type": "worked_example",
+        "title": "구체적 예시",
+        "situation": "쇼핑몰의 검색 기능에서 검색 키워드가 그대로 HTML에 삽입되어 있었다. 사용자가 검색란에 스크립트를 입력하면 다른 사용자의 Cookie가 탈취된다.",
+        "reasoning": [
+          "이것은 반사형 XSS. URL 파라미터 값이 이스케이프 없이 HTML에 출력되고 있다",
+          "먼저 출력 위치를 모두 파악하고, 템플릿 엔진의 자동 이스케이프를 활성화한다",
+          "Content-Security-Policy 헤더로 인라인 스크립트 실행을 제한한다",
+          "심층 방어(Defense in Depth) 관점에서 여러 대책을 겹쳐 적용한다"
+        ],
+        "takeaway": "웹 보안은 단일 대책이 아닌, 심층 방어로 여러 방어책을 겹치는 것이 중요합니다"
+      },
+      {
+        "id": "security-03-mini-3",
+        "type": "mini_check",
+        "title": "확인3",
+        "prompt": "CSRF 토큰이 유효한 이유로 올바른 것은?",
+        "options": [
+          {"id": "A", "text": "공격자는 정규 사이트가 발행한 토큰을 알 수 없기 때문에"},
+          {"id": "B", "text": "토큰이 있으면 HTTPS 통신이 강제되기 때문에"},
+          {"id": "C", "text": "토큰에 의해 사용자 인증이 수행되기 때문에"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "CSRF 토큰은 서버가 세션별로 생성하는 랜덤 값입니다. 공격자의 사이트에서는 이 토큰을 얻을 수 없으므로, 부정 요청을 탐지할 수 있습니다."
+      },
+      {
+        "id": "security-03-apply-1",
+        "type": "apply_check",
+        "title": "응용1",
+        "prompt": "React/Next.js 앱에서 XSS 대책으로 자동 적용되는 구조는 어느 것인가요?",
+        "options": [
+          {"id": "A", "text": "JSX가 기본적으로 변수를 HTML 이스케이프하여 출력한다"},
+          {"id": "B", "text": "React Router가 URL 파라미터를 검증한다"},
+          {"id": "C", "text": "Next.js가 모든 API 요청을 암호화한다"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "React의 JSX는 변수 출력 시 기본적으로 HTML 이스케이프합니다. 단 dangerouslySetInnerHTML을 사용하면 이 보호가 해제되므로 주의가 필요합니다."
+      },
+      {
+        "id": "security-03-apply-2",
+        "type": "apply_check",
+        "title": "응용2",
+        "prompt": "ORM을 사용하면 SQL 인젝션을 완전히 방지할 수 있다고 할 수 있나요?",
+        "options": [
+          {"id": "A", "text": "아니오. raw SQL 기능이나 raw 쿼리를 사용하면 여전히 위험이 있다"},
+          {"id": "B", "text": "예. ORM은 모든 쿼리를 안전하게 처리한다"},
+          {"id": "C", "text": "ORM은 SQL 인젝션과 무관하다"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "ORM의 표준 메서드는 파라미터화되어 있지만, raw 쿼리나 커스텀 SQL 구성을 사용하면 SQL 인젝션 위험이 남습니다."
+      },
+      {
+        "id": "security-03-summary",
+        "type": "summary",
+        "title": "배운 내용",
+        "bullets": [
+          "XSS는 HTML 이스케이프+CSP로 방지하며, 저장형이 가장 위험하다",
+          "SQL 인젝션은 프리페어드 스테이트먼트로 근본적으로 방지한다",
+          "CSRF는 토큰 검증+SameSite Cookie로 대응한다",
+          "심층 방어 관점에서 여러 대책을 조합하는 것이 중요하다"
+        ]
+      }
+    ],
+    "referenceLabel": "참고 노트 보기"
+  }
+}

@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "javascript",
   "topic": "dom-events",
-  "summary": "Covers DOM element selection and manipulation, event propagation phases (capturing, target, bubbling), and the event delegation pattern for handling dynamic elements efficiently.",
+  "summary": "DOM要素の選択・操作、イベント伝搬フェーズ（キャプチャ・ターゲット・バブリング）、イベント委譲パターンを解説する。",
   "key_points": [
-    "Events propagate in three phases: capturing (top-down), target, and bubbling (bottom-up).",
-    "Event delegation attaches a single listener to a parent to handle events on dynamic child elements.",
-    "Use textContent instead of innerHTML for user input to prevent XSS vulnerabilities."
+    "イベントはキャプチャリング（上→下）、ターゲット、バブリング（下→上）の3フェーズで伝搬する。",
+    "イベント委譲は親要素に単一のリスナーを付け、動的な子要素のイベントを処理するパターンである。",
+    "ユーザー入力にはinnerHTMLではなくtextContentを使用し、XSS脆弱性を防ぐ。"
   ],
   "misconceptions": [
     "e.target and e.currentTarget always refer to the same element.",

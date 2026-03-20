@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "ja": {
+    "hook": {
+      "title": "thisの値、なぜundefined？",
+      "prompt": "`setTimeout(obj.method, 100)`で呼び出すと`this`がオブジェクトではなくなります。なぜこのような問題が起こり、どう解決すべきでしょうか？",
+      "takeaway": "モジュールシステム・クロージャ・thisバインディングを理解し、実務コードの変数参照先を正確に追跡できるようになります"
+    },
+    "steps": [
+      {
+        "id": "js-04-concept-1",
+        "type": "concept",
+        "title": "ES ModulesとCommonJSの違い",
+        "body": "ES Modules（ESM）は`import/export`構文でブラウザとNode.js両方で使える標準仕様です。CommonJS（CJS）は`require/module.exports`でNode.jsの従来の仕組みです。ESMは静的解析が可能でTree Shakingに有利であり、`import`はファイル先頭でのみ使えます。CJSの`require`はどこでも呼べますが、動的です。",
+        "bullets": [
+          "ESMは静的解析可能でTree Shakingに有利、importはファイル先頭のみ",
+          "CJSのrequireはどこでも呼べるが動的で、ESMとの混在はエラーの原因になる"
+        ]
+      },
+      {
+        "id": "js-04-mini-1",
+        "type": "mini_check",
+        "title": "確認1",
+        "prompt": "ES ModulesとCommonJSの違いとして正しいものはどれですか？",
+        "options": [
+          { "id": "A", "text": "ESMのimportは関数内でも使える" },
+          { "id": "B", "text": "CJSのrequireはファイル先頭でのみ使える" },
+          { "id": "C", "text": "ESMは静的解析が可能で、CJSは動的にrequireできる" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "ESMのimportはファイル先頭で静的に宣言し、Tree Shakingなどの最適化が可能です。CJSのrequireは関数内やif文内など動的に使えますが、静的解析には不向きです。"
+      },
+      {
+        "id": "js-04-concept-2",
+        "type": "concept",
+        "title": "クロージャとthisバインディング",
+        "body": "クロージャとは関数が定義時のスコープの変数を参照し続ける仕組みで、データ隠蔽や関数ファクトリに活用されます。thisの値は関数の呼び出し方法で決まり、デフォルト・暗黙的・明示的（call/apply/bind）・newの4つのルールがあります。アロー関数は自身のthisを持たず、定義時のスコープのthisを引き継ぎます。",
+        "bullets": [
+          "クロージャは定義時のスコープの変数を保持し、データ隠蔽や関数ファクトリに使う",
+          "アロー関数はレキシカルthisを持ち、bind/call/applyで変更できない"
+        ]
+      },
+      {
+        "id": "js-04-mini-2",
+        "type": "mini_check",
+        "title": "確認2",
+        "prompt": "クロージャの活用例として正しいものはどれですか？",
+        "options": [
+          { "id": "A", "text": "グローバル変数を増やして全関数からアクセスする" },
+          { "id": "B", "text": "内部変数を外部から隠蔽し、限定されたメソッドのみでアクセスする" },
+          { "id": "C", "text": "関数をクラスに変換する" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "クロージャの代表的な活用がデータ隠蔽です。関数内の変数を外部から直接アクセスできないようにし、返されたメソッドのみでアクセスする設計が可能です。"
+      },
+      {
+        "id": "js-04-worked",
+        "type": "worked_example",
+        "title": "具体例：APIクライアントのクロージャ活用",
+        "situation": "認証トークンを保持するAPIクライアントを作成する場面を考えます。",
+        "reasoning": [
+          "createClient(token)関数でtokenをクロージャに閉じ込める",
+          "返されたオブジェクトのgetメソッドがtokenを参照し続ける",
+          "一度クライアントを作成すれば、毎回tokenを渡す必要がなくなる",
+          "tokenは外部から直接アクセスできないため、セキュリティ面でも有利"
+        ],
+        "takeaway": "クロージャを使えば、外部に公開せずに内部状態を保持できる安全で再利用可能なモジュールが作れます"
+      },
+      {
+        "id": "js-04-mini-3",
+        "type": "mini_check",
+        "title": "確認3",
+        "prompt": "クラスのメソッド内でsetIntervalを使う場合、アロー関数と通常関数でthisの挙動はどう異なりますか？",
+        "options": [
+          { "id": "A", "text": "どちらも同じ。thisはクラスインスタンスを指す" },
+          { "id": "B", "text": "アロー関数はクラスインスタンスのthisを引き継ぎ、通常関数はグローバル（またはundefined）になる" },
+          { "id": "C", "text": "通常関数はクラスインスタンスのthisを引き継ぎ、アロー関数はundefinedになる" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "アロー関数はレキシカルthis（定義時のスコープのthis）を引き継ぐため、クラスメソッド内ではインスタンスを指します。通常関数は呼び出し元のコンテキストに応じてthisが変わるため、setInterval内ではグローバルまたはundefinedになります。"
+      },
+      {
+        "id": "js-04-apply-1",
+        "type": "apply_check",
+        "title": "応用1",
+        "prompt": "`setTimeout(emitter.emit, 1000)`でthisがemitterを指さない問題の解決方法として最も適切なものはどれですか？",
+        "options": [
+          { "id": "A", "text": "emitter.emitをグローバル関数に変更する" },
+          { "id": "B", "text": "`setTimeout(() => emitter.emit('tick'), 1000)`でアロー関数を使うか、`.bind(emitter)`を使う" },
+          { "id": "C", "text": "setTimeoutの代わりにsetIntervalを使う" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "アロー関数を使えばemitter.emit('tick')が暗黙的バインディングで正しくthisを設定します。また.bind(emitter)で明示的にthisを固定する方法もあります。"
+      },
+      {
+        "id": "js-04-apply-2",
+        "type": "apply_check",
+        "title": "応用2",
+        "prompt": "forループ内で`var`を使いイベントリスナーを登録した場合、すべてのリスナーがループの最終値を参照してしまいます。最も適切な修正方法はどれですか？",
+        "options": [
+          { "id": "A", "text": "setTimeout()でリスナー登録を遅延させる" },
+          { "id": "B", "text": "varをletに変更し、ブロックスコープで各反復の値を保持する" },
+          { "id": "C", "text": "グローバル変数に各値を保存する" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "varは関数スコープのため、ループ変数が共有されます。letに変更するとブロックスコープにより各反復で別の変数が生成され、クロージャが正しい値を参照します。"
+      },
+      {
+        "id": "js-04-summary",
+        "type": "summary",
+        "title": "学んだこと",
+        "bullets": [
+          "ESMは静的解析・Tree Shaking対応、CJSは動的requireが可能だが混在に注意",
+          "クロージャは定義時のスコープの変数を保持し、データ隠蔽や関数ファクトリに活用する",
+          "thisの値は呼び出し方法で決まり、デフォルト・暗黙的・明示的・newの4ルールがある",
+          "アロー関数はレキシカルthisを持ち、コールバックやタイマー内でthisが変わらない"
+        ]
+      }
+    ],
+    "referenceLabel": "参考ノートを見る"
+  },
+  "ko": {
+    "hook": {
+      "title": "this 값, 왜 undefined일까?",
+      "prompt": "`setTimeout(obj.method, 100)`으로 호출하면 `this`가 객체가 아니게 됩니다. 왜 이런 문제가 생기고, 어떻게 해결해야 할까요?",
+      "takeaway": "모듈 시스템·클로저·this 바인딩을 이해하고, 실무 코드의 변수 참조 대상을 정확히 추적할 수 있게 됩니다"
+    },
+    "steps": [
+      {
+        "id": "js-04-concept-1",
+        "type": "concept",
+        "title": "ES Modules와 CommonJS의 차이",
+        "body": "ES Modules(ESM)는 `import/export` 구문으로 브라우저와 Node.js 양쪽에서 사용할 수 있는 표준 사양입니다. CommonJS(CJS)는 `require/module.exports`로 Node.js의 기존 방식입니다. ESM은 정적 분석이 가능하여 Tree Shaking에 유리하고, `import`는 파일 선두에서만 사용 가능합니다. CJS의 `require`는 어디서든 호출할 수 있지만 동적입니다.",
+        "bullets": [
+          "ESM은 정적 분석 가능하며 Tree Shaking에 유리, import는 파일 선두에서만 가능",
+          "CJS의 require는 어디서든 호출 가능하지만 동적이며, ESM과의 혼재는 에러 원인이 된다"
+        ]
+      },
+      {
+        "id": "js-04-mini-1",
+        "type": "mini_check",
+        "title": "확인1",
+        "prompt": "ES Modules와 CommonJS의 차이로 올바른 것은 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "ESM의 import는 함수 안에서도 사용할 수 있다" },
+          { "id": "B", "text": "CJS의 require는 파일 선두에서만 사용할 수 있다" },
+          { "id": "C", "text": "ESM은 정적 분석이 가능하고, CJS는 동적으로 require할 수 있다" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "ESM의 import는 파일 선두에서 정적으로 선언하며 Tree Shaking 등의 최적화가 가능합니다. CJS의 require는 함수 안이나 if문 안에서 동적으로 사용할 수 있지만 정적 분석에는 불리합니다."
+      },
+      {
+        "id": "js-04-concept-2",
+        "type": "concept",
+        "title": "클로저와 this 바인딩",
+        "body": "클로저란 함수가 정의 시점의 스코프에 있는 변수를 계속 참조하는 구조로, 데이터 은닉이나 함수 팩토리에 활용됩니다. this의 값은 함수의 호출 방법에 의해 결정되며, 기본·암묵적·명시적(call/apply/bind)·new의 4가지 규칙이 있습니다. 화살표 함수는 자체 this를 갖지 않고 정의 시점 스코프의 this를 그대로 이어받습니다.",
+        "bullets": [
+          "클로저는 정의 시점 스코프의 변수를 유지하며, 데이터 은닉이나 함수 팩토리에 사용",
+          "화살표 함수는 렉시컬 this를 가지며, bind/call/apply로 변경할 수 없다"
+        ]
+      },
+      {
+        "id": "js-04-mini-2",
+        "type": "mini_check",
+        "title": "확인2",
+        "prompt": "클로저의 활용 예로 올바른 것은 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "전역 변수를 늘려 모든 함수에서 접근한다" },
+          { "id": "B", "text": "내부 변수를 외부에서 은닉하고, 제한된 메서드로만 접근한다" },
+          { "id": "C", "text": "함수를 클래스로 변환한다" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "클로저의 대표적 활용이 데이터 은닉입니다. 함수 내 변수를 외부에서 직접 접근할 수 없게 하고, 반환된 메서드로만 접근하는 설계가 가능합니다."
+      },
+      {
+        "id": "js-04-worked",
+        "type": "worked_example",
+        "title": "구체적 예: API 클라이언트의 클로저 활용",
+        "situation": "인증 토큰을 보유하는 API 클라이언트를 만드는 상황을 생각해 봅니다.",
+        "reasoning": [
+          "createClient(token) 함수로 token을 클로저에 가둔다",
+          "반환된 객체의 get 메서드가 token을 계속 참조한다",
+          "한번 클라이언트를 생성하면 매번 token을 전달할 필요가 없어진다",
+          "token은 외부에서 직접 접근할 수 없으므로 보안 면에서도 유리하다"
+        ],
+        "takeaway": "클로저를 사용하면 외부에 공개하지 않고 내부 상태를 유지할 수 있는 안전하고 재사용 가능한 모듈을 만들 수 있습니다"
+      },
+      {
+        "id": "js-04-mini-3",
+        "type": "mini_check",
+        "title": "확인3",
+        "prompt": "클래스 메서드 내에서 setInterval을 사용할 때, 화살표 함수와 일반 함수에서 this의 동작은 어떻게 다른가요?",
+        "options": [
+          { "id": "A", "text": "둘 다 같다. this는 클래스 인스턴스를 가리킨다" },
+          { "id": "B", "text": "화살표 함수는 클래스 인스턴스의 this를 이어받고, 일반 함수는 전역(또는 undefined)이 된다" },
+          { "id": "C", "text": "일반 함수는 클래스 인스턴스의 this를 이어받고, 화살표 함수는 undefined가 된다" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "화살표 함수는 렉시컬 this(정의 시점 스코프의 this)를 이어받으므로 클래스 메서드 내에서는 인스턴스를 가리킵니다. 일반 함수는 호출 측 컨텍스트에 따라 this가 변하므로 setInterval 내에서는 전역 또는 undefined가 됩니다."
+      },
+      {
+        "id": "js-04-apply-1",
+        "type": "apply_check",
+        "title": "응용1",
+        "prompt": "`setTimeout(emitter.emit, 1000)`에서 this가 emitter를 가리키지 않는 문제의 해결 방법으로 가장 적절한 것은 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "emitter.emit을 전역 함수로 변경한다" },
+          { "id": "B", "text": "`setTimeout(() => emitter.emit('tick'), 1000)`으로 화살표 함수를 사용하거나, `.bind(emitter)`를 사용한다" },
+          { "id": "C", "text": "setTimeout 대신 setInterval을 사용한다" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "화살표 함수를 사용하면 emitter.emit('tick')이 암묵적 바인딩으로 올바르게 this를 설정합니다. 또한 .bind(emitter)로 명시적으로 this를 고정하는 방법도 있습니다."
+      },
+      {
+        "id": "js-04-apply-2",
+        "type": "apply_check",
+        "title": "응용2",
+        "prompt": "for 루프 안에서 `var`를 사용하여 이벤트 리스너를 등록하면, 모든 리스너가 루프의 최종값을 참조합니다. 가장 적절한 수정 방법은 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "setTimeout()으로 리스너 등록을 지연시킨다" },
+          { "id": "B", "text": "var를 let으로 변경하여 블록 스코프로 각 반복의 값을 유지한다" },
+          { "id": "C", "text": "전역 변수에 각 값을 저장한다" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "var는 함수 스코프이므로 루프 변수가 공유됩니다. let으로 변경하면 블록 스코프에 의해 각 반복마다 별도의 변수가 생성되어 클로저가 올바른 값을 참조합니다."
+      },
+      {
+        "id": "js-04-summary",
+        "type": "summary",
+        "title": "배운 내용",
+        "bullets": [
+          "ESM은 정적 분석·Tree Shaking 대응, CJS는 동적 require가 가능하지만 혼재에 주의",
+          "클로저는 정의 시점 스코프의 변수를 유지하며, 데이터 은닉이나 함수 팩토리에 활용한다",
+          "this의 값은 호출 방법으로 결정되며, 기본·암묵적·명시적·new의 4가지 규칙이 있다",
+          "화살표 함수는 렉시컬 this를 가져 콜백이나 타이머 내에서 this가 변하지 않는다"
+        ]
+      }
+    ],
+    "referenceLabel": "참고 노트 보기"
+  }
+}

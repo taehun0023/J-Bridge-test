@@ -37,67 +37,70 @@ export interface CategoryChild {
   description: string
 }
 
-export const categoryChildren: Record<string, {
-  title: string
-  description: string
-  children: CategoryChild[]
-}> = {
+export const categoryChildren: Record<
+  string,
+  {
+    title: string
+    description: string
+    children: CategoryChild[]
+  }
+> = {
   seikatsu: {
     title: '生活日本語',
-    description: 'JLPT対策の語彙・文法・読解・聴解・漢字を学習しましょう',
+    description: 'JLPT の語彙、文法、読解、聴解、漢字を段階的に学習します。',
     children: [
-      { href: '/japanese/jlpt/vocabulary', label: '語彙', description: 'JLPT級別の単語学習とフラッシュカード' },
-      { href: '/japanese/jlpt/grammar', label: '文法', description: 'JLPT級別の文法パターン' },
-      { href: '/japanese/jlpt/reading', label: '読解', description: '読解問題で読む力を鍛える' },
-      { href: '/japanese/jlpt/listening', label: '聴解', description: 'リスニング問題で聞く力を鍛える' },
-      { href: '/japanese/jlpt/kanji', label: '漢字', description: 'JLPT級別の漢字学習' },
+      { href: '/japanese/jlpt/vocabulary', label: '語彙', description: 'JLPT 頻出語彙を学習します' },
+      { href: '/japanese/jlpt/grammar', label: '文法', description: 'JLPT 文法項目を整理します' },
+      { href: '/japanese/jlpt/reading', label: '読解', description: '読解問題の読み方を練習します' },
+      { href: '/japanese/jlpt/listening', label: '聴解', description: '音声を聞いて内容を理解します' },
+      { href: '/japanese/jlpt/kanji', label: '漢字', description: 'JLPT 頻出漢字を学習します' },
     ],
   },
   'business-jp': {
     title: 'ビジネス日本語',
-    description: 'ビジネス語彙、文章パターン、ビジネス表現を学習しましょう',
+    description: '職場でよく使う表現、敬語、用語、文型を中心に学習します。',
     children: [
-      { href: '/japanese/business/glossary', label: 'ビジネス語彙', description: 'ビジネス・IT現場の専門用語' },
-      { href: '/japanese/business/sentence-patterns', label: '文章パターン', description: '日本語の文章パターン' },
-      { href: '/japanese/business/expressions', label: 'ビジネス表現', description: 'ビジネスで使える表現' },
-      { href: '/japanese/business/keigo', label: '敬語', description: '敬語の変換規則・よくある間違い' },
-      { href: '/japanese/business/shared-vocab', label: 'みんなの単語帳', description: 'みんなで作る共有単語帳' },
+      { href: '/japanese/business/glossary', label: 'ビジネス用語', description: '職場でよく使う基本用語を確認します' },
+      { href: '/japanese/business/sentence-patterns', label: '文型', description: 'ビジネス文型を整理します' },
+      { href: '/japanese/business/expressions', label: '表現', description: '実務で使う定番表現を学びます' },
+      { href: '/japanese/business/keigo', label: '敬語', description: '敬語の使い方を確認します' },
+      { href: '/japanese/business/shared-vocab', label: '共通知識用語', description: '業務全体で使う共通知識を確認します' },
     ],
   },
   cs: {
     title: 'CS知識',
-    description: 'ITパスポート・基本情報技術者試験のテクノロジ系を学習しましょう',
+    description: 'IT 基礎知識を科目別に学び、用語確認と理解度テストにつなげます。',
     children: [
-      { href: '/cs/basic-theory', label: '基礎理論', description: '2進数、論理演算、情報理論、確率統計' },
-      { href: '/cs/algorithms', label: 'アルゴリズム', description: 'ソート、探索、再帰、計算量、動的計画法' },
-      { href: '/cs/data-structures', label: 'データ構造', description: '配列、リスト、スタック、キュー、ツリー、ハッシュ' },
-      { href: '/cs/computer-architecture', label: 'コンピュータシステム', description: 'CPU、メモリ、プロセス、OS機能' },
-      { href: '/cs/operating-systems', label: 'オペレーティングシステム', description: 'プロセス、スレッド、スケジューリング、資源管理' },
-      { href: '/cs/database', label: 'データベース', description: '正規化、SQL理論、トランザクション、ER図' },
-      { href: '/cs/networking', label: 'ネットワーク', description: 'OSI/TCP/IP、プロトコル、ルーティング' },
-      { href: '/cs/security', label: 'セキュリティ', description: '暗号化、認証、攻撃手法、セキュリティ対策' },
+      { href: '/cs/basic-theory', label: '基礎理論', description: '情報表現、数値、コードの基礎' },
+      { href: '/cs/algorithms', label: 'アルゴリズム', description: '探索、整列、再帰、計算量の基本' },
+      { href: '/cs/data-structures', label: 'データ構造', description: '配列、リスト、木、ハッシュの使い分け' },
+      { href: '/cs/computer-architecture', label: 'コンピュータアーキテクチャ', description: 'CPU、メモリ、入出力、性能指標' },
+      { href: '/cs/operating-systems', label: 'オペレーティングシステム', description: 'プロセス、スレッド、仮想メモリ、排他制御' },
+      { href: '/cs/database', label: 'データベース', description: '関係モデル、索引、トランザクション、実行計画' },
+      { href: '/cs/networking', label: 'ネットワーク', description: 'OSI/TCP/IP、ルーティング、HTTP、DNS' },
+      { href: '/cs/security', label: 'セキュリティ', description: '認証、暗号、脆弱性、インシデント対応' },
     ],
   },
   dev: {
-    title: '開発実務能力',
-    description: 'プログラミング言語とフレームワークを学習しましょう',
+    title: '開発実践スキル',
+    description: '開発現場で必要な実践スキルを科目別に学習します。',
     children: [
-      { href: '/dev/cwf', label: '共通業務基礎', description: 'エラー報告・バージョン管理・コードレビューの基礎' },
-      { href: '/dev/java', label: 'Java', description: 'エンタープライズ開発の基盤' },
-      { href: '/dev/javascript', label: 'JavaScript', description: 'Web開発の必須言語' },
-      { href: '/dev/spring-boot', label: 'Spring Boot', description: 'Javaバックエンドフレームワーク' },
-      { href: '/dev/react', label: 'React', description: 'フロントエンドUIライブラリ' },
-      { href: '/dev/nextjs', label: 'Next.js', description: 'Reactフルスタックフレームワーク' },
-      { href: '/dev/python', label: 'Python', description: '汎用プログラミング言語' },
-      { href: '/dev/sql', label: 'SQL', description: 'データベース操作言語' },
+      { href: '/dev/cwf', label: '共通業務基礎', description: '開発現場で共通して必要な基礎スキル' },
+      { href: '/dev/java', label: 'Java', description: 'Java の実務基礎' },
+      { href: '/dev/javascript', label: 'JavaScript', description: 'Web 開発の基本言語' },
+      { href: '/dev/spring-boot', label: 'Spring Boot', description: 'Java バックエンド開発の基本' },
+      { href: '/dev/react', label: 'React', description: 'React を使った UI 開発' },
+      { href: '/dev/nextjs', label: 'Next.js', description: 'Next.js を使った実践開発' },
+      { href: '/dev/python', label: 'Python', description: 'Python の基本と実務活用' },
+      { href: '/dev/sql', label: 'SQL', description: 'データベース操作の基礎' },
     ],
   },
   'business-lit': {
-    title: 'ビジネスリテラシー',
-    description: 'ビジネスマナーと企業文化を学習しましょう',
+    title: 'ビジネス素養',
+    description: '職場で必要な態度、文化理解、情報セキュリティを学習します。',
     children: [
-      { href: '/business-literacy/attitude-culture', label: '態度・企業文化', description: '社会人としての姿勢と日本企業の文化' },
-      { href: '/business-literacy/security', label: 'セキュリティ', description: '情報セキュリティの基礎知識' },
+      { href: '/business-literacy/attitude-culture', label: '態度・文化', description: '職場で求められる姿勢と文化理解' },
+      { href: '/business-literacy/security', label: 'セキュリティ', description: '情報セキュリティの基本知識' },
     ],
   },
 }
@@ -107,17 +110,17 @@ export const mainNavItems: NavItem[] = [
   { key: 'seikatsu', href: '/japanese/jlpt', label: '生活日本語', icon: Languages },
   { key: 'business-jp', href: '/japanese/business', label: 'ビジネス日本語', icon: Briefcase },
   { key: 'cs', href: '/cs', label: 'CS知識', icon: Cpu },
-  { key: 'dev', href: '/dev', label: '開発実務能力', icon: Code2 },
-  { key: 'business-lit', href: '/business-literacy', label: 'ビジネスリテラシー', icon: Handshake },
+  { key: 'dev', href: '/dev', label: '開発実践スキル', icon: Code2 },
+  { key: 'business-lit', href: '/business-literacy', label: 'ビジネス素養', icon: Handshake },
 ]
 
 export const adminNavItems: AdminNavItem[] = [
   { href: '/admin', label: 'ダッシュボード', icon: LayoutDashboard, allowedRoles: ['admin', 'mentor'] },
-  { href: '/mentor', label: 'メンティ管理', icon: Users, allowedRoles: ['mentor'] },
+  { href: '/mentor', label: 'メンター管理', icon: Users, allowedRoles: ['mentor'] },
   { href: '/admin/users', label: 'ユーザー管理', icon: Users, allowedRoles: ['admin'] },
-  { href: '/admin/mentors', label: 'メンター管理', icon: UserCog, allowedRoles: ['admin'] },
-  { href: '/admin/courses', label: 'コンテンツ管理', icon: FileEdit, allowedRoles: ['admin'] },
-  { href: '/admin/tasks', label: '課題配信', icon: ClipboardList, allowedRoles: ['admin', 'mentor'] },
+  { href: '/admin/mentors', label: 'メンター一覧', icon: UserCog, allowedRoles: ['admin'] },
+  { href: '/admin/courses', label: 'コース管理', icon: FileEdit, allowedRoles: ['admin'] },
+  { href: '/admin/tasks', label: '課題管理', icon: ClipboardList, allowedRoles: ['admin', 'mentor'] },
   { href: '/admin/reports', label: 'レポート', icon: BarChart3, allowedRoles: ['admin', 'mentor'] },
   { href: '/admin/tts-cache', label: 'TTSキャッシュ', icon: Volume2, allowedRoles: ['admin'] },
   { href: '/admin/audit-log', label: '監査ログ', icon: ScrollText, allowedRoles: ['admin'] },

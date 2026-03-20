@@ -1,5 +1,10 @@
 import { readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
+import {
+  getCsLessonDisplayTitle,
+  getCsSubjectDisplayDescription,
+  getCsSubjectDisplayTitle,
+} from './cs-display'
 
 export type CsSubjectSlug =
   | 'basic-theory'
@@ -16,6 +21,7 @@ export interface CsLessonMeta {
   category: 'cs-knowledge'
   subject: string
   topic: string
+  difficulty: 'foundation' | 'intermediate' | 'advanced'
   default_language: 'ja'
   available_languages: string[]
   summary: string
@@ -30,11 +36,65 @@ export interface CsLessonMeta {
   }
 }
 
+export interface CsLessonChoiceOption {
+  id: string
+  text: string
+}
+
+export type CsLessonStep =
+  | {
+      id: string
+      type: 'concept'
+      title: string
+      body: string
+      bullets?: string[]
+    }
+  | {
+      id: string
+      type: 'mini_check' | 'apply_check'
+      title: string
+      prompt: string
+      options: CsLessonChoiceOption[]
+      correctOptionId: string
+      explanation: string
+    }
+  | {
+      id: string
+      type: 'worked_example'
+      title: string
+      situation: string
+      reasoning: string[]
+      takeaway: string
+    }
+  | {
+      id: string
+      type: 'summary'
+      title: string
+      bullets: string[]
+    }
+
+export interface CsLessonStageLocale {
+  hook: {
+    title: string
+    prompt: string
+    takeaway?: string
+  }
+  steps: CsLessonStep[]
+  referenceLabel?: string
+}
+
+export interface CsLessonInteractiveContent {
+  version: 1
+  ja: CsLessonStageLocale
+  ko?: CsLessonStageLocale
+}
+
 export interface CsLessonSummary {
   lessonId: string
   title: string
   estMinutes: number
   subject: string
+  difficulty: CsLessonMeta['difficulty']
   tags: string[]
   summary: string
 }
@@ -59,6 +119,7 @@ export interface CsLessonDetail {
   tags: string[]
   content: string
   contentKo: string | null
+  interactiveContent: CsLessonInteractiveContent | null
   meta: CsLessonMeta
 }
 
@@ -81,18 +142,29 @@ const SUBJECT_CONFIG: Record<CsSubjectSlug, { moduleId: string }> = {
   security: { moduleId: 'CSK-SC-01' },
 }
 
+const SUBJECT_ORDER: CsSubjectSlug[] = [
+  'basic-theory',
+  'data-structures',
+  'algorithms',
+  'computer-architecture',
+  'operating-systems',
+  'database',
+  'networking',
+  'security',
+]
+
 function stripQuotes(value: string) {
   return value.trim().replace(/^['"]|['"]$/g, '')
 }
 
 function parseFrontmatter(content: string) {
-  const match = content.match(/^---\n([\s\S]*?)\n---/)
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/)
   if (!match) {
     throw new Error('Missing lesson frontmatter')
   }
 
   const result: Record<string, string | number | string[]> = {}
-  for (const line of match[1].split('\n')) {
+  for (const line of match[1].split(/\r?\n/)) {
     const trimmed = line.trim()
     if (!trimmed || !trimmed.includes(':')) continue
 
@@ -137,6 +209,80 @@ function parseModuleYaml(content: string) {
   }
 }
 
+function isValidStep(step: unknown): step is CsLessonStep {
+  if (!step || typeof step !== 'object') return false
+
+  const candidate = step as Partial<CsLessonStep>
+  if (!candidate.id || !candidate.type || !candidate.title) return false
+
+  if (candidate.type === 'concept') {
+    return typeof candidate.body === 'string'
+  }
+
+  if (candidate.type === 'mini_check' || candidate.type === 'apply_check') {
+    return (
+      typeof candidate.prompt === 'string' &&
+      Array.isArray(candidate.options) &&
+      candidate.options.length >= 2 &&
+      candidate.options.every(
+        (option) =>
+          option &&
+          typeof option === 'object' &&
+          'id' in option &&
+          'text' in option &&
+          typeof option.id === 'string' &&
+          typeof option.text === 'string'
+      ) &&
+      typeof candidate.correctOptionId === 'string' &&
+      candidate.options.some((option) => option.id === candidate.correctOptionId) &&
+      typeof candidate.explanation === 'string'
+    )
+  }
+
+  if (candidate.type === 'worked_example') {
+    return (
+      typeof candidate.situation === 'string' &&
+      Array.isArray(candidate.reasoning) &&
+      candidate.reasoning.every((item) => typeof item === 'string') &&
+      typeof candidate.takeaway === 'string'
+    )
+  }
+
+  if (candidate.type === 'summary') {
+    return Array.isArray(candidate.bullets) && candidate.bullets.every((item) => typeof item === 'string')
+  }
+
+  return false
+}
+
+function isValidLocale(locale: unknown): locale is CsLessonStageLocale {
+  if (!locale || typeof locale !== 'object') return false
+
+  const candidate = locale as Partial<CsLessonStageLocale>
+  return (
+    !!candidate.hook &&
+    typeof candidate.hook.title === 'string' &&
+    typeof candidate.hook.prompt === 'string' &&
+    Array.isArray(candidate.steps) &&
+    candidate.steps.length > 0 &&
+    candidate.steps.every(isValidStep)
+  )
+}
+
+export function parseInteractiveContent(raw: string): CsLessonInteractiveContent {
+  const parsed = JSON.parse(raw) as CsLessonInteractiveContent
+
+  if (
+    parsed.version !== 1 ||
+    !isValidLocale(parsed.ja) ||
+    (parsed.ko !== undefined && !isValidLocale(parsed.ko))
+  ) {
+    throw new Error('Invalid CS lesson interactive content schema')
+  }
+
+  return parsed
+}
+
 function getModuleDir(moduleId: string) {
   return path.join(CONTENT_ROOT, 'modules', moduleId)
 }
@@ -159,11 +305,12 @@ async function readModule(moduleId: string) {
         await readFile(path.join(lessonsDir, `${lessonId}.meta.json`), 'utf8')
       ) as CsLessonMeta
 
-      return {
-        lessonId,
-        title: String(frontmatter.title),
-        estMinutes: Number(frontmatter.est_minutes),
-        subject: String(frontmatter.subject),
+        return {
+          lessonId,
+          title: getCsLessonDisplayTitle(lessonId, String(frontmatter.title)),
+          estMinutes: Number(frontmatter.est_minutes),
+          subject: String(frontmatter.subject),
+          difficulty: meta.difficulty,
         tags: Array.isArray(frontmatter.tags) ? frontmatter.tags.map(String) : [],
         summary: meta.summary,
       } satisfies CsLessonSummary
@@ -177,9 +324,7 @@ async function readModule(moduleId: string) {
 }
 
 export async function getAllCsSubjectContents(): Promise<CsSubjectContent[]> {
-  const entries = Object.entries(SUBJECT_CONFIG) as Array<
-    [CsSubjectSlug, { moduleId: string }]
-  >
+  const entries = SUBJECT_ORDER.map((slug) => [slug, SUBJECT_CONFIG[slug]] as const)
 
   return Promise.all(
     entries.map(async ([slug, config]) => {
@@ -187,8 +332,8 @@ export async function getAllCsSubjectContents(): Promise<CsSubjectContent[]> {
       return {
         slug,
         moduleId: config.moduleId,
-        title: moduleData.title,
-        description: moduleData.description,
+        title: getCsSubjectDisplayTitle(slug),
+        description: getCsSubjectDisplayDescription(slug),
         level: moduleData.level,
         lessons: moduleData.lessons,
       }
@@ -204,17 +349,15 @@ export async function getCsSubjectContent(slug: CsSubjectSlug) {
   return {
     slug,
     moduleId: config.moduleId,
-    title: moduleData.title,
-    description: moduleData.description,
+    title: getCsSubjectDisplayTitle(slug),
+    description: getCsSubjectDisplayDescription(slug),
     level: moduleData.level,
     lessons: moduleData.lessons,
   } satisfies CsSubjectContent
 }
 
 export async function getCsLessonDetail(lessonId: string): Promise<CsLessonDetail | null> {
-  const entries = Object.entries(SUBJECT_CONFIG) as Array<
-    [CsSubjectSlug, { moduleId: string }]
-  >
+  const entries = SUBJECT_ORDER.map((slug) => [slug, SUBJECT_CONFIG[slug]] as const)
 
   for (const [subjectSlug, config] of entries) {
     const moduleDir = getModuleDir(config.moduleId)
@@ -239,17 +382,27 @@ export async function getCsLessonDetail(lessonId: string): Promise<CsLessonDetai
         contentKo = null
       }
 
+      let interactiveContent: CsLessonInteractiveContent | null = null
+      try {
+        interactiveContent = parseInteractiveContent(
+          await readFile(path.join(moduleDir, 'lessons', `${lessonId}.stage.json`), 'utf8')
+        )
+      } catch {
+        interactiveContent = null
+      }
+
       return {
         lessonId,
-        title: String(frontmatter.title),
+        title: getCsLessonDisplayTitle(lessonId, String(frontmatter.title)),
         subject: String(frontmatter.subject),
         subjectSlug,
         moduleId: config.moduleId,
-        moduleTitle: moduleData.title,
+        moduleTitle: getCsSubjectDisplayTitle(subjectSlug),
         estMinutes: Number(frontmatter.est_minutes),
         tags: Array.isArray(frontmatter.tags) ? frontmatter.tags.map(String) : [],
         content,
         contentKo,
+        interactiveContent,
         meta,
       }
     } catch {

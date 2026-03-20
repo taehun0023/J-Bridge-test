@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "javascript",
   "topic": "modules-closures",
-  "summary": "Explains ES Modules vs CommonJS differences, closure mechanics and practical use patterns, and the four this-binding rules including arrow function lexical this behavior.",
+  "summary": "ESモジュールとCommonJSの違い、クロージャの仕組みと実務パターン、thisの4つのバインディング規則を解説する。",
   "key_points": [
-    "ES Modules use static imports enabling tree-shaking; CommonJS uses dynamic require.",
-    "Closures allow functions to retain access to their definition-scope variables, enabling data encapsulation.",
-    "Arrow functions inherit this from their lexical scope and cannot be rebound with bind/call/apply."
+    "ESモジュールは静的インポートによりツリーシェイキングが可能、CommonJSは動的なrequireを使用する。",
+    "クロージャにより関数は定義スコープの変数へのアクセスを保持し、データのカプセル化を実現する。",
+    "アロー関数はレキシカルスコープからthisを継承し、bind/call/applyで再バインドできない。"
   ],
   "misconceptions": [
     "Arrow function this can be changed using bind, call, or apply.",

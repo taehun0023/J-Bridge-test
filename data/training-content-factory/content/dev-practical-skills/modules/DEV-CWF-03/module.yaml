@@ -1,8 +1,8 @@
 module:
   id: DEV-CWF-03
-  title: Common Workplace Fundamentals - Issue and Task Reading
+  title: 共通業務基礎 - イシューとタスクの読み方
   level: foundation
-  description: "정적 해설형 콘텐츠로 이슈 트래커와 태스크 카드에서 작업 범위와 우선순위를 읽는 방법을 설명한다."
+  description: "イシュートラッカーとタスクカードから作業範囲と優先順位を読む方法を解説する。"
   subject: common-workplace-fundamentals
   content_mode: static-interpretive
   outcomes:

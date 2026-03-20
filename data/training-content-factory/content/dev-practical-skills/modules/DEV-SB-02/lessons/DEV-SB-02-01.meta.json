@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "spring-boot",
   "topic": "layered-architecture",
-  "summary": "Explains the responsibilities of Controller, Service, and Repository layers in Spring Boot, how data flows through a REST request lifecycle, dependency direction rules, and DTO/Entity separation.",
+  "summary": "Controller・Service・Repository各層の責務、RESTリクエストのデータフロー、依存方向の規則、DTO/Entity分離を解説する。",
   "key_points": [
-    "Controller handles HTTP request/response only; Service holds business logic; Repository manages data access.",
-    "Dependencies flow one way: Controller → Service → Repository — never in reverse.",
-    "DTOs and Entities should be separated to decouple API contracts from database schema."
+    "ControllerはHTTPリクエスト/レスポンスのみを担当し、Serviceはビジネスロジック、Repositoryはデータアクセスを管理する。",
+    "依存方向は一方向：Controller → Service → Repository — 逆方向は不可。",
+    "DTOとEntityを分離し、APIの契約とデータベーススキーマを疎結合にする。"
   ],
   "misconceptions": [
     "It is acceptable to call Repository directly from Controller for simple queries.",

@@ -1,8 +1,8 @@
 module:
   id: DEV-SQL-03
-  title: SQL - Transactions, Indexes, and Operational Caution
+  title: SQL - トランザクション・インデックス・運用上の注意
   level: advanced
-  description: "정적 해설형 콘텐츠로 트랜잭션, 인덱스, 운영 환경에서의 SQL 주의점을 설명한다."
+  description: "トランザクション・インデックス・本番環境でのSQL注意点を解説する。"
   subject: sql
   content_mode: static-interpretive
   outcomes:

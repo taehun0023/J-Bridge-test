@@ -1,8 +1,8 @@
 module:
   id: DEV-JAVA-03
-  title: Java - Error and Exception Interpretation
+  title: Java - エラーと例外の解釈
   level: intermediate
-  description: "정적 해설형 콘텐츠로 Java 예외 계층과 스택 트레이스를 읽고 원인을 추론하는 방법을 설명한다."
+  description: "Javaの例外階層とスタックトレースを読み、原因を推論する方法を解説する。"
   subject: java
   content_mode: static-interpretive
   outcomes:

@@ -1,8 +1,8 @@
 module:
   id: DEV-JS-04
-  title: JavaScript - Modules, Scope, and Common Work Situations
+  title: JavaScript - モジュール・スコープ・実務パターン
   level: advanced
-  description: "정적 해설형 콘텐츠로 모듈 시스템, 클로저, 실무에서 자주 마주치는 JS 패턴을 설명한다."
+  description: "モジュールシステム・クロージャ・実務で頻出するJSパターンを解説する。"
   subject: javascript
   content_mode: static-interpretive
   outcomes:

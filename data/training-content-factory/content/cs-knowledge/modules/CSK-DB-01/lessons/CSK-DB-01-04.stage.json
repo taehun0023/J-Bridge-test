@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "ja": {
+    "hook": {
+      "title": "実行計画を読んでSQLを最適化する",
+      "prompt": "同じ結果を返すSQLでも実行時間が100倍違うことがあります。データベースは内部でどうやって実行方法を決めているのでしょうか？",
+      "takeaway": "EXPLAINの読み方を理解し、シーケンシャルスキャンとインデックススキャンの違い、オプティマイザの判断基準を把握できるようになります。"
+    },
+    "steps": [
+      {
+        "id": "database-04-concept-1",
+        "type": "concept",
+        "title": "実行計画とオプティマイザ",
+        "body": "SQLを実行する際、データベースのクエリオプティマイザが最もコストの低い実行計画を選択します。EXPLAIN文を使うことで、オプティマイザが選んだ実行計画を確認できます。実行計画にはスキャン方式（Seq Scan / Index Scan）、結合方式（Nested Loop / Hash Join / Merge Join）、コスト見積もりなどが含まれます。",
+        "bullets": [
+          "コストベースオプティマイザ（CBO）はテーブルの統計情報（行数、カラムの分布等）に基づいて計画を選択する",
+          "統計情報が古いと、オプティマイザが最適でない計画を選ぶことがある（ANALYZEで更新）"
+        ]
+      },
+      {
+        "id": "database-04-mini-1",
+        "type": "mini_check",
+        "title": "確認1",
+        "prompt": "クエリオプティマイザが実行計画を決定する際に最も重要な入力は何ですか？",
+        "options": [
+          {"id": "A", "text": "テーブルの統計情報（行数、カラムのカーディナリティ、データの分布等）"},
+          {"id": "B", "text": "SQLを書いたプログラマの意図"},
+          {"id": "C", "text": "サーバのCPUクロック速度"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "コストベースオプティマイザはテーブルの統計情報を参照して各実行計画のコストを見積もり、最もコストの低い計画を選択します。統計情報の正確さが計画の品質を左右します。"
+      },
+      {
+        "id": "database-04-concept-2",
+        "type": "concept",
+        "title": "Seq Scan vs Index Scan",
+        "body": "Seq Scan（シーケンシャルスキャン）はテーブル全体を先頭から順に読み取ります。Index Scanはインデックスを使って必要な行だけをピンポイントで取得します。ただし、取得する行数がテーブルの大部分を占める場合、ランダムI/Oが発生するIndex Scanよりも、シーケンシャルI/OのSeq Scanの方が高速になることがあります。",
+        "bullets": [
+          "選択率（selectivity）が低い（少数の行を取得する）クエリではIndex Scanが有利",
+          "テーブルの大部分を読む場合はSeq Scanの方がI/O効率が良い場合がある"
+        ]
+      },
+      {
+        "id": "database-04-mini-2",
+        "type": "mini_check",
+        "title": "確認2",
+        "prompt": "インデックスが存在するカラムに対するSELECTなのに、オプティマイザがSeq Scanを選択する理由は何ですか？",
+        "options": [
+          {"id": "A", "text": "テーブルの大部分の行を取得する場合、シーケンシャルI/OのSeq Scanの方がランダムI/OのIndex Scanより高速だから"},
+          {"id": "B", "text": "インデックスが壊れているから"},
+          {"id": "C", "text": "オプティマイザのバグ"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "取得行数がテーブルの相当な割合を占める場合、インデックス経由のランダムアクセスより、テーブルを先頭から順に読むSeq Scanの方がディスクI/O効率が良いとオプティマイザが判断します。"
+      },
+      {
+        "id": "database-04-worked",
+        "type": "worked_example",
+        "title": "EXPLAINで遅いクエリを改善する",
+        "situation": "ユーザーテーブル（100万行）で SELECT * FROM users WHERE email = 'test@example.com' が3秒かかっています。EXPLAIN ANALYZEを実行して原因を特定します。",
+        "reasoning": [
+          "EXPLAIN結果：Seq Scan on users (cost=0.00..25000.00 rows=1 width=100) actual time=3000ms",
+          "emailカラムにインデックスがないため、100万行すべてを順にスキャンしている",
+          "対策：CREATE INDEX idx_users_email ON users(email) を実行",
+          "改善後：Index Scan using idx_users_email (cost=0.42..8.44 rows=1 width=100) actual time=0.05ms"
+        ],
+        "takeaway": "EXPLAIN ANALYZEでactual timeを確認し、Seq Scanが不要な箇所にインデックスを追加することが基本的なチューニング手法です。"
+      },
+      {
+        "id": "database-04-mini-3",
+        "type": "mini_check",
+        "title": "確認3",
+        "prompt": "EXPLAIN ANALYZEがEXPLAINと異なる点は何ですか？",
+        "options": [
+          {"id": "A", "text": "実際にクエリを実行し、見積もりコストだけでなく実測の実行時間と行数も表示する"},
+          {"id": "B", "text": "インデックスの作成を自動的に提案する"},
+          {"id": "C", "text": "クエリの結果データも同時に表示する"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "EXPLAIN ANALYZEは実際にクエリを実行するため、見積もり（estimated）だけでなく実測（actual）の実行時間・処理行数が表示されます。見積もりと実測の乖離がチューニングの手がかりになります。"
+      },
+      {
+        "id": "database-04-apply-1",
+        "type": "apply_check",
+        "title": "応用1",
+        "prompt": "結合（JOIN）を含むクエリの実行計画でNested Loop Joinが選択されるのはどのような場合ですか？",
+        "options": [
+          {"id": "A", "text": "一方のテーブルの結果が少数行で、もう一方にインデックスがある場合"},
+          {"id": "B", "text": "両方のテーブルが非常に大きい場合"},
+          {"id": "C", "text": "結合キーにインデックスがない場合"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "Nested Loop Joinは外側テーブルの各行について内側テーブルをインデックスで検索するため、外側が少数行かつ内側にインデックスがある場合に最も効率的です。"
+      },
+      {
+        "id": "database-04-apply-2",
+        "type": "apply_check",
+        "title": "応用2",
+        "prompt": "本番環境でSQLの性能問題を調査する際、EXPLAIN ANALYZEを使う上で注意すべき点は何ですか？",
+        "options": [
+          {"id": "A", "text": "ANALYZEは実際にクエリを実行するため、UPDATE/DELETEに対して使うとデータが変更される（トランザクションで囲む必要がある）"},
+          {"id": "B", "text": "EXPLAIN ANALYZEは読み取り専用なので、いつでも安全に使える"},
+          {"id": "C", "text": "EXPLAIN ANALYZEはテスト環境でしか使えない"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "EXPLAIN ANALYZEは実際にクエリを実行するため、INSERT/UPDATE/DELETEではデータが変更されます。本番環境ではBEGIN〜ROLLBACK内で実行するか、SELECT文のみに使うなど注意が必要です。"
+      },
+      {
+        "id": "database-04-summary",
+        "type": "summary",
+        "title": "学んだこと",
+        "bullets": [
+          "クエリオプティマイザは統計情報に基づいて最もコストの低い実行計画を選択する",
+          "Seq Scanはテーブル全体を順読み、Index Scanはインデックスで必要行だけを取得する",
+          "選択率が低いクエリではIndex Scan、テーブルの大部分を読む場合はSeq Scanが有利",
+          "EXPLAIN ANALYZEで見積もりと実測を比較し、インデックス追加やクエリ改善の判断材料にする"
+        ]
+      }
+    ],
+    "referenceLabel": "参考ノートを見る"
+  },
+  "ko": {
+    "hook": {
+      "title": "실행 계획을 읽고 SQL을 최적화하기",
+      "prompt": "같은 결과를 반환하는 SQL이라도 실행 시간이 100배 차이 날 수 있습니다. 데이터베이스는 내부적으로 어떻게 실행 방법을 결정하는 걸까요?",
+      "takeaway": "EXPLAIN의 읽는 방법을 이해하고, 시퀀셜 스캔과 인덱스 스캔의 차이, 옵티마이저의 판단 기준을 파악할 수 있게 됩니다."
+    },
+    "steps": [
+      {
+        "id": "database-04-concept-1",
+        "type": "concept",
+        "title": "실행 계획과 옵티마이저",
+        "body": "SQL을 실행할 때, 데이터베이스의 쿼리 옵티마이저가 가장 비용이 낮은 실행 계획을 선택합니다. EXPLAIN 문을 사용하면 옵티마이저가 선택한 실행 계획을 확인할 수 있습니다. 실행 계획에는 스캔 방식(Seq Scan / Index Scan), 조인 방식(Nested Loop / Hash Join / Merge Join), 비용 추정 등이 포함됩니다.",
+        "bullets": [
+          "비용 기반 옵티마이저(CBO)는 테이블 통계 정보(행 수, 컬럼 분포 등)에 기반하여 계획을 선택한다",
+          "통계 정보가 오래되면 옵티마이저가 최적이 아닌 계획을 선택할 수 있다 (ANALYZE로 갱신)"
+        ]
+      },
+      {
+        "id": "database-04-mini-1",
+        "type": "mini_check",
+        "title": "확인1",
+        "prompt": "쿼리 옵티마이저가 실행 계획을 결정할 때 가장 중요한 입력은 무엇인가요?",
+        "options": [
+          {"id": "A", "text": "테이블의 통계 정보 (행 수, 컬럼의 카디널리티, 데이터 분포 등)"},
+          {"id": "B", "text": "SQL을 작성한 프로그래머의 의도"},
+          {"id": "C", "text": "서버의 CPU 클럭 속도"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "비용 기반 옵티마이저는 테이블의 통계 정보를 참조하여 각 실행 계획의 비용을 추정하고, 가장 비용이 낮은 계획을 선택합니다. 통계 정보의 정확성이 계획의 품질을 좌우합니다."
+      },
+      {
+        "id": "database-04-concept-2",
+        "type": "concept",
+        "title": "Seq Scan vs Index Scan",
+        "body": "Seq Scan(시퀀셜 스캔)은 테이블 전체를 처음부터 순서대로 읽습니다. Index Scan은 인덱스를 사용하여 필요한 행만 정확히 가져옵니다. 다만 가져올 행 수가 테이블의 대부분을 차지하는 경우, 랜덤 I/O가 발생하는 Index Scan보다 시퀀셜 I/O의 Seq Scan이 더 빠를 수 있습니다.",
+        "bullets": [
+          "선택률(selectivity)이 낮은(소수의 행을 가져오는) 쿼리에서는 Index Scan이 유리하다",
+          "테이블 대부분을 읽는 경우에는 Seq Scan이 I/O 효율이 좋을 수 있다"
+        ]
+      },
+      {
+        "id": "database-04-mini-2",
+        "type": "mini_check",
+        "title": "확인2",
+        "prompt": "인덱스가 존재하는 컬럼에 대한 SELECT인데도 옵티마이저가 Seq Scan을 선택하는 이유는 무엇인가요?",
+        "options": [
+          {"id": "A", "text": "테이블 대부분의 행을 가져오는 경우 시퀀셜 I/O의 Seq Scan이 랜덤 I/O의 Index Scan보다 빠르기 때문"},
+          {"id": "B", "text": "인덱스가 손상되었기 때문"},
+          {"id": "C", "text": "옵티마이저의 버그"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "가져올 행 수가 테이블의 상당 비율을 차지하면, 인덱스 경유의 랜덤 접근보다 테이블을 처음부터 순서대로 읽는 Seq Scan이 디스크 I/O 효율이 좋다고 옵티마이저가 판단합니다."
+      },
+      {
+        "id": "database-04-worked",
+        "type": "worked_example",
+        "title": "EXPLAIN으로 느린 쿼리 개선하기",
+        "situation": "사용자 테이블(100만 행)에서 SELECT * FROM users WHERE email = 'test@example.com'이 3초 걸리고 있습니다. EXPLAIN ANALYZE를 실행하여 원인을 특정합니다.",
+        "reasoning": [
+          "EXPLAIN 결과: Seq Scan on users (cost=0.00..25000.00 rows=1 width=100) actual time=3000ms",
+          "email 컬럼에 인덱스가 없어 100만 행 전체를 순차 스캔하고 있다",
+          "대책: CREATE INDEX idx_users_email ON users(email) 실행",
+          "개선 후: Index Scan using idx_users_email (cost=0.42..8.44 rows=1 width=100) actual time=0.05ms"
+        ],
+        "takeaway": "EXPLAIN ANALYZE로 actual time을 확인하고, Seq Scan이 불필요한 곳에 인덱스를 추가하는 것이 기본적인 튜닝 기법입니다."
+      },
+      {
+        "id": "database-04-mini-3",
+        "type": "mini_check",
+        "title": "확인3",
+        "prompt": "EXPLAIN ANALYZE가 EXPLAIN과 다른 점은 무엇인가요?",
+        "options": [
+          {"id": "A", "text": "실제로 쿼리를 실행하여 추정 비용뿐만 아니라 실측 실행 시간과 행 수도 표시한다"},
+          {"id": "B", "text": "인덱스 생성을 자동으로 제안한다"},
+          {"id": "C", "text": "쿼리 결과 데이터도 동시에 표시한다"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "EXPLAIN ANALYZE는 실제로 쿼리를 실행하므로 추정(estimated)뿐 아니라 실측(actual) 실행 시간과 처리 행 수가 표시됩니다. 추정과 실측의 차이가 튜닝의 단서가 됩니다."
+      },
+      {
+        "id": "database-04-apply-1",
+        "type": "apply_check",
+        "title": "응용1",
+        "prompt": "조인(JOIN)이 포함된 쿼리의 실행 계획에서 Nested Loop Join이 선택되는 경우는 어떤 때인가요?",
+        "options": [
+          {"id": "A", "text": "한쪽 테이블의 결과가 소수 행이고 다른 쪽에 인덱스가 있는 경우"},
+          {"id": "B", "text": "양쪽 테이블이 매우 큰 경우"},
+          {"id": "C", "text": "조인 키에 인덱스가 없는 경우"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "Nested Loop Join은 외부 테이블의 각 행에 대해 내부 테이블을 인덱스로 검색하므로, 외부가 소수 행이고 내부에 인덱스가 있을 때 가장 효율적입니다."
+      },
+      {
+        "id": "database-04-apply-2",
+        "type": "apply_check",
+        "title": "응용2",
+        "prompt": "프로덕션 환경에서 SQL 성능 문제를 조사할 때, EXPLAIN ANALYZE를 사용할 때 주의할 점은 무엇인가요?",
+        "options": [
+          {"id": "A", "text": "ANALYZE는 실제로 쿼리를 실행하므로 UPDATE/DELETE에 사용하면 데이터가 변경된다 (트랜잭션으로 감싸야 한다)"},
+          {"id": "B", "text": "EXPLAIN ANALYZE는 읽기 전용이므로 언제든 안전하게 사용할 수 있다"},
+          {"id": "C", "text": "EXPLAIN ANALYZE는 테스트 환경에서만 사용할 수 있다"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "EXPLAIN ANALYZE는 실제로 쿼리를 실행하므로 INSERT/UPDATE/DELETE에서는 데이터가 변경됩니다. 프로덕션 환경에서는 BEGIN~ROLLBACK 내에서 실행하거나 SELECT 문에만 사용하는 등 주의가 필요합니다."
+      },
+      {
+        "id": "database-04-summary",
+        "type": "summary",
+        "title": "배운 내용",
+        "bullets": [
+          "쿼리 옵티마이저는 통계 정보에 기반하여 가장 비용이 낮은 실행 계획을 선택한다",
+          "Seq Scan은 테이블 전체를 순서대로 읽고, Index Scan은 인덱스로 필요한 행만 가져온다",
+          "선택률이 낮은 쿼리에서는 Index Scan, 테이블 대부분을 읽는 경우에는 Seq Scan이 유리하다",
+          "EXPLAIN ANALYZE로 추정과 실측을 비교하여 인덱스 추가나 쿼리 개선의 판단 재료로 활용한다"
+        ]
+      }
+    ],
+    "referenceLabel": "참고 노트 보기"
+  }
+}

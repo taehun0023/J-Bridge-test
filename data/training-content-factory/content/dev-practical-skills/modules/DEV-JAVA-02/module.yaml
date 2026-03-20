@@ -1,8 +1,8 @@
 module:
   id: DEV-JAVA-02
-  title: Java - Object-Oriented Reasoning in Practice
+  title: Java - 実務でのオブジェクト指向
   level: intermediate
-  description: "정적 해설형 콘텐츠로 상속, 인터페이스, 다형성이 실무 코드에서 어떻게 사용되는지 해석하는 방법을 설명한다."
+  description: "継承・インタフェース・ポリモーフィズムが実務コードでどう使われるかを解説する。"
   subject: java
   content_mode: static-interpretive
   outcomes:

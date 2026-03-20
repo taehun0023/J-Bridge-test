@@ -1,0 +1,44 @@
+{
+  "lesson_id": "CSK-NW-01-04",
+  "category": "cs-knowledge",
+  "subject": "networking",
+  "topic": "http-dns-and-failures",
+  "default_language": "ja",
+  "available_languages": ["ja", "ko"],
+  "summary": "HTTPメソッド・ステータスコードの分類、DNS名前解決の流れ、ネットワーク障害の基本的な診断手順を学ぶ",
+  "key_points": [
+    "HTTPメソッド（GET/POST/PUT/PATCH/DELETE）とRESTful設計の原則",
+    "ステータスコードは2xx（成功）・3xx（リダイレクト）・4xx（クライアントエラー）・5xx（サーバエラー）の4分類",
+    "DNS名前解決はローカルキャッシュ→再帰リゾルバ→ルートDNS→TLD DNS→権威DNSの順に行われる"
+  ],
+  "misconceptions": [
+    "404はサーバが落ちているという意味（実際はリソース未発見でサーバは正常動作中）",
+    "DNSは一度設定すれば即座に反映される（TTLに基づく伝播時間が必要）",
+    "GETリクエストにボディを含めてもよい（多くのサーバやプロキシが無視または拒否する）"
+  ],
+  "check_questions": [
+    "HTTPステータスコード401と403の違いを説明してください",
+    "DNS名前解決でブラウザからIPアドレス取得までの流れを順番に述べてください",
+    "502 Bad Gatewayが発生する典型的な原因は何ですか",
+    "Webサイトにアクセスできないとき原因を切り分けるためにどのような手順で診断しますか"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "HTTPステータスコード301は恒久的リダイレクト、302は一時的リダイレクトを意味する",
+      "DNS名前解決ではTTL（Time To Live）の期間だけキャッシュが保持される"
+    ],
+    "concept_contrast_candidates": [
+      "401（認証未済）vs 403（認可拒否）の違い",
+      "301（恒久的リダイレクト）vs 302（一時的リダイレクト）の違い"
+    ],
+    "scenario_candidates": [
+      "pingは通るがWebページが表示されない場合の原因切り分け",
+      "API呼び出しで403が返されたときに確認すべきこと"
+    ],
+    "common_wrong_answer_patterns": [
+      "404をサーバダウンと混同する",
+      "DNS変更が即座に反映されると誤解する"
+    ]
+  },
+  "difficulty": "foundation"
+}

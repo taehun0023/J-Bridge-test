@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "ja": {
+    "hook": {
+      "title": "varとlet、本当に同じ？",
+      "prompt": "forループの中で`var`を使った場合と`let`を使った場合で、setTimeoutの出力結果が異なります。なぜこのような違いが生まれるのでしょうか？",
+      "takeaway": "var/let/constのスコープの違いとホイスティングの仕組みを理解し、JavaScriptコードの実行順序を正確に予測できるようになります"
+    },
+    "steps": [
+      {
+        "id": "js-01-concept-1",
+        "type": "concept",
+        "title": "var, let, constのスコープの違い",
+        "body": "`var`は関数スコープを持ち、ブロック内で宣言しても関数全体からアクセスできます。`let`と`const`はブロックスコープを持ち、宣言されたブロック内でのみアクセスできます。`const`は再代入が不可能ですが、オブジェクトのプロパティは変更できます。",
+        "bullets": [
+          "varは関数スコープ、let/constはブロックスコープを持つ",
+          "constは再代入不可だが、オブジェクトの内部プロパティは変更可能"
+        ]
+      },
+      {
+        "id": "js-01-mini-1",
+        "type": "mini_check",
+        "title": "確認1",
+        "prompt": "`const obj = {a: 1}; obj.a = 2;`を実行するとどうなりますか？",
+        "options": [
+          { "id": "A", "text": "エラーが発生する。constは変更不可" },
+          { "id": "B", "text": "obj.aが2に更新される。constは再代入を防ぐがプロパティ変更は可能" },
+          { "id": "C", "text": "obj.aは1のままで、変更は無視される" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "constは変数への再代入（obj = ...）を防ぎますが、オブジェクトの内部プロパティ（obj.a）の変更は許可されます。constが保護するのは参照先のアドレスです。"
+      },
+      {
+        "id": "js-01-concept-2",
+        "type": "concept",
+        "title": "ホイスティングと暗黙的型変換",
+        "body": "`var`宣言はホイスティングにより関数の先頭に引き上げられますが、値の代入は元の位置で行われるため宣言前のアクセスはundefinedになります。`let`もホイスティングされますがTDZ（Temporal Dead Zone）により宣言前にアクセスするとReferenceErrorが発生します。また、暗黙的型変換により`\"5\" + 3`は`\"53\"`、`\"5\" - 3`は`2`になるなど予測困難な結果が生じます。",
+        "bullets": [
+          "varのホイスティングはundefined、letのTDZはReferenceErrorになる",
+          "暗黙的型変換は予測困難なバグの原因になるため、===と明示的変換を使うべき"
+        ]
+      },
+      {
+        "id": "js-01-mini-2",
+        "type": "mini_check",
+        "title": "確認2",
+        "prompt": "`console.log(x); var x = 10;`を実行すると何が出力されますか？",
+        "options": [
+          { "id": "A", "text": "10が出力される" },
+          { "id": "B", "text": "ReferenceErrorが発生する" },
+          { "id": "C", "text": "undefinedが出力される" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "varのホイスティングにより宣言は関数の先頭に引き上げられますが、値の代入は元の位置で行われます。そのため宣言前のアクセスではundefinedが返されます。"
+      },
+      {
+        "id": "js-01-worked",
+        "type": "worked_example",
+        "title": "具体例：forループ＋setTimeout問題",
+        "situation": "forループ内で`setTimeout`を使い、0〜2の数値を順に出力しようとする場面を考えます。",
+        "reasoning": [
+          "`var`を使うと`i`は関数スコープで1つの変数を共有するため、ループ終了後の値3が3回出力される",
+          "`let`に変更すると各反復ごとに別の`i`が生成され、0, 1, 2が正しく出力される",
+          "これは`var`の関数スコープと`let`のブロックスコープの違いが原因",
+          "レガシーコードでは即時関数（IIFE）で`var`のスコープ問題を回避していた"
+        ],
+        "takeaway": "varとletのスコープの違いを理解していないと、非同期処理と組み合わせた際に予期しないバグが発生します"
+      },
+      {
+        "id": "js-01-mini-3",
+        "type": "mini_check",
+        "title": "確認3",
+        "prompt": "`0 == false`と`0 === false`の結果の組み合わせとして正しいものはどれですか？",
+        "options": [
+          { "id": "A", "text": "両方true" },
+          { "id": "B", "text": "==はtrue、===はfalse" },
+          { "id": "C", "text": "両方false" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "`==`は型変換後に比較するため、0とfalseは同値と見なされtrue。`===`は型まで厳密に比較するため、number型とboolean型は異なりfalseです。"
+      },
+      {
+        "id": "js-01-apply-1",
+        "type": "apply_check",
+        "title": "応用1",
+        "prompt": "レガシーコードの`var`を`let`に一括置換する際、注意すべき点はどれですか？",
+        "options": [
+          { "id": "A", "text": "問題なく置換できる。動作は全く同じ" },
+          { "id": "B", "text": "ブロックスコープの違いにより、以前アクセスできていた変数にアクセスできなくなる場合がある" },
+          { "id": "C", "text": "letはホイスティングされないため、宣言の位置を全て先頭に移動する必要がある" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "varは関数スコープ、letはブロックスコープです。ブロック外から変数にアクセスしているコードがある場合、letに変更するとスコープ外参照エラーになります。"
+      },
+      {
+        "id": "js-01-apply-2",
+        "type": "apply_check",
+        "title": "応用2",
+        "prompt": "ユーザー入力を数値として使いたい場合、`\"5\" + 3`のような暗黙的変換に頼らない正しい方法はどれですか？",
+        "options": [
+          { "id": "A", "text": "`parseInt`や`Number`で明示的に型変換してから演算する" },
+          { "id": "B", "text": "`==`で型変換が適用されるので、そのまま使えばよい" },
+          { "id": "C", "text": "文字列のまま加算すれば、JavaScriptが自動的に正しく処理する" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "暗黙的型変換は演算子によって結果が変わるため予測困難です。Number()やparseInt()で明示的に変換してから演算することで、意図通りの結果を得られます。"
+      },
+      {
+        "id": "js-01-summary",
+        "type": "summary",
+        "title": "学んだこと",
+        "bullets": [
+          "varは関数スコープ、let/constはブロックスコープを持つ",
+          "varのホイスティングはundefined、letのTDZはReferenceErrorになる",
+          "暗黙的型変換を避け、===と明示的型変換を使うべき",
+          "constはオブジェクトの再代入を防ぐが、内部プロパティの変更は許可される"
+        ]
+      }
+    ],
+    "referenceLabel": "参考ノートを見る"
+  },
+  "ko": {
+    "hook": {
+      "title": "var와 let, 정말 같을까?",
+      "prompt": "for 루프 안에서 `var`를 사용한 경우와 `let`을 사용한 경우, setTimeout의 출력 결과가 다릅니다. 왜 이런 차이가 생기는 걸까요?",
+      "takeaway": "var/let/const의 스코프 차이와 호이스팅 구조를 이해하고, JavaScript 코드의 실행 순서를 정확히 예측할 수 있게 됩니다"
+    },
+    "steps": [
+      {
+        "id": "js-01-concept-1",
+        "type": "concept",
+        "title": "var, let, const의 스코프 차이",
+        "body": "`var`는 함수 스코프를 가지며, 블록 안에서 선언해도 함수 전체에서 접근할 수 있습니다. `let`과 `const`는 블록 스코프를 가지며, 선언된 블록 안에서만 접근할 수 있습니다. `const`는 재대입이 불가능하지만, 객체의 프로퍼티는 변경할 수 있습니다.",
+        "bullets": [
+          "var는 함수 스코프, let/const는 블록 스코프를 가진다",
+          "const는 재대입 불가이지만, 객체 내부 프로퍼티는 변경 가능"
+        ]
+      },
+      {
+        "id": "js-01-mini-1",
+        "type": "mini_check",
+        "title": "확인1",
+        "prompt": "`const obj = {a: 1}; obj.a = 2;`를 실행하면 어떻게 되나요?",
+        "options": [
+          { "id": "A", "text": "에러가 발생한다. const는 변경 불가" },
+          { "id": "B", "text": "obj.a가 2로 업데이트된다. const는 재대입을 막지만 프로퍼티 변경은 가능" },
+          { "id": "C", "text": "obj.a는 1 그대로이며, 변경은 무시된다" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "const는 변수에 대한 재대입(obj = ...)을 막지만, 객체의 내부 프로퍼티(obj.a) 변경은 허용합니다. const가 보호하는 것은 참조 주소입니다."
+      },
+      {
+        "id": "js-01-concept-2",
+        "type": "concept",
+        "title": "호이스팅과 암묵적 타입 변환",
+        "body": "`var` 선언은 호이스팅에 의해 함수 선두로 끌어올려지지만, 값 대입은 원래 위치에서 이루어지므로 선언 전 접근 시 undefined가 됩니다. `let`도 호이스팅되지만 TDZ(Temporal Dead Zone)에 의해 선언 전 접근 시 ReferenceError가 발생합니다. 또한 암묵적 타입 변환으로 `\"5\" + 3`은 `\"53\"`, `\"5\" - 3`은 `2`가 되는 등 예측하기 어려운 결과가 발생합니다.",
+        "bullets": [
+          "var의 호이스팅은 undefined, let의 TDZ는 ReferenceError가 된다",
+          "암묵적 타입 변환은 예측 어려운 버그의 원인이 되므로 ===와 명시적 변환을 사용해야 한다"
+        ]
+      },
+      {
+        "id": "js-01-mini-2",
+        "type": "mini_check",
+        "title": "확인2",
+        "prompt": "`console.log(x); var x = 10;`을 실행하면 무엇이 출력되나요?",
+        "options": [
+          { "id": "A", "text": "10이 출력된다" },
+          { "id": "B", "text": "ReferenceError가 발생한다" },
+          { "id": "C", "text": "undefined가 출력된다" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "var의 호이스팅에 의해 선언은 함수 선두로 끌어올려지지만, 값 대입은 원래 위치에서 이루어집니다. 따라서 선언 전 접근 시 undefined가 반환됩니다."
+      },
+      {
+        "id": "js-01-worked",
+        "type": "worked_example",
+        "title": "구체적 예: for 루프 + setTimeout 문제",
+        "situation": "for 루프 안에서 `setTimeout`을 사용하여 0~2의 숫자를 순서대로 출력하려는 상황을 생각해 봅니다.",
+        "reasoning": [
+          "`var`를 사용하면 `i`는 함수 스코프에서 하나의 변수를 공유하므로, 루프 종료 후 값 3이 3번 출력된다",
+          "`let`으로 변경하면 각 반복마다 별도의 `i`가 생성되어 0, 1, 2가 올바르게 출력된다",
+          "이는 `var`의 함수 스코프와 `let`의 블록 스코프 차이가 원인",
+          "레거시 코드에서는 즉시 실행 함수(IIFE)로 `var`의 스코프 문제를 회피했다"
+        ],
+        "takeaway": "var와 let의 스코프 차이를 이해하지 못하면, 비동기 처리와 조합할 때 예상치 못한 버그가 발생합니다"
+      },
+      {
+        "id": "js-01-mini-3",
+        "type": "mini_check",
+        "title": "확인3",
+        "prompt": "`0 == false`와 `0 === false`의 결과 조합으로 올바른 것은 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "둘 다 true" },
+          { "id": "B", "text": "==는 true, ===는 false" },
+          { "id": "C", "text": "둘 다 false" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "`==`는 타입 변환 후 비교하므로 0과 false는 동등하다고 판단하여 true입니다. `===`는 타입까지 엄격히 비교하므로, number와 boolean은 다른 타입이어서 false입니다."
+      },
+      {
+        "id": "js-01-apply-1",
+        "type": "apply_check",
+        "title": "응용1",
+        "prompt": "레거시 코드의 `var`를 `let`으로 일괄 치환할 때, 주의해야 할 점은 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "문제없이 치환할 수 있다. 동작은 완전히 같다" },
+          { "id": "B", "text": "블록 스코프 차이로 인해 이전에 접근 가능했던 변수에 접근할 수 없게 되는 경우가 있다" },
+          { "id": "C", "text": "let은 호이스팅되지 않으므로 선언 위치를 모두 선두로 옮겨야 한다" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "var는 함수 스코프, let은 블록 스코프입니다. 블록 외부에서 변수에 접근하는 코드가 있으면 let으로 변경 시 스코프 외 참조 에러가 발생합니다."
+      },
+      {
+        "id": "js-01-apply-2",
+        "type": "apply_check",
+        "title": "응용2",
+        "prompt": "사용자 입력을 숫자로 사용하려 할 때, `\"5\" + 3` 같은 암묵적 변환에 의존하지 않는 올바른 방법은 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "`parseInt`나 `Number`로 명시적으로 타입 변환한 후 연산한다" },
+          { "id": "B", "text": "`==`로 타입 변환이 적용되므로 그대로 사용하면 된다" },
+          { "id": "C", "text": "문자열 그대로 더하면 JavaScript가 자동으로 올바르게 처리한다" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "암묵적 타입 변환은 연산자에 따라 결과가 달라져 예측이 어렵습니다. Number()나 parseInt()로 명시적으로 변환한 후 연산하면 의도한 결과를 얻을 수 있습니다."
+      },
+      {
+        "id": "js-01-summary",
+        "type": "summary",
+        "title": "배운 내용",
+        "bullets": [
+          "var는 함수 스코프, let/const는 블록 스코프를 가진다",
+          "var의 호이스팅은 undefined, let의 TDZ는 ReferenceError가 된다",
+          "암묵적 타입 변환을 피하고 ===와 명시적 타입 변환을 사용해야 한다",
+          "const는 객체 재대입을 막지만, 내부 프로퍼티 변경은 허용된다"
+        ]
+      }
+    ],
+    "referenceLabel": "참고 노트 보기"
+  }
+}

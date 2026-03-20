@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "java",
   "topic": "oop-reasoning",
-  "summary": "Explains how inheritance, interfaces, and polymorphism are used in real-world Java code, including method dispatch tracing and design trade-offs between abstract classes and interfaces.",
+  "summary": "継承・インタフェース・ポリモーフィズムの実務コードでの使い方、メソッドディスパッチの追跡、抽象クラスとインタフェースの設計判断を解説する。",
   "key_points": [
-    "Method calls on overridden methods resolve to the runtime instance type, not the declared variable type.",
-    "Interfaces define capability contracts without implementation; abstract classes share common logic with subclasses.",
-    "Polymorphism allows uniform handling of different implementations through a shared type."
+    "オーバーライドされたメソッドの呼び出しは、宣言型ではなく実行時のインスタンス型に解決される。",
+    "インタフェースは実装なしの機能契約を定義し、抽象クラスはサブクラスと共通ロジックを共有する。",
+    "ポリモーフィズムにより、共通の型を通じて異なる実装を統一的に扱える。"
   ],
   "misconceptions": [
     "The declared variable type determines which overridden method runs at runtime.",

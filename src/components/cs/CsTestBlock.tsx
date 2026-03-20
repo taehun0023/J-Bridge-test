@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { Lock, ArrowRight } from 'lucide-react'
+import { ArrowRight, Lock } from 'lucide-react'
+import { CS_QUIZ_UNLOCK_THRESHOLD, getCsQuizListHref } from '@/lib/cs-quiz'
 
 interface CategoryProgress {
   label: string
@@ -13,54 +14,53 @@ interface Props {
   bypassLock?: boolean
 }
 
-const THRESHOLD = 80
-
 export default function CsTestBlock({ categories, bypassLock = false }: Props) {
   return (
     <div className="max-w-2xl space-y-4">
       <div>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">理解度テスト</h2>
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          ※ 進行率{THRESHOLD}%以上でテストが解放されます
+          進行率{CS_QUIZ_UNLOCK_THRESHOLD}%以上で各科目のテストが解放されます
         </p>
       </div>
 
       <div className="space-y-3">
-        {categories.map(cat => {
+        {categories.map((cat) => {
           const pct = cat.total > 0 ? Math.round((cat.mastered / cat.total) * 100) : 0
-          const unlocked = bypassLock || pct >= THRESHOLD
+          const unlocked = bypassLock || pct >= CS_QUIZ_UNLOCK_THRESHOLD
 
           const card = (
-            <div className={`rounded-xl border border-gray-200 p-4 transition-all dark:border-gray-700 ${
-              unlocked ? 'hover:shadow-md' : ''
-            }`}>
+            <div
+              className={`rounded-xl border border-gray-200 p-4 transition-all dark:border-gray-700 ${
+                unlocked ? 'hover:shadow-md' : ''
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-gray-900 dark:text-white">{cat.label}</h3>
-                <span className={`text-sm font-semibold tabular-nums ${
-                  pct >= THRESHOLD ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'
-                }`}>
+                <span
+                  className={`text-sm font-semibold tabular-nums ${
+                    pct >= CS_QUIZ_UNLOCK_THRESHOLD
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-gray-500 dark:text-gray-400'
+                  }`}
+                >
                   {pct}%
                 </span>
               </div>
 
-              {/* Progress bar */}
               <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ${
-                    pct >= THRESHOLD
-                      ? 'bg-indigo-500'
-                      : 'bg-gray-300 dark:bg-gray-600'
+                    pct >= CS_QUIZ_UNLOCK_THRESHOLD ? 'bg-indigo-500' : 'bg-gray-300 dark:bg-gray-600'
                   }`}
                   style={{ width: `${Math.min(pct, 100)}%` }}
                 />
               </div>
 
-              {/* Progress detail */}
               <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
                 {cat.mastered}/{cat.total}
               </div>
 
-              {/* Action */}
               <div className="mt-3">
                 {unlocked ? (
                   <span className="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 dark:text-indigo-400">
@@ -70,7 +70,7 @@ export default function CsTestBlock({ categories, bypassLock = false }: Props) {
                 ) : (
                   <span className="inline-flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500">
                     <Lock className="h-3.5 w-3.5" />
-                    進行率{THRESHOLD}%以上で解放
+                    進行率{CS_QUIZ_UNLOCK_THRESHOLD}%以上で解放
                   </span>
                 )}
               </div>
@@ -81,7 +81,7 @@ export default function CsTestBlock({ categories, bypassLock = false }: Props) {
             return (
               <Link
                 key={cat.quizCategory}
-                href={`/cs/quiz?category=${cat.quizCategory}`}
+                href={getCsQuizListHref(cat.quizCategory)}
                 className="group block"
               >
                 {card}

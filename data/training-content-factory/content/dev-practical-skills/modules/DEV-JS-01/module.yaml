@@ -1,8 +1,8 @@
 module:
   id: DEV-JS-01
-  title: JavaScript - Language Basics and Runtime Behavior
+  title: JavaScript - 言語基礎とランタイム動作
   level: foundation
-  description: "정적 해설형 콘텐츠로 JavaScript의 변수 선언, 타입 변환, 스코프 규칙을 읽고 해석하는 방법을 설명한다."
+  description: "JavaScriptの変数宣言、型変換、スコープ規則を読み解く方法を解説する。"
   subject: javascript
   content_mode: static-interpretive
   outcomes:

@@ -1,8 +1,8 @@
 module:
   id: DEV-PY-03
-  title: Python - File I/O, Error Handling, and Practical Usage
+  title: Python - ファイルI/O・エラー処理・実務活用
   level: advanced
-  description: "정적 해설형 콘텐츠로 파일 입출력, 예외 처리, 실무에서 자주 마주치는 Python 패턴을 설명한다."
+  description: "ファイル入出力・例外処理・実務で頻出するPythonパターンを解説する。"
   subject: python
   content_mode: static-interpretive
   outcomes:

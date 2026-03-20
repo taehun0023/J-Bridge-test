@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "react",
   "topic": "component-thinking-jsx-basics",
-  "summary": "Explains React component concept, JSX syntax differences from HTML, and guidelines for component separation in frontend projects.",
+  "summary": "Reactコンポーネントの概念、JSXとHTMLの構文の違い、コンポーネント分割のガイドラインを解説する。",
   "key_points": [
-    "React components are independent, reusable pieces of UI defined as functions.",
-    "JSX differs from HTML: className instead of class, self-closing tags required, JS expressions in {}.",
-    "Component separation improves readability and maintainability — split by independent change areas."
+    "Reactコンポーネントは関数として定義される、独立した再利用可能なUI部品である。",
+    "JSXはHTMLと異なる：classではなくclassName、自己閉じタグ必須、{}内にJS式を記述する。",
+    "コンポーネント分割は可読性と保守性を向上させる — 独立して変更される領域で分割する。"
   ],
   "misconceptions": [
     "JSX and HTML use exactly the same attribute names.",

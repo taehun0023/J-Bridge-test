@@ -1,0 +1,44 @@
+{
+  "lesson_id": "CSK-NW-01-03",
+  "category": "cs-knowledge",
+  "subject": "networking",
+  "topic": "tcp-vs-udp",
+  "default_language": "ja",
+  "available_languages": ["ja", "ko"],
+  "summary": "TCPとUDPの設計思想の違い、3ウェイハンドシェイクの仕組み、ユースケースに応じたプロトコル選択を学ぶ",
+  "key_points": [
+    "TCPはコネクション型で順序保証・再送制御・フロー制御を備える信頼性重視のプロトコル",
+    "UDPはコネクションレス型で軽量・高速だが順序保証も再送もない",
+    "TCPヘッダは20バイト以上、UDPは8バイトでリアルタイム性に大きな差が出る"
+  ],
+  "misconceptions": [
+    "UDPは信頼性がないから使うべきではない（DNS・動画配信・VoIPなど多くのサービスが使用）",
+    "TCPなら絶対にデータが届く（ネットワーク断やタイムアウトで失敗する場合がある）",
+    "3ウェイハンドシェイクは毎回のデータ送信で行われる（コネクション確立時に1回だけ）"
+  ],
+  "check_questions": [
+    "TCPの3ウェイハンドシェイクで交換されるパケットの順序を説明してください",
+    "オンラインゲームのリアルタイム位置情報同期にUDPが適している理由は何ですか",
+    "TCPの再送制御はどのような仕組みで機能しますか",
+    "DNS問い合わせがUDPを使う理由を説明してください"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "TCPは3ウェイハンドシェイク（SYN→SYN+ACK→ACK）でコネクションを確立する",
+      "UDPヘッダは8バイト、TCPヘッダは20バイト以上である"
+    ],
+    "concept_contrast_candidates": [
+      "TCP（信頼性・順序保証）vs UDP（軽量・高速・保証なし）",
+      "書留郵便（TCP）vs 普通投函（UDP）のアナロジー"
+    ],
+    "scenario_candidates": [
+      "動画ストリーミングサービスでUDPを選択する理由を問う",
+      "Web APIの通信でTCPが使われる理由を問う"
+    ],
+    "common_wrong_answer_patterns": [
+      "UDPでも再送制御が行われると誤解する",
+      "TCPのコネクション確立にはSYNパケット1つで十分と誤解する"
+    ]
+  },
+  "difficulty": "foundation"
+}

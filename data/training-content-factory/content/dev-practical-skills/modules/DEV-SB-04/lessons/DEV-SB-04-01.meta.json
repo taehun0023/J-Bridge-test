@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "spring-boot",
   "topic": "jpa-transactions",
-  "summary": "Covers Spring Data JPA repository patterns, @Transactional behavior and propagation rules, N+1 problem causes and solutions (Fetch Join, EntityGraph), and lazy vs eager loading pitfalls.",
+  "summary": "Spring Data JPAのリポジトリパターン、@Transactionalの動作と伝搬規則、N+1問題の原因と対策、遅延/即時ロードの注意点を解説する。",
   "key_points": [
-    "@Transactional auto-commits on success and rolls back on RuntimeException (not checked exceptions by default).",
-    "N+1 problem occurs when lazy-loaded collections are accessed in a loop — solved with Fetch Join or @EntityGraph.",
-    "JPA dirty checking automatically persists entity field changes at transaction commit without explicit save()."
+    "@Transactionalは成功時に自動コミットし、RuntimeExceptionでロールバックする（検査例外はデフォルトでロールバック対象外）。",
+    "N+1問題は遅延ロードされたコレクションをループ内でアクセスすると発生し、Fetch Joinまたは@EntityGraphで解決する。",
+    "JPAのダーティチェッキングにより、トランザクションコミット時にエンティティのフィールド変更が明示的なsave()なしで永続化される。"
   ],
   "misconceptions": [
     "@Transactional rolls back on all exceptions including checked exceptions by default.",

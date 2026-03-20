@@ -7,9 +7,9 @@
 
 ---
 
-## 종합 평가: 87/100 (양호 — 수정 필요 사항 있음)
+## 종합 평가: 93/100 (양호 — 주요 정합성 이슈 해결, 일부 문서/제품 흐름 과제 잔존)
 
-콘텐츠 자체는 고품질이며 업무지시서의 대부분의 요구사항을 충족. 시험 문항 추출 연동 전 필드명 수정이 필요.
+콘텐츠 자체는 고품질이며 업무지시서의 대부분의 요구사항을 충족. 메타데이터 스키마와 레슨 UI 정합성 이슈는 해결되었고, 남은 과제는 지시서 문구와 제품 흐름 정리 쪽에 가깝다.
 
 ---
 
@@ -31,8 +31,8 @@
 - `src/lib/cs-content.ts` (lines 73-82): SUBJECT_CONFIG 정상 매핑
 - `src/lib/navigation.ts`: categoryChildren['cs'] 8개 항목 정상
 
-**지적 사항:**
-- `/cs/os/` 빈 디렉토리 존재 — operating-systems가 정식이므로 삭제 필요
+**업데이트:**
+- `/cs/os/` 빈 디렉토리 이슈는 정리 완료
 
 ---
 
@@ -51,8 +51,8 @@
 전 16개 레슨의 `.meta.json` 확인 결과, 필수 필드 전부 존재:
 - lesson_id, category, subject, topic, summary, key_points, misconceptions, check_questions, exam_extractables
 
-**지적 사항:**
-- `difficulty` 필드 누락 — 업무지시서 Section 6에서 요구하지만 meta.json에 없음
+**업데이트:**
+- `difficulty` 필드는 전 16개 `.meta.json`에 추가 완료
 - `estimated_read_minutes`는 MDX frontmatter의 `est_minutes`로 대체됨 (허용 가능)
 
 ---
@@ -72,15 +72,15 @@
 
 ---
 
-## E. 시험 추출 필드 (Section 7.8 + 8) — PARTIAL (수정 필요)
+## E. 시험 추출 필드 (Section 7.8 + 8) — PASS
 
-### 필드명 불일치 (Critical)
+### 현재 상태
 
-| 업무지시서 요구 | 실제 구현 | 영향도 |
-|----------------|----------|--------|
-| `contrast_candidates` | `concept_contrast_candidates` | **중** — 시험 추출 도구 연동 시 키 불일치 |
-| `mechanism_sequence_candidates` | **누락** | **상** — 순서형 문항 생성 불가 |
-| `wrong_answer_patterns` | `common_wrong_answer_patterns` | **하** — 의미적 차이 미미 |
+| 업무지시서 요구 | 현재 구현 | 상태 |
+|----------------|----------|------|
+| `contrast_candidates` | `contrast_candidates` | OK |
+| `mechanism_sequence_candidates` | 존재 | OK |
+| `wrong_answer_patterns` | `wrong_answer_patterns` | OK |
 
 ### 필드 내용 충족도
 
@@ -89,14 +89,10 @@
 - 시나리오 후보 1개 이상: OK (각 2개씩 있음)
 - 오답 패턴 2개 이상: OK
 
-### 수정 필요 사항
+### 업데이트
 
-1. **16개 `.meta.json` 전부**: `concept_contrast_candidates` → `contrast_candidates` 리네임
-2. **16개 `.meta.json` 전부**: `common_wrong_answer_patterns` → `wrong_answer_patterns` 리네임
-3. **16개 `.meta.json`에 추가**: `mechanism_sequence_candidates` 필드 (순서가 있는 레슨에서 추출)
-   - CSK-CA-01: 프로그램 로드→메모리 배치→CPU 실행 순서
-   - CSK-AL-01: 정렬 확인→랜덤 접근 확인→비용 합산
-4. **`src/lib/cs-content.ts`**: CsLessonMeta 인터페이스의 exam_extractables 타입 업데이트
+1. **16개 `.meta.json` 전부**: `contrast_candidates`, `wrong_answer_patterns`, `mechanism_sequence_candidates` 반영 완료
+2. **`src/lib/cs-content.ts`**: CsLessonMeta 인터페이스 업데이트 완료
 
 ---
 
@@ -145,33 +141,29 @@ cs-knowledge/modules/<MODULE-ID>/lessons/<LESSON-ID>.mdx
 
 ## I. 코드 리뷰
 
-### `cs-content.ts` — OK (필드명 수정 필요)
+### `cs-content.ts` — OK
 
 - 8개 과목 매핑 정상
 - `readModule()` 로직 정상 (ja 기본, ko 제외 필터링)
-- **수정 필요:** CsLessonMeta.exam_extractables 타입에 `mechanism_sequence_candidates` 추가, 필드명 통일
+- exam_extractables 타입이 현재 메타데이터와 정합
+- 과목 순서도 명시 배열 기반으로 고정되어 암묵적 객체 순서 의존이 줄어듦
 
 ### `CsStaticSubjectPage.tsx` — OK
 
 - 레슨 목록 정상 표시
 - 시간/태그/요약 표시
 
-### `CsStaticLessonPage.tsx` — PARTIAL (UI 표시 누락)
+### `CsStaticLessonPage.tsx` — OK
 
 현재 사이드바에 표시되는 항목:
 - Key Points (key_points) — OK
+- Misconceptions (misconceptions) — OK
 - Check Questions (check_questions) — OK
-- Exam Extraction: Contrasts + Scenarios — OK
+- Exam Extraction: Contrasts + Mechanisms + Scenarios + Wrong Answers — OK
 
-**표시되지 않는 항목:**
-- Learning Objectives (별도 섹션 없음 — key_points와 혼재)
-- Why This Concept Matters (별도 표시 없음)
-- Misconceptions (별도 사이드바 카드 없음 — MDX 본문에만 존재)
-- Structure/Mechanism Breakdown (별도 표시 없음)
-
-**수정 필요:**
-- `misconceptions` 사이드바 카드 추가 (meta.json에 데이터 있음)
-- Learning Objectives를 key_points와 별도로 표시하는 것 검토
+**남은 검토 사항:**
+- Learning Objectives를 key_points와 별도로 표시할지 여부는 UX 선택 사항
+- Why This Concept Matters를 본문 외 카드로 중복 노출할지는 선택 사항
 
 ### 과목 페이지 (8개) — OK
 
@@ -187,23 +179,19 @@ cs-knowledge/modules/<MODULE-ID>/lessons/<LESSON-ID>.mdx
 
 | # | 대상 | 내용 | 이유 |
 |---|------|------|------|
-| 1 | 16개 `.meta.json` | `concept_contrast_candidates` → `contrast_candidates` 리네임 | 업무지시서 Section 7.8 필드명 불일치 |
-| 2 | 16개 `.meta.json` | `mechanism_sequence_candidates` 필드 추가 | 업무지시서 Section 7.8 필수 필드 누락 |
-| 3 | `cs-content.ts` | CsLessonMeta 인터페이스 exam_extractables 타입 업데이트 | 필드명 변경 반영 |
-| 4 | `CsStaticLessonPage.tsx` | exam_extractables 렌더링 코드 필드명 업데이트 | 빌드 에러 방지 |
+| 없음 | - | 현재 필수 수정 사항은 해소됨 | - |
 
 ### 권장 (Should Fix)
 
 | # | 대상 | 내용 | 이유 |
 |---|------|------|------|
-| 5 | 16개 `.meta.json` | `common_wrong_answer_patterns` → `wrong_answer_patterns` 리네임 | 업무지시서 일관성 (영향도 낮음) |
-| 6 | `CsStaticLessonPage.tsx` | `misconceptions` 사이드바 카드 추가 | meta.json에 데이터 존재하나 UI 미표시 |
-| 7 | 16개 `.meta.json` | `difficulty` 필드 추가 | 업무지시서 Section 6 필수 메타데이터 |
-| 8 | `/cs/os/` 디렉토리 | 삭제 | 빈 디렉토리, operating-systems가 정식 |
+| 1 | 업무지시서 | 언어 우선순위를 Japanese first 기준으로 갱신 | 실제 구현 방향과 지시서 정합성 필요 |
+| 2 | 업무지시서 | 모듈 기반 파일 구조를 공식 반영 | 현재 구현과 지시서 정합성 필요 |
+| 3 | 제품 흐름 | static lesson과 legacy quiz 관계를 더 명확히 설명 | 사용자 정보 구조 측면 개선 여지 |
 
 ### 참고 (Note)
 
 | # | 대상 | 내용 |
 |---|------|------|
-| 9 | 업무지시서 | 언어 우선순위를 "Korean first"에서 "Japanese first (Korean available)"로 반영 필요 |
-| 10 | 파일 구조 | 모듈 기반 구조는 업무지시서 권장과 다르지만 더 나은 선택이므로 지시서 업데이트 권장 |
+| 1 | 과목 페이지/허브 | 이해도 테스트 목록으로 가는 브리지 링크 추가됨 |
+| 2 | CS 레슨 상세 | `?lang=ko` URL 공유 및 새로고침 보존 가능 |

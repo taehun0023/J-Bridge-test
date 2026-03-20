@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "ja": {
+    "hook": {
+      "title": "SELECTクエリを正確に読む力",
+      "prompt": "同僚が書いたSQLを見て「このクエリの結果はどうなる？」と聞かれたとき、自信を持って答えられますか？SELECT文には書く順序と実行される順序が違うという重要なルールがあります。",
+      "takeaway": "SELECT文の実行順序と集計関数の動作を理解し、クエリ結果を正確に予測できる力を身につけます"
+    },
+    "steps": [
+      {
+        "id": "sql-01-concept-1",
+        "type": "concept",
+        "title": "SELECT文の論理的実行順序",
+        "body": "SELECT文は記述順序と実行順序が異なります。論理的実行順序はFROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMITです。この順序を理解すれば、各句がどのデータに対して適用されるかを正確に追跡できます。",
+        "bullets": [
+          "SELECTは最初に書くが、実行はほぼ最後に行われる",
+          "実行順序を知ることでWHEREとHAVINGの使い分けが明確になる"
+        ]
+      },
+      {
+        "id": "sql-01-mini-1",
+        "type": "mini_check",
+        "title": "確認1",
+        "prompt": "SELECT文の論理的実行順序として正しいものはどれですか？",
+        "options": [
+          { "id": "A", "text": "SELECT → FROM → WHERE → GROUP BY → ORDER BY" },
+          { "id": "B", "text": "FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY" },
+          { "id": "C", "text": "FROM → SELECT → WHERE → GROUP BY → HAVING → ORDER BY" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "SQLの論理的実行順序はFROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMITです。SELECTは記述では最初ですが、実行はほぼ最後になります。"
+      },
+      {
+        "id": "sql-01-concept-2",
+        "type": "concept",
+        "title": "WHEREとHAVINGの違い",
+        "body": "WHEREはGROUP BY前に個別の行をフィルタリングし、HAVINGはGROUP BY後にグループをフィルタリングします。WHEREでは集計関数を使用できませんが、HAVINGでは使用できます。この違いを理解しないとクエリエラーの原因がわかりません。",
+        "bullets": [
+          "WHERE：グループ化前の行レベルのフィルタリング（集計関数不可）",
+          "HAVING：グループ化後のグループレベルのフィルタリング（集計関数使用可能）"
+        ]
+      },
+      {
+        "id": "sql-01-mini-2",
+        "type": "mini_check",
+        "title": "確認2",
+        "prompt": "「WHERE COUNT(*) > 5」と書いた場合、何が起きますか？",
+        "options": [
+          { "id": "A", "text": "SQLエラーが発生する" },
+          { "id": "B", "text": "5行以上のグループだけが返される" },
+          { "id": "C", "text": "全行が返される" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "WHERE句ではGROUP BY前に行がフィルタリングされるため、集計関数は使用できません。集計結果でフィルタリングするにはHAVINGを使用する必要があります。"
+      },
+      {
+        "id": "sql-01-worked",
+        "type": "worked_example",
+        "title": "具体例：部署別の人数集計クエリを読み解く",
+        "situation": "以下のクエリの結果を予測します。\nSELECT department, COUNT(*) AS member_count\nFROM employees\nWHERE status = 'active'\nGROUP BY department\nHAVING COUNT(*) >= 5\nORDER BY member_count DESC;",
+        "reasoning": [
+          "FROM: employeesテーブルからデータを取得する",
+          "WHERE: statusが'active'の行のみフィルタリングする",
+          "GROUP BY + HAVING: department別にグループ化し、メンバーが5人以上のグループのみ残す",
+          "SELECT + ORDER BY: 部署名と人数を取得し、人数の降順でソートする"
+        ],
+        "takeaway": "実行順序に沿ってクエリを読むことで、各句がどのデータに適用されるかを正確に把握できます"
+      },
+      {
+        "id": "sql-01-mini-3",
+        "type": "mini_check",
+        "title": "確認3",
+        "prompt": "COUNT(*)とCOUNT(email)の違いとして正しいものはどれですか？",
+        "options": [
+          { "id": "A", "text": "どちらも完全に同じ結果を返す" },
+          { "id": "B", "text": "COUNT(email)はemailカラムがNULLの行を除外して数える" },
+          { "id": "C", "text": "COUNT(*)はNULLの行を除外して数える" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "COUNT(*)は全行を数えますが、COUNT(column)は該当カラムがNULLでない行のみを数えます。100人のうち10人のemailがNULLなら、COUNT(*)は100、COUNT(email)は90を返します。"
+      },
+      {
+        "id": "sql-01-apply-1",
+        "type": "apply_check",
+        "title": "応用1",
+        "prompt": "「SELECT name, COUNT(*) FROM users」をGROUP BYなしで実行した場合、どうなりますか？",
+        "options": [
+          { "id": "A", "text": "各ユーザー名と全体の行数が表示される" },
+          { "id": "B", "text": "最初のユーザー名だけが表示される" },
+          { "id": "C", "text": "ほとんどのDBMSでエラーとなる" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "集計関数と非集計カラムをGROUP BYなしで混ぜて使うと、ほとんどのDBMSでエラーになります。集計関数を使う場合、SELECT句の非集計カラムはすべてGROUP BYに含める必要があります。"
+      },
+      {
+        "id": "sql-01-apply-2",
+        "type": "apply_check",
+        "title": "応用2",
+        "prompt": "usersテーブルに100人のデータがあり、うち10人のemailがNULLです。SELECT COUNT(*), COUNT(email) FROM usersの結果はどうなりますか？",
+        "options": [
+          { "id": "A", "text": "100, 100" },
+          { "id": "B", "text": "90, 90" },
+          { "id": "C", "text": "100, 90" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "COUNT(*)は全行を数えるため100を返します。COUNT(email)はemailがNULLでない行のみを数えるため90を返します。この違いはNULLの処理を理解するうえで重要です。"
+      },
+      {
+        "id": "sql-01-summary",
+        "type": "summary",
+        "title": "学んだこと",
+        "bullets": [
+          "SELECT文の論理的実行順序はFROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMITである",
+          "WHEREは行のフィルタリング、HAVINGはグループのフィルタリングに使い、WHERE句では集計関数を使えない",
+          "COUNT(*)は全行を数え、COUNT(column)はNULL以外の行のみを数える",
+          "集計関数と非集計カラムを混ぜるにはGROUP BYが必須である"
+        ]
+      }
+    ],
+    "referenceLabel": "参考ノートを見る"
+  },
+  "ko": {
+    "hook": {
+      "title": "SELECT 쿼리를 정확하게 읽는 능력",
+      "prompt": "동료가 작성한 SQL을 보고 \"이 쿼리의 결과는 어떻게 되나요?\"라고 질문받았을 때, 자신 있게 답할 수 있나요? SELECT 문에는 작성 순서와 실행 순서가 다르다는 중요한 규칙이 있습니다.",
+      "takeaway": "SELECT 문의 실행 순서와 집계 함수의 동작을 이해하고, 쿼리 결과를 정확하게 예측하는 능력을 키웁니다"
+    },
+    "steps": [
+      {
+        "id": "sql-01-concept-1",
+        "type": "concept",
+        "title": "SELECT 문의 논리적 실행 순서",
+        "body": "SELECT 문은 작성 순서와 실행 순서가 다릅니다. 논리적 실행 순서는 FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT입니다. 이 순서를 이해하면 각 절이 어떤 데이터에 적용되는지 정확하게 추적할 수 있습니다.",
+        "bullets": [
+          "SELECT는 가장 먼저 작성하지만 실행은 거의 마지막에 이루어진다",
+          "실행 순서를 알면 WHERE와 HAVING의 구분이 명확해진다"
+        ]
+      },
+      {
+        "id": "sql-01-mini-1",
+        "type": "mini_check",
+        "title": "확인1",
+        "prompt": "SELECT 문의 논리적 실행 순서로 올바른 것은 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "SELECT → FROM → WHERE → GROUP BY → ORDER BY" },
+          { "id": "B", "text": "FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY" },
+          { "id": "C", "text": "FROM → SELECT → WHERE → GROUP BY → HAVING → ORDER BY" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "SQL의 논리적 실행 순서는 FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT입니다. SELECT는 작성에서는 가장 처음이지만 실행은 거의 마지막에 이루어집니다."
+      },
+      {
+        "id": "sql-01-concept-2",
+        "type": "concept",
+        "title": "WHERE와 HAVING의 차이",
+        "body": "WHERE는 GROUP BY 전에 개별 행을 필터링하고, HAVING은 GROUP BY 후에 그룹을 필터링합니다. WHERE에서는 집계 함수를 사용할 수 없지만, HAVING에서는 사용할 수 있습니다. 이 차이를 이해하지 못하면 쿼리 에러의 원인을 파악할 수 없습니다.",
+        "bullets": [
+          "WHERE: 그룹화 전의 행 레벨 필터링 (집계 함수 사용 불가)",
+          "HAVING: 그룹화 후의 그룹 레벨 필터링 (집계 함수 사용 가능)"
+        ]
+      },
+      {
+        "id": "sql-01-mini-2",
+        "type": "mini_check",
+        "title": "확인2",
+        "prompt": "\"WHERE COUNT(*) > 5\"라고 작성하면 어떻게 되나요?",
+        "options": [
+          { "id": "A", "text": "SQL 에러가 발생한다" },
+          { "id": "B", "text": "5행 이상의 그룹만 반환된다" },
+          { "id": "C", "text": "전체 행이 반환된다" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "WHERE 절에서는 GROUP BY 전에 행이 필터링되므로 집계 함수를 사용할 수 없습니다. 집계 결과로 필터링하려면 HAVING을 사용해야 합니다."
+      },
+      {
+        "id": "sql-01-worked",
+        "type": "worked_example",
+        "title": "구체적 예: 부서별 인원 집계 쿼리 읽기",
+        "situation": "다음 쿼리의 결과를 예측합니다.\nSELECT department, COUNT(*) AS member_count\nFROM employees\nWHERE status = 'active'\nGROUP BY department\nHAVING COUNT(*) >= 5\nORDER BY member_count DESC;",
+        "reasoning": [
+          "FROM: employees 테이블에서 데이터를 가져온다",
+          "WHERE: status가 'active'인 행만 필터링한다",
+          "GROUP BY + HAVING: department별로 그룹화하고, 멤버가 5명 이상인 그룹만 남긴다",
+          "SELECT + ORDER BY: 부서명과 인원수를 가져와 인원수 내림차순으로 정렬한다"
+        ],
+        "takeaway": "실행 순서에 따라 쿼리를 읽으면 각 절이 어떤 데이터에 적용되는지 정확하게 파악할 수 있습니다"
+      },
+      {
+        "id": "sql-01-mini-3",
+        "type": "mini_check",
+        "title": "확인3",
+        "prompt": "COUNT(*)와 COUNT(email)의 차이로 올바른 것은 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "둘 다 완전히 같은 결과를 반환한다" },
+          { "id": "B", "text": "COUNT(email)은 email 컬럼이 NULL인 행을 제외하고 센다" },
+          { "id": "C", "text": "COUNT(*)는 NULL인 행을 제외하고 센다" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "COUNT(*)는 전체 행을 세지만, COUNT(column)은 해당 컬럼이 NULL이 아닌 행만 셉니다. 100명 중 10명의 email이 NULL이라면 COUNT(*)는 100, COUNT(email)은 90을 반환합니다."
+      },
+      {
+        "id": "sql-01-apply-1",
+        "type": "apply_check",
+        "title": "응용1",
+        "prompt": "\"SELECT name, COUNT(*) FROM users\"를 GROUP BY 없이 실행하면 어떻게 되나요?",
+        "options": [
+          { "id": "A", "text": "각 사용자 이름과 전체 행 수가 표시된다" },
+          { "id": "B", "text": "첫 번째 사용자 이름만 표시된다" },
+          { "id": "C", "text": "대부분의 DBMS에서 에러가 발생한다" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "집계 함수와 비집계 컬럼을 GROUP BY 없이 섞어 사용하면 대부분의 DBMS에서 에러가 발생합니다. 집계 함수를 사용할 경우 SELECT 절의 비집계 컬럼은 모두 GROUP BY에 포함해야 합니다."
+      },
+      {
+        "id": "sql-01-apply-2",
+        "type": "apply_check",
+        "title": "응용2",
+        "prompt": "users 테이블에 100명의 데이터가 있고, 그 중 10명의 email이 NULL입니다. SELECT COUNT(*), COUNT(email) FROM users의 결과는 어떻게 되나요?",
+        "options": [
+          { "id": "A", "text": "100, 100" },
+          { "id": "B", "text": "90, 90" },
+          { "id": "C", "text": "100, 90" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "COUNT(*)는 전체 행을 세므로 100을 반환합니다. COUNT(email)은 email이 NULL이 아닌 행만 세므로 90을 반환합니다. 이 차이는 NULL 처리를 이해하는 데 중요합니다."
+      },
+      {
+        "id": "sql-01-summary",
+        "type": "summary",
+        "title": "배운 내용",
+        "bullets": [
+          "SELECT 문의 논리적 실행 순서는 FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT이다",
+          "WHERE는 행 필터링, HAVING은 그룹 필터링에 사용하며, WHERE 절에서는 집계 함수를 사용할 수 없다",
+          "COUNT(*)는 전체 행을 세고, COUNT(column)은 NULL이 아닌 행만 센다",
+          "집계 함수와 비집계 컬럼을 함께 사용하려면 GROUP BY가 필수이다"
+        ]
+      }
+    ],
+    "referenceLabel": "참고 노트 보기"
+  }
+}

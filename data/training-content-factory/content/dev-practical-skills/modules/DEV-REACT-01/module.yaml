@@ -1,8 +1,8 @@
 module:
   id: DEV-REACT-01
-  title: React - Component Thinking and JSX Basics
+  title: React - コンポーネント思考とJSX基礎
   level: foundation
-  description: "정적 해설형 콘텐츠로 React 컴포넌트의 개념과 JSX 문법을 읽고 해석하는 방법을 설명한다."
+  description: "Reactコンポーネントの概念とJSX構文の読み方を解説する。"
   subject: react
   content_mode: static-interpretive
   outcomes:

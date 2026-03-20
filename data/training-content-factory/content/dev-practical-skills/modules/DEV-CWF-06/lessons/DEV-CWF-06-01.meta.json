@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "common-workplace-fundamentals",
   "topic": "code-review",
-  "summary": "Explains the key perspectives for conducting code reviews, how to write constructive comments, and how to respond to review feedback professionally.",
+  "summary": "コードレビューの観点、建設的なコメントの書き方、レビューフィードバックへの対応方法を解説する。",
   "key_points": [
-    "Review for correctness, readability, maintainability, security, and performance.",
-    "Constructive comments include what is wrong, why it matters, and how to fix it.",
-    "Treat feedback as directed at the code, not at you personally."
+    "正確性・可読性・保守性・セキュリティ・パフォーマンスの観点でレビューする。",
+    "建設的なコメントには何が問題か・なぜ重要か・どう修正するかを含める。",
+    "フィードバックはコードに対するものであり、個人への批判ではないと捉える。"
   ],
   "misconceptions": [
     "Code review is only about formatting and naming conventions.",

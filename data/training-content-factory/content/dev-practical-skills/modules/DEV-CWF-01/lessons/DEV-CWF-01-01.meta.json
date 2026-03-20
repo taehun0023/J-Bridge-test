@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "common-workplace-fundamentals",
   "topic": "error-report-reading",
-  "summary": "Explains how to read and structure an error report before escalating or asking for help.",
+  "summary": "エラーレポートを読み取り、助けを求める前に整理する方法を解説する。",
   "key_points": [
-    "Separate symptom, reproduction path, environment, and cause hypothesis.",
-    "Do not confuse a guessed cause with an observed failure.",
-    "A useful report reduces investigation cost for the team."
+    "症状・再現手順・環境・原因仮説を分けて整理する。",
+    "推測した原因と観察された障害を混同しない。",
+    "有用なレポートはチームの調査コストを削減する。"
   ],
   "misconceptions": [
     "A vague statement of failure is enough to begin debugging.",

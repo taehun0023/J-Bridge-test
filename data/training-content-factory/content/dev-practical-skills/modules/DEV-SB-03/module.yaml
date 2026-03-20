@@ -1,8 +1,8 @@
 module:
   id: DEV-SB-03
-  title: Spring Boot - Configuration and Profile Management
+  title: Spring Boot - 設定とProfile管理
   level: intermediate
-  description: "정적 해설형 콘텐츠로 application.yml/properties 설정과 프로필(dev, prod) 관리 방법을 설명한다."
+  description: "application.yml/propertiesの設定とProfile（dev/prod）管理方法を解説する。"
   subject: spring-boot
   content_mode: static-interpretive
   outcomes:

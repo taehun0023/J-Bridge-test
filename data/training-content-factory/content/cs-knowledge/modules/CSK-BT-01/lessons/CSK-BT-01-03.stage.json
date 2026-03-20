@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "ja": {
+    "hook": {
+      "title": "整数の限界とオーバーフロー",
+      "prompt": "32ビット整数に21億を超える値を入れたらどうなるでしょうか？",
+      "takeaway": "signed/unsignedの違い、2の補数表現、オーバーフローの仕組みと危険性を理解する"
+    },
+    "steps": [
+      {
+        "id": "basic-theory-03-concept-1",
+        "type": "concept",
+        "title": "signed整数とunsigned整数",
+        "body": "signed整数は正と負の両方を表現でき、unsigned整数は0以上の正の数だけを扱います。同じ32ビットでも、signedなら-2,147,483,648〜2,147,483,647、unsignedなら0〜4,294,967,295と表現範囲が異なります。",
+        "bullets": [
+          "signed: 最上位ビットを符号ビットとして使う（0=正、1=負）",
+          "unsigned: 全ビットを値として使うため、正の範囲が2倍になる"
+        ]
+      },
+      {
+        "id": "basic-theory-03-mini-1",
+        "type": "mini_check",
+        "title": "確認1",
+        "prompt": "8ビットsigned整数で表現できる最小値は？",
+        "options": [
+          { "id": "A", "text": "-128（10000000₂）" },
+          { "id": "B", "text": "-127（10000001₂）" },
+          { "id": "C", "text": "-255（全ビット使用）" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "8ビットsignedは-128〜127の範囲です。2の補数表現で10000000₂ = -128が最小値になります。"
+      },
+      {
+        "id": "basic-theory-03-concept-2",
+        "type": "concept",
+        "title": "2の補数とオーバーフロー",
+        "body": "2の補数は、負の数を表現する最も一般的な方法です。ある数のビットを反転して1を足すと、その数の符号が反転します。オーバーフローとは、計算結果が型の表現範囲を超えることで、予期しない値になる現象です。",
+        "bullets": [
+          "2の補数: 5(00000101₂)の補数 → 反転11111010₂ + 1 = 11111011₂(-5)",
+          "オーバーフロー: 127+1 = -128（8ビットsignedの場合、正から負に巡回する）"
+        ]
+      },
+      {
+        "id": "basic-theory-03-mini-2",
+        "type": "mini_check",
+        "title": "確認2",
+        "prompt": "8ビットsigned整数で127+1の結果は？",
+        "options": [
+          { "id": "A", "text": "-128（オーバーフローで最小値に巡回する）" },
+          { "id": "B", "text": "128（正常に計算される）" },
+          { "id": "C", "text": "0（リセットされる）" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "01111111₂(127)+1 = 10000000₂ ですが、signedでは10000000₂ = -128です。最大値を超えると最小値に巡回します。"
+      },
+      {
+        "id": "basic-theory-03-worked",
+        "type": "worked_example",
+        "title": "オーバーフローの実例",
+        "situation": "ゲームのスコアカウンタが32ビットsigned int型で、スコアが2,147,483,647に達した状態で1点加算される場面を考えてみましょう。",
+        "reasoning": [
+          "現在の値: 2,147,483,647（01111...1₂ = intの最大値）",
+          "1を加算: 10000...0₂ に変わる",
+          "signed intでは10000...0₂ = -2,147,483,648",
+          "スコアが突然マイナスになるバグが発生する"
+        ],
+        "takeaway": "オーバーフローはセキュリティ脆弱性やバグの原因になる。大きな値を扱う場合はlong型やBigIntegerを検討する"
+      },
+      {
+        "id": "basic-theory-03-mini-3",
+        "type": "mini_check",
+        "title": "確認3",
+        "prompt": "オーバーフローを防ぐ方法として適切なのは？",
+        "options": [
+          { "id": "A", "text": "より大きな型（longなど）を使うか、加算前に上限チェックをする" },
+          { "id": "B", "text": "全ての変数をunsignedにする" },
+          { "id": "C", "text": "計算結果を常に0にリセットする" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "より大きな型を使えば範囲が広がり、加算前チェックで上限を超える計算を事前に防げます。unsignedでも範囲は有限です。"
+      },
+      {
+        "id": "basic-theory-03-apply-1",
+        "type": "apply_check",
+        "title": "応用1",
+        "prompt": "Javaのint型（32ビットsigned）で、System.currentTimeMillis()のミリ秒を格納すると問題になりうる理由は？",
+        "options": [
+          { "id": "A", "text": "ミリ秒の値がintの最大値(約21億)を超えるため、longを使うべき" },
+          { "id": "B", "text": "int型は小数を扱えないため" },
+          { "id": "C", "text": "int型は負の数を格納できないため" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "現在のUnixタイムスタンプ(ミリ秒)は約1.7兆で、intの最大値(約21億)をはるかに超えます。Javaではlong型を使います。"
+      },
+      {
+        "id": "basic-theory-03-apply-2",
+        "type": "apply_check",
+        "title": "応用2",
+        "prompt": "C言語で配列サイズをunsigned intで管理し、size-1を計算した時、sizeが0だとどうなる？",
+        "options": [
+          { "id": "A", "text": "4,294,967,295になる（unsignedの0-1はアンダーフローで最大値に巡回）" },
+          { "id": "B", "text": "-1になる（負の値として処理される）" },
+          { "id": "C", "text": "コンパイルエラーになる" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "unsigned型では負の値がないため、0-1は最大値(2³²-1)に巡回します。これがバッファオーバーフロー脆弱性の原因になりえます。"
+      },
+      {
+        "id": "basic-theory-03-summary",
+        "type": "summary",
+        "title": "学んだこと",
+        "bullets": [
+          "signed整数は正負両方、unsigned整数は正の数のみを表現する",
+          "2の補数でビット反転+1すると符号が反転する",
+          "オーバーフローは最大値を超えた時に値が巡回する現象",
+          "大きな値にはlong型を使い、加算前の上限チェックが重要"
+        ]
+      }
+    ],
+    "referenceLabel": "参考ノートを見る"
+  },
+  "ko": {
+    "hook": {
+      "title": "정수의 한계와 오버플로",
+      "prompt": "32비트 정수에 21억을 초과하는 값을 넣으면 어떻게 될까요?",
+      "takeaway": "signed/unsigned의 차이, 2의 보수 표현, 오버플로의 구조와 위험성을 이해한다"
+    },
+    "steps": [
+      {
+        "id": "basic-theory-03-concept-1",
+        "type": "concept",
+        "title": "개념1",
+        "body": "signed 정수는 양수와 음수 모두를 표현할 수 있고, unsigned 정수는 0 이상의 양수만 다룹니다. 같은 32비트라도 signed는 -2,147,483,648~2,147,483,647, unsigned는 0~4,294,967,295로 표현 범위가 다릅니다.",
+        "bullets": [
+          "signed: 최상위 비트를 부호 비트로 사용 (0=양수, 1=음수)",
+          "unsigned: 모든 비트를 값으로 사용하여, 양수 범위가 2배"
+        ]
+      },
+      {
+        "id": "basic-theory-03-mini-1",
+        "type": "mini_check",
+        "title": "확인1",
+        "prompt": "8비트 signed 정수로 표현할 수 있는 최솟값은?",
+        "options": [
+          { "id": "A", "text": "-128 (10000000₂)" },
+          { "id": "B", "text": "-127 (10000001₂)" },
+          { "id": "C", "text": "-255 (전체 비트 사용)" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "8비트 signed는 -128~127 범위입니다. 2의 보수 표현에서 10000000₂ = -128이 최솟값입니다."
+      },
+      {
+        "id": "basic-theory-03-concept-2",
+        "type": "concept",
+        "title": "개념2",
+        "body": "2의 보수는 음수를 표현하는 가장 일반적인 방법입니다. 어떤 수의 비트를 반전하고 1을 더하면 부호가 반전됩니다. 오버플로란 계산 결과가 자료형의 표현 범위를 초과하여 예상치 못한 값이 되는 현상입니다.",
+        "bullets": [
+          "2의 보수: 5(00000101₂)의 보수 → 반전 11111010₂ + 1 = 11111011₂(-5)",
+          "오버플로: 127+1 = -128 (8비트 signed의 경우, 양수에서 음수로 순환)"
+        ]
+      },
+      {
+        "id": "basic-theory-03-mini-2",
+        "type": "mini_check",
+        "title": "확인2",
+        "prompt": "8비트 signed 정수에서 127+1의 결과는?",
+        "options": [
+          { "id": "A", "text": "-128 (오버플로로 최솟값으로 순환)" },
+          { "id": "B", "text": "128 (정상적으로 계산)" },
+          { "id": "C", "text": "0 (리셋됨)" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "01111111₂(127)+1 = 10000000₂이지만, signed에서 10000000₂ = -128입니다. 최댓값을 넘으면 최솟값으로 순환합니다."
+      },
+      {
+        "id": "basic-theory-03-worked",
+        "type": "worked_example",
+        "title": "구체적 예시",
+        "situation": "게임의 점수 카운터가 32비트 signed int형이고, 점수가 2,147,483,647에 도달한 상태에서 1점이 추가되는 상황을 생각해 봅시다.",
+        "reasoning": [
+          "현재 값: 2,147,483,647 (01111...1₂ = int의 최댓값)",
+          "1을 더하면: 10000...0₂로 변경",
+          "signed int에서 10000...0₂ = -2,147,483,648",
+          "점수가 갑자기 마이너스가 되는 버그 발생"
+        ],
+        "takeaway": "오버플로는 보안 취약점이나 버그의 원인이 된다. 큰 값을 다룰 때는 long형이나 BigInteger를 검토해야 한다"
+      },
+      {
+        "id": "basic-theory-03-mini-3",
+        "type": "mini_check",
+        "title": "확인3",
+        "prompt": "오버플로를 방지하는 적절한 방법은?",
+        "options": [
+          { "id": "A", "text": "더 큰 자료형(long 등)을 사용하거나, 덧셈 전에 상한 검사를 수행" },
+          { "id": "B", "text": "모든 변수를 unsigned로 변경" },
+          { "id": "C", "text": "계산 결과를 항상 0으로 리셋" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "더 큰 자료형을 사용하면 범위가 넓어지고, 덧셈 전 검사로 상한 초과 계산을 사전에 방지할 수 있습니다. unsigned도 범위는 유한합니다."
+      },
+      {
+        "id": "basic-theory-03-apply-1",
+        "type": "apply_check",
+        "title": "응용1",
+        "prompt": "Java의 int형(32비트 signed)으로 System.currentTimeMillis()의 밀리초를 저장하면 문제가 될 수 있는 이유는?",
+        "options": [
+          { "id": "A", "text": "밀리초 값이 int의 최댓값(약 21억)을 초과하므로 long을 사용해야 한다" },
+          { "id": "B", "text": "int형은 소수를 다룰 수 없기 때문" },
+          { "id": "C", "text": "int형은 음수를 저장할 수 없기 때문" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "현재 Unix 타임스탬프(밀리초)는 약 1.7조로, int의 최댓값(약 21억)을 훨씬 초과합니다. Java에서는 long형을 사용합니다."
+      },
+      {
+        "id": "basic-theory-03-apply-2",
+        "type": "apply_check",
+        "title": "응용2",
+        "prompt": "C 언어에서 배열 크기를 unsigned int로 관리하고 size-1을 계산할 때, size가 0이면 어떻게 되는가?",
+        "options": [
+          { "id": "A", "text": "4,294,967,295가 된다 (unsigned의 0-1은 언더플로로 최댓값으로 순환)" },
+          { "id": "B", "text": "-1이 된다 (음수로 처리됨)" },
+          { "id": "C", "text": "컴파일 오류가 발생한다" }
+        ],
+        "correctOptionId": "A",
+        "explanation": "unsigned형에서는 음수가 없으므로, 0-1은 최댓값(2³²-1)으로 순환합니다. 이것이 버퍼 오버플로 취약점의 원인이 될 수 있습니다."
+      },
+      {
+        "id": "basic-theory-03-summary",
+        "type": "summary",
+        "title": "배운 내용",
+        "bullets": [
+          "signed 정수는 양수·음수 모두, unsigned 정수는 양수만 표현한다",
+          "2의 보수에서 비트 반전+1을 하면 부호가 반전된다",
+          "오버플로는 최댓값을 초과할 때 값이 순환하는 현상",
+          "큰 값에는 long형을 사용하고, 덧셈 전 상한 검사가 중요"
+        ]
+      }
+    ],
+    "referenceLabel": "참고 노트 보기"
+  }
+}

@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "ja": {
+    "hook": {
+      "title": "HTTP・DNS・障害対応",
+      "prompt": "ブラウザに「404」と表示されたとき、何が起きているのか正確に説明できますか？",
+      "takeaway": "HTTPメソッド・ステータスコード・DNSの仕組みを理解し、障害時のトラブルシューティングに活かせるようになります"
+    },
+    "steps": [
+      {
+        "id": "networking-04-concept-1",
+        "type": "concept",
+        "title": "概念1",
+        "body": "HTTPメソッドはクライアントがサーバーに対して行いたい操作を示します。GETはリソースの取得、POSTはリソースの作成、PUTは更新、DELETEは削除です。ステータスコードは3桁の数字で結果を表し、2xxは成功、3xxはリダイレクト、4xxはクライアントエラー、5xxはサーバーエラーを意味します。",
+        "bullets": [
+          "GETはべき等（何度実行しても同じ結果）、POSTはべき等ではない",
+          "REST APIではメソッドとステータスコードを適切に使い分けることが重要"
+        ]
+      },
+      {
+        "id": "networking-04-mini-1",
+        "type": "mini_check",
+        "title": "確認1",
+        "prompt": "HTTPステータスコード 403 の意味として正しいものはどれですか？",
+        "options": [
+          {"id": "A", "text": "アクセス禁止（認可されていない）"},
+          {"id": "B", "text": "リソースが見つからない"},
+          {"id": "C", "text": "サーバー内部エラー"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "403 Forbiddenは認可されていないアクセスを示します。404はリソースが見つからない、500はサーバー内部エラーです。"
+      },
+      {
+        "id": "networking-04-concept-2",
+        "type": "concept",
+        "title": "概念2",
+        "body": "DNS（Domain Name System）はドメイン名をIPアドレスに変換する仕組みです。ブラウザがURLにアクセスすると、まずDNSリゾルバがキャッシュを確認し、なければルートDNS→TLDサーバー→権威DNSサーバーの順に問い合わせてIPアドレスを取得します。",
+        "bullets": [
+          "DNSキャッシュはTTL（Time To Live）で有効期限が管理される",
+          "DNS障害はすべてのWeb通信に影響するため、冗長構成が重要"
+        ]
+      },
+      {
+        "id": "networking-04-mini-2",
+        "type": "mini_check",
+        "title": "確認2",
+        "prompt": "DNSの名前解決で最初に問い合わせるサーバーはどれですか？",
+        "options": [
+          {"id": "A", "text": "DNSリゾルバ（キャッシュサーバー）"},
+          {"id": "B", "text": "ルートDNSサーバー"},
+          {"id": "C", "text": "権威DNSサーバー"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "クライアントはまずDNSリゾルバに問い合わせます。キャッシュになければリゾルバがルートDNSから順に再帰問い合わせを行います。"
+      },
+      {
+        "id": "networking-04-worked",
+        "type": "worked_example",
+        "title": "具体例",
+        "situation": "本番環境のWebアプリに「502 Bad Gateway」エラーが発生している。ユーザーからの報告が増えている。",
+        "reasoning": [
+          "502はリバースプロキシがバックエンドから無効な応答を受けたことを示す",
+          "まずバックエンドサーバーのプロセスが稼働しているか確認する",
+          "サーバーログで例外やOOM（メモリ不足）がないか調べる",
+          "バックエンドが正常なら、プロキシの設定（タイムアウト値等）を確認する"
+        ],
+        "takeaway": "ステータスコードの意味を正確に理解することで、障害の調査方向を素早く絞り込めます"
+      },
+      {
+        "id": "networking-04-mini-3",
+        "type": "mini_check",
+        "title": "確認3",
+        "prompt": "Webサイトにアクセスできない場合、DNSの問題かHTTPの問題かを切り分ける方法として適切なのはどれですか？",
+        "options": [
+          {"id": "A", "text": "nslookupでドメインのIPアドレスが解決できるか確認する"},
+          {"id": "B", "text": "ブラウザのキャッシュをクリアする"},
+          {"id": "C", "text": "別のブラウザで試す"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "nslookupやdigコマンドでDNS解決を確認できます。IPが返ればDNSは正常で、HTTP層の問題を疑います。"
+      },
+      {
+        "id": "networking-04-apply-1",
+        "type": "apply_check",
+        "title": "応用1",
+        "prompt": "REST APIで「ユーザーが存在しないリソースを削除しようとした」場合、最も適切なレスポンスはどれですか？",
+        "options": [
+          {"id": "A", "text": "404 Not Found"},
+          {"id": "B", "text": "200 OK"},
+          {"id": "C", "text": "500 Internal Server Error"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "存在しないリソースに対するDELETEは404が適切です。200は操作成功、500はサーバーの予期せぬエラーを示します。"
+      },
+      {
+        "id": "networking-04-apply-2",
+        "type": "apply_check",
+        "title": "応用2",
+        "prompt": "DNS TTLを短く設定する（例：60秒）メリットとデメリットの組み合わせとして正しいものはどれですか？",
+        "options": [
+          {"id": "A", "text": "メリット：IP変更が素早く反映される。デメリット：DNS問い合わせ回数が増える"},
+          {"id": "B", "text": "メリット：セキュリティが向上する。デメリット：通信速度が低下する"},
+          {"id": "C", "text": "メリット：サーバー負荷が減る。デメリット：ドメインが失効しやすくなる"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "TTLが短いとキャッシュの更新が頻繁になり、IP変更の反映が速くなります。一方、DNSサーバーへの問い合わせ回数が増加します。"
+      },
+      {
+        "id": "networking-04-summary",
+        "type": "summary",
+        "title": "学んだこと",
+        "bullets": [
+          "HTTPメソッド（GET/POST/PUT/DELETE）はクライアントの意図を示し、ステータスコードは結果を伝える",
+          "DNSはドメイン名→IPアドレスの変換を担い、キャッシュとTTLで効率化されている",
+          "ステータスコードの意味を正確に理解することで障害調査の方向を絞り込める",
+          "nslookupなどのツールでDNS層とHTTP層の問題を切り分けられる"
+        ]
+      }
+    ],
+    "referenceLabel": "参考ノートを見る"
+  },
+  "ko": {
+    "hook": {
+      "title": "HTTP·DNS·장애 대응",
+      "prompt": "브라우저에 '404'가 표시되었을 때, 무엇이 일어나고 있는지 정확히 설명할 수 있나요?",
+      "takeaway": "HTTP 메서드·상태 코드·DNS의 구조를 이해하고, 장애 시 트러블슈팅에 활용할 수 있게 됩니다"
+    },
+    "steps": [
+      {
+        "id": "networking-04-concept-1",
+        "type": "concept",
+        "title": "개념1",
+        "body": "HTTP 메서드는 클라이언트가 서버에 대해 수행하고자 하는 작업을 나타냅니다. GET은 리소스 조회, POST는 리소스 생성, PUT은 갱신, DELETE는 삭제입니다. 상태 코드는 3자리 숫자로 결과를 나타내며, 2xx는 성공, 3xx는 리다이렉트, 4xx는 클라이언트 오류, 5xx는 서버 오류를 의미합니다.",
+        "bullets": [
+          "GET은 멱등(몇 번 실행해도 같은 결과), POST는 멱등이 아니다",
+          "REST API에서는 메서드와 상태 코드를 적절히 구분하여 사용하는 것이 중요"
+        ]
+      },
+      {
+        "id": "networking-04-mini-1",
+        "type": "mini_check",
+        "title": "확인1",
+        "prompt": "HTTP 상태 코드 403의 의미로 올바른 것은?",
+        "options": [
+          {"id": "A", "text": "접근 금지(인가되지 않음)"},
+          {"id": "B", "text": "리소스를 찾을 수 없음"},
+          {"id": "C", "text": "서버 내부 오류"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "403 Forbidden은 인가되지 않은 접근을 나타냅니다. 404는 리소스를 찾을 수 없음, 500은 서버 내부 오류입니다."
+      },
+      {
+        "id": "networking-04-concept-2",
+        "type": "concept",
+        "title": "개념2",
+        "body": "DNS(Domain Name System)는 도메인 이름을 IP 주소로 변환하는 시스템입니다. 브라우저가 URL에 접속하면, 먼저 DNS 리졸버가 캐시를 확인하고, 없으면 루트 DNS → TLD 서버 → 권위 DNS 서버 순서로 질의하여 IP 주소를 얻습니다.",
+        "bullets": [
+          "DNS 캐시는 TTL(Time To Live)로 유효 기간이 관리된다",
+          "DNS 장애는 모든 웹 통신에 영향을 미치므로 이중화 구성이 중요하다"
+        ]
+      },
+      {
+        "id": "networking-04-mini-2",
+        "type": "mini_check",
+        "title": "확인2",
+        "prompt": "DNS 이름 해석에서 가장 먼저 질의하는 서버는 어느 것인가요?",
+        "options": [
+          {"id": "A", "text": "DNS 리졸버(캐시 서버)"},
+          {"id": "B", "text": "루트 DNS 서버"},
+          {"id": "C", "text": "권위 DNS 서버"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "클라이언트는 먼저 DNS 리졸버에 질의합니다. 캐시에 없으면 리졸버가 루트 DNS부터 순차적으로 재귀 질의를 수행합니다."
+      },
+      {
+        "id": "networking-04-worked",
+        "type": "worked_example",
+        "title": "구체적 예시",
+        "situation": "운영 환경의 웹 앱에서 '502 Bad Gateway' 오류가 발생하고 있다. 사용자 보고가 증가하고 있다.",
+        "reasoning": [
+          "502는 리버스 프록시가 백엔드로부터 잘못된 응답을 받았음을 나타낸다",
+          "먼저 백엔드 서버의 프로세스가 가동 중인지 확인한다",
+          "서버 로그에서 예외나 OOM(메모리 부족)이 없는지 조사한다",
+          "백엔드가 정상이면 프록시 설정(타임아웃 값 등)을 확인한다"
+        ],
+        "takeaway": "상태 코드의 의미를 정확히 이해하면 장애 조사 방향을 빠르게 좁힐 수 있습니다"
+      },
+      {
+        "id": "networking-04-mini-3",
+        "type": "mini_check",
+        "title": "확인3",
+        "prompt": "웹사이트에 접속할 수 없는 경우, DNS 문제인지 HTTP 문제인지를 구분하는 방법으로 적절한 것은?",
+        "options": [
+          {"id": "A", "text": "nslookup으로 도메인의 IP 주소가 해석되는지 확인한다"},
+          {"id": "B", "text": "브라우저 캐시를 지운다"},
+          {"id": "C", "text": "다른 브라우저로 시도한다"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "nslookup이나 dig 명령으로 DNS 해석을 확인할 수 있습니다. IP가 반환되면 DNS는 정상이고, HTTP 계층의 문제를 의심합니다."
+      },
+      {
+        "id": "networking-04-apply-1",
+        "type": "apply_check",
+        "title": "응용1",
+        "prompt": "REST API에서 '사용자가 존재하지 않는 리소스를 삭제하려 한 경우', 가장 적절한 응답은?",
+        "options": [
+          {"id": "A", "text": "404 Not Found"},
+          {"id": "B", "text": "200 OK"},
+          {"id": "C", "text": "500 Internal Server Error"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "존재하지 않는 리소스에 대한 DELETE는 404가 적절합니다. 200은 작업 성공, 500은 서버의 예기치 않은 오류를 나타냅니다."
+      },
+      {
+        "id": "networking-04-apply-2",
+        "type": "apply_check",
+        "title": "응용2",
+        "prompt": "DNS TTL을 짧게 설정하는(예: 60초) 장점과 단점의 조합으로 올바른 것은?",
+        "options": [
+          {"id": "A", "text": "장점: IP 변경이 빠르게 반영된다. 단점: DNS 질의 횟수가 늘어난다"},
+          {"id": "B", "text": "장점: 보안이 향상된다. 단점: 통신 속도가 저하된다"},
+          {"id": "C", "text": "장점: 서버 부하가 줄어든다. 단점: 도메인이 만료되기 쉬워진다"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "TTL이 짧으면 캐시 갱신이 빈번해져 IP 변경 반영이 빨라집니다. 반면 DNS 서버로의 질의 횟수가 증가합니다."
+      },
+      {
+        "id": "networking-04-summary",
+        "type": "summary",
+        "title": "배운 내용",
+        "bullets": [
+          "HTTP 메서드(GET/POST/PUT/DELETE)는 클라이언트의 의도를 나타내고, 상태 코드는 결과를 전달한다",
+          "DNS는 도메인 이름→IP 주소 변환을 담당하며, 캐시와 TTL로 효율화된다",
+          "상태 코드의 의미를 정확히 이해하면 장애 조사 방향을 좁힐 수 있다",
+          "nslookup 등의 도구로 DNS 계층과 HTTP 계층의 문제를 구분할 수 있다"
+        ]
+      }
+    ],
+    "referenceLabel": "참고 노트 보기"
+  }
+}

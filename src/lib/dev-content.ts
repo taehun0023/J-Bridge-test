@@ -1,5 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
+import { parseInteractiveContent } from './cs-content'
+import type { CsLessonInteractiveContent } from './cs-content'
 
 export type DevLang = 'ja' | 'ko'
 
@@ -18,6 +20,8 @@ export interface DevLessonMeta {
   category: 'dev-practical-skills'
   subject: string
   topic: string
+  estimated_read_minutes: number
+  difficulty: 'foundation' | 'intermediate' | 'advanced'
   summary: string
   key_points: string[]
   misconceptions: string[]
@@ -62,10 +66,10 @@ export interface DevLessonDetail {
   moduleTitle: string
   estMinutes: number
   tags: string[]
-  content: string
+  contentJa: string
+  contentKo: string | null
+  interactiveContent: CsLessonInteractiveContent | null
   meta: DevLessonMeta
-  lang: DevLang
-  hasKo: boolean
 }
 
 const CONTENT_ROOT = path.join(
@@ -103,13 +107,13 @@ function stripQuotes(value: string) {
 }
 
 function parseFrontmatter(content: string) {
-  const match = content.match(/^---\n([\s\S]*?)\n---/)
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/)
   if (!match) {
     throw new Error('Missing lesson frontmatter')
   }
 
   const result: Record<string, string | number | string[]> = {}
-  for (const line of match[1].split('\n')) {
+  for (const line of match[1].split(/\r?\n/)) {
     const trimmed = line.trim()
     if (!trimmed || !trimmed.includes(':')) continue
 
@@ -210,8 +214,7 @@ export async function getDevSubjectContent(slug: DevSubjectSlug): Promise<DevSub
 }
 
 export async function getDevLessonDetail(
-  lessonId: string,
-  lang: DevLang = 'ja'
+  lessonId: string
 ): Promise<DevLessonDetail | null> {
   const entries = Object.entries(SUBJECT_CONFIG) as Array<
     [DevSubjectSlug, { moduleIds: string[] }]
@@ -220,26 +223,32 @@ export async function getDevLessonDetail(
   for (const [subjectSlug, config] of entries) {
     for (const moduleId of config.moduleIds) {
       const moduleDir = getModuleDir(moduleId)
-      const mdxFile = lang === 'ko' ? `${lessonId}.ko.mdx` : `${lessonId}.mdx`
-      const lessonPath = path.join(moduleDir, 'lessons', mdxFile)
+      const lessonsDir = path.join(moduleDir, 'lessons')
+      const lessonPath = path.join(lessonsDir, `${lessonId}.mdx`)
 
       try {
-        const content = await readFile(lessonPath, 'utf8')
-        const frontmatter = parseFrontmatter(content)
+        const contentJa = await readFile(lessonPath, 'utf8')
+        const frontmatter = parseFrontmatter(contentJa)
         const moduleYaml = await readFile(path.join(moduleDir, 'module.yaml'), 'utf8')
         const moduleData = parseModuleYaml(moduleYaml)
         const meta = JSON.parse(
-          await readFile(path.join(moduleDir, 'lessons', `${lessonId}.meta.json`), 'utf8')
+          await readFile(path.join(lessonsDir, `${lessonId}.meta.json`), 'utf8')
         ) as DevLessonMeta
 
-        // Check if Korean version exists
-        let hasKo = true
-        if (lang !== 'ko') {
-          try {
-            await readFile(path.join(moduleDir, 'lessons', `${lessonId}.ko.mdx`), 'utf8')
-          } catch {
-            hasKo = false
-          }
+        let contentKo: string | null = null
+        try {
+          contentKo = await readFile(path.join(lessonsDir, `${lessonId}.ko.mdx`), 'utf8')
+        } catch {
+          contentKo = null
+        }
+
+        let interactiveContent: CsLessonInteractiveContent | null = null
+        try {
+          interactiveContent = parseInteractiveContent(
+            await readFile(path.join(lessonsDir, `${lessonId}.stage.json`), 'utf8')
+          )
+        } catch {
+          interactiveContent = null
         }
 
         return {
@@ -251,10 +260,10 @@ export async function getDevLessonDetail(
           moduleTitle: moduleData.title,
           estMinutes: Number(frontmatter.est_minutes),
           tags: Array.isArray(frontmatter.tags) ? frontmatter.tags.map(String) : [],
-          content,
+          contentJa,
+          contentKo,
+          interactiveContent,
           meta,
-          lang,
-          hasKo,
         }
       } catch {
         continue

@@ -1,8 +1,8 @@
 module:
   id: DEV-REACT-02
-  title: React - State, Props, and Data Flow
+  title: React - State・Props・データフロー
   level: intermediate
-  description: "정적 해설형 콘텐츠로 State와 Props의 차이, 단방향 데이터 흐름을 읽고 추적하는 방법을 설명한다."
+  description: "StateとPropsの違い、単方向データフローの読み方と追跡方法を解説する。"
   subject: react
   content_mode: static-interpretive
   outcomes:

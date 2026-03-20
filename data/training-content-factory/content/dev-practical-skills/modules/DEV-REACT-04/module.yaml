@@ -1,8 +1,8 @@
 module:
   id: DEV-REACT-04
-  title: React - Rendering Behavior and Performance Reasoning
+  title: React - レンダリング動作とパフォーマンス判断
   level: advanced
-  description: "정적 해설형 콘텐츠로 React의 렌더링 동작과 성능 최적화 판단 기준을 설명한다."
+  description: "Reactのレンダリング動作と性能最適化の判断基準を解説する。"
   subject: react
   content_mode: static-interpretive
   outcomes:

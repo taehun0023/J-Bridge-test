@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "nextjs",
   "topic": "server-client-component-boundaries",
-  "summary": "Explains the differences between Server Components and Client Components in Next.js App Router, the role of 'use client' directive, available APIs for each type, and composition patterns.",
+  "summary": "サーバーコンポーネントとクライアントコンポーネントの違い、'use client'の役割、各タイプで利用可能なAPI、合成パターンを解説する。",
   "key_points": [
-    "All components in App Router are Server Components by default — 'use client' opts into client rendering.",
-    "'use client' creates a boundary: all children imported by the file become client components.",
-    "Server Components can access databases and server-only APIs; Client Components can use hooks and browser APIs."
+    "App Routerのすべてのコンポーネントはデフォルトでサーバーコンポーネント — 'use client'でクライアントレンダリングに切り替える。",
+    "'use client'は境界を作成し、そのファイルからインポートされるすべての子はクライアントコンポーネントになる。",
+    "サーバーコンポーネントはデータベースやサーバー専用APIにアクセスでき、クライアントコンポーネントはフックやブラウザAPIを使用できる。"
   ],
   "misconceptions": [
     "Every component needs 'use client' to work in the browser.",

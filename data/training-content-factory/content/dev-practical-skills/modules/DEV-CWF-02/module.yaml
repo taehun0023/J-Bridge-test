@@ -1,8 +1,8 @@
 module:
   id: DEV-CWF-02
-  title: Common Workplace Fundamentals - Version Control Basics
+  title: 共通業務基礎 - バージョン管理の基本
   level: foundation
-  description: "정적 해설형 콘텐츠로 Git 기본 명령과 커밋 메시지 읽기, 브랜치 전략의 기초를 설명한다."
+  description: "Gitの基本コマンドとコミットメッセージの読み方、ブランチ戦略の基礎を解説する。"
   subject: common-workplace-fundamentals
   content_mode: static-interpretive
   outcomes:

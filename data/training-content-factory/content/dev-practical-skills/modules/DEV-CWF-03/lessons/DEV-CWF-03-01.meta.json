@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "common-workplace-fundamentals",
   "topic": "issue-tracking",
-  "summary": "Explains how to read issue trackers to identify task scope, priority labels, and the relationship between issues and pull requests.",
+  "summary": "イシュートラッカーからタスクの範囲・優先順位ラベル・イシューとPRの関係を読む方法を解説する。",
   "key_points": [
-    "Read acceptance criteria to determine the exact scope of work.",
-    "Priority determines when to act; Severity determines impact level.",
-    "Always link PRs to issues for traceability."
+    "受け入れ基準を読んで作業の正確な範囲を把握する。",
+    "優先度は対応時期を、重大度は影響度を決定する。",
+    "トレーサビリティのためにPRは必ずイシューに紐づける。"
   ],
   "misconceptions": [
     "Reading only the issue title is enough to understand the task.",

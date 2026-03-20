@@ -121,6 +121,86 @@ const TRADITIONAL_DIFFICULTY_OPTIONS = [
   { value: '上級', label: '上級' },
 ]
 
+const normalizedCategoryLabels: Record<string, string> = {
+  vocab: '語彙',
+  vocabulary: '語彙',
+  kanji: '漢字',
+  jlpt_kanji: '漢字',
+  grammar: '文法',
+  reading: '読解',
+  listening: '聴解',
+  fill_blank: '穴埋め',
+  sentence_pattern: '文型パターン',
+  business_expression: 'ビジネス表現',
+  keigo: '敬語',
+  algorithm: 'アルゴリズム',
+  data_structure: 'データ構造',
+  basic_theory: '情報表現',
+  computer_architecture: 'コンピュータ構成',
+  database: 'データベース',
+  network: 'ネットワーク',
+  os: 'オペレーティングシステム',
+  security: 'セキュリティ',
+  java_core: 'Java基礎',
+  spring_boot: 'Spring Boot',
+  javascript_core: 'JavaScript基礎',
+  react: 'React',
+  sql: 'SQL',
+  python: 'Python',
+  nextjs: 'Next.js',
+  java_code: 'Javaコード',
+  javascript_code: 'JavaScriptコード',
+  business_manner: 'ビジネスマナー',
+  communication: 'コミュニケーション',
+  cross_culture: '異文化理解',
+}
+
+const normalizedDifficultyLabels: Record<string, string> = {
+  easy: '初級',
+  medium: '中級',
+  hard: '上級',
+  N5: 'N5',
+  N4: 'N4',
+  N3: 'N3',
+  N2: 'N2',
+  N1: 'N1',
+  初級: '初級',
+  中級: '中級',
+  上級: '上級',
+  '?앯킎': '初級',
+  '訝?킎': '中級',
+  '訝딁킎': '上級',
+}
+
+Object.assign(categoryLabels, normalizedCategoryLabels, {
+  basic_theory_check_1: '情報表現',
+  basic_theory_check_2: '情報表現',
+  basic_theory_final: '情報表現',
+  data_structure_check_1: 'データ構造',
+  data_structure_check_2: 'データ構造',
+  data_structure_final: 'データ構造',
+  algorithm_check_1: 'アルゴリズム',
+  algorithm_check_2: 'アルゴリズム',
+  algorithm_final: 'アルゴリズム',
+  computer_architecture_check_1: 'コンピュータ構成',
+  computer_architecture_check_2: 'コンピュータ構成',
+  computer_architecture_final: 'コンピュータ構成',
+  database_check_1: 'データベース',
+  database_check_2: 'データベース',
+  database_final: 'データベース',
+  network_check_1: 'ネットワーク',
+  network_check_2: 'ネットワーク',
+  network_final: 'ネットワーク',
+  os_check_1: 'オペレーティングシステム',
+  os_check_2: 'オペレーティングシステム',
+  os_final: 'オペレーティングシステム',
+  security_check_1: 'セキュリティ',
+  security_check_2: 'セキュリティ',
+  security_final: 'セキュリティ',
+})
+
+Object.assign(difficultyLabels, normalizedDifficultyLabels)
+
 export default function AdminCoursesClient({
   axes,
 }: {
@@ -144,6 +224,7 @@ export default function AdminCoursesClient({
   const [questions, setQuestions] = useState<QuestionData[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [hasMore, setHasMore] = useState(false)
+  const [availableCategories, setAvailableCategories] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   // Track what we've loaded: "step:section:filters"
@@ -152,6 +233,82 @@ export default function AdminCoursesClient({
 
   const currentAxis = axes.find(a => a.step === selectedStep)!
   const hasPractice = currentAxis.practiceTypes.length > 0
+  const isCsPracticeSection = currentAxis.step === 3 && activeSection === 'practice'
+
+  const CS_SUBJECT_LABELS: Record<string, string> = {
+    basic_theory: '情報表現',
+    data_structure: 'データ構造',
+    algorithm: 'アルゴリズム',
+    computer_architecture: 'コンピュータ構成',
+    database: 'データベース',
+    network: 'ネットワーク',
+    os: 'オペレーティングシステム',
+    security: 'セキュリティ',
+  }
+
+  const csSubjectLabels = {
+    basic_theory: '情報表現',
+    data_structure: 'データ構造',
+    algorithm: 'アルゴリズム',
+    computer_architecture: 'コンピュータ構成',
+    database: 'データベース',
+    network: 'ネットワーク',
+    os: 'オペレーティングシステム',
+    security: 'セキュリティ',
+  } as const
+
+  const CS_SUBJECT_ORDER = [
+    'basic_theory',
+    'data_structure',
+    'algorithm',
+    'computer_architecture',
+    'database',
+    'network',
+    'os',
+    'security',
+  ] as const
+
+  function getCsSubjectCategory(rawCategory: string | null | undefined) {
+    if (!rawCategory) return null
+    const direct = rawCategory.replace(/_(check_[12]|final)$/, '')
+    return csSubjectLabels[direct as keyof typeof csSubjectLabels] ? direct : null
+  }
+
+  function getCsDifficultyLabel(value: string | null | undefined) {
+    if (value === 'easy') return '初級'
+    if (value === 'medium') return '中級'
+    if (value === 'hard') return '上級'
+    return value ?? '未設定'
+  }
+
+  function getCategoryLabel(rawCategory: string | null | undefined) {
+    if (!rawCategory) return '未分類(旧データ)'
+    if (isCsPracticeSection) {
+      const subject = getCsSubjectCategory(rawCategory)
+      return subject ? CS_SUBJECT_LABELS[subject] : '未分類(旧データ)'
+    }
+    return categoryLabels[rawCategory] ?? rawCategory
+  }
+
+  function getDifficultyLabel(value: string | null | undefined) {
+    if (isCsPracticeSection) return getCsDifficultyLabel(value)
+    return value ? (difficultyLabels[value] ?? value) : '未設定'
+  }
+
+  function getDisplayCategoryLabel(rawCategory: string | null | undefined) {
+    if (!rawCategory) return '未分類(旧データ)'
+    if (isCsPracticeSection) {
+      const direct = rawCategory.replace(/_(check_[12]|final)$/, '')
+      return csSubjectLabels[direct as keyof typeof csSubjectLabels] ?? '未分類(旧データ)'
+    }
+    return normalizedCategoryLabels[rawCategory] ?? categoryLabels[rawCategory] ?? rawCategory
+  }
+
+  function getDisplayDifficultyLabel(value: string | null | undefined) {
+    if (!value) return '未設定'
+    if (isCsPracticeSection) return normalizedDifficultyLabels[value] ?? value
+    return normalizedDifficultyLabels[value] ?? difficultyLabels[value] ?? value
+  }
 
   const getQuizIds = useCallback(() => {
     return activeSection === 'assessment'
@@ -164,6 +321,7 @@ export default function AdminCoursesClient({
       setQuestions([])
       setTotalCount(0)
       setHasMore(false)
+      setAvailableCategories([])
       return
     }
 
@@ -184,6 +342,7 @@ export default function AdminCoursesClient({
     }
     setTotalCount(result.totalCount)
     setHasMore(result.hasMore)
+    setAvailableCategories(result.availableCategories ?? [])
 
     if (append) setLoadingMore(false)
     else setLoading(false)
@@ -262,6 +421,12 @@ export default function AdminCoursesClient({
     setTimeout(() => setMessage(null), 3000)
   }
 
+  const normalizedCsDevDifficultyOptions = [
+    { value: 'easy', label: '初級' },
+    { value: 'medium', label: '中級' },
+    { value: 'hard', label: '上級' },
+  ]
+
   const CS_DEV_DIFFICULTY_OPTIONS = [
     { value: 'easy', label: 'ブロンズ' },
     { value: 'medium', label: 'シルバー' },
@@ -270,7 +435,7 @@ export default function AdminCoursesClient({
 
   function getDifficultyOptions(): { value: string; label: string }[] {
     if (currentAxis.step === 1) return N_LEVEL_OPTIONS
-    if (currentAxis.step === 3 || currentAxis.step === 4) return CS_DEV_DIFFICULTY_OPTIONS
+    if (currentAxis.step === 3 || currentAxis.step === 4) return normalizedCsDevDifficultyOptions
     return TRADITIONAL_DIFFICULTY_OPTIONS
   }
 
@@ -293,9 +458,34 @@ export default function AdminCoursesClient({
     if (cat) categoryToQuizTypeMap[cat] = pt.quizType
   })
 
-  const practiceCategories = currentAxis.practiceTypes
+  const rawPracticeCategories = currentAxis.practiceTypes
     .map(pt => ({ value: quizTypeToCategoryMap[pt.quizType] ?? pt.quizType, label: pt.label }))
     .filter(c => c.value)
+
+  const practiceCategories = isCsPracticeSection
+    ? CS_SUBJECT_ORDER.map((cat) => ({ value: cat, label: csSubjectLabels[cat] }))
+    : rawPracticeCategories
+
+  const toolbarCategories = activeSection === 'practice'
+    ? (
+        isCsPracticeSection
+          ? [
+              ...CS_SUBJECT_ORDER.map((cat) => ({
+                value: `__cs_subject__:${cat}`,
+                label: csSubjectLabels[cat],
+              })),
+              { value: '__legacy_unclassified__', label: '未分類(旧データ)' },
+            ]
+          : practiceCategories
+      )
+    : availableCategories.map(cat => ({ value: cat, label: normalizedCategoryLabels[cat] ?? categoryLabels[cat] ?? cat }))
+
+  const displayToolbarCategories = toolbarCategories.map((cat) => (
+    cat.value === '__legacy_unclassified__'
+      ? { ...cat, label: '未分類(旧データ)' }
+      : cat
+  ))
+  const filteredToolbarCategories = displayToolbarCategories.filter((cat) => cat.value !== '__legacy_unclassified__')
 
   function openAddForm(section: 'assessment' | 'practice') {
     setFormSection(section)
@@ -319,6 +509,43 @@ export default function AdminCoursesClient({
     setFormText(q.question_text)
     setFormDifficulty(q.difficulty ?? '中級')
     setFormCategory(q.question_category ?? '')
+    setFormExplanation(q.explanation ?? '')
+    setFormOptions(
+      q.options.length >= 2
+        ? q.options.map(o => ({ option_text: o.option_text, is_correct: o.is_correct }))
+        : [
+            { option_text: '', is_correct: true },
+            { option_text: '', is_correct: false },
+            { option_text: '', is_correct: false },
+            { option_text: '', is_correct: false },
+          ]
+    )
+    setEditingQuestion(q)
+    setShowAddForm(true)
+  }
+
+  function openManagedAddForm(section: 'assessment' | 'practice') {
+    setFormSection(section)
+    setEditingQuestion(null)
+    setFormText('')
+    setFormDifficulty(currentAxis.step === 1 ? 'N3' : (isCsPracticeSection ? 'medium' : '中級'))
+    setFormCategory(section === 'practice' ? (practiceCategories[0]?.value ?? '') : '')
+    setFormExplanation('')
+    setFormOptions([
+      { option_text: '', is_correct: true },
+      { option_text: '', is_correct: false },
+      { option_text: '', is_correct: false },
+      { option_text: '', is_correct: false },
+    ])
+    setShowAddForm(true)
+  }
+
+  function openManagedEditForm(q: QuestionData) {
+    const isAssessment = q.quiz_id === currentAxis.assessmentQuizId
+    setFormSection(isAssessment ? 'assessment' : 'practice')
+    setFormText(q.question_text)
+    setFormDifficulty(q.difficulty ?? (isCsPracticeSection ? 'medium' : '中級'))
+    setFormCategory(isCsPracticeSection ? (getCsSubjectCategory(q.question_category) ?? '') : (q.question_category ?? ''))
     setFormExplanation(q.explanation ?? '')
     setFormOptions(
       q.options.length >= 2
@@ -376,20 +603,39 @@ export default function AdminCoursesClient({
     return pt?.quizIds[0] ?? currentAxis.practiceTypes[0]?.quizIds[0]
   }
 
+  function getManagedCreateQuizId(): string | undefined {
+    if (formSection === 'assessment') return currentAxis.assessmentQuizId
+    if (isCsPracticeSection) return currentAxis.practiceTypes[0]?.quizIds[0]
+    return getCreateQuizId()
+  }
+
+  function getQuestionCategoryForSave() {
+    if (formSection !== 'practice') return formCategory || null
+    if (!isCsPracticeSection) return formCategory || null
+    if (!formCategory) return null
+
+    const editingCategory = getCsSubjectCategory(editingQuestion?.question_category)
+    if (editingQuestion?.question_category && editingCategory === formCategory) {
+      return editingQuestion.question_category
+    }
+
+    return formCategory
+  }
+
   function handleSubmitForm() {
     if (!formText.trim()) { showMsg('問題テキストを入力してください', 'error'); return }
     if (formSection === 'practice' && !formCategory) { showMsg('カテゴリを選択してください', 'error'); return }
     const validOptions = formOptions.filter(o => o.option_text.trim())
     if (validOptions.length < 2) { showMsg('選択肢を最低2つ入力してください', 'error'); return }
     if (!validOptions.some(o => o.is_correct)) { showMsg('正解を1つ選択してください', 'error'); return }
-    const createQuizId = getCreateQuizId()
+    const createQuizId = getManagedCreateQuizId()
     if (!createQuizId) { showMsg('クイズIDが見つかりません', 'error'); return }
 
     const data = {
       question_text: formText.trim(),
       question_type: 'multiple_choice',
       difficulty: formDifficulty,
-      question_category: formCategory || null,
+      question_category: getQuestionCategoryForSave(),
       explanation: formExplanation.trim() || null,
       options: validOptions.map((o, i) => ({
         option_text: o.option_text.trim(),
@@ -449,7 +695,6 @@ export default function AdminCoursesClient({
     })
   }
 
-  const uniqueCategories = [...new Set(questions.map(q => q.question_category).filter(Boolean) as string[])]
   const formDifficultyOptions = getDifficultyOptions()
 
   // Render question row
@@ -460,7 +705,7 @@ export default function AdminCoursesClient({
           <span className="line-clamp-2">{q.question_text}</span>
         </td>
         <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-          {q.question_category ? (categoryLabels[q.question_category] ?? q.question_category) : '-'}
+          {getDisplayCategoryLabel(q.question_category)}
         </td>
         <td className="px-4 py-3">
           <Badge label={q.difficulty ? (difficultyLabels[q.difficulty] ?? q.difficulty) : '未設定'} variant="difficulty" />
@@ -489,7 +734,7 @@ export default function AdminCoursesClient({
         <td className="px-4 py-3 text-right">
           <div className="flex justify-end gap-2">
             <button
-              onClick={() => openEditForm(q)}
+              onClick={() => openManagedEditForm(q)}
               disabled={pending}
               className="text-xs text-blue-600 hover:underline disabled:opacity-50 dark:text-blue-400"
             >
@@ -520,7 +765,7 @@ export default function AdminCoursesClient({
     return (
       <div className="flex flex-wrap items-center gap-3">
         <button
-          onClick={() => openAddForm(section)}
+          onClick={() => openManagedAddForm(section)}
           className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
         >
           + 問題追加
@@ -538,15 +783,15 @@ export default function AdminCoursesClient({
           <option value="__null__">未設定</option>
         </select>
 
-        {uniqueCategories.length > 0 && (
+        {filteredToolbarCategories.length > 0 && (
           <select
             value={filters.category}
             onChange={e => setFilters(f => ({ ...f, category: e.target.value }))}
             className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
           >
             <option value="">全カテゴリ</option>
-            {uniqueCategories.map(cat => (
-              <option key={cat} value={cat}>{categoryLabels[cat] ?? cat}</option>
+            {filteredToolbarCategories.map(cat => (
+              <option key={cat.value} value={cat.value}>{cat.label}</option>
             ))}
           </select>
         )}
@@ -851,8 +1096,8 @@ export default function AdminCoursesClient({
                   ) : (
                     <>
                       <option value="">未設定</option>
-                      {uniqueCategories.map(cat => (
-                        <option key={cat} value={cat}>{categoryLabels[cat] ?? cat}</option>
+                      {availableCategories.map(cat => (
+                        <option key={cat} value={cat}>{normalizedCategoryLabels[cat] ?? categoryLabels[cat] ?? cat}</option>
                       ))}
                     </>
                   )}

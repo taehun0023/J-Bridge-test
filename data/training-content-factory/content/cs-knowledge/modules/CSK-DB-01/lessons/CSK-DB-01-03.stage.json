@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "ja": {
+    "hook": {
+      "title": "トランザクションと分離レベルを理解する",
+      "prompt": "銀行の送金処理で「口座Aから引き落としたのに口座Bに入金されなかった」という事態はなぜ起きないのでしょうか？でも完全な整合性には性能の犠牲が伴う？",
+      "takeaway": "ACIDの各特性と4つの分離レベルの違いを理解し、整合性と性能のトレードオフを判断できるようになります。"
+    },
+    "steps": [
+      {
+        "id": "database-03-concept-1",
+        "type": "concept",
+        "title": "ACID特性",
+        "body": "トランザクションはACID特性で信頼性を保証します。Atomicity（原子性）は全操作が成功か全失敗かのいずれか、Consistency（整合性）は制約違反のない状態を維持、Isolation（隔離性）は並行トランザクション間の干渉を防止、Durability（永続性）はコミット後のデータが障害後も保持されることを保証します。",
+        "bullets": [
+          "Atomicity：送金で引き落としと入金がセットで成功するか、両方ロールバックされる",
+          "Durability：コミット済みデータはWAL（Write-Ahead Logging）等でディスクに永続化される"
+        ]
+      },
+      {
+        "id": "database-03-mini-1",
+        "type": "mini_check",
+        "title": "確認1",
+        "prompt": "トランザクションの「原子性（Atomicity）」が保証することは何ですか？",
+        "options": [
+          {"id": "A", "text": "トランザクション内の全操作が成功するか、1つでも失敗すれば全操作がロールバックされる"},
+          {"id": "B", "text": "トランザクションが他のトランザクションの影響を受けないこと"},
+          {"id": "C", "text": "データが常にディスクに保存されること"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "原子性は「全部成功 or 全部失敗」を保証します。送金処理で引き落としだけ成功して入金が失敗するような中間状態を防ぎます。"
+      },
+      {
+        "id": "database-03-concept-2",
+        "type": "concept",
+        "title": "分離レベルと異常現象",
+        "body": "分離レベルは並行トランザクション間の見え方を制御します。Read Uncommitted（最低）ではダーティリードが発生し得ます。Read Committedではダーティリードを防止。Repeatable Readではファジーリード（非再現読み取り）も防止。Serializable（最高）ではファントムリードも含め全異常を防止しますが、性能が最も低下します。",
+        "bullets": [
+          "ダーティリード：未コミットデータを読む。ファジーリード：同じ行を2回読んで値が変わる",
+          "ファントムリード：同じ条件で検索して行数が変わる（別トランザクションのINSERT/DELETEによる）"
+        ]
+      },
+      {
+        "id": "database-03-mini-2",
+        "type": "mini_check",
+        "title": "確認2",
+        "prompt": "「ファントムリード」が発生するのはどのような状況ですか？",
+        "options": [
+          {"id": "A", "text": "同じWHERE条件で2回SELECT した際、別トランザクションのINSERTにより結果の行数が変わる"},
+          {"id": "B", "text": "未コミットのデータを他のトランザクションが読み取る"},
+          {"id": "C", "text": "トランザクションがコミットに失敗する"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "ファントムリードは、あるトランザクションが同じ条件で2回検索した間に、別のトランザクションが条件に合致する行をINSERT/DELETEすることで発生します。"
+      },
+      {
+        "id": "database-03-worked",
+        "type": "worked_example",
+        "title": "在庫管理システムの分離レベル選択",
+        "situation": "ECサイトの在庫管理で、複数のユーザーが同時に同じ商品を購入しようとしています。在庫が1個しかない場合、2人に販売してしまう問題が発生しました。",
+        "reasoning": [
+          "Read Committedでは、トランザクションAが在庫=1を読み取った後、Bも在庫=1を読み取れる",
+          "両方が「在庫-1」を実行すると、在庫が-1になる（過剰販売）",
+          "対策1：Serializable分離レベルにして完全直列化（性能低下が大きい）",
+          "対策2：SELECT FOR UPDATEで行ロックを取得し、悲観的ロックで制御する（推奨）"
+        ],
+        "takeaway": "在庫のような競合が激しいリソースでは、分離レベルの選択だけでなく、明示的なロック戦略が必要です。"
+      },
+      {
+        "id": "database-03-mini-3",
+        "type": "mini_check",
+        "title": "確認3",
+        "prompt": "Read Committed分離レベルで防止できる異常現象と、防止できない異常現象の組み合わせはどれですか？",
+        "options": [
+          {"id": "A", "text": "ダーティリードは防止できるが、ファジーリードとファントムリードは防止できない"},
+          {"id": "B", "text": "すべての異常現象を防止できる"},
+          {"id": "C", "text": "ファントムリードは防止できるが、ダーティリードは防止できない"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "Read Committedはコミット済みデータのみ読み取るためダーティリードは発生しませんが、同じ行の再読み取りで値が変わるファジーリードや行数が変わるファントムリードは発生し得ます。"
+      },
+      {
+        "id": "database-03-apply-1",
+        "type": "apply_check",
+        "title": "応用1",
+        "prompt": "PostgreSQLのデフォルト分離レベルがRead Committedである理由は何ですか？",
+        "options": [
+          {"id": "A", "text": "多くのアプリケーションでダーティリード防止と実用的な並行性能のバランスが取れるため"},
+          {"id": "B", "text": "PostgreSQLがSerializableをサポートしていないため"},
+          {"id": "C", "text": "Read Committedですべての異常現象を防止できるため"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "Read Committedはダーティリードを防ぎつつロックの保持時間を最小化するため、多くのWebアプリケーションで十分な整合性と高い並行性能を両立できます。"
+      },
+      {
+        "id": "database-03-apply-2",
+        "type": "apply_check",
+        "title": "応用2",
+        "prompt": "分散データベースにおけるCAP定理の制約下で、ACID特性のうち最も妥協されやすいのはどれですか？",
+        "options": [
+          {"id": "A", "text": "Isolation（隔離性）— 結果整合性（Eventual Consistency）を採用して可用性と分断耐性を優先する"},
+          {"id": "B", "text": "Atomicity（原子性）— トランザクションを部分的に成功させる"},
+          {"id": "C", "text": "Durability（永続性）— コミット済みデータを失うことを許容する"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "CAP定理では一貫性・可用性・分断耐性の3つを同時に完全に満たせません。多くの分散システムはIsolationを緩和し、結果整合性を採用して可用性と分断耐性を優先します。"
+      },
+      {
+        "id": "database-03-summary",
+        "type": "summary",
+        "title": "学んだこと",
+        "bullets": [
+          "ACID（原子性・整合性・隔離性・永続性）がトランザクションの信頼性を保証する",
+          "分離レベルはRead Uncommitted→Read Committed→Repeatable Read→Serializableの順で整合性が高まる",
+          "分離レベルが高いほど性能が低下するため、要件に応じたレベル選択が重要",
+          "在庫管理など競合が激しい場面では、分離レベルに加えて明示的なロック戦略が必要"
+        ]
+      }
+    ],
+    "referenceLabel": "参考ノートを見る"
+  },
+  "ko": {
+    "hook": {
+      "title": "트랜잭션과 격리 수준을 이해하기",
+      "prompt": "은행 송금 처리에서 '계좌 A에서 인출했는데 계좌 B에 입금되지 않았다'는 사태는 왜 발생하지 않는 걸까요? 하지만 완전한 정합성에는 성능 희생이 따른다?",
+      "takeaway": "ACID의 각 특성과 4가지 격리 수준의 차이를 이해하고, 정합성과 성능의 트레이드오프를 판단할 수 있게 됩니다."
+    },
+    "steps": [
+      {
+        "id": "database-03-concept-1",
+        "type": "concept",
+        "title": "ACID 특성",
+        "body": "트랜잭션은 ACID 특성으로 신뢰성을 보장합니다. Atomicity(원자성)는 모든 작업이 성공 또는 전체 실패, Consistency(일관성)는 제약 조건 위반 없는 상태 유지, Isolation(격리성)은 병행 트랜잭션 간 간섭 방지, Durability(영속성)는 커밋 후 데이터가 장애 후에도 유지됨을 보장합니다.",
+        "bullets": [
+          "Atomicity: 송금에서 인출과 입금이 세트로 성공하거나 둘 다 롤백된다",
+          "Durability: 커밋된 데이터는 WAL(Write-Ahead Logging) 등으로 디스크에 영속화된다"
+        ]
+      },
+      {
+        "id": "database-03-mini-1",
+        "type": "mini_check",
+        "title": "확인1",
+        "prompt": "트랜잭션의 '원자성(Atomicity)'이 보장하는 것은 무엇인가요?",
+        "options": [
+          {"id": "A", "text": "트랜잭션 내 모든 작업이 성공하거나, 하나라도 실패하면 전체 작업이 롤백된다"},
+          {"id": "B", "text": "트랜잭션이 다른 트랜잭션의 영향을 받지 않는 것"},
+          {"id": "C", "text": "데이터가 항상 디스크에 저장되는 것"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "원자성은 '전부 성공 or 전부 실패'를 보장합니다. 송금 처리에서 인출만 성공하고 입금이 실패하는 중간 상태를 방지합니다."
+      },
+      {
+        "id": "database-03-concept-2",
+        "type": "concept",
+        "title": "격리 수준과 이상 현상",
+        "body": "격리 수준은 병행 트랜잭션 간의 가시성을 제어합니다. Read Uncommitted(최저)에서는 더티 리드가 발생할 수 있습니다. Read Committed에서는 더티 리드를 방지. Repeatable Read에서는 퍼지 리드(비반복 읽기)도 방지. Serializable(최고)에서는 팬텀 리드를 포함한 모든 이상을 방지하지만 성능이 가장 저하됩니다.",
+        "bullets": [
+          "더티 리드: 미커밋 데이터를 읽음. 퍼지 리드: 같은 행을 2번 읽어 값이 변함",
+          "팬텀 리드: 같은 조건으로 검색하여 행 수가 변함 (다른 트랜잭션의 INSERT/DELETE에 의해)"
+        ]
+      },
+      {
+        "id": "database-03-mini-2",
+        "type": "mini_check",
+        "title": "확인2",
+        "prompt": "'팬텀 리드'가 발생하는 상황은 어떤 것인가요?",
+        "options": [
+          {"id": "A", "text": "같은 WHERE 조건으로 2번 SELECT 했을 때 다른 트랜잭션의 INSERT로 결과 행 수가 변한다"},
+          {"id": "B", "text": "미커밋 데이터를 다른 트랜잭션이 읽는다"},
+          {"id": "C", "text": "트랜잭션이 커밋에 실패한다"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "팬텀 리드는 한 트랜잭션이 같은 조건으로 2번 검색하는 사이에 다른 트랜잭션이 조건에 해당하는 행을 INSERT/DELETE하여 발생합니다."
+      },
+      {
+        "id": "database-03-worked",
+        "type": "worked_example",
+        "title": "재고 관리 시스템의 격리 수준 선택",
+        "situation": "EC 사이트의 재고 관리에서 여러 사용자가 동시에 같은 상품을 구매하려 합니다. 재고가 1개뿐인데 2명에게 판매해 버리는 문제가 발생했습니다.",
+        "reasoning": [
+          "Read Committed에서는 트랜잭션 A가 재고=1을 읽은 후 B도 재고=1을 읽을 수 있다",
+          "양쪽이 '재고-1'을 실행하면 재고가 -1이 된다 (과잉 판매)",
+          "대책1: Serializable 격리 수준으로 완전 직렬화 (성능 저하가 큼)",
+          "대책2: SELECT FOR UPDATE로 행 락을 획득하여 비관적 락으로 제어 (권장)"
+        ],
+        "takeaway": "재고처럼 경합이 심한 리소스에서는 격리 수준 선택만으로는 부족하고, 명시적인 락 전략이 필요합니다."
+      },
+      {
+        "id": "database-03-mini-3",
+        "type": "mini_check",
+        "title": "확인3",
+        "prompt": "Read Committed 격리 수준에서 방지할 수 있는 이상 현상과 방지할 수 없는 이상 현상의 조합은 어느 것인가요?",
+        "options": [
+          {"id": "A", "text": "더티 리드는 방지할 수 있지만, 퍼지 리드와 팬텀 리드는 방지할 수 없다"},
+          {"id": "B", "text": "모든 이상 현상을 방지할 수 있다"},
+          {"id": "C", "text": "팬텀 리드는 방지할 수 있지만 더티 리드는 방지할 수 없다"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "Read Committed는 커밋된 데이터만 읽으므로 더티 리드는 발생하지 않지만, 같은 행의 재읽기에서 값이 변하는 퍼지 리드나 행 수가 변하는 팬텀 리드는 발생할 수 있습니다."
+      },
+      {
+        "id": "database-03-apply-1",
+        "type": "apply_check",
+        "title": "응용1",
+        "prompt": "PostgreSQL의 기본 격리 수준이 Read Committed인 이유는 무엇인가요?",
+        "options": [
+          {"id": "A", "text": "많은 애플리케이션에서 더티 리드 방지와 실용적인 병행 성능의 균형이 맞기 때문"},
+          {"id": "B", "text": "PostgreSQL이 Serializable을 지원하지 않기 때문"},
+          {"id": "C", "text": "Read Committed로 모든 이상 현상을 방지할 수 있기 때문"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "Read Committed는 더티 리드를 방지하면서 락 유지 시간을 최소화하므로, 많은 웹 애플리케이션에서 충분한 정합성과 높은 병행 성능을 양립할 수 있습니다."
+      },
+      {
+        "id": "database-03-apply-2",
+        "type": "apply_check",
+        "title": "응용2",
+        "prompt": "분산 데이터베이스에서 CAP 정리의 제약 하에 ACID 특성 중 가장 타협되기 쉬운 것은 무엇인가요?",
+        "options": [
+          {"id": "A", "text": "Isolation(격리성) - 결과적 일관성(Eventual Consistency)을 채택하여 가용성과 분할 내성을 우선한다"},
+          {"id": "B", "text": "Atomicity(원자성) - 트랜잭션을 부분적으로 성공시킨다"},
+          {"id": "C", "text": "Durability(영속성) - 커밋된 데이터를 잃는 것을 허용한다"}
+        ],
+        "correctOptionId": "A",
+        "explanation": "CAP 정리에서는 일관성, 가용성, 분할 내성 3가지를 동시에 완전히 만족시킬 수 없습니다. 많은 분산 시스템은 Isolation을 완화하고 결과적 일관성을 채택하여 가용성과 분할 내성을 우선합니다."
+      },
+      {
+        "id": "database-03-summary",
+        "type": "summary",
+        "title": "배운 내용",
+        "bullets": [
+          "ACID(원자성, 일관성, 격리성, 영속성)가 트랜잭션의 신뢰성을 보장한다",
+          "격리 수준은 Read Uncommitted->Read Committed->Repeatable Read->Serializable 순으로 정합성이 높아진다",
+          "격리 수준이 높을수록 성능이 저하되므로, 요구 사항에 맞는 수준 선택이 중요하다",
+          "재고 관리 등 경합이 심한 상황에서는 격리 수준에 더해 명시적 락 전략이 필요하다"
+        ]
+      }
+    ],
+    "referenceLabel": "참고 노트 보기"
+  }
+}

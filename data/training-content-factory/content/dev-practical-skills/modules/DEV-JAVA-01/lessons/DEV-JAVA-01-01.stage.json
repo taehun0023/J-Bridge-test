@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "ja": {
+    "hook": {
+      "title": "Javaソースファイルを開いたら何を見る？",
+      "prompt": "初めて参加するプロジェクトで数百のJavaファイルがあります。目的のコードを素早く見つけるために、まずファイルのどの部分を確認すべきでしょうか？",
+      "takeaway": "Javaソースファイルの基本構成を理解し、コードリーディングの出発点を身につけます"
+    },
+    "steps": [
+      {
+        "id": "java-01-concept-1",
+        "type": "concept",
+        "title": "Javaソースファイルの3構成要素",
+        "body": "Javaソースファイルは「パッケージ宣言」「インポート文」「クラス定義」の3つで構成されます。パッケージ宣言はディレクトリ構造と1:1で対応し、ファイルの所在を示します。インポート文を見れば外部依存性を素早く把握できます。",
+        "bullets": [
+          "パッケージ宣言がディレクトリパスに対応し、プロジェクト内の位置を示す",
+          "インポート文から依存している外部クラスやモジュールが分かる"
+        ]
+      },
+      {
+        "id": "java-01-mini-1",
+        "type": "mini_check",
+        "title": "確認1",
+        "prompt": "`package com.example.service;`という宣言から読み取れる情報は何ですか？",
+        "options": [
+          { "id": "A", "text": "このクラスがserviceという名前であること" },
+          { "id": "B", "text": "このファイルがcom/example/serviceディレクトリに存在すること" },
+          { "id": "C", "text": "このクラスがpublicであること" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "パッケージ宣言はディレクトリ構造と1:1で対応するため、`com.example.service`はcom/example/serviceディレクトリにファイルが存在することを意味します。"
+      },
+      {
+        "id": "java-01-concept-2",
+        "type": "concept",
+        "title": "基本型と参照型の違い",
+        "body": "基本型（int, boolean, double等）は値そのものを格納し、参照型（String, List, ユーザー定義クラス）はオブジェクトのアドレスを格納します。この違いは比較演算で重要になり、基本型は`==`で値を比較できますが、参照型は`equals`メソッドを使わなければ内容を比較できません。",
+        "bullets": [
+          "基本型は`==`で値を直接比較できる",
+          "参照型は`==`がアドレス比較になるため、内容比較には`equals`を使う"
+        ]
+      },
+      {
+        "id": "java-01-mini-2",
+        "type": "mini_check",
+        "title": "確認2",
+        "prompt": "`new String(\"hello\") == new String(\"hello\")`の結果はどれですか？",
+        "options": [
+          { "id": "A", "text": "true — 文字列の中身が同じだから" },
+          { "id": "B", "text": "コンパイルエラーが発生する" },
+          { "id": "C", "text": "false — 参照（アドレス）が異なるから" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "Stringは参照型であり、`==`はオブジェクトのアドレスを比較します。`new`で生成した2つのオブジェクトはアドレスが異なるためfalseです。内容を比較するには`equals`を使います。"
+      },
+      {
+        "id": "java-01-worked",
+        "type": "worked_example",
+        "title": "具体例：UserServiceクラスを読み解く",
+        "situation": "新しいプロジェクトに配属され、UserService.javaというファイルを開いた場面を考えます。",
+        "reasoning": [
+          "パッケージ宣言`com.example.user`からユーザー関連の機能であることが分かる",
+          "インポート文に`StringHelper`があり、文字列処理ユーティリティに依存していると判断",
+          "メソッドシグネチャ`public String assignRole(String userId, String role)`からアクセス範囲・戻り値型・パラメータを把握",
+          "roleがnullの場合のデフォルト値処理を確認し、防御的プログラミングを読み取る"
+        ],
+        "takeaway": "パッケージ→インポート→クラス定義の順で読むことで、ファイルの役割と依存関係を素早く把握できます"
+      },
+      {
+        "id": "java-01-mini-3",
+        "type": "mini_check",
+        "title": "確認3",
+        "prompt": "メソッドシグネチャ`public String getUserName(int userId)`から読み取れない情報はどれですか？",
+        "options": [
+          { "id": "A", "text": "戻り値の型がStringであること" },
+          { "id": "B", "text": "メソッド内部の処理ロジック" },
+          { "id": "C", "text": "パラメータの型がintであること" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "メソッドシグネチャからはアクセス修飾子、戻り値型、メソッド名、パラメータを読み取れますが、内部の処理ロジックはシグネチャには含まれません。"
+      },
+      {
+        "id": "java-01-apply-1",
+        "type": "apply_check",
+        "title": "応用1",
+        "prompt": "他のクラスから呼び出せないメソッドを定義したい場合、どのアクセス修飾子を使うべきですか？",
+        "options": [
+          { "id": "A", "text": "public — どこからでもアクセス可能" },
+          { "id": "B", "text": "protected — サブクラスからのみアクセス可能" },
+          { "id": "C", "text": "private — 同じクラス内からのみアクセス可能" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "privateメソッドは定義されたクラス内部からのみ呼び出し可能であり、外部のクラスからはアクセスできません。内部実装の詳細を隠蔽する際に使用します。"
+      },
+      {
+        "id": "java-01-apply-2",
+        "type": "apply_check",
+        "title": "応用2",
+        "prompt": "コードレビューで`if (userRole == \"admin\")`という行を発見しました。どのような指摘が適切ですか？",
+        "options": [
+          { "id": "A", "text": "問題ない。Stringも==で比較できる" },
+          { "id": "B", "text": "`equals`を使うべき。参照型の==はアドレス比較であり意図通りに動かない場合がある" },
+          { "id": "C", "text": "intに変換してから比較すべき" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "Stringは参照型であるため、`==`はアドレス比較になります。文字列リテラルとの比較では動く場合もありますが、`new String`やメソッド戻り値との比較ではfalseになる可能性があり、`equals`を使うべきです。"
+      },
+      {
+        "id": "java-01-summary",
+        "type": "summary",
+        "title": "学んだこと",
+        "bullets": [
+          "Javaソースファイルはパッケージ宣言・インポート文・クラス定義の3部構成",
+          "パッケージ宣言はディレクトリ構造と1:1対応し、ファイルの位置を示す",
+          "基本型は==で値を比較できるが、参照型はequalsで内容を比較する",
+          "メソッドシグネチャからアクセス範囲・戻り値型・メソッド名・パラメータを読み取れる"
+        ]
+      }
+    ],
+    "referenceLabel": "参考ノートを見る"
+  },
+  "ko": {
+    "hook": {
+      "title": "Java 소스 파일을 열면 무엇을 봐야 할까?",
+      "prompt": "처음 참여하는 프로젝트에 수백 개의 Java 파일이 있습니다. 원하는 코드를 빠르게 찾기 위해 파일의 어떤 부분을 먼저 확인해야 할까요?",
+      "takeaway": "Java 소스 파일의 기본 구성을 이해하고, 코드 리딩의 출발점을 익힙니다"
+    },
+    "steps": [
+      {
+        "id": "java-01-concept-1",
+        "type": "concept",
+        "title": "Java 소스 파일의 3가지 구성 요소",
+        "body": "Java 소스 파일은 '패키지 선언', '임포트 문', '클래스 정의'의 3가지로 구성됩니다. 패키지 선언은 디렉토리 구조와 1:1로 대응하며, 파일의 위치를 나타냅니다. 임포트 문을 보면 외부 의존성을 빠르게 파악할 수 있습니다.",
+        "bullets": [
+          "패키지 선언이 디렉토리 경로에 대응하여 프로젝트 내 위치를 나타낸다",
+          "임포트 문에서 의존하고 있는 외부 클래스나 모듈을 알 수 있다"
+        ]
+      },
+      {
+        "id": "java-01-mini-1",
+        "type": "mini_check",
+        "title": "확인1",
+        "prompt": "`package com.example.service;`라는 선언에서 읽을 수 있는 정보는 무엇인가요?",
+        "options": [
+          { "id": "A", "text": "이 클래스의 이름이 service라는 것" },
+          { "id": "B", "text": "이 파일이 com/example/service 디렉토리에 존재한다는 것" },
+          { "id": "C", "text": "이 클래스가 public이라는 것" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "패키지 선언은 디렉토리 구조와 1:1로 대응하므로, `com.example.service`는 com/example/service 디렉토리에 파일이 존재한다는 의미입니다."
+      },
+      {
+        "id": "java-01-concept-2",
+        "type": "concept",
+        "title": "기본형과 참조형의 차이",
+        "body": "기본형(int, boolean, double 등)은 값 자체를 저장하고, 참조형(String, List, 사용자 정의 클래스)은 객체의 주소를 저장합니다. 이 차이는 비교 연산에서 중요하며, 기본형은 `==`로 값을 비교할 수 있지만 참조형은 `equals` 메서드를 사용해야 내용을 비교할 수 있습니다.",
+        "bullets": [
+          "기본형은 `==`로 값을 직접 비교할 수 있다",
+          "참조형은 `==`가 주소 비교이므로, 내용 비교에는 `equals`를 사용한다"
+        ]
+      },
+      {
+        "id": "java-01-mini-2",
+        "type": "mini_check",
+        "title": "확인2",
+        "prompt": "`new String(\"hello\") == new String(\"hello\")`의 결과는 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "true — 문자열 내용이 같으므로" },
+          { "id": "B", "text": "컴파일 에러가 발생한다" },
+          { "id": "C", "text": "false — 참조(주소)가 다르므로" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "String은 참조형이며, `==`는 객체의 주소를 비교합니다. `new`로 생성한 두 객체는 주소가 다르므로 false입니다. 내용을 비교하려면 `equals`를 사용해야 합니다."
+      },
+      {
+        "id": "java-01-worked",
+        "type": "worked_example",
+        "title": "구체적 예: UserService 클래스 읽어보기",
+        "situation": "새 프로젝트에 배정되어 UserService.java라는 파일을 열어본 상황을 생각해 봅니다.",
+        "reasoning": [
+          "패키지 선언 `com.example.user`에서 사용자 관련 기능임을 알 수 있다",
+          "임포트 문에 `StringHelper`가 있어 문자열 처리 유틸리티에 의존하고 있다고 판단",
+          "메서드 시그니처 `public String assignRole(String userId, String role)`에서 접근 범위·반환형·파라미터를 파악",
+          "role이 null인 경우 기본값 처리를 확인하고, 방어적 프로그래밍을 읽어냄"
+        ],
+        "takeaway": "패키지 → 임포트 → 클래스 정의 순서로 읽으면 파일의 역할과 의존 관계를 빠르게 파악할 수 있습니다"
+      },
+      {
+        "id": "java-01-mini-3",
+        "type": "mini_check",
+        "title": "확인3",
+        "prompt": "메서드 시그니처 `public String getUserName(int userId)`에서 읽을 수 없는 정보는 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "반환 타입이 String이라는 것" },
+          { "id": "B", "text": "메서드 내부의 처리 로직" },
+          { "id": "C", "text": "파라미터 타입이 int라는 것" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "메서드 시그니처에서는 접근 제어자, 반환 타입, 메서드 이름, 파라미터를 읽을 수 있지만, 내부 처리 로직은 시그니처에 포함되지 않습니다."
+      },
+      {
+        "id": "java-01-apply-1",
+        "type": "apply_check",
+        "title": "응용1",
+        "prompt": "다른 클래스에서 호출할 수 없는 메서드를 정의하려면 어떤 접근 제어자를 사용해야 하나요?",
+        "options": [
+          { "id": "A", "text": "public — 어디서든 접근 가능" },
+          { "id": "B", "text": "protected — 서브클래스에서만 접근 가능" },
+          { "id": "C", "text": "private — 같은 클래스 내에서만 접근 가능" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "private 메서드는 정의된 클래스 내부에서만 호출할 수 있으며, 외부 클래스에서는 접근할 수 없습니다. 내부 구현을 은닉할 때 사용합니다."
+      },
+      {
+        "id": "java-01-apply-2",
+        "type": "apply_check",
+        "title": "응용2",
+        "prompt": "코드 리뷰에서 `if (userRole == \"admin\")`이라는 코드를 발견했습니다. 어떤 지적이 적절한가요?",
+        "options": [
+          { "id": "A", "text": "문제없다. String도 ==로 비교할 수 있다" },
+          { "id": "B", "text": "`equals`를 사용해야 한다. 참조형의 ==는 주소 비교이므로 의도대로 동작하지 않을 수 있다" },
+          { "id": "C", "text": "int로 변환한 후 비교해야 한다" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "String은 참조형이므로 `==`는 주소 비교가 됩니다. 문자열 리터럴과의 비교에서는 동작할 수도 있지만, `new String`이나 메서드 반환값과의 비교에서는 false가 될 수 있으므로 `equals`를 사용해야 합니다."
+      },
+      {
+        "id": "java-01-summary",
+        "type": "summary",
+        "title": "배운 내용",
+        "bullets": [
+          "Java 소스 파일은 패키지 선언·임포트 문·클래스 정의의 3부 구성",
+          "패키지 선언은 디렉토리 구조와 1:1 대응하여 파일 위치를 나타낸다",
+          "기본형은 ==로 값을 비교할 수 있지만, 참조형은 equals로 내용을 비교한다",
+          "메서드 시그니처에서 접근 범위·반환 타입·메서드 이름·파라미터를 읽을 수 있다"
+        ]
+      }
+    ],
+    "referenceLabel": "참고 노트 보기"
+  }
+}

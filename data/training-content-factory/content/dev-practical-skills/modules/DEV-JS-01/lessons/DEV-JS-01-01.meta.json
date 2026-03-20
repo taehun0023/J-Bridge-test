@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "javascript",
   "topic": "runtime-behavior-scope",
-  "summary": "Explains JavaScript variable declarations (var/let/const), scoping rules, hoisting, and implicit type coercion for reading and debugging code.",
+  "summary": "JavaScriptの変数宣言（var/let/const）、スコープ規則、ホイスティング、暗黙の型変換を解説する。",
   "key_points": [
-    "var has function scope; let and const have block scope.",
-    "Hoisting moves declarations up but var initializes as undefined while let throws ReferenceError (TDZ).",
-    "Implicit type coercion causes unexpected results — prefer explicit conversions and ===."
+    "varは関数スコープ、letとconstはブロックスコープを持つ。",
+    "ホイスティングにより宣言は巻き上げられるが、varはundefinedで初期化され、letはTDZによりReferenceErrorをスローする。",
+    "暗黙の型変換は予期しない結果を招くため、明示的な変換と===の使用が望ましい。"
   ],
   "misconceptions": [
     "var and let can always be used interchangeably.",

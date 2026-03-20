@@ -1,8 +1,8 @@
 module:
   id: DEV-REACT-03
-  title: React - Hooks and Side Effects
+  title: React - Hooksと副作用
   level: intermediate
-  description: "정적 해설형 콘텐츠로 useEffect, useState 등 React Hooks의 동작 원리와 실무 패턴을 설명한다."
+  description: "useEffect・useStateなどReact Hooksの動作原理と実務パターンを解説する。"
   subject: react
   content_mode: static-interpretive
   outcomes:

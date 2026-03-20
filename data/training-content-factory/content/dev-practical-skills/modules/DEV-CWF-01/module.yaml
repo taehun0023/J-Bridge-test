@@ -1,8 +1,8 @@
 module:
   id: DEV-CWF-01
-  title: Common Workplace Fundamentals - Error Report Reading
+  title: 共通業務基礎 - エラーレポートの読み方
   level: foundation
-  description: "정적 해설형 콘텐츠로 오류 보고서를 읽는 순서와 정보 우선순위를 설명한다."
+  description: "エラーレポートの読み取り順序と情報の優先順位を解説する。"
   subject: common-workplace-fundamentals
   content_mode: static-interpretive
   outcomes:

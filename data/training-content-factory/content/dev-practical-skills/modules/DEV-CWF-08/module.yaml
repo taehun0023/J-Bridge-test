@@ -1,8 +1,8 @@
 module:
   id: DEV-CWF-08
-  title: Common Workplace Fundamentals - Delivery and Reporting
+  title: 共通業務基礎 - 納品と報告
   level: foundation
-  description: "정적 해설형 콘텐츠로 작업 완료 보고와 인수인계 문서 작성의 기본을 설명한다."
+  description: "作業完了報告と引き継ぎ文書作成の基本を解説する。"
   subject: common-workplace-fundamentals
   content_mode: static-interpretive
   outcomes:

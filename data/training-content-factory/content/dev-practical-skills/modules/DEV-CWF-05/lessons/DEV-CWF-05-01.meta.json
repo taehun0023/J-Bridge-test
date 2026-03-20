@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "common-workplace-fundamentals",
   "topic": "http-api",
-  "summary": "Explains the structure of HTTP requests and responses, HTTP methods, and how to interpret status codes to diagnose API errors.",
+  "summary": "HTTPリクエスト・レスポンスの構造、HTTPメソッド、ステータスコードの解釈方法を解説する。",
   "key_points": [
-    "HTTP requests consist of a request line, headers, and an optional body.",
-    "Status codes indicate error ownership: 4xx is client-side, 5xx is server-side.",
-    "Always check both the status code and the response body to diagnose errors."
+    "HTTPリクエストはリクエストライン・ヘッダー・オプションのボディで構成される。",
+    "ステータスコードはエラーの責任を示す：4xxはクライアント側、5xxはサーバー側。",
+    "エラー診断にはステータスコードとレスポンスボディの両方を必ず確認する。"
   ],
   "misconceptions": [
     "401 and 403 mean the same thing.",

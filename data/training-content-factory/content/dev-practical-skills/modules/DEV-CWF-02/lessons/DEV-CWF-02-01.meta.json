@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "common-workplace-fundamentals",
   "topic": "version-control-basics",
-  "summary": "Explains Git basic commands, commit message reading, and fundamental branch strategy for workplace collaboration.",
+  "summary": "Gitの基本コマンド、コミットメッセージの読み方、職場での協業のためのブランチ戦略の基礎を解説する。",
   "key_points": [
-    "Understand the role of add, commit, push, pull in the Git workflow.",
-    "Read commit messages to identify change intent and scope.",
-    "Use feature branches to keep the main branch stable."
+    "Gitワークフローにおけるadd・commit・push・pullの役割を理解する。",
+    "コミットメッセージから変更の意図と範囲を読み取る。",
+    "フィーチャーブランチを使ってmainブランチを安定に保つ。"
   ],
   "misconceptions": [
     "A one-word commit message like 'fix' is sufficient.",

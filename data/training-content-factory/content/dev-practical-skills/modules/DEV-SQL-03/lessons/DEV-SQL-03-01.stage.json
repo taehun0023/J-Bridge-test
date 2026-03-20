@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "ja": {
+    "hook": {
+      "title": "本番DBを安全に扱う技術",
+      "prompt": "本番環境でWHERE句なしのUPDATEを実行したらどうなるか想像できますか？トランザクションとインデックスの知識は、事故を防ぐための必須スキルです。",
+      "takeaway": "ACID特性、トランザクション操作、インデックスの効果と本番SQLの安全手順を身につけます"
+    },
+    "steps": [
+      {
+        "id": "sql-03-concept-1",
+        "type": "concept",
+        "title": "ACID特性とトランザクションの基本",
+        "body": "トランザクションが保証すべき4つの特性がACIDです。Atomicity（原子性）は全操作の成功か全取消、Consistency（一貫性）はデータ整合性の維持、Isolation（分離性）は同時実行の干渉防止、Durability（永続性）はCOMMIT後のデータ永続化を意味します。",
+        "bullets": [
+          "送金処理では引き落としと入金が両方成功するか両方失敗するか（原子性）が保証される",
+          "COMMITで確定、ROLLBACKで全操作を取り消せる"
+        ]
+      },
+      {
+        "id": "sql-03-mini-1",
+        "type": "mini_check",
+        "title": "確認1",
+        "prompt": "ACID特性の「Atomicity（原子性）」が意味するのはどれですか？",
+        "options": [
+          { "id": "A", "text": "データが永続的に保存されること" },
+          { "id": "B", "text": "トランザクション内の全操作が成功するか、全て取り消されること" },
+          { "id": "C", "text": "同時実行されるトランザクションが干渉しないこと" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "Atomicity（原子性）は、トランザクション内の操作がすべて成功するか、すべて取り消されるかのどちらかであることを保証します。Aは永続性、Cは分離性の説明です。"
+      },
+      {
+        "id": "sql-03-concept-2",
+        "type": "concept",
+        "title": "インデックスの効果と代償",
+        "body": "インデックスは本の索引のようなもので、特定の値を持つ行を高速に見つけるデータ構造です。WHERE句やJOINのパフォーマンスを大幅に向上させますが、INSERT/UPDATE/DELETE時にインデックスも更新するため書き込み速度がやや低下します。読み取り頻度が高いカラムに作成するのが原則です。",
+        "bullets": [
+          "インデックスありならツリー構造で高速検索、なければ全行スキャンとなる",
+          "全カラムにインデックスを作るのは逆効果 — 書き込み性能が低下する"
+        ]
+      },
+      {
+        "id": "sql-03-mini-2",
+        "type": "mini_check",
+        "title": "確認2",
+        "prompt": "LIKE '%田中%'のクエリでインデックスが使えない理由は何ですか？",
+        "options": [
+          { "id": "A", "text": "LIKE句はインデックスに対応していないから" },
+          { "id": "B", "text": "先頭にワイルドカードがあるとインデックスのツリー検索ができないから" },
+          { "id": "C", "text": "日本語文字列にはインデックスが作成できないから" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "インデックスはB-Treeの先頭から順にマッチさせるため、先頭にワイルドカード(%)があるとツリー検索が使えません。LIKE 'keyword%'なら使用可能です。"
+      },
+      {
+        "id": "sql-03-worked",
+        "type": "worked_example",
+        "title": "具体例：本番UPDATEの安全な実行手順",
+        "situation": "本番環境で商品の価格を10%値上げするUPDATEを実行するようレビュー依頼が来ました。UPDATE products SET price = price * 1.1 WHERE category = 'electronics'を安全に実行する手順を確認します。",
+        "reasoning": [
+          "まずSELECT COUNT(*)で対象行数を確認し、予想と合っているかチェックする",
+          "BEGINでトランザクションを開始してからUPDATEを実行する",
+          "UPDATE後にSELECTで結果を確認し、問題なければCOMMIT、問題があればROLLBACKする",
+          "categoryカラムにインデックスがあるか確認し、なければ大量データ処理時のロック時間に注意する"
+        ],
+        "takeaway": "本番でのSQL実行は「SELECT確認 → BEGIN → 実行 → SELECT確認 → COMMIT/ROLLBACK」の手順を徹底します"
+      },
+      {
+        "id": "sql-03-mini-3",
+        "type": "mini_check",
+        "title": "確認3",
+        "prompt": "本番環境でWHERE句なしのDELETE FROM employeesを実行した場合、何が起きますか？",
+        "options": [
+          { "id": "A", "text": "最初の1行だけが削除される" },
+          { "id": "B", "text": "エラーが発生して何も削除されない" },
+          { "id": "C", "text": "テーブルの全行が削除される" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "WHERE句なしのDELETEはテーブルの全行を削除します。本番環境では最も危険な操作の一つであり、必ずWHERE句を付け、事前にSELECTで対象行を確認すべきです。"
+      },
+      {
+        "id": "sql-03-apply-1",
+        "type": "apply_check",
+        "title": "応用1",
+        "prompt": "「ユーザー検索が3秒かかる」というパフォーマンス問題が報告されました。emailカラムで検索しています。最初に確認すべきことは何ですか？",
+        "options": [
+          { "id": "A", "text": "サーバーのメモリを増設する" },
+          { "id": "B", "text": "EXPLAINでクエリ実行計画を確認し、emailカラムにインデックスがあるか確認する" },
+          { "id": "C", "text": "クエリのSELECT句を減らして取得カラムを絞る" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "パフォーマンス問題の最初のステップはEXPLAINで実行計画を確認することです。emailカラムにインデックスがなければフルテーブルスキャンとなり、インデックスを作成するだけで検索時間がミリ秒単位に短縮される可能性があります。"
+      },
+      {
+        "id": "sql-03-apply-2",
+        "type": "apply_check",
+        "title": "応用2",
+        "prompt": "注文キャンセル処理で、ordersテーブルのstatus更新とinventoryテーブルの在庫復元を行います。安全な方法はどれですか？",
+        "options": [
+          { "id": "A", "text": "ordersを更新してからinventoryを更新する（トランザクションなし）" },
+          { "id": "B", "text": "BEGIN/COMMITで両方の更新を囲む" },
+          { "id": "C", "text": "inventoryを先に更新してからordersを更新する（トランザクションなし）" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "複数テーブルにまたがる更新はBEGIN/COMMITで囲む必要があります。トランザクションなしでは1つ目が成功して2つ目が失敗した場合にデータの不整合が発生します。"
+      },
+      {
+        "id": "sql-03-summary",
+        "type": "summary",
+        "title": "学んだこと",
+        "bullets": [
+          "ACID特性（原子性・一貫性・分離性・永続性）はトランザクションが保証すべき4つの要件である",
+          "本番SQLは「SELECT確認→BEGIN→実行→確認→COMMIT/ROLLBACK」の手順を徹底する",
+          "インデックスはWHEREやJOINの検索速度を向上させるが、書き込み性能の低下というトレードオフがある",
+          "LIKE先頭ワイルドカードではインデックスが使えないため、パフォーマンスに注意が必要である"
+        ]
+      }
+    ],
+    "referenceLabel": "参考ノートを見る"
+  },
+  "ko": {
+    "hook": {
+      "title": "운영 DB를 안전하게 다루는 기술",
+      "prompt": "운영 환경에서 WHERE 절 없이 UPDATE를 실행하면 어떻게 될지 상상할 수 있나요? 트랜잭션과 인덱스 지식은 사고를 방지하기 위한 필수 스킬입니다.",
+      "takeaway": "ACID 특성, 트랜잭션 조작, 인덱스의 효과와 운영 SQL의 안전한 실행 절차를 익힙니다"
+    },
+    "steps": [
+      {
+        "id": "sql-03-concept-1",
+        "type": "concept",
+        "title": "ACID 특성과 트랜잭션의 기본",
+        "body": "트랜잭션이 보장해야 하는 4가지 특성이 ACID입니다. Atomicity(원자성)는 전체 성공 또는 전체 취소, Consistency(일관성)는 데이터 정합성 유지, Isolation(격리성)은 동시 실행 간섭 방지, Durability(영속성)는 COMMIT 후 데이터 영구 보존을 의미합니다.",
+        "bullets": [
+          "송금 처리에서는 출금과 입금이 모두 성공하거나 모두 실패하는 것(원자성)이 보장된다",
+          "COMMIT으로 확정하고, ROLLBACK으로 전체 조작을 취소할 수 있다"
+        ]
+      },
+      {
+        "id": "sql-03-mini-1",
+        "type": "mini_check",
+        "title": "확인1",
+        "prompt": "ACID 특성의 \"Atomicity(원자성)\"가 의미하는 것은 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "데이터가 영구적으로 저장되는 것" },
+          { "id": "B", "text": "트랜잭션 내 모든 조작이 성공하거나 모두 취소되는 것" },
+          { "id": "C", "text": "동시에 실행되는 트랜잭션이 서로 간섭하지 않는 것" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "Atomicity(원자성)는 트랜잭션 내의 조작이 모두 성공하거나 모두 취소되는 것을 보장합니다. A는 영속성, C는 격리성에 대한 설명입니다."
+      },
+      {
+        "id": "sql-03-concept-2",
+        "type": "concept",
+        "title": "인덱스의 효과와 대가",
+        "body": "인덱스는 책의 색인과 같아서, 특정 값을 가진 행을 빠르게 찾기 위한 데이터 구조입니다. WHERE 절이나 JOIN의 성능을 크게 향상시키지만, INSERT/UPDATE/DELETE 시 인덱스도 갱신하므로 쓰기 속도가 다소 저하됩니다. 읽기 빈도가 높은 컬럼에 생성하는 것이 원칙입니다.",
+        "bullets": [
+          "인덱스가 있으면 트리 구조로 빠른 검색, 없으면 전체 행 스캔이 된다",
+          "모든 컬럼에 인덱스를 만드는 것은 역효과 — 쓰기 성능이 저하된다"
+        ]
+      },
+      {
+        "id": "sql-03-mini-2",
+        "type": "mini_check",
+        "title": "확인2",
+        "prompt": "LIKE '%田中%' 쿼리에서 인덱스가 사용되지 않는 이유는 무엇인가요?",
+        "options": [
+          { "id": "A", "text": "LIKE 절은 인덱스를 지원하지 않기 때문" },
+          { "id": "B", "text": "앞부분에 와일드카드가 있으면 인덱스의 트리 검색을 할 수 없기 때문" },
+          { "id": "C", "text": "일본어 문자열에는 인덱스를 생성할 수 없기 때문" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "인덱스는 B-Tree의 처음부터 순서대로 매칭하므로, 앞부분에 와일드카드(%)가 있으면 트리 검색을 사용할 수 없습니다. LIKE 'keyword%'라면 사용 가능합니다."
+      },
+      {
+        "id": "sql-03-worked",
+        "type": "worked_example",
+        "title": "구체적 예: 운영 UPDATE의 안전한 실행 절차",
+        "situation": "운영 환경에서 상품 가격을 10% 인상하는 UPDATE를 실행하라는 리뷰 요청이 왔습니다. UPDATE products SET price = price * 1.1 WHERE category = 'electronics'를 안전하게 실행하는 절차를 확인합니다.",
+        "reasoning": [
+          "먼저 SELECT COUNT(*)로 대상 행 수를 확인하고 예상과 맞는지 체크한다",
+          "BEGIN으로 트랜잭션을 시작한 후 UPDATE를 실행한다",
+          "UPDATE 후 SELECT로 결과를 확인하고, 문제없으면 COMMIT, 문제가 있으면 ROLLBACK한다",
+          "category 컬럼에 인덱스가 있는지 확인하고, 없으면 대량 데이터 처리 시 락 시간에 주의한다"
+        ],
+        "takeaway": "운영에서의 SQL 실행은 'SELECT 확인 → BEGIN → 실행 → SELECT 확인 → COMMIT/ROLLBACK' 절차를 철저히 합니다"
+      },
+      {
+        "id": "sql-03-mini-3",
+        "type": "mini_check",
+        "title": "확인3",
+        "prompt": "운영 환경에서 WHERE 절 없이 DELETE FROM employees를 실행하면 어떻게 되나요?",
+        "options": [
+          { "id": "A", "text": "첫 번째 1행만 삭제된다" },
+          { "id": "B", "text": "에러가 발생하여 아무것도 삭제되지 않는다" },
+          { "id": "C", "text": "테이블의 전체 행이 삭제된다" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "WHERE 절 없는 DELETE는 테이블의 전체 행을 삭제합니다. 운영 환경에서 가장 위험한 조작 중 하나이며, 반드시 WHERE 절을 붙이고 사전에 SELECT로 대상 행을 확인해야 합니다."
+      },
+      {
+        "id": "sql-03-apply-1",
+        "type": "apply_check",
+        "title": "응용1",
+        "prompt": "\"사용자 검색이 3초 걸린다\"는 성능 문제가 보고되었습니다. email 컬럼으로 검색 중입니다. 가장 먼저 확인해야 할 것은 무엇인가요?",
+        "options": [
+          { "id": "A", "text": "서버 메모리를 증설한다" },
+          { "id": "B", "text": "EXPLAIN으로 쿼리 실행 계획을 확인하고, email 컬럼에 인덱스가 있는지 확인한다" },
+          { "id": "C", "text": "쿼리의 SELECT 절을 줄여 가져오는 컬럼 수를 줄인다" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "성능 문제의 첫 단계는 EXPLAIN으로 실행 계획을 확인하는 것입니다. email 컬럼에 인덱스가 없으면 풀 테이블 스캔이 되며, 인덱스를 생성하는 것만으로 검색 시간이 밀리초 단위로 단축될 수 있습니다."
+      },
+      {
+        "id": "sql-03-apply-2",
+        "type": "apply_check",
+        "title": "응용2",
+        "prompt": "주문 취소 처리에서 orders 테이블의 status 갱신과 inventory 테이블의 재고 복원을 수행합니다. 안전한 방법은 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "orders를 갱신한 후 inventory를 갱신한다 (트랜잭션 없이)" },
+          { "id": "B", "text": "BEGIN/COMMIT으로 양쪽 갱신을 감싼다" },
+          { "id": "C", "text": "inventory를 먼저 갱신한 후 orders를 갱신한다 (트랜잭션 없이)" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "여러 테이블에 걸친 갱신은 BEGIN/COMMIT으로 감싸야 합니다. 트랜잭션 없이 하면 첫 번째가 성공하고 두 번째가 실패할 경우 데이터 정합성이 깨집니다."
+      },
+      {
+        "id": "sql-03-summary",
+        "type": "summary",
+        "title": "배운 내용",
+        "bullets": [
+          "ACID 특성(원자성·일관성·격리성·영속성)은 트랜잭션이 보장해야 하는 4가지 요건이다",
+          "운영 SQL은 'SELECT 확인→BEGIN→실행→확인→COMMIT/ROLLBACK' 절차를 철저히 한다",
+          "인덱스는 WHERE나 JOIN의 검색 속도를 향상시키지만, 쓰기 성능 저하라는 트레이드오프가 있다",
+          "LIKE 앞부분 와일드카드에서는 인덱스가 사용되지 않으므로 성능에 주의가 필요하다"
+        ]
+      }
+    ],
+    "referenceLabel": "참고 노트 보기"
+  }
+}

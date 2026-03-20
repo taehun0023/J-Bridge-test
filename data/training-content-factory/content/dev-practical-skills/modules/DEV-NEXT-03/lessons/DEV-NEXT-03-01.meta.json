@@ -3,11 +3,11 @@
   "category": "dev-practical-skills",
   "subject": "nextjs",
   "topic": "data-fetching-caching-project-organization",
-  "summary": "Explains Next.js data fetching patterns in Server Components, caching layers (Request Memoization, Data Cache, Full Route Cache), revalidation strategies, static vs dynamic rendering, and project organization patterns for large codebases.",
+  "summary": "サーバーコンポーネントでのデータフェッチ、キャッシュ層（リクエストメモ化・データキャッシュ・フルルートキャッシュ）、再検証戦略、静的/動的レンダリング、大規模プロジェクト構成を解説する。",
   "key_points": [
-    "Server Components can fetch data directly with async/await — no need for separate API routes.",
-    "Next.js has three caching layers: Request Memoization, Data Cache, and Full Route Cache.",
-    "Dynamic functions (cookies, headers) automatically switch rendering from static to dynamic."
+    "サーバーコンポーネントはasync/awaitで直接データを取得でき、別途APIルートを用意する必要がない。",
+    "Next.jsには3つのキャッシュ層がある：リクエストメモ化、データキャッシュ、フルルートキャッシュ。",
+    "動的関数（cookies、headers）を使用すると、レンダリングが自動的に静的から動的に切り替わる。"
   ],
   "misconceptions": [
     "All pages are dynamically rendered by default.",

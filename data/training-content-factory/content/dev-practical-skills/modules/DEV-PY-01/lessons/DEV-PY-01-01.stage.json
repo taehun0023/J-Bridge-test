@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "ja": {
+    "hook": {
+      "title": "Pythonスクリプトの構造を正しく読む",
+      "prompt": "同僚が書いたPythonスクリプトを読んで「この関数、いつ実行されるの？」と聞かれたとき、正確に答えられますか？インデントだけでブロックが決まるPythonには独特の読み方があります。",
+      "takeaway": "Pythonスクリプトの構造、インデントルール、基本データ型の特性を理解し、コードの実行フローを正確に読む力を身につけます"
+    },
+    "steps": [
+      {
+        "id": "py-01-concept-1",
+        "type": "concept",
+        "title": "スクリプト構造とif __name__パターン",
+        "body": "Pythonスクリプトは上から下へ順番に実行されますが、関数やクラスの定義は「登録」されるだけで呼び出されるまで実行されません。`if __name__ == \"__main__\"`は「このファイルが直接実行された時のみ」以下を実行する条件で、他のファイルからimportする際には実行されません。",
+        "bullets": [
+          "関数定義は登録のみ、呼び出し時に初めて実行される",
+          "if __name__ == \"__main__\"パターンにより、ライブラリとスクリプトの両用が可能になる"
+        ]
+      },
+      {
+        "id": "py-01-mini-1",
+        "type": "mini_check",
+        "title": "確認1",
+        "prompt": "if __name__ == \"__main__\"を使わずにトップレベルにprint文を書いた場合、他のモジュールからimportするとどうなりますか？",
+        "options": [
+          { "id": "A", "text": "print文は実行されない" },
+          { "id": "B", "text": "import時にprint文が実行される" },
+          { "id": "C", "text": "コンパイルエラーが発生する" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "if __name__ == \"__main__\"なしのトップレベルコードはimport時にも実行されます。このパターンを使用すれば、直接実行時のみコードを実行できます。"
+      },
+      {
+        "id": "py-01-concept-2",
+        "type": "concept",
+        "title": "インデントと基本データ型",
+        "body": "Pythonはインデントでコードブロックを決定し、同じレベルのインデントを持つ行が同じブロックに属します。基本データ型では、strとtupleは不変（immutable）、listとdictは可変（mutable）です。可変オブジェクトを関数に渡すと、関数内での変更が元のオブジェクトにも反映される点が重要です。",
+        "bullets": [
+          "インデントが合わないとIndentationErrorが発生する — タブとスペースの混在は禁止",
+          "list/dictは可変、str/tupleは不変 — 関数に渡す際の動作が異なる"
+        ]
+      },
+      {
+        "id": "py-01-mini-2",
+        "type": "mini_check",
+        "title": "確認2",
+        "prompt": "Pythonのlistとtupleの最も重要な違いは何ですか？",
+        "options": [
+          { "id": "A", "text": "listは要素数が限られるが、tupleは無制限" },
+          { "id": "B", "text": "listは順序がないが、tupleは順序がある" },
+          { "id": "C", "text": "listは可変（変更可能）、tupleは不変（変更不可能）" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "listはappendやpopで変更できる可変オブジェクトですが、tupleは一度生成すると変更できない不変オブジェクトです。どちらも順序ありのコレクションです。"
+      },
+      {
+        "id": "py-01-worked",
+        "type": "worked_example",
+        "title": "具体例：可変デフォルト引数の罠を解読する",
+        "situation": "以下のコードを2回呼び出した場合の結果を予測します。\ndef add_item(item, items=[]):\n    items.append(item)\n    return items\nprint(add_item(\"a\"))  # 1回目\nprint(add_item(\"b\"))  # 2回目",
+        "reasoning": [
+          "1回目のadd_item(\"a\")でデフォルト引数の空リストにappendされ、[\"a\"]が返る",
+          "2回目のadd_item(\"b\")では、デフォルト引数のリストが前回変更済みのままである",
+          "そのためitemsは[\"a\"]から始まり、appendで[\"a\", \"b\"]となる",
+          "デフォルト引数にはNoneを使い、関数内で新しいリストを作成するのが安全なパターンである"
+        ],
+        "takeaway": "可変オブジェクトをデフォルト引数に使うと呼び出し間で共有されるため、Noneを使って関数内で新規作成するのが安全です"
+      },
+      {
+        "id": "py-01-mini-3",
+        "type": "mini_check",
+        "title": "確認3",
+        "prompt": "Python 3でインデントにタブとスペースを混在させた場合、どうなりますか？",
+        "options": [
+          { "id": "A", "text": "問題なく動作する" },
+          { "id": "B", "text": "警告が出るが動作する" },
+          { "id": "C", "text": "TabErrorが発生する" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "Python 3ではタブとスペースの混在時にTabErrorが発生します。プロジェクト内でどちらかに統一する必要があり、通常は4スペースが推奨されます。"
+      },
+      {
+        "id": "py-01-apply-1",
+        "type": "apply_check",
+        "title": "応用1",
+        "prompt": "文字列\"hello\"の最初の文字を\"H\"に変更したい場合、正しい方法はどれですか？",
+        "options": [
+          { "id": "A", "text": "s[0] = \"H\"で直接変更する" },
+          { "id": "B", "text": "\"H\" + s[1:]で新しい文字列を作成する" },
+          { "id": "C", "text": "s.replace_at(0, \"H\")メソッドを使う" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "文字列は不変（immutable）なので、インデックスで直接変更できません。新しい文字列を作成する必要があり、スライスやreplaceを使用します。"
+      },
+      {
+        "id": "py-01-apply-2",
+        "type": "apply_check",
+        "title": "応用2",
+        "prompt": "dictのキーとして使用できないのはどの型ですか？",
+        "options": [
+          { "id": "A", "text": "str" },
+          { "id": "B", "text": "tuple" },
+          { "id": "C", "text": "list" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "dictのキーには不変（hashable）な型のみ使用可能です。listは可変オブジェクトのためキーにできません。str、int、tupleなどの不変型はキーに使用できます。"
+      },
+      {
+        "id": "py-01-summary",
+        "type": "summary",
+        "title": "学んだこと",
+        "bullets": [
+          "if __name__ == \"__main__\"パターンにより、ファイルをスクリプトとしてもライブラリとしても使用できる",
+          "Pythonはインデントでブロックを決定し、タブとスペースの混在はTabErrorの原因になる",
+          "list/dictは可変、str/tupleは不変であり、関数への引数渡し時に挙動が異なる",
+          "可変オブジェクトをデフォルト引数に使うと呼び出し間で共有される罠がある"
+        ]
+      }
+    ],
+    "referenceLabel": "参考ノートを見る"
+  },
+  "ko": {
+    "hook": {
+      "title": "Python 스크립트의 구조를 올바르게 읽기",
+      "prompt": "동료가 작성한 Python 스크립트를 읽고 \"이 함수는 언제 실행되나요?\"라고 질문받았을 때, 정확하게 답할 수 있나요? 들여쓰기만으로 블록이 결정되는 Python에는 독특한 읽는 방법이 있습니다.",
+      "takeaway": "Python 스크립트의 구조, 들여쓰기 규칙, 기본 데이터 타입의 특성을 이해하고, 코드의 실행 흐름을 정확히 읽는 능력을 키웁니다"
+    },
+    "steps": [
+      {
+        "id": "py-01-concept-1",
+        "type": "concept",
+        "title": "스크립트 구조와 if __name__ 패턴",
+        "body": "Python 스크립트는 위에서 아래로 순서대로 실행되지만, 함수나 클래스의 정의는 '등록'만 될 뿐 호출될 때까지 실행되지 않습니다. `if __name__ == \"__main__\"`은 '이 파일이 직접 실행되었을 때만' 아래 코드를 실행하는 조건으로, 다른 파일에서 import할 때는 실행되지 않습니다.",
+        "bullets": [
+          "함수 정의는 등록만 되며, 호출 시에 처음 실행된다",
+          "if __name__ == \"__main__\" 패턴으로 라이브러리와 스크립트 겸용이 가능해진다"
+        ]
+      },
+      {
+        "id": "py-01-mini-1",
+        "type": "mini_check",
+        "title": "확인1",
+        "prompt": "if __name__ == \"__main__\"을 사용하지 않고 최상위에 print문을 작성한 경우, 다른 모듈에서 import하면 어떻게 되나요?",
+        "options": [
+          { "id": "A", "text": "print문이 실행되지 않는다" },
+          { "id": "B", "text": "import 시 print문이 실행된다" },
+          { "id": "C", "text": "컴파일 에러가 발생한다" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "if __name__ == \"__main__\" 없이 최상위에 작성된 코드는 import 시에도 실행됩니다. 이 패턴을 사용하면 직접 실행 시에만 코드를 실행할 수 있습니다."
+      },
+      {
+        "id": "py-01-concept-2",
+        "type": "concept",
+        "title": "들여쓰기와 기본 데이터 타입",
+        "body": "Python은 들여쓰기로 코드 블록을 결정하며, 같은 레벨의 들여쓰기를 가진 행이 같은 블록에 속합니다. 기본 데이터 타입에서 str과 tuple은 불변(immutable), list와 dict는 가변(mutable)입니다. 가변 객체를 함수에 전달하면 함수 내에서의 변경이 원본 객체에도 반영되는 점이 중요합니다.",
+        "bullets": [
+          "들여쓰기가 맞지 않으면 IndentationError가 발생 — 탭과 스페이스 혼용은 금지",
+          "list/dict는 가변, str/tuple은 불변 — 함수에 전달할 때 동작이 다르다"
+        ]
+      },
+      {
+        "id": "py-01-mini-2",
+        "type": "mini_check",
+        "title": "확인2",
+        "prompt": "Python의 list와 tuple의 가장 중요한 차이는 무엇인가요?",
+        "options": [
+          { "id": "A", "text": "list는 요소 수가 제한되지만 tuple은 무제한" },
+          { "id": "B", "text": "list는 순서가 없지만 tuple은 순서가 있다" },
+          { "id": "C", "text": "list는 가변(변경 가능), tuple은 불변(변경 불가능)" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "list는 append나 pop으로 변경할 수 있는 가변 객체이지만, tuple은 한번 생성되면 변경할 수 없는 불변 객체입니다. 둘 다 순서가 있는 컬렉션입니다."
+      },
+      {
+        "id": "py-01-worked",
+        "type": "worked_example",
+        "title": "구체적 예: 가변 기본 인수의 함정 해독하기",
+        "situation": "다음 코드를 2번 호출한 경우의 결과를 예측합니다.\ndef add_item(item, items=[]):\n    items.append(item)\n    return items\nprint(add_item(\"a\"))  # 1회차\nprint(add_item(\"b\"))  # 2회차",
+        "reasoning": [
+          "1회차 add_item(\"a\")에서 기본 인수의 빈 리스트에 append되어 [\"a\"]가 반환된다",
+          "2회차 add_item(\"b\")에서는 기본 인수의 리스트가 이전 호출에서 변경된 그대로이다",
+          "따라서 items는 [\"a\"]에서 시작하고, append로 [\"a\", \"b\"]가 된다",
+          "기본 인수에는 None을 사용하고 함수 내에서 새 리스트를 생성하는 것이 안전한 패턴이다"
+        ],
+        "takeaway": "가변 객체를 기본 인수로 사용하면 호출 간에 공유되므로, None을 사용하여 함수 내에서 새로 생성하는 것이 안전합니다"
+      },
+      {
+        "id": "py-01-mini-3",
+        "type": "mini_check",
+        "title": "확인3",
+        "prompt": "Python 3에서 들여쓰기에 탭과 스페이스를 혼용하면 어떻게 되나요?",
+        "options": [
+          { "id": "A", "text": "문제없이 동작한다" },
+          { "id": "B", "text": "경고가 나오지만 동작한다" },
+          { "id": "C", "text": "TabError가 발생한다" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "Python 3에서는 탭과 스페이스를 혼용하면 TabError가 발생합니다. 프로젝트 내에서 하나로 통일해야 하며, 보통 4스페이스가 권장됩니다."
+      },
+      {
+        "id": "py-01-apply-1",
+        "type": "apply_check",
+        "title": "응용1",
+        "prompt": "문자열 \"hello\"의 첫 글자를 \"H\"로 변경하고 싶은 경우, 올바른 방법은 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "s[0] = \"H\"로 직접 변경한다" },
+          { "id": "B", "text": "\"H\" + s[1:]로 새 문자열을 생성한다" },
+          { "id": "C", "text": "s.replace_at(0, \"H\") 메서드를 사용한다" }
+        ],
+        "correctOptionId": "B",
+        "explanation": "문자열은 불변(immutable)이므로 인덱스로 직접 변경할 수 없습니다. 새 문자열을 생성해야 하며, 슬라이싱이나 replace를 사용합니다."
+      },
+      {
+        "id": "py-01-apply-2",
+        "type": "apply_check",
+        "title": "응용2",
+        "prompt": "dict의 키로 사용할 수 없는 타입은 어느 것인가요?",
+        "options": [
+          { "id": "A", "text": "str" },
+          { "id": "B", "text": "tuple" },
+          { "id": "C", "text": "list" }
+        ],
+        "correctOptionId": "C",
+        "explanation": "dict의 키에는 불변(hashable)한 타입만 사용 가능합니다. list는 가변 객체이므로 키로 사용할 수 없습니다. str, int, tuple 등의 불변 타입은 키로 사용할 수 있습니다."
+      },
+      {
+        "id": "py-01-summary",
+        "type": "summary",
+        "title": "배운 내용",
+        "bullets": [
+          "if __name__ == \"__main__\" 패턴으로 파일을 스크립트로도 라이브러리로도 사용할 수 있다",
+          "Python은 들여쓰기로 블록을 결정하며, 탭과 스페이스 혼용은 TabError의 원인이 된다",
+          "list/dict는 가변, str/tuple은 불변이며, 함수 인수 전달 시 동작이 다르다",
+          "가변 객체를 기본 인수로 사용하면 호출 간에 공유되는 함정이 있다"
+        ]
+      }
+    ],
+    "referenceLabel": "참고 노트 보기"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "lesson_id": "CSK-DB-01-03",
+  "category": "cs-knowledge",
+  "subject": "database",
+  "topic": "transaction-and-isolation",
+  "default_language": "ja",
+  "available_languages": ["ja", "ko"],
+  "summary": "トランザクションのACID特性、4つの分離レベル、異常現象（ダーティリード等）とパフォーマンスのトレードオフを学ぶ",
+  "key_points": [
+    "トランザクションはACID特性（原子性・一貫性・分離性・永続性）によりデータの信頼性を保証する",
+    "分離レベルはREAD UNCOMMITTED→READ COMMITTED→REPEATABLE READ→SERIALIZABLEの4段階がある",
+    "異常現象にはダーティリード・ノンリピータブルリード・ファントムリードがあり、分離レベルが高いほど防げる",
+    "悲観的同時実行制御はロックで排他、楽観的同時実行制御はバージョン番号で衝突検出する",
+    "トランザクションはACID保証のある論理単位、バッチ処理は大量データの一括処理方式"
+  ],
+  "misconceptions": [
+    "分離レベルを常にSERIALIZABLEにすれば安全だが、ロック競合が激増しスループットが大幅に低下する",
+    "トランザクションを使えばパフォーマンス問題は起きないという誤解があるが、長時間トランザクションはロックを長く保持し他の処理をブロックする",
+    "REPEATABLE READならファントムリードも防げるとは限らない。SQL標準では防げず、DBMS実装に依存する"
+  ],
+  "check_questions": [
+    "ACID特性の4つの要素を挙げ、それぞれ何を保証するか説明してください",
+    "ダーティリード、ノンリピータブルリード、ファントムリードの違いは何ですか？",
+    "READ COMMITTEDとREPEATABLE READでは、どのような場面で結果が異なりますか？",
+    "分離レベルを高くするとパフォーマンスが低下する理由を説明してください"
+  ],
+  "exam_extractables": {
+    "fact_candidates": [
+      "ACID特性のAはAtomicity（原子性）、CはConsistency（一貫性）、IはIsolation（分離性）、DはDurability（永続性）",
+      "READ COMMITTEDはダーティリードを防ぐが、ノンリピータブルリードとファントムリードは防げない"
+    ],
+    "concept_contrast_candidates": [
+      "READ COMMITTEDはコミット済みデータのみ読取り、REPEATABLE READはトランザクション開始時のスナップショットで読取り",
+      "悲観的制御はロックによる排他、楽観的制御はバージョン番号による衝突検出"
+    ],
+    "scenario_candidates": [
+      "銀行振込処理で分離レベルが低い場合に発生するデータ不整合シナリオ",
+      "2つのトランザクションが同じ行を同時に更新する場合の挙動の違い"
+    ],
+    "common_wrong_answer_patterns": [
+      "READ UNCOMMITTEDでもダーティリードは発生しないという誤解に基づく選択肢",
+      "SERIALIZABLEはパフォーマンスに影響しないという誤解に基づく選択肢"
+    ]
+  },
+  "difficulty": "foundation"
+}
