@@ -2,7 +2,12 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import ExamClient from './ExamClient'
 import { getCategoryLabel, getSubcategoryLabel } from '@/lib/assignment-categories'
-import { COMP_EXAM_CATEGORY_TO_STEP, ASSESSMENT_TOTAL_QUESTIONS, ASSESSMENT_TIME_LIMITS } from '@/lib/assessment-config'
+import {
+  COMP_EXAM_CATEGORY_TO_STEP,
+  ASSESSMENT_TOTAL_QUESTIONS,
+  ASSESSMENT_TIME_LIMITS,
+  CS_COMPREHENSIVE_TOTAL_QUESTIONS,
+} from '@/lib/assessment-config'
 import Card from '@/components/ui/Card'
 import Link from 'next/link'
 
@@ -23,10 +28,14 @@ export default async function ExamPage({ params }: { params: Promise<{ examId: s
 
   // For comprehensive cycle exams, override total_questions/time_limit with config values
   if (exam.subcategory === 'comprehensive') {
-    const step = COMP_EXAM_CATEGORY_TO_STEP[exam.category]
-    if (step) {
-      exam.total_questions = ASSESSMENT_TOTAL_QUESTIONS[step] ?? exam.total_questions
-      exam.time_limit_minutes = ASSESSMENT_TIME_LIMITS[step] ?? exam.time_limit_minutes
+    if (exam.category === 'cs' && exam.status === 'approved') {
+      exam.total_questions = CS_COMPREHENSIVE_TOTAL_QUESTIONS
+    } else {
+      const step = COMP_EXAM_CATEGORY_TO_STEP[exam.category]
+      if (step) {
+        exam.total_questions = ASSESSMENT_TOTAL_QUESTIONS[step] ?? exam.total_questions
+        exam.time_limit_minutes = ASSESSMENT_TIME_LIMITS[step] ?? exam.time_limit_minutes
+      }
     }
   }
 

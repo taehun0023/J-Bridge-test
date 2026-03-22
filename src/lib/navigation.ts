@@ -82,7 +82,7 @@ export const categoryChildren: Record<
     ],
   },
   dev: {
-    title: '開発実践スキル',
+    title: '開発実務',
     description: '開発現場で必要な実践スキルを科目別に学習します。',
     children: [
       { href: '/dev/cwf', label: '共通業務基礎', description: '開発現場で共通して必要な基礎スキル' },
@@ -110,7 +110,7 @@ export const mainNavItems: NavItem[] = [
   { key: 'seikatsu', href: '/japanese/jlpt', label: '生活日本語', icon: Languages },
   { key: 'business-jp', href: '/japanese/business', label: 'ビジネス日本語', icon: Briefcase },
   { key: 'cs', href: '/cs', label: 'CS知識', icon: Cpu },
-  { key: 'dev', href: '/dev', label: '開発実践スキル', icon: Code2 },
+  { key: 'dev', href: '/dev', label: '開発実務', icon: Code2 },
   { key: 'business-lit', href: '/business-literacy', label: 'ビジネス素養', icon: Handshake },
 ]
 

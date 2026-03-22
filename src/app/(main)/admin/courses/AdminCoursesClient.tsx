@@ -4,6 +4,7 @@ import React, { useState, useTransition, useEffect, useCallback, useRef } from '
 import Badge from '@/components/ui/Badge'
 import { createQuestion, updateQuestion, deleteQuestion, toggleQuestionPublished, fetchQuestionsPage } from '@/app/actions/admin/questions'
 import { resolveQuestionClaims } from '@/app/actions/claims'
+import { CS_QUIZ_SET_DEFINITIONS } from '@/lib/cs-quiz'
 import { useRouter } from 'next/navigation'
 
 interface QuestionOption {
@@ -26,6 +27,7 @@ interface QuestionData {
   question_type: string
   difficulty: string | null
   question_category: string | null
+  question_subtype: string | null
   explanation: string | null
   is_published: boolean
   sort_order: number
@@ -44,6 +46,8 @@ interface AxisConfig {
   step: number
   label: string
   assessmentQuizId: string
+  assessmentQuizIds?: string[]
+  sourceQuizIds?: string[]
   practiceTypes: PracticeType[]
   assessmentCount: number
   practiceCount: number
@@ -71,13 +75,12 @@ const categoryLabels: Record<string, string> = {
   data_structure: 'データ構造',
   os: 'OS',
   network: 'ネットワーク',
-  java_core: 'Java基礎',
+  cwf: '共通業務基礎',
+  java: 'Java',
   spring_boot: 'Spring Boot',
-  javascript_core: 'JavaScript基礎',
+  javascript: 'JavaScript',
   react: 'React',
   sql: 'SQL',
-  java_code: 'Javaコード',
-  javascript_code: 'JSコード',
   business_manner: 'ビジネスマナー',
   communication: 'コミュニケーション',
   cross_culture: '異文化理解',
@@ -100,10 +103,16 @@ const difficultyLabels: Record<string, string> = {
   '上級': '上級',
 }
 
+const subtypeLabels: Record<string, string> = {
+  concept: '概念',
+  code_reading: 'コード解析',
+}
+
 type FilterState = {
   difficulty: string
   published: string
   category: string
+  subtype: string
   claimsOnly: boolean
 }
 
@@ -141,15 +150,14 @@ const normalizedCategoryLabels: Record<string, string> = {
   network: 'ネットワーク',
   os: 'オペレーティングシステム',
   security: 'セキュリティ',
-  java_core: 'Java基礎',
+  cwf: '共通業務基礎',
+  java: 'Java',
   spring_boot: 'Spring Boot',
-  javascript_core: 'JavaScript基礎',
+  javascript: 'JavaScript',
   react: 'React',
   sql: 'SQL',
   python: 'Python',
   nextjs: 'Next.js',
-  java_code: 'Javaコード',
-  javascript_code: 'JavaScriptコード',
   business_manner: 'ビジネスマナー',
   communication: 'コミュニケーション',
   cross_culture: '異文化理解',
@@ -216,6 +224,7 @@ export default function AdminCoursesClient({
     difficulty: '',
     published: '',
     category: '',
+    subtype: '',
     claimsOnly: false,
   })
 
@@ -234,6 +243,14 @@ export default function AdminCoursesClient({
   const currentAxis = axes.find(a => a.step === selectedStep)!
   const hasPractice = currentAxis.practiceTypes.length > 0
   const isCsPracticeSection = currentAxis.step === 3 && activeSection === 'practice'
+  const isCsAssessmentSection = currentAxis.step === 3 && activeSection === 'assessment'
+  const isDevPracticeSection = currentAxis.step === 4 && activeSection === 'practice'
+  const isDevStep = currentAxis.step === 4
+  const csQuestionUsageScope = isCsAssessmentSection
+    ? 'comprehensive_only'
+    : isCsPracticeSection
+      ? 'understanding_only'
+      : null
 
   const CS_SUBJECT_LABELS: Record<string, string> = {
     basic_theory: '情報表現',
@@ -267,6 +284,11 @@ export default function AdminCoursesClient({
     'os',
     'security',
   ] as const
+
+  const csUnderstandingCategoryOptions = CS_QUIZ_SET_DEFINITIONS.map((def) => ({
+    value: def.questionCategory,
+    label: `${csSubjectLabels[def.category]} ${def.id}`,
+  }))
 
   function getCsSubjectCategory(rawCategory: string | null | undefined) {
     if (!rawCategory) return null
@@ -311,9 +333,11 @@ export default function AdminCoursesClient({
   }
 
   const getQuizIds = useCallback(() => {
-    return activeSection === 'assessment'
-      ? [currentAxis.assessmentQuizId]
-      : currentAxis.practiceTypes.flatMap(pt => pt.quizIds)
+    if (currentAxis.step === 3) {
+      return currentAxis.sourceQuizIds ?? []
+    }
+    if (activeSection === 'assessment') return currentAxis.assessmentQuizIds ?? [currentAxis.assessmentQuizId]
+    return currentAxis.practiceTypes.flatMap(pt => pt.quizIds)
   }, [activeSection, currentAxis])
 
   const loadPage = useCallback(async (quizIds: string[], filtersArg: FilterState, offset: number, append: boolean) => {
@@ -333,6 +357,8 @@ export default function AdminCoursesClient({
       category: filtersArg.category || undefined,
       published: (filtersArg.published as 'published' | 'unpublished' | '') || '',
       claimsOnly: filtersArg.claimsOnly,
+      questionUsageScope: csQuestionUsageScope,
+      excludeOutOfScope: !!csQuestionUsageScope,
     }, offset, PAGE_SIZE)
 
     if (append) {
@@ -346,7 +372,7 @@ export default function AdminCoursesClient({
 
     if (append) setLoadingMore(false)
     else setLoading(false)
-  }, [])
+  }, [csQuestionUsageScope])
 
   // Load questions when step/section changes
   const filterSkipRef = useRef(false)
@@ -357,15 +383,31 @@ export default function AdminCoursesClient({
 
     // Skip next filter effect since step/section change resets filters
     filterSkipRef.current = true
+
+    // Dev step practice: auto-filter by first subject category (questions live in assessment quiz)
+    let defaultCategory = ''
+    if (selectedStep === 4 && activeSection === 'practice' && currentAxis.practiceTypes.length > 0) {
+      defaultCategory = currentAxis.practiceTypes[0].quizType
+    }
+    if (selectedStep === 3 && activeSection === 'practice') {
+      defaultCategory = '__cs_understanding_subject__:basic_theory'
+    }
+    const resetFilters: FilterState = {
+      ...getResetFilters(selectedStep, activeSection),
+      category: defaultCategory,
+    }
+    setFilters(resetFilters)
+
     const quizIds = getQuizIds()
-    loadPage(quizIds, { difficulty: '', published: '', category: '', claimsOnly: false }, 0, false)
-  }, [selectedStep, activeSection, getQuizIds, loadPage])
+    loadPage(quizIds, resetFilters, 0, false)
+  }, [selectedStep, activeSection, getQuizIds, loadPage, currentAxis.practiceTypes, currentAxis.step])
 
   // Reload when filters change (skip on step/section changes which reset filters)
   const filterInitRef = useRef(false)
   useEffect(() => {
     if (!filterInitRef.current) {
       filterInitRef.current = true
+      filterSkipRef.current = false
       return
     }
     if (filterSkipRef.current) {
@@ -375,7 +417,7 @@ export default function AdminCoursesClient({
     const quizIds = getQuizIds()
     loadPage(quizIds, filters, 0, false)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.difficulty, filters.published, filters.category, filters.claimsOnly])
+  }, [filters.difficulty, filters.published, filters.category, filters.subtype, filters.claimsOnly])
 
   // Infinite scroll observer
   useEffect(() => {
@@ -407,6 +449,7 @@ export default function AdminCoursesClient({
   const [formText, setFormText] = useState('')
   const [formDifficulty, setFormDifficulty] = useState('中級')
   const [formCategory, setFormCategory] = useState('')
+  const [formSubtype, setFormSubtype] = useState('')
   const [formExplanation, setFormExplanation] = useState('')
   const [formOptions, setFormOptions] = useState<OptionFormData[]>([
     { option_text: '', is_correct: true },
@@ -439,8 +482,10 @@ export default function AdminCoursesClient({
     return TRADITIONAL_DIFFICULTY_OPTIONS
   }
 
-  // Server-side filtering — questions state already contains filtered results
-  const filteredQuestions = questions
+  // Server-side filtering + client-side subtype filter
+  const filteredQuestions = filters.subtype
+    ? questions.filter(q => q.question_subtype === filters.subtype)
+    : questions
   const activeDifficultyOptions = getDifficultyOptions()
 
   // Quiz type → default question_category mapping
@@ -462,7 +507,7 @@ export default function AdminCoursesClient({
     .map(pt => ({ value: quizTypeToCategoryMap[pt.quizType] ?? pt.quizType, label: pt.label }))
     .filter(c => c.value)
 
-  const practiceCategories = isCsPracticeSection
+  const practiceCategories = isCsAssessmentSection
     ? CS_SUBJECT_ORDER.map((cat) => ({ value: cat, label: csSubjectLabels[cat] }))
     : rawPracticeCategories
 
@@ -471,14 +516,16 @@ export default function AdminCoursesClient({
         isCsPracticeSection
           ? [
               ...CS_SUBJECT_ORDER.map((cat) => ({
-                value: `__cs_subject__:${cat}`,
+                value: `__cs_understanding_subject__:${cat}`,
                 label: csSubjectLabels[cat],
               })),
               { value: '__legacy_unclassified__', label: '未分類(旧データ)' },
             ]
           : practiceCategories
       )
-    : availableCategories.map(cat => ({ value: cat, label: normalizedCategoryLabels[cat] ?? categoryLabels[cat] ?? cat }))
+    : (isCsAssessmentSection
+        ? CS_SUBJECT_ORDER.map((cat) => ({ value: `__cs_comprehensive_subject__:${cat}`, label: csSubjectLabels[cat] }))
+        : availableCategories.map(cat => ({ value: cat, label: normalizedCategoryLabels[cat] ?? categoryLabels[cat] ?? cat })))
 
   const displayToolbarCategories = toolbarCategories.map((cat) => (
     cat.value === '__legacy_unclassified__'
@@ -487,12 +534,34 @@ export default function AdminCoursesClient({
   ))
   const filteredToolbarCategories = displayToolbarCategories.filter((cat) => cat.value !== '__legacy_unclassified__')
 
+  function getSectionLabel(section: 'assessment' | 'practice') {
+    if (currentAxis.step === 3) {
+      return section === 'assessment' ? '종합시험' : '이해도테스트'
+    }
+    return section === 'assessment' ? 'Assessment' : 'Practice'
+  }
+
+  function getResetFilters(step: number, section: 'assessment' | 'practice'): FilterState {
+    return {
+      difficulty: '',
+      published: step === 3 ? 'published' : '',
+      category: step === 3 && section === 'practice' ? '__cs_understanding_subject__:basic_theory' : '',
+      subtype: '',
+      claimsOnly: false,
+    }
+  }
+
   function openAddForm(section: 'assessment' | 'practice') {
     setFormSection(section)
     setEditingQuestion(null)
     setFormText('')
     setFormDifficulty(currentAxis.step === 1 ? 'N3' : '中級')
-    setFormCategory(section === 'practice' ? (practiceCategories[0]?.value ?? '') : '')
+    setFormCategory(
+      section === 'assessment'
+        ? (practiceCategories[0]?.value ?? '')
+        : (currentAxis.step === 3 ? (csUnderstandingCategoryOptions[0]?.value ?? '') : '')
+    )
+    setFormSubtype(isDevStep ? 'concept' : '')
     setFormExplanation('')
     setFormOptions([
       { option_text: '', is_correct: true },
@@ -504,11 +573,14 @@ export default function AdminCoursesClient({
   }
 
   function openEditForm(q: QuestionData) {
-    const isAssessment = q.quiz_id === currentAxis.assessmentQuizId
+    const isAssessment = currentAxis.step === 3
+      ? activeSection === 'assessment'
+      : (currentAxis.assessmentQuizIds ?? [currentAxis.assessmentQuizId]).includes(q.quiz_id)
     setFormSection(isAssessment ? 'assessment' : 'practice')
     setFormText(q.question_text)
     setFormDifficulty(q.difficulty ?? '中級')
     setFormCategory(q.question_category ?? '')
+    setFormSubtype(q.question_subtype ?? '')
     setFormExplanation(q.explanation ?? '')
     setFormOptions(
       q.options.length >= 2
@@ -528,8 +600,13 @@ export default function AdminCoursesClient({
     setFormSection(section)
     setEditingQuestion(null)
     setFormText('')
-    setFormDifficulty(currentAxis.step === 1 ? 'N3' : (isCsPracticeSection ? 'medium' : '中級'))
-    setFormCategory(section === 'practice' ? (practiceCategories[0]?.value ?? '') : '')
+    setFormDifficulty(currentAxis.step === 1 ? 'N3' : ((isCsPracticeSection || isDevPracticeSection) ? 'medium' : '中級'))
+    setFormCategory(
+      section === 'assessment'
+        ? (practiceCategories[0]?.value ?? '')
+        : (currentAxis.step === 3 ? (csUnderstandingCategoryOptions[0]?.value ?? '') : '')
+    )
+    setFormSubtype(isDevStep ? 'concept' : '')
     setFormExplanation('')
     setFormOptions([
       { option_text: '', is_correct: true },
@@ -541,11 +618,14 @@ export default function AdminCoursesClient({
   }
 
   function openManagedEditForm(q: QuestionData) {
-    const isAssessment = q.quiz_id === currentAxis.assessmentQuizId
+    const isAssessment = currentAxis.step === 3
+      ? activeSection === 'assessment'
+      : (currentAxis.assessmentQuizIds ?? [currentAxis.assessmentQuizId]).includes(q.quiz_id)
     setFormSection(isAssessment ? 'assessment' : 'practice')
     setFormText(q.question_text)
-    setFormDifficulty(q.difficulty ?? (isCsPracticeSection ? 'medium' : '中級'))
+    setFormDifficulty(q.difficulty ?? ((isCsPracticeSection || isDevPracticeSection) ? 'medium' : '中級'))
     setFormCategory(isCsPracticeSection ? (getCsSubjectCategory(q.question_category) ?? '') : (q.question_category ?? ''))
+    setFormSubtype(q.question_subtype ?? (isDevStep ? 'concept' : ''))
     setFormExplanation(q.explanation ?? '')
     setFormOptions(
       q.options.length >= 2
@@ -597,15 +677,27 @@ export default function AdminCoursesClient({
   }
 
   function getCreateQuizId(): string | undefined {
-    if (formSection === 'assessment') return currentAxis.assessmentQuizId
+    if (formSection === 'assessment') {
+      if (currentAxis.step === 3) {
+        return currentAxis.practiceTypes[0]?.quizIds[0]
+      }
+      return currentAxis.assessmentQuizId
+    }
+    if (currentAxis.step === 3) {
+      return CS_QUIZ_SET_DEFINITIONS.find(def => def.questionCategory === formCategory)?.quizId
+    }
     const quizType = categoryToQuizTypeMap[formCategory]
     const pt = currentAxis.practiceTypes.find(p => p.quizType === quizType)
     return pt?.quizIds[0] ?? currentAxis.practiceTypes[0]?.quizIds[0]
   }
 
   function getManagedCreateQuizId(): string | undefined {
-    if (formSection === 'assessment') return currentAxis.assessmentQuizId
+    if (formSection === 'assessment') return getCreateQuizId()
     if (isCsPracticeSection) return currentAxis.practiceTypes[0]?.quizIds[0]
+    if (isDevPracticeSection) {
+      // Dev questions live in the assessment quiz, not pool quizzes
+      return currentAxis.assessmentQuizId
+    }
     return getCreateQuizId()
   }
 
@@ -624,19 +716,25 @@ export default function AdminCoursesClient({
 
   function handleSubmitForm() {
     if (!formText.trim()) { showMsg('問題テキストを入力してください', 'error'); return }
-    if (formSection === 'practice' && !formCategory) { showMsg('カテゴリを選択してください', 'error'); return }
+    if ((formSection === 'practice' || currentAxis.step === 3) && !formCategory) { showMsg('カテゴリを選択してください', 'error'); return }
     const validOptions = formOptions.filter(o => o.option_text.trim())
     if (validOptions.length < 2) { showMsg('選択肢を最低2つ入力してください', 'error'); return }
     if (!validOptions.some(o => o.is_correct)) { showMsg('正解を1つ選択してください', 'error'); return }
     const createQuizId = getManagedCreateQuizId()
     if (!createQuizId) { showMsg('クイズIDが見つかりません', 'error'); return }
 
+    const questionUsageScope: 'understanding_only' | 'comprehensive_only' | null = currentAxis.step === 3
+      ? (formSection === 'assessment' ? 'understanding_only' : 'comprehensive_only')
+      : null
+
     const data = {
       question_text: formText.trim(),
       question_type: 'multiple_choice',
       difficulty: formDifficulty,
       question_category: getQuestionCategoryForSave(),
+      question_subtype: isDevStep && formSubtype ? formSubtype : null,
       explanation: formExplanation.trim() || null,
+      question_usage_scope: questionUsageScope,
       options: validOptions.map((o, i) => ({
         option_text: o.option_text.trim(),
         is_correct: o.is_correct,
@@ -707,6 +805,21 @@ export default function AdminCoursesClient({
         <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
           {getDisplayCategoryLabel(q.question_category)}
         </td>
+        {isDevStep && (
+          <td className="px-4 py-3">
+            {q.question_subtype ? (
+              <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                q.question_subtype === 'code_reading'
+                  ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'
+                  : 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400'
+              }`}>
+                {subtypeLabels[q.question_subtype] ?? q.question_subtype}
+              </span>
+            ) : (
+              <span className="text-xs text-gray-400">—</span>
+            )}
+          </td>
+        )}
         <td className="px-4 py-3">
           <Badge label={q.difficulty ? (difficultyLabels[q.difficulty] ?? q.difficulty) : '未設定'} variant="difficulty" />
         </td>
@@ -780,8 +893,19 @@ export default function AdminCoursesClient({
           {activeDifficultyOptions.map(d => (
             <option key={d.value} value={d.value}>{d.label}</option>
           ))}
-          <option value="__null__">未設定</option>
         </select>
+
+        {isDevStep && (
+          <select
+            value={filters.subtype}
+            onChange={e => setFilters(f => ({ ...f, subtype: e.target.value }))}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+          >
+            <option value="">全サブタイプ</option>
+            <option value="concept">概念</option>
+            <option value="code_reading">コード解析</option>
+          </select>
+        )}
 
         {filteredToolbarCategories.length > 0 && (
           <select
@@ -828,6 +952,9 @@ export default function AdminCoursesClient({
         <tr>
           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">問題テキスト</th>
           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">カテゴリ</th>
+          {isDevStep && (
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">サブタイプ</th>
+          )}
           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">難易度</th>
           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">状態</th>
           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">クレーム</th>
@@ -895,7 +1022,7 @@ export default function AdminCoursesClient({
         {axes.map(axis => (
           <button
             key={axis.step}
-            onClick={() => { setSelectedStep(axis.step); setActiveSection('assessment'); setClaimDetailId(null); setFilters({ difficulty: '', published: '', category: '', claimsOnly: false }) }}
+            onClick={() => { setSelectedStep(axis.step); setActiveSection('assessment'); setClaimDetailId(null); setFilters(getResetFilters(axis.step, 'assessment')) }}
             className={`rounded-xl border-2 px-4 py-3 text-left transition-colors ${
               axis.step === selectedStep
                 ? 'border-indigo-600 bg-indigo-50 dark:border-indigo-500 dark:bg-indigo-900/20'
@@ -924,7 +1051,7 @@ export default function AdminCoursesClient({
       {hasPractice && (
         <div className="mt-6 flex border-b border-gray-200 dark:border-gray-700">
           <button
-            onClick={() => { setActiveSection('assessment'); setFilters({ difficulty: '', published: '', category: '', claimsOnly: false }) }}
+            onClick={() => { setActiveSection('assessment'); setFilters(getResetFilters(currentAxis.step, 'assessment')) }}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
               activeSection === 'assessment'
                 ? 'border-indigo-600 text-indigo-700 dark:border-indigo-400 dark:text-indigo-400'
@@ -941,7 +1068,7 @@ export default function AdminCoursesClient({
             </span>
           </button>
           <button
-            onClick={() => { setActiveSection('practice'); setFilters({ difficulty: '', published: '', category: '', claimsOnly: false }) }}
+            onClick={() => { setActiveSection('practice'); setFilters(getResetFilters(currentAxis.step, 'practice')) }}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
               activeSection === 'practice'
                 ? 'border-teal-600 text-teal-700 dark:border-teal-400 dark:text-teal-400'
@@ -1082,7 +1209,7 @@ export default function AdminCoursesClient({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  カテゴリ {formSection === 'practice' ? '*' : ''}
+                  カテゴリ {(formSection === 'practice' || currentAxis.step === 3) ? '*' : ''}
                 </label>
                 <select
                   value={formCategory}
@@ -1092,6 +1219,10 @@ export default function AdminCoursesClient({
                   {formSection === 'practice' ? (
                     practiceCategories.map(c => (
                       <option key={c.value} value={c.value}>{c.label}</option>
+                    ))
+                  ) : currentAxis.step === 3 ? (
+                    csUnderstandingCategoryOptions.map((cat) => (
+                      <option key={cat.value} value={cat.value}>{cat.label}</option>
                     ))
                   ) : (
                     <>
@@ -1103,6 +1234,20 @@ export default function AdminCoursesClient({
                   )}
                 </select>
               </div>
+              {isDevStep && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">サブタイプ</label>
+                  <select
+                    value={formSubtype}
+                    onChange={e => setFormSubtype(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="">未設定</option>
+                    <option value="concept">概念</option>
+                    <option value="code_reading">コード解析</option>
+                  </select>
+                </div>
+              )}
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">解説（任意）</label>
                 <textarea

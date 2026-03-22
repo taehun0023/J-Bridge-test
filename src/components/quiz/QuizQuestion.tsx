@@ -18,7 +18,7 @@ interface QuizQuestionProps {
   isCorrect?: boolean
 }
 
-const CODE_INDICATORS = ['{', 'class ', 'function ', 'console.', 'const ', 'import ', 'public ', 'static ', 'void ', 'System.', 'return ', 'int ', 'String ']
+const CODE_INDICATORS = ['{', 'class ', 'function ', 'console.', 'const ', 'import ', 'public ', 'static ', 'void ', 'System.', 'return ', 'int ', 'String ', 'SELECT ', 'UPDATE ', 'DELETE ', 'INSERT ', 'BEGIN;', 'def ', 'print(', 'for (', 'document.', 'useEffect(', 'useState(', 'async ', 'await ', 'Promise.']
 
 /** Convert literal \n sequences (stored as two chars in DB) to actual newlines */
 function normalizeNewlines(text: string): string {
@@ -26,16 +26,24 @@ function normalizeNewlines(text: string): string {
 }
 
 function splitQuestionText(text: string): { prompt: string; codeBlock: string | null } {
-  const splitIndex = text.indexOf('\n\n')
-  if (splitIndex === -1) return { prompt: text, codeBlock: null }
+  // Try \n\n split first (explicit separator)
+  const doubleIdx = text.indexOf('\n\n')
+  if (doubleIdx !== -1) {
+    const after = text.substring(doubleIdx + 2)
+    if (CODE_INDICATORS.some(ind => after.includes(ind))) {
+      return { prompt: text.substring(0, doubleIdx), codeBlock: after }
+    }
+  }
 
-  const before = text.substring(0, splitIndex)
-  const after = text.substring(splitIndex + 2)
+  // Fallback: find first line containing a code indicator
+  const lines = text.split('\n')
+  for (let i = 1; i < lines.length; i++) {
+    if (CODE_INDICATORS.some(ind => lines[i].includes(ind))) {
+      return { prompt: lines.slice(0, i).join('\n'), codeBlock: lines.slice(i).join('\n') }
+    }
+  }
 
-  const hasCode = CODE_INDICATORS.some(indicator => after.includes(indicator))
-  if (!hasCode) return { prompt: text, codeBlock: null }
-
-  return { prompt: before, codeBlock: after }
+  return { prompt: text, codeBlock: null }
 }
 
 export default function QuizQuestion({

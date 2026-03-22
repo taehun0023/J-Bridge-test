@@ -14,3 +14,6 @@ export { updateCoursePublished, deleteCourse } from './content'
 
 // Question Management
 export { createQuestion, updateQuestion, deleteQuestion, toggleQuestionPublished } from './questions'
+
+// CS Governance
+export { getCsGovernanceInventory } from './cs-governance'

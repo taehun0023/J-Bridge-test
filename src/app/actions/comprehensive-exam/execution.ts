@@ -6,13 +6,121 @@ import { ASSIGNMENT_CATEGORIES } from '@/lib/assignment-categories'
 import { notifyMentorsOf, getUserDisplayName } from '@/lib/notification-helpers'
 import { recalculateUserScores } from '@/modules/scoring'
 import { tryCompleteActiveCycle, resetCycleCompletedAt } from '@/app/actions/exam-scheduling'
-import { COMP_EXAM_CATEGORY_TO_STEP, ASSESSMENT_QUIZ_IDS, ASSESSMENT_CONTENT_QUIZ_TYPES, ASSESSMENT_TOTAL_QUESTIONS, ASSESSMENT_TIME_LIMITS } from '@/lib/assessment-config'
-import { fetchRandomAssessmentQuestions } from '@/lib/supabase/queries/assessments'
+import {
+  COMP_EXAM_CATEGORY_TO_STEP,
+  ASSESSMENT_QUIZ_IDS,
+  ASSESSMENT_CONTENT_QUIZ_TYPES,
+  ASSESSMENT_TOTAL_QUESTIONS,
+  ASSESSMENT_TIME_LIMITS,
+  CS_COMPREHENSIVE_TOTAL_QUESTIONS,
+} from '@/lib/assessment-config'
+import { fetchCsComprehensiveQuestions, fetchRandomAssessmentQuestions } from '@/lib/supabase/queries/assessments'
 
-/** Shuffle array and assign sort_order to options */
 function shuffleOptions(options: { id: string; option_text: string; sort_order?: number }[]) {
   const shuffled = [...options].sort(() => Math.random() - 0.5)
   return shuffled.map((o, i) => ({ id: o.id, option_text: o.option_text, sort_order: i + 1 }))
+}
+
+type RuntimeQuestion = {
+  id: string
+  question_text: string
+  question_category: string | null
+  quiz_question_options_safe: {
+    id: string
+    option_text: string
+    sort_order: number
+  }[]
+}
+
+function formatExamQuestions(questions: RuntimeQuestion[]) {
+  return questions.map(q => ({
+    id: q.id,
+    question_text: q.question_text,
+    question_category: q.question_category,
+    options: shuffleOptions(q.quiz_question_options_safe),
+  }))
+}
+
+async function persistExamQuestions(
+  serviceClient: NonNullable<ReturnType<typeof createServiceRoleClient>>,
+  examId: string,
+  questions: {
+    id: string
+    question_category: string | null
+    difficulty: string | null
+  }[],
+) {
+  await serviceClient
+    .from('comprehensive_exam_questions')
+    .delete()
+    .eq('exam_id', examId)
+
+  if (questions.length === 0) return null
+
+  const { error } = await serviceClient
+    .from('comprehensive_exam_questions')
+    .insert(
+      questions.map((q, index) => ({
+        exam_id: examId,
+        question_id: q.id,
+        question_category: q.question_category,
+        difficulty: q.difficulty,
+        sort_order: index,
+      }))
+    )
+
+  return error
+}
+
+async function loadPersistedExamQuestions(
+  serviceClient: NonNullable<ReturnType<typeof createServiceRoleClient>>,
+  examId: string,
+) {
+  const { data: persisted, error: persistedErr } = await serviceClient
+    .from('comprehensive_exam_questions')
+    .select('question_id, sort_order')
+    .eq('exam_id', examId)
+    .order('sort_order', { ascending: true })
+
+  if (persistedErr || !persisted || persisted.length === 0) {
+    return { error: persistedErr, questions: [] as RuntimeQuestion[] }
+  }
+
+  const { data: questionRows, error: questionErr } = await serviceClient
+    .from('quiz_questions')
+    .select('id, question_text, question_category, quiz_question_options_safe(id, option_text, sort_order)')
+    .in('id', persisted.map(row => row.question_id))
+
+  if (questionErr || !questionRows) {
+    return { error: questionErr, questions: [] as RuntimeQuestion[] }
+  }
+
+  const questionMap = new Map(questionRows.map(q => [q.id, q]))
+  const orderedQuestions = persisted
+    .map(row => questionMap.get(row.question_id))
+    .filter(Boolean) as RuntimeQuestion[]
+
+  return { error: null, questions: orderedQuestions }
+}
+
+async function fetchCsComprehensiveQuizIds(
+  serviceClient: NonNullable<ReturnType<typeof createServiceRoleClient>>
+) {
+  const { data: quizzes, error } = await serviceClient
+    .from('quizzes')
+    .select('id')
+    .eq('quiz_type', 'cs_knowledge')
+
+  if (error) {
+    console.error('Failed to load CS comprehensive source quizzes:', error)
+    return [ASSESSMENT_QUIZ_IDS[3]]
+  }
+
+  const ids = new Set<string>([ASSESSMENT_QUIZ_IDS[3]])
+  for (const quiz of quizzes ?? []) {
+    ids.add(quiz.id as string)
+  }
+  return [...ids]
 }
 
 export async function startExam(examId: string) {
@@ -30,18 +138,51 @@ export async function startExam(examId: string) {
     .eq('user_id', user.id)
     .single()
 
-  if (!exam) return { error: '試験が見つかりません' }
-  if (exam.status !== 'approved') return { error: 'この試験はまだ開始できません' }
+  if (!exam) return { error: 'Exam not found' }
+  if (exam.status !== 'approved') return { error: 'Exam is not approved' }
 
-  // Cycle comprehensive exams: use assessment quiz IDs directly
+  if (exam.category === 'cs' && exam.subcategory === 'comprehensive') {
+    const quizIds = await fetchCsComprehensiveQuizIds(serviceClient)
+    const selectedQuestions = await fetchCsComprehensiveQuestions(quizIds)
+    if (selectedQuestions.length === 0) return { error: 'No CS comprehensive questions available' }
+
+    const totalQ = Math.min(selectedQuestions.length, CS_COMPREHENSIVE_TOTAL_QUESTIONS)
+    const startedAt = new Date().toISOString()
+    const persistErr = await persistExamQuestions(serviceClient, examId, selectedQuestions.slice(0, totalQ))
+
+    if (persistErr) {
+      console.error('Failed to persist CS comprehensive exam questions:', persistErr)
+      return { error: 'Failed to persist CS comprehensive exam questions' }
+    }
+
+    const { error: updateErr } = await serviceClient
+      .from('comprehensive_exams')
+      .update({
+        status: 'in_progress',
+        started_at: startedAt,
+        total_questions: totalQ,
+      })
+      .eq('id', examId)
+
+    if (updateErr) {
+      console.error('Failed to update CS comprehensive exam status to in_progress:', updateErr)
+      return { error: 'Failed to start CS comprehensive exam' }
+    }
+
+    return {
+      questions: formatExamQuestions(selectedQuestions.slice(0, totalQ)),
+      timeLimit: exam.time_limit_minutes,
+      startedAt,
+    }
+  }
+
   if (exam.subcategory === 'comprehensive') {
     const step = COMP_EXAM_CATEGORY_TO_STEP[exam.category]
-    if (!step) return { error: 'カテゴリが無効です' }
+    if (!step) return { error: 'Unsupported comprehensive exam category' }
 
     const assessmentQuizId = ASSESSMENT_QUIZ_IDS[step]
-    if (!assessmentQuizId) return { error: '該当するクイズが見つかりません' }
+    if (!assessmentQuizId) return { error: 'Assessment quiz not found' }
 
-    // Build quiz ID list: assessment quiz + blended content quizzes (if applicable)
     const quizIds: string[] = [assessmentQuizId]
     const contentQuizTypes = ASSESSMENT_CONTENT_QUIZ_TYPES[step]
     if (contentQuizTypes) {
@@ -55,7 +196,6 @@ export async function startExam(examId: string) {
       }
     }
 
-    // For steps 3-5, get user profile info (targetCodingArea for step 4, isJapanese for step 5)
     let targetCodingArea: string | null = null
     let isJapanese: boolean | undefined
     if (step >= 3) {
@@ -74,18 +214,12 @@ export async function startExam(examId: string) {
       targetCodingArea,
       isJapanese
     )
+    if (questions.length === 0) return { error: 'No comprehensive questions available' }
 
-    if (questions.length === 0) {
-      return { error: '出題可能な問題がありません' }
-    }
-
-    // Use config values (authoritative) — DB records may have stale defaults
     const totalQ = ASSESSMENT_TOTAL_QUESTIONS[step] ?? exam.total_questions
     const timeLimit = ASSESSMENT_TIME_LIMITS[step] ?? exam.time_limit_minutes
-
     const startedAt = new Date().toISOString()
 
-    // Update exam status to in_progress + sync config values to DB
     const { error: updateErr } = await serviceClient
       .from('comprehensive_exams')
       .update({
@@ -97,29 +231,20 @@ export async function startExam(examId: string) {
       .eq('id', examId)
 
     if (updateErr) {
-      console.error('Failed to update exam status to in_progress:', updateErr)
-      return { error: '試験の開始に失敗しました' }
+      console.error('Failed to update comprehensive exam status to in_progress:', updateErr)
+      return { error: 'Failed to start comprehensive exam' }
     }
 
-    // NOTE: Do NOT revalidatePath here — it causes the server component to re-render,
-    // which changes mode from 'start' to 'exam' and re-mounts ExamClient, losing questions state.
     return {
-      questions: questions.slice(0, totalQ).map(q => ({
-        id: q.id,
-        question_text: q.question_text,
-        question_category: q.question_category,
-        options: shuffleOptions(q.quiz_question_options_safe),
-      })),
+      questions: formatExamQuestions(questions.slice(0, totalQ)),
       timeLimit,
       startedAt,
     }
   }
 
-  // Standard subcategory exam: find quizzes by quiz_type
   const subcatConfig = ASSIGNMENT_CATEGORIES[exam.category]?.subcategories[exam.subcategory]
   const quizTypes = subcatConfig?.quizType ? [subcatConfig.quizType] : []
-
-  if (quizTypes.length === 0) return { error: 'クイズタイプが見つかりません' }
+  if (quizTypes.length === 0) return { error: 'No quiz types configured for this exam' }
 
   const quizQuery = serviceClient
     .from('quizzes')
@@ -133,8 +258,7 @@ export async function startExam(examId: string) {
 
   const { data: matchingQuizzes } = await quizQuery
   const quizIds = (matchingQuizzes ?? []).map(q => q.id)
-
-  if (quizIds.length === 0) return { error: '該当するクイズが見つかりません' }
+  if (quizIds.length === 0) return { error: 'No published quizzes found' }
 
   const { data: allQuestions } = await serviceClient
     .from('quiz_questions')
@@ -142,16 +266,13 @@ export async function startExam(examId: string) {
     .in('quiz_id', quizIds)
 
   if (!allQuestions || allQuestions.length === 0) {
-    return { error: '出題可能な問題がありません' }
+    return { error: 'No questions available' }
   }
 
-  // Shuffle and pick up to total_questions
   const shuffled = allQuestions.sort(() => Math.random() - 0.5)
   const selected = shuffled.slice(0, exam.total_questions)
-
   const standardStartedAt = new Date().toISOString()
 
-  // Update exam status to in_progress
   const { error: stdUpdateErr } = await serviceClient
     .from('comprehensive_exams')
     .update({
@@ -162,7 +283,7 @@ export async function startExam(examId: string) {
 
   if (stdUpdateErr) {
     console.error('Failed to update exam status to in_progress:', stdUpdateErr)
-    return { error: '試験の開始に失敗しました' }
+    return { error: 'Failed to start exam' }
   }
 
   return {
@@ -178,7 +299,6 @@ export async function startExam(examId: string) {
 
 /**
  * Load questions for an in-progress exam (handles page refresh mid-exam).
- * Re-randomizes questions since selected IDs aren't persisted.
  */
 export async function loadExamQuestions(examId: string) {
   const auth = await requireAuth()
@@ -195,18 +315,30 @@ export async function loadExamQuestions(examId: string) {
     .eq('user_id', user.id)
     .single()
 
-  if (!exam) return { error: '試験が見つかりません' }
-  if (exam.status !== 'in_progress') return { error: 'この試験は進行中ではありません' }
+  if (!exam) return { error: 'Exam not found' }
+  if (exam.status !== 'in_progress') return { error: 'Exam is not in progress' }
 
-  // Cycle comprehensive exam: use assessment quiz IDs + blending
+  if (exam.category === 'cs' && exam.subcategory === 'comprehensive') {
+    const { error: persistedErr, questions } = await loadPersistedExamQuestions(serviceClient, examId)
+    if (persistedErr || questions.length === 0) {
+      console.error('Failed to load persisted CS comprehensive exam questions:', persistedErr)
+      return { error: 'Failed to load persisted CS comprehensive exam questions' }
+    }
+
+    return {
+      questions: formatExamQuestions(questions),
+      timeLimit: exam.time_limit_minutes,
+      startedAt: exam.started_at,
+    }
+  }
+
   if (exam.subcategory === 'comprehensive') {
     const step = COMP_EXAM_CATEGORY_TO_STEP[exam.category]
-    if (!step) return { error: 'カテゴリが無効です' }
+    if (!step) return { error: 'Unsupported comprehensive exam category' }
 
     const assessmentQuizId = ASSESSMENT_QUIZ_IDS[step]
-    if (!assessmentQuizId) return { error: '該当するクイズが見つかりません' }
+    if (!assessmentQuizId) return { error: 'Assessment quiz not found' }
 
-    // Build quiz ID list: assessment quiz + blended content quizzes
     const quizIds: string[] = [assessmentQuizId]
     const contentQuizTypes = ASSESSMENT_CONTENT_QUIZ_TYPES[step]
     if (contentQuizTypes) {
@@ -238,27 +370,21 @@ export async function loadExamQuestions(examId: string) {
       targetCodingArea,
       isJapanese
     )
-    if (questions.length === 0) return { error: '出題可能な問題がありません' }
+    if (questions.length === 0) return { error: 'No comprehensive questions available' }
 
     const totalQ = ASSESSMENT_TOTAL_QUESTIONS[step] ?? exam.total_questions
     const timeLimit = ASSESSMENT_TIME_LIMITS[step] ?? exam.time_limit_minutes
 
     return {
-      questions: questions.slice(0, totalQ).map(q => ({
-        id: q.id,
-        question_text: q.question_text,
-        question_category: q.question_category,
-        options: shuffleOptions(q.quiz_question_options_safe),
-      })),
+      questions: formatExamQuestions(questions.slice(0, totalQ)),
       timeLimit,
       startedAt: exam.started_at,
     }
   }
 
-  // Standard subcategory exam
   const subcatConfig = ASSIGNMENT_CATEGORIES[exam.category]?.subcategories[exam.subcategory]
   const quizTypes = subcatConfig?.quizType ? [subcatConfig.quizType] : []
-  if (quizTypes.length === 0) return { error: 'クイズタイプが見つかりません' }
+  if (quizTypes.length === 0) return { error: 'No quiz types configured for this exam' }
 
   const quizQuery = serviceClient
     .from('quizzes')
@@ -272,14 +398,14 @@ export async function loadExamQuestions(examId: string) {
 
   const { data: matchingQuizzes } = await quizQuery
   const quizIds = (matchingQuizzes ?? []).map(q => q.id)
-  if (quizIds.length === 0) return { error: '該当するクイズが見つかりません' }
+  if (quizIds.length === 0) return { error: 'No published quizzes found' }
 
   const { data: allQuestions } = await serviceClient
     .from('quiz_questions')
     .select('id, question_text, quiz_question_options(id, option_text)')
     .in('quiz_id', quizIds)
 
-  if (!allQuestions || allQuestions.length === 0) return { error: '出題可能な問題がありません' }
+  if (!allQuestions || allQuestions.length === 0) return { error: 'No questions available' }
 
   const shuffled = allQuestions.sort(() => Math.random() - 0.5)
   const selected = shuffled.slice(0, exam.total_questions)
@@ -313,10 +439,9 @@ export async function submitExam(
     .eq('user_id', user.id)
     .single()
 
-  if (!exam) return { error: '試験が見つかりません' }
-  if (exam.status !== 'in_progress') return { error: 'この試験は提出できません' }
+  if (!exam) return { error: 'Exam not found' }
+  if (exam.status !== 'in_progress') return { error: 'Exam is not in progress' }
 
-  // 0 answers = auto-fail with 0 score (e.g. user navigated away without answering)
   if (answers.length === 0) {
     const { data: updated, error: statusErr } = await serviceClient
       .from('comprehensive_exams')
@@ -332,15 +457,13 @@ export async function submitExam(
 
     if (statusErr || !updated) {
       console.error('Failed to update exam status (0 answers):', statusErr)
-      return { error: '試験結果の保存に失敗しました' }
+      return { error: 'Failed to submit exam' }
     }
 
     await recalculateUserScores(user.id)
 
     if (exam.subcategory === 'comprehensive') {
       await tryCompleteActiveCycle(user.id)
-      // Retake outside cycle: reset last completed cycle's completed_at to now
-      // so next auto-cycle starts 14 days from this retake, not the original completion
       await resetCycleCompletedAt(user.id)
     }
 
@@ -348,7 +471,7 @@ export async function submitExam(
     await notifyMentorsOf(
       user.id,
       'exam_completed',
-      `${userName}さんが総合試験を完了 (0点 - 不合格)`,
+      `${userName} completed a comprehensive exam (0 points - failed)`,
       undefined,
       '/admin/tasks',
       examId
@@ -357,7 +480,6 @@ export async function submitExam(
     return { score: 0, passed: false, correctCount: 0, totalCount: exam.total_questions, results: [] }
   }
 
-  // Get correct answers
   const questionIds = answers.map(a => a.questionId)
   const { data: correctOptions } = await serviceClient
     .from('quiz_question_options')
@@ -369,7 +491,6 @@ export async function submitExam(
     correctOptions?.map(o => [o.question_id, o.id]) ?? []
   )
 
-  // Grade and insert answers
   let correctCount = 0
   const answerRows = answers.map((a, index) => {
     const isCorrect = correctMap.get(a.questionId) === a.selectedOptionId
@@ -386,10 +507,9 @@ export async function submitExam(
   const { error: insertErr } = await serviceClient.from('comprehensive_exam_answers').insert(answerRows)
   if (insertErr) {
     console.error('Failed to insert exam answers:', insertErr)
-    return { error: '回答の保存に失敗しました' }
+    return { error: 'Failed to save exam answers' }
   }
 
-  // Use total questions (not just answered count) as denominator — unanswered = incorrect
   const totalQ = exam.total_questions > 0 ? exam.total_questions : answers.length
   const score = totalQ > 0 ? Math.round((correctCount / totalQ) * 100) : 0
   const passed = score >= exam.passing_score
@@ -409,43 +529,30 @@ export async function submitExam(
 
   if (statusErr || !updated) {
     console.error('Failed to update exam status:', statusErr)
-    return { error: '試験結果の保存に失敗しました' }
+    return { error: 'Failed to update exam status' }
   }
 
   if (updated.status !== newStatus) {
     console.error('Exam status not updated:', { expected: newStatus, actual: updated.status })
-    return { error: '試験結果の保存に失敗しました' }
+    return { error: 'Exam status update mismatch' }
   }
 
-  // Recalculate radar chart scores (merges with onboarding assessment via max strategy)
   await recalculateUserScores(user.id)
 
-  // If this is a cycle exam, check if the cycle is now complete
-  // NOTE: Don't rely on exam.exam_cycle_id — PostgREST schema cache may not recognize the column.
-  // Instead, find the active cycle by user_id.
   if (exam.subcategory === 'comprehensive') {
     await tryCompleteActiveCycle(user.id)
-    // Retake outside cycle: reset last completed cycle's completed_at to now
-    // so next auto-cycle starts 14 days from this retake, not the original completion
     await resetCycleCompletedAt(user.id)
   }
 
-  // Notify mentor(s) about result
   const userName = await getUserDisplayName(user.id)
   await notifyMentorsOf(
     user.id,
     'exam_completed',
-    `${userName}さんが総合試験を完了 (${score}点 - ${passed ? '合格' : '不合格'})`,
+    `${userName} completed a comprehensive exam (${score} points - ${passed ? 'passed' : 'failed'})`,
     undefined,
     '/admin/tasks',
     examId
   )
-
-  // NOTE: Do NOT call any revalidatePath here. Any revalidatePath in a server action
-  // causes Next.js to re-render the CURRENT page's server component, which replaces
-  // ExamClient's review/claim UI with the server-rendered score card.
-  // Dashboard/assignments/ranking will get fresh data via full page navigation
-  // (window.location.href in ExamClient).
 
   const results = answers.map(a => ({
     questionId: a.questionId,

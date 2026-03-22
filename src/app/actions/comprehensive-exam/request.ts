@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { requireAuth } from '@/lib/auth-helpers'
 import { ASSIGNMENT_CATEGORIES } from '@/lib/assignment-categories'
 import { notifyMentorsAndAdmins, getUserDisplayName } from '@/lib/notification-helpers'
+import { CS_COMPREHENSIVE_TOTAL_QUESTIONS } from '@/lib/assessment-config'
 
 export async function requestExam(category: string, subcategory: string, contentLevel: string | null) {
   const auth = await requireAuth()
@@ -45,6 +46,9 @@ export async function requestExam(category: string, subcategory: string, content
       subcategory,
       content_level: contentLevel,
       status: isAdminOrMentor ? 'approved' : 'requested',
+      total_questions: category === 'cs' && subcategory === 'comprehensive'
+        ? CS_COMPREHENSIVE_TOTAL_QUESTIONS
+        : undefined,
     })
     .select('id')
     .single()
@@ -108,6 +112,9 @@ export async function requestRetakeExam(examId: string) {
       subcategory: exam.subcategory,
       content_level: exam.content_level,
       status: isAdminOrMentor ? 'approved' : 'requested',
+      total_questions: exam.category === 'cs' && exam.subcategory === 'comprehensive'
+        ? CS_COMPREHENSIVE_TOTAL_QUESTIONS
+        : undefined,
     })
     .select('id')
     .single()

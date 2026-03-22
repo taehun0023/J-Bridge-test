@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
+import { selectCsComprehensiveQuestionsFromPool } from '@/lib/cs-comprehensive-selector'
 
-interface QuestionWithOptions {
+export interface QuestionWithOptions {
   id: string
   quiz_id: string
   question_type: string
@@ -12,6 +13,10 @@ interface QuestionWithOptions {
   sort_order: number
   difficulty: string | null
   question_category: string | null
+  question_subtype: string | null
+  curriculum_status: 'aligned' | 'adaptable' | 'out_of_scope' | null
+  question_usage_scope: 'understanding_only' | 'comprehensive_only' | 'exclude' | null
+  lesson_mapping: string | null
   quiz_question_options_safe: {
     id: string
     option_text: string
@@ -41,7 +46,7 @@ async function fetchAllQuestions(quizIds: string | string[]): Promise<QuestionWi
   const supabase = await createClient()
   const query = supabase
     .from('quiz_questions')
-    .select('*, quiz_question_options_safe(*)')
+    .select('*, question_subtype, curriculum_status, question_usage_scope, lesson_mapping, quiz_question_options_safe(*)')
     .eq('is_published', true)
     .order('sort_order', { ascending: true })
 
@@ -150,6 +155,11 @@ export async function fetchRandomByWeightedCategory(
   }
 
   return shuffle(result)
+}
+
+export async function fetchCsComprehensiveQuestions(quizIds: string | string[]): Promise<QuestionWithOptions[]> {
+  const allQuestions = await fetchAllQuestions(quizIds)
+  return selectCsComprehensiveQuestionsFromPool(allQuestions)
 }
 
 /** Step 1 JLPT-style selection: listening 15 + grammar 30 + reading 15 = 60, with N-level difficulty distribution.
@@ -265,14 +275,17 @@ async function fetchStep3CsStyle(quizIds: string | string[]): Promise<QuestionWi
   return result.length > 0 ? result : fetchRandomByDifficulty(quizIds, 30)
 }
 
-/** Step 4 Dev Practical selection: language-group category-weighted + difficulty-distributed. */
+/** Step 4 Dev Practical selection: category × subtype × difficulty 3-dimensional balanced selection.
+ *  Each category gets 20 questions: concept 10 + code_reading 10.
+ *  Each subtype split: easy 30% (3), medium 50% (5), hard 20% (2). */
 async function fetchStep4DevStyle(quizIds: string | string[], targetCodingArea: string | null): Promise<QuestionWithOptions[]> {
   const {
-    STEP4_CATEGORY_WEIGHTS_JAVA, STEP4_CATEGORY_WEIGHTS_JS, STEP4_DIFFICULTY_RATIOS, getLanguageCategories,
+    STEP4_CATEGORY_WEIGHTS_JAVA, STEP4_CATEGORY_WEIGHTS_JS, STEP4_DIFFICULTY_RATIOS,
+    STEP4_SUBTYPE_SPLIT, getLanguageCategories,
   } = await import('@/lib/assessment-config')
 
   const categories = getLanguageCategories(4, targetCodingArea)
-  if (!categories) return fetchRandomByDifficulty(quizIds, 30)
+  if (!categories) return fetchRandomByDifficulty(quizIds, 60)
 
   const weights = targetCodingArea === 'java' ? STEP4_CATEGORY_WEIGHTS_JAVA : STEP4_CATEGORY_WEIGHTS_JS
   const allQuestions = await fetchAllQuestions(quizIds)
@@ -281,36 +294,51 @@ async function fetchStep4DevStyle(quizIds: string | string[], targetCodingArea: 
   const result: QuestionWithOptions[] = []
   const usedIds = new Set<string>()
 
-  for (const [category, targetCount] of Object.entries(weights)) {
+  for (const [category, categoryTarget] of Object.entries(weights)) {
     const categoryPool = filtered.filter(q => q.question_category === category)
     if (categoryPool.length === 0) continue
 
-    const picked: QuestionWithOptions[] = []
+    const categoryPicked: QuestionWithOptions[] = []
 
-    for (const [difficulty, ratio] of Object.entries(STEP4_DIFFICULTY_RATIOS)) {
-      const count = Math.round(targetCount * ratio)
-      const pool = shuffle(categoryPool.filter(q => q.difficulty === difficulty && !usedIds.has(q.id)))
-      const selected = pool.slice(0, count)
-      selected.forEach(q => usedIds.add(q.id))
-      picked.push(...selected)
+    for (const [subtype, subtypeTarget] of Object.entries(STEP4_SUBTYPE_SPLIT)) {
+      const subtypePool = categoryPool.filter(q => q.question_subtype === subtype)
+
+      // Pick by difficulty ratio within this subtype
+      for (const [difficulty, ratio] of Object.entries(STEP4_DIFFICULTY_RATIOS)) {
+        const count = Math.round(subtypeTarget * ratio)
+        const pool = shuffle(subtypePool.filter(q => q.difficulty === difficulty && !usedIds.has(q.id)))
+        const selected = pool.slice(0, count)
+        selected.forEach(q => usedIds.add(q.id))
+        categoryPicked.push(...selected)
+      }
+
+      // Rounding fix within subtype
+      const subtypePicked = categoryPicked.filter(q => q.question_subtype === subtype).length
+      if (subtypePicked < subtypeTarget) {
+        const remaining = shuffle(subtypePool.filter(q => !usedIds.has(q.id)))
+        const needed = remaining.slice(0, subtypeTarget - subtypePicked)
+        needed.forEach(q => usedIds.add(q.id))
+        categoryPicked.push(...needed)
+      }
     }
 
-    if (picked.length < targetCount) {
+    // Fallback: if code_reading shortage, fill from concept (or vice versa)
+    if (categoryPicked.length < categoryTarget) {
       const remaining = shuffle(categoryPool.filter(q => !usedIds.has(q.id)))
-      const needed = remaining.slice(0, targetCount - picked.length)
+      const needed = remaining.slice(0, categoryTarget - categoryPicked.length)
       needed.forEach(q => usedIds.add(q.id))
-      picked.push(...needed)
+      categoryPicked.push(...needed)
     }
 
-    result.push(...shuffle(picked))
+    result.push(...shuffle(categoryPicked))
   }
 
   if (result.length > 0) return shuffle(result)
 
   // Fallback: language group selection
-  const langResult = await fetchRandomByLanguageGroup(quizIds, categories, 30)
+  const langResult = await fetchRandomByLanguageGroup(quizIds, categories, 60)
   if (langResult.length > 0) return langResult
-  return fetchRandomByDifficulty(quizIds, 30)
+  return fetchRandomByDifficulty(quizIds, 60)
 }
 
 /** Fetch random assessment questions based on step and optional target coding area */

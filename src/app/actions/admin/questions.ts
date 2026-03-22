@@ -18,7 +18,10 @@ interface QuestionFormData {
   question_type: string
   difficulty: string
   question_category: string | null
+  question_subtype: string | null
   explanation: string | null
+  topic_key?: string | null
+  question_usage_scope?: 'understanding_only' | 'comprehensive_only' | 'exclude' | null
   options: QuestionOptionData[]
 }
 
@@ -47,7 +50,10 @@ export async function createQuestion(quizId: string, data: QuestionFormData) {
       question_type: data.question_type,
       difficulty: data.difficulty,
       question_category: data.question_category,
+      question_subtype: data.question_subtype,
       explanation: data.explanation,
+      ...(data.topic_key !== undefined ? { topic_key: data.topic_key } : {}),
+      question_usage_scope: data.question_usage_scope ?? null,
       points: 1,
       sort_order: nextOrder,
       is_published: true,
@@ -97,7 +103,10 @@ export async function updateQuestion(questionId: string, data: QuestionFormData)
       question_text: data.question_text,
       difficulty: data.difficulty,
       question_category: data.question_category,
+      question_subtype: data.question_subtype,
       explanation: data.explanation,
+      ...(data.topic_key !== undefined ? { topic_key: data.topic_key } : {}),
+      question_usage_scope: data.question_usage_scope ?? null,
     })
     .eq('id', questionId)
 
@@ -178,6 +187,7 @@ interface QuestionResult {
   question_type: string
   difficulty: string | null
   question_category: string | null
+  question_subtype: string | null
   explanation: string | null
   is_published: boolean
   sort_order: number
@@ -202,7 +212,7 @@ export async function fetchQuestionsForQuizIds(quizIds: string[]): Promise<{ que
   // so a quiz with 250 questions × 4 options = 1000 rows already hits the cap.
   type QRow = {
     id: string; quiz_id: string; question_text: string; question_type: string;
-    difficulty: string | null; question_category: string | null; explanation: string | null;
+    difficulty: string | null; question_category: string | null; question_subtype: string | null; explanation: string | null;
     is_published: boolean; sort_order: number;
     quiz_question_options: { id: string; option_text: string; is_correct: boolean; sort_order: number }[]
   }
@@ -210,7 +220,7 @@ export async function fetchQuestionsForQuizIds(quizIds: string[]): Promise<{ que
   for (const qid of quizIds) {
     const { data } = await serviceClient
       .from('quiz_questions')
-      .select('id, quiz_id, question_text, question_type, difficulty, question_category, explanation, is_published, sort_order, quiz_question_options(id, option_text, is_correct, sort_order)')
+      .select('id, quiz_id, question_text, question_type, difficulty, question_category, question_subtype, explanation, is_published, sort_order, quiz_question_options(id, option_text, is_correct, sort_order)')
       .eq('quiz_id', qid)
       .order('sort_order')
     if (data) allQuestions = [...allQuestions, ...(data as unknown as QRow[])]
@@ -249,6 +259,7 @@ export async function fetchQuestionsForQuizIds(quizIds: string[]): Promise<{ que
     question_type: q.question_type,
     difficulty: q.difficulty,
     question_category: q.question_category,
+    question_subtype: q.question_subtype,
     explanation: q.explanation,
     is_published: q.is_published,
     sort_order: q.sort_order,
@@ -267,6 +278,8 @@ interface QuestionPageFilters {
   category?: string | null
   published?: 'published' | 'unpublished' | ''
   claimsOnly?: boolean
+  questionUsageScope?: 'understanding_only' | 'comprehensive_only' | 'exclude' | null
+  excludeOutOfScope?: boolean
 }
 
 interface QuestionPageResult {
@@ -293,9 +306,43 @@ const CS_ADMIN_CATEGORY_GROUPS: Record<string, string[]> = {
   security: ['security', 'security_check_1', 'security_check_2', 'security_final'],
 }
 
+const CS_ADMIN_UNDERSTANDING_CATEGORY_GROUPS: Record<string, string[]> = {
+  basic_theory: ['basic_theory_check_1', 'basic_theory_check_2', 'basic_theory_final'],
+  data_structure: ['data_structure_check_1', 'data_structure_check_2', 'data_structure_final'],
+  algorithm: ['algorithm_check_1', 'algorithm_check_2', 'algorithm_final'],
+  computer_architecture: [
+    'computer_architecture_check_1',
+    'computer_architecture_check_2',
+    'computer_architecture_final',
+  ],
+  database: ['database_check_1', 'database_check_2', 'database_final'],
+  network: ['network_check_1', 'network_check_2', 'network_final'],
+  os: ['os_check_1', 'os_check_2', 'os_final'],
+  security: ['security_check_1', 'security_check_2', 'security_final'],
+}
+
+const CS_ADMIN_COMPREHENSIVE_CATEGORY_GROUPS: Record<string, string[]> = {
+  basic_theory: ['basic_theory'],
+  data_structure: ['data_structure'],
+  algorithm: ['algorithm'],
+  computer_architecture: ['computer_architecture'],
+  database: ['database'],
+  network: ['network'],
+  os: ['os'],
+  security: ['security'],
+}
+
 function getAdminCategoryFilterValues(category: string | null | undefined): string[] | null {
   if (!category) return null
   if (category === '__legacy_unclassified__') return null
+  if (category.startsWith('__cs_understanding_subject__:')) {
+    const subject = category.replace('__cs_understanding_subject__:', '')
+    return CS_ADMIN_UNDERSTANDING_CATEGORY_GROUPS[subject] ?? [subject]
+  }
+  if (category.startsWith('__cs_comprehensive_subject__:')) {
+    const subject = category.replace('__cs_comprehensive_subject__:', '')
+    return CS_ADMIN_COMPREHENSIVE_CATEGORY_GROUPS[subject] ?? [subject]
+  }
   if (category.startsWith('__cs_subject__:')) {
     const subject = category.replace('__cs_subject__:', '')
     return CS_ADMIN_CATEGORY_GROUPS[subject] ?? [subject]
@@ -357,6 +404,12 @@ export async function fetchQuestionsPage(
     } else if (filters.published === 'unpublished') {
       q = q.eq('is_published', false)
     }
+    if (filters.questionUsageScope) {
+      q = q.eq('question_usage_scope', filters.questionUsageScope)
+    }
+    if (filters.excludeOutOfScope) {
+      q = q.or('curriculum_status.is.null,curriculum_status.eq.aligned,curriculum_status.eq.adaptable')
+    }
     if (claimedIds) {
       q = q.in('id', claimedIds)
     }
@@ -401,7 +454,7 @@ export async function fetchQuestionsPage(
 
   // Step 2: Question query (no options join to avoid 1000-row limit)
   const dataQuery = applyFilters(
-    serviceClient.from('quiz_questions').select('id, quiz_id, question_text, question_type, difficulty, question_category, explanation, is_published, sort_order')
+    serviceClient.from('quiz_questions').select('id, quiz_id, question_text, question_type, difficulty, question_category, question_subtype, explanation, is_published, sort_order')
   )
   const { data: questionRows } = await dataQuery
     .order('sort_order')
@@ -413,7 +466,7 @@ export async function fetchQuestionsPage(
 
   type QRow = {
     id: string; quiz_id: string; question_text: string; question_type: string;
-    difficulty: string | null; question_category: string | null; explanation: string | null;
+    difficulty: string | null; question_category: string | null; question_subtype: string | null; explanation: string | null;
     is_published: boolean; sort_order: number;
   }
   const rows = questionRows as unknown as QRow[]
@@ -471,6 +524,7 @@ export async function fetchQuestionsPage(
     question_type: q.question_type,
     difficulty: q.difficulty,
     question_category: q.question_category,
+    question_subtype: q.question_subtype,
     explanation: q.explanation,
     is_published: q.is_published,
     sort_order: q.sort_order,

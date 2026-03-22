@@ -49,13 +49,14 @@ const categoryLabels: Record<string, string> = {
   data_structure: 'データ構造',
   os: 'OS',
   network: 'ネットワーク',
-  java_core: 'Java基礎',
+  java: 'Java',
   spring_boot: 'Spring Boot',
-  javascript_core: 'JavaScript基礎',
+  javascript: 'JavaScript',
   react: 'React',
   sql: 'SQL',
-  java_code: 'Javaコード読解',
-  db_design: 'DB設計',
+  cwf: '共通業務基礎',
+  python: 'Python',
+  nextjs: 'Next.js',
   vocabulary: '語彙(ビジネス)',
   sentence_pattern: '文型(ビジネス)',
   business_expression: 'ビジネス表現',
@@ -66,9 +67,6 @@ const categoryLabels: Record<string, string> = {
   business_manner: 'ビジネスマナー',
   communication: 'コミュニケーション',
   cross_culture: '異文化理解',
-  java: 'Java',
-  javascript: 'JavaScript',
-  javascript_code: 'JavaScriptコード読解',
 }
 
 /**

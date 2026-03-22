@@ -22,10 +22,10 @@ export const DEV_QUIZ_SUBJECT_LABELS: Record<DevQuizSubject, string> = {
 }
 
 export const DEV_QUIZ_SET_DEFINITIONS = [
-  { quizId: 'e0000001-0000-0000-0000-000000000001', category: 'java', courseId: 'dev-java', questionCategory: 'java_core' },
+  { quizId: 'e0000001-0000-0000-0000-000000000001', category: 'java', courseId: 'dev-java', questionCategory: 'java' },
   { quizId: 'e0000001-0000-0000-0000-000000000002', category: 'spring_boot', courseId: 'dev-spring-boot', questionCategory: 'spring_boot' },
   { quizId: 'e0000001-0000-0000-0000-000000000003', category: 'sql', courseId: 'dev-sql', questionCategory: 'sql' },
-  { quizId: 'e0000001-0000-0000-0000-000000000004', category: 'javascript', courseId: 'dev-javascript', questionCategory: 'javascript_core' },
+  { quizId: 'e0000001-0000-0000-0000-000000000004', category: 'javascript', courseId: 'dev-javascript', questionCategory: 'javascript' },
   { quizId: 'e0000001-0000-0000-0000-000000000005', category: 'react', courseId: 'dev-react', questionCategory: 'react' },
   { quizId: 'e0000001-0000-0000-0000-000000000007', category: 'cwf', courseId: 'dev-common-workplace-fundamentals', questionCategory: 'cwf' },
   { quizId: 'e0000001-0000-0000-0000-000000000008', category: 'python', courseId: 'dev-python', questionCategory: 'python' },

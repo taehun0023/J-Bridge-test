@@ -18,7 +18,7 @@ export const ASSESSMENT_TIME_LIMITS: Record<number, number> = {
   1: 50,
   2: 50,
   3: 30,
-  4: 30,
+  4: 60,
   5: 25,
 }
 
@@ -26,7 +26,7 @@ export const ASSESSMENT_TOTAL_QUESTIONS: Record<number, number> = {
   1: 60,
   2: 60,
   3: 30,
-  4: 30,
+  4: 60,
   5: 30,
 }
 
@@ -99,10 +99,10 @@ export const CS_POOL_QUIZ_IDS: Record<string, string> = {
 }
 
 export const DEV_POOL_QUIZ_IDS: Record<string, string> = {
-  java_core: 'e0000001-0000-0000-0000-000000000001',
+  java: 'e0000001-0000-0000-0000-000000000001',
   spring_boot: 'e0000001-0000-0000-0000-000000000002',
   sql: 'e0000001-0000-0000-0000-000000000003',
-  javascript_core: 'e0000001-0000-0000-0000-000000000004',
+  javascript: 'e0000001-0000-0000-0000-000000000004',
   react: 'e0000001-0000-0000-0000-000000000005',
   sql_shared: 'e0000001-0000-0000-0000-000000000006',
 }
@@ -266,6 +266,26 @@ export const CS_KNOWLEDGE_CATEGORIES = [
   'security',
 ] as const
 
+export const CS_COMPREHENSIVE_CATEGORIES = [
+  'basic_theory',
+  'data_structure',
+  'algorithm',
+  'computer_architecture',
+  'database',
+  'network',
+  'os',
+  'security',
+] as const
+
+export const CS_COMPREHENSIVE_CATEGORY_COUNT = 10
+export const CS_COMPREHENSIVE_TOTAL_QUESTIONS = CS_COMPREHENSIVE_CATEGORIES.length * CS_COMPREHENSIVE_CATEGORY_COUNT
+
+export const CS_COMPREHENSIVE_DIFFICULTY_COUNTS = {
+  easy: 3,
+  medium: 5,
+  hard: 2,
+} as const
+
 export const CS_KNOWLEDGE_WEIGHTS: Record<string, number> = {
   algorithm: 5,
   data_structure: 5,
@@ -284,28 +304,31 @@ export const STEP3_DIFFICULTY_RATIOS: Record<string, number> = {
 }
 
 export const STEP4_CATEGORY_WEIGHTS_JAVA: Record<string, number> = {
-  java_core: 10,
-  spring_boot: 8,
-  sql: 6,
-  java_code: 6,
+  java: 20,
+  spring_boot: 20,
+  sql: 20,
 }
 
 export const STEP4_CATEGORY_WEIGHTS_JS: Record<string, number> = {
-  javascript_core: 10,
-  react: 8,
-  sql: 6,
-  javascript_code: 6,
+  javascript: 20,
+  react: 20,
+  sql: 20,
 }
 
 export const STEP4_DIFFICULTY_RATIOS: Record<string, number> = {
-  easy: 0.2,
-  medium: 0.4,
-  hard: 0.4,
+  easy: 0.3,
+  medium: 0.5,
+  hard: 0.2,
+}
+
+export const STEP4_SUBTYPE_SPLIT: Record<string, number> = {
+  concept: 10,
+  code_reading: 10,
 }
 
 const DEV_PRACTICAL_GROUPS: Record<TargetCodingArea, string[]> = {
-  java: ['java_core', 'spring_boot', 'sql', 'java_code'],
-  javascript: ['javascript_core', 'react', 'sql', 'javascript_code'],
+  java: ['java', 'spring_boot', 'sql'],
+  javascript: ['javascript', 'react', 'sql'],
 }
 
 export function getLanguageCategories(step: number, targetCodingArea: string | null): string[] | null {
