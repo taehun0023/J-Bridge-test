@@ -1,11 +1,26 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { requireAdminOrTechMentor } from '@/lib/auth-helpers'
+import { requireAdmin } from '@/lib/auth-helpers'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { logAuditEvent } from '@/app/actions/audit'
 import { ERR } from '@/lib/action-types'
 import { getCacheKey, BUCKET } from '@/lib/tts-utils'
+
+// Check if a question is used in any in-progress comprehensive exam
+async function checkQuestionInActiveExam(
+  serviceClient: NonNullable<ReturnType<typeof createServiceRoleClient>>,
+  questionId: string
+): Promise<boolean> {
+  const { data } = await serviceClient
+    .from('comprehensive_exam_questions')
+    .select('id, comprehensive_exams!inner(status)')
+    .eq('question_id', questionId)
+    .eq('comprehensive_exams.status', 'in_progress')
+    .limit(1)
+
+  return (data?.length ?? 0) > 0
+}
 
 interface QuestionOptionData {
   option_text: string
@@ -26,7 +41,7 @@ interface QuestionFormData {
 }
 
 export async function createQuestion(quizId: string, data: QuestionFormData) {
-  const auth = await requireAdminOrTechMentor()
+  const auth = await requireAdmin()
   if ('error' in auth) return { error: auth.error } as const
 
   const serviceClient = createServiceRoleClient()
@@ -84,11 +99,14 @@ export async function createQuestion(quizId: string, data: QuestionFormData) {
 }
 
 export async function updateQuestion(questionId: string, data: QuestionFormData) {
-  const auth = await requireAdminOrTechMentor()
+  const auth = await requireAdmin()
   if ('error' in auth) return { error: auth.error } as const
 
   const serviceClient = createServiceRoleClient()
   if (!serviceClient) return { error: ERR.SERVICE_KEY_MISSING }
+
+  const inActiveExam = await checkQuestionInActiveExam(serviceClient, questionId)
+  if (inActiveExam) return { error: ERR.QUESTION_IN_ACTIVE_EXAM }
 
   // Fetch old data for audit
   const { data: oldData } = await serviceClient
@@ -133,6 +151,12 @@ export async function updateQuestion(questionId: string, data: QuestionFormData)
 
   if (optError) return { error: optError.message }
 
+  // Auto-resolve claims: editing a question implies the issue is addressed
+  await serviceClient
+    .from('question_claims')
+    .delete()
+    .eq('question_id', questionId)
+
   // Clean up old TTS cache if question text changed (listening questions)
   if (oldData && oldData.question_text !== data.question_text) {
     const oldHash = getCacheKey(oldData.question_text.replace(/\\n/g, '\n'), 1.0)
@@ -146,11 +170,14 @@ export async function updateQuestion(questionId: string, data: QuestionFormData)
 }
 
 export async function deleteQuestion(questionId: string) {
-  const auth = await requireAdminOrTechMentor()
+  const auth = await requireAdmin()
   if ('error' in auth) return { error: auth.error } as const
 
   const serviceClient = createServiceRoleClient()
   if (!serviceClient) return { error: ERR.SERVICE_KEY_MISSING }
+
+  const inActiveExam = await checkQuestionInActiveExam(serviceClient, questionId)
+  if (inActiveExam) return { error: ERR.QUESTION_IN_ACTIVE_EXAM }
 
   // Fetch old data for audit
   const { data: oldData } = await serviceClient
@@ -201,7 +228,7 @@ interface QuestionResult {
  * Used by admin content management to avoid loading all questions at once.
  */
 export async function fetchQuestionsForQuizIds(quizIds: string[]): Promise<{ questions: QuestionResult[]; error?: string }> {
-  const auth = await requireAdminOrTechMentor()
+  const auth = await requireAdmin()
   if ('error' in auth) return { questions: [], error: auth.error }
 
   const serviceClient = createServiceRoleClient()
@@ -359,7 +386,7 @@ export async function fetchQuestionsPage(
   offset: number,
   limit: number = PAGE_SIZE_DEFAULT
 ): Promise<QuestionPageResult> {
-  const auth = await requireAdminOrTechMentor()
+  const auth = await requireAdmin()
   if ('error' in auth) return { questions: [], totalCount: 0, hasMore: false, availableCategories: [], error: auth.error }
 
   const serviceClient = createServiceRoleClient()
@@ -542,11 +569,14 @@ export async function fetchQuestionsPage(
 }
 
 export async function toggleQuestionPublished(questionId: string, isPublished: boolean) {
-  const auth = await requireAdminOrTechMentor()
+  const auth = await requireAdmin()
   if ('error' in auth) return { error: auth.error } as const
 
   const serviceClient = createServiceRoleClient()
   if (!serviceClient) return { error: ERR.SERVICE_KEY_MISSING }
+
+  const inActiveExam = await checkQuestionInActiveExam(serviceClient, questionId)
+  if (inActiveExam) return { error: ERR.QUESTION_IN_ACTIVE_EXAM }
 
   // Fetch old data for audit
   const { data: oldData } = await serviceClient

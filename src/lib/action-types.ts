@@ -39,4 +39,5 @@ export const ERR = {
 
   // State
   ALREADY_REQUESTED: '既にリクエスト済みです',
+  QUESTION_IN_ACTIVE_EXAM: '進行中の試験で使用されている問題は編集できません',
 } as const

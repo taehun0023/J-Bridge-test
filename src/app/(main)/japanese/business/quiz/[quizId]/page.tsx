@@ -24,7 +24,7 @@ export default async function BusinessQuizPage({ params }: { params: Promise<Par
 
   const backUrl = quiz.is_pool
     ? `/japanese/business/quiz/tests?type=${quiz.quiz_type}`
-    : '/japanese/business/quiz'
+    : `/japanese/business/quiz?type=${quiz.quiz_type}`
 
   // 1-attempt guard for mentees
   const { data: { user } } = await supabase.auth.getUser()

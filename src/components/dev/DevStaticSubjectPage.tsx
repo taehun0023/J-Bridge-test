@@ -82,8 +82,8 @@ export default function DevStaticSubjectPage({
         </div>
       </div>
 
-      {/* Tab bar */}
-      {certCourses !== undefined || activeTab === 'learn' ? (
+      {/* Tab bar — only show when cert content exists */}
+      {certCourses !== undefined ? (
         <div className="mb-6 flex gap-1 overflow-x-auto border-b border-gray-200 pb-px dark:border-white/[0.06]">
           <Link
             href={pathname}

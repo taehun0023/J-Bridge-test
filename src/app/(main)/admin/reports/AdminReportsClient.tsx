@@ -325,19 +325,15 @@ export default function AdminReportsClient({
               disabled={pending}
               className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
             >
-              {copied ? (
-                <>
-                  <Check className="h-4 w-4" />
-                  コピー完了
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4" />
-                  <ClipboardCopy className="h-4 w-4" />
-                  AIプロンプトをコピー
-                </>
-              )}
+              <Sparkles className="h-4 w-4" />
+              <ClipboardCopy className="h-4 w-4" />
+              AIプロンプトをコピー
             </button>
+            {copied && (
+              <div className="mt-2 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-700 dark:border-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300">
+                コピーが完了しました。ChatGPTなどのAIチャットに貼り付けて、指導方法をご参考ください。
+              </div>
+            )}
           </div>
         </>
       ) : !pending && !selectedUser ? (

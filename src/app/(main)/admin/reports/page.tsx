@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import AdminReportsClient from './AdminReportsClient'
@@ -49,22 +48,13 @@ export default async function AdminReportsPage({ searchParams }: Props) {
 
   return (
     <div>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Admin Reports</h1>
-          <p className="mt-1 text-gray-500 dark:text-gray-400">
-            {myRole === 'mentor'
-              ? 'Review reports for your assigned mentees.'
-              : 'Review user-level reports and governance summaries.'}
-          </p>
-        </div>
-
-        <Link
-          href="/admin/reports/cs-governance"
-          className="inline-flex items-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-        >
-          CS Governance Report
-        </Link>
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">レポート</h1>
+        <p className="mt-1 text-gray-500 dark:text-gray-400">
+          {myRole === 'mentor'
+            ? '担当メンティーのレポートを確認できます。'
+            : 'ユーザーごとの成績レポートを確認できます。'}
+        </p>
       </div>
 
       <div className="mt-6">

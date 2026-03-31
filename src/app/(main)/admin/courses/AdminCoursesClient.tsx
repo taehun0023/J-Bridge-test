@@ -3,7 +3,7 @@
 import React, { useState, useTransition, useEffect, useCallback, useRef } from 'react'
 import Badge from '@/components/ui/Badge'
 import { createQuestion, updateQuestion, deleteQuestion, toggleQuestionPublished, fetchQuestionsPage } from '@/app/actions/admin/questions'
-import { resolveQuestionClaims } from '@/app/actions/claims'
+import { resolveQuestionClaims, resolveMultipleQuestionClaims } from '@/app/actions/claims'
 import { CS_QUIZ_SET_DEFINITIONS } from '@/lib/cs-quiz'
 import { useRouter } from 'next/navigation'
 
@@ -750,8 +750,33 @@ export default function AdminCoursesClient({
       if (result.error) showMsg(result.error, 'error')
       else {
         showMsg(editingQuestion ? '問題を更新しました' : '問題を追加しました', 'success')
-        closeForm()
-        invalidateCache()
+        if (editingQuestion) {
+          // Local state update — preserve scroll position
+          setQuestions(prev => prev.map(q =>
+            q.id === editingQuestion.id
+              ? {
+                  ...q,
+                  question_text: data.question_text,
+                  difficulty: data.difficulty,
+                  question_category: data.question_category,
+                  question_subtype: data.question_subtype ?? null,
+                  explanation: data.explanation,
+                  options: data.options.map((o, i) => ({
+                    id: `local-${i}`,
+                    option_text: o.option_text,
+                    is_correct: o.is_correct,
+                    sort_order: o.sort_order,
+                  })),
+                  claim_count: 0,
+                  claim_details: [],
+                }
+              : q
+          ))
+          closeForm()
+        } else {
+          closeForm()
+          invalidateCache()
+        }
       }
     })
   }
@@ -762,7 +787,11 @@ export default function AdminCoursesClient({
       if (result.error) showMsg(result.error, 'error')
       else {
         showMsg(q.is_published ? '非公開にしました' : '公開しました', 'success')
-        invalidateCache()
+        setQuestions(prev => prev.map(existing =>
+          existing.id === q.id
+            ? { ...existing, is_published: !q.is_published }
+            : existing
+        ))
       }
     })
   }
@@ -787,8 +816,34 @@ export default function AdminCoursesClient({
       } else {
         showMsg('クレームを全件解決しました', 'success')
         setClaimDetailId(null)
-        invalidateCache()
-        router.refresh()
+        setQuestions(prev => prev.map(q =>
+          q.id === questionId
+            ? { ...q, claim_count: 0, claim_details: [] }
+            : q
+        ))
+      }
+    })
+  }
+
+  function handleBatchResolveClaims() {
+    const claimedIds = questions.filter(q => q.claim_count > 0).map(q => q.id)
+    if (claimedIds.length === 0) {
+      showMsg('解決するクレームがありません', 'error')
+      return
+    }
+    if (!confirm(`${claimedIds.length}件の問題のクレームを一括解決しますか？`)) return
+
+    startTransition(async () => {
+      const result = await resolveMultipleQuestionClaims(claimedIds)
+      if (result.error) {
+        showMsg(result.error, 'error')
+      } else {
+        showMsg(`${claimedIds.length}件の問題のクレームを解決しました`, 'success')
+        setQuestions(prev => prev.map(q =>
+          claimedIds.includes(q.id)
+            ? { ...q, claim_count: 0, claim_details: [] }
+            : q
+        ))
       }
     })
   }
@@ -939,6 +994,15 @@ export default function AdminCoursesClient({
           />
           クレームあり
         </label>
+        {questions.some(q => q.claim_count > 0) && (
+          <button
+            onClick={handleBatchResolveClaims}
+            disabled={pending}
+            className="rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100 dark:border-red-600 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
+          >
+            クレーム一括解決
+          </button>
+        )}
         <span className="text-sm text-gray-500 dark:text-gray-400">
           {filteredQuestions.length} / {totalCount}件 表示中
         </span>

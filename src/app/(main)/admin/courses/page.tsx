@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import Card from '@/components/ui/Card'
 import AdminCoursesClient from './AdminCoursesClient'
 import {
@@ -30,6 +31,12 @@ const CS_UNDERSTANDING_QUESTION_CATEGORIES = [...new Set(CS_QUIZ_SET_DEFINITIONS
 
 export default async function AdminCoursesPage() {
   const supabase = await createClient()
+
+  // Admin-only page guard
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'admin') redirect('/dashboard')
 
   // ── Lightweight: only fetch quiz metadata + counts ──
 

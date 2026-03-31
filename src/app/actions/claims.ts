@@ -15,6 +15,23 @@ export async function resolveQuestionClaims(questionId: string): Promise<{ succe
   return { success: true }
 }
 
+export async function resolveMultipleQuestionClaims(
+  questionIds: string[]
+): Promise<{ success?: boolean; error?: string }> {
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error as string }
+
+  if (questionIds.length === 0) return { success: true }
+
+  const { error } = await auth.serviceClient
+    .from('question_claims')
+    .delete()
+    .in('question_id', questionIds)
+
+  if (error) return { error: 'クレームの一括削除に失敗しました' }
+  return { success: true }
+}
+
 export async function submitQuestionClaim(questionId: string, reason?: string): Promise<{ success?: boolean; error?: string }> {
   const auth = await requireAuth()
   if ('error' in auth) return { error: auth.error } as const

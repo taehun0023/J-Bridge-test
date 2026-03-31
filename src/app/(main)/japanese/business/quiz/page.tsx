@@ -66,9 +66,13 @@ export default async function BusinessQuizListPage({ searchParams }: { searchPar
   }
 
   const validTypes = ['it_terminology', 'sentence_pattern', 'business_expression', 'keigo']
-  const quizTypes = params.type && validTypes.includes(params.type)
-    ? [params.type]
-    : validTypes
+
+  // Require a specific type param — don't show all quizzes at once
+  if (!params.type || !validTypes.includes(params.type)) {
+    redirect('/japanese/business')
+  }
+
+  const quizTypes = [params.type]
 
   const { data: quizzes } = await supabase
     .from('quizzes')

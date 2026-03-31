@@ -96,7 +96,7 @@ export const categoryChildren: Record<
     ],
   },
   'business-lit': {
-    title: 'ビジネス素養',
+    title: 'ビジネスリテラシー',
     description: '職場で必要な態度、文化理解、情報セキュリティを学習します。',
     children: [
       { href: '/business-literacy/attitude-culture', label: '態度・文化', description: '職場で求められる姿勢と文化理解' },
@@ -111,7 +111,7 @@ export const mainNavItems: NavItem[] = [
   { key: 'business-jp', href: '/japanese/business', label: 'ビジネス日本語', icon: Briefcase },
   { key: 'cs', href: '/cs', label: 'CS知識', icon: Cpu },
   { key: 'dev', href: '/dev', label: '開発実務', icon: Code2 },
-  { key: 'business-lit', href: '/business-literacy', label: 'ビジネス素養', icon: Handshake },
+  { key: 'business-lit', href: '/business-literacy', label: 'ビジネスリテラシー', icon: Handshake },
 ]
 
 export const adminNavItems: AdminNavItem[] = [
