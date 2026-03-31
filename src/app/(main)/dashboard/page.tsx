@@ -6,6 +6,7 @@ import type { RankingUserData } from '@/lib/ranking'
 import DashboardClient from './DashboardClient'
 import ExamGatePage from '@/components/dashboard/ExamGatePage'
 import { checkAndCreateExamCycle, getNextExamDate } from '@/app/actions/exam-scheduling'
+import { expireStaleExams } from '@/app/actions/comprehensive-exam'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -20,6 +21,11 @@ export default async function DashboardPage() {
 
   const isJapanese = profile?.is_japanese ?? false
   const isAdmin = profile?.role === 'admin'
+
+  // ──────────────────────────────────────────────
+  // Phase 0.3: Auto-fail expired in_progress exams
+  // ──────────────────────────────────────────────
+  await expireStaleExams(user.id)
 
   // ──────────────────────────────────────────────
   // Phase 0.5: Mentee exam gate check
@@ -75,7 +81,7 @@ export default async function DashboardPage() {
       .eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
     // 10. 종합시험 재시험 정보
     supabase.from('comprehensive_exams').select('id, category, score, status')
-      .eq('user_id', user.id).in('status', ['completed', 'failed', 'requested', 'approved'])
+      .eq('user_id', user.id).in('status', ['completed', 'failed', 'requested', 'approved', 'in_progress'])
       .order('requested_at', { ascending: false }),
   ])
 
@@ -142,11 +148,11 @@ export default async function DashboardPage() {
   }
 
   // 종합시험 재시험 맵 (category 단위로 집약)
-  const STATUS_PRIORITY: Record<string, number> = { approved: 4, requested: 3, failed: 2, completed: 1 }
+  const STATUS_PRIORITY: Record<string, number> = { in_progress: 5, approved: 4, requested: 3, failed: 2, completed: 1 }
   const compExamRetakeByCategory: Record<string, {
     examId: string
     score: number | null
-    retakeStatus: 'completed' | 'failed' | 'requested' | 'approved'
+    retakeStatus: 'completed' | 'failed' | 'requested' | 'approved' | 'in_progress'
   }> = {}
 
   for (const exam of userCompExams ?? []) {
@@ -159,7 +165,7 @@ export default async function DashboardPage() {
       compExamRetakeByCategory[key] = {
         examId: exam.id,
         score: exam.score,
-        retakeStatus: exam.status as 'completed' | 'failed' | 'requested' | 'approved',
+        retakeStatus: exam.status as 'completed' | 'failed' | 'requested' | 'approved' | 'in_progress',
       }
     }
   }

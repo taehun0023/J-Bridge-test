@@ -831,7 +831,9 @@ export default function AdminCoursesClient({
       showMsg('解決するクレームがありません', 'error')
       return
     }
-    if (!confirm(`${claimedIds.length}件の問題のクレームを一括解決しますか？`)) return
+    const sectionLabel = activeSection === 'assessment' ? '総合試験' : '理解度テスト'
+    const scopeLabel = `${currentAxis.label} > ${sectionLabel}`
+    if (!confirm(`【${scopeLabel}】\n${claimedIds.length}件の問題のクレームを一括解決しますか？\n\n※ この操作は元に戻せません`)) return
 
     startTransition(async () => {
       const result = await resolveMultipleQuestionClaims(claimedIds)

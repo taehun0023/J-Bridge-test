@@ -563,3 +563,56 @@ export async function submitExam(
 
   return { score, passed, correctCount, totalCount: totalQ, results }
 }
+
+/**
+ * Auto-fail exams that are still in_progress but have exceeded their time limit.
+ * Called from dashboard page load and exam page access.
+ * Uses a 5-minute grace period beyond the time limit.
+ */
+export async function expireStaleExams(userId: string): Promise<number> {
+  const serviceClient = createServiceRoleClient()
+  if (!serviceClient) return 0
+
+  const { data: staleExams } = await serviceClient
+    .from('comprehensive_exams')
+    .select('id, started_at, time_limit_minutes, subcategory')
+    .eq('user_id', userId)
+    .eq('status', 'in_progress')
+    .not('started_at', 'is', null)
+
+  if (!staleExams || staleExams.length === 0) return 0
+
+  const now = Date.now()
+  const GRACE_MINUTES = 5
+  let expiredCount = 0
+
+  for (const exam of staleExams) {
+    const startedAt = new Date(exam.started_at).getTime()
+    const limitMs = (exam.time_limit_minutes + GRACE_MINUTES) * 60 * 1000
+    if (now - startedAt <= limitMs) continue
+
+    const { error } = await serviceClient
+      .from('comprehensive_exams')
+      .update({
+        status: 'failed',
+        completed_at: new Date().toISOString(),
+        score: 0,
+        passed: false,
+      })
+      .eq('id', exam.id)
+      .eq('status', 'in_progress')
+
+    if (!error) {
+      expiredCount++
+      if (exam.subcategory === 'comprehensive') {
+        await tryCompleteActiveCycle(userId)
+      }
+    }
+  }
+
+  if (expiredCount > 0) {
+    await recalculateUserScores(userId)
+  }
+
+  return expiredCount
+}

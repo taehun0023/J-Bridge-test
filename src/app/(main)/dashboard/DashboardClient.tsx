@@ -80,7 +80,7 @@ interface Props {
   topRanking?: TopRankingEntry[] | null
   learningStats?: LearningStats
   recentFeedbacks?: RecentFeedback[]
-  compExamRetakeByCategory?: Record<string, { examId: string; score: number | null; retakeStatus: 'completed' | 'failed' | 'requested' | 'approved' }>
+  compExamRetakeByCategory?: Record<string, { examId: string; score: number | null; retakeStatus: 'completed' | 'failed' | 'requested' | 'approved' | 'in_progress' }>
   role?: string
   nextExamDate?: string | null
 }
@@ -280,7 +280,14 @@ export default function DashboardClient({
                       </span>
                       {retakeInfo ? (
                         <div className="mt-1.5">
-                          {retakeInfo.retakeStatus === 'requested' ? (
+                          {retakeInfo.retakeStatus === 'in_progress' ? (
+                            <Link
+                              href={`/exam/${retakeInfo.examId}`}
+                              className="rounded-md bg-blue-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-blue-500 transition-colors"
+                            >
+                              試験を再開
+                            </Link>
+                          ) : retakeInfo.retakeStatus === 'requested' ? (
                             <span className="text-[10px] text-amber-400">リクエスト中</span>
                           ) : retakeInfo.retakeStatus === 'approved' ? (
                             <Link
@@ -362,7 +369,14 @@ export default function DashboardClient({
                       <p className="mt-1 text-lg font-mono font-bold text-zinc-400 dark:text-zinc-500">—</p>
                       <div className="mt-1.5">
                         {retakeInfo ? (
-                          retakeInfo.retakeStatus === 'requested' ? (
+                          retakeInfo.retakeStatus === 'in_progress' ? (
+                            <Link
+                              href={`/exam/${retakeInfo.examId}`}
+                              className="rounded-md bg-blue-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-blue-500 transition-colors"
+                            >
+                              試験を再開
+                            </Link>
+                          ) : retakeInfo.retakeStatus === 'requested' ? (
                             <span className="text-[10px] text-amber-400">リクエスト中</span>
                           ) : retakeInfo.retakeStatus === 'approved' ? (
                             <Link

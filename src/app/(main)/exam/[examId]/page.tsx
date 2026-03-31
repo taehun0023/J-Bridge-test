@@ -10,12 +10,16 @@ import {
 } from '@/lib/assessment-config'
 import Card from '@/components/ui/Card'
 import Link from 'next/link'
+import { expireStaleExams } from '@/app/actions/comprehensive-exam'
 
 export default async function ExamPage({ params }: { params: Promise<{ examId: string }> }) {
   const { examId } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
+
+  // Auto-fail expired in_progress exams before loading
+  await expireStaleExams(user.id)
 
   const { data: exam } = await supabase
     .from('comprehensive_exams')
