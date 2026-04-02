@@ -11,7 +11,7 @@ export async function resolveQuestionClaims(questionId: string): Promise<{ succe
     .delete()
     .eq('question_id', questionId)
 
-  if (error) return { error: 'クレームの削除に失敗しました' }
+  if (error) return { error: '問い合わせの削除に失敗しました' }
   return { success: true }
 }
 
@@ -28,7 +28,7 @@ export async function resolveMultipleQuestionClaims(
     .delete()
     .in('question_id', questionIds)
 
-  if (error) return { error: 'クレームの一括削除に失敗しました' }
+  if (error) return { error: '問い合わせの一括削除に失敗しました' }
   return { success: true }
 }
 
@@ -58,7 +58,7 @@ export async function submitQuestionClaim(questionId: string, reason?: string): 
   if (error) {
     // Unique violation means already claimed
     if (error.code === '23505') return { success: true }
-    return { error: 'クレーム送信に失敗しました' }
+    return { error: '問い合わせ送信に失敗しました' }
   }
 
   return { success: true }

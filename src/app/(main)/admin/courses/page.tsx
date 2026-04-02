@@ -218,7 +218,7 @@ export default async function AdminCoursesPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white">コンテンツ管理</h1>
-      <p className="mt-1 text-gray-500 dark:text-gray-400">総合試験・理解度テスト問題の管理・クレーム対応</p>
+      <p className="mt-1 text-gray-500 dark:text-gray-400">総合試験・理解度テスト問題の管理・問い合わせ対応</p>
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Card>
@@ -230,7 +230,7 @@ export default async function AdminCoursesPage() {
           <p className="text-2xl font-bold text-blue-600">{axes.reduce((s, a) => s + (a.practiceTypes.length > 0 ? 1 + a.practiceTypes.length : 1), 0)}</p>
         </Card>
         <Card>
-          <p className="text-sm text-gray-500 dark:text-gray-400">クレーム</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">問い合わせ</p>
           <p className="text-2xl font-bold text-red-600">{totalClaims}</p>
         </Card>
         <Card>

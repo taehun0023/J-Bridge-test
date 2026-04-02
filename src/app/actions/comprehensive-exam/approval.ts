@@ -3,7 +3,7 @@
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { requireAdminOrMentor } from '@/lib/auth-helpers'
-import { createNotification } from '@/app/actions/notifications'
+import { createNotification, deleteNotificationsByRelatedId } from '@/app/actions/notifications'
 
 export async function approveExam(examId: string) {
   const auth = await requireAdminOrMentor()
@@ -31,6 +31,9 @@ export async function approveExam(examId: string) {
     .eq('id', examId)
 
   if (error) return { error: error.message }
+
+  // Clean up request notifications sent to other admins/mentors
+  await deleteNotificationsByRelatedId(examId, 'exam_requested')
 
   // Notify mentee
   await createNotification(
@@ -70,6 +73,9 @@ export async function denyExam(examId: string) {
 
   if (error) return { error: error.message }
 
+  // Clean up request notifications sent to other admins/mentors
+  await deleteNotificationsByRelatedId(examId, 'exam_requested')
+
   await createNotification(
     exam.user_id,
     'exam_denied',
@@ -98,6 +104,9 @@ export async function deleteExam(examId: string) {
     .single()
 
   if (!exam) return { error: '試験が見つかりません' }
+
+  // Clean up request notifications
+  await deleteNotificationsByRelatedId(examId, 'exam_requested')
 
   // Delete related answers first (FK constraint)
   await serviceClient

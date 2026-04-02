@@ -36,7 +36,7 @@ export async function bulkDeleteFeedbacks() {
 
   if (error) return { error: error.message }
 
-  revalidatePath('/feedback')
+  revalidatePath('/profile/feedback')
   revalidatePath('/admin/reports')
   revalidatePath('/dashboard')
   return { success: true }
@@ -72,12 +72,12 @@ export async function createFeedbackReply(feedbackId: string, content: string) {
       'feedback_reply',
       'フィードバックに返信がありました',
       content.slice(0, 100),
-      '/feedback',
+      '/profile/feedback',
       feedbackId
     )
   }
 
-  revalidatePath('/feedback')
+  revalidatePath('/profile/feedback')
   return { success: true }
 }
 
@@ -94,7 +94,7 @@ export async function updateFeedbackReply(replyId: string, content: string) {
     .eq('user_id', user.id)
 
   if (error) return { error: error.message }
-  revalidatePath('/feedback')
+  revalidatePath('/profile/feedback')
   return { success: true }
 }
 
@@ -110,6 +110,6 @@ export async function deleteFeedbackReply(replyId: string) {
     .eq('user_id', user.id)
 
   if (error) return { error: error.message }
-  revalidatePath('/feedback')
+  revalidatePath('/profile/feedback')
   return { success: true }
 }

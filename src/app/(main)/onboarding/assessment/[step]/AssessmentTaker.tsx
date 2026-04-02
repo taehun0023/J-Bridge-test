@@ -433,13 +433,13 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
                       {isClaimed ? (
                         <div className="flex justify-end">
                           <span className="rounded-lg bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500">
-                            クレーム送信済み
+                            問い合わせ送信済み
                           </span>
                         </div>
                       ) : claimForms.has(q.id) ? (
                         <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
                           <textarea
-                            placeholder="クレーム理由（任意）"
+                            placeholder="問い合わせ理由（任意）"
                             value={claimReasons[q.id] ?? ''}
                             onChange={e => setClaimReasons(prev => ({ ...prev, [q.id]: e.target.value }))}
                             rows={2}
@@ -470,7 +470,7 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
                             onClick={() => toggleClaimForm(q.id)}
                             className="rounded-lg bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-600 hover:bg-amber-500/20 dark:text-amber-400"
                           >
-                            問題にクレーム
+                            問題に問い合わせ
                           </button>
                         </div>
                       )}

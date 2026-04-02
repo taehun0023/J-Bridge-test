@@ -814,7 +814,7 @@ export default function AdminCoursesClient({
       if (result.error) {
         showMsg(result.error, 'error')
       } else {
-        showMsg('クレームを全件解決しました', 'success')
+        showMsg('問い合わせを全件解決しました', 'success')
         setClaimDetailId(null)
         setQuestions(prev => prev.map(q =>
           q.id === questionId
@@ -828,19 +828,19 @@ export default function AdminCoursesClient({
   function handleBatchResolveClaims() {
     const claimedIds = questions.filter(q => q.claim_count > 0).map(q => q.id)
     if (claimedIds.length === 0) {
-      showMsg('解決するクレームがありません', 'error')
+      showMsg('解決する問い合わせがありません', 'error')
       return
     }
     const sectionLabel = activeSection === 'assessment' ? '総合試験' : '理解度テスト'
     const scopeLabel = `${currentAxis.label} > ${sectionLabel}`
-    if (!confirm(`【${scopeLabel}】\n${claimedIds.length}件の問題のクレームを一括解決しますか？\n\n※ この操作は元に戻せません`)) return
+    if (!confirm(`【${scopeLabel}】\n${claimedIds.length}件の問題の問い合わせを一括解決しますか？\n\n※ この操作は元に戻せません`)) return
 
     startTransition(async () => {
       const result = await resolveMultipleQuestionClaims(claimedIds)
       if (result.error) {
         showMsg(result.error, 'error')
       } else {
-        showMsg(`${claimedIds.length}件の問題のクレームを解決しました`, 'success')
+        showMsg(`${claimedIds.length}件の問題の問い合わせを解決しました`, 'success')
         setQuestions(prev => prev.map(q =>
           claimedIds.includes(q.id)
             ? { ...q, claim_count: 0, claim_details: [] }
@@ -994,7 +994,7 @@ export default function AdminCoursesClient({
             onChange={e => setFilters(f => ({ ...f, claimsOnly: e.target.checked }))}
             className="rounded border-gray-300"
           />
-          クレームあり
+          問い合わせあり
         </label>
         {questions.some(q => q.claim_count > 0) && (
           <button
@@ -1002,7 +1002,7 @@ export default function AdminCoursesClient({
             disabled={pending}
             className="rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100 dark:border-red-600 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
           >
-            クレーム一括解決
+            問い合わせ一括解決
           </button>
         )}
         <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -1023,7 +1023,7 @@ export default function AdminCoursesClient({
           )}
           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">難易度</th>
           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">状態</th>
-          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">クレーム</th>
+          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">問い合わせ</th>
           <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400">操作</th>
         </tr>
       </thead>
@@ -1183,7 +1183,7 @@ export default function AdminCoursesClient({
             <div className="mx-4 max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-amber-200 bg-amber-50 p-6 shadow-xl dark:border-amber-800 dark:bg-gray-800">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-300">
-                  クレーム詳細 ({q.claim_count}件)
+                  問い合わせ詳細 ({q.claim_count}件)
                 </h4>
                 <button
                   onClick={() => setClaimDetailId(null)}

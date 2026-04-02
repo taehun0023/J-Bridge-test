@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { requireAuth, requireAdminOrMentor } from '@/lib/auth-helpers'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { notifyMentorsAndAdmins, getUserDisplayName } from '@/lib/notification-helpers'
-import { createNotification } from '@/app/actions/notifications'
+import { createNotification, deleteNotificationsByRelatedId } from '@/app/actions/notifications'
 
 export async function requestQuizRetake(attemptId: string) {
   const auth = await requireAuth()
@@ -105,6 +105,9 @@ export async function approveQuizRetake(attemptId: string) {
     })
     .eq('id', attemptId)
 
+  // Clean up request notifications sent to other admins/mentors
+  await deleteNotificationsByRelatedId(attemptId, 'retake_requested')
+
   // Notify the mentee
   const { data: quiz } = await queryClient
     .from('quizzes')
@@ -147,6 +150,9 @@ export async function denyQuizRetake(attemptId: string) {
     .from('quiz_attempts')
     .update({ retake_request_status: 'denied' })
     .eq('id', attemptId)
+
+  // Clean up request notifications sent to other admins/mentors
+  await deleteNotificationsByRelatedId(attemptId, 'retake_requested')
 
   // Notify the mentee
   const { data: quiz } = await queryClient

@@ -46,13 +46,13 @@ export async function createFeedback(formData: FormData) {
     'feedback_received',
     'フィードバックが届きました',
     content.slice(0, 100),
-    '/feedback',
+    '/profile/feedback',
     data.id
   )
 
   revalidatePath('/admin/reports')
   revalidatePath('/admin')
-  revalidatePath('/feedback')
+  revalidatePath('/profile/feedback')
   revalidatePath('/dashboard')
   return { success: true }
 }
@@ -81,7 +81,7 @@ export async function updateFeedback(feedbackId: string, content: string) {
 
   revalidatePath('/admin/reports')
   revalidatePath('/admin')
-  revalidatePath('/feedback')
+  revalidatePath('/profile/feedback')
   return { success: true }
 }
 
@@ -112,6 +112,6 @@ export async function deleteFeedback(feedbackId: string) {
 
   revalidatePath('/admin/reports')
   revalidatePath('/admin')
-  revalidatePath('/feedback')
+  revalidatePath('/profile/feedback')
   return { success: true }
 }

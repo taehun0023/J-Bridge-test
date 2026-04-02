@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import MarkdownRenderer from '@/components/ui/MarkdownRenderer'
 import type { CsLessonInteractiveContent, CsLessonStageLocale, CsLessonStep } from '@/lib/cs-content'
+import { shuffleArray } from '@/lib/shuffle'
 
 interface Props {
   contentJa: string
@@ -211,6 +212,9 @@ function StepCard({
     )
   }
 
+  const OPTION_LABELS = ['A', 'B', 'C', 'D'] as const
+  const shuffledOptions = useMemo(() => shuffleArray(step.options), [step.options])
+
   const isAnswered = !!selectedOptionId
   const isCorrect = selectedOptionId === step.correctOptionId
 
@@ -223,7 +227,7 @@ function StepCard({
       <p className="mt-3 text-sm leading-7 text-gray-700 dark:text-gray-300">{step.prompt}</p>
 
       <div className="mt-4 space-y-2">
-        {step.options.map((option) => {
+        {shuffledOptions.map((option, optIdx) => {
           const active = selectedOptionId === option.id
           return (
             <button
@@ -236,7 +240,7 @@ function StepCard({
               }`}
             >
               <span className="mt-0.5 h-5 w-5 rounded-full border border-current text-center text-xs leading-5">
-                {option.id}
+                {OPTION_LABELS[optIdx] ?? option.id}
               </span>
               <span>{option.text}</span>
             </button>

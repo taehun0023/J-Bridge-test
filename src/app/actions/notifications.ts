@@ -97,6 +97,25 @@ export async function deleteAllNotifications() {
   return { success: true }
 }
 
+/**
+ * Delete all notifications matching a given type and related_id.
+ * Used to clean up request notifications sent to other admins/mentors
+ * after one of them has already approved/denied.
+ */
+export async function deleteNotificationsByRelatedId(
+  relatedId: string,
+  type: NotificationType
+) {
+  const serviceClient = createServiceRoleClient()
+  if (!serviceClient) return
+
+  await serviceClient
+    .from('notifications')
+    .delete()
+    .eq('related_id', relatedId)
+    .eq('type', type)
+}
+
 export async function createNotification(
   userId: string,
   type: NotificationType,
