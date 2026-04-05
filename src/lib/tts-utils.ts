@@ -4,7 +4,7 @@ import { createHash } from 'crypto'
  * TTS Cache Version — increment when TTS generation logic changes
  * to automatically invalidate old cached audio.
  */
-const CACHE_VERSION = 2
+const CACHE_VERSION = 3
 
 export const BUCKET = 'tts-cache'
 
@@ -60,8 +60,9 @@ export function parseDialogueScript(text: string): { isDialogue: boolean; segmen
     }
   }
 
-  // 2行以上が対話形式の場合のみダイアログとして扱う
-  if (dialogueLineCount >= 2) {
+  // 1行以上が対話形式の場合、話者マーカーを除去して話者別音声で合成する
+  // (独白型モノローグ「アナウンス：...」「研究者：...」も含む)
+  if (dialogueLineCount >= 1) {
     return { isDialogue: true, segments }
   }
 

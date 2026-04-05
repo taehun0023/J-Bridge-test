@@ -279,9 +279,11 @@ function analyze({ questions, options, claims, quizRows }) {
 
       // A2 answer leak (with A2-exempt bypass)
       // R1: reading category is globally A2-exempt (structural overlap is inherent).
-      // Reference: docs/exam_quality_rubric.md R1
-      const isReadingCategory = (q.question_category || '').toLowerCase() === 'reading';
-      if (correct && !isReadingCategory) {
+      // L4: listening category is globally A2-exempt (transcript contains answer).
+      // Reference: docs/exam_quality_rubric.md R1, L4
+      const catLower = (q.question_category || '').toLowerCase();
+      const isTranscriptCategory = catLower === 'reading' || catLower === 'listening';
+      if (correct && !isTranscriptCategory) {
         const leak = answerLeakRatio(q.question_text || '', correct.option_text || '');
         if (leak > 0.5) {
           const exempt = isA2Exempt(q.question_text || '');
@@ -347,6 +349,40 @@ function analyze({ questions, options, claims, quizRows }) {
               note: `answer-leak bigram ratio = ${(leak * 100).toFixed(0)}%`,
             });
           }
+        }
+      }
+    }
+
+    // L1: TTS speaker marker detection (listening only)
+    // Reference: docs/exam_quality_rubric.md L1 — any short token followed by ：/:
+    // at utterance boundary is a speaker marker that TTS reads aloud.
+    // Matches: A：, B：, 男：, 女：, 田中：, リン：, 研究者A：, 医師：, 先生：, etc.
+    if ((q.question_category || '').toLowerCase() === 'listening') {
+      const qtext = q.question_text || '';
+      // Token: 1–8 chars of kanji/kana/alphanumeric (halfwidth+fullwidth),
+      // followed by ：or : and whitespace (or end of token).
+      // Anchored to utterance boundary: line start, 。, ？, ！, or whitespace.
+      // Exclude common non-marker colon usages: 時刻(X時:Y分) is rare in scripts.
+      const markerRe = /(?:^|[\n\s。？！])\s*([一-龥ぁ-んァ-ヴー々〆A-Za-zＡ-Ｚａ-ｚ０-９0-9]{1,8})\s*[：:](?=\s|\S)/;
+      const m = qtext.match(markerRe);
+      if (m) {
+        // Exclude if marker is part of 質問： prompt (standard quiz preamble)
+        const token = m[1];
+        const isQuestionPrompt = /^(?:質問|問題|問|答|正解|注意|例)$/.test(token);
+        if (!isQuestionPrompt) {
+          // Count all distinct markers in the script for richer note
+          const allMarkersRe = /(?:^|[\n\s。？！])\s*([一-龥ぁ-んァ-ヴー々〆A-Za-zＡ-Ｚａ-ｚ０-９0-9]{1,8})\s*[：:](?=\s|[^\d])/g;
+          const markers = new Set();
+          let mm;
+          while ((mm = allMarkersRe.exec(qtext)) !== null) {
+            const tok = mm[1];
+            if (!/^(?:質問|問題|問|答|正解|注意|例)$/.test(tok)) markers.add(tok);
+          }
+          issues.push({
+            code: 'L1',
+            prio: 'Info',
+            note: `TTS speaker markers: [${[...markers].map((s) => `"${s}："`).join(', ')}] (stripped by parseDialogueScript; verify with test-tts-parse.mjs)`,
+          });
         }
       }
     }
