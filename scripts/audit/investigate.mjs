@@ -234,20 +234,28 @@ function analyze({ questions, options, claims, quizRows }) {
       const correct = correctOpts[0];
       const correctLen = correct ? strLen(correct.option_text) : 0;
 
-      // B5 length bias
-      if (maxL / minL > 1.5) {
-        issues.push({
-          code: 'B5',
-          prio: 'Medium',
-          note: `length ratio ${(maxL / minL).toFixed(2)}x (max=${maxL}, min=${minL})`,
-        });
-      }
-      if (correct && (correctLen === maxL || correctLen === minL) && maxL !== minL) {
-        issues.push({
-          code: 'B5',
-          prio: 'Medium',
-          note: `correct is ${correctLen === maxL ? 'longest' : 'shortest'} (${correctLen} vs avg ${avgL.toFixed(1)})`,
-        });
+      // R4: B5 numeric/unit short-answer exemption
+      // Reference: docs/exam_quality_rubric.md R4
+      const UNIT_RE = /[0-9０-９%％円時人回分秒時間日月年歳件個本枚]/;
+      const isNumericShortAnswer =
+        lengths.every((l) => l <= 4) && opts.some((o) => UNIT_RE.test(o.option_text || ''));
+
+      // B5 length bias (skip if R4 applies)
+      if (!isNumericShortAnswer) {
+        if (maxL / minL > 1.5) {
+          issues.push({
+            code: 'B5',
+            prio: 'Medium',
+            note: `length ratio ${(maxL / minL).toFixed(2)}x (max=${maxL}, min=${minL})`,
+          });
+        }
+        if (correct && (correctLen === maxL || correctLen === minL) && maxL !== minL) {
+          issues.push({
+            code: 'B5',
+            prio: 'Medium',
+            note: `correct is ${correctLen === maxL ? 'longest' : 'shortest'} (${correctLen} vs avg ${avgL.toFixed(1)})`,
+          });
+        }
       }
 
       // B6 slash
@@ -270,7 +278,10 @@ function analyze({ questions, options, claims, quizRows }) {
       }
 
       // A2 answer leak (with A2-exempt bypass)
-      if (correct) {
+      // R1: reading category is globally A2-exempt (structural overlap is inherent).
+      // Reference: docs/exam_quality_rubric.md R1
+      const isReadingCategory = (q.question_category || '').toLowerCase() === 'reading';
+      if (correct && !isReadingCategory) {
         const leak = answerLeakRatio(q.question_text || '', correct.option_text || '');
         if (leak > 0.5) {
           const exempt = isA2Exempt(q.question_text || '');
