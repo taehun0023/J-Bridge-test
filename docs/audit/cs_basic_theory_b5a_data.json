@@ -1,0 +1,1806 @@
+[
+  {
+    "qid": "bee1b5b9-2014-498d-ab06-0a2f21c4c5ed",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "basic_theory",
+    "diff": "easy",
+    "qtext": "コンパイラの説明として正しいものはどれか。",
+    "correctLen": 21,
+    "correctIsShortest": false,
+    "correctIsLongest": false,
+    "ratio": "1.65",
+    "opts": [
+      {
+        "id": "94abe11d-3d51-48d0-92f1-33be41825bf7",
+        "text": "ソースコードを1行ずつ逐次実行する",
+        "len": 17,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "8081e671-f349-47c7-ac68-fc3cff2d39b9",
+        "text": "ソースコードの文法エラーだけをチェックする",
+        "len": 21,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "998e21e4-70f6-4593-b479-d9db8bc54729",
+        "text": "ソースコード全体を一括して機械語に変換する",
+        "len": 21,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "50a1c9a0-5e8e-48bf-a531-2fb67a684bf5",
+        "text": "ソースコードをバイトコードに変換して仮想マシンで実行する",
+        "len": 28,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "03c38d21-da2c-4340-9717-aff1bb589080",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "basic_theory",
+    "diff": "easy",
+    "qtext": "メモリ領域のスタックの特徴として正しいものはどれか。",
+    "correctLen": 26,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.86",
+    "opts": [
+      {
+        "id": "4a71e1b6-a21c-4596-81be-cabed72b0e9a",
+        "text": "プログラマが明示的に確保・解放するメモリ領域",
+        "len": 22,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "4a809a4e-108c-4716-b2f3-af77ee431bf8",
+        "text": "FIFO方式で管理される領域",
+        "len": 14,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "e9a300e5-fde6-4f06-8c40-d38a74621cb4",
+        "text": "LIFO方式で管理され関数のローカル変数が格納される",
+        "len": 26,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "1b5475bb-1e99-4812-a788-4be261ac04a0",
+        "text": "ガベージコレクションによって管理される領域",
+        "len": 21,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "c145cc09-a347-4014-82ec-8c25ad4a769f",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "basic_theory",
+    "diff": "easy",
+    "qtext": "ASCIIコードの説明として正しいものはどれか。",
+    "correctLen": 23,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.35",
+    "opts": [
+      {
+        "id": "59212bc1-687a-41e2-9c1b-121bcedc3da5",
+        "text": "日本語を含む多言語対応の文字コード",
+        "len": 17,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "f987e1d0-665d-49c2-9ba1-7e128151e91f",
+        "text": "7ビットで128種類の文字を表現する文字コード",
+        "len": 23,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "08fdee87-4a24-445b-8e17-f70f9927bfbd",
+        "text": "16ビットで世界中の文字を表現する文字コード",
+        "len": 22,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "cccdea8b-bee3-4c56-b80b-dc5b0e8e7f93",
+        "text": "可変長エンコーディングを使用する文字コード",
+        "len": 21,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "a0d403c6-03af-43f8-aaeb-8de4ee4f1562",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "basic_theory",
+    "diff": "medium",
+    "qtext": "ポリモーフィズム（多態性）の説明として正しいものはどれか。",
+    "correctLen": 24,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.41",
+    "opts": [
+      {
+        "id": "c8ca5323-ad06-42b6-b302-4662d1272b80",
+        "text": "クラスの内部実装を外部から隠蔽すること",
+        "len": 19,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "c159844f-fe33-4dda-a2cb-16109f5a6e4b",
+        "text": "親クラスの属性やメソッドを子クラスが引き継ぐこと",
+        "len": 24,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "23e41e19-3ccf-4527-9cbb-a8d052d053a2",
+        "text": "同じインターフェースで異なる実装を呼び出せること",
+        "len": 24,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "b90b926a-fb4e-4164-990b-cdc980549cee",
+        "text": "オブジェクトの状態を永続化すること",
+        "len": 17,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "17e9f0e4-2272-4d42-bccf-5f8fd0c9e394",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "basic_theory",
+    "diff": "medium",
+    "qtext": "UTF-8の特徴として正しいものはどれか。",
+    "correctLen": 23,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.64",
+    "opts": [
+      {
+        "id": "2c73ed93-8064-46b3-97e0-a8f727d79a0e",
+        "text": "すべての文字を2バイト固定で表現する",
+        "len": 18,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "c4049b5b-3dc6-4781-8670-9ea495d32ad9",
+        "text": "可変長エンコーディングでASCII互換性がある",
+        "len": 23,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "bdf8fe65-807b-40bc-bcf6-6749deace214",
+        "text": "すべての文字を4バイト固定で表現する",
+        "len": 18,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "bbd73fd4-e6f5-47d7-b56c-dd541c21cf19",
+        "text": "日本語を1バイトで表現できる",
+        "len": 14,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "4d2f9f7c-5a9c-4ccc-ae02-d497f37f3ac9",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "basic_theory",
+    "diff": "medium",
+    "qtext": "Singletonパターンの目的として正しいものはどれか。",
+    "correctLen": 20,
+    "correctIsShortest": true,
+    "correctIsLongest": false,
+    "ratio": "1.05",
+    "opts": [
+      {
+        "id": "d77c8759-5e71-4f56-b476-a935f34e8f07",
+        "text": "オブジェクトの生成を工場クラスに委譲する",
+        "len": 20,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "616d2843-677d-456e-ac70-c07621e48dd3",
+        "text": "オブジェクト間の1対多の依存関係を定義する",
+        "len": 21,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "e45b2a27-c45e-4e27-8e7b-1eec3f8a25eb",
+        "text": "クラスのインスタンスを1つだけに制限する",
+        "len": 20,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "e23ee02b-7236-4a19-a45e-2082ee04f32a",
+        "text": "アルゴリズムをカプセル化して交換可能にする",
+        "len": 21,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "50354b4f-073b-4d87-a3b0-8650846d8ac9",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "basic_theory",
+    "diff": "medium",
+    "qtext": "SOLID原則の「S」（単一責任の原則）の説明として正しいものはどれか。",
+    "correctLen": 20,
+    "correctIsShortest": true,
+    "correctIsLongest": false,
+    "ratio": "1.55",
+    "opts": [
+      {
+        "id": "7e065322-6a95-4be5-9afd-a6950909dbbc",
+        "text": "クラスは変更する理由がただ1つであるべき",
+        "len": 20,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "2e36a36c-4e03-449f-a7fd-1b0fc4c6fbdb",
+        "text": "クラスは拡張に対して開き、修正に対して閉じるべき",
+        "len": 24,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "6a43a060-0cd4-4d81-b418-d6289493c613",
+        "text": "サブクラスは親クラスと置換可能であるべき",
+        "len": 20,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "16d3eea8-cb64-4dbc-8fb9-701b51475a09",
+        "text": "クライアントに不要なインターフェースへの依存を強制すべきでない",
+        "len": 31,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "28439954-98ae-4972-ba3c-8ca1249eab97",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "basic_theory",
+    "diff": "medium",
+    "qtext": "関数型プログラミングの特徴として正しいものはどれか。",
+    "correctLen": 21,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.50",
+    "opts": [
+      {
+        "id": "9f5a3d86-7830-48df-bbee-8b8c50764d7d",
+        "text": "クラスとオブジェクトを中心に設計する",
+        "len": 18,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "a1566ad6-98fe-4d8e-9242-4f4c07d84097",
+        "text": "手続きの順序を明示的に記述する",
+        "len": 15,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "9cc66a50-6341-4f2e-9664-3e431e26929c",
+        "text": "副作用を避け不変データと純粋関数を重視する",
+        "len": 21,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "404263cb-6203-4d49-9683-5426df586955",
+        "text": "goto文を積極的に使用する",
+        "len": 14,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "461c52a9-1796-4b59-947b-0dc5b97bd0e8",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "basic_theory",
+    "diff": "medium",
+    "qtext": "ヒープ領域の特徴として正しいものはどれか。",
+    "correctLen": 26,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.17",
+    "opts": [
+      {
+        "id": "ee7807a2-546d-4319-be49-adf1f956f5ef",
+        "text": "関数呼び出し時に自動的に確保・解放される",
+        "len": 20,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "ef436d8e-f8b5-413e-b532-b1e179a07f58",
+        "text": "動的にメモリを確保でき、明示的またはGCで解放される",
+        "len": 26,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "cb95370d-611b-46bc-bb13-6665d6ab1704",
+        "text": "コンパイル時にサイズが決定される固定領域",
+        "len": 20,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "f09ab6b1-9c98-4fff-a2ab-ba11753987ff",
+        "text": "読み取り専用のメモリ領域",
+        "len": 12,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "597a4594-efb0-47d6-addc-28b9b7126c11",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "basic_theory",
+    "diff": "medium",
+    "qtext": "Observerパターンの説明として正しいものはどれか。",
+    "correctLen": 27,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.29",
+    "opts": [
+      {
+        "id": "552e473c-d4b2-42a4-b5ae-84207dcc8ff6",
+        "text": "オブジェクトの生成を専門のクラスに委譲する",
+        "len": 21,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "1f9921f3-dac1-4c9d-963c-f653f815c363",
+        "text": "アルゴリズムの骨格を定義し詳細をサブクラスに委ねる",
+        "len": 25,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "14aa1500-1f19-4030-bfcd-fa7fd7c6de7d",
+        "text": "複雑なサブシステムへの統一インターフェースを提供する",
+        "len": 26,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "5279b038-0810-4955-98c5-1fb38fda701a",
+        "text": "オブジェクトの状態変化を依存オブジェクトに自動通知する",
+        "len": 27,
+        "correct": true,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "9b6b2816-65da-4754-8684-68bd2d0942a8",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "basic_theory",
+    "diff": "hard",
+    "qtext": "IEEE 754浮動小数点数で0.1+0.2が0.3にならない原因として正しいものはどれか。",
+    "correctLen": 29,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.71",
+    "opts": [
+      {
+        "id": "db664e6e-7bd5-4135-a0db-1959fcde108a",
+        "text": "CPUの演算精度が不足しているため",
+        "len": 17,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "cbb8d60e-0ced-471f-ad82-ea10b99fa976",
+        "text": "0.1や0.2が2進数で無限小数となり丸め誤差が生じるため",
+        "len": 29,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "20525d45-313b-4bfb-87a0-4937124a27d6",
+        "text": "コンパイラの最適化によるバグのため",
+        "len": 17,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "465edd91-9395-4c08-92f7-0d1ed5b7c160",
+        "text": "メモリアライメントのずれにより計算結果が変わるため",
+        "len": 25,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "5d4b2862-70a2-4c68-9cd7-59d43a031aa8",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "basic_theory",
+    "diff": "hard",
+    "qtext": "リスコフの置換原則（LSP）に違反する例として最も適切なものはどれか。",
+    "correctLen": 40,
+    "correctIsShortest": false,
+    "correctIsLongest": false,
+    "ratio": "1.41",
+    "opts": [
+      {
+        "id": "0516035a-4bc4-4fe0-8218-1e67687a6ff8",
+        "text": "Animalクラスを継承したDogクラスがbarkメソッドを追加する",
+        "len": 34,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "620505f6-f0da-46d8-80c1-44ffc8f17e72",
+        "text": "RectangleクラスをSquareが継承しsetWidthで高さも変更される",
+        "len": 40,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "eb7ca865-3907-4421-971b-6e58a590a33d",
+        "text": "Listインターフェースを実装したArrayListクラス",
+        "len": 29,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "2b881a5f-32b1-41dd-b461-bb4350550f60",
+        "text": "Vehicleクラスを継承したCarクラスがdriveメソッドをオーバーライドする",
+        "len": 41,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "83da4fb2-9cf9-42e1-8a47-a08ad2ce9f9e",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "basic_theory",
+    "diff": "hard",
+    "qtext": "マーク・アンド・スイープ方式のガベージコレクションの説明として正しいものはどれか。",
+    "correctLen": 31,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.19",
+    "opts": [
+      {
+        "id": "be9c304d-04f3-4312-9de4-dd30e59ca684",
+        "text": "参照カウントが0になったオブジェクトを即座に解放する",
+        "len": 26,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "35a5d64e-9f25-4c7a-8d01-19fea98f8b09",
+        "text": "メモリプールを世代別に分けて若い世代を頻繁に回収する",
+        "len": 26,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "7def060d-57bd-49a1-8aea-d3c4b51e3755",
+        "text": "ルートから到達可能なオブジェクトをマークし、未マークを解放する",
+        "len": 31,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "e35f3e30-39d9-461f-9792-6be2ac1b9aa0",
+        "text": "オブジェクトのスコープ終了時に自動的にデストラクタを呼ぶ",
+        "len": 28,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "3e509652-1e69-4d09-b535-de845b5a8ac9",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "basic_theory",
+    "diff": "hard",
+    "qtext": "SOLID原則の「D」（依存性逆転の原則）の説明として正しいものはどれか。",
+    "correctLen": 32,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.00",
+    "opts": [
+      {
+        "id": "e74e6013-ef4f-4d90-9798-c0d3f59cb3b8",
+        "text": "クラスは1つの責任だけを持つべき",
+        "len": 16,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "8cc3bbad-d415-4ce6-9976-b729c54d5e06",
+        "text": "上位モジュールは下位モジュールに依存せず両者とも抽象に依存すべき",
+        "len": 32,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "88ad8ea1-d5e5-4dcb-891a-c6a1f346c663",
+        "text": "サブクラスは親クラスと置換可能であるべき",
+        "len": 20,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "1c8f7e80-94c0-4240-9a48-dd983380d51a",
+        "text": "ソフトウェアは拡張に対して開き修正に対して閉じるべき",
+        "len": 26,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "1c054534-6690-4e34-9a0a-9ddd7bbfd011",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "basic_theory",
+    "diff": "hard",
+    "qtext": "Strategyパターンを適用すべき状況として最も適切なものはどれか。",
+    "correctLen": 23,
+    "correctIsShortest": false,
+    "correctIsLongest": false,
+    "ratio": "1.32",
+    "opts": [
+      {
+        "id": "3a911f11-b7a0-4ece-a050-315aeb273858",
+        "text": "オブジェクトの生成過程が複雑で段階的に構築したい",
+        "len": 24,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "718a0a6c-6bfd-441d-8e85-35d6083cca1a",
+        "text": "複数のソートアルゴリズムを実行時に切り替えたい",
+        "len": 23,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "a8698217-4a34-475b-908c-38562594b29b",
+        "text": "サブシステムへのアクセスを統一インターフェースで提供したい",
+        "len": 29,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "2d25e6ed-f4c2-4772-ad28-9be3160955e5",
+        "text": "オブジェクトの状態に応じて振る舞いを変えたい",
+        "len": 22,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "311e4b47-af7e-42b5-84b6-3d2c6c7ef71d",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "basic_theory",
+    "diff": "hard",
+    "qtext": "Javaのジェネリクスにおける型消去（Type Erasure）の説明として正しいものはどれか。",
+    "correctLen": 33,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.57",
+    "opts": [
+      {
+        "id": "730abc6d-4cc4-4ce1-8b19-60d9970b7506",
+        "text": "実行時に型パラメータの情報が保持され動的型チェックが行われる",
+        "len": 30,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "882b6cc7-f611-41b8-97e1-4cbaf3eb48ee",
+        "text": "コンパイル時に型チェック後、実行時には型パラメータ情報が消去される",
+        "len": 33,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "12c08b66-8506-46f8-9a95-6a6b48b5c49e",
+        "text": "ジェネリック型はコンパイル時にプリミティブ型に変換される",
+        "len": 28,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "2cf77287-c3e6-4508-936d-9b76d6ceb12d",
+        "text": "型パラメータはリフレクションで常に取得可能",
+        "len": 21,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "18754247-bf1a-4fd0-abcc-19c827097d34",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "basic_theory",
+    "diff": "hard",
+    "qtext": "GC対応言語（Java等）でメモリリークが発生するケースとして正しいものはどれか。",
+    "correctLen": 34,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.13",
+    "opts": [
+      {
+        "id": "943e82cb-dd72-42f8-8f5d-82a2a72d9dde",
+        "text": "ローカル変数を大量に宣言した場合",
+        "len": 16,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "f1a2ed86-9e3c-4858-8827-aa53058a32e5",
+        "text": "staticフィールドのリストに不要なオブジェクトを追加し続ける場合",
+        "len": 34,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "48533756-f602-46fc-b400-08fed9de557c",
+        "text": "メソッドの再帰呼び出しが深い場合",
+        "len": 16,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "1cb29758-7c60-46bd-a10e-28d0bf6d0167",
+        "text": "プリミティブ型の配列を確保した場合",
+        "len": 17,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "b36238e3-4d76-4693-8a1b-8242a3830a54",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "basic_theory",
+    "diff": "hard",
+    "qtext": "クロージャ（closure）の説明として正しいものはどれか。",
+    "correctLen": 26,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.53",
+    "opts": [
+      {
+        "id": "f91896c4-921b-48da-81f7-7f0c115d7538",
+        "text": "関数が自身を再帰的に呼び出す仕組み",
+        "len": 17,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "f41a777b-e907-41b4-bec4-1ae10492955b",
+        "text": "関数と定義時の環境（自由変数の束縛）を一体化したもの",
+        "len": 26,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "8b3787d2-eed9-4c80-bd7a-6deb931917b0",
+        "text": "関数をコンパイル時にインライン展開する最適化手法",
+        "len": 24,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "79d0ba8a-c722-4fe6-affc-f153c0539d00",
+        "text": "関数の実行結果をキャッシュして再利用する仕組み",
+        "len": 23,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "e2d9532f-95cd-449b-b98e-96eca6cd81f4",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "basic_theory",
+    "diff": "hard",
+    "qtext": "末尾再帰最適化（Tail Call Optimization）の説明として正しいものはどれか。",
+    "correctLen": 32,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.52",
+    "opts": [
+      {
+        "id": "3a721150-90df-43b2-ad7f-0af0850dbad4",
+        "text": "再帰を並列処理に変換してCPUコアを活用する最適化",
+        "len": 25,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "947d035e-a725-424a-baf0-061d716ce601",
+        "text": "再帰の結果をメモ化してキャッシュする最適化",
+        "len": 21,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "24f78d88-bde9-4a19-b0f9-fce95b1d575a",
+        "text": "末尾位置の再帰呼び出しをループに変換しスタック消費を抑える最適化",
+        "len": 32,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "1e8dd963-0f99-445f-83a5-eef66447407f",
+        "text": "再帰の深さに上限を設けてスタックオーバーフローを防ぐ仕組み",
+        "len": 29,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "1f781b40-67d7-4cd3-9dbc-00fbd2077b70",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "basic_theory",
+    "diff": "hard",
+    "qtext": "Abstract Factoryパターンの目的として正しいものはどれか。",
+    "correctLen": 26,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.44",
+    "opts": [
+      {
+        "id": "7619841f-bb88-481b-9776-48310e3d4394",
+        "text": "1つのオブジェクトの生成手順を段階的に定義する",
+        "len": 23,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "61b80970-6353-4557-9597-cfe22b9dacde",
+        "text": "既存オブジェクトのクローンを作成する",
+        "len": 18,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "800408e8-c44b-4f57-9a22-2aa1e1048f00",
+        "text": "関連するオブジェクト群を具象クラスを指定せず生成する",
+        "len": 26,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "096b4281-4e24-4735-91b7-baa98465b738",
+        "text": "オブジェクトの生成をサブクラスに委譲する",
+        "len": 20,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "deb455ec-6b98-4132-a3a2-c5273e14a137",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "basic_theory",
+    "diff": "hard",
+    "qtext": "不変オブジェクト（Immutable Object）の利点として正しくないものはどれか。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": false,
+    "ratio": "1.31",
+    "opts": [
+      {
+        "id": "68eab648-b487-40a0-bea3-8425401255fe",
+        "text": "スレッドセーフであり同期処理が不要",
+        "len": 17,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "c64102bc-b9e0-4446-abe3-902e57c9ec0c",
+        "text": "ハッシュマップのキーとして安全に使用できる",
+        "len": 21,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "1a865562-3fe9-4b87-ba90-fd5574551a3c",
+        "text": "状態変更時に常にメモリ効率が向上する",
+        "len": 18,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "f94b7724-fad0-453b-ac62-4a7d5c45d1b8",
+        "text": "副作用がなく予測可能な動作をする",
+        "len": 16,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "0337b18c-cdee-42d7-a2cc-6a4f4f8377ab",
+    "quizId": "3714c842-5507-4f99-a185-7c5dba98a90b",
+    "cat": "basic_theory",
+    "diff": "easy",
+    "qtext": "NAND回路は何と何の組み合わせで構成されるか。",
+    "correctLen": 9,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.13",
+    "opts": [
+      {
+        "id": "ac081af8-83a8-4dce-b3ea-31967cd80e57",
+        "text": "AND + NOT",
+        "len": 9,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "920d8b66-0e93-4cbb-91ae-4643a203d690",
+        "text": "OR + NOT",
+        "len": 8,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "a8004271-d702-438e-a48d-64b1747924f9",
+        "text": "XOR + NOT",
+        "len": 9,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "6f6ea827-41cb-4fcf-ab12-1851c59bb4c3",
+        "text": "AND + OR",
+        "len": 8,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "6c4bac5c-b390-4599-aa0b-190cee700067",
+    "quizId": "a6cfb45b-4b26-42c9-9e8a-ceda2bf545e4",
+    "cat": "basic_theory",
+    "diff": "easy",
+    "qtext": "文字コードの説明として正しいものはどれか。",
+    "correctLen": 25,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.27",
+    "opts": [
+      {
+        "id": "28d3c696-dcd9-4b84-9f43-32f6c7df91db",
+        "text": "文字をコンピュータで扱うために割り当てた番号の体系",
+        "len": 25,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "0b8dd958-29db-42ec-ae24-9703eb231e60",
+        "text": "プログラムのソースコードのこと",
+        "len": 15,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "16b72270-6282-4503-86a8-e50c07aa6e1d",
+        "text": "暗号化のためのアルゴリズム",
+        "len": 13,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "24a5fde5-8fd7-4ddb-96cd-b1eadcb888e3",
+        "text": "ファイルの拡張子のこと",
+        "len": 11,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "3a3bbd78-5b2c-40f4-9a6c-ca3cd7bdf33f",
+    "quizId": "a6cfb45b-4b26-42c9-9e8a-ceda2bf545e4",
+    "cat": "basic_theory",
+    "diff": "easy",
+    "qtext": "ビット（bit）の説明として正しいものはどれか。",
+    "correctLen": 16,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.78",
+    "opts": [
+      {
+        "id": "609076f2-f4a0-4b06-8f89-16566683ce04",
+        "text": "コンピュータが扱う情報の最小単位",
+        "len": 16,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "0bc7dcc7-d0de-4575-a874-618e6bd1b082",
+        "text": "8桁の2進数のこと",
+        "len": 9,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "663a5928-498b-4869-8e91-9bed89675715",
+        "text": "データの転送速度の単位",
+        "len": 11,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "1e8a7746-9865-4e23-a1f4-f393a5fadd9a",
+        "text": "メモリの容量の単位",
+        "len": 9,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "55999ca6-81d3-4643-ba6f-ae4aa3668c76",
+    "quizId": "0c498260-8162-48c7-a198-d563a1c4d536",
+    "cat": "basic_theory",
+    "diff": "medium",
+    "qtext": "けた落ちの説明として正しいものはどれか。",
+    "correctLen": 23,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.09",
+    "opts": [
+      {
+        "id": "46624af4-2c1f-4739-b556-5d7b3ccc5c90",
+        "text": "ほぼ等しい数の差を求めたとき有効桁数が減る現象",
+        "len": 23,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "8497f555-adf6-4169-9b04-b0d5daab147b",
+        "text": "計算結果が表現可能な最大値を超える現象",
+        "len": 19,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "d967812d-7664-4107-b479-e6a00d0b4f1b",
+        "text": "小数点以下の桁が切り捨てられる現象",
+        "len": 17,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "affb90ae-0941-400f-9423-c810c432e6e2",
+        "text": "整数部分が失われる現象",
+        "len": 11,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "bf37936c-74e8-4c90-a4f2-180285c9c603",
+    "quizId": "0c498260-8162-48c7-a198-d563a1c4d536",
+    "cat": "basic_theory",
+    "diff": "medium",
+    "qtext": "丸め誤差の説明として正しいものはどれか。",
+    "correctLen": 25,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.79",
+    "opts": [
+      {
+        "id": "adfb3b5d-fb8f-462a-9ecc-a136a766e5e7",
+        "text": "有限ビットで数値を表現する際に端数処理で生じる誤差",
+        "len": 25,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "4c433cfb-40e1-4730-b911-daf0b7823b78",
+        "text": "プログラムの論理ミスによる計算誤差",
+        "len": 17,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "b0a7556e-47d4-49df-b9da-274b1fc8ae5c",
+        "text": "ハードウェアの故障による誤差",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "e35b7fbd-5aba-4c70-91c5-7340e4f6eea3",
+        "text": "ネットワーク通信中のデータ化けによる誤差",
+        "len": 20,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "1b2e3149-beec-4026-bcdd-9ca597ed07ca",
+    "quizId": "0c498260-8162-48c7-a198-d563a1c4d536",
+    "cat": "basic_theory",
+    "diff": "medium",
+    "qtext": "誤り検出符号であるパリティビットの説明として正しいものはどれか。",
+    "correctLen": 28,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.75",
+    "opts": [
+      {
+        "id": "d9462674-1b20-40fe-a58f-2bd568d34205",
+        "text": "データに1ビット付加して1の数の偶奇で誤りを検出する方式",
+        "len": 28,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "b83c7ce4-a4a9-45a5-a14f-5ec12a2cf8dc",
+        "text": "データを二重に送信して比較する方式",
+        "len": 17,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "1802e541-4cda-4f81-8db9-48d632318fe4",
+        "text": "データを暗号化して改ざんを検出する方式",
+        "len": 19,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "1860edbd-db80-4129-a86c-8bb463a8e2ea",
+        "text": "データのハッシュ値を比較する方式",
+        "len": 16,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "60a3b184-f68c-4e97-b557-decb5c748b42",
+    "quizId": "0c498260-8162-48c7-a198-d563a1c4d536",
+    "cat": "basic_theory",
+    "diff": "medium",
+    "qtext": "オーバーフローの説明として正しいものはどれか。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": false,
+    "ratio": "1.82",
+    "opts": [
+      {
+        "id": "ee52663e-78fe-4e34-8356-e6b2a5032c53",
+        "text": "演算結果が表現可能な範囲を超える現象",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "cb48ecd6-3548-4cf6-82bd-862f4b076bc1",
+        "text": "メモリが不足してプログラムが停止する現象",
+        "len": 20,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "5305ab61-59b0-48a4-a2dd-00261c5651f9",
+        "text": "有効桁数が減少する現象",
+        "len": 11,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "8f17d79b-c58e-4354-8e86-456b8c75f368",
+        "text": "小数点以下が丸められる現象",
+        "len": 13,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "07c97caf-5d45-44b7-a89e-16d4ff35febf",
+    "quizId": "0c498260-8162-48c7-a198-d563a1c4d536",
+    "cat": "basic_theory",
+    "diff": "medium",
+    "qtext": "Unicodeの説明として正しいものはどれか。",
+    "correctLen": 20,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.67",
+    "opts": [
+      {
+        "id": "339ca487-3502-4063-8ee5-8def5ceff8a2",
+        "text": "世界中の文字を統一的に扱う文字コード規格",
+        "len": 20,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "9b189d14-fa54-421f-81e7-9486b806bb8d",
+        "text": "日本語専用の文字コード規格",
+        "len": 13,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "15ee1788-8c12-4774-8fa4-36f85454fb6e",
+        "text": "ASCII文字のみを扱う規格",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "12b8c051-b6ec-4120-a96a-aa3c3b03c699",
+        "text": "バイナリデータの圧縮規格",
+        "len": 12,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "1e0725d7-ea3a-4faa-a68b-92be9abb9ea8",
+    "quizId": "0c498260-8162-48c7-a198-d563a1c4d536",
+    "cat": "basic_theory",
+    "diff": "medium",
+    "qtext": "情報エントロピーの説明として正しいものはどれか。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.00",
+    "opts": [
+      {
+        "id": "b72cfa54-54d7-4d9a-8ef5-e4a0fdb3b717",
+        "text": "情報源の不確実さ（あいまいさ）の尺度",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "833580e0-2ba0-4d7c-9816-0b2f885d7913",
+        "text": "データの圧縮率を表す指標",
+        "len": 12,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "dd41f611-0ffd-483b-ab33-8718195df398",
+        "text": "通信速度を表す単位",
+        "len": 9,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "33940e33-4f26-492c-a633-43df87b2ee59",
+        "text": "メモリ使用量を表す指標",
+        "len": 11,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "0e0fb076-2dc8-4a5b-8777-a2cff715a534",
+    "quizId": "a6cfb45b-4b26-42c9-9e8a-ceda2bf545e4",
+    "cat": "basic_theory",
+    "diff": "medium",
+    "qtext": "補数の説明として正しいものはどれか。",
+    "correctLen": 17,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.89",
+    "opts": [
+      {
+        "id": "4f212743-884a-4213-8fa4-b53c811df2b9",
+        "text": "ある数に足すと基数のべき乗になる数",
+        "len": 17,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "48c47f46-db1a-4a73-8fd1-c03fca185f14",
+        "text": "小数点以下を切り捨てた数",
+        "len": 12,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "dd4e0230-1801-4201-b2ce-a48cfacb1db8",
+        "text": "絶対値が等しい正の数",
+        "len": 10,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "98c8e8c0-90e9-4768-8b1e-051bb7e9c22d",
+        "text": "2で割った余りの数",
+        "len": 9,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "e58af6ac-5194-4a77-b121-57838777521d",
+    "quizId": "0c498260-8162-48c7-a198-d563a1c4d536",
+    "cat": "basic_theory",
+    "diff": "medium",
+    "qtext": "浮動小数点数の表現において、仮数部と指数部の説明として正しいものはどれか。",
+    "correctLen": 23,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.53",
+    "opts": [
+      {
+        "id": "14101ec9-85c7-46ae-80c6-7de8f2ecf57b",
+        "text": "仮数部は有効数字を、指数部は小数点の位置を表す",
+        "len": 23,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "4c568441-81b4-49e2-9b1a-9acfe7734920",
+        "text": "仮数部は小数点の位置を、指数部は有効数字を表す",
+        "len": 23,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "ac1d85f0-5a7d-4475-8863-38137310ac19",
+        "text": "仮数部は符号を、指数部は絶対値を表す",
+        "len": 18,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "9a809f24-75df-49f2-96c9-bad41edaff46",
+        "text": "仮数部と指数部は同じ役割を持つ",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "2c1e4c0d-75be-4d35-a8f3-fa84f8b002b0",
+    "quizId": "4828dbf5-6f6e-4ccd-8be3-7547414b180b",
+    "cat": "basic_theory",
+    "diff": "medium",
+    "qtext": "バッファオーバーフロー攻撃の説明として正しいものはどれか。",
+    "correctLen": 30,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.14",
+    "opts": [
+      {
+        "id": "dc8e1e9e-84c0-45b9-8055-c1e43a9ecf42",
+        "text": "バッファ領域を超えるデータを送り不正なコードを実行させる攻撃",
+        "len": 30,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "86919e72-c0a8-4e64-9ece-b418e68cd0f8",
+        "text": "バッファの容量を縮小する攻撃",
+        "len": 14,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "5579397c-2555-4a64-a45d-446d199fab2e",
+        "text": "ネットワークのバッファを消費する攻撃",
+        "len": 18,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "d1ff629b-c807-4939-a1ac-98f67205029e",
+        "text": "バッファ内のデータを暗号化する攻撃",
+        "len": 17,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "21e286a8-e6ef-4c2b-a9cb-8b6327c15ed6",
+    "quizId": "a6cfb45b-4b26-42c9-9e8a-ceda2bf545e4",
+    "cat": "basic_theory",
+    "diff": "easy",
+    "qtext": "NOT演算について正しい説明はどれか。",
+    "correctLen": 13,
+    "correctIsShortest": true,
+    "correctIsLongest": false,
+    "ratio": "1.15",
+    "opts": [
+      {
+        "id": "ebc26316-35df-476b-af8b-226105d20778",
+        "text": "入力の真偽を反転させる演算",
+        "len": 13,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "6eef147e-7d8f-49c6-92c3-ff836b43b65b",
+        "text": "二つの入力の論理積を求める演算",
+        "len": 15,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "4e4ab6b2-3a1f-4b33-bf55-1cbda0e9fbec",
+        "text": "二つの入力の論理和を求める演算",
+        "len": 15,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "f1058b0c-14ec-47dd-87ac-3738050366ab",
+        "text": "入力値をそのまま出力する演算",
+        "len": 14,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "36d95ad4-54b4-4527-88b7-64d72ce8486b",
+    "quizId": "a6cfb45b-4b26-42c9-9e8a-ceda2bf545e4",
+    "cat": "basic_theory",
+    "diff": "easy",
+    "qtext": "集合A={1,2,3}と集合B={2,3,4}の積集合（A∩B）はどれか。",
+    "correctLen": 6,
+    "correctIsShortest": true,
+    "correctIsLongest": false,
+    "ratio": "2.00",
+    "opts": [
+      {
+        "id": "3a8be431-1441-4e17-bd2b-883695d2ae9e",
+        "text": "{2, 3}",
+        "len": 6,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "b3690933-c778-40a0-a1ba-bbdbec542745",
+        "text": "{1, 2, 3, 4}",
+        "len": 12,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "9f85721f-347e-4293-beab-2aeec811b3cd",
+        "text": "{1, 4}",
+        "len": 6,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "c6abd42f-5677-4374-8c7e-d4bc08ea3b0d",
+        "text": "{1, 2, 3}",
+        "len": 9,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "66ee5a44-2476-4988-89b7-9cc72d208c80",
+    "quizId": "a6cfb45b-4b26-42c9-9e8a-ceda2bf545e4",
+    "cat": "basic_theory",
+    "diff": "easy",
+    "qtext": "ベン図とは何か。",
+    "correctLen": 14,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.17",
+    "opts": [
+      {
+        "id": "5aadb615-09f5-412b-94cf-712a404a70ba",
+        "text": "集合の関係を図形で表現した図",
+        "len": 14,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "ef302143-dd2d-41b6-8751-90936dda81c9",
+        "text": "データの流れを表現した図",
+        "len": 12,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "ca46a241-2d34-4afd-b704-8114ca8f2681",
+        "text": "プログラムの構造を表現した図",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "c8b8bc99-fc24-4028-94c7-5b916e800841",
+        "text": "ネットワーク構成を表現した図",
+        "len": 14,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "c67b80a7-a638-4d2f-aae0-720adb6968d4",
+    "quizId": "a6cfb45b-4b26-42c9-9e8a-ceda2bf545e4",
+    "cat": "basic_theory",
+    "diff": "easy",
+    "qtext": "集合A={1,2,3}と集合B={2,3,4}の和集合（A∪B）はどれか。",
+    "correctLen": 12,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.00",
+    "opts": [
+      {
+        "id": "59276801-2053-4f07-8449-17877e14e77d",
+        "text": "{1, 2, 3, 4}",
+        "len": 12,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "7402156e-3dbc-4068-9c50-44c9eb1a455c",
+        "text": "{2, 3}",
+        "len": 6,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "fa53c05c-d0ea-4e59-aa7f-bba71ee289b0",
+        "text": "{1, 4}",
+        "len": 6,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "1b3feeb5-bf57-49ce-b45b-ab11f5b1ea44",
+        "text": "{1, 2, 3}",
+        "len": 9,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "d72790df-21ad-482b-b3ee-c86fea3ce9ad",
+    "quizId": "a6cfb45b-4b26-42c9-9e8a-ceda2bf545e4",
+    "cat": "basic_theory",
+    "diff": "easy",
+    "qtext": "真理値表とは何か。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.20",
+    "opts": [
+      {
+        "id": "9c6633cc-6fdd-4f91-8e04-a02342445cb3",
+        "text": "論理演算の入出力をすべて一覧にした表",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "6c9e416f-ebf0-423b-b9a7-19d76e66a29b",
+        "text": "データベースのテーブル構造を示す図",
+        "len": 17,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "1fbb78a2-23d5-4d58-bbd6-315e723c2c2e",
+        "text": "プログラムの実行結果を記録した表",
+        "len": 16,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "39811cdf-e9cf-4835-9a12-1223fa3ea58e",
+        "text": "ネットワークの接続状況を示す表",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "fe46d70d-535a-4111-8a6a-816d2dc877f2",
+    "quizId": "0c498260-8162-48c7-a198-d563a1c4d536",
+    "cat": "basic_theory",
+    "diff": "easy",
+    "qtext": "BCD（2進化10進数）の説明として正しいものはどれか。",
+    "correctLen": 21,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.62",
+    "opts": [
+      {
+        "id": "8bce66de-d4fb-47c7-af96-f5ffe6787021",
+        "text": "10進数の各桁を4ビットの2進数で表す方式",
+        "len": 21,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "e16a62f5-f28b-44ac-b56e-d8111ad6ed6e",
+        "text": "2進数を10進数に変換するアルゴリズム",
+        "len": 19,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "a236ce10-3fb9-4368-9525-a7f8eb336bf9",
+        "text": "16進数を2進数で表す方式",
+        "len": 13,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "ca57bf99-36c7-46d1-84ef-ad7e860aebd1",
+        "text": "8進数の各桁を3ビットで表す方式",
+        "len": 16,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "204f8eb2-d46b-4c4c-90d6-951efd01f333",
+    "quizId": "0c498260-8162-48c7-a198-d563a1c4d536",
+    "cat": "basic_theory",
+    "diff": "medium",
+    "qtext": "カルノー図の用途として正しいものはどれか。",
+    "correctLen": 13,
+    "correctIsShortest": false,
+    "correctIsLongest": false,
+    "ratio": "1.33",
+    "opts": [
+      {
+        "id": "b65b603e-0753-4f03-af18-64d64834b4c2",
+        "text": "論理式を視覚的に簡略化する",
+        "len": 13,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "2b336cf5-98c1-4bb6-99de-b628d935ab77",
+        "text": "データの流れを可視化する",
+        "len": 12,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "0bcec837-8262-461e-9bdc-a2f07fd1cf70",
+        "text": "ネットワーク構成を表現する",
+        "len": 13,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "60fbed00-0469-40c8-a414-69cf2c553ca3",
+        "text": "データベースのテーブル関係を示す",
+        "len": 16,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "8d11029c-4937-47cf-b923-e6bd9c11079b",
+    "quizId": "0c498260-8162-48c7-a198-d563a1c4d536",
+    "cat": "basic_theory",
+    "diff": "medium",
+    "qtext": "加算器において、全加算器（Full Adder）が半加算器（Half Adder）と異なる点はどれか。",
+    "correctLen": 20,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.22",
+    "opts": [
+      {
+        "id": "6aaf8027-7207-4d5d-9bed-2ee9e7574a39",
+        "text": "下位桁からの繰り上がりを入力として扱える",
+        "len": 20,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "b0a2f846-4606-456c-b39f-de566b55c9bd",
+        "text": "減算も同時に行える",
+        "len": 9,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "72e7e833-1cb8-49fb-bd0d-fcec9e700760",
+        "text": "浮動小数点数を扱える",
+        "len": 10,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "74f37467-dae8-4c0b-b1e5-bc6d5560f690",
+        "text": "3つ以上の数の加算を同時に行える",
+        "len": 16,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "8e45c7af-f720-4347-99f4-f41ff9e35374",
+    "quizId": "0c498260-8162-48c7-a198-d563a1c4d536",
+    "cat": "basic_theory",
+    "diff": "medium",
+    "qtext": "オートマトンの説明として正しいものはどれか。",
+    "correctLen": 22,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.29",
+    "opts": [
+      {
+        "id": "1f1c10f9-0d32-47d0-a255-009d36d13716",
+        "text": "入力に応じて状態が遷移する抽象的な計算モデル",
+        "len": 22,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "4122695e-baf5-4704-8b43-d518b6d4e5ea",
+        "text": "自動的にプログラムを生成するツール",
+        "len": 17,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "aa49b79e-e91e-4a0e-88a4-ef8fecbd26ea",
+        "text": "データベースを自動管理するシステム",
+        "len": 17,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "d147ee2e-592f-4e7f-bdd2-9effe7993b0d",
+        "text": "ネットワークを自動監視するソフトウェア",
+        "len": 19,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "a1ad5301-2c99-40bb-b7d0-5ac169fba845",
+    "quizId": "0c498260-8162-48c7-a198-d563a1c4d536",
+    "cat": "basic_theory",
+    "diff": "medium",
+    "qtext": "ド・モルガンの法則として正しいものはどれか。",
+    "correctLen": 14,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.17",
+    "opts": [
+      {
+        "id": "3905d40f-f547-40af-9b77-d2e02be6880d",
+        "text": "¬(A∧B) = ¬A∨¬B",
+        "len": 14,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "72316d7a-e4c3-417e-b3bc-77416e065220",
+        "text": "¬(A∧B) = ¬A∧¬B",
+        "len": 14,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "a83b29ba-06ac-47a6-a015-a493dfde0a5d",
+        "text": "¬(A∨B) = ¬A∨¬B",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "e344b8f2-6e6c-4cf2-be53-51819a5476dc",
+        "text": "¬(A∧B) = A∨B",
+        "len": 12,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "c1a7574e-21c9-4f9c-a806-70e66179e4aa",
+    "quizId": "0c498260-8162-48c7-a198-d563a1c4d536",
+    "cat": "basic_theory",
+    "diff": "medium",
+    "qtext": "状態遷移図の説明として正しいものはどれか。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.64",
+    "opts": [
+      {
+        "id": "ad5594c6-a0e0-42a5-b4e7-f890d4528190",
+        "text": "システムの状態と遷移を図で表したもの",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "bb6419a4-6c16-4b44-bfcf-d402372f98f4",
+        "text": "データの流れを表した図",
+        "len": 11,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "69dcacc1-f3a1-444e-9ddc-991d31ac6257",
+        "text": "クラスの継承関係を表した図",
+        "len": 13,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "3a7f136e-9d19-459b-a5d5-24e92af2ac4a",
+        "text": "プロセスのスケジューリングを表した図",
+        "len": 18,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  }
+]

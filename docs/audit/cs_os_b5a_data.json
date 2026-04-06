@@ -1,0 +1,4061 @@
+[
+  {
+    "qid": "8fe9e9f4-956d-49bb-b0f5-f23c44bb2265",
+    "quizId": "a6cfb45b-4b26-42c9-9e8a-ceda2bf545e4",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "標本化（サンプリング）の説明として正しいものはどれか。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.64",
+    "opts": [
+      {
+        "id": "d621d454-18c9-4699-9bc4-34658ea49428",
+        "text": "アナログ信号を一定間隔で測定すること",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "10994df6-9dee-49c5-bc0c-cf117c2b18b3",
+        "text": "デジタルデータを圧縮すること",
+        "len": 14,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "193b6bfe-57a5-4c8c-adf1-82c91f38639a",
+        "text": "データを暗号化すること",
+        "len": 11,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "6073e421-d482-4769-9c5d-7a0f694c420a",
+        "text": "ファイルをバックアップすること",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "396be538-af4e-4103-921b-14004038089b",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "プロセスとスレッドの違いとして正しいものはどれか。",
+    "correctLen": 23,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.53",
+    "opts": [
+      {
+        "id": "44cf9584-9b8b-4475-a0c8-d35a6a0c6a98",
+        "text": "スレッドはプロセスより多くのメモリを消費する",
+        "len": 22,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "2bc59f17-65c4-4736-8156-d2d94fe055da",
+        "text": "プロセスは同一メモリ空間を共有する",
+        "len": 17,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "151e83ea-d8b4-40d3-bfde-3b303c486643",
+        "text": "スレッドは同一プロセス内でメモリ空間を共有する",
+        "len": 23,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "7ad9af82-1145-48f6-a9c5-19390543a92e",
+        "text": "プロセスとスレッドに違いはない",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "f25b5605-4acc-43ea-b062-07ce0e34d890",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "OSのカーネルの役割として最も適切なものはどれか。",
+    "correctLen": 28,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.15",
+    "opts": [
+      {
+        "id": "f13c7c83-9d3c-4293-95f3-9dfe7fb1c882",
+        "text": "ハードウェアやプロセス、メモリなどシステム全体を制御する",
+        "len": 28,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "1b8db892-8668-4b0a-88df-e442f0253a95",
+        "text": "ユーザーのGUIを描画する",
+        "len": 13,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "bf6e121c-e3d1-4e38-823f-e4ff1f3c6145",
+        "text": "アプリケーションのインストールを行う",
+        "len": 18,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "bcc05999-0ebe-4927-969a-1287a5f52c4d",
+        "text": "ファイルの圧縮と暗号化を行う",
+        "len": 14,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "93b5a028-148a-410d-a97e-e209c3e74f45",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "ページングの説明として正しいものはどれか。",
+    "correctLen": 35,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.19",
+    "opts": [
+      {
+        "id": "4c2564b2-caae-43b3-a662-b9fb8d4581f1",
+        "text": "メモリを可変サイズのセグメントに分割する",
+        "len": 20,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "098db7b3-77b1-42a6-a3c9-6a5f40d20ab5",
+        "text": "メモリを固定サイズのページに分割し仮想アドレスを物理アドレスに変換する",
+        "len": 35,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "c484ad41-536d-4c5e-8e7e-78ee9836e228",
+        "text": "ディスク全体をメモリとして使用する",
+        "len": 17,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "fbdd9c21-eece-4df0-a889-53f7bc87327d",
+        "text": "CPUキャッシュの管理方式の一つ",
+        "len": 16,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "619d316e-6cdb-426f-8ab6-6dad639294ef",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "ラウンドロビンスケジューリングの説明として正しいものはどれか。",
+    "correctLen": 25,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.39",
+    "opts": [
+      {
+        "id": "1be1039a-0f5d-4fab-b3d3-fc8b3e60caeb",
+        "text": "最も短い実行時間のプロセスを優先する",
+        "len": 18,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "02ebccba-d29f-4ea5-84bf-7237989a0977",
+        "text": "各プロセスに等しいタイムスライスを順番に割り当てる",
+        "len": 25,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "cc7791e4-3c36-4054-be8e-b62db4a17aa6",
+        "text": "優先度の高いプロセスが常に先に実行される",
+        "len": 20,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "ec87907a-6a41-4077-9e1f-4939047f066b",
+        "text": "先に到着したプロセスが完了するまで実行される",
+        "len": 22,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "e0437541-1751-4538-9afb-fec9d40c1f0d",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "仮想記憶方式におけるページテーブルの役割として正しいものはどれか。",
+    "correctLen": 27,
+    "correctIsShortest": true,
+    "correctIsLongest": false,
+    "ratio": "1.15",
+    "opts": [
+      {
+        "id": "21d064f7-59fd-4a30-9a1e-c3fff2340457",
+        "text": "プロセス間の通信データを格納するための共有メモリ領域を管理する",
+        "len": 31,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "6f741a57-1502-4cb5-af9b-c06286d76ae1",
+        "text": "仮想アドレスから物理アドレスへの変換を行う対応表である",
+        "len": 27,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "1e5c85b1-a624-4056-a5d6-6f42fe6f7d95",
+        "text": "ディスク上のファイルシステムのブロック割り当てを管理する",
+        "len": 28,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "89fd57bc-2fd8-4961-92fc-b7ab8c7515c5",
+        "text": "CPUのレジスタ割り当てを最適化するためのテーブルである",
+        "len": 28,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "69eaec02-12cd-4d1e-90d4-98e54d8c16cc",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "ページ置換アルゴリズムに関する説明として正しいものはどれか。",
+    "correctLen": 33,
+    "correctIsShortest": false,
+    "correctIsLongest": false,
+    "ratio": "1.52",
+    "opts": [
+      {
+        "id": "5c44c9d9-a68d-47c5-830a-80ae8c2f2856",
+        "text": "FIFOは最も使用頻度の低いページを置換し、LRUは最も古いページを置換する",
+        "len": 38,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "37acdcdc-4f1c-4fd4-9286-5aa10579efcc",
+        "text": "LRUとFIFOは常に同じページフォールト率を示す",
+        "len": 25,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "0ac630d8-2bf9-47a8-ad09-ef59e6b6efa7",
+        "text": "FIFOではBéládyの異常が起こりうるが、LRUでは起こらない",
+        "len": 33,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "20c4ac43-7daf-4a6c-9476-2b796249a210",
+        "text": "LRUの方がFIFOより実装コストが低く、常にすべての面で優れている",
+        "len": 34,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "f65dd1cb-0556-4d2f-9477-f8805a61db38",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "メモリ管理方式であるページングとセグメンテーションの比較として正しいものはどれか。",
+    "correctLen": 62,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.00",
+    "opts": [
+      {
+        "id": "6b3b865a-dd34-42ff-ad6e-1b695fa10ee7",
+        "text": "ページングは固定サイズで外部フラグメンテーションがなく、セグメンテーションは可変サイズで外部フラグメンテーションが起こりうる",
+        "len": 62,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "7a281ffd-1e3a-4568-9f32-5a57b7ad4b02",
+        "text": "セグメンテーションは固定サイズで外部フラグメンテーションがなく、ページングは可変サイズである",
+        "len": 46,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "5f85bcfd-3156-4a51-9cce-f466e2fa6ff9",
+        "text": "両方とも固定サイズで管理され、フラグメンテーションの違いはない",
+        "len": 31,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "09b14ddc-ded5-4c58-86fe-1af6ec8051dc",
+        "text": "ページングは論理的な単位で分割し、セグメンテーションは物理的な単位で分割する",
+        "len": 38,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "c8e08e15-66e8-4a54-89b3-c8d62d5b411b",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "プロセススケジューリングにおける優先度ベース方式とラウンドロビン方式の比較として正しいものはどれか。",
+    "correctLen": 36,
+    "correctIsShortest": false,
+    "correctIsLongest": false,
+    "ratio": "1.60",
+    "opts": [
+      {
+        "id": "3a3633c3-e7a7-4124-a57b-c7bac9450052",
+        "text": "ラウンドロビンはスタベーションが発生するが、優先度ベースでは発生しない",
+        "len": 35,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "e12c0497-c0be-476f-8be6-b4f9ac1454e4",
+        "text": "優先度ベースではスタベーションが起こりうるが、エージング技法で防止できる",
+        "len": 36,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "e340e881-a9f2-411b-a339-b07924280c13",
+        "text": "ラウンドロビンは非プリエンプティブであり、実行中のプロセスは完了まで中断されない",
+        "len": 40,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "ac4aa829-576b-48d1-bd23-1056cc2861de",
+        "text": "優先度ベースは常にラウンドロビンより応答時間が短い",
+        "len": 25,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "9badd323-59f9-44bf-96b2-31bb14635104",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "UNIX系ファイルシステムにおけるi-node（アイノード）の説明として正しいものはどれか。",
+    "correctLen": 39,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.44",
+    "opts": [
+      {
+        "id": "b4f9fa96-49dc-49e6-a267-086d65a7887f",
+        "text": "ファイル名とファイルの内容データを直接格納するデータ構造である",
+        "len": 31,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "22252ea8-636d-4c46-8bdf-9760cd5877a9",
+        "text": "ディレクトリの階層構造を表現するためのツリー構造である",
+        "len": 27,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "0c538279-32a3-480c-ba66-eeacb2da214b",
+        "text": "ファイルのメタデータとデータブロックへのポインタを格納し、ファイル名は含まない",
+        "len": 39,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "92100135-46cf-4e19-afec-1256fa430af3",
+        "text": "ファイルのバックアップ情報を保存するための補助構造である",
+        "len": 28,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "48685202-670a-4153-83b9-f08953cf6851",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "ファイルシステムの主な役割として正しいものはどれか。",
+    "correctLen": 21,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.91",
+    "opts": [
+      {
+        "id": "5f97d4e4-ac43-4079-a569-f4340c716f88",
+        "text": "CPUのタスクスケジューリング",
+        "len": 15,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "e24361c4-36d0-49d8-bef0-5e27016ef8f1",
+        "text": "ネットワーク接続の管理",
+        "len": 11,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "88ec7c4b-7afd-471d-90f1-49de674840c8",
+        "text": "ディスク上のデータを階層的に整理し管理する",
+        "len": 21,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "847aacc7-ab6d-496a-a598-e3c57e14a6c0",
+        "text": "メモリの仮想アドレス変換",
+        "len": 12,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "f1000001-0000-4000-a000-000000000121",
+    "quizId": "60000001-0000-0000-0000-000000000006",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "ページフォールトが発生するのはどのようなときか。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.50",
+    "opts": [
+      {
+        "id": "f1000001-0000-4000-b000-000000000121",
+        "text": "必要なページが主記憶に存在しないとき",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "f1000001-0000-4000-b000-000000000122",
+        "text": "CPUのクロック周波数が低下したとき",
+        "len": 18,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "f1000001-0000-4000-b000-000000000123",
+        "text": "同じロックを二重に取得したとき",
+        "len": 15,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "f1000001-0000-4000-b000-000000000124",
+        "text": "ファイル名が重複したとき",
+        "len": 12,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "a4659253-e40e-4e39-b40f-3757a5d1a81d",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "デッドロックの説明として正しいものはどれか。",
+    "correctLen": 27,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.80",
+    "opts": [
+      {
+        "id": "57863312-ec3a-41f2-9aa8-e92c905c4f2b",
+        "text": "複数のプロセスが互いに資源を待ち合い進行不能になる状態",
+        "len": 27,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "1ec6ee21-5d2e-44a0-8b78-2522fa62fc9e",
+        "text": "プロセスが無限ループに入る状態",
+        "len": 15,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "c9597c2d-ca6b-4738-ad7d-f3d9301e359e",
+        "text": "メモリが不足してプロセスが停止する状態",
+        "len": 19,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "0c962071-d3a0-44ac-9dde-63dea5ae1752",
+        "text": "CPUの使用率が100%になる状態",
+        "len": 17,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "032c0b44-1678-4962-8c01-228d5316f647",
+    "quizId": "e1afaf9c-86d5-43a4-ad33-f38b904cad84",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "ファイルシステムの役割として正しいものはどれか。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.20",
+    "opts": [
+      {
+        "id": "32814484-26b5-4239-94dc-2cd3631c041c",
+        "text": "ストレージ上のデータを管理する仕組み",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "31e39d95-caa8-4abb-ac50-5d7c24ab81b6",
+        "text": "CPUの処理速度を管理する仕組み",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "2621129b-1c35-4d29-b74d-93c2d53c1672",
+        "text": "ネットワーク接続を管理する仕組み",
+        "len": 16,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "0efd5486-9bd3-4eb6-b104-d29c94fe5fc6",
+        "text": "ユーザーの認証を管理する仕組み",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "433a7e3c-9770-426f-9455-2eb547c19619",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "ページフォルトが発生する状況として正しいものはどれか。",
+    "correctLen": 24,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.50",
+    "opts": [
+      {
+        "id": "6b9f5e06-b062-46d9-85ec-58b5916000d9",
+        "text": "CPUキャッシュにデータが見つからなかった場合",
+        "len": 23,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "b93d0d21-2254-4488-9d39-14357873113b",
+        "text": "アクセスしたページが物理メモリ上に存在しない場合",
+        "len": 24,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "131d0135-d649-4b57-b5b9-196f5322de58",
+        "text": "ファイルシステムのエラーが発生した場合",
+        "len": 19,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "d46f8198-2496-42e1-8dbf-e978dea8dcfe",
+        "text": "プロセスの優先度が変更された場合",
+        "len": 16,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "416543ee-3456-4134-819a-905828f72b35",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "セマフォの説明として正しいものはどれか。",
+    "correctLen": 26,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.73",
+    "opts": [
+      {
+        "id": "75d39a82-29b6-4e2b-8389-782c1ede9abb",
+        "text": "カウンタ変数で共有資源へのアクセスを制御する同期機構",
+        "len": 26,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "26cfa18b-da19-4d86-9c08-b2e798efff79",
+        "text": "プロセス間でデータを送受信する仕組み",
+        "len": 18,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "32dc0c90-ccc1-4104-a626-37d3b9793005",
+        "text": "メモリを自動的に管理する仕組み",
+        "len": 15,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "d9067000-7965-4c87-a9fe-e66e70fa5b94",
+        "text": "ファイルのアクセス権を管理する仕組み",
+        "len": 18,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "8eed3b0e-44fb-479d-86d9-569cc8ca60b4",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "ラウンドロビン方式のプロセススケジューリングの説明として正しいものはどれか。",
+    "correctLen": 25,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.39",
+    "opts": [
+      {
+        "id": "71ce3456-3601-45d3-ab21-6d92249d3417",
+        "text": "各プロセスに均等な時間を割り当て順番に実行する方式",
+        "len": 25,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "cc258f8e-76da-4dfe-8620-6806c1464996",
+        "text": "最も優先度の高いプロセスを常に実行する方式",
+        "len": 21,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "a3ed9d6f-825d-4a27-a44c-8a37f5cec1cd",
+        "text": "実行時間の短いプロセスを優先する方式",
+        "len": 18,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "6d10eb76-86d2-4d31-9560-6e036071b698",
+        "text": "先に到着したプロセスを先に実行する方式",
+        "len": 19,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "50bba785-d14f-4526-a80c-9380918ef2fc",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "ページングの説明として正しいものはどれか。",
+    "correctLen": 24,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.71",
+    "opts": [
+      {
+        "id": "6a235907-36d4-4db3-9f12-77da24b73072",
+        "text": "メモリを固定サイズのページに分割して管理する方式",
+        "len": 24,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "d137c603-5488-447b-af27-ef1d1271e708",
+        "text": "メモリを可変サイズのセグメントに分割する方式",
+        "len": 22,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "a893ad50-8fea-4782-a2f1-d8fbd0cafe6d",
+        "text": "メモリの使用量を監視する方式",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "b5355aee-a6e5-47ba-895f-bde8a93eb64c",
+        "text": "メモリ内のデータを暗号化する方式",
+        "len": 16,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "b530ec76-d8b0-4044-b7cf-38ea4cda2d54",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "コンテキストスイッチの説明として正しいものはどれか。",
+    "correctLen": 36,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.00",
+    "opts": [
+      {
+        "id": "b298b327-c89c-411b-8605-3c34fb754aaf",
+        "text": "メモリの内容をディスクに書き出すこと",
+        "len": 18,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "15baa458-b3f5-458a-846b-8f6426df09f5",
+        "text": "プロセスの状態を保存し別のプロセスの状態を復元してCPUを切り替えること",
+        "len": 36,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "d5b76861-21df-4e5a-8d33-e11cd5605771",
+        "text": "ユーザーモードからカーネルモードへの遷移のみを指す",
+        "len": 25,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "8f34afa0-1e6a-476e-a6b1-af701327d358",
+        "text": "プロセスを終了して新しいプロセスを起動すること",
+        "len": 23,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "79569b91-c76a-40c3-9591-9bf2c62f3bd5",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "仮想メモリの利点として正しいものはどれか。",
+    "correctLen": 22,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.69",
+    "opts": [
+      {
+        "id": "3dec7c18-858c-407f-aa93-dd8b86f7aae5",
+        "text": "プログラムの実行速度が必ず向上する",
+        "len": 17,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "56234859-7ce5-4f44-92f2-683203e7fde1",
+        "text": "物理メモリより大きなアドレス空間を利用できる",
+        "len": 22,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "b6f88040-5e80-444d-b6ce-21927c1fa90e",
+        "text": "ディスクI/Oが不要になる",
+        "len": 13,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "6a4a4984-37a4-44de-865c-2f25eb77eb67",
+        "text": "メモリリークが完全に防止される",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "29063da6-e6f0-4714-8181-c0be4984111a",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "スラッシングの説明として正しいものはどれか。",
+    "correctLen": 27,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.93",
+    "opts": [
+      {
+        "id": "7d9f4a1f-acfc-4951-a9d4-b2a8739b8223",
+        "text": "ページの入れ替えが頻発して処理効率が著しく低下する現象",
+        "len": 27,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "31ae3777-c07b-4374-bf78-012fe9d9c04f",
+        "text": "CPUの処理速度が低下する現象",
+        "len": 15,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "814a071c-f3e6-4dad-ab57-456924b96717",
+        "text": "ハードディスクが故障する現象",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "45587047-80b9-4a4b-8ea6-4a9c4e9e0de8",
+        "text": "ネットワークの通信速度が低下する現象",
+        "len": 18,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "41ddb427-9b7f-49d2-8c0a-96c4698996ba",
+    "quizId": "b69b76bc-8e71-44e5-a8db-4523dccffe35",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "デッドロックの説明として正しいものはどれか。",
+    "correctLen": 25,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.92",
+    "opts": [
+      {
+        "id": "ebb00930-ccd9-4574-9501-af8236a9c1ee",
+        "text": "複数のトランザクションが互いにロックを待ち合う状態",
+        "len": 25,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "3017961c-438f-4c32-9ab6-71fc914540a2",
+        "text": "データベースの容量が不足した状態",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "a8e6a1f9-9e53-499f-90e1-48050427e161",
+        "text": "ネットワーク切断でトランザクションが中断した状態",
+        "len": 24,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "0971b4a4-2b2f-453e-b11f-f71bbd8c1528",
+        "text": "インデックスが破損した状態",
+        "len": 13,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "dd996a7e-3fc3-4ff1-8a50-abfabc02eaba",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "プロセスとスレッドの違いとして正しいものはどれか。",
+    "correctLen": 23,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.53",
+    "opts": [
+      {
+        "id": "31e4ea65-3ebd-41ae-b62d-ae845a4bc94c",
+        "text": "スレッドは同一プロセス内でメモリ空間を共有する",
+        "len": 23,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "8a428a67-e730-4ff6-88f1-4f81a3012141",
+        "text": "プロセスはスレッドより軽量である",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "098d28ad-9488-4f1e-9f46-5d3cadf28395",
+        "text": "スレッドは独立したメモリ空間を持つ",
+        "len": 17,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "9cf6aa2e-2a93-4c62-9e50-21fcc32beb03",
+        "text": "プロセスとスレッドに違いはない",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "ef47d31a-9cd7-4dab-9b93-2653f0c995dd",
+    "quizId": "e1afaf9c-86d5-43a4-ad33-f38b904cad84",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "GPUの用途として最も適切なものはどれか。",
+    "correctLen": 9,
+    "correctIsShortest": false,
+    "correctIsLongest": false,
+    "ratio": "1.57",
+    "opts": [
+      {
+        "id": "35b18b23-b0c5-44c7-aa3b-0244aabe08fe",
+        "text": "画像処理や並列計算",
+        "len": 9,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "39ffb907-8646-4a45-a8ca-20c8e4f6dca8",
+        "text": "データの長期保存",
+        "len": 8,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "8813b096-f389-47eb-9551-7a11a8062462",
+        "text": "ネットワーク通信の制御",
+        "len": 11,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "4a8d04df-d376-4c2e-b221-5d8e428f3295",
+        "text": "文書の印刷処理",
+        "len": 7,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "6f913e4a-8c11-48d8-819b-3b52b4814389",
+    "quizId": "3ba24aae-54a2-40a7-a3c1-0df0d4993208",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "B木（Bツリー）が主に使用される場面はどれか。",
+    "correctLen": 13,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.86",
+    "opts": [
+      {
+        "id": "e11a8f06-d018-4bb0-ad7d-920d7b6c8e2e",
+        "text": "データベースのインデックス",
+        "len": 13,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "cd03ac78-d15b-4000-8af4-392b3425398b",
+        "text": "メモリ内のソート",
+        "len": 8,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "30246ead-29a3-4683-868c-81a6cc9673c1",
+        "text": "ネットワークのルーティング",
+        "len": 13,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "b71870d0-7fdf-4a1a-939f-6bf463234e96",
+        "text": "画像の圧縮処理",
+        "len": 7,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "fcb60331-886a-4567-854f-c9549f02cf0b",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "次のOS運用場面を想定するとき、ページングの説明として正しいものはどれか。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 24,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.71",
+    "opts": [
+      {
+        "id": "9f4632f5-d646-4785-b5af-8fb604eb5838",
+        "text": "メモリを固定サイズのページに分割して管理する方式",
+        "len": 24,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "c2762633-f1d4-4607-b7ec-d9ea12600364",
+        "text": "メモリを可変サイズのセグメントに分割する方式",
+        "len": 22,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "7a239f0f-3b9e-424f-9d58-1c1d418738ad",
+        "text": "メモリの使用量を監視する方式",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "a8b90049-d06b-4be7-a501-65f7725f0dbb",
+        "text": "メモリ内のデータを暗号化する方式",
+        "len": 16,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "2989f042-fdfc-4ffd-8c61-5ea42b7ce44d",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "次のシステム障害対応の文脈で、スラッシングの説明として正しいものはどれか。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 27,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.93",
+    "opts": [
+      {
+        "id": "00230417-7b38-4a15-941a-1c499f495b4c",
+        "text": "ページの入れ替えが頻発して処理効率が著しく低下する現象",
+        "len": 27,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "19ef2c7e-fa09-4da8-912a-ccc817519369",
+        "text": "CPUの処理速度が低下する現象",
+        "len": 15,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "71c07eb7-9a2d-4124-99a7-b2fe98f9de7d",
+        "text": "ハードディスクが故障する現象",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "7b0241ce-6fff-42c1-8205-7f864bf49ae8",
+        "text": "ネットワークの通信速度が低下する現象",
+        "len": 18,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "d528bd4d-db5c-48de-80c1-4772136bc6bb",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "次のプロセス管理の状況で、プロセスとスレッドの違いとして正しいものはどれか。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 23,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.53",
+    "opts": [
+      {
+        "id": "b5068ada-699e-4bf8-948a-ae1c67749100",
+        "text": "スレッドは同一プロセス内でメモリ空間を共有する",
+        "len": 23,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "fe424dea-0b01-4f91-aefe-d9665afdeb6f",
+        "text": "プロセスはスレッドより軽量である",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "17177c26-c8d6-4389-b80e-ffedd1b066c5",
+        "text": "スレッドは独立したメモリ空間を持つ",
+        "len": 17,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "76d5a980-bb37-4fee-9b8f-b5ae0b62cd43",
+        "text": "プロセスとスレッドに違いはない",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "aafd3ea4-7ffd-405b-9294-21e82c6bac26",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "次のメモリ管理の観点から、デッドロックの説明として正しいものはどれか。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 27,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.80",
+    "opts": [
+      {
+        "id": "e907e3e1-9c37-4a86-97af-ddb0ac5b15ab",
+        "text": "複数のプロセスが互いに資源を待ち合い進行不能になる状態",
+        "len": 27,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "e1f34871-cd01-4018-83a5-23c0f41d48f8",
+        "text": "プロセスが無限ループに入る状態",
+        "len": 15,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "cfc762ee-8f84-4d54-85bf-22039bd1c7d8",
+        "text": "メモリが不足してプロセスが停止する状態",
+        "len": 19,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "068825be-208f-4e7c-9e25-f9a7c51326bc",
+        "text": "CPUの使用率が100%になる状態",
+        "len": 17,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "553892e5-7330-4687-8bb0-0c4d0d6a62fa",
+    "quizId": "b69b76bc-8e71-44e5-a8db-4523dccffe35",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "次のプロセス管理の状況で、デッドロックの説明として正しいものはどれか。\n\n実装や運用上の含意まで含めて最も適切なものを選べ。",
+    "correctLen": 25,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.92",
+    "opts": [
+      {
+        "id": "0f052d72-0569-45ca-85ab-e9080cd1455c",
+        "text": "複数のトランザクションが互いにロックを待ち合う状態",
+        "len": 25,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "d6a05be5-c10d-41ef-bc22-3c7b83cc3eb9",
+        "text": "データベースの容量が不足した状態",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "b63c9c68-d579-4df3-bf14-0aed4b3081b8",
+        "text": "ネットワーク切断でトランザクションが中断した状態",
+        "len": 24,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "63ca6f38-2111-4e56-845e-2d0e061c3fa6",
+        "text": "インデックスが破損した状態",
+        "len": 13,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "fd6b67a8-ad7e-42c9-ba18-c81930b959b7",
+    "quizId": "a6cfb45b-4b26-42c9-9e8a-ceda2bf545e4",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "次のメモリ管理の観点から、標本化（サンプリング）の説明として正しいものはどれか。\n\n実装や運用上の含意まで含めて最も適切なものを選べ。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.64",
+    "opts": [
+      {
+        "id": "2919a15c-4f25-4b1f-ba2a-57c4888c29b9",
+        "text": "アナログ信号を一定間隔で測定すること",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "b676eadc-50bf-4a30-afee-d22e36763ec4",
+        "text": "デジタルデータを圧縮すること",
+        "len": 14,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "ceb6b409-824a-417c-8a8f-6be3647771e0",
+        "text": "データを暗号化すること",
+        "len": 11,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "39b732b3-dc34-4323-81d7-902988e6ee9d",
+        "text": "ファイルをバックアップすること",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "d3b757ae-355d-430b-a027-f6019b9397ad",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "次のOS運用場面を想定するとき、ラウンドロビン方式のプロセススケジューリングの説明として正しいものはどれか。\n\n実装や運用上の含意まで含めて最も適切なものを選べ。",
+    "correctLen": 25,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.39",
+    "opts": [
+      {
+        "id": "2524b15a-d342-4d00-9a12-d43d5e5de5c6",
+        "text": "各プロセスに均等な時間を割り当て順番に実行する方式",
+        "len": 25,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "24e7bf4d-f491-492b-b54b-b5f13031d64c",
+        "text": "最も優先度の高いプロセスを常に実行する方式",
+        "len": 21,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "caaafe26-cbde-4550-aa14-b9e29554bc88",
+        "text": "実行時間の短いプロセスを優先する方式",
+        "len": 18,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "e2ac761b-484d-498a-aae8-be31f1ec6d3a",
+        "text": "先に到着したプロセスを先に実行する方式",
+        "len": 19,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "b01af69b-20fc-4edb-8c3c-2546b229b92b",
+    "quizId": "e1afaf9c-86d5-43a4-ad33-f38b904cad84",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "次のシステム障害対応の文脈で、ファイルシステムの役割として正しいものはどれか。\n\n実装や運用上の含意まで含めて最も適切なものを選べ。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.20",
+    "opts": [
+      {
+        "id": "ec3adaeb-499c-4c1a-8a9c-3dc185548929",
+        "text": "ストレージ上のデータを管理する仕組み",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "dcc19e0d-a799-410a-9689-36134d87dfb7",
+        "text": "CPUの処理速度を管理する仕組み",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "23eb333f-c2b7-4edd-bb3e-8f710973b7cc",
+        "text": "ネットワーク接続を管理する仕組み",
+        "len": 16,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "d08de846-8f81-4bf5-985a-83665635986d",
+        "text": "ユーザーの認証を管理する仕組み",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "7d4612f3-1777-4afa-ab2e-3a06db99495c",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "次のプロセス管理の状況で、セマフォの説明として正しいものはどれか。\n\n実装や運用上の含意まで含めて最も適切なものを選べ。",
+    "correctLen": 26,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.73",
+    "opts": [
+      {
+        "id": "3cb6a5ba-adff-4db9-9435-d29a2381c708",
+        "text": "カウンタ変数で共有資源へのアクセスを制御する同期機構",
+        "len": 26,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "2ee08359-7c2d-4e03-b85a-b4c524e31bf4",
+        "text": "プロセス間でデータを送受信する仕組み",
+        "len": 18,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "6576983c-4b94-4e5c-b8f9-782d2c0eddac",
+        "text": "メモリを自動的に管理する仕組み",
+        "len": 15,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "551511c2-c6c4-488a-a9d7-1bc11373245a",
+        "text": "ファイルのアクセス権を管理する仕組み",
+        "len": 18,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "cdc855aa-d242-4cf5-8dc6-fc9eeda10f6c",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "次のメモリ管理の観点から、プロセスとスレッドの違いとして正しいものはどれか。\n\n前提条件を踏まえて最も適切なものを選べ。",
+    "correctLen": 23,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.53",
+    "opts": [
+      {
+        "id": "b5a81680-93a8-4483-9dbf-f52a14d53bbe",
+        "text": "スレッドはプロセスより多くのメモリを消費する",
+        "len": 22,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "ac96e6cf-d04f-4071-98f3-52cf84ec9e08",
+        "text": "プロセスは同一メモリ空間を共有する",
+        "len": 17,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "64ff5181-d3d0-4fe8-b07e-27a3e492950e",
+        "text": "スレッドは同一プロセス内でメモリ空間を共有する",
+        "len": 23,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "df88610a-afbf-45a5-9edc-9d839291570f",
+        "text": "プロセスとスレッドに違いはない",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "82d65894-4927-40e1-b64c-cdf4205baf0d",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "次のOS運用場面を想定するとき、ページングの説明として正しいものはどれか。\n\n実装や運用上の含意まで含めて最も適切なものを選べ。",
+    "correctLen": 24,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.71",
+    "opts": [
+      {
+        "id": "819c5827-38d1-4134-8678-7e5285e89fe4",
+        "text": "メモリを固定サイズのページに分割して管理する方式",
+        "len": 24,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "fa3dddbd-202d-4f32-98ee-1c853ac24554",
+        "text": "メモリを可変サイズのセグメントに分割する方式",
+        "len": 22,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "6c8b0fa2-223f-4009-87fd-769df79a1e08",
+        "text": "メモリの使用量を監視する方式",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "7478e84f-d091-460e-90c0-fd7457f2f2fd",
+        "text": "メモリ内のデータを暗号化する方式",
+        "len": 16,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "b2493b60-0921-4896-b954-4e734cf41c56",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "次のシステム障害対応の文脈で、スラッシングの説明として正しいものはどれか。\n\n実装や運用上の含意まで含めて最も適切なものを選べ。",
+    "correctLen": 27,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.93",
+    "opts": [
+      {
+        "id": "edd1ae68-ae15-40b5-9e08-bf80911dd6d6",
+        "text": "ページの入れ替えが頻発して処理効率が著しく低下する現象",
+        "len": 27,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "bb105f88-3f34-4bf7-a769-d779e0597a8a",
+        "text": "CPUの処理速度が低下する現象",
+        "len": 15,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "e7bc60e9-1000-4cf8-be8a-daa1a2baeaff",
+        "text": "ハードディスクが故障する現象",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "1543b1f5-d48c-46e0-8728-221c17a8a25c",
+        "text": "ネットワークの通信速度が低下する現象",
+        "len": 18,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "eab1ad8c-0a02-4685-8093-bcc61f955425",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "次のプロセス管理の状況で、プロセスとスレッドの違いとして正しいものはどれか。\n\n実装や運用上の含意まで含めて最も適切なものを選べ。",
+    "correctLen": 23,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.53",
+    "opts": [
+      {
+        "id": "9192e3c2-510e-40e8-a94c-b47ce1b01a10",
+        "text": "スレッドは同一プロセス内でメモリ空間を共有する",
+        "len": 23,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "1856c4d5-c2e7-4cad-862a-eee12e1d60b7",
+        "text": "プロセスはスレッドより軽量である",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "7de1ac36-8514-4654-91b0-4a817bc240f7",
+        "text": "スレッドは独立したメモリ空間を持つ",
+        "len": 17,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "dc8a892a-d47b-446f-bbec-fc1b9454e103",
+        "text": "プロセスとスレッドに違いはない",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "5b49bc96-bb57-401a-9c89-4879291cd059",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "次のメモリ管理の観点から、デッドロックの説明として正しいものはどれか。\n\n前提条件を踏まえて最も適切なものを選べ。",
+    "correctLen": 27,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.80",
+    "opts": [
+      {
+        "id": "e3ad919d-8bf2-4e56-851f-0acbb33946c0",
+        "text": "複数のプロセスが互いに資源を待ち合い進行不能になる状態",
+        "len": 27,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "fc419a1c-3e31-455c-970c-c9f01c0930d1",
+        "text": "プロセスが無限ループに入る状態",
+        "len": 15,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "e27c83f6-eed8-478c-b9e3-8a0c14ef0bce",
+        "text": "メモリが不足してプロセスが停止する状態",
+        "len": 19,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "7630564e-6189-4137-a4f5-fdcd2dbe0ab0",
+        "text": "CPUの使用率が100%になる状態",
+        "len": 17,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "d8d1d7ce-8962-42f5-ad3f-7404b73afb9e",
+    "quizId": "b69b76bc-8e71-44e5-a8db-4523dccffe35",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "次のシステム障害対応の文脈で、デッドロックの説明として正しいものはどれか。\n\n実装や運用上の含意まで含めて最も適切なものを選べ。",
+    "correctLen": 25,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.92",
+    "opts": [
+      {
+        "id": "6dc58e35-99b9-42af-8628-690311e95bd4",
+        "text": "複数のトランザクションが互いにロックを待ち合う状態",
+        "len": 25,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "83ca1d18-44ae-488e-8d1f-6931a975021d",
+        "text": "データベースの容量が不足した状態",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "991cfc09-f882-40f5-84df-fd8ec83d6752",
+        "text": "ネットワーク切断でトランザクションが中断した状態",
+        "len": 24,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "e21487c5-910a-49ef-af2e-66081a33bbaf",
+        "text": "インデックスが破損した状態",
+        "len": 13,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "7475d413-2c40-4b14-a8c4-b98fd19250c7",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "次のメモリ管理の観点から、ラウンドロビン方式のプロセススケジューリングの説明として正しいものはどれか。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 25,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.39",
+    "opts": [
+      {
+        "id": "8f7cea5f-e975-4958-9c2f-df6b7331cbdc",
+        "text": "各プロセスに均等な時間を割り当て順番に実行する方式",
+        "len": 25,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "9539ea2d-1fae-4b71-84a1-0ee7947662b6",
+        "text": "最も優先度の高いプロセスを常に実行する方式",
+        "len": 21,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "9fec8284-8675-45de-aee6-ad9c7d9b9a2e",
+        "text": "実行時間の短いプロセスを優先する方式",
+        "len": 18,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "f2347c9b-d094-4f1f-b7b2-2f78e785818f",
+        "text": "先に到着したプロセスを先に実行する方式",
+        "len": 19,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "48da5143-7369-4962-ae9a-238f85c6f3ed",
+    "quizId": "a6cfb45b-4b26-42c9-9e8a-ceda2bf545e4",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "次のOS運用場面を想定するとき、標本化（サンプリング）の説明として正しいものはどれか。\n\n実装や運用上の含意まで含めて最も適切なものを選べ。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.64",
+    "opts": [
+      {
+        "id": "c67773ad-18b0-4a7e-9009-c16af0493c05",
+        "text": "アナログ信号を一定間隔で測定すること",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "2729d8c6-dcdf-490c-9b42-d0752bf1ddb1",
+        "text": "デジタルデータを圧縮すること",
+        "len": 14,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "8e57238a-0840-48c5-8685-7e323692a3ea",
+        "text": "データを暗号化すること",
+        "len": 11,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "e0722ea8-0f5d-481d-b631-4688d4335a32",
+        "text": "ファイルをバックアップすること",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "13137e5c-d6e0-4845-b23b-06ab7a512046",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "次のシステム障害対応の文脈で、セマフォの説明として正しいものはどれか。\n\n前提条件を踏まえて最も適切なものを選べ。",
+    "correctLen": 26,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.73",
+    "opts": [
+      {
+        "id": "302444a5-4322-4e3e-a03f-e0e9097abacb",
+        "text": "カウンタ変数で共有資源へのアクセスを制御する同期機構",
+        "len": 26,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "c4dab06a-af86-4494-bf36-a3e38ea893da",
+        "text": "プロセス間でデータを送受信する仕組み",
+        "len": 18,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "ac0ae64b-1df5-401d-aae0-037a1e4cb9b3",
+        "text": "メモリを自動的に管理する仕組み",
+        "len": 15,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "9a729f68-adca-47fa-859f-84d9e23b7e5f",
+        "text": "ファイルのアクセス権を管理する仕組み",
+        "len": 18,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "57f436e6-7804-49dd-8da6-ff3a4e534ec4",
+    "quizId": "e1afaf9c-86d5-43a4-ad33-f38b904cad84",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "次のプロセス管理の状況で、ファイルシステムの役割として正しいものはどれか。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.20",
+    "opts": [
+      {
+        "id": "a935d39a-854b-4ee8-b682-d336d955f1e7",
+        "text": "ストレージ上のデータを管理する仕組み",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "064d829a-808d-4db0-baf3-44a5f194668e",
+        "text": "CPUの処理速度を管理する仕組み",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "17ee08b1-81bf-460e-85d0-3aafafd10772",
+        "text": "ネットワーク接続を管理する仕組み",
+        "len": 16,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "b2333447-35b0-4755-82e5-200411a87ec0",
+        "text": "ユーザーの認証を管理する仕組み",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "2e60a796-acff-4e2d-837b-c6688b3f78b3",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "次のメモリ管理の観点から、プロセスとスレッドの違いとして正しいものはどれか。\n\n実装や運用上の含意まで含めて最も適切なものを選べ。",
+    "correctLen": 23,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.53",
+    "opts": [
+      {
+        "id": "7c0dd819-67ce-4016-90b9-599da4c07563",
+        "text": "スレッドはプロセスより多くのメモリを消費する",
+        "len": 22,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "e6c51d48-ca23-452f-8e61-31ac184d9a02",
+        "text": "プロセスは同一メモリ空間を共有する",
+        "len": 17,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "56906777-7f23-4f01-a984-0f7fd9a5ec1a",
+        "text": "スレッドは同一プロセス内でメモリ空間を共有する",
+        "len": 23,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "75d320e8-8c9f-4e1a-b97d-01236d081d59",
+        "text": "プロセスとスレッドに違いはない",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "f2d0894d-d0b9-456d-840a-2199d52b2b90",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "次のシステム障害対応の文脈で、ファイルシステムの主な役割として正しいものはどれか。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 21,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.91",
+    "opts": [
+      {
+        "id": "75bbf27f-09ab-4444-a7e1-3953dc8e8352",
+        "text": "CPUのタスクスケジューリング",
+        "len": 15,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "214aac03-acd4-4a0a-b6f8-887bc48e3f66",
+        "text": "ネットワーク接続の管理",
+        "len": 11,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "91246ee1-a907-4846-be68-83fb48c37b72",
+        "text": "ディスク上のデータを階層的に整理し管理する",
+        "len": 21,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "8674734c-b643-4fa7-85c9-7f2d99bf91d0",
+        "text": "メモリの仮想アドレス変換",
+        "len": 12,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "4cc89bb1-e441-448b-bcb1-e79a4783daec",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "次のOS運用場面を想定するとき、OSのカーネルの役割として最も適切なものはどれか。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 28,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.15",
+    "opts": [
+      {
+        "id": "eb9ee837-3f3f-4d67-b263-f85c4de80f3d",
+        "text": "ハードウェアやプロセス、メモリなどシステム全体を制御する",
+        "len": 28,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "9dcca719-494d-4300-9e2e-d1bf09d9f32c",
+        "text": "ユーザーのGUIを描画する",
+        "len": 13,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "5c62fd30-a964-4357-b4fb-f2a359338acc",
+        "text": "アプリケーションのインストールを行う",
+        "len": 18,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "ebf93119-2e77-4109-a333-0c305fc20a77",
+        "text": "ファイルの圧縮と暗号化を行う",
+        "len": 14,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "e8a9f9ec-f792-48fb-a429-d5fda0762721",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "次のプロセス管理の状況で、ページングの説明として正しいものはどれか。\n\n前提条件を踏まえて最も適切なものを選べ。",
+    "correctLen": 35,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.19",
+    "opts": [
+      {
+        "id": "d6a5f6e7-bdf1-4455-b8b9-620258f256ff",
+        "text": "メモリを可変サイズのセグメントに分割する",
+        "len": 20,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "400f4692-c821-4767-917b-2b5ef446e2e7",
+        "text": "メモリを固定サイズのページに分割し仮想アドレスを物理アドレスに変換する",
+        "len": 35,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "ee951383-98d9-47ae-ad2a-c9f04d907527",
+        "text": "ディスク全体をメモリとして使用する",
+        "len": 17,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "7b9b5b9a-a475-44be-98fd-3cfefd2a0436",
+        "text": "CPUキャッシュの管理方式の一つ",
+        "len": 16,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "32974308-3344-449d-babc-98ff6365410e",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "次のメモリ管理の観点から、仮想メモリの利点として正しいものはどれか。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 22,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.69",
+    "opts": [
+      {
+        "id": "daf5cea1-a082-4213-a331-965c244108e0",
+        "text": "プログラムの実行速度が必ず向上する",
+        "len": 17,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "59e6ee80-003a-443f-b3df-e35ccc7372e5",
+        "text": "物理メモリより大きなアドレス空間を利用できる",
+        "len": 22,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "720646c5-1fca-4aa0-b51c-5ede4ea85f53",
+        "text": "ディスクI/Oが不要になる",
+        "len": 13,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "34fef467-dfea-4fcd-b2d6-e2df9736e2c5",
+        "text": "メモリリークが完全に防止される",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "e78252a0-3e6a-4cae-80e7-a0df03c48283",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "次のOS運用場面を想定するとき、ラウンドロビンスケジューリングの説明として正しいものはどれか。\n\n実装や運用上の含意まで含めて最も適切なものを選べ。",
+    "correctLen": 25,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.39",
+    "opts": [
+      {
+        "id": "98f09b9a-ea2d-4765-8e81-c14e37ec4ef5",
+        "text": "最も短い実行時間のプロセスを優先する",
+        "len": 18,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "56d0d8a6-6512-4eb4-b7da-c526462dab73",
+        "text": "各プロセスに等しいタイムスライスを順番に割り当てる",
+        "len": 25,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "8260aa2a-92ed-46c3-8a2a-5c58f75baa07",
+        "text": "優先度の高いプロセスが常に先に実行される",
+        "len": 20,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "a7b3ede8-91e1-4f82-aaf5-a248aef51921",
+        "text": "先に到着したプロセスが完了するまで実行される",
+        "len": 22,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "0c6e768c-c6ae-49a9-93d0-ff4ebb0f6261",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "次のシステム障害対応の文脈で、コンテキストスイッチの説明として正しいものはどれか。\n\n前提条件を踏まえて最も適切なものを選べ。",
+    "correctLen": 36,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.00",
+    "opts": [
+      {
+        "id": "8a37c52e-8f71-4ed2-9214-84b0790c759b",
+        "text": "メモリの内容をディスクに書き出すこと",
+        "len": 18,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "b6068a1f-5517-4acd-b44d-27217230e522",
+        "text": "プロセスの状態を保存し別のプロセスの状態を復元してCPUを切り替えること",
+        "len": 36,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "f1d80026-31d6-4320-ace1-7b2f682ec2e6",
+        "text": "ユーザーモードからカーネルモードへの遷移のみを指す",
+        "len": 25,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "9dee6134-7cf5-4c7b-bd2b-115fb6a4fc05",
+        "text": "プロセスを終了して新しいプロセスを起動すること",
+        "len": 23,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "0583be8c-014e-4857-95d5-29ad6511ea7a",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "次のプロセス管理の状況で、ページフォルトが発生する状況として正しいものはどれか。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 24,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.50",
+    "opts": [
+      {
+        "id": "29971fb7-b3d2-4c60-9b6c-8af7f2062d5d",
+        "text": "CPUキャッシュにデータが見つからなかった場合",
+        "len": 23,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "4a64b6d9-3d48-43be-b9f1-57e12d677b1e",
+        "text": "アクセスしたページが物理メモリ上に存在しない場合",
+        "len": 24,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "f1f708fc-ad3c-4c09-9287-d2ab9c582a7f",
+        "text": "ファイルシステムのエラーが発生した場合",
+        "len": 19,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "1d916039-0af3-4480-a813-7612f6d50e68",
+        "text": "プロセスの優先度が変更された場合",
+        "len": 16,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "717437e6-a3a0-42a9-93c9-6c139c106988",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "次のメモリ管理の観点から、仮想記憶方式におけるページテーブルの役割として正しいものはどれか。\n\n実装や運用上の含意まで含めて最も適切なものを選べ。",
+    "correctLen": 27,
+    "correctIsShortest": true,
+    "correctIsLongest": false,
+    "ratio": "1.15",
+    "opts": [
+      {
+        "id": "645e6e8b-a036-4e59-81dd-1f8cc0643ef3",
+        "text": "プロセス間の通信データを格納するための共有メモリ領域を管理する",
+        "len": 31,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "224cf971-8c75-4713-9adb-78eab93a5017",
+        "text": "仮想アドレスから物理アドレスへの変換を行う対応表である",
+        "len": 27,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "d528be98-af7a-4cdc-acf0-6e14d7141f01",
+        "text": "ディスク上のファイルシステムのブロック割り当てを管理する",
+        "len": 28,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "17774f66-11e6-4c1f-a46f-1765ec11f618",
+        "text": "CPUのレジスタ割り当てを最適化するためのテーブルである",
+        "len": 28,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "a3981fa3-ed68-47d2-a0c2-cae6ce6f8783",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "次のOS運用場面を想定するとき、ページ置換アルゴリズムに関する説明として正しいものはどれか。\n\n前提条件を踏まえて最も適切なものを選べ。",
+    "correctLen": 33,
+    "correctIsShortest": false,
+    "correctIsLongest": false,
+    "ratio": "1.52",
+    "opts": [
+      {
+        "id": "282c2156-ca80-402e-b142-6eb86b90b426",
+        "text": "FIFOは最も使用頻度の低いページを置換し、LRUは最も古いページを置換する",
+        "len": 38,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "5b47a05d-8b50-4600-828e-92389e0630ce",
+        "text": "LRUとFIFOは常に同じページフォールト率を示す",
+        "len": 25,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "c5a00bac-b7c3-4bdd-9f43-8de58b305499",
+        "text": "FIFOではBéládyの異常が起こりうるが、LRUでは起こらない",
+        "len": 33,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "59de4487-dab9-421d-b14d-e92ff596503e",
+        "text": "LRUの方がFIFOより実装コストが低く、常にすべての面で優れている",
+        "len": 34,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "3400fa7c-5958-495f-a21c-d17a66ac4c1d",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "次のシステム障害対応の文脈で、ページングの説明として正しいものはどれか。\n\n実装や運用上の含意まで含めて最も適切なものを選べ。",
+    "correctLen": 24,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.71",
+    "opts": [
+      {
+        "id": "4283b544-95e9-4260-b4e4-d3556e54ce98",
+        "text": "メモリを固定サイズのページに分割して管理する方式",
+        "len": 24,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "12dcf216-7292-4202-854f-52a03b4636fa",
+        "text": "メモリを可変サイズのセグメントに分割する方式",
+        "len": 22,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "b78735d1-cf19-453b-a54a-b42f6bce497b",
+        "text": "メモリの使用量を監視する方式",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "f7437bae-c118-4538-b24a-b52e7f23364a",
+        "text": "メモリ内のデータを暗号化する方式",
+        "len": 16,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "0820c5d2-b7b6-403a-be67-0d166b5b5c9f",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "次のシステム障害対応の文脈で、スラッシングの説明として正しいものはどれか。\n\n前提条件を踏まえて最も適切なものを選べ。",
+    "correctLen": 27,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.93",
+    "opts": [
+      {
+        "id": "f454dc4d-be1f-429a-8e40-fa4761dc5061",
+        "text": "ページの入れ替えが頻発して処理効率が著しく低下する現象",
+        "len": 27,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "66f05f27-ff6d-4eef-a53b-08ab48d13ac8",
+        "text": "CPUの処理速度が低下する現象",
+        "len": 15,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "6f46c8b9-5d70-470d-ab83-ca16dce76c3b",
+        "text": "ハードディスクが故障する現象",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "92a4fbe7-8f86-477e-a617-d957f9902bbc",
+        "text": "ネットワークの通信速度が低下する現象",
+        "len": 18,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "8d5884d3-79c3-4455-abe0-8ffa58e0dc58",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "次のメモリ管理の観点から、プロセスとスレッドの違いとして正しいものはどれか。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 23,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.53",
+    "opts": [
+      {
+        "id": "5062e3c3-068f-4b4f-87e9-f65c1ddbe6c9",
+        "text": "スレッドは同一プロセス内でメモリ空間を共有する",
+        "len": 23,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "0980bb9e-979c-493a-8205-fe95e2635d6a",
+        "text": "プロセスはスレッドより軽量である",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "9ef31b82-34a9-4fe8-a1ee-3c9e7afa6edb",
+        "text": "スレッドは独立したメモリ空間を持つ",
+        "len": 17,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "3f1118d7-7411-4eec-8b3e-805938a2f1a8",
+        "text": "プロセスとスレッドに違いはない",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "0ec50f8d-e129-46e5-950b-c87e25931629",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "次のメモリ管理の観点から、デッドロックの説明として正しいものはどれか。\n\n実装や運用上の含意まで含めて最も適切なものを選べ。",
+    "correctLen": 27,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.80",
+    "opts": [
+      {
+        "id": "0639576f-925a-4a49-b271-c8bb83f02f4d",
+        "text": "複数のプロセスが互いに資源を待ち合い進行不能になる状態",
+        "len": 27,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "3ecf5c1c-807e-4155-8375-29af28b34dde",
+        "text": "プロセスが無限ループに入る状態",
+        "len": 15,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "1623f905-4f78-4f18-9ab4-a90cf19867c7",
+        "text": "メモリが不足してプロセスが停止する状態",
+        "len": 19,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "90fe1328-f4e3-44c8-8e96-03da974c0e7d",
+        "text": "CPUの使用率が100%になる状態",
+        "len": 17,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "4aa02e9e-e900-4169-9cd3-3af9216fc8d9",
+    "quizId": "b69b76bc-8e71-44e5-a8db-4523dccffe35",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "次のシステム障害対応の文脈で、デッドロックの説明として正しいものはどれか。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 25,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.92",
+    "opts": [
+      {
+        "id": "8d01a3b6-d1ee-4be2-bcd9-ff9b074ed928",
+        "text": "複数のトランザクションが互いにロックを待ち合う状態",
+        "len": 25,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "c65a5823-ea80-4df8-851b-47b1f1b805f3",
+        "text": "データベースの容量が不足した状態",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "900b6395-d0c3-488a-ba80-45602bd18576",
+        "text": "ネットワーク切断でトランザクションが中断した状態",
+        "len": 24,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "17161dc5-bf9a-4d5e-9cb2-e49086b551d0",
+        "text": "インデックスが破損した状態",
+        "len": 13,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "005aba9a-c422-4f37-865b-b7f7a5ef9289",
+    "quizId": "a6cfb45b-4b26-42c9-9e8a-ceda2bf545e4",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "次のメモリ管理の観点から、標本化（サンプリング）の説明として正しいものはどれか。\n\n前提条件を踏まえて最も適切なものを選べ。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.64",
+    "opts": [
+      {
+        "id": "c731b35d-3759-482e-bc4d-2be0d61daaa0",
+        "text": "アナログ信号を一定間隔で測定すること",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "2ec6c8be-d40a-4298-92ae-39bc90e32a28",
+        "text": "デジタルデータを圧縮すること",
+        "len": 14,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "9acbc9b7-23f3-4bc1-bc9d-b0d15986b5eb",
+        "text": "データを暗号化すること",
+        "len": 11,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "da75cf89-3617-4bc6-9156-3a9492dc17af",
+        "text": "ファイルをバックアップすること",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "a705aa6a-db48-42bb-859b-da9176bd2a7d",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "次のOS運用場面を想定するとき、ラウンドロビン方式のプロセススケジューリングの説明として正しいものはどれか。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 25,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.39",
+    "opts": [
+      {
+        "id": "e6911d40-6a34-49a7-a4d9-747e184e247b",
+        "text": "各プロセスに均等な時間を割り当て順番に実行する方式",
+        "len": 25,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "58974507-9b09-4dfa-95a2-1c8c92899544",
+        "text": "最も優先度の高いプロセスを常に実行する方式",
+        "len": 21,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "94fd2654-1bf1-41c1-aa4e-a1d805d29481",
+        "text": "実行時間の短いプロセスを優先する方式",
+        "len": 18,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "a023db12-559d-4933-b76c-f6ac827f61cd",
+        "text": "先に到着したプロセスを先に実行する方式",
+        "len": 19,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "9e11940d-2387-4805-896c-f49d6f86a1d4",
+    "quizId": "e1afaf9c-86d5-43a4-ad33-f38b904cad84",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "次のプロセス管理の状況で、ファイルシステムの役割として正しいものはどれか。\n\n実装や運用上の含意まで含めて最も適切なものを選べ。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.20",
+    "opts": [
+      {
+        "id": "0049ef29-8306-4996-82e0-0d2cc5b860b4",
+        "text": "ストレージ上のデータを管理する仕組み",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "434c4d41-5e4a-46f6-9cd5-84704ffb3e67",
+        "text": "CPUの処理速度を管理する仕組み",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "bf99ef8b-d96e-4f4c-a484-eef6989e5502",
+        "text": "ネットワーク接続を管理する仕組み",
+        "len": 16,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "1cb95270-3b3e-467b-889e-9c9503fc39ee",
+        "text": "ユーザーの認証を管理する仕組み",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "b877b21a-5d05-40ab-b786-810c351a4f9c",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "次のプロセス管理の状況で、セマフォの説明として正しいものはどれか。\n\n前提条件を踏まえて最も適切なものを選べ。",
+    "correctLen": 26,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.73",
+    "opts": [
+      {
+        "id": "4421ef6a-2392-4776-b521-66f636025bfc",
+        "text": "カウンタ変数で共有資源へのアクセスを制御する同期機構",
+        "len": 26,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "6e44230c-f73a-4919-81f7-c09f9b73037f",
+        "text": "プロセス間でデータを送受信する仕組み",
+        "len": 18,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "96437d8e-daae-4c66-a04d-5ad92a606a75",
+        "text": "メモリを自動的に管理する仕組み",
+        "len": 15,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "ca9b56a5-7a68-4d45-9b2b-7e6e61439866",
+        "text": "ファイルのアクセス権を管理する仕組み",
+        "len": 18,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "5f62686b-fd47-42af-8683-e4b112955112",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "次のメモリ管理の観点から、プロセスとスレッドの違いとして正しいものはどれか。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 23,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.53",
+    "opts": [
+      {
+        "id": "f85b1778-506b-4efd-9dc1-259d5a73aa48",
+        "text": "スレッドはプロセスより多くのメモリを消費する",
+        "len": 22,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "b692f3bc-7179-4aed-895e-9cd98cf81add",
+        "text": "プロセスは同一メモリ空間を共有する",
+        "len": 17,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "8b54b3f2-7043-48d0-b1ef-6ca17de9bba9",
+        "text": "スレッドは同一プロセス内でメモリ空間を共有する",
+        "len": 23,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "34751620-7186-4a55-a581-10ab7d8dc70c",
+        "text": "プロセスとスレッドに違いはない",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "1837f2ca-be8b-40d0-8568-54ee0e2632f4",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "次のシステム障害対応の文脈で、ファイルシステムの主な役割として正しいものはどれか。\n\n前提条件を踏まえて最も適切なものを選べ。",
+    "correctLen": 21,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.91",
+    "opts": [
+      {
+        "id": "8ad5ce54-364e-4d11-a80a-0e972784f357",
+        "text": "CPUのタスクスケジューリング",
+        "len": 15,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "45297ddc-5bc4-486e-bc21-45a0a13d5a0e",
+        "text": "ネットワーク接続の管理",
+        "len": 11,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "059f7ec1-d307-448c-a9ee-7a8aa4ddb110",
+        "text": "ディスク上のデータを階層的に整理し管理する",
+        "len": 21,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "afbeec4f-c206-4dfa-9a1d-b2a7a90ef9dc",
+        "text": "メモリの仮想アドレス変換",
+        "len": 12,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "acb89fe0-fcda-46f8-a702-33dde327ec7b",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "次のOS運用場面を想定するとき、OSのカーネルの役割として最も適切なものはどれか。\n\n前提条件を踏まえて最も適切なものを選べ。",
+    "correctLen": 28,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.15",
+    "opts": [
+      {
+        "id": "a2fb48fc-0ff0-4734-b19c-c5e37976c8f9",
+        "text": "ハードウェアやプロセス、メモリなどシステム全体を制御する",
+        "len": 28,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "985e8d4e-638b-475c-a26d-ddd19f616a06",
+        "text": "ユーザーのGUIを描画する",
+        "len": 13,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "3bfcd0d0-f1a5-4089-beb9-33696d66a814",
+        "text": "アプリケーションのインストールを行う",
+        "len": 18,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "1bcf712b-1668-40ea-a0ab-735df40a1b85",
+        "text": "ファイルの圧縮と暗号化を行う",
+        "len": 14,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "afbb8816-584b-40b6-83b3-b69273099b3d",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "次のプロセス管理の状況で、ページングの説明として正しいものはどれか。\n\n実装や運用上の含意まで含めて最も適切なものを選べ。",
+    "correctLen": 35,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.19",
+    "opts": [
+      {
+        "id": "9a9fd929-f8bd-4c8a-b909-142e7663e10c",
+        "text": "メモリを可変サイズのセグメントに分割する",
+        "len": 20,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "4b01688f-32be-4f6e-abe0-f6ca61fe278a",
+        "text": "メモリを固定サイズのページに分割し仮想アドレスを物理アドレスに変換する",
+        "len": 35,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "81478529-a388-4977-bb09-ed4b9aaf664d",
+        "text": "ディスク全体をメモリとして使用する",
+        "len": 17,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "0efbe05a-dabd-4d6e-85eb-6315068b07a1",
+        "text": "CPUキャッシュの管理方式の一つ",
+        "len": 16,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "d6a54cf6-7ca8-4cc6-9fa9-2cca8001a228",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "次のメモリ管理の観点から、仮想メモリの利点として正しいものはどれか。\n\n前提条件を踏まえて最も適切なものを選べ。",
+    "correctLen": 22,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.69",
+    "opts": [
+      {
+        "id": "7fdd1afd-0498-4f86-a3e1-ca1678181b82",
+        "text": "プログラムの実行速度が必ず向上する",
+        "len": 17,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "b2f0dec0-3a7d-4b19-9998-4729393c8011",
+        "text": "物理メモリより大きなアドレス空間を利用できる",
+        "len": 22,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "4b5b06da-8d8b-4b47-bb11-215019050eb3",
+        "text": "ディスクI/Oが不要になる",
+        "len": 13,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "1bddc472-4cd1-4662-9479-f31fff67c144",
+        "text": "メモリリークが完全に防止される",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "865e1a29-e422-429f-81e9-e88ccf8a6869",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "次のOS運用場面を想定するとき、ラウンドロビンスケジューリングの説明として正しいものはどれか。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 25,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.39",
+    "opts": [
+      {
+        "id": "45e91562-9b01-4438-a47d-c005efd11290",
+        "text": "最も短い実行時間のプロセスを優先する",
+        "len": 18,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "4023acd1-595d-444e-909f-947b59ff8cb8",
+        "text": "各プロセスに等しいタイムスライスを順番に割り当てる",
+        "len": 25,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "d08073c3-975e-4cdb-beca-4822893066ba",
+        "text": "優先度の高いプロセスが常に先に実行される",
+        "len": 20,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "55b407e4-c000-4a44-b9d8-3d0c06d7e77a",
+        "text": "先に到着したプロセスが完了するまで実行される",
+        "len": 22,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "83d9c05f-7f04-47a7-8c47-1d8be8931f27",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "次のシステム障害対応の文脈で、コンテキストスイッチの説明として正しいものはどれか。\n\n実装や運用上の含意まで含めて最も適切なものを選べ。",
+    "correctLen": 36,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.00",
+    "opts": [
+      {
+        "id": "c0ffe544-bb09-4531-9772-c39a37554957",
+        "text": "メモリの内容をディスクに書き出すこと",
+        "len": 18,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "cf8525c8-b659-4d5b-8a7d-5f3d0b928cc9",
+        "text": "プロセスの状態を保存し別のプロセスの状態を復元してCPUを切り替えること",
+        "len": 36,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "e6256ea3-29c2-4317-98fb-8f71f9c97bce",
+        "text": "ユーザーモードからカーネルモードへの遷移のみを指す",
+        "len": 25,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "b7adbb86-55af-4241-9e18-64da65267d40",
+        "text": "プロセスを終了して新しいプロセスを起動すること",
+        "len": 23,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "56570bcf-3725-45f2-8550-73c452414779",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "次のプロセス管理の状況で、ページフォルトが発生する状況として正しいものはどれか。\n\n前提条件を踏まえて最も適切なものを選べ。",
+    "correctLen": 24,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.50",
+    "opts": [
+      {
+        "id": "1a1e0c63-0bca-4a2a-b2b7-89f082e57583",
+        "text": "CPUキャッシュにデータが見つからなかった場合",
+        "len": 23,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "b8099d4d-e20c-4832-b3ca-64240f0af53f",
+        "text": "アクセスしたページが物理メモリ上に存在しない場合",
+        "len": 24,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "615396a1-ae16-4a23-af15-627c941d66f7",
+        "text": "ファイルシステムのエラーが発生した場合",
+        "len": 19,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "c4b9570b-e5fc-4127-a81a-fcb08b619019",
+        "text": "プロセスの優先度が変更された場合",
+        "len": 16,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "0042d412-380e-4ed8-b652-d9e2b783b95f",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "次のメモリ管理の観点から、仮想記憶方式におけるページテーブルの役割として正しいものはどれか。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 27,
+    "correctIsShortest": true,
+    "correctIsLongest": false,
+    "ratio": "1.15",
+    "opts": [
+      {
+        "id": "8c25d2b6-58f1-4f92-a87f-670431e1f521",
+        "text": "プロセス間の通信データを格納するための共有メモリ領域を管理する",
+        "len": 31,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "56bf2a51-2bb4-415a-aadd-cefdf20ab269",
+        "text": "仮想アドレスから物理アドレスへの変換を行う対応表である",
+        "len": 27,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "cba66de5-02cb-46ab-a2ca-810ff374c71f",
+        "text": "ディスク上のファイルシステムのブロック割り当てを管理する",
+        "len": 28,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "d9e7a2c5-ff3b-404d-b554-387d933bf950",
+        "text": "CPUのレジスタ割り当てを最適化するためのテーブルである",
+        "len": 28,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "bc032077-c02e-4961-880b-736b7ee68311",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "次のOS運用場面を想定するとき、ページ置換アルゴリズムに関する説明として正しいものはどれか。\n\n実装や運用上の含意まで含めて最も適切なものを選べ。",
+    "correctLen": 33,
+    "correctIsShortest": false,
+    "correctIsLongest": false,
+    "ratio": "1.52",
+    "opts": [
+      {
+        "id": "d7e1ef9a-735d-44d8-b093-f9914703b97b",
+        "text": "FIFOは最も使用頻度の低いページを置換し、LRUは最も古いページを置換する",
+        "len": 38,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "50388825-4828-42e3-85c1-afafdce2adf9",
+        "text": "LRUとFIFOは常に同じページフォールト率を示す",
+        "len": 25,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "4318399a-5b0d-427e-8921-a1cb1f73a0ed",
+        "text": "FIFOではBéládyの異常が起こりうるが、LRUでは起こらない",
+        "len": 33,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "d934d844-ba91-45b3-8486-cd04a2d1aa58",
+        "text": "LRUの方がFIFOより実装コストが低く、常にすべての面で優れている",
+        "len": 34,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "641c8b1f-496b-4204-b898-571e20d95354",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "次のプロセス管理の状況で、メモリ管理方式であるページングとセグメンテーションの比較として正しいものはどれか。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 62,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.00",
+    "opts": [
+      {
+        "id": "2750a0d6-5536-47a5-98d0-46eb1065da9c",
+        "text": "ページングは固定サイズで外部フラグメンテーションがなく、セグメンテーションは可変サイズで外部フラグメンテーションが起こりうる",
+        "len": 62,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "3ae1004e-3113-4150-a973-812360da88ba",
+        "text": "セグメンテーションは固定サイズで外部フラグメンテーションがなく、ページングは可変サイズである",
+        "len": 46,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "143e56bf-8756-4320-9a3c-040de974c63a",
+        "text": "両方とも固定サイズで管理され、フラグメンテーションの違いはない",
+        "len": 31,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "af127dc1-65db-4e47-b29c-ae19fc5da3f8",
+        "text": "ページングは論理的な単位で分割し、セグメンテーションは物理的な単位で分割する",
+        "len": 38,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "e2715cf1-3061-4db5-a377-8b2120111c0e",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "次のメモリ管理の観点から、プロセススケジューリングにおける優先度ベース方式とラウンドロビン方式の比較として正しいものはどれか。\n\n実装や運用上の含意まで含めて最も適切なものを選べ。",
+    "correctLen": 36,
+    "correctIsShortest": false,
+    "correctIsLongest": false,
+    "ratio": "1.60",
+    "opts": [
+      {
+        "id": "b540c6ce-54de-4ffd-ab3b-bf818b1f9450",
+        "text": "ラウンドロビンはスタベーションが発生するが、優先度ベースでは発生しない",
+        "len": 35,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "3f2495bb-dcc8-47b0-9ddb-8b8ae844bad3",
+        "text": "優先度ベースではスタベーションが起こりうるが、エージング技法で防止できる",
+        "len": 36,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "79701eb4-c9d3-4254-867d-cd893e16ed22",
+        "text": "ラウンドロビンは非プリエンプティブであり、実行中のプロセスは完了まで中断されない",
+        "len": 40,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "63fcad02-a233-44c9-933a-35b57b739f91",
+        "text": "優先度ベースは常にラウンドロビンより応答時間が短い",
+        "len": 25,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "0004dc27-3e1d-40a1-8320-109c559dadc7",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "次のOS運用場面を想定するとき、UNIX系ファイルシステムにおけるi-node（アイノード）の説明として正しいものはどれか。\n\n前提条件を踏まえて最も適切なものを選べ。",
+    "correctLen": 39,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.44",
+    "opts": [
+      {
+        "id": "a967d6be-1b62-46c9-b4ac-aab6b85e013f",
+        "text": "ファイル名とファイルの内容データを直接格納するデータ構造である",
+        "len": 31,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "469aa3be-31e7-4896-9042-dc39562a6645",
+        "text": "ディレクトリの階層構造を表現するためのツリー構造である",
+        "len": 27,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "a1b72ebe-8754-42d1-8820-c2e4e8e99684",
+        "text": "ファイルのメタデータとデータブロックへのポインタを格納し、ファイル名は含まない",
+        "len": 39,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "f8af5bc1-50c0-426e-9047-ac7d73c0fbab",
+        "text": "ファイルのバックアップ情報を保存するための補助構造である",
+        "len": 28,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "4fd2f136-3342-43ef-945d-69587dcb8f96",
+    "quizId": "60000001-0000-0000-0000-000000000006",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "次のシステム障害対応の文脈で、ページフォールトが発生するのはどのようなときか。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.50",
+    "opts": [
+      {
+        "id": "221475de-dba7-4f97-ad34-703bb9175ce6",
+        "text": "必要なページが主記憶に存在しないとき",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "869a82cd-d4d2-4882-a85f-6bca5f959d3f",
+        "text": "CPUのクロック周波数が低下したとき",
+        "len": 18,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "8837183e-a446-4e12-a7a1-2e364629374c",
+        "text": "同じロックを二重に取得したとき",
+        "len": 15,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "61050ad9-e56a-40b7-9c53-c3981d493ae3",
+        "text": "ファイル名が重複したとき",
+        "len": 12,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "b5a8013f-9ec5-44f4-9427-7bf71aa69e17",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "次のプロセス管理の状況で、ページングの説明として正しいものはどれか。\n\n実装や運用上の含意まで含めて最も適切なものを選べ。",
+    "correctLen": 24,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.71",
+    "opts": [
+      {
+        "id": "60c37e59-146e-446f-80e0-a5eba66f0af9",
+        "text": "メモリを固定サイズのページに分割して管理する方式",
+        "len": 24,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "119253cf-666e-48a9-b966-262388ba9319",
+        "text": "メモリを可変サイズのセグメントに分割する方式",
+        "len": 22,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "aa8228b6-04d7-40b7-b25d-63abbdb761be",
+        "text": "メモリの使用量を監視する方式",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "cbfa7352-63a4-44d0-bb31-4a741fa87be3",
+        "text": "メモリ内のデータを暗号化する方式",
+        "len": 16,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "1289e6b0-5c57-4327-975f-8c42caef31e6",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "次のメモリ管理の観点から、スラッシングの説明として正しいものはどれか。\n\n前提条件を踏まえて最も適切なものを選べ。",
+    "correctLen": 27,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.93",
+    "opts": [
+      {
+        "id": "15f7e18a-5141-4249-9a8d-bef34b2f0b81",
+        "text": "ページの入れ替えが頻発して処理効率が著しく低下する現象",
+        "len": 27,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "c19f36ec-a361-4df3-91b4-a3477e97bd34",
+        "text": "CPUの処理速度が低下する現象",
+        "len": 15,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "adaf1991-dedf-4664-99b7-9c7fb86fd19f",
+        "text": "ハードディスクが故障する現象",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "6baf7f56-df9c-40dc-a692-2b4ac4cf1e07",
+        "text": "ネットワークの通信速度が低下する現象",
+        "len": 18,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "9db1a5ae-ce5b-4310-9830-95b0754cb4d1",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "OS運用ケース01: ページングの説明として正しいものはどれか。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 24,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.71",
+    "opts": [
+      {
+        "id": "ce4de94e-d825-448d-92e5-3031d929103c",
+        "text": "メモリを固定サイズのページに分割して管理する方式",
+        "len": 24,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "81a5c89f-6449-4e81-bebc-3e0377b768b5",
+        "text": "メモリを可変サイズのセグメントに分割する方式",
+        "len": 22,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "bf74990e-8fda-45da-aab2-c4802f127b2c",
+        "text": "メモリの使用量を監視する方式",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "108e8ac8-068e-4931-8f4b-ec47e7386eba",
+        "text": "メモリ内のデータを暗号化する方式",
+        "len": 16,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "8c21cb95-4d0f-4a2a-978d-51ce8eef38ce",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "OS運用ケース02: スラッシングの説明として正しいものはどれか。\n\n原因と結果の関係を踏まえて最も適切なものを選べ。",
+    "correctLen": 27,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.93",
+    "opts": [
+      {
+        "id": "cb3e3d6e-90fc-4954-81eb-39f1de443e23",
+        "text": "ページの入れ替えが頻発して処理効率が著しく低下する現象",
+        "len": 27,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "46c245f9-605d-4fe6-a2de-863edcad0423",
+        "text": "CPUの処理速度が低下する現象",
+        "len": 15,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "3b79faaa-ed8b-4e63-9a6e-d4e7de60d10b",
+        "text": "ハードディスクが故障する現象",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "5ad987fd-1c1d-4c50-8a79-4deba0934e7d",
+        "text": "ネットワークの通信速度が低下する現象",
+        "len": 18,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "5debec1c-5057-4bc1-a5b8-50fd3b67d68d",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "OS運用ケース03: プロセスとスレッドの違いとして正しいものはどれか。\n\n実運用上の影響まで踏まえて最も適切なものを選べ。",
+    "correctLen": 23,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.53",
+    "opts": [
+      {
+        "id": "5d9fb564-f809-4aa4-96a4-8a9a21f0a341",
+        "text": "スレッドは同一プロセス内でメモリ空間を共有する",
+        "len": 23,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "6db063fc-2906-4582-9e7b-179722148eab",
+        "text": "プロセスはスレッドより軽量である",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "77f4c45d-e002-4f70-889b-2ec68050abae",
+        "text": "スレッドは独立したメモリ空間を持つ",
+        "len": 17,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "c59dcfb8-8b56-45c9-ba96-01ca9df6d530",
+        "text": "プロセスとスレッドに違いはない",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "e71d734d-76b9-431c-bf1e-2adf45785403",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "OS運用ケース04: デッドロックの説明として正しいものはどれか。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 27,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.80",
+    "opts": [
+      {
+        "id": "89934dff-54ed-40ae-b0a1-d30b65f25d67",
+        "text": "複数のプロセスが互いに資源を待ち合い進行不能になる状態",
+        "len": 27,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "1dba8c44-0e8d-423e-9ae5-b21c56d41945",
+        "text": "プロセスが無限ループに入る状態",
+        "len": 15,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "4db22d56-ab32-4709-8e28-ed255e6d4b61",
+        "text": "メモリが不足してプロセスが停止する状態",
+        "len": 19,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "450aaafc-6a33-4be6-a903-51c5013352c9",
+        "text": "CPUの使用率が100%になる状態",
+        "len": 17,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "9dd7bccd-bab1-4538-8c0f-2884ef9aa53f",
+    "quizId": "b69b76bc-8e71-44e5-a8db-4523dccffe35",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "OS運用ケース06: デッドロックの説明として正しいものはどれか。\n\n実運用上の影響まで踏まえて最も適切なものを選べ。",
+    "correctLen": 25,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.92",
+    "opts": [
+      {
+        "id": "7dd6ded5-0d50-447d-9d08-16b72e902151",
+        "text": "複数のトランザクションが互いにロックを待ち合う状態",
+        "len": 25,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "142b56b3-782a-4d45-b21e-a3625bfcfaf4",
+        "text": "データベースの容量が不足した状態",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "64577631-dc68-4531-9a9b-e6dfe25522d7",
+        "text": "ネットワーク切断でトランザクションが中断した状態",
+        "len": 24,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "1f1f865b-5f7d-4353-84b6-fd6f924d942a",
+        "text": "インデックスが破損した状態",
+        "len": 13,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "eeb7ee45-bb8e-4ec4-9825-b2d0a0843242",
+    "quizId": "b69b76bc-8e71-44e5-a8db-4523dccffe35",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "OS運用ケース08: 次のプロセス管理の状況で、デッドロックの説明として正しいものはどれか。 実装や運用上の含意まで含めて最も適切なものを選べ。\n\n原因と結果の関係を踏まえて最も適切なものを選べ。",
+    "correctLen": 25,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.92",
+    "opts": [
+      {
+        "id": "df703dcb-e3a1-4acb-880d-b94ddacdaaaa",
+        "text": "複数のトランザクションが互いにロックを待ち合う状態",
+        "len": 25,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "a7ca3c5f-da4e-43e9-b1ca-4180ee84d7ef",
+        "text": "データベースの容量が不足した状態",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "1283e827-81e2-4c8d-ac54-a899291e53dd",
+        "text": "ネットワーク切断でトランザクションが中断した状態",
+        "len": 24,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "42a14e20-a5aa-40d1-8497-89a8eb097c73",
+        "text": "インデックスが破損した状態",
+        "len": 13,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "37279bbe-8f05-4481-831f-9dc88a3e6a75",
+    "quizId": "b69b76bc-8e71-44e5-a8db-4523dccffe35",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "OS運용ケース09: 次のシステム障害対応の文脈で、デッドロックの説明として正しいものはどれか。 実装や運用上の含意まで含めて最も適切なものを選べ。\n\n実運用上の影響まで踏まえて最も適切なものを選べ。",
+    "correctLen": 25,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.92",
+    "opts": [
+      {
+        "id": "435af4aa-a0c4-46e2-bde2-b2f36d0f6c68",
+        "text": "複数のトランザクションが互いにロックを待ち合う状態",
+        "len": 25,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "41771aab-bf7f-4c8e-b99d-aa197a745a81",
+        "text": "データベースの容量が不足した状態",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "8bbd3b1b-4d1c-4eb0-9cf0-8c106391d5dc",
+        "text": "ネットワーク切断でトランザクションが中断した状態",
+        "len": 24,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "d8a5d366-0cab-45e1-a0fa-67abf6093ebe",
+        "text": "インデックスが破損した状態",
+        "len": 13,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "416eb828-a27a-44a7-af0a-0cb9c68b86c3",
+    "quizId": "b69b76bc-8e71-44e5-a8db-4523dccffe35",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "OS運용ケース10: 次のシステム障害対応の文脈で、デッドロックの説明として正しいものはどれか。 基本事項として最も適切なものを選べ。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 25,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.92",
+    "opts": [
+      {
+        "id": "e7a978cf-ed70-46ca-a16e-0d38ef21338c",
+        "text": "複数のトランザクションが互いにロックを待ち合う状態",
+        "len": 25,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "87bae0af-ef36-4b07-a5e0-937d22e05c40",
+        "text": "データベースの容量が不足した状態",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "b3184ee3-7311-414b-a3d3-f0eb085bc765",
+        "text": "ネットワーク切断でトランザクションが中断した状態",
+        "len": 24,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "4e8cb8df-4bed-43e7-a1b4-d43e98b33d72",
+        "text": "インデックスが破損した状態",
+        "len": 13,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "a56bd468-85b8-4da2-a455-39fd58cd9e00",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "OS運용ケース11: ラウンドロビン方式のプロセススケジューリングの説明として正しいものはどれか。\n\n原因と結果の関係を踏まえて最も適切なものを選べ。",
+    "correctLen": 25,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.39",
+    "opts": [
+      {
+        "id": "5dfefeed-da42-4db3-ac82-d8feeb192348",
+        "text": "各プロセスに均等な時間を割り当て順番に実行する方式",
+        "len": 25,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "e35b5f01-4262-41f3-9c57-290e6aecec4f",
+        "text": "最も優先度の高いプロセスを常に実行する方式",
+        "len": 21,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "ab5ca31d-735b-4fdd-ac33-4289b4886915",
+        "text": "実行時間の短いプロセスを優先する方式",
+        "len": 18,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "87b4f140-ffee-42f1-b744-22f154f7c170",
+        "text": "先に到着したプロセスを先に実行する方式",
+        "len": 19,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "21bfd1e6-633e-41f6-8266-dd239df78849",
+    "quizId": "a6cfb45b-4b26-42c9-9e8a-ceda2bf545e4",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "OS運용ケース12: 標本化（サンプリング）の説明として正しいものはどれか。\n\n実運用上の影響まで踏まえて最も適切なものを選べ。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.64",
+    "opts": [
+      {
+        "id": "020b27d8-71f4-482d-8796-c3f10d8f0552",
+        "text": "アナログ信号を一定間隔で測定すること",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "89954e49-9d52-488e-ada0-4c5fbb4eacb3",
+        "text": "デジタルデータを圧縮すること",
+        "len": 14,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "72a53a41-cd82-4c21-b2e5-0fb3f9325b41",
+        "text": "データを暗号化すること",
+        "len": 11,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "276e4424-de58-473c-89a5-7e66fe79abe7",
+        "text": "ファイルをバックアップすること",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "5c4e9b76-c5c9-4a33-826e-38dbf08801fb",
+    "quizId": "a6cfb45b-4b26-42c9-9e8a-ceda2bf545e4",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "OS運용ケース13: 次のメモリ管理の観点から、標本化（サンプリング）の説明として正しいものはどれか。 実装や運用上の含意まで含めて最も適切なものを選べ。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.64",
+    "opts": [
+      {
+        "id": "5a698821-990b-4f9c-8f12-40c055cf903a",
+        "text": "アナログ信号を一定間隔で測定すること",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "7123a42e-605c-45ed-a159-937f743c81d2",
+        "text": "デジタルデータを圧縮すること",
+        "len": 14,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "42efd4f9-c67f-429d-a468-d510b42cbd2a",
+        "text": "データを暗号化すること",
+        "len": 11,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "f2fdf6fa-411f-4d53-aaa8-57996525febe",
+        "text": "ファイルをバックアップすること",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "e54f82dc-4134-47d9-bd38-a7628fea4075",
+    "quizId": "a6cfb45b-4b26-42c9-9e8a-ceda2bf545e4",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "OS運용ケース14: 次のOS運用場面を想定するとき、標本化（サンプリング）の説明として正しいものはどれか。 実装や運用上の含意まで含めて最も適切なものを選べ。\n\n原因と結果の関係を踏まえて最も適切なものを選べ。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.64",
+    "opts": [
+      {
+        "id": "50d8f13a-6a12-4ba1-a4b3-12733b720b48",
+        "text": "アナログ信号を一定間隔で測定すること",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "002c88d4-ec64-4a1e-ac03-c3f2ad4329a5",
+        "text": "デジタルデータを圧縮すること",
+        "len": 14,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "822d9df0-2ffe-44ad-bbe7-15cffaf45d4c",
+        "text": "データを暗号化すること",
+        "len": 11,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "503d5d0e-fa62-46d7-aeeb-bb78e312e838",
+        "text": "ファイルをバックアップすること",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "dfeb3ff8-31c2-41ad-b251-0f10c0efc32e",
+    "quizId": "a6cfb45b-4b26-42c9-9e8a-ceda2bf545e4",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "OS運용ケース15: 次のメモリ管理の観点から、標本化（サンプリング）の説明として正しいものはどれか。 前提条件を踏まえて最も適切なものを選べ。\n\n実運用上の影響まで踏まえて最も適切なものを選べ。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.64",
+    "opts": [
+      {
+        "id": "d1c432c6-d856-4a28-b4e1-faf41d660105",
+        "text": "アナログ信号を一定間隔で測定すること",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "c1666054-6b7d-4a9c-bead-c7a732b59259",
+        "text": "デジタルデータを圧縮すること",
+        "len": 14,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "3aa0d94f-c861-43e6-82be-fedb0ff9afaf",
+        "text": "データを暗号化すること",
+        "len": 11,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "596f69d5-51df-497d-8306-7b1378fe0292",
+        "text": "ファイルをバックアップすること",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "af183be1-1ec5-4d2a-87d5-ca5db2086aff",
+    "quizId": "e1afaf9c-86d5-43a4-ad33-f38b904cad84",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "OS運用ケース16: ファイルシステムの役割として正しいものはどれか。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.20",
+    "opts": [
+      {
+        "id": "6b081921-9c9b-4bdd-8d48-f48fb79eebb5",
+        "text": "ストレージ上のデータを管理する仕組み",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "2f25c2d6-5704-4c42-965a-e326593a74b2",
+        "text": "CPUの処理速度を管理する仕組み",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "a1405b92-eb99-40d7-8c7c-df4709fcfa90",
+        "text": "ネットワーク接続を管理する仕組み",
+        "len": 16,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "10638bf7-e96d-4d4c-83cd-b134478b23a0",
+        "text": "ユーザーの認証を管理する仕組み",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "2e3a3801-8f9b-487b-876a-2d331a048cc1",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "medium",
+    "qtext": "OS運用ケース17: セマフォの説明として正しいものはどれか。\n\n原因と結果の関係を踏まえて最も適切なものを選べ。",
+    "correctLen": 26,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.73",
+    "opts": [
+      {
+        "id": "99248c59-67aa-4497-a1f9-4f83f5d9e09a",
+        "text": "カウンタ変数で共有資源へのアクセスを制御する同期機構",
+        "len": 26,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "382a6cac-e176-4a36-acad-d375a0c7ad43",
+        "text": "プロセス間でデータを送受信する仕組み",
+        "len": 18,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "1914c767-5d34-437a-a8f9-d94839d16925",
+        "text": "メモリを自動的に管理する仕組み",
+        "len": 15,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "7dbd89b3-48a1-4612-84f1-c0bb79af4cc6",
+        "text": "ファイルのアクセス権を管理する仕組み",
+        "len": 18,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "36c6de85-2213-4b26-81f6-61f423a71de9",
+    "quizId": "e1afaf9c-86d5-43a4-ad33-f38b904cad84",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "OS運用ケース18: 次のシステム障害対応の文脈で、ファイルシステムの役割として正しいものはどれか。 実装や運用上の含意まで含めて最も適切なものを選べ。\n\n実運用上の影響まで踏まえて最も適切なものを選べ。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.20",
+    "opts": [
+      {
+        "id": "6c6c57e2-3631-4936-bc47-0568525f2c2e",
+        "text": "ストレージ上のデータを管理する仕組み",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "67e34643-c6cc-4083-81ee-97917ad16100",
+        "text": "CPUの処理速度を管理する仕組み",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "2a320f48-5899-4d84-862b-b911d6e3d9dd",
+        "text": "ネットワーク接続を管理する仕組み",
+        "len": 16,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "880edbaa-f76b-4d62-acf3-84dea72827b5",
+        "text": "ユーザーの認証を管理する仕組み",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "438a8f33-8e19-4acf-bf54-91bfee216e83",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "OS運用ケース19: 次のOS運用場面を想定するとき、ページングの説明として正しいものはどれか。 基本事項として最も適切なものを選べ。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 24,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.71",
+    "opts": [
+      {
+        "id": "767c913d-8ea1-4c0e-9741-7d6a5e889ba8",
+        "text": "メモリを固定サイズのページに分割して管理する方式",
+        "len": 24,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "7e290048-7780-4a1c-b7a1-4b9416df5547",
+        "text": "メモリを可変サイズのセグメントに分割する方式",
+        "len": 22,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "406a30c7-7513-42ab-a591-b2e4c36d0dd2",
+        "text": "メモリの使用量を監視する方式",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "f7ec1daf-b4a7-4a36-bdd6-333849559032",
+        "text": "メモリ内のデータを暗号化する方式",
+        "len": 16,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "9965ead8-dac9-46ce-acfb-2e02b584002e",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "OS運用ケース21: 次のシステム障害対応の文脈で、スラッシングの説明として正しいものはどれか。 基本事項として最も適切なものを選べ。\n\n実運用上の影響まで踏まえて最も適切なものを選べ。",
+    "correctLen": 27,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.93",
+    "opts": [
+      {
+        "id": "bf582997-97a9-4c2e-9229-cb74dd6e4da5",
+        "text": "ページの入れ替えが頻発して処理効率が著しく低下する現象",
+        "len": 27,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "2d8e5a46-f4fb-4179-bfcd-b643315a985b",
+        "text": "CPUの処理速度が低下する現象",
+        "len": 15,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "da186def-b47b-4ef3-98a3-82ebd825b4df",
+        "text": "ハードディスクが故障する現象",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "64d0888c-6fe6-4253-8999-2addcf1fb453",
+        "text": "ネットワークの通信速度が低下する現象",
+        "len": 18,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "0e660fa1-1152-4fe5-a35c-07cc47f1139e",
+    "quizId": "e1afaf9c-86d5-43a4-ad33-f38b904cad84",
+    "cat": "os",
+    "diff": "easy",
+    "qtext": "OS運用ケース22: 次のプロセス管理の状況で、ファイルシステムの役割として正しいものはどれか。 基本事項として最も適切なものを選べ。\n\n基本事項として最も適切なものを選べ。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.20",
+    "opts": [
+      {
+        "id": "137e9bac-dd89-4d2c-8833-98b9bf66200d",
+        "text": "ストレージ上のデータを管理する仕組み",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "d11fadb1-c2db-4c2e-b5c4-732b40aa75fa",
+        "text": "CPUの処理速度を管理する仕組み",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "a332db6e-68a9-4d10-9eca-49d05e999093",
+        "text": "ネットワーク接続を管理する仕組み",
+        "len": 16,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "3edb6b05-dba2-4255-8e4a-c27e287c1fa7",
+        "text": "ユーザーの認証を管理する仕組み",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "e9412329-cd52-44db-b6d2-d1e6df524152",
+    "quizId": "bbae6864-814f-4871-af38-26e042e94580",
+    "cat": "os",
+    "diff": "hard",
+    "qtext": "OS運用ケース24: 次のプロセス管理の状況で、プロセスとスレッドの違いとして正しいものはどれか。 基本事項として最も適切なものを選べ。\n\n実運用上の影響まで踏まえて最も適切なものを選べ。",
+    "correctLen": 23,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.53",
+    "opts": [
+      {
+        "id": "cd3bb21f-a09a-4a25-8127-27ccd5fbcb11",
+        "text": "スレッドは同一プロセス内でメモリ空間を共有する",
+        "len": 23,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "059e8054-d18b-4ff5-8c34-870569a59e18",
+        "text": "プロセスはスレッドより軽量である",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "0d427a28-7ef0-4237-8de2-37afbdc31cff",
+        "text": "スレッドは独立したメモリ空間を持つ",
+        "len": 17,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "ff4626ab-d8c0-4084-9755-6b5248093e73",
+        "text": "プロセスとスレッドに違いはない",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  }
+]

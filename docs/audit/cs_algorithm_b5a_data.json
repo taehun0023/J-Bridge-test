@@ -1,0 +1,1929 @@
+[
+  {
+    "qid": "70bc61cb-71ef-4d18-99da-ee528a5ecbec",
+    "quizId": "40473700-00e1-4b2e-86bb-d079cfcc5e43",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "ユークリッドの互除法の用途として正しいものはどれか。",
+    "correctLen": 15,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.14",
+    "opts": [
+      {
+        "id": "949e371f-a111-4e38-9a60-3be537a16071",
+        "text": "2つの整数の最大公約数を求める",
+        "len": 15,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "0230b5a4-cb50-407f-9ce6-5a2cfdada6c0",
+        "text": "素数を列挙する",
+        "len": 7,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "b9cf1535-e25b-4b18-b0c2-4f771908b563",
+        "text": "最小公倍数を直接求める",
+        "len": 11,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "742fe012-a732-4b50-b07d-d193e6bffb08",
+        "text": "整数を素因数分解する",
+        "len": 10,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "bd610c38-4a1d-4d9d-af4f-db05051433ed",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "algorithm",
+    "diff": "easy",
+    "qtext": "二分探索を適用するための前提条件として正しいものはどれか。",
+    "correctLen": 14,
+    "correctIsShortest": false,
+    "correctIsLongest": false,
+    "ratio": "1.73",
+    "opts": [
+      {
+        "id": "0ba70856-9d6f-48d8-b98e-cc41de5c123f",
+        "text": "データがソート済みであること",
+        "len": 14,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "3231ce33-7215-481e-a3e1-89fae2ee7af2",
+        "text": "データが連結リストに格納されていること",
+        "len": 19,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "c3886200-e634-42b2-971d-f19919fb5b73",
+        "text": "データの要素数が2の累乗であること",
+        "len": 17,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "272f31aa-f61f-4668-80cb-0662898c1461",
+        "text": "データに重複がないこと",
+        "len": 11,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "efb0f7ac-b2a2-4dc2-9ae3-1ee4229f4a0a",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "algorithm",
+    "diff": "easy",
+    "qtext": "選択ソートの動作として正しいものはどれか。",
+    "correctLen": 20,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.33",
+    "opts": [
+      {
+        "id": "7c3a5ae6-d34a-48cc-bb44-73b789f1b90d",
+        "text": "隣接する要素を比較して交換を繰り返す",
+        "len": 18,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "1b043266-d1d3-4207-b0f6-645a5947b31d",
+        "text": "未整列部分から最小値を選び先頭と交換する",
+        "len": 20,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "d312863c-c5d6-4e71-8598-3dfac0422161",
+        "text": "要素を適切な位置に挿入していく",
+        "len": 15,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "2a5c4a9a-e2bc-4909-978b-36f59b182f27",
+        "text": "ピボットを基準に分割を繰り返す",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "8104c9e1-91dc-4049-b18a-15a4c099c553",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "algorithm",
+    "diff": "easy",
+    "qtext": "安定ソートの説明として正しいものはどれか。",
+    "correctLen": 25,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.47",
+    "opts": [
+      {
+        "id": "fb999bfe-5da9-4bf6-8797-72045856b5b7",
+        "text": "常にO(n log n)で動作するソート",
+        "len": 20,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "e53dbd67-e373-4168-b286-e920fc92b0a0",
+        "text": "メモリ使用量がO(1)であるソート",
+        "len": 17,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "a4b1d71e-8cc3-4f01-98e2-8305811970a8",
+        "text": "同じ値の要素の相対順序がソート後も保持されるソート",
+        "len": 25,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "4a363e69-1f8c-4a25-851f-6782ffe93b87",
+        "text": "入力データに関係なく常に同じ実行時間のソート",
+        "len": 22,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "e74bdf6f-92d1-4d4a-93cf-247f1cfdb680",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "マージソートの特徴として正しいものはどれか。",
+    "correctLen": 27,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.50",
+    "opts": [
+      {
+        "id": "36818d89-ad1e-44b7-9ccb-c29f8635573a",
+        "text": "追加メモリ不要のインプレースソートである",
+        "len": 20,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "e200bfb3-9a88-4b40-b666-846fc39c362e",
+        "text": "最悪計算量がO(n²)になる場合がある",
+        "len": 19,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "c3b9f947-17d7-4a8e-a186-d07bac663a7e",
+        "text": "安定ソートであり最悪でもO(n log n)を保証する",
+        "len": 27,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "f13104c2-cae6-4b95-9aab-92250ec2fa80",
+        "text": "不安定ソートだが平均計算量が最も速い",
+        "len": 18,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "b49a95bf-e21d-45ca-937d-60425bb0fafb",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "グリーディ法（貪欲法）の説明として正しいものはどれか。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": false,
+    "ratio": "1.29",
+    "opts": [
+      {
+        "id": "48cbcc32-b2a5-4af1-b4df-800297e4f7d7",
+        "text": "すべての組み合わせを試して最適解を求める",
+        "len": 20,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "47ccd400-ed3d-4319-8bdc-fb4753905117",
+        "text": "問題を小さな部分問題に分割して結果を統合する",
+        "len": 22,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "a76ece1f-87b8-4f89-99db-48c02fc772c5",
+        "text": "過去の計算結果を記録して再利用する",
+        "len": 17,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "ed10c72b-175d-41b7-b1e4-0595fee1c7ff",
+        "text": "各段階で局所的に最適な選択を繰り返す",
+        "len": 18,
+        "correct": true,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "8b137cb8-07d9-470b-a364-6ecb00da8e92",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "algorithm",
+    "diff": "hard",
+    "qtext": "動的計画法（DP）に関する説明として最も適切なものはどれか。",
+    "correctLen": 40,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.43",
+    "opts": [
+      {
+        "id": "9a5e1ad4-1910-4afb-ab74-1ee5f78b85a3",
+        "text": "常に貪欲法より最適な解が得られるが、計算量は指数的になる",
+        "len": 28,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "c2c9d839-1242-4717-8727-8621277626b2",
+        "text": "部分問題の解を再利用せず、毎回再計算することで正確性を保つ手法である",
+        "len": 34,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "cfd82f83-cd77-434e-9d8d-527baa2a72f2",
+        "text": "最適部分構造と部分問題の重複を持つ問題に適用し、部分問題の解を記録して再利用する",
+        "len": 40,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "fb57b305-0fc5-4379-b045-c9195c1ef317",
+        "text": "分割統治法と同じ原理であり、部分問題が重複しない場合にのみ適用できる",
+        "len": 34,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "53cb6bec-379b-4356-af18-8553763d5622",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "algorithm",
+    "diff": "hard",
+    "qtext": "クイックソートの計算量に関する説明として正しいものはどれか。",
+    "correctLen": 42,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.56",
+    "opts": [
+      {
+        "id": "41f8ecb6-3594-417a-8519-2f7dd34ac417",
+        "text": "平均・最悪ともにO(n log n)であり、ピボット選択の影響を受けない",
+        "len": 36,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "07388ca5-6edb-4773-bff4-86e9093f5bf3",
+        "text": "平均はO(n log n)だが、最悪はO(n²)となり、ピボット選択が性能に影響する",
+        "len": 42,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "a1aec43c-3ca6-4d64-998b-dd2db8b84f42",
+        "text": "平均はO(n²)だが、最悪はO(n log n)である",
+        "len": 27,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "227b468f-117c-4d7c-972f-688d9a261fcb",
+        "text": "平均・最悪ともにO(n²)であるが、実用上は定数が小さく高速である",
+        "len": 33,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "503b2a5e-4d2d-4dc1-b7cc-f50821ee8e7e",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "algorithm",
+    "diff": "hard",
+    "qtext": "ハッシュ法における衝突（コリジョン）に関する説明として最も適切なものはどれか。",
+    "correctLen": 40,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.74",
+    "opts": [
+      {
+        "id": "f151d431-1476-4ac9-befc-d4f81c2beac2",
+        "text": "良いハッシュ関数を使えば衝突は絶対に発生しない",
+        "len": 23,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "56778da9-277e-478d-93ce-2e65ad175b8f",
+        "text": "衝突が発生した場合、ハッシュテーブルを破棄して再構築するのが唯一の方法である",
+        "len": 38,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "1aac4d6b-dadf-4835-8c6a-ea3e7973b086",
+        "text": "衝突の解決にはチェイン法とオープンアドレス法があり、それぞれ異なる方式で対処する",
+        "len": 40,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "136df278-8e81-4689-9908-15bc9df57bb3",
+        "text": "衝突はキーのデータ型が異なる場合にのみ発生する現象である",
+        "len": 28,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "8470ee09-24d0-4efd-b369-907df363be19",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "動的計画法（DP）の基本的な考え方として正しいものはどれか。",
+    "correctLen": 23,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.64",
+    "opts": [
+      {
+        "id": "402cdcce-e33d-437a-95c5-67973b9c7cb9",
+        "text": "乱数を使って近似解を高速に求める",
+        "len": 16,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "2da7186a-7df4-4e82-8aba-3703755b696c",
+        "text": "部分問題の解を記録し再利用して重複計算を避ける",
+        "len": 23,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "dfd0b063-54f5-46e7-a93d-35d8e3a81c53",
+        "text": "常に局所最適な選択を繰り返す",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "312b60ac-026f-471a-b5c6-a94d28bb9113",
+        "text": "問題をランダムに分割して並列処理する",
+        "len": 18,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "dc759bc0-0a20-497b-840b-a8e397fa2475",
+    "quizId": "64f2db3f-c67f-4d9c-8827-147d133838db",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "2分探索木を中順走査（in-order traversal）した結果の特徴はどれか。",
+    "correctLen": 14,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.17",
+    "opts": [
+      {
+        "id": "2c5a29e7-a44a-4752-9bbb-efff7540012a",
+        "text": "ノードの値が昇順に出力される",
+        "len": 14,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "18bfaf56-73d1-4c9e-a233-9e5ab74e4379",
+        "text": "ノードの値が降順に出力される",
+        "len": 14,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "a653fab9-b1b7-4ab7-99cd-a56a68c66b27",
+        "text": "ルートが最初に出力される",
+        "len": 12,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "e8315b1b-c126-4e9a-ab82-bf3b485ddb0e",
+        "text": "リーフが最初に出力される",
+        "len": 12,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "97019052-a058-4b7e-a1cb-3ec1c44b321a",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "クイックソートの最悪時間計算量がO(n²)になるのはどのような場合か。",
+    "correctLen": 23,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.92",
+    "opts": [
+      {
+        "id": "b399de5b-b367-4b5a-b74f-ffece349a1c8",
+        "text": "配列の要素がすべて同じ値の場合",
+        "len": 15,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "c80c4545-6cb3-4fe8-8351-1818532e9762",
+        "text": "配列の要素数が奇数の場合",
+        "len": 12,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "8a9b1dcb-8e0e-45b6-941c-4b62911d0075",
+        "text": "ピボットが常に最小値または最大値に選ばれる場合",
+        "len": 23,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "1b6f96d9-08e5-433c-b771-d40637904eed",
+        "text": "配列にランダムな値が含まれる場合",
+        "len": 16,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "b7092e05-9625-4d31-b1a3-c7b5ae929343",
+    "quizId": "b50edf75-8fe6-4d66-aaa5-637673e4dca9",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "2分探索の前提条件として正しいものはどれか。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": false,
+    "ratio": "1.36",
+    "opts": [
+      {
+        "id": "2f904a03-843e-4b04-895d-fabffe207154",
+        "text": "データがソート（整列）済みであること",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "fcef4b9f-5b13-4bb1-8266-ed5fa4648164",
+        "text": "データが連結リストに格納されていること",
+        "len": 19,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "ea54ed3b-babb-4250-a29e-356e219643f8",
+        "text": "データの個数が偶数であること",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "4828cc02-415e-41ba-9f0b-dffd3d890ffd",
+        "text": "データがすべて異なる値であること",
+        "len": 16,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "2f032201-b165-4f60-9126-c900995605f3",
+    "quizId": "b50edf75-8fe6-4d66-aaa5-637673e4dca9",
+    "cat": "algorithm",
+    "diff": "easy",
+    "qtext": "線形探索（リニアサーチ）の説明として正しいものはどれか。",
+    "correctLen": 20,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.43",
+    "opts": [
+      {
+        "id": "6c624780-56f3-44bd-b4eb-51de96397ebf",
+        "text": "データを先頭から順に一つずつ調べる探索法",
+        "len": 20,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "1ba2d37d-f4e6-4620-98c8-4c14de53541b",
+        "text": "データを半分に分けて探す探索法",
+        "len": 15,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "8fd3b2a2-5f68-4670-87c8-fcbeea74a5a8",
+        "text": "ランダムにデータを選んで探す探索法",
+        "len": 17,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "f19e1944-9fb6-411b-8c8d-c3c8bc0adac9",
+        "text": "ハッシュ値を使って探す探索法",
+        "len": 14,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "a24d898b-3eac-4681-a2a8-1ec811c7709d",
+    "quizId": "b50edf75-8fe6-4d66-aaa5-637673e4dca9",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "バブルソートの説明として正しいものはどれか。",
+    "correctLen": 21,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.50",
+    "opts": [
+      {
+        "id": "500e3c3c-1b09-4d91-95a4-2234d6e5dc38",
+        "text": "隣り合う要素を比較・交換して並べ替える手法",
+        "len": 21,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "90b826f0-2602-460a-bc1c-7f46f4445c0d",
+        "text": "最小値を見つけて先頭に移動させる手法",
+        "len": 18,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "1114032f-7902-4beb-aa05-f34a56e9629f",
+        "text": "データを分割して統合する手法",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "8f2278af-8066-4648-bc08-a271a59947d5",
+        "text": "ランダムに並べ替えを行う手法",
+        "len": 14,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "e29f7e55-d041-4534-b8a5-fefbccf06487",
+    "quizId": "b50edf75-8fe6-4d66-aaa5-637673e4dca9",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "挿入ソートの説明として正しいものはどれか。",
+    "correctLen": 22,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.57",
+    "opts": [
+      {
+        "id": "5caaddbb-9696-4cff-8d9d-add324642745",
+        "text": "整列済み部分の適切な位置に要素を挿入する手法",
+        "len": 22,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "5043a0cd-7def-4fc4-8d33-025c421bb9a6",
+        "text": "先頭から順にすべての要素を比較する手法",
+        "len": 19,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "b34e7b3c-70a3-42fd-a833-1a2c441c97d8",
+        "text": "データを半分に分割して結合する手法",
+        "len": 17,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "f37883f1-8ecc-495e-83fd-2d05b288e1c7",
+        "text": "最大値を末尾に移動させる手法",
+        "len": 14,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "e82442a2-ae1f-4d8d-8240-03a4663d7ab4",
+    "quizId": "b50edf75-8fe6-4d66-aaa5-637673e4dca9",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "ソートアルゴリズムの目的として正しいものはどれか。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.25",
+    "opts": [
+      {
+        "id": "271b82b6-85d0-4762-9697-9b17adf1723d",
+        "text": "データを一定の規則に従って並べ替える",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "50509c78-7366-4a37-b746-16cc9581c401",
+        "text": "データを検索する",
+        "len": 8,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "858c1c6c-69aa-4497-a1e7-1743b756c9d4",
+        "text": "データを圧縮する",
+        "len": 8,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "e8d02867-30fb-4a71-a562-65f1cce12fcc",
+        "text": "データを暗号化する",
+        "len": 9,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "a0b4a296-717c-461c-9417-16fc71af42d2",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "algorithm",
+    "diff": "hard",
+    "qtext": "ヒープソートの平均時間計算量と、その特徴として正しいものはどれか。",
+    "correctLen": 29,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.26",
+    "opts": [
+      {
+        "id": "788014bf-e170-4fdf-8370-7f70cec73c77",
+        "text": "平均計算量はO(n²)であり、安定ソートである",
+        "len": 23,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "22d73c93-6d12-4578-a815-0ad2d41fee49",
+        "text": "平均計算量はO(n log n)であり、安定ソートである",
+        "len": 28,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "74509be2-0287-4965-831a-92b9ad5e7545",
+        "text": "平均計算量はO(n log n)であり、安定ソートではない",
+        "len": 29,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "1f0bc07c-717b-4595-9f86-949422b43b17",
+        "text": "平均計算量はO(n)であり、追加メモリO(n)が必要である",
+        "len": 29,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "983700b8-b2a0-4ada-8e77-c7eef1102a51",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "algorithm",
+    "diff": "hard",
+    "qtext": "基数ソート（Radix Sort）の特徴として最も適切なものはどれか。",
+    "correctLen": 37,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.68",
+    "opts": [
+      {
+        "id": "7af9bcbc-7f28-47b7-a4f4-111e491a0607",
+        "text": "比較ベースのソートであり、最悪計算量はO(n log n)である",
+        "len": 32,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "22b9562a-5850-4751-8c3a-994a60b616df",
+        "text": "非比較ソートであり、桁数dと基数kに対してO(d(n+k))の計算量を持つ",
+        "len": 37,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "2cff2512-4c5c-486f-8f97-52b848b97041",
+        "text": "任意のデータ型に適用でき、常にO(n)で動作する",
+        "len": 24,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "ebcdf699-1c1c-46f7-8e2a-de1f1321b657",
+        "text": "不安定ソートであり、追加メモリを必要としない",
+        "len": 22,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "250bb667-fd2e-4d54-b24c-a572f4eb9b7d",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "algorithm",
+    "diff": "hard",
+    "qtext": "マージソートに関する説明として正しいものはどれか。",
+    "correctLen": 44,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.91",
+    "opts": [
+      {
+        "id": "b2017dfd-bfaf-474e-b0f0-f503bd43b24a",
+        "text": "不安定ソートであるが、追加メモリを必要としないインプレースソートである",
+        "len": 35,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "1929f73d-e2e8-417b-bd24-6fb8f910aaf2",
+        "text": "安定ソートであり、最悪計算量はO(n²)である",
+        "len": 23,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "7c0944ba-8e88-40df-a41c-d8bed73af8f9",
+        "text": "不安定ソートであり、最悪計算量はO(n log n)である",
+        "len": 29,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "5d3d9a40-7adf-4b7c-8836-ffa4e2703706",
+        "text": "安定ソートであり、最悪計算量はO(n log n)だが、O(n)の追加メモリが必要である",
+        "len": 44,
+        "correct": true,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "09f6329d-ebd5-4041-b7d5-fc30652dc5e1",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "algorithm",
+    "diff": "hard",
+    "qtext": "グラフ探索における幅優先探索（BFS）と深さ優先探索（DFS）の比較として正しいものはどれか。",
+    "correctLen": 39,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.95",
+    "opts": [
+      {
+        "id": "b75a9107-0a5f-4371-9d50-4421c431c3ef",
+        "text": "BFSはスタックを使用し、DFSはキューを使用する",
+        "len": 25,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "6d74cbf3-8de9-4493-802b-64b7394e53b9",
+        "text": "BFSは重みなしグラフの最短経路に適し、DFSはトポロジカルソートに適している",
+        "len": 39,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "3cfc0ea1-ff48-4dc8-b7d7-3fb8aa073872",
+        "text": "DFSは常にBFSよりメモリ使用量が多い",
+        "len": 20,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "c29464f6-a6d1-4229-9b82-d06ad4d4ab74",
+        "text": "BFSもDFSも重み付きグラフの最短経路を正しく求めることができる",
+        "len": 33,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "2cc4ffc2-3a06-4e95-b63f-8b9501349466",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "algorithm",
+    "diff": "hard",
+    "qtext": "トポロジカルソートに関する説明として正しいものはどれか。",
+    "correctLen": 37,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.37",
+    "opts": [
+      {
+        "id": "effbec5e-53cb-4a8a-a6c7-2ca2d8f6aecf",
+        "text": "任意の有向グラフに適用でき、閉路がある場合でも正しく動作する",
+        "len": 30,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "27d33c8d-91b5-4c22-9cbd-88e1378217e9",
+        "text": "無向グラフの頂点を次数の昇順に並べるアルゴリズムである",
+        "len": 27,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "aa678ab0-46a4-4cec-9deb-fcece81814e6",
+        "text": "DAGの頂点を依存関係に矛盾しない順序に並べ、タスク依存解決等に用いられる",
+        "len": 37,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "495cca30-2b6a-44b1-872d-cb4bf6ec44ae",
+        "text": "重み付きグラフの最短経路を求めるために使用されるアルゴリズムである",
+        "len": 33,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "49a2dcd9-c7cc-4451-88af-bb894fdc1436",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "algorithm",
+    "diff": "hard",
+    "qtext": "償却解析（Amortized Analysis）の基本概念として正しいものはどれか。",
+    "correctLen": 42,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.68",
+    "opts": [
+      {
+        "id": "cc785c0b-c055-4feb-be1b-ceacb5969248",
+        "text": "各操作の最悪計算量を合計し、全体の最悪ケースを求める手法である",
+        "len": 31,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "d2a5dc9e-4e9a-454f-b953-aeabf4a887bb",
+        "text": "確率的な分析手法であり、期待値を計算するものである",
+        "len": 25,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "9db6bad3-6ca5-48c7-a288-fd64e3224fb7",
+        "text": "一連の操作全体のコストを操作回数で割り、1回あたりの平均的コストを評価する手法である",
+        "len": 42,
+        "correct": true,
+        "sort": 3
+      },
+      {
+        "id": "836e8f40-0ec9-4ac1-b5fa-190d8091e3d5",
+        "text": "最良ケースのみを考慮し、アルゴリズムの下限を評価する手法である",
+        "len": 31,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "4e94611d-cc3c-4cee-b97b-ff208accc3c0",
+    "quizId": "b50edf75-8fe6-4d66-aaa5-637673e4dca9",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "再帰（リカーション）の説明として正しいものはどれか。",
+    "correctLen": 14,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.27",
+    "opts": [
+      {
+        "id": "a7c7161f-04e4-4274-aba7-8f17d3b8b20c",
+        "text": "関数が自分自身を呼び出すこと",
+        "len": 14,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "222ec180-0b1a-41ab-821b-26a353866251",
+        "text": "同じ処理を並列に実行すること",
+        "len": 14,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "0d9eb33c-9b18-4f8d-bc18-5aa5ea5d0e68",
+        "text": "条件分岐を繰り返すこと",
+        "len": 11,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "b0579dc8-cc8f-489a-b0cc-1f69f53ba888",
+        "text": "データを逆順に並べ替えること",
+        "len": 14,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "546bda78-840e-40b5-8d2c-917e69f8e097",
+    "quizId": "40473700-00e1-4b2e-86bb-d079cfcc5e43",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "深さ優先探索（DFS）の説明として正しいものはどれか。",
+    "correctLen": 23,
+    "correctIsShortest": false,
+    "correctIsLongest": false,
+    "ratio": "2.08",
+    "opts": [
+      {
+        "id": "7455544b-ad7f-49c9-a5ce-0f6b4185dbaa",
+        "text": "一つの枝を深く進んでからバックトラックする手法",
+        "len": 23,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "cf9fde12-4413-4c9b-b592-202388ce7b15",
+        "text": "同じ深さのノードをすべて探索してから次の深さに進む手法",
+        "len": 27,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "8b6526d4-2e76-46f3-bea7-80077d2e20b6",
+        "text": "ランダムにノードを選んで探索する手法",
+        "len": 18,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "5871eb19-9723-4036-87c5-0e6a1cb29748",
+        "text": "最短経路を保証する探索手法",
+        "len": 13,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "a52b3363-2185-41b4-9ad1-0bb100b8a12c",
+    "quizId": "40473700-00e1-4b2e-86bb-d079cfcc5e43",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "幅優先探索（BFS）の説明として正しいものはどれか。",
+    "correctLen": 22,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.69",
+    "opts": [
+      {
+        "id": "b86ab0c7-a6f0-4cab-93e4-851cee4b1efa",
+        "text": "始点から近い順にすべてのノードを探索する手法",
+        "len": 22,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "8a539ff6-57d2-4dad-b570-62ebb5529efc",
+        "text": "一つの枝を最後まで探索する手法",
+        "len": 15,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "1552d8bb-1863-4eef-90e6-9c04516f94d1",
+        "text": "コスト最小の経路を選ぶ手法",
+        "len": 13,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "e4c2fd6c-31fb-4b27-a0b2-b3f21d77538f",
+        "text": "ヒューリスティック関数を使う手法",
+        "len": 16,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "06a490a9-73a4-4ec9-b9e8-c35ef66ee630",
+    "quizId": "a0000003-0000-0000-0000-000000000003",
+    "cat": "algorithm",
+    "diff": "easy",
+    "qtext": "O記法（ビッグオー記法）が表すものとして最も適切なのはどれか。",
+    "correctLen": 24,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.40",
+    "opts": [
+      {
+        "id": "9b173a3d-2af0-4c01-b250-50241f91b13f",
+        "text": "プログラムの実行にかかる正確な秒数",
+        "len": 17,
+        "correct": false,
+        "sort": 1
+      },
+      {
+        "id": "88e3c242-1f79-4baf-8dc3-29c5181ef955",
+        "text": "アルゴリズムの最悪時における計算量の増加オーダー",
+        "len": 24,
+        "correct": true,
+        "sort": 2
+      },
+      {
+        "id": "968fd1e1-297e-437a-b190-5f0aa4bbd714",
+        "text": "メモリ使用量の最小値",
+        "len": 10,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "45cad74c-b89a-4801-a449-347824882be5",
+        "text": "CPUのクロック周波数に対する性能比",
+        "len": 18,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "7e5062bc-c784-4f1d-8fed-ed37312a0da4",
+    "quizId": "40473700-00e1-4b2e-86bb-d079cfcc5e43",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "安定ソートの説明として正しいものはどれか。",
+    "correctLen": 21,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.91",
+    "opts": [
+      {
+        "id": "5bf3fafd-3e55-4276-8e3d-d7a8ae7555fe",
+        "text": "同じ値の要素の元の順序がソート後も保たれる",
+        "len": 21,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "26e81cb9-0388-4dd1-9929-3d431654cdec",
+        "text": "常にO(n log n)で動作する",
+        "len": 17,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "f6d6f967-24f1-4ef5-995f-9463dba6e8db",
+        "text": "追加メモリを使用しない",
+        "len": 11,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "3ba56fcb-b5be-4e35-8a9c-c635e742053d",
+        "text": "最悪計算量がO(n)である",
+        "len": 13,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "3c729280-7160-4ca5-9df2-570b4f6b44fa",
+    "quizId": "40473700-00e1-4b2e-86bb-d079cfcc5e43",
+    "cat": "algorithm",
+    "diff": "easy",
+    "qtext": "マージソートの特徴として正しいものはどれか。",
+    "correctLen": 27,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.93",
+    "opts": [
+      {
+        "id": "45432024-e7ca-44af-8860-ec2994f9fcff",
+        "text": "安定ソートであり最悪計算量がO(n log n)である",
+        "len": 27,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "053d0360-2529-4271-978b-4ec8f1c59410",
+        "text": "インプレースソートで追加メモリが不要である",
+        "len": 21,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "84919e92-0c16-4c89-9c38-a66d92522709",
+        "text": "最悪計算量がO(n²)である",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "168a3b1e-b148-4b9e-b87c-f424ffcb3b54",
+        "text": "データがソート済みのとき最も遅くなる",
+        "len": 18,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "eab8af73-f1f8-457b-98b4-87ac9a18b538",
+    "quizId": "40473700-00e1-4b2e-86bb-d079cfcc5e43",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "貪欲法（グリーディ法）の説明として正しいものはどれか。",
+    "correctLen": 20,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.43",
+    "opts": [
+      {
+        "id": "e4970740-4c64-4a06-910a-f5422176224c",
+        "text": "各ステップで局所的に最適な選択を行う手法",
+        "len": 20,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "f78ad679-12c2-4200-842c-61e6fed5e0e9",
+        "text": "すべての可能性を網羅的に調べる手法",
+        "len": 17,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "0a879f6d-e52b-4542-bf55-244f74371fd8",
+        "text": "問題を再帰的に小さく分割する手法",
+        "len": 16,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "920f56e9-8190-484b-8900-ca2ac650fa5f",
+        "text": "ランダムな選択を繰り返す手法",
+        "len": 14,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "3b4784f1-9b83-4de9-8c4b-bca33b38143b",
+    "quizId": "b50edf75-8fe6-4d66-aaa5-637673e4dca9",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "擬似コードの目的として最も適切なものはどれか。",
+    "correctLen": 25,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.79",
+    "opts": [
+      {
+        "id": "61d26a8c-3ecd-4f7a-bbae-a13fe8ecbd04",
+        "text": "プログラミング言語に依存せずアルゴリズムを記述する",
+        "len": 25,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "536a4e14-b22c-4bc1-97b4-5b299e381466",
+        "text": "プログラムを自動的に生成する",
+        "len": 14,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "1885eadf-4587-4f2b-807d-e4496edf22fb",
+        "text": "ソースコードのエラーを検出する",
+        "len": 15,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "576cf2b7-5236-4c7a-a57d-bfbdeea2360e",
+        "text": "プログラムの実行速度を測定する",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "0ab0963c-2991-4689-9110-ade27562b21a",
+    "quizId": "b50edf75-8fe6-4d66-aaa5-637673e4dca9",
+    "cat": "algorithm",
+    "diff": "easy",
+    "qtext": "選択ソートの説明として正しいものはどれか。",
+    "correctLen": 22,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.29",
+    "opts": [
+      {
+        "id": "f0661ac3-2a7d-4698-bddd-aaf8e60a68c5",
+        "text": "未整列部分から最小値を選び先頭に配置する手法",
+        "len": 22,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "81b09410-e039-4574-a925-316b4709896e",
+        "text": "隣り合う要素を比較して交換する手法",
+        "len": 17,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "f76ff99e-2448-4014-a2d4-d37abe023af9",
+        "text": "データを再帰的に分割して整列する手法",
+        "len": 18,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "3ff4aece-3261-49d1-a95a-136bc7069a0f",
+        "text": "挿入位置を探して要素を挿入する手法",
+        "len": 17,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "f29962c4-332a-456c-ae94-9f4e58a74452",
+    "quizId": "b50edf75-8fe6-4d66-aaa5-637673e4dca9",
+    "cat": "algorithm",
+    "diff": "easy",
+    "qtext": "探索アルゴリズムの目的として最も適切なものはどれか。",
+    "correctLen": 20,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.22",
+    "opts": [
+      {
+        "id": "c338658e-8259-419b-a9f1-aaf0b8efe9a9",
+        "text": "データの集まりから目的のデータを見つける",
+        "len": 20,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "a654eb16-f9fa-4b1e-9158-42194af1e0fd",
+        "text": "データを効率よく保存する",
+        "len": 12,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "6833edb8-2eec-4a7e-96d0-e39e00a86cb1",
+        "text": "データを暗号化する",
+        "len": 9,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "102fc5e9-3290-4b2e-886b-0520f281a87b",
+        "text": "データの整合性を検証する",
+        "len": 12,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "a15a7101-74c6-4e38-aa34-2bef6392bfbb",
+    "quizId": "40473700-00e1-4b2e-86bb-d079cfcc5e43",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "分割統治法の説明として正しいものはどれか。",
+    "correctLen": 18,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.50",
+    "opts": [
+      {
+        "id": "1f8110bd-35d3-4979-9436-e7bd268595f2",
+        "text": "問題を小さく分割し、解を統合する手法",
+        "len": 18,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "1513f26c-0ea0-42aa-85af-d7bfcf349f95",
+        "text": "問題を並列に処理する手法",
+        "len": 12,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "71f06aa7-85cb-4040-93d4-6829968762e2",
+        "text": "データを順次処理する手法",
+        "len": 12,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "5c43eb08-0815-4920-bb5f-939b946cf09d",
+        "text": "ランダムに問題を分割する手法",
+        "len": 14,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "19518630-a555-4fab-80c9-9b8eba042e41",
+    "quizId": "b50edf75-8fe6-4d66-aaa5-637673e4dca9",
+    "cat": "algorithm",
+    "diff": "easy",
+    "qtext": "アルゴリズムの説明として最も適切なものはどれか。",
+    "correctLen": 13,
+    "correctIsShortest": false,
+    "correctIsLongest": false,
+    "ratio": "1.36",
+    "opts": [
+      {
+        "id": "461a166c-1738-40f3-9f07-689910fe1080",
+        "text": "問題を解くための明確な手順",
+        "len": 13,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "aae1dd2a-4233-480e-a947-f5cb95b2ffd5",
+        "text": "プログラミング言語の文法",
+        "len": 12,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "3aaf933e-9fe7-404d-9c16-a43305dd0cdd",
+        "text": "コンピュータのハードウェア構成",
+        "len": 15,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "ca3f46f8-a34e-4833-9d11-eae1012d3803",
+        "text": "データベースの設計手法",
+        "len": 11,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "43be2ff9-0767-4185-a0d8-a03b63611f61",
+    "quizId": "b50edf75-8fe6-4d66-aaa5-637673e4dca9",
+    "cat": "algorithm",
+    "diff": "easy",
+    "qtext": "繰り返し処理の例として最も適切なものはどれか。",
+    "correctLen": 17,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.70",
+    "opts": [
+      {
+        "id": "1fa75dd0-e84d-4c61-9aed-0bf9f9b03dab",
+        "text": "配列の全要素に対して同じ計算を行う",
+        "len": 17,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "4a62a826-0a95-4d27-a1e5-254f4a85d967",
+        "text": "条件に応じて異なる処理を行う",
+        "len": 14,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "3f8ff94c-8dcc-4c54-816a-6b97cc9732bc",
+        "text": "処理を一度だけ実行する",
+        "len": 11,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "02819cad-cdda-4410-820b-cb574ec818d2",
+        "text": "プログラムを終了する",
+        "len": 10,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "abf27c25-5626-4262-8701-adbad5cdbb66",
+    "quizId": "b50edf75-8fe6-4d66-aaa5-637673e4dca9",
+    "cat": "algorithm",
+    "diff": "easy",
+    "qtext": "変数の説明として最も適切なものはどれか。",
+    "correctLen": 19,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.11",
+    "opts": [
+      {
+        "id": "1f3c3f2c-daf5-4c29-879d-c8968ff132c7",
+        "text": "データを一時的に記憶する名前付きの領域",
+        "len": 19,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "9fe4918c-7186-4f46-9ac1-fd7de9d81b57",
+        "text": "固定された値のこと",
+        "len": 9,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "d1ff441c-0bb7-4d27-ad97-937ce2ca5dd1",
+        "text": "プログラムの実行命令のこと",
+        "len": 13,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "28eb697f-ce02-40ee-9637-7a03ee554885",
+        "text": "ファイルの保存場所のこと",
+        "len": 12,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "239e9278-3aaa-4fb5-bc58-1c946e9c2642",
+    "quizId": "40473700-00e1-4b2e-86bb-d079cfcc5e43",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "動的計画法（DP）の説明として正しいものはどれか。",
+    "correctLen": 19,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.46",
+    "opts": [
+      {
+        "id": "23ed3ced-e87f-4adb-86b1-4e1b3cf607cb",
+        "text": "部分問題の結果を保存して再利用する手法",
+        "len": 19,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "9ad538a3-d22f-49bb-92a3-b7cc99204b69",
+        "text": "問題をランダムに分割して解く手法",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "db7d4dc2-9100-48c4-8140-b76282dc432d",
+        "text": "常にその時点の最善の選択をする手法",
+        "len": 17,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "9066ef84-2efa-4a5b-aa54-c40b82bd6b2b",
+        "text": "全ての組み合わせを試す手法",
+        "len": 13,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "257ed618-8fe6-487e-9d0f-797e4deb2bdb",
+    "quizId": "b50edf75-8fe6-4d66-aaa5-637673e4dca9",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "アルゴリズムの良さを評価する基準として適切なものはどれか。",
+    "correctLen": 11,
+    "correctIsShortest": false,
+    "correctIsLongest": false,
+    "ratio": "1.44",
+    "opts": [
+      {
+        "id": "7457458e-06a9-4724-8100-2a55bea655dc",
+        "text": "処理時間と使用メモリ量",
+        "len": 11,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "0646c33d-55dc-4e03-a818-3e0cb0348f14",
+        "text": "ソースコードの行数",
+        "len": 9,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "0e241fb2-d92a-4b94-ae7b-7af90351e1d3",
+        "text": "使用するプログラミング言語",
+        "len": 13,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "6b6c5cf6-c9c6-4abc-acaa-4807a5263d7e",
+        "text": "プログラマの経験年数",
+        "len": 10,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "34292346-d8b6-48a1-b0f9-2eb339dbeaf8",
+    "quizId": "b50edf75-8fe6-4d66-aaa5-637673e4dca9",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "トレースの説明として正しいものはどれか。",
+    "correctLen": 26,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "2.17",
+    "opts": [
+      {
+        "id": "cb5e5587-7581-4a33-84cb-93e9368bbb1c",
+        "text": "プログラムを1ステップずつ追跡して動作を確認する手法",
+        "len": 26,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "f6f19815-5cc6-4726-8b85-1b73cd47034e",
+        "text": "プログラムの実行時間を計測する手法",
+        "len": 17,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "dd89a757-4976-4f9e-abb2-13aba9f1e142",
+        "text": "プログラムを自動テストする手法",
+        "len": 15,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "b646eec2-73c9-4ae6-b483-3c4cd7d5080e",
+        "text": "プログラムを圧縮する手法",
+        "len": 12,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "9e585d1f-e66d-446e-829f-d0c25f0d07ce",
+    "quizId": "b50edf75-8fe6-4d66-aaa5-637673e4dca9",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "順次・選択・繰り返しの3つの基本構造のうち、「選択」にあたるものはどれか。",
+    "correctLen": 17,
+    "correctIsShortest": false,
+    "correctIsLongest": false,
+    "ratio": "1.46",
+    "opts": [
+      {
+        "id": "f3813e4d-9d1b-4008-945c-caaf3e40a74a",
+        "text": "条件に基づいて処理を分岐させる構造",
+        "len": 17,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "2a960a3c-a151-4ffc-b350-b1b74f1b6b00",
+        "text": "処理を上から順に実行する構造",
+        "len": 14,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "fd678489-56b8-4669-8583-b5c372e21605",
+        "text": "処理を条件が満たされるまで繰り返す構造",
+        "len": 19,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "62f63bbe-b851-4713-a2c9-801da9525245",
+        "text": "関数を定義して呼び出す構造",
+        "len": 13,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "cdd983b9-664c-4a7e-9204-dce0ebf6ad36",
+    "quizId": "40473700-00e1-4b2e-86bb-d079cfcc5e43",
+    "cat": "algorithm",
+    "diff": "medium",
+    "qtext": "ダイクストラ法の目的として正しいものはどれか。",
+    "correctLen": 16,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.45",
+    "opts": [
+      {
+        "id": "a4ecc4e0-8b49-4bd3-b331-b13443ee0304",
+        "text": "重み付きグラフの最短経路を求める",
+        "len": 16,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "058523a5-8e89-44fb-ab4d-58994fc040b0",
+        "text": "グラフの連結成分を求める",
+        "len": 12,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "d7c1b72b-aa24-456b-b442-949e14bb3100",
+        "text": "グラフの最大フローを求める",
+        "len": 13,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "1e2b5fa1-0f26-4f17-a68a-f05211cd1500",
+        "text": "グラフの全域木を求める",
+        "len": 11,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "0e11e446-d114-4510-80fb-64693c391701",
+    "quizId": "3ba24aae-54a2-40a7-a3c1-0df0d4993208",
+    "cat": "algorithm",
+    "diff": "hard",
+    "qtext": "2分探索木において、左部分木と右部分木の関係として正しいものはどれか。",
+    "correctLen": 27,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.59",
+    "opts": [
+      {
+        "id": "c8d8770a-6c06-4b54-a552-609f529896fc",
+        "text": "左部分木の値は親より小さく、右部分木の値は親より大きい",
+        "len": 27,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "1fee2faf-a442-4878-a9f6-f44fd27e4e28",
+        "text": "左部分木の値は親より大きく、右部分木の値は親より小さい",
+        "len": 27,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "3ae87b80-558a-4b0e-8e1a-1a09771b6989",
+        "text": "左右の部分木の値に順序の制約はない",
+        "len": 17,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "08b0a42b-4144-4306-9be5-c910c7f42ba2",
+        "text": "左右の部分木は常に同じ数のノードを持つ",
+        "len": 19,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "6fb0cbb9-b3cb-41ef-b0fe-34bc66a6e78d",
+    "quizId": "3ba24aae-54a2-40a7-a3c1-0df0d4993208",
+    "cat": "algorithm",
+    "diff": "hard",
+    "qtext": "赤黒木の特徴として正しいものはどれか。",
+    "correctLen": 19,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.46",
+    "opts": [
+      {
+        "id": "753c9230-749a-4414-bab3-2efbc90418f0",
+        "text": "ノードに色を付けて平衡を保つ2分探索木",
+        "len": 19,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "20f30e2c-28cd-4ae3-ad23-32a4d363a4e2",
+        "text": "すべてのリーフが同じ深さの完全2分木",
+        "len": 18,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "1ee290ae-b999-4704-8ce7-1f831af67586",
+        "text": "ソート済みデータ専用の木構造",
+        "len": 14,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "218c98ba-1481-44e0-b020-1180b7241af8",
+        "text": "3つ以上の子を持てる多分木",
+        "len": 13,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "7b3aefe5-a0f8-43f1-9fa7-30c3b8211df0",
+    "quizId": "3ba24aae-54a2-40a7-a3c1-0df0d4993208",
+    "cat": "algorithm",
+    "diff": "hard",
+    "qtext": "AVL木の特徴として正しいものはどれか。",
+    "correctLen": 20,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.33",
+    "opts": [
+      {
+        "id": "c9d33c9e-9441-4952-b758-8f8e596a8b67",
+        "text": "左右部分木の高さの差が常に1以下の平衡木",
+        "len": 20,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "b316a094-b666-4581-a1ee-d3612449b94f",
+        "text": "すべてのリーフが同じ深さにある木",
+        "len": 16,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "ef665f11-ee32-4f06-8944-90608d80675f",
+        "text": "各ノードが最大3つの子を持つ木",
+        "len": 15,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "d9bf187f-5ef3-41ec-9e69-9896a829c19f",
+        "text": "データがランダムに配置される木",
+        "len": 15,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "8dd383be-c9bb-4d9c-8921-c669e0843213",
+    "quizId": "3ba24aae-54a2-40a7-a3c1-0df0d4993208",
+    "cat": "algorithm",
+    "diff": "hard",
+    "qtext": "2分探索木に対する中順走査（in-order traversal）の結果はどれか。",
+    "correctLen": 13,
+    "correctIsShortest": false,
+    "correctIsLongest": false,
+    "ratio": "1.36",
+    "opts": [
+      {
+        "id": "19480548-f4f6-4a05-9f94-ba4fc6ca2684",
+        "text": "ノードの値が昇順に得られる",
+        "len": 13,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "90a28a7d-b8c4-47b3-a919-c5ab82340f80",
+        "text": "ノードの値が降順に得られる",
+        "len": 13,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "e6cae05b-8dc1-4499-9a7d-8d5cd6b3d7dd",
+        "text": "ルートから順に層ごとに得られる",
+        "len": 15,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "169911b7-c142-4a29-91fc-caa341b9859a",
+        "text": "結果の順序は不定である",
+        "len": 11,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  },
+  {
+    "qid": "e4346c46-5772-4a06-a668-36cdf019c128",
+    "quizId": "40473700-00e1-4b2e-86bb-d079cfcc5e43",
+    "cat": "algorithm",
+    "diff": "hard",
+    "qtext": "バックトラッキングの説明として正しいものはどれか。",
+    "correctLen": 21,
+    "correctIsShortest": false,
+    "correctIsLongest": true,
+    "ratio": "1.31",
+    "opts": [
+      {
+        "id": "9eee3600-0f66-4558-abdb-3983aab5461b",
+        "text": "行き詰まったら直前に戻り別の候補を試す手法",
+        "len": 21,
+        "correct": true,
+        "sort": 1
+      },
+      {
+        "id": "93abe20b-7322-496b-afeb-b4f2054b765d",
+        "text": "すべての候補を同時に並列で探索する手法",
+        "len": 19,
+        "correct": false,
+        "sort": 2
+      },
+      {
+        "id": "e84581aa-1814-406a-8c2e-c9628966e8f5",
+        "text": "解の候補をランダムに選択する手法",
+        "len": 16,
+        "correct": false,
+        "sort": 3
+      },
+      {
+        "id": "843ea210-dd52-4c50-9810-d86d4667abc5",
+        "text": "最初に見つかった解を最適解とする手法",
+        "len": 18,
+        "correct": false,
+        "sort": 4
+      }
+    ]
+  }
+]
