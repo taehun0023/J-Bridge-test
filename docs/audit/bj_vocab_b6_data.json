@@ -1,0 +1,1831 @@
+[
+  {
+    "qId": "3d0032d6-aae5-4dd8-9e1b-cdb32ac9c64a",
+    "diff": "初級",
+    "qText": "「案件」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "22b85a04-cf8f-4cc6-a119-dac841112dde",
+        "text": "상영",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "df21c72c-f7fd-4267-b659-d3f287ad1d19",
+        "text": "검수/수령 확인",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "5d8e8db0-474c-42e5-a12a-bbd16848130d",
+        "text": "안건/프로젝트",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "0d2c4de0-c967-419b-88a3-0cb91524f93e",
+        "text": "마일스톤",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "392daba5-583b-4f0f-b06b-b96ebf4cbacc",
+    "diff": "初級",
+    "qText": "「有給休暇」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "92545cb4-511b-4812-8da2-363f4631b0fe",
+        "text": "청구서",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "9b4efbe1-53d3-4f12-926e-d0f3c32a3e03",
+        "text": "지급/긴급",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "c5579048-f5df-42a4-9b2e-b656ad05c5d8",
+        "text": "시스템 구성도",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "4867c345-0297-481d-8711-e00beeff0d11",
+        "text": "유급 휴가",
+        "isCorrect": true,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "98c7827c-31b4-44a4-a9ce-58639e637dca",
+    "diff": "中級",
+    "qText": "「残業」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "e39f7268-d786-423f-8e87-66c4989e17e2",
+        "text": "잔업/야근",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "7ee806d2-3440-40e8-949a-f986475a20b4",
+        "text": "전념",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "a75c4401-a8c7-4076-b1ac-5de76763e8cd",
+        "text": "조치",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "dfb7c690-ed27-4171-aafb-a1da60272b24",
+        "text": "버전 관리",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "00d1148d-0c1a-423f-b15d-870ac5f0360e",
+    "diff": "中級",
+    "qText": "「追加開発」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "6b0c10b8-12e4-48d0-9149-40b0022aa390",
+        "text": "최우선",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "89990eee-154a-45bc-9e1c-0fdec11cb2df",
+        "text": "중요함 / 핵심",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "10479481-3043-455c-af41-437dea2987e7",
+        "text": "추가 개발",
+        "isCorrect": true,
+        "hasSlash": false
+      },
+      {
+        "id": "7f69d8f6-e89f-492d-a8ad-3bec9af27723",
+        "text": "영향범위",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "b99a8604-12da-449f-a03f-6a1466c5d3e4",
+    "diff": "中級",
+    "qText": "「報連相」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "34cc3b6b-cabb-477d-b2e5-f621e0c9ba17",
+        "text": "보고/연락/상담",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "7c43e305-71e4-4607-bbd5-68016ddbee5b",
+        "text": "질문의 의도를 정확하게 파악하다",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "8867e632-6c59-452e-ab3b-8b5233622525",
+        "text": "횡령",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "bcae7b58-4b0e-456f-a8e5-0e946c94cc56",
+        "text": "짜 넣는 일",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "4de63e2c-cbc5-49f2-ab70-865156082fd6",
+    "diff": "中級",
+    "qText": "「ご査収」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "82107429-5dd0-4c87-b3b8-efe1f1d968d1",
+        "text": "서류",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "8e4d77bf-93b0-4f3c-8eff-6fe872d9f75c",
+        "text": "검수/수령 확인",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "26926456-745c-4348-9519-a508ba520c47",
+        "text": "사양 변경",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "ea2fdc40-ffe3-47e0-a989-0d43692ece81",
+        "text": "직함",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "df00ea5e-987f-4f6f-9125-35c1abed4fb8",
+    "diff": "上級",
+    "qText": "「暫定対応」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "8e8db412-ef24-48f3-9c49-83c1b8eb18fe",
+        "text": "청구서",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "b74b8cd7-0a77-4f5f-b77b-6eb31cfcb19b",
+        "text": "지급/긴급",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "ede48c3a-2c49-4ff1-816f-0a4a1b9d7ac7",
+        "text": "화면 설계서",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "dc06d94a-2cd3-4022-8fd8-7af4330aa45f",
+        "text": "임시 대응",
+        "isCorrect": true,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "b7b40645-41e3-4563-98b2-d49b65e20fb8",
+    "diff": "上級",
+    "qText": "「至急」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "b8e322da-6942-462d-9d80-d8d997a59110",
+        "text": "지급/긴급",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "23e06c8f-bbda-4de1-bccf-2fcd69cc8f03",
+        "text": "억제",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "75df79c5-80e5-4a31-94ee-f155172bc85f",
+        "text": "보고・연락・상담",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "16abe6bc-8787-4b30-ae3d-12513eb60966",
+        "text": "버전 관리",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "d7066cc5-fe22-45d2-a7e7-185f04e3fd4d",
+    "diff": "上級",
+    "qText": "「上映」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "e68b7c3c-0100-4813-bf5a-847180a2c063",
+        "text": "안건/프로젝트",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "d6e97544-4c0d-4993-a3cc-a8666581a54a",
+        "text": "단축",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "986fab90-0c2e-4d35-83a7-267001d8d9cc",
+        "text": "상영",
+        "isCorrect": true,
+        "hasSlash": false
+      },
+      {
+        "id": "28d6d578-6187-459e-9223-dad3b14320a9",
+        "text": "와이어프레임",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "b37101a0-4ef5-4a0d-b6b8-ed0b3452c396",
+    "diff": "中級",
+    "qText": "「最優先」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "bbc461c4-caa0-4d23-b09e-b8deaa5b4087",
+        "text": "불명확",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "8b369f1b-7569-475f-bdab-cdfd96c292bb",
+        "text": "중요함 / 핵심",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "fee7826d-3ad3-468f-ad05-a6696f2f682f",
+        "text": "최우선",
+        "isCorrect": true,
+        "hasSlash": false
+      },
+      {
+        "id": "f5111afc-2b03-4526-81ad-beeeff903047",
+        "text": "인터페이스",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "e898d758-8772-4a1f-9e80-706553930091",
+    "diff": "上級",
+    "qText": "「創出」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "5fe46995-ba2d-4e00-af2a-eb26834eaf5d",
+        "text": "중요함 / 핵심",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "f07dcdea-6319-4b1e-a6b7-428d5c605d02",
+        "text": "우러러보다",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "d8d72515-74d0-4f0b-a340-8a1b66dbc3cf",
+        "text": "플로우차트",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "ad81ecc9-8300-4aaf-a366-d129ca470ccc",
+        "text": "창출",
+        "isCorrect": true,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "2de6faa8-3b2d-4bd9-be01-541c99e76f1d",
+    "diff": "上級",
+    "qText": "「肝心」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "680316c2-5bc6-476e-b93b-7c14762d38d0",
+        "text": "중요함 / 핵심",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "9926eb92-2b47-438c-abd5-79d12b483f31",
+        "text": "위탁",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "b902e69a-9864-47aa-acef-b482f09f3133",
+        "text": "서론",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "5e103700-ea84-4507-b911-c0ca11d92079",
+        "text": "버전 관리",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "9052687b-af22-48fc-a44e-523ff9de8695",
+    "diff": "上級",
+    "qText": "「遠隔」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "31f0650e-94fb-4950-80ac-54a755a78fcb",
+        "text": "원격",
+        "isCorrect": true,
+        "hasSlash": false
+      },
+      {
+        "id": "6e4ba884-ec0b-42e9-acf3-78d7da044880",
+        "text": "준위",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "fca39bac-f2c0-4001-bacc-b0f4007894db",
+        "text": "지급/긴급",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "270a2fc7-8844-48b0-87a5-5208e993d640",
+        "text": "품질 보증",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "e9f5620e-3f10-4ec5-a425-93950e4af9d5",
+    "diff": "中級",
+    "qText": "「圧迫」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "bb91142f-5517-48e5-bdc0-54d3d3decfd5",
+        "text": "검수/수령 확인",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "b9490b64-4d62-4079-a218-cd133f7d6d34",
+        "text": "유지보수 운영",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "e5e584f8-a5fb-4c9d-bdea-dfd3555275f8",
+        "text": "압박",
+        "isCorrect": true,
+        "hasSlash": false
+      },
+      {
+        "id": "9eff66f6-1896-49b4-8596-7e47642fb632",
+        "text": "인터페이스",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "667061cb-3008-49fb-814d-67576d8e2d5e",
+    "diff": "中級",
+    "qText": "「心掛ける」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "00c970ca-a628-494d-b2a7-fa589f3ca6c1",
+        "text": "검수/수령 확인",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "2c7e234d-5ab3-4e9c-8845-c672c0e35c1a",
+        "text": "전념",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "2f37eda4-b47a-44ff-bfb6-ff5697d12ecd",
+        "text": "마음에 새기다",
+        "isCorrect": true,
+        "hasSlash": false
+      },
+      {
+        "id": "61856f2b-4b7b-4eb3-86c9-272853162ed8",
+        "text": "마일스톤",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "2717ae45-2df1-4440-a3d8-72fdaee73d4e",
+    "diff": "初級",
+    "qText": "「障害」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "94bfc77c-3e53-4cc4-a357-06c95e1987c7",
+        "text": "스크럼 마스터",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "68c8d6bc-f7ce-4c9b-8caf-3b5415275434",
+        "text": "짜 넣는 일",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "edfdbd83-02fd-4dfd-84de-52f4c441bb52",
+        "text": "잔업/야근",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "07c10bc0-d07d-43d2-8b69-44c45bbe9fe1",
+        "text": "장애",
+        "isCorrect": true,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "d3ce4448-68bb-43df-b564-90b2cd640929",
+    "diff": "中級",
+    "qText": "「ER図」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "03b8e83b-9545-4cd4-846f-9a321565080e",
+        "text": "스프린트",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "e65f1210-7978-4220-803d-776bcd5e3425",
+        "text": "간트 차트",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "1454b811-e6b6-46aa-9bad-8749e6a0cb7c",
+        "text": "ER 다이어그램",
+        "isCorrect": true,
+        "hasSlash": false
+      },
+      {
+        "id": "26bd4747-55ff-498f-b4f2-b4de5bb0ce70",
+        "text": "검수/수령 확인",
+        "isCorrect": false,
+        "hasSlash": true
+      }
+    ]
+  },
+  {
+    "qId": "86260602-9fac-4954-b1bf-cf8bedeb7af4",
+    "diff": "上級",
+    "qText": "「レビュー会」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "27779a92-7a23-4f34-a87d-6bcf554cc727",
+        "text": "정합성",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "88c19a2f-bbb5-498c-a054-d2ef16618481",
+        "text": "테스트 데이터",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "82e57f8a-449b-4227-b49b-0ebc428ee283",
+        "text": "리뷰 회의",
+        "isCorrect": true,
+        "hasSlash": false
+      },
+      {
+        "id": "b28c7a63-580b-48e7-a995-90c194a46bd9",
+        "text": "검수/수령 확인",
+        "isCorrect": false,
+        "hasSlash": true
+      }
+    ]
+  },
+  {
+    "qId": "655c6ae3-f8aa-4c9a-bdf1-646cb799d7cf",
+    "diff": "初級",
+    "qText": "「バックログ」の意味として正しいものは？",
+    "opts": [
+      {
+        "id": "7cb61ec9-1637-4ce1-afa3-d918a3946ce8",
+        "text": "완료된 작업 목록",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "a7158837-6c0a-4044-8652-73728a37f41c",
+        "text": "서버 로그 기록",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "f3453cac-6b17-4ca4-9c19-2a3493711acb",
+        "text": "미착수 작업/요건 목록",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "d1e61246-bdaf-4a50-932d-ff230fb7990a",
+        "text": "에러 보고서",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "a6e3509e-fee7-4393-bd35-576e90f42e6e",
+    "diff": "初級",
+    "qText": "IT業界で使われる「ミーティング」の意味は？",
+    "opts": [
+      {
+        "id": "34be843d-1cec-44ef-b1f6-f78a1b17780a",
+        "text": "회의 / 미팅",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "87512174-1c44-4ba5-a9e2-7b9247f542e8",
+        "text": "면접 / 인터뷰",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "e9786033-1cf0-494c-873d-f78c4e727b46",
+        "text": "발표 / 프레젠테이션",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "9b3e6702-45bc-4f33-84ab-a9c68d548178",
+        "text": "연수 / 트레이닝",
+        "isCorrect": false,
+        "hasSlash": true
+      }
+    ]
+  },
+  {
+    "qId": "612aa0d7-26a2-4c9f-8bec-4e79f87f6931",
+    "diff": "初級",
+    "qText": "「不具合」の意味は？",
+    "opts": [
+      {
+        "id": "d6e456d8-cdad-4462-b678-dd4e6ca5eff4",
+        "text": "사양 변경",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "df684e18-45ad-43fd-b915-3ef724e3eeb4",
+        "text": "버그 / 결함",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "8b20b45e-9e7e-49d2-b043-57122a9e56c2",
+        "text": "기능 추가",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "e4a39777-2370-402b-a83d-a68759998719",
+        "text": "업데이트",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "a678305f-cbf5-4548-bf1a-37183ca5dd20",
+    "diff": "初級",
+    "qText": "「仕様」の意味は？",
+    "opts": [
+      {
+        "id": "c45691ac-bb17-4588-8e5c-0436ac4d72e5",
+        "text": "사양 / 스펙",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "3798f5ce-267f-4593-918d-21ed7fe7175b",
+        "text": "사용 방법",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "20efce93-9be5-40a7-8187-801b003123d4",
+        "text": "설정 항목",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "7a5701e9-2ffa-4b8e-9756-6c9e13ac22c7",
+        "text": "시험 계획",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "a8694528-ae5c-4d30-9427-2afd214333e8",
+    "diff": "中級",
+    "qText": "「マイグレーション」の意味として正しいものは？",
+    "opts": [
+      {
+        "id": "c942414b-e923-4a64-9d78-e5cdaed7b3c3",
+        "text": "DB 스키마 변경 / 시스템 이행 관리",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "27fbe973-d383-4d34-90ee-5eaad4c06a77",
+        "text": "데이터 백업 및 복원 작업",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "1b1ce462-f852-43bb-bffa-3026a1b12a83",
+        "text": "서버 간 통신 프로토콜",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "a822c3c4-0007-44bf-8a85-27e39fbfab7a",
+        "text": "소스코드 난독화 작업",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "da1ef8ca-dd1c-491f-b885-0381f80f1772",
+    "diff": "中級",
+    "qText": "「リソース」の意味として正しいものは？",
+    "opts": [
+      {
+        "id": "f158923d-ea77-427c-bd64-b5a719573d0f",
+        "text": "소스코드 저장소",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "3f780f0d-9afd-4f51-b4eb-0733e76f661f",
+        "text": "개발 프레임워크",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "9ba90d42-c4ff-41c6-a9b9-3c9f6ce35f58",
+        "text": "자원 (인력/시간/예산/서버 등)",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "75502b89-d2d9-49e2-a066-7fde84c3c618",
+        "text": "테스트 결과 보고서",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "1717ca6e-fbbb-43e7-bdba-8a99f85416d4",
+    "diff": "中級",
+    "qText": "「マイルストーン」の意味として正しいものは？",
+    "opts": [
+      {
+        "id": "230cb22b-2eb8-47a5-8424-2efc7b30b682",
+        "text": "프로젝트의 주요 이정표 / 목표 지점",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "43279bf6-0149-48d3-bd3d-b92cffa1c96e",
+        "text": "개발 환경의 설정 파일",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "541683e2-e483-4ee9-8f21-925868e33069",
+        "text": "테스트 자동화 도구",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "c31b8f80-cb53-44d8-8eb0-1dac54ee2efa",
+        "text": "코드 품질 측정 기준",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "750af1fc-2657-4545-8d6e-aed7cde494e2",
+    "diff": "中級",
+    "qText": "「エスカレーション」の意味として正しいものは？",
+    "opts": [
+      {
+        "id": "a37d0da3-19cf-4ce7-b943-8bd7f894c374",
+        "text": "문제를 스스로 해결하는 것",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "005318e4-cb6e-4afc-9c7a-b281c237dad9",
+        "text": "문제를 상위자에게 보고/인계하는 것",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "d101157e-06c5-4f6f-a53b-bd3a110edc18",
+        "text": "시스템을 업그레이드하는 것",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "a62a3b0f-271f-4ace-83e9-e38e21eeb3cd",
+        "text": "에러 로그를 분석하는 것",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "c3cf5e32-ec81-4012-991f-16cbb8398ffe",
+    "diff": "中級",
+    "qText": "「結合テスト」の意味は？",
+    "opts": [
+      {
+        "id": "7d88206e-d2ae-4e80-85aa-7a51726c7af1",
+        "text": "단위 테스트 / 유닛 테스트",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "d3e52385-4f6d-440a-a78a-b8ebcb2cae5b",
+        "text": "성능 테스트 / 부하 테스트",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "24270bc2-8815-4473-ac5a-24b65e3e5ec6",
+        "text": "결합 테스트 / 통합 테스트",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "9cabcb67-e007-4748-9898-8b29f5b60cef",
+        "text": "회귀 테스트 / 리그레션 테스트",
+        "isCorrect": false,
+        "hasSlash": true
+      }
+    ]
+  },
+  {
+    "qId": "3131b67e-cd71-4690-9635-2c9584d3b915",
+    "diff": "中級",
+    "qText": "「冗長化」の意味は？",
+    "opts": [
+      {
+        "id": "5450fa76-e0ef-4b42-9b2d-9f9ea7fa7be7",
+        "text": "최적화 / 튜닝",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "ccdbf402-624b-4f5c-9880-da26bad0e3f4",
+        "text": "간소화 / 경량화",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "3947d2f5-5429-4afb-b4af-a88d6c7a0b09",
+        "text": "자동화 / 스크립트화",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "6ba6a089-5445-4020-b1fc-c82e4934ace8",
+        "text": "이중화 / 다중화",
+        "isCorrect": true,
+        "hasSlash": true
+      }
+    ]
+  },
+  {
+    "qId": "e1d7444b-3996-4739-a0f2-a35bdc182033",
+    "diff": "中級",
+    "qText": "「工数」の意味は？",
+    "opts": [
+      {
+        "id": "ac88da85-c911-4120-bf5e-f16e714219bb",
+        "text": "공정 (작업 단계/절차)",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "655c9942-7706-420e-ae84-cdf48d713b36",
+        "text": "공수 (작업량/인월)",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "cd836b2b-d5a8-405f-b59a-456c96fcaa15",
+        "text": "공통 (공유 모듈/라이브러리)",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "16c4a30d-e7ea-4c2c-8818-dc91aa7a7318",
+        "text": "공개 (외부 공개/릴리스)",
+        "isCorrect": false,
+        "hasSlash": true
+      }
+    ]
+  },
+  {
+    "qId": "c272fb81-0dd1-4f85-8777-7e2d7c54569f",
+    "diff": "中級",
+    "qText": "「外部設計」の意味は？",
+    "opts": [
+      {
+        "id": "73b570df-337c-429e-9991-dd072c50b6b0",
+        "text": "외부 설계 (UI/UX 설계)",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "02a2593c-4c63-4c12-af39-cbf2ac854acf",
+        "text": "내부 설계 (모듈 상세 설계)",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "3a0f5587-53f4-40dd-8d92-e73b020a9dc5",
+        "text": "데이터베이스 설계 (ER 설계)",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "c715bd74-7614-4aa6-8799-f258592bd108",
+        "text": "네트워크 설계 (인프라 설계)",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "48b00844-aab9-4549-a1b3-ca0654a04748",
+    "diff": "中級",
+    "qText": "「進捗」の意味は？",
+    "opts": [
+      {
+        "id": "63214c74-891e-456a-9e12-4efe8ba5aa91",
+        "text": "완료 / 종료 처리",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "4c096644-7394-475b-81da-21eecbe60a6b",
+        "text": "지연 / 일정 초과",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "c50cfa0e-ac9d-4fb9-abbe-86f7958e329a",
+        "text": "진척 / 진행 상황",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "b44e4889-2723-4309-a642-f3c8df4ff8e4",
+        "text": "보류 / 대기 상태",
+        "isCorrect": false,
+        "hasSlash": true
+      }
+    ]
+  },
+  {
+    "qId": "76239f19-eaf2-45c5-bd59-043335985098",
+    "diff": "中級",
+    "qText": "「一貫する」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "18154918-3c20-44aa-b652-8f872ec51c01",
+        "text": "경계치(테스트 공정)",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "7b8b5fca-0b87-4b14-b06d-dbf13e48ee8f",
+        "text": "모크",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "bb03fa89-8100-4899-9508-fcc3bcc3ccd1",
+        "text": "중요함 / 핵심",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "03f7c0d1-f618-4e5f-800a-ae94e1597749",
+        "text": "일관하다",
+        "isCorrect": true,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "2a5a45c0-19f0-4a35-9cb3-b91db3e0bca4",
+    "diff": "上級",
+    "qText": "「ポストモーテム」の意味として正しいものは？",
+    "opts": [
+      {
+        "id": "268b5895-a57d-4599-b2e0-73065eaca32d",
+        "text": "장애/프로젝트 후 원인 분석 및 재발 방지 회고",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "fbf3c136-7047-4a38-bd7a-1ae34ffe9ff2",
+        "text": "프로젝트 시작 전 리스크 분석 회의",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "4fe17aca-bc21-4725-b542-b70c5fbc8bd6",
+        "text": "코드 품질 측정을 위한 정적 분석",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "92d70823-ea02-4630-a56b-aaf96ad52c34",
+        "text": "서버 성능 모니터링 리포트",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "294d2d00-f91b-4d07-abde-c20eba08c2e1",
+    "diff": "上級",
+    "qText": "「デプロイパイプライン」の意味として正しいものは？",
+    "opts": [
+      {
+        "id": "57bf7858-621d-4a25-905e-c8cc3fe3073d",
+        "text": "네트워크 데이터 전송 경로",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "a746cd32-fe7d-4aa8-b8da-00db3b93b5ac",
+        "text": "데이터베이스 복제 프로세스",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "3b1a30d6-0a3d-43af-8b7f-8f34e9104230",
+        "text": "빌드/테스트/배포를 자동화한 일련의 프로세스",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "e5b5a109-a0cc-49ef-9390-ee0bc475fad0",
+        "text": "서버 간 로드 밸런싱 구조",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "1ea8cd1e-dbd4-4b2e-a89b-6f3bf3c53e7a",
+    "diff": "上級",
+    "qText": "「非機能要件」の意味は？",
+    "opts": [
+      {
+        "id": "4463d682-607e-4974-b58c-a200b209b5f4",
+        "text": "비기능 요건 (성능/보안/가용성 등)",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "db6160c0-17f6-4e0c-b75d-6430b90a9989",
+        "text": "기능 요건 (업무 로직/화면 요건)",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "59c95c59-7d32-48da-8a12-dc0927fb24c2",
+        "text": "화면 설계서 (UI 레이아웃 정의)",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "59cadada-8b34-4ddd-8787-e6beccc39784",
+        "text": "테스트 계획서 (검증 절차 정의)",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "720698ed-425d-4a76-8606-07117246cd5c",
+    "diff": "上級",
+    "qText": "「デグレード」の意味は？",
+    "opts": [
+      {
+        "id": "d2f210d5-8c87-4e02-ba4c-b1d973c02d73",
+        "text": "업그레이드 (기능 개선/버전 향상)",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "0bfe7a53-7d4a-48d2-bd51-b9597a49dffe",
+        "text": "다운그레이드 (이전 버전 복원)",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "23334c50-d9dd-4823-afb2-7a4d8dbc5ded",
+        "text": "리팩토링 (코드 구조 개선/정리)",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "2dccaa07-b411-4b92-8210-cb572099ecd6",
+        "text": "디그레이드 (수정으로 인한 기능 퇴행)",
+        "isCorrect": true,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "9c3e7bb4-2919-40ed-90dc-98def3093d56",
+    "diff": "上級",
+    "qText": "「死活監視」の意味は？",
+    "opts": [
+      {
+        "id": "9ab5ab74-93b3-48a6-90e1-61580597ab64",
+        "text": "성능 모니터링 (리소스 감시)",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "16ab9ed7-5875-476a-b1ef-669f52ff741c",
+        "text": "로그 분석 (이벤트 추적 감시)",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "8f4248da-49d9-4d36-a1b0-4b6d21a512bd",
+        "text": "보안 감사 (취약점 탐지 감시)",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "66bd43e6-85f6-408e-bd49-79d9012b20d0",
+        "text": "생사 감시 / 헬스 체크",
+        "isCorrect": true,
+        "hasSlash": true
+      }
+    ]
+  },
+  {
+    "qId": "35990a9e-3b4e-4b49-9efa-1bd3d0107a6f",
+    "diff": "上級",
+    "qText": "「暫定対応」の意味は？",
+    "opts": [
+      {
+        "id": "dec0b793-0ba2-4f13-b48c-c1f738322f14",
+        "text": "영구 대응 / 근본적 해결 조치",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "5938f749-2bb0-44f2-aed3-74e2e28b8d8a",
+        "text": "임시 대응 / 워크어라운드",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "3f085545-9469-4d39-80e0-87331f4bbeb6",
+        "text": "긴급 배포 / 핫픽스 적용",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "af9d59b7-b101-47a9-8129-3d57d643d568",
+        "text": "롤백 처리 / 이전 버전 복원",
+        "isCorrect": false,
+        "hasSlash": true
+      }
+    ]
+  },
+  {
+    "qId": "02b434af-3f0e-470a-9b85-17bdb6487dd3",
+    "diff": "上級",
+    "qText": "「恒久対応」の意味は？",
+    "opts": [
+      {
+        "id": "b069b75b-a1b0-4a99-a73c-ff74cb97c3fc",
+        "text": "임시 대응 / 워크어라운드 적용",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "290e74b5-f7d8-4d02-8487-7416e31ab0fc",
+        "text": "긴급 패치 / 핫픽스 배포",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "12537b97-3f86-4350-a5ac-de43b814774a",
+        "text": "영구 대응 / 근본 해결",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "36bbbeac-c69e-44a3-899c-6f60ada000d3",
+        "text": "장애 전파 / 에스컬레이션 처리",
+        "isCorrect": false,
+        "hasSlash": true
+      }
+    ]
+  },
+  {
+    "qId": "d0000002-0000-4000-a000-000000001118",
+    "diff": "中級",
+    "qText": "「HTTP」と「HTTPS」의 차이점은?",
+    "opts": [
+      {
+        "id": "196d9e97-ad43-4f07-acbf-eb71567b6855",
+        "text": "HTTPS는 HTTP에 SSL/TLS 암호화가 추가된 것이다",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "3a56b9c9-749f-4077-82fe-429cbac715e8",
+        "text": "HTTPS는 HTTP보다 속도가 빠른 프로토콜이다",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "5f1e7c43-879f-48dd-8a8b-6c868e916e35",
+        "text": "HTTP와 HTTPS는 동일한 프로토콜이다",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "776edad8-fb41-4c50-957e-d55ce9d7d838",
+        "text": "HTTPS는 파일 전송 전용 프로토콜이다",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "86da27ef-1e05-4c9e-b751-d3e4e202df5b",
+    "diff": "初級",
+    "qText": "「案件」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "888209b9-b31e-4238-b100-620c5b7b6908",
+        "text": "상영",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "61b446cc-3127-421e-8ddb-cd8e889903a2",
+        "text": "검수/수령 확인",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "fe54cf66-1d59-4ed0-abaf-300110bcd997",
+        "text": "안건/프로젝트",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "2ed640ea-1c82-4d39-9441-f6d35296810e",
+        "text": "마일스톤",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "c12468d7-24ef-44ca-8379-375963b853a1",
+    "diff": "初級",
+    "qText": "「有給休暇」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "9195222e-fa0e-49e0-b6d5-c18ad3ff74fb",
+        "text": "청구서",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "3e914d0d-cf7f-4c4e-9d77-9880c4cb0d45",
+        "text": "지급/긴급",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "0ef97370-a3b0-47f8-b25b-8b930ff56bf8",
+        "text": "시스템 구성도",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "4a84a27f-9319-4199-b794-bca5aa9022c2",
+        "text": "유급 휴가",
+        "isCorrect": true,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "715085db-41f2-4a67-8988-0fc411e478b7",
+    "diff": "中級",
+    "qText": "「残業」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "fb3d251e-a88d-431b-a7fe-5d907c4d90de",
+        "text": "잔업/야근",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "a8c59153-71dc-4d05-8200-83eee9e0ea41",
+        "text": "전념",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "21bf5fe9-449f-4d21-8ac6-4fb9187d1cf4",
+        "text": "조치",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "be0e6f29-3dfc-4b70-8906-e02a649757a8",
+        "text": "버전 관리",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "452b64a4-add4-4edb-ba99-dc079999b85a",
+    "diff": "中級",
+    "qText": "「追加開発」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "1a17ad04-50d3-4c8c-940b-2e71890bb53e",
+        "text": "최우선",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "77e39e1c-76b5-4efc-ac57-aaf5668928af",
+        "text": "중요함 / 핵심",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "2c110ead-7b3a-4139-b933-ed2a78b18e72",
+        "text": "추가 개발",
+        "isCorrect": true,
+        "hasSlash": false
+      },
+      {
+        "id": "78b157eb-447b-4a93-881a-1a19bd776749",
+        "text": "영향범위",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "96490466-d173-4f0b-ac44-7ffbf6a6ce1e",
+    "diff": "中級",
+    "qText": "「報連相」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "7a43e175-13ba-448b-8769-f4ebe487c97e",
+        "text": "보고/연락/상담",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "daf4ade6-6722-4628-813e-b11db7301867",
+        "text": "질문의 의도를 정확하게 파악하다",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "8606c269-3b3b-4f43-9fff-087483dd9bd2",
+        "text": "횡령",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "9820fd53-4808-469f-adaa-b14f761ff59a",
+        "text": "짜 넣는 일",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "02bd608e-020d-4901-83ae-84f46f909317",
+    "diff": "中級",
+    "qText": "「ご査収」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "9f57e32a-8037-46b0-bc36-52ee07a7ed24",
+        "text": "서류",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "9b2401a4-86aa-4344-aa20-88a609459df6",
+        "text": "검수/수령 확인",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "0af900bb-a675-404a-b207-dc4ab6ba53d0",
+        "text": "사양 변경",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "6005f72d-d5bb-4141-b091-2d4453b069eb",
+        "text": "직함",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "28538740-0fe6-476c-853b-7f4613732991",
+    "diff": "上級",
+    "qText": "「暫定対応」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "378014b0-2560-4c1a-b0d2-c193bc4721ad",
+        "text": "청구서",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "a931ab43-f6d8-4661-9249-72ee82969cc8",
+        "text": "지급/긴급",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "d77be25e-6f65-4e13-853d-237487abe2da",
+        "text": "화면 설계서",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "150208df-a126-46cf-95f2-af891b0f4779",
+        "text": "임시 대응",
+        "isCorrect": true,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "5dd6d0af-dad1-497d-b892-9bb654e22b14",
+    "diff": "上級",
+    "qText": "「至急」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "e1ad84c0-af29-4402-9e66-8ed3556879b1",
+        "text": "지급/긴급",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "3114a8c9-19b4-450a-a426-6a1b462d0136",
+        "text": "억제",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "4fcabc76-71bc-4999-b9e7-a3260ee50d69",
+        "text": "보고・연락・상담",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "05728217-6e01-4230-8139-ecdc5217e29c",
+        "text": "버전 관리",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "a94d441c-6dcd-46de-997c-025ca881add1",
+    "diff": "上級",
+    "qText": "「上映」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "38b1231d-be88-49e9-8adc-bff31f1fe310",
+        "text": "안건/프로젝트",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "80a43c53-883d-48a4-864a-dd1f96e194cc",
+        "text": "단축",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "a3c10469-4933-4f6a-900a-1ef40112814d",
+        "text": "상영",
+        "isCorrect": true,
+        "hasSlash": false
+      },
+      {
+        "id": "73c45121-f6d4-4ea2-b1aa-553d331f6fe0",
+        "text": "와이어프레임",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "961619c6-bc1c-462f-a892-0b0c5038c8eb",
+    "diff": "中級",
+    "qText": "「最優先」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "964ed4b3-462f-4552-8167-8beeec33f177",
+        "text": "불명확",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "91afc871-f21e-40c9-af11-6a24d3800167",
+        "text": "중요함 / 핵심",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "e1894c7e-b91b-4536-9e06-30a1f2515842",
+        "text": "최우선",
+        "isCorrect": true,
+        "hasSlash": false
+      },
+      {
+        "id": "8408c13c-e70c-4512-9161-ce0f7a88cdc0",
+        "text": "인터페이스",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "95aa901a-277c-4b02-b98f-fa59c8c42b53",
+    "diff": "上級",
+    "qText": "「創出」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "c2df73db-e747-404c-b3b5-1bdc032ff1ae",
+        "text": "중요함 / 핵심",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "d1d2efc7-59a7-4b43-ab4f-c89ff22cf6fa",
+        "text": "우러러보다",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "30842e48-66f8-46ed-aba0-deae0ec0e936",
+        "text": "플로우차트",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "db7df232-af15-47e6-be7a-2efcf19f86b1",
+        "text": "창출",
+        "isCorrect": true,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "0cdee2d1-b267-472e-89c3-6b766905cb4a",
+    "diff": "上級",
+    "qText": "「肝心」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "4d7a43c9-45a6-4953-8fa8-e2351bf016c3",
+        "text": "중요함 / 핵심",
+        "isCorrect": true,
+        "hasSlash": true
+      },
+      {
+        "id": "9a7b68d6-4fc5-46cd-ac4f-cc5d8893051e",
+        "text": "위탁",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "8045ffc6-2229-4360-ad97-92f7d00f1eb1",
+        "text": "서론",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "d9118a90-83ec-4752-87f9-67ae0a2b9f5b",
+        "text": "버전 관리",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "7709309a-7254-4d89-9c53-d2fe61d0b364",
+    "diff": "上級",
+    "qText": "「遠隔」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "b3b93688-3071-4062-b1bb-14ab8f9ab3ee",
+        "text": "원격",
+        "isCorrect": true,
+        "hasSlash": false
+      },
+      {
+        "id": "3d06ac1e-a471-4fc7-9c02-f2a77f8b20b8",
+        "text": "준위",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "074bb4ed-616c-4eb7-bfd5-31b3058f330d",
+        "text": "지급/긴급",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "de7ad520-ecc0-423f-8f0e-5eb3e71965af",
+        "text": "품질 보증",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "8c120da5-3f69-4198-9243-1264882874ae",
+    "diff": "中級",
+    "qText": "「圧迫」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "3a13b6c4-4189-4ee5-a09f-904e59b59275",
+        "text": "검수/수령 확인",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "cab7d2db-cafd-4728-9893-746f4d348f28",
+        "text": "유지보수 운영",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "031409ea-f2af-430d-a216-a534ea27ee39",
+        "text": "압박",
+        "isCorrect": true,
+        "hasSlash": false
+      },
+      {
+        "id": "cbf46771-20c6-48cd-9bc0-a6113497e753",
+        "text": "인터페이스",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "bee64877-7ec7-4deb-ad67-11e8400b9273",
+    "diff": "中級",
+    "qText": "「心掛ける」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "5af5c7cc-3df8-4492-9e82-beea7212b07f",
+        "text": "검수/수령 확인",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "54ffaf47-83b4-41da-a5ed-e5b5d9060f02",
+        "text": "전념",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "f6e26611-f4d3-42d1-877e-a79f2712d34f",
+        "text": "마음에 새기다",
+        "isCorrect": true,
+        "hasSlash": false
+      },
+      {
+        "id": "8e6364fa-26cb-47f4-a20d-d6c77bf910e9",
+        "text": "마일스톤",
+        "isCorrect": false,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "86c86a0c-83cf-4cf4-a230-9dc9e195f0ff",
+    "diff": "初級",
+    "qText": "「障害」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "4fbec5c2-fb19-4bd8-a4cd-864e1624d627",
+        "text": "스크럼 마스터",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "c8abb67b-d7ae-423c-9251-c1f65204ad40",
+        "text": "짜 넣는 일",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "b2f7fe2c-94f3-4882-9adb-fa0c1a1ebab8",
+        "text": "잔업/야근",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "f161528e-6387-4aa1-affc-749362dba286",
+        "text": "장애",
+        "isCorrect": true,
+        "hasSlash": false
+      }
+    ]
+  },
+  {
+    "qId": "9f6930e5-d10e-46f8-9088-70be70cde039",
+    "diff": "中級",
+    "qText": "「ER図」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "bbd6fa53-ae33-4dab-a32c-f041ea1f7442",
+        "text": "스프린트",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "f2017f3e-9d16-4225-83bb-fd89831eb74c",
+        "text": "간트 차트",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "c8c7d097-2027-4a90-a546-6fd24377795b",
+        "text": "ER 다이어그램",
+        "isCorrect": true,
+        "hasSlash": false
+      },
+      {
+        "id": "ae739ba1-a42a-41a9-b8d9-b491026d29be",
+        "text": "검수/수령 확인",
+        "isCorrect": false,
+        "hasSlash": true
+      }
+    ]
+  },
+  {
+    "qId": "002ee0b2-ba00-4635-8a6b-6b1e7610ee65",
+    "diff": "上級",
+    "qText": "「レビュー会」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "3b2118d0-8536-4fd7-871d-a98f6b89ad91",
+        "text": "정합성",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "55a9f593-d175-4319-a0f0-c2f29ca512e7",
+        "text": "테스트 데이터",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "466922f2-25dd-4d68-af64-ee05cec8826f",
+        "text": "리뷰 회의",
+        "isCorrect": true,
+        "hasSlash": false
+      },
+      {
+        "id": "25cd33b0-b3f8-4dba-9ec5-2fa6bd51ad89",
+        "text": "검수/수령 확인",
+        "isCorrect": false,
+        "hasSlash": true
+      }
+    ]
+  },
+  {
+    "qId": "0614e5a5-c79f-4449-9fc2-7f59397cef4b",
+    "diff": "中級",
+    "qText": "「一貫する」의 의미로 올바른 것은?",
+    "opts": [
+      {
+        "id": "111101ae-8f59-47bb-9ee8-46b19d59efd9",
+        "text": "경계치(테스트 공정)",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "50dff7ba-9ad3-4606-bd85-783aac3bc676",
+        "text": "모크",
+        "isCorrect": false,
+        "hasSlash": false
+      },
+      {
+        "id": "442e6326-8a9d-4c2c-b4d5-f14368aba718",
+        "text": "중요함 / 핵심",
+        "isCorrect": false,
+        "hasSlash": true
+      },
+      {
+        "id": "50b56340-551a-4a91-b29d-5644b44e3581",
+        "text": "일관하다",
+        "isCorrect": true,
+        "hasSlash": false
+      }
+    ]
+  }
+]
