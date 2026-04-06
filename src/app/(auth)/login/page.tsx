@@ -1,11 +1,20 @@
 'use client'
 
 import { signIn } from '@/app/actions/auth'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  // Detect password recovery hash and redirect to reset-password page
+  useEffect(() => {
+    const hash = window.location.hash
+    if (hash && hash.includes('type=recovery')) {
+      // Preserve hash fragment so Supabase client on reset-password page can process it
+      window.location.href = '/reset-password' + hash
+    }
+  }, [])
 
   async function handleSubmit(formData: FormData) {
     setLoading(true)

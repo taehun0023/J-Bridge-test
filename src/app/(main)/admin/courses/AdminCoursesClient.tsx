@@ -340,6 +340,10 @@ export default function AdminCoursesClient({
     return currentAxis.practiceTypes.flatMap(pt => pt.quizIds)
   }, [activeSection, currentAxis])
 
+  // Monotonic request ID to discard stale responses (fixes filter race condition
+  // where rapid toggles cause out-of-order responses to overwrite newer results).
+  const loadRequestIdRef = useRef(0)
+
   const loadPage = useCallback(async (quizIds: string[], filtersArg: FilterState, offset: number, append: boolean) => {
     if (quizIds.length === 0) {
       setQuestions([])
@@ -348,6 +352,8 @@ export default function AdminCoursesClient({
       setAvailableCategories([])
       return
     }
+
+    const requestId = ++loadRequestIdRef.current
 
     if (append) setLoadingMore(true)
     else setLoading(true)
@@ -360,6 +366,9 @@ export default function AdminCoursesClient({
       questionUsageScope: csQuestionUsageScope,
       excludeOutOfScope: !!csQuestionUsageScope,
     }, offset, PAGE_SIZE)
+
+    // Discard stale response — a newer request has been issued since this one started.
+    if (requestId !== loadRequestIdRef.current) return
 
     if (append) {
       setQuestions(prev => [...prev, ...(result.questions ?? [])])
@@ -743,8 +752,15 @@ export default function AdminCoursesClient({
     }
 
     startTransition(async () => {
+      let resolveClaims = false
+      if (editingQuestion && editingQuestion.claim_count > 0) {
+        resolveClaims = window.confirm(
+          `この問題には${editingQuestion.claim_count}件の問い合わせがあります。\n問い合わせを解決処理しますか？`
+        )
+      }
+
       const result = editingQuestion
-        ? await updateQuestion(editingQuestion.id, data)
+        ? await updateQuestion(editingQuestion.id, data, resolveClaims)
         : await createQuestion(createQuizId, data)
 
       if (result.error) showMsg(result.error, 'error')
@@ -752,6 +768,7 @@ export default function AdminCoursesClient({
         showMsg(editingQuestion ? '問題を更新しました' : '問題を追加しました', 'success')
         if (editingQuestion) {
           // Local state update — preserve scroll position
+          const resolvedClaims = resolveClaims
           setQuestions(prev => prev.map(q =>
             q.id === editingQuestion.id
               ? {
@@ -767,8 +784,8 @@ export default function AdminCoursesClient({
                     is_correct: o.is_correct,
                     sort_order: o.sort_order,
                   })),
-                  claim_count: 0,
-                  claim_details: [],
+                  claim_count: resolvedClaims ? 0 : q.claim_count,
+                  claim_details: resolvedClaims ? [] : q.claim_details,
                 }
               : q
           ))

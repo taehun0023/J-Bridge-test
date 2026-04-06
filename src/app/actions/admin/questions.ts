@@ -98,7 +98,7 @@ export async function createQuestion(quizId: string, data: QuestionFormData) {
   return { success: true }
 }
 
-export async function updateQuestion(questionId: string, data: QuestionFormData) {
+export async function updateQuestion(questionId: string, data: QuestionFormData, resolveClaims = true) {
   const auth = await requireAdmin()
   if ('error' in auth) return { error: auth.error } as const
 
@@ -151,11 +151,13 @@ export async function updateQuestion(questionId: string, data: QuestionFormData)
 
   if (optError) return { error: optError.message }
 
-  // Auto-resolve claims: editing a question implies the issue is addressed
-  await serviceClient
-    .from('question_claims')
-    .delete()
-    .eq('question_id', questionId)
+  // Resolve claims only when explicitly requested
+  if (resolveClaims) {
+    await serviceClient
+      .from('question_claims')
+      .delete()
+      .eq('question_id', questionId)
+  }
 
   // Clean up old TTS cache if question text changed (listening questions)
   if (oldData && oldData.question_text !== data.question_text) {

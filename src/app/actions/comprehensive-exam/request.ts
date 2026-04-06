@@ -38,6 +38,17 @@ export async function requestExam(category: string, subcategory: string, content
     return { error: '既にリクエスト中または進行中の試験があります' }
   }
 
+  // Check if this is the user's first exam for this category (any subcategory, any status).
+  // First exams are auto-approved regardless of role to remove the approval friction.
+  const { count: categoryCount } = await queryClient
+    .from('comprehensive_exams')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('category', category)
+  const isFirstExam = (categoryCount ?? 0) === 0
+  const autoApprove = isAdminOrMentor || isFirstExam
+  const nowIso = new Date().toISOString()
+
   const { data, error } = await queryClient
     .from('comprehensive_exams')
     .insert({
@@ -45,18 +56,22 @@ export async function requestExam(category: string, subcategory: string, content
       category,
       subcategory,
       content_level: contentLevel,
-      status: isAdminOrMentor ? 'approved' : 'requested',
+      status: autoApprove ? 'approved' : 'requested',
       total_questions: category === 'cs' && subcategory === 'comprehensive'
         ? CS_COMPREHENSIVE_TOTAL_QUESTIONS
         : undefined,
+      ...(autoApprove && {
+        approved_at: nowIso,
+        approved_by: user.id,
+      }),
     })
     .select('id')
     .single()
 
   if (error) return { error: error.message }
 
-  // Notify mentors and admins (skip for admin/mentor self-request)
-  if (!isAdminOrMentor) {
+  // Notify mentors and admins only when an approval is actually needed
+  if (!autoApprove) {
     const userName = await getUserDisplayName(user.id)
     const catLabel = ASSIGNMENT_CATEGORIES[category]?.label ?? category
     const subLabel = ASSIGNMENT_CATEGORIES[category]?.subcategories[subcategory]?.label ?? subcategory

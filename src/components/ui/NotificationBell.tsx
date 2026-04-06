@@ -56,17 +56,20 @@ export default function NotificationBell() {
     setLoading(false)
   }
 
-  async function handleNotificationClick(notification: NotificationItem) {
+  function handleNotificationClick(notification: NotificationItem) {
+    // Navigate first for instant response — don't block on server round-trip.
+    if (notification.link) {
+      setIsOpen(false)
+      router.push(notification.link)
+    }
+    // Mark as read asynchronously (fire-and-forget); local state updates immediately
+    // so the UI reflects the read state without waiting for the server.
     if (!notification.is_read) {
-      await markAsRead(notification.id)
       setNotifications(prev =>
         prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n)
       )
       setUnreadCount(prev => Math.max(0, prev - 1))
-    }
-    if (notification.link) {
-      setIsOpen(false)
-      router.push(notification.link)
+      markAsRead(notification.id).catch(err => console.error('Failed to mark notification as read:', err))
     }
   }
 

@@ -62,11 +62,15 @@ export async function checkAndCreateExamCycle(
     // Find cycle exams by user_id + subcategory + timestamp (NOT by exam_cycle_id FK).
     // PostgREST schema cache may not recognize exam_cycle_id column, causing FK queries
     // to silently return 0 results and triggering infinite self-healing loops.
+    // Filter by cycle categories to exclude manual requests (cs/dev/business-lit) that
+    // share subcategory='comprehensive' but are not part of the cycle.
+    const cycleCategories = isJapanese ? JAPANESE_EXAM_CATEGORIES : FIRST_CYCLE_NON_JAPANESE
     const { data: allExams } = await serviceClient
       .from('comprehensive_exams')
       .select('id, category, subcategory, status, score, passed')
       .eq('user_id', userId)
       .eq('subcategory', 'comprehensive')
+      .in('category', cycleCategories)
       .gte('requested_at', activeCycle.created_at)
       .order('requested_at', { ascending: true })
 
@@ -151,7 +155,7 @@ async function createCycleExams(
   userId: string,
   cycleId: string,
   isJapanese: boolean,
-  cycleNumber: number = 1
+  cycleNumber: number
 ): Promise<CycleExam[]> {
   // Japanese users never reach here (gated in checkAndCreateExamCycle).
   // Non-Japanese: seikatsu + business-jp only (all cycles).
@@ -159,17 +163,26 @@ async function createCycleExams(
     ? JAPANESE_EXAM_CATEGORIES
     : FIRST_CYCLE_NON_JAPANESE
 
+  // Cycle 1 requires admin/mentor approval (onboarding gate workflow).
+  // Cycle 2+ auto-approves since the 14-day interval itself is the gate.
+  const isFirstCycle = cycleNumber === 1
+  const nowIso = new Date().toISOString()
+
   const examInserts = categories.map(category => {
     const step = COMP_EXAM_CATEGORY_TO_STEP[category]
     return {
       user_id: userId,
       category,
       subcategory: 'comprehensive',
-      status: 'requested',
+      status: isFirstCycle ? 'requested' : 'approved',
       exam_cycle_id: cycleId,
       time_limit_minutes: step ? ASSESSMENT_TIME_LIMITS[step] : 30,
       total_questions: step ? ASSESSMENT_TOTAL_QUESTIONS[step] : 30,
       passing_score: 70,
+      ...(isFirstCycle ? {} : {
+        approved_at: nowIso,
+        approved_by: userId,
+      }),
     }
   })
 
@@ -178,23 +191,25 @@ async function createCycleExams(
     .insert(examInserts)
     .select('id, category, subcategory, status, score, passed')
 
-  // Notify mentors/admins about pending exam approval
-  const userName = await getUserDisplayName(userId)
-  await Promise.all([
-    notifyMentorsOf(
-      userId,
-      'exam_requested',
-      `${userName}さんが総合試験（第${cycleNumber}回）の承認を待っています`,
-      undefined,
-      '/admin/tasks'
-    ),
-    notifyAdmins(
-      'exam_requested',
-      `${userName}さんが総合試験（第${cycleNumber}回）の承認を待っています`,
-      undefined,
-      '/admin/tasks'
-    ),
-  ])
+  // First cycle needs admin/mentor approval — notify them
+  if (isFirstCycle) {
+    const userName = await getUserDisplayName(userId)
+    await Promise.all([
+      notifyMentorsOf(
+        userId,
+        'exam_requested',
+        `${userName}さんが総合試験（第${cycleNumber}回）の承認を待っています`,
+        undefined,
+        '/admin/tasks'
+      ),
+      notifyAdmins(
+        'exam_requested',
+        `${userName}さんが総合試験（第${cycleNumber}回）の承認を待っています`,
+        undefined,
+        '/admin/tasks'
+      ),
+    ])
+  }
 
   return (exams ?? []).map(e => ({
     id: e.id,
@@ -256,12 +271,22 @@ async function completeExamCycle(cycleId: string, userId: string, cycleCreatedAt
   const serviceClient = createServiceRoleClient()
   if (!serviceClient) return false
 
+  // Determine which categories belong to this cycle, so manual requests
+  // (cs/dev/business-lit for non-Japanese users) don't block cycle completion.
+  const { data: profile } = await serviceClient
+    .from('profiles')
+    .select('is_japanese')
+    .eq('id', userId)
+    .single()
+  const cycleCategories = profile?.is_japanese ? JAPANESE_EXAM_CATEGORIES : FIRST_CYCLE_NON_JAPANESE
+
   // Find cycle exams by timestamp (not FK — PostgREST schema cache issue)
   const { data: allExams } = await serviceClient
     .from('comprehensive_exams')
     .select('id, category, status')
     .eq('user_id', userId)
     .eq('subcategory', 'comprehensive')
+    .in('category', cycleCategories)
     .gte('requested_at', cycleCreatedAt)
     .order('requested_at', { ascending: true })
 

@@ -4,10 +4,11 @@ import dynamic from 'next/dynamic'
 import { useState, useTransition } from 'react'
 import Card from '@/components/ui/Card'
 import Link from 'next/link'
-import { AlertTriangle, BarChart3, Trophy, BookOpen, Eye, Calendar } from 'lucide-react'
+import { AlertTriangle, BarChart3, Trophy, BookOpen, Eye, Calendar, ClipboardCheck, CheckCircle, Clock, Circle } from 'lucide-react'
 import { getGrade, getGradeColor, getJlptLevel, getJlptLevelColor, DISPATCH_MINIMUM_SCORE, getRelevantAxes, AXIS_DISPLAY_LABELS } from '@/lib/assessment-config'
 import type { AxisKey } from '@/lib/assessment-config'
 import { requestExam, requestRetakeExam } from '@/app/actions/comprehensive-exam'
+import type { ExamCycleInfo, CycleExam } from '@/app/actions/exam-scheduling'
 
 const RadarChart = dynamic(() => import('@/components/dashboard/RadarChart'), { ssr: false })
 
@@ -81,14 +82,63 @@ interface Props {
   learningStats?: LearningStats
   recentFeedbacks?: RecentFeedback[]
   compExamRetakeByCategory?: Record<string, { examId: string; score: number | null; retakeStatus: 'completed' | 'failed' | 'requested' | 'approved' | 'in_progress' }>
+  hasCompletedExamByCategory?: Record<string, boolean>
   role?: string
   nextExamDate?: string | null
+  activeCycle?: ExamCycleInfo | null
+}
+
+const CYCLE_CATEGORY_LABELS: Record<string, string> = {
+  seikatsu: '生活日本語',
+  'business-jp': 'ビジネス日本語',
+  cs: 'CS知識',
+  dev: '開発実務',
+  'business-lit': 'ビジネスリテラシー',
+}
+
+function getCycleStatusIcon(status: string) {
+  switch (status) {
+    case 'completed':
+      return <CheckCircle className="h-5 w-5 text-emerald-500" />
+    case 'failed':
+      return <CheckCircle className="h-5 w-5 text-red-400" />
+    case 'in_progress':
+      return <Clock className="h-5 w-5 text-blue-500 animate-pulse" />
+    default:
+      return <Circle className="h-5 w-5 text-zinc-400" />
+  }
+}
+
+function getCycleStatusLabel(status: string, score: number | null) {
+  switch (status) {
+    case 'completed':
+      return <span className="text-xs font-bold text-emerald-500">{score}点 合格</span>
+    case 'failed':
+      return <span className="text-xs font-bold text-red-400">{score}点 不合格</span>
+    case 'in_progress':
+      return <span className="text-xs font-medium text-blue-500">進行中</span>
+    default:
+      return <span className="text-xs text-zinc-500">未受験</span>
+  }
+}
+
+function getNextCycleExam(exams: CycleExam[]): CycleExam | null {
+  const inProgress = exams.find(e => e.status === 'in_progress')
+  if (inProgress) return inProgress
+  return exams.find(e => e.status === 'approved') ?? null
+}
+
+function getDaysUntil(deadlineAt: string): number {
+  const now = new Date()
+  const deadline = new Date(deadlineAt)
+  return Math.max(0, Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
 }
 
 export default function DashboardClient({
   profile, radarScores, recentResults, isJapanese,
-  userRanking, topRanking, learningStats, recentFeedbacks = [], compExamRetakeByCategory = {}, role,
-  nextExamDate,
+  userRanking, topRanking, learningStats, recentFeedbacks = [], compExamRetakeByCategory = {},
+  hasCompletedExamByCategory = {}, role,
+  nextExamDate, activeCycle,
 }: Props) {
   const isMentee = role === 'mentee'
   const relevantAxes = getRelevantAxes(isJapanese, role)
@@ -137,18 +187,6 @@ export default function DashboardClient({
     })
   }
 
-  function handleExamRequest(category: string) {
-    startTransition(async () => {
-      const result = await requestExam(category, 'comprehensive', null)
-      if ('error' in result && result.error) {
-        setRetakeMessage(result.error)
-      } else {
-        setRetakeMessage('試験リクエストを送信しました')
-        window.location.reload()
-      }
-      setTimeout(() => setRetakeMessage(null), 3000)
-    })
-  }
 
   return (
     <div>
@@ -225,8 +263,88 @@ export default function DashboardClient({
         </div>
       )}
 
-      {/* Next exam date indicator */}
-      {isMentee && nextExamDate && (
+      {/* Active exam cycle card — takes precedence over nextExamDate banner */}
+      {isMentee && activeCycle ? (() => {
+        const daysRemaining = getDaysUntil(activeCycle.deadlineAt)
+        const nextExam = getNextCycleExam(activeCycle.exams)
+        const completedCount = activeCycle.exams.filter(e => e.status === 'completed' || e.status === 'failed').length
+        const totalCount = activeCycle.exams.length
+        const allDone = completedCount === totalCount
+
+        return (
+          <div className="mt-4 rounded-2xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-5 shadow-sm dark:border-indigo-800 dark:from-indigo-950/40 dark:via-zinc-900 dark:to-purple-950/30">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 dark:bg-indigo-900/30">
+                  <ClipboardCheck className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+                      総合試験（第{activeCycle.cycleNumber}回）
+                    </h2>
+                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                      D-{daysRemaining}
+                    </span>
+                  </div>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    締切: {new Date(activeCycle.deadlineAt).toLocaleDateString('ja-JP')} ・ {completedCount}/{totalCount} 完了
+                  </p>
+                </div>
+              </div>
+              {nextExam && (
+                <Link
+                  href={`/exam/${nextExam.id}`}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-500 transition-colors"
+                >
+                  {nextExam.status === 'in_progress' ? '試験を続ける' : '試験を受ける'}
+                  <span>→</span>
+                </Link>
+              )}
+            </div>
+
+            {/* Exam status grid */}
+            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
+              {activeCycle.exams.map((exam) => {
+                const isClickable = exam.status === 'approved' || exam.status === 'in_progress'
+                const cardContent = (
+                  <div
+                    className={`rounded-lg border p-2.5 text-center transition-all ${
+                      exam.status === 'completed'
+                        ? 'border-emerald-200 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-900/10'
+                        : exam.status === 'failed'
+                          ? 'border-red-200 bg-red-50/50 dark:border-red-800 dark:bg-red-900/10'
+                          : isClickable
+                            ? 'border-indigo-200 bg-white hover:border-indigo-400 hover:shadow-sm cursor-pointer dark:border-indigo-700 dark:bg-zinc-800 dark:hover:border-indigo-500'
+                            : 'border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/50'
+                    }`}
+                  >
+                    <div className="flex justify-center mb-1">
+                      {getCycleStatusIcon(exam.status)}
+                    </div>
+                    <p className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 truncate">
+                      {CYCLE_CATEGORY_LABELS[exam.category] ?? exam.category}
+                    </p>
+                    <div className="mt-0.5">
+                      {getCycleStatusLabel(exam.status, exam.score)}
+                    </div>
+                  </div>
+                )
+                if (isClickable) {
+                  return <Link key={exam.id} href={`/exam/${exam.id}`}>{cardContent}</Link>
+                }
+                return <div key={exam.id}>{cardContent}</div>
+              })}
+            </div>
+
+            {allDone && (
+              <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400 text-center">
+                すべての試験が完了しています。ページをリロードしてください。
+              </p>
+            )}
+          </div>
+        )
+      })() : isMentee && nextExamDate && (
         <div className="mt-4 flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/50 px-4 py-3 dark:border-indigo-800 dark:bg-indigo-900/10">
           <Calendar className="h-4 w-4 text-indigo-500" />
           <span className="text-sm text-indigo-700 dark:text-indigo-300">
@@ -259,10 +377,11 @@ export default function DashboardClient({
                 {relevantAxes.map((key) => {
                   const score = radarScores[key]
                   const isSeikatsu = key === 'jlpt'
+                  const category = AXIS_TO_CATEGORY[key]
+                  const hasCompleted = hasCompletedExamByCategory[category] ?? false
                   const gradeLabel = isSeikatsu ? getJlptLevel(score) : getGrade(score)
                   const colorClass = isSeikatsu ? getJlptLevelColor(gradeLabel as 'N1'|'N2'|'N3'|'N4'|'N5') : getGradeColor(gradeLabel as 'S'|'A'|'B'|'C'|'D')
-                  const isBelowB = score < DISPATCH_MINIMUM_SCORE
-                  const category = AXIS_TO_CATEGORY[key]
+                  const isBelowB = hasCompleted && score < DISPATCH_MINIMUM_SCORE
                   const retakeInfo = compExamRetakeByCategory[category]
                   return (
                     <div
@@ -274,10 +393,18 @@ export default function DashboardClient({
                       }`}
                     >
                       <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{AXIS_DISPLAY_LABELS[key]}</p>
-                      <p className="mt-1 text-lg font-mono font-bold text-zinc-900 dark:text-zinc-100">{score}</p>
-                      <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-bold ${colorClass}`}>
-                        {gradeLabel}
-                      </span>
+                      <p className={`mt-1 text-lg font-mono font-bold ${hasCompleted ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-500'}`}>
+                        {hasCompleted ? score : '—'}
+                      </p>
+                      {hasCompleted ? (
+                        <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-bold ${colorClass}`}>
+                          {gradeLabel}
+                        </span>
+                      ) : (
+                        <span className="mt-1 inline-block rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-bold text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400">
+                          未受験
+                        </span>
+                      )}
                       {retakeInfo ? (
                         <div className="mt-1.5">
                           {retakeInfo.retakeStatus === 'in_progress' ? (
@@ -314,7 +441,7 @@ export default function DashboardClient({
                             </button>
                           )}
                         </div>
-                      ) : (role === 'admin' || role === 'mentor') ? (
+                      ) : (
                         <div className="mt-1.5">
                           <button
                             onClick={() => handleFirstExam(category)}
@@ -322,16 +449,6 @@ export default function DashboardClient({
                             className="rounded-md bg-indigo-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
                           >
                             試験を受ける
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="mt-1.5">
-                          <button
-                            onClick={() => handleExamRequest(category)}
-                            disabled={pending}
-                            className="rounded-md bg-indigo-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
-                          >
-                            試験をリクエスト
                           </button>
                         </div>
                       )}
@@ -367,6 +484,9 @@ export default function DashboardClient({
                     <div key={key} className="rounded-xl border border-white/[0.08] bg-white/[0.03] dark:border-white/[0.08] dark:bg-white/[0.03] border-gray-200/60 p-2 text-center">
                       <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{AXIS_DISPLAY_LABELS[key]}</p>
                       <p className="mt-1 text-lg font-mono font-bold text-zinc-400 dark:text-zinc-500">—</p>
+                      <span className="mt-1 inline-block rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-bold text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400">
+                        未受験
+                      </span>
                       <div className="mt-1.5">
                         {retakeInfo ? (
                           retakeInfo.retakeStatus === 'in_progress' ? (
@@ -402,21 +522,13 @@ export default function DashboardClient({
                               再試験リクエスト
                             </button>
                           )
-                        ) : (role === 'admin' || role === 'mentor') ? (
+                        ) : (
                           <button
                             onClick={() => handleFirstExam(category)}
                             disabled={pending}
                             className="rounded-md bg-indigo-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
                           >
                             試験を受ける
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleExamRequest(category)}
-                            disabled={pending}
-                            className="rounded-md bg-indigo-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
-                          >
-                            試験をリクエスト
                           </button>
                         )}
                       </div>

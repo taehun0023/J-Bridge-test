@@ -491,6 +491,15 @@ export async function submitExam(
     correctOptions?.map(o => [o.question_id, o.id]) ?? []
   )
 
+  const { data: questionRows } = await serviceClient
+    .from('quiz_questions')
+    .select('id, explanation')
+    .in('id', questionIds)
+
+  const explanationMap = new Map(
+    questionRows?.map(q => [q.id, q.explanation]) ?? []
+  )
+
   let correctCount = 0
   const answerRows = answers.map((a, index) => {
     const isCorrect = correctMap.get(a.questionId) === a.selectedOptionId
@@ -559,6 +568,7 @@ export async function submitExam(
     selectedOptionId: a.selectedOptionId,
     correctOptionId: correctMap.get(a.questionId) ?? '',
     isCorrect: correctMap.get(a.questionId) === a.selectedOptionId,
+    explanation: explanationMap.get(a.questionId) ?? null,
   }))
 
   return { score, passed, correctCount, totalCount: totalQ, results }

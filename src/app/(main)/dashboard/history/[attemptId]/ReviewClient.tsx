@@ -165,6 +165,13 @@ export default function ReviewClient({ questions, title, score, completedAt, hid
                     })}
                   </div>
 
+                  {/* Explanation */}
+                  {q.explanation && (
+                    <div className="mt-3 rounded-lg bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+                      <span className="font-medium">解説: </span>{q.explanation}
+                    </div>
+                  )}
+
                   {/* Claim section */}
                   {!hideClaim && <div className="mt-3">
                     {isClaimed ? (

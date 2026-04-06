@@ -10,6 +10,7 @@ export interface ReviewQuestion {
   selectedOptionId: string
   correctOptionId: string
   isCorrect: boolean
+  explanation?: string | null
 }
 
 export interface ReviewData {
@@ -56,7 +57,7 @@ export async function getQuizAttemptReview(attemptId: string): Promise<{ data?: 
   const questionIds = answers.map(a => a.question_id)
   const { data: questions } = await supabase
     .from('quiz_questions')
-    .select('id, question_text, quiz_question_options(id, option_text, is_correct, sort_order)')
+    .select('id, question_text, explanation, quiz_question_options(id, option_text, is_correct, sort_order)')
     .in('id', questionIds)
 
   if (!questions) return { error: '問題データが見つかりません' }
@@ -79,6 +80,7 @@ export async function getQuizAttemptReview(attemptId: string): Promise<{ data?: 
       selectedOptionId: answer?.selected_option_id ?? '',
       correctOptionId: correctOption?.id ?? '',
       isCorrect: answer?.is_correct ?? false,
+      explanation: q.explanation,
     }
   })
 
@@ -131,7 +133,7 @@ export async function getCompExamReview(examId: string): Promise<{ data?: Review
   const questionIds = answers.map(a => a.question_id)
   const { data: questions } = await supabase
     .from('quiz_questions')
-    .select('id, question_text, quiz_question_options(id, option_text, is_correct, sort_order)')
+    .select('id, question_text, explanation, quiz_question_options(id, option_text, is_correct, sort_order)')
     .in('id', questionIds)
 
   if (!questions) return { error: '問題データが見つかりません' }
@@ -162,6 +164,7 @@ export async function getCompExamReview(examId: string): Promise<{ data?: Review
       selectedOptionId: answer?.selected_option_id ?? '',
       correctOptionId: correctOption?.id ?? '',
       isCorrect: answer?.is_correct ?? false,
+      explanation: q.explanation,
     }
   })
 
@@ -219,7 +222,7 @@ export async function getMentorQuizAttemptReview(attemptId: string): Promise<{ d
   const questionIds = answers.map(a => a.question_id)
   const { data: questions } = await queryClient
     .from('quiz_questions')
-    .select('id, question_text, quiz_question_options(id, option_text, is_correct, sort_order)')
+    .select('id, question_text, explanation, quiz_question_options(id, option_text, is_correct, sort_order)')
     .in('id', questionIds)
 
   if (!questions) return { error: '問題データが見つかりません' }
@@ -241,6 +244,7 @@ export async function getMentorQuizAttemptReview(attemptId: string): Promise<{ d
       selectedOptionId: answer?.selected_option_id ?? '',
       correctOptionId: correctOption?.id ?? '',
       isCorrect: answer?.is_correct ?? false,
+      explanation: q.explanation,
     }
   })
 
@@ -309,7 +313,7 @@ export async function getMentorCompExamReview(examId: string): Promise<{ data?: 
   const questionIds = answers.map(a => a.question_id)
   const { data: questions } = await queryClient
     .from('quiz_questions')
-    .select('id, question_text, quiz_question_options(id, option_text, is_correct, sort_order)')
+    .select('id, question_text, explanation, quiz_question_options(id, option_text, is_correct, sort_order)')
     .in('id', questionIds)
 
   if (!questions) return { error: '問題データが見つかりません' }
@@ -340,6 +344,7 @@ export async function getMentorCompExamReview(examId: string): Promise<{ data?: 
       selectedOptionId: answer?.selected_option_id ?? '',
       correctOptionId: correctOption?.id ?? '',
       isCorrect: answer?.is_correct ?? false,
+      explanation: q.explanation,
     }
   })
 

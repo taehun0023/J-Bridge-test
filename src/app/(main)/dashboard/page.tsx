@@ -28,14 +28,16 @@ export default async function DashboardPage() {
   await expireStaleExams(user.id)
 
   // ──────────────────────────────────────────────
-  // Phase 0.5: Mentee exam gate check
-  // If mentee has an active exam cycle, show exam gate UI only
+  // Phase 0.5: Mentee active cycle
+  // Cycle 1 → full-screen dashboard gate (initial onboarding exams)
+  // Cycle 2+ → rendered as an inline card via DashboardClient
   // ──────────────────────────────────────────────
-  if (profile?.role === 'mentee') {
-    const activeCycle = await checkAndCreateExamCycle(user.id, isJapanese)
-    if (activeCycle) {
-      return <ExamGatePage cycle={activeCycle} userName={profile?.full_name ?? null} />
-    }
+  const activeCycle = profile?.role === 'mentee'
+    ? await checkAndCreateExamCycle(user.id, isJapanese)
+    : null
+
+  if (activeCycle && activeCycle.cycleNumber === 1) {
+    return <ExamGatePage cycle={activeCycle} userName={profile?.full_name ?? null} />
   }
 
   // ──────────────────────────────────────────────
@@ -154,6 +156,9 @@ export default async function DashboardPage() {
     score: number | null
     retakeStatus: 'completed' | 'failed' | 'requested' | 'approved' | 'in_progress'
   }> = {}
+  // Track whether a user has ever completed/failed a comprehensive exam per category.
+  // Used to show 未受験 styling when no exam has been taken yet.
+  const hasCompletedExamByCategory: Record<string, boolean> = {}
 
   for (const exam of userCompExams ?? []) {
     const key = exam.category
@@ -167,6 +172,10 @@ export default async function DashboardPage() {
         score: exam.score,
         retakeStatus: exam.status as 'completed' | 'failed' | 'requested' | 'approved' | 'in_progress',
       }
+    }
+
+    if (exam.status === 'completed' || exam.status === 'failed') {
+      hasCompletedExamByCategory[key] = true
     }
   }
 
@@ -233,8 +242,10 @@ export default async function DashboardPage() {
     learningStats,
     recentFeedbacks: feedbackProps,
     compExamRetakeByCategory,
+    hasCompletedExamByCategory,
     role: profile?.role ?? 'mentee',
     nextExamDate,
+    activeCycle,
   }
 
   return <DashboardClient {...dashboardProps} />
