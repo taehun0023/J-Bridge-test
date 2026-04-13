@@ -3,17 +3,20 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Card from '@/components/ui/Card'
 import { categoryChildren } from '@/lib/navigation'
-import BusinessTestBlock from '@/components/japanese/BusinessTestBlock'
 import { FileClock } from 'lucide-react'
 import GuideCard from '@/components/japanese/JlptGuideCard'
 
 // Subcategory definitions: label, DB categories to include, quiz type
+// label must match navigation.ts children labels
 const SUBCATEGORIES = [
-  { key: 'glossary', label: 'ビジネス語彙', dbCategories: ['business', 'it', 'dev'], quizType: 'it_terminology' },
-  { key: 'sentence_pattern', label: '文章パターン', dbCategories: ['sentence_pattern'], quizType: 'sentence_pattern' },
-  { key: 'expression', label: 'ビジネス表現', dbCategories: ['expression'], quizType: 'business_expression' },
-  { key: 'keigo', label: '敬語', dbCategories: ['keigo'], quizType: 'keigo' },
+  { key: 'glossary', href: '/japanese/business/glossary', label: 'ビジネス用語', dbCategories: ['business', 'it', 'dev'], quizType: 'it_terminology' },
+  { key: 'sentence_pattern', href: '/japanese/business/sentence-patterns', label: '文型', dbCategories: ['sentence_pattern'], quizType: 'sentence_pattern' },
+  { key: 'expression', href: '/japanese/business/expressions', label: '表現', dbCategories: ['expression'], quizType: 'business_expression' },
+  { key: 'keigo', href: '/japanese/business/keigo', label: '敬語', dbCategories: ['keigo'], quizType: 'keigo' },
+  { key: 'writing', href: '/japanese/business/writing', label: '作文 (Beta)', dbCategories: ['expression', 'sentence_pattern', 'keigo'], quizType: 'writing' },
 ] as const
+
+const THRESHOLD = 80
 
 export default async function BusinessJapaneseHubPage() {
   const config = categoryChildren['business-jp']
@@ -24,7 +27,6 @@ export default async function BusinessJapaneseHubPage() {
   if (!user) redirect('/login')
 
   const { data: prof } = await supabase.from('profiles').select('role, mentor_specialty').eq('id', user.id).single()
-  const bypassLock = prof?.role === 'admin' || prof?.role === 'mentor'
   const canManage = prof?.role === 'admin' || (prof?.role === 'mentor' && prof?.mentor_specialty !== 'technical')
 
   // Fetch all mastered it_glossary items for this user
@@ -47,12 +49,7 @@ export default async function BusinessJapaneseHubPage() {
       const total = items?.length ?? 0
       const mastered = items?.filter(i => masteredIdSet.has(i.id)).length ?? 0
 
-      return {
-        label: sub.label,
-        mastered,
-        total,
-        quizType: sub.quizType,
-      }
+      return { ...sub, mastered, total }
     })
   )
 
@@ -80,26 +77,44 @@ export default async function BusinessJapaneseHubPage() {
       <GuideCard storageKey="business-jp-guide-dismissed">
         <ol className="mt-2 list-inside list-decimal space-y-1 text-sm text-blue-800 dark:text-blue-300">
           <li>各カテゴリの語彙・パターン・表現を学習し「✓」でチェックしてください</li>
-          <li>進行率80%以上で理解度テストが解放されます</li>
+          <li>進行率{THRESHOLD}%以上で理解度テストが解放されます</li>
           <li>テストに合格して実力を確認しましょう</li>
         </ol>
       </GuideCard>
 
-      {/* Category cards */}
+      {/* Category cards with inline progress + test button */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {config.children.map((child) => (
-          <Link key={child.href} href={child.href}>
-            <Card className="h-full transition-shadow hover:shadow-md">
-              <h3 className="font-semibold text-gray-900 dark:text-white">{child.label}</h3>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{child.description}</p>
-            </Card>
-          </Link>
-        ))}
-      </div>
+        {subcategoryProgress.map((sub) => {
+          const navChild = config.children.find(c => c.href === sub.href)
+          const pct = sub.total > 0 ? Math.round((sub.mastered / sub.total) * 100) : 0
 
-      {/* Test block */}
-      <div className="mt-6">
-        <BusinessTestBlock subcategories={subcategoryProgress} bypassLock={bypassLock} />
+          return (
+            <Link key={sub.key} href={sub.href}>
+              <Card className="h-full transition-shadow hover:shadow-md">
+                <h3 className="font-semibold text-gray-900 dark:text-white">{sub.label}</h3>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  {navChild?.description ?? ''}
+                </p>
+                <div className="mt-3">
+                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                    <span>{sub.mastered}/{sub.total}</span>
+                    <span className={`font-semibold tabular-nums ${
+                      pct >= THRESHOLD ? 'text-emerald-600 dark:text-emerald-400' : ''
+                    }`}>{pct}%</span>
+                  </div>
+                  <div className="mt-1 h-1.5 rounded-full bg-gray-200 dark:bg-gray-700">
+                    <div
+                      className={`h-1.5 rounded-full transition-all duration-500 ${
+                        pct >= THRESHOLD ? 'bg-indigo-500' : 'bg-gray-300 dark:bg-gray-600'
+                      }`}
+                      style={{ width: `${Math.min(pct, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </Card>
+            </Link>
+          )
+        })}
       </div>
     </div>
   )

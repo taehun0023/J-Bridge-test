@@ -67,7 +67,7 @@ export const ASSESSMENT_CONTENT_QUIZ_TYPES: Record<number, string[]> = {
 
 export const ADMIN_CONTENT_QUIZ_TYPES: Record<number, string[]> = {
   1: ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening', 'jlpt_kanji'],
-  2: ['it_terminology', 'sentence_pattern', 'business_expression', 'keigo'],
+  2: ['it_terminology', 'sentence_pattern', 'business_expression', 'keigo', 'writing'],
   3: ['cs_knowledge'],
   4: ['core_programming', 'framework'],
 }
@@ -82,6 +82,7 @@ export const PRACTICE_QUIZ_TYPE_LABELS: Record<string, string> = {
   sentence_pattern: '文型表現(練習)',
   business_expression: 'ビジネス表現(練習)',
   keigo: '敬語(練習)',
+  writing: '作文(練習)',
   cs_knowledge: 'CS知識(練習)',
   core_programming: 'コア開発(練習)',
   framework: 'フレームワーク(練習)',
@@ -150,6 +151,7 @@ export const BJ_POOL_QUIZ_IDS: Record<string, string> = {
   sentence_pattern: 'f0000001-0000-0000-0000-000000000002',
   business_expression: 'f0000001-0000-0000-0000-000000000003',
   keigo: 'f0000001-0000-0000-0000-000000000004',
+  writing: 'f0000001-0000-0000-0000-000000000005',
 }
 
 export const ALL_PRACTICE_QUIZ_TYPES = [
@@ -162,6 +164,7 @@ export const ALL_PRACTICE_QUIZ_TYPES = [
   'sentence_pattern',
   'business_expression',
   'keigo',
+  'writing',
   'cs_knowledge',
   'core_programming',
   'framework',

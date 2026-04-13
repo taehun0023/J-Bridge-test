@@ -230,12 +230,11 @@
 
 ![バックアップ](images/admin/10_backup.png)
 
-7つの主要テーブルのデータをCSVでバックアップできます。
+6つの主要テーブルのデータをCSVでバックアップできます。
 
 | テーブル | 内容 |
 |----------|------|
 | profiles | ユーザープロフィール |
-| shared_vocab | 共有単語帳 |
 | quiz_questions | クイズ問題 |
 | learning_assignments | 学習課題 |
 | task_assignments | 課題配信 |

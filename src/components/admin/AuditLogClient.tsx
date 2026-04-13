@@ -166,7 +166,7 @@ export default function AuditLogClient() {
               <option value="learning_assignments">学習課題</option>
               <option value="admin_feedbacks">フィードバック</option>
               <option value="quiz_attempts">クイズ再受験</option>
-              <option value="shared_vocab_submissions">みんなの単語帳</option>
+
               <option value="jlpt_vocabulary">JLPT語彙</option>
               <option value="jlpt_grammar">JLPT文法</option>
               <option value="jlpt_kanji">JLPT漢字</option>

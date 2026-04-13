@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import TabBar from '@/components/ui/TabBar'
 import Pagination from '@/components/ui/Pagination'
 import EmptyState from '@/components/ui/EmptyState'
 import VocabularyList from '@/components/japanese/VocabularyList'
@@ -52,14 +51,6 @@ const posLabels: Record<string, string> = {
   '표현': '表現',
 }
 
-const levelTabs = [
-  { key: 'N5', label: 'N5 基礎' },
-  { key: 'N4', label: 'N4 初級' },
-  { key: 'N3', label: 'N3 中級' },
-  { key: 'N2', label: 'N2 中上級' },
-  { key: 'N1', label: 'N1 上級' },
-]
-
 const MASTERY_FILTERS = [
   { key: '', label: '全て' },
   { key: 'mastered', label: '暗記済み' },
@@ -108,13 +99,6 @@ export default function JlptVocabularyClient({
 
   return (
     <div>
-      {/* Level tabs */}
-      <TabBar
-        tabs={levelTabs}
-        activeKey={level}
-        onChange={(key) => updateParams({ level: key, search: '', pos: '', mastery: '' })}
-      />
-
       {/* Filters */}
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <form onSubmit={handleSearch} className="flex gap-2">

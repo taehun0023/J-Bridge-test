@@ -231,12 +231,11 @@
 
 ![백업](images/admin/10_backup.png)
 
-7개 주요 테이블의 데이터를 CSV로 백업할 수 있습니다.
+6개 주요 테이블의 데이터를 CSV로 백업할 수 있습니다.
 
 | 테이블 | 내용 |
 |--------|------|
 | profiles | 유저 프로필 |
-| shared_vocab | 공유 단어장 |
 | quiz_questions | 퀴즈 문제 |
 | learning_assignments | 학습 과제 |
 | task_assignments | 과제 배정 |

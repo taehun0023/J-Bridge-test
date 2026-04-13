@@ -103,12 +103,6 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
     columns: 'id, term_ja, reading, term_ko, term_en, category, description, example_sentence, created_at',
     group: 'step2',
   },
-  shared_vocab_submissions: {
-    label: 'みんなの単語帳',
-    columns: 'id, term_ja, term_reading, term_ko, term_en, example_sentence, category, status, submitted_by, created_at',
-    group: 'step2',
-  },
-
   // ── CS知識 コンテンツ ──
   cs_terms: {
     label: 'CS用語',

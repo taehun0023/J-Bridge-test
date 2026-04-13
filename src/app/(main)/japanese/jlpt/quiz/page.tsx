@@ -17,8 +17,8 @@ interface Quiz {
 const LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'] as const
 const CATEGORY_ORDER = ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening', 'jlpt_kanji']
 
-export default async function QuizListPage({ searchParams }: { searchParams: Promise<{ level?: string }> }) {
-  const { level } = await searchParams
+export default async function QuizListPage({ searchParams }: { searchParams: Promise<{ level?: string; type?: string }> }) {
+  const { level, type } = await searchParams
   if (!level || !LEVELS.includes(level as typeof LEVELS[number])) {
     redirect('/japanese/jlpt')
   }
@@ -33,12 +33,16 @@ export default async function QuizListPage({ searchParams }: { searchParams: Pro
     userRole = prof?.role ?? null
   }
 
-  // Fetch pool quizzes for the selected level only
+  // Fetch pool quizzes for the selected level, optionally filtered by quiz type
+  const quizTypes = type && CATEGORY_ORDER.includes(type)
+    ? [type]
+    : ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening', 'jlpt_kanji']
+
   const { data: poolQuizzes } = await supabase
     .from('quizzes')
     .select('*')
     .eq('is_pool', true)
-    .in('quiz_type', ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening', 'jlpt_kanji'])
+    .in('quiz_type', quizTypes)
     .ilike('title', `${level}%`)
     .order('created_at', { ascending: true })
 

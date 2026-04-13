@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import TabBar from '@/components/ui/TabBar'
 import Pagination from '@/components/ui/Pagination'
 import EmptyState from '@/components/ui/EmptyState'
 import ReadingPassageList from '@/components/japanese/ReadingPassageList'
@@ -20,14 +19,6 @@ interface Props {
   totalCount: number
   masteredIds: string[]
 }
-
-const levelTabs = [
-  { key: 'N5', label: 'N5 基礎' },
-  { key: 'N4', label: 'N4 初級' },
-  { key: 'N3', label: 'N3 中級' },
-  { key: 'N2', label: 'N2 中上級' },
-  { key: 'N1', label: 'N1 上級' },
-]
 
 const typeLabels: Record<ReadingPassageType, string> = {
   notice: 'お知らせ',
@@ -68,13 +59,6 @@ export default function JlptReadingClient({
 
   return (
     <div>
-      {/* Level tabs */}
-      <TabBar
-        tabs={levelTabs}
-        activeKey={level}
-        onChange={(key) => updateParams({ level: key, search: '', passage_type: '' })}
-      />
-
       {/* Filters */}
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <form onSubmit={handleSearch} className="flex gap-2">

@@ -71,6 +71,7 @@ const categoryLabels: Record<string, string> = {
   sentence_pattern: '文章パターン',
   business_expression: 'ビジネス表現',
   keigo: '敬語',
+  writing: '作文',
   algorithm: 'アルゴリズム',
   data_structure: 'データ構造',
   os: 'OS',
@@ -466,6 +467,7 @@ export default function AdminCoursesClient({
     { option_text: '', is_correct: false },
     { option_text: '', is_correct: false },
   ])
+  const [formModelAnswer, setFormModelAnswer] = useState('')
 
   function showMsg(msg: string, type: 'success' | 'error' = 'success') {
     setMessage(msg)
@@ -590,7 +592,13 @@ export default function AdminCoursesClient({
     setFormDifficulty(q.difficulty ?? '中級')
     setFormCategory(q.question_category ?? '')
     setFormSubtype(q.question_subtype ?? '')
-    setFormExplanation(q.explanation ?? '')
+    if (q.question_category === 'writing') {
+      setFormExplanation('')
+      setFormModelAnswer(q.explanation ?? '')
+    } else {
+      setFormExplanation(q.explanation ?? '')
+      setFormModelAnswer('')
+    }
     setFormOptions(
       q.options.length >= 2
         ? q.options.map(o => ({ option_text: o.option_text, is_correct: o.is_correct }))
@@ -635,7 +643,13 @@ export default function AdminCoursesClient({
     setFormDifficulty(q.difficulty ?? ((isCsPracticeSection || isDevPracticeSection) ? 'medium' : '中級'))
     setFormCategory(isCsPracticeSection ? (getCsSubjectCategory(q.question_category) ?? '') : (q.question_category ?? ''))
     setFormSubtype(q.question_subtype ?? (isDevStep ? 'concept' : ''))
-    setFormExplanation(q.explanation ?? '')
+    if (q.question_category === 'writing') {
+      setFormExplanation('')
+      setFormModelAnswer(q.explanation ?? '')
+    } else {
+      setFormExplanation(q.explanation ?? '')
+      setFormModelAnswer('')
+    }
     setFormOptions(
       q.options.length >= 2
         ? q.options.map(o => ({ option_text: o.option_text, is_correct: o.is_correct }))
@@ -726,9 +740,13 @@ export default function AdminCoursesClient({
   function handleSubmitForm() {
     if (!formText.trim()) { showMsg('問題テキストを入力してください', 'error'); return }
     if ((formSection === 'practice' || currentAxis.step === 3) && !formCategory) { showMsg('カテゴリを選択してください', 'error'); return }
-    const validOptions = formOptions.filter(o => o.option_text.trim())
-    if (validOptions.length < 2) { showMsg('選択肢を最低2つ入力してください', 'error'); return }
-    if (!validOptions.some(o => o.is_correct)) { showMsg('正解を1つ選択してください', 'error'); return }
+    const isWriting = formCategory === 'writing'
+    if (!isWriting) {
+      const validOptions = formOptions.filter(o => o.option_text.trim())
+      if (validOptions.length < 2) { showMsg('選択肢を最低2つ入力してください', 'error'); return }
+      if (!validOptions.some(o => o.is_correct)) { showMsg('正解を1つ選択してください', 'error'); return }
+    }
+    if (isWriting && !formModelAnswer.trim()) { showMsg('模範答案を入力してください', 'error'); return }
     const createQuizId = getManagedCreateQuizId()
     if (!createQuizId) { showMsg('クイズIDが見つかりません', 'error'); return }
 
@@ -736,13 +754,17 @@ export default function AdminCoursesClient({
       ? (formSection === 'assessment' ? 'understanding_only' : 'comprehensive_only')
       : null
 
+    const validOptions = isWriting ? [] : formOptions.filter(o => o.option_text.trim())
+
     const data = {
       question_text: formText.trim(),
-      question_type: 'multiple_choice',
+      question_type: isWriting ? 'writing' : 'multiple_choice',
       difficulty: formDifficulty,
       question_category: getQuestionCategoryForSave(),
       question_subtype: isDevStep && formSubtype ? formSubtype : null,
-      explanation: formExplanation.trim() || null,
+      explanation: isWriting
+        ? formModelAnswer.trim()
+        : (formExplanation.trim() || null),
       question_usage_scope: questionUsageScope,
       options: validOptions.map((o, i) => ({
         option_text: o.option_text.trim(),
@@ -1331,43 +1353,58 @@ export default function AdminCoursesClient({
                   </select>
                 </div>
               )}
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">解説（任意）</label>
-                <textarea
-                  value={formExplanation}
-                  onChange={e => setFormExplanation(e.target.value)}
-                  rows={2}
-                  className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                />
-              </div>
-
-              {/* Options */}
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">選択肢 *</label>
-                <div className="space-y-2">
-                  {formOptions.map((opt, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <input
-                        type="radio"
-                        name="correct_option"
-                        checked={opt.is_correct}
-                        onChange={() => handleOptionChange(i, 'is_correct', true)}
-                        className="text-indigo-600"
-                      />
-                      <input
-                        type="text"
-                        value={opt.option_text}
-                        onChange={e => handleOptionChange(i, 'option_text', e.target.value)}
-                        placeholder={`選択肢 ${i + 1}`}
-                        className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                      />
-                      {opt.is_correct && (
-                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">正解</span>
-                      )}
-                    </div>
-                  ))}
+              {formCategory === 'writing' ? (
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">正解文（日本語） *</label>
+                  <p className="mb-2 text-xs text-gray-400 dark:text-gray-500">採点の基準となる正解文です。修正すると以降のテスト採点に反映されます。</p>
+                  <textarea
+                    value={formModelAnswer}
+                    onChange={e => setFormModelAnswer(e.target.value)}
+                    rows={3}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  />
                 </div>
-              </div>
+              ) : (
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">解説（任意）</label>
+                  <textarea
+                    value={formExplanation}
+                    onChange={e => setFormExplanation(e.target.value)}
+                    rows={2}
+                    className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+              )}
+
+              {/* Options (non-writing only) */}
+              {formCategory !== 'writing' && (
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">選択肢 *</label>
+                  <div className="space-y-2">
+                    {formOptions.map((opt, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <input
+                          type="radio"
+                          name="correct_option"
+                          checked={opt.is_correct}
+                          onChange={() => handleOptionChange(i, 'is_correct', true)}
+                          className="text-indigo-600"
+                        />
+                        <input
+                          type="text"
+                          value={opt.option_text}
+                          onChange={e => handleOptionChange(i, 'option_text', e.target.value)}
+                          placeholder={`選択肢 ${i + 1}`}
+                          className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        />
+                        {opt.is_correct && (
+                          <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">正解</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="mt-4 flex gap-2">

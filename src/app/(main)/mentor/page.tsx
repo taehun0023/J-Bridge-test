@@ -17,12 +17,10 @@ export default async function MentorPage() {
 
   const result = await getMentorDashboardData()
   const mentees = result.mentees ?? []
-  const pendingVocabCount = result.pendingVocabCount ?? 0
 
   return (
     <MentorDashboardClient
       mentees={mentees}
-      pendingVocabCount={pendingVocabCount}
       mentorSpecialty={profile?.mentor_specialty ?? null}
     />
   )

@@ -89,7 +89,7 @@ const CYCLE_INTERVAL_DAYS = 14
 
 export async function getMentorDashboardData() {
   const auth = await requireAdminOrMentor()
-  if ('error' in auth) return { error: auth.error, mentees: [] as MenteeOverview[], pendingVocabCount: 0 }
+  if ('error' in auth) return { error: auth.error, mentees: [] as MenteeOverview[] }
   const { supabase, user } = auth
 
   // Get assigned mentees
@@ -99,7 +99,7 @@ export async function getMentorDashboardData() {
     .eq('mentor_id', user.id)
 
   const menteeIds = assignments?.map(a => a.mentee_id) ?? []
-  if (menteeIds.length === 0) return { mentees: [], pendingVocabCount: 0 }
+  if (menteeIds.length === 0) return { mentees: [] }
 
   // Parallel queries
   const [
@@ -107,7 +107,6 @@ export async function getMentorDashboardData() {
     { data: learningAssignments },
     { data: compExams },
     { data: quizAttempts },
-    { count: pendingVocabCount },
   ] = await Promise.all([
     // 1. Mentee profiles + skills + is_japanese
     supabase
@@ -140,11 +139,6 @@ export async function getMentorDashboardData() {
       .not('completed_at', 'is', null)
       .order('completed_at', { ascending: false })
       .limit(menteeIds.length * 5),
-    // 5. Pending shared vocab count
-    supabase
-      .from('shared_vocab_submissions')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'pending'),
   ])
 
   // Fetch exam cycles for next exam date (needs service role for exam_cycles)
@@ -225,5 +219,5 @@ export async function getMentorDashboardData() {
     }
   })
 
-  return { mentees, pendingVocabCount: pendingVocabCount ?? 0 }
+  return { mentees }
 }

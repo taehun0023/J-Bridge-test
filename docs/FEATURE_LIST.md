@@ -108,19 +108,7 @@
 | 비즈니스 표현 | `/japanese/business/expressions` | 비즈니스 표현 매뉴얼 |
 | 문형 | `/japanese/business/sentence-patterns` | 비즈니스 문형 패턴 |
 | IT 용어집 | `/japanese/business/glossary` | IT 용어 (일→영) 테이블 |
-| 공유 단어장 | `/japanese/business/shared-vocab` | 멘토 승인제 공유 단어장 |
 | 퀴즈 | `/japanese/business/quiz`, `quiz/[quizId]` | 비즈니스 일본어 퀴즈 |
-
-### 공유 단어장 상세
-| 기능 | 액션 |
-|------|------|
-| 단어 제출 (멘토는 자동 승인) | `submitVocab()` |
-| 중복 체크 (정규화 매칭) | `checkDuplicate()` |
-| 승인/거부 (JP멘토/관리자) | `approveVocab()`, `rejectVocab()` |
-| 편집/삭제 | `updateSharedVocab()`, `deleteSharedVocab()` |
-| 내 제출 조회 | `getMySubmissions()` |
-| 거부된 제출 삭제 | `deleteMySubmission()` |
-| 공유 단어 퀴즈 생성 | `generateSharedVocabQuiz()` |
 
 ---
 
@@ -253,7 +241,6 @@
 - `generateGlossaryQuiz()` — IT 용어 퀴즈
 - `generateCsTermQuiz()` — CS 용어 퀴즈
 - `generateVocabQuiz()` — JLPT 어휘 퀴즈
-- `generateSharedVocabQuiz()` — 공유 단어 퀴즈
 
 ---
 
@@ -351,7 +338,7 @@
 | CSV 내보내기 | `exportAuditLogCsv()` |
 
 ### CSV 백업 대상 테이블
-profiles, shared_vocab, quiz_questions, learning_assignments, task_assignments, admin_feedbacks, coding_problems
+profiles, quiz_questions, learning_assignments, task_assignments, admin_feedbacks, coding_problems
 
 ---
 

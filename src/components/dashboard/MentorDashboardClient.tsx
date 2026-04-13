@@ -14,7 +14,6 @@ const RadarChart = dynamic(() => import('./RadarChart'), { ssr: false })
 
 interface Props {
   mentees: MenteeOverview[]
-  pendingVocabCount: number
   mentorSpecialty: string | null
 }
 
@@ -290,7 +289,7 @@ function MenteeAccordion({ mentee }: { mentee: MenteeOverview }) {
   )
 }
 
-export default function MentorDashboardClient({ mentees, pendingVocabCount, mentorSpecialty }: Props) {
+export default function MentorDashboardClient({ mentees, mentorSpecialty }: Props) {
   return (
     <div>
       <div className="mb-6">
@@ -338,26 +337,6 @@ export default function MentorDashboardClient({ mentees, pendingVocabCount, ment
           </Card>
         </Link>
       </div>
-
-      {/* Pending actions */}
-      {pendingVocabCount > 0 && (mentorSpecialty === null || mentorSpecialty === 'japanese') && (
-        <Card className="mb-6 border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-900/20">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-amber-900 dark:text-amber-200">承認待ちアクション</h3>
-              <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
-                みんなの単語帳: {pendingVocabCount}件の承認待ち
-              </p>
-            </div>
-            <Link
-              href="/japanese/business/shared-vocab"
-              className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500 transition-colors"
-            >
-              確認する
-            </Link>
-          </div>
-        </Card>
-      )}
 
       {/* Mentee list */}
       {mentees.length === 0 ? (

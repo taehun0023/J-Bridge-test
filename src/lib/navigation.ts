@@ -13,6 +13,7 @@ import {
   Volume2,
   ScrollText,
   HardDrive,
+  Terminal,
   type LucideIcon,
 } from 'lucide-react'
 import type { UserRole } from '@/lib/supabase/types'
@@ -49,11 +50,11 @@ export const categoryChildren: Record<
     title: '生活日本語',
     description: 'JLPT の語彙、文法、読解、聴解、漢字を段階的に学習します。',
     children: [
-      { href: '/japanese/jlpt/vocabulary', label: '語彙', description: 'JLPT 頻出語彙を学習します' },
-      { href: '/japanese/jlpt/grammar', label: '文法', description: 'JLPT 文法項目を整理します' },
-      { href: '/japanese/jlpt/reading', label: '読解', description: '読解問題の読み方を練習します' },
-      { href: '/japanese/jlpt/listening', label: '聴解', description: '音声を聞いて内容を理解します' },
-      { href: '/japanese/jlpt/kanji', label: '漢字', description: 'JLPT 頻出漢字を学習します' },
+      { href: '/japanese/jlpt/n5', label: 'N5', description: '基礎的な日本語を学びます' },
+      { href: '/japanese/jlpt/n4', label: 'N4', description: '基本的な日本語を理解します' },
+      { href: '/japanese/jlpt/n3', label: 'N3', description: '日常的な日本語をある程度理解します' },
+      { href: '/japanese/jlpt/n2', label: 'N2', description: '日常的な場面に加え幅広い場面の日本語を理解します' },
+      { href: '/japanese/jlpt/n1', label: 'N1', description: '幅広い場面で使われる日本語を理解します' },
     ],
   },
   'business-jp': {
@@ -64,7 +65,7 @@ export const categoryChildren: Record<
       { href: '/japanese/business/sentence-patterns', label: '文型', description: 'ビジネス文型を整理します' },
       { href: '/japanese/business/expressions', label: '表現', description: '実務で使う定番表現を学びます' },
       { href: '/japanese/business/keigo', label: '敬語', description: '敬語の使い方を確認します' },
-      { href: '/japanese/business/shared-vocab', label: '共通知識用語', description: '業務全体で使う共通知識を確認します' },
+      { href: '/japanese/business/writing', label: '作文 (Beta)', description: '韓国語の意味を見て日本語で書く練習をします' },
     ],
   },
   cs: {
@@ -112,6 +113,7 @@ export const mainNavItems: NavItem[] = [
   { key: 'cs', href: '/cs', label: 'CS知識', icon: Cpu },
   { key: 'dev', href: '/dev', label: '開発実務', icon: Code2 },
   { key: 'business-lit', href: '/business-literacy', label: 'ビジネスリテラシー', icon: Handshake },
+  { key: 'coding', href: '/coding/problems', label: 'コーディング (Beta)', icon: Terminal },
 ]
 
 export const adminNavItems: AdminNavItem[] = [
