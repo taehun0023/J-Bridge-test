@@ -12,6 +12,9 @@ updates:
       - dependencies
     commit-message:
       prefix: "chore(deps)"
+    # Group patch + minor updates so they arrive as 2 PRs instead of N PRs.
+    # Major bumps (typescript / @types/node / next / react etc.) are excluded
+    # from grouping AND ignored as auto-PRs — handle those manually.
     groups:
       production-deps:
         dependency-type: production
@@ -23,6 +26,37 @@ updates:
         update-types:
           - patch
           - minor
+    ignore:
+      # Major version bumps require code review + compatibility checks.
+      # Surface them via `npm outdated` instead of automated PRs.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint-config-next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@tailwindcss/postcss"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "vitest"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@vitest/coverage-v8"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "lucide-react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@supabase/ssr"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@supabase/supabase-js"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
