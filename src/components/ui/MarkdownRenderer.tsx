@@ -90,6 +90,7 @@ const mdComponents: Components = {
   ),
   hr: () => <hr className="my-8 border-gray-200 dark:border-gray-700" />,
   img: ({ src, alt }) => (
+    // markdown allows arbitrary external image URLs that next/image cannot pre-validate
     // eslint-disable-next-line @next/next/no-img-element
     <img src={src} alt={alt ?? ''} className="my-4 rounded-lg max-w-full" />
   ),

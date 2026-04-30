@@ -339,3 +339,24 @@ export interface TaskAssignment {
   created_at: string
   completed_at: string | null
 }
+
+/**
+ * Helper for typing Supabase queries that include foreign-table joins.
+ *
+ * Supabase's generated types don't propagate `.select('a, foreign_table(b)')`
+ * shape inference reliably, so call sites typically need a manual structural
+ * type. Use `Joined<T>` instead of `as unknown as T` to make intent explicit.
+ *
+ * Example:
+ *   const { data } = await supabase
+ *     .from('quiz_attempts')
+ *     .select('id, quizzes(quiz_type)')
+ *   const rows = data as Joined<{ id: string; quizzes: { quiz_type: string } | null }>[]
+ */
+export type Joined<T> = T
+
+/**
+ * Single row variant — equivalent to `Joined<T>` but reads naturally for
+ * `.single()` / `.maybeSingle()` query results.
+ */
+export type JoinedRow<T> = T

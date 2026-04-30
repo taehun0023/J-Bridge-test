@@ -95,10 +95,13 @@ export async function synthesize(
   speakingRate: number
 ): Promise<Buffer> {
   const response = await fetch(
-    `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`,
+    'https://texttospeech.googleapis.com/v1/text:synthesize',
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': apiKey,
+      },
       body: JSON.stringify({
         input: { text },
         voice: { languageCode: 'ja-JP', ...voice },

@@ -36,8 +36,6 @@ export async function createFeedback(formData: FormData) {
     return { error: error.message }
   }
 
-  console.log('[createFeedback] Feedback created:', data.id)
-
   await logAuditEvent(user.id, 'create', 'admin_feedbacks', data.id, null, { user_id: userId, category: category || 'seikatsu' })
 
   // 受信者に通知

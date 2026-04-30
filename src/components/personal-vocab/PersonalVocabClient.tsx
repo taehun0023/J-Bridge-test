@@ -41,6 +41,7 @@ export default function PersonalVocabClient() {
     if (!localStorage.getItem('personal-vocab-guide-dismissed')) {
       setShowGuide(true)
     }
+    // mount-only: initial load + guide visibility check
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

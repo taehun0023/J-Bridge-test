@@ -53,6 +53,7 @@ export default function AuditLogClient() {
 
   useEffect(() => {
     loadData()
+    // mount-only: filters trigger reload via handleFilter, not effect deps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

@@ -2,7 +2,13 @@
 
 Supabase (PostgreSQL) 기반 DB 스키마. 총 48개 테이블 (+ coding_exam_problems junction).
 
-> **Migration 기준:** `00001` ~ `00105` (2026-03 기준)
+> **Migration 기준:** `00001` ~ `00170` (2026-04 기준 — 인수 시점 최신)
+>
+> 이후 추가된 마이그레이션은 다음을 포함:
+> - `00148`~`00163`: JLPT/BJ/CS 품질 감사 수정 + N5 grammar answer-leak 수정
+> - `00164`: shared_vocab 테이블 폐기
+> - `00165`~`00169`: 작문(writing_exercises) 시스템 도입 + 한국어 예시 + claims + 설명 수정
+> - `00170`: 코딩 학습(coding_learning) 시스템
 
 ## ERD 개요
 

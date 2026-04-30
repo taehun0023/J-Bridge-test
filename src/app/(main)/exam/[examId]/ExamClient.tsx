@@ -98,6 +98,7 @@ function ListeningPlayer({ script, questionId, alreadyPlayed, onPlayed }: {
       }
       if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current)
     }
+  // refs (playingRef, onPlayedRef, blobUrlRef) are intentionally not deps
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questionId])
 
@@ -191,6 +192,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
         }
       })
     }
+  // exam.time_limit_minutes is captured at start; remount on mode/exam.id change is sufficient
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, exam.id])
 

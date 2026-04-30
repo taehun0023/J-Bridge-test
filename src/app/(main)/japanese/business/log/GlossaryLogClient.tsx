@@ -95,6 +95,7 @@ export default function GlossaryLogClient() {
 
   useEffect(() => {
     loadData()
+    // mount-only: filters trigger reload via handleFilter
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

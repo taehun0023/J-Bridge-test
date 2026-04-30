@@ -33,6 +33,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # TTS audio cache
 /public/audio
@@ -44,5 +45,4 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# architecture analysis docs (local study)
-/docs/architecture
+# (architecture docs are now committed for handover — see docs/ARCHITECTURE.md)

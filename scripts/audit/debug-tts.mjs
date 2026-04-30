@@ -43,10 +43,13 @@ const narratorVoice = { name: 'ja-JP-Neural2-B', ssmlGender: 'FEMALE' };
 
 async function synthesize(text, voice, speakingRate = 1.0) {
   const response = await fetch(
-    `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`,
+    'https://texttospeech.googleapis.com/v1/text:synthesize',
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': apiKey,
+      },
       body: JSON.stringify({
         input: { text },
         voice: { languageCode: 'ja-JP', ...voice },

@@ -407,10 +407,18 @@ export async function fetchQuestionsPage(
     if (claimedIds.length === 0) return { questions: [], totalCount: 0, hasMore: false, availableCategories: [] }
   }
 
-  // Build base query builder function (reused for count + data)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function applyFilters(query: any, includeCategory: boolean = true) {
-    let q = query.in('quiz_id', quizIds)
+  // Build base query builder function (reused for count + data).
+  // Generic Q preserves the Supabase query type through filter chaining;
+  // an internal structural type captures the filter methods we use.
+  type Filterable = {
+    in: (col: string, vals: readonly unknown[]) => Filterable
+    is: (col: string, val: unknown) => Filterable
+    eq: (col: string, val: unknown) => Filterable
+    or: (filter: string) => Filterable
+  }
+  function applyFilters<Q>(query: Q, includeCategory: boolean = true): Q {
+    let q = query as unknown as Filterable
+    q = q.in('quiz_id', quizIds)
     if (filters.difficulty === '__null__') {
       q = q.is('difficulty', null)
     } else if (filters.difficulty) {
@@ -442,7 +450,7 @@ export async function fetchQuestionsPage(
     if (claimedIds) {
       q = q.in('id', claimedIds)
     }
-    return q
+    return q as unknown as Q
   }
 
   async function fetchAvailableCategories(): Promise<string[]> {

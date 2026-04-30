@@ -426,6 +426,7 @@ export default function AdminCoursesClient({
     }
     const quizIds = getQuizIds()
     loadPage(quizIds, filters, 0, false)
+  // intentionally omits getQuizIds/loadPage — those are stable callbacks; only filter changes should retrigger
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.difficulty, filters.published, filters.category, filters.subtype, filters.claimsOnly])
 

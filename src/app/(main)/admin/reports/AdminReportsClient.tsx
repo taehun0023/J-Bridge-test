@@ -74,6 +74,7 @@ export default function AdminReportsClient({
         handleSelect(initialUserId)
       }
     }
+    // initialLoaded ref guards single-run; users/handleSelect intentionally not deps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialUserId])
 
