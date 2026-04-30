@@ -46,3 +46,6 @@ yarn-error.log*
 next-env.d.ts
 
 # (architecture docs are now committed for handover — see docs/ARCHITECTURE.md)
+
+# personal handover briefing notes (local only)
+/BRIEFING_NOTES.md
