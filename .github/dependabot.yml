@@ -7,28 +7,18 @@ updates:
       day: monday
       time: "09:00"
       timezone: Asia/Tokyo
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 8
     labels:
       - dependencies
     commit-message:
       prefix: "chore(deps)"
-    # Group patch + minor updates so they arrive as 2 PRs instead of N PRs.
-    # Major bumps (typescript / @types/node / next / react etc.) are excluded
-    # from grouping AND ignored as auto-PRs — handle those manually.
-    groups:
-      production-deps:
-        dependency-type: production
-        update-types:
-          - patch
-          - minor
-      dev-deps:
-        dependency-type: development
-        update-types:
-          - patch
-          - minor
+    # No grouping — one PR per package so the maintenance team can pinpoint
+    # which dependency broke the build. Ignore rules below filter out the
+    # high-risk bumps so PR volume stays manageable.
     ignore:
-      # Major version bumps require code review + compatibility checks.
-      # Surface them via `npm outdated` instead of automated PRs.
+      # ----- Major version bumps -----
+      # Require code review + compatibility checks. Surface via
+      # `npm outdated` instead of automated PRs.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
       - dependency-name: "@types/node"
@@ -53,8 +43,12 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "lucide-react"
         update-types: ["version-update:semver-major"]
+
+      # ----- 0.x packages: minor bumps are de-facto breaking -----
+      # @supabase/ssr 0.8 → 0.10 broke our build (writing.ts type recursion).
+      # Block minor bumps too; let majors get reviewed manually.
       - dependency-name: "@supabase/ssr"
-        update-types: ["version-update:semver-major"]
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
       - dependency-name: "@supabase/supabase-js"
         update-types: ["version-update:semver-major"]
 
