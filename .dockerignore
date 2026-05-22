@@ -1,0 +1,48 @@
+# --- Node / Next.js ---
+node_modules
+.next
+out
+build
+coverage
+*.tsbuildinfo
+next-env.d.ts
+
+# --- Git / 에디터 / OS ---
+.git
+.gitignore
+.gitattributes
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# --- 환경변수 / 로컬 비밀 ---
+.env
+.env.*
+!.env.example
+
+# --- 로그 ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# --- 테스트 / CI ---
+.github
+playwright-report
+test-results
+
+# --- 문서 / 개인 메모 (이미지에 불필요) ---
+docs
+BRIEFING_NOTES.md
+*.md
+!README.md
+
+# --- TTS 캐시 (런타임에 볼륨으로 마운트) ---
+public/audio
+
+# --- Judge0 컨테이너 정의 (별도 서버에서 실행) ---
+judge0
+
+# --- Vercel (사용하지 않음) ---
+.vercel
