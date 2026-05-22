@@ -161,7 +161,10 @@
       "Bash(git fetch:*)",
       "Bash(node -e ':*)",
       "Bash(npx tsx -e ':*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "PowerShell(npm run *)",
+      "PowerShell(Test-Path *)",
+      "PowerShell(npm install *)"
     ]
   }
 }

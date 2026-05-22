@@ -47,5 +47,8 @@ next-env.d.ts
 
 # (architecture docs are now committed for handover — see docs/ARCHITECTURE.md)
 
+# migration apply backups (one-off scripts under scripts/)
+.backup-*.json
+
 # personal handover briefing notes (local only)
 /BRIEFING_NOTES.md

@@ -25,11 +25,20 @@ ALTER TABLE quiz_questions ADD CONSTRAINT quiz_questions_question_type_check
 -- ============================================================
 -- 2. コード解析プールクイズ (3言語)
 -- ============================================================
+-- Idempotency guard: 既に00170データが投入済みなら以降のINSERTを丸ごとスキップする。
+-- marker = coding_problems の最初の行 (b0000001-0001-...)。
+DO $mig$
+BEGIN
+  IF EXISTS (SELECT 1 FROM coding_problems WHERE id = 'b0000001-0001-0000-0000-000000000001') THEN
+    RAISE NOTICE '00170 already applied — skipping data inserts';
+    RETURN;
+  END IF;
+
 INSERT INTO quizzes (id, title, quiz_type, is_pool, is_assessment, passing_score, questions_per_attempt)
 VALUES
-  ('a0000001-0000-0000-0000-000000000001', 'Java コード解析',       'code_reading', true, false, 70, 10),
-  ('a0000001-0000-0000-0000-000000000002', 'JavaScript コード解析', 'code_reading', true, false, 70, 10),
-  ('a0000001-0000-0000-0000-000000000003', 'SQL コード解析',        'code_reading', true, false, 70, 10)
+  ('c0de0001-0000-0000-0000-000000000001', 'Java コード解析',       'code_reading', true, false, 70, 10),
+  ('c0de0001-0000-0000-0000-000000000002', 'JavaScript コード解析', 'code_reading', true, false, 70, 10),
+  ('c0de0001-0000-0000-0000-000000000003', 'SQL コード解析',        'code_reading', true, false, 70, 10)
 ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================
@@ -39,104 +48,104 @@ ON CONFLICT (id) DO NOTHING;
 -- Java Easy 1: 変数と演算
 INSERT INTO quiz_questions (quiz_id, question_text, explanation, question_type, difficulty, question_category, is_published, points, sort_order)
 VALUES (
-  'a0000001-0000-0000-0000-000000000001',
+  'c0de0001-0000-0000-0000-000000000001',
   E'次のJavaコードの出力結果はどれですか？\n\n```java\nint x = 5;\nint y = x * 2 + 3;\nSystem.out.println(y);\n```',
   'x=5, y=5*2+3=13。乗算が先に計算され、その後加算される。',
   'code_reading', 'easy', 'java', true, 1, 1
 );
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '10', false, 1 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=1;
+SELECT id, '10', false, 1 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=1;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '13', true, 2 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=1;
+SELECT id, '13', true, 2 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=1;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '8', false, 3 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=1;
+SELECT id, '8', false, 3 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=1;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '15', false, 4 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=1;
+SELECT id, '15', false, 4 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=1;
 
 -- Java Easy 2: 条件分岐
 INSERT INTO quiz_questions (quiz_id, question_text, explanation, question_type, difficulty, question_category, is_published, points, sort_order)
 VALUES (
-  'a0000001-0000-0000-0000-000000000001',
+  'c0de0001-0000-0000-0000-000000000001',
   E'次のJavaコードで、x = -3 の場合の出力はどれですか？\n\n```java\nif (x > 0) {\n    System.out.println("正の数");\n} else if (x == 0) {\n    System.out.println("ゼロ");\n} else {\n    System.out.println("負の数");\n}\n```',
   'x=-3は0より小さいので、else節が実行され「負の数」が出力される。',
   'code_reading', 'easy', 'java', true, 1, 2
 );
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '正の数', false, 1 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=2;
+SELECT id, '正の数', false, 1 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=2;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'ゼロ', false, 2 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=2;
+SELECT id, 'ゼロ', false, 2 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=2;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '負の数', true, 3 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=2;
+SELECT id, '負の数', true, 3 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=2;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'コンパイルエラー', false, 4 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=2;
+SELECT id, 'コンパイルエラー', false, 4 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=2;
 
 -- Java Medium 1: 配列の合計
 INSERT INTO quiz_questions (quiz_id, question_text, explanation, question_type, difficulty, question_category, is_published, points, sort_order)
 VALUES (
-  'a0000001-0000-0000-0000-000000000001',
+  'c0de0001-0000-0000-0000-000000000001',
   E'次のJavaコードの出力結果はどれですか？\n\n```java\nint[] nums = {3, 7, 2, 8};\nint sum = 0;\nfor (int i = 0; i < nums.length; i++) {\n    sum += nums[i];\n}\nSystem.out.println(sum);\n```',
   '3+7+2+8=20。forループで配列の全要素を合計している。',
   'code_reading', 'medium', 'java', true, 1, 3
 );
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '10', false, 1 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=3;
+SELECT id, '10', false, 1 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=3;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '20', true, 2 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=3;
+SELECT id, '20', true, 2 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=3;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '18', false, 3 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=3;
+SELECT id, '18', false, 3 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=3;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '17', false, 4 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=3;
+SELECT id, '17', false, 4 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=3;
 
 -- Java Medium 2: String操作
 INSERT INTO quiz_questions (quiz_id, question_text, explanation, question_type, difficulty, question_category, is_published, points, sort_order)
 VALUES (
-  'a0000001-0000-0000-0000-000000000001',
+  'c0de0001-0000-0000-0000-000000000001',
   E'次のJavaコードの出力結果はどれですか？\n\n```java\nString s = "Hello World";\nSystem.out.println(s.substring(6, 11));\n```',
   'substring(6,11)はインデックス6から10までの文字列を返す。"Hello World"のインデックス6は"W"、10は"d"なので"World"。',
   'code_reading', 'medium', 'java', true, 1, 4
 );
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '"World"', true, 1 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=4;
+SELECT id, '"World"', true, 1 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=4;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '"Hello"', false, 2 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=4;
+SELECT id, '"Hello"', false, 2 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=4;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '"o Wor"', false, 3 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=4;
+SELECT id, '"o Wor"', false, 3 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=4;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '"orld"', false, 4 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=4;
+SELECT id, '"orld"', false, 4 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=4;
 
 -- Java Hard 1: 例外処理
 INSERT INTO quiz_questions (quiz_id, question_text, explanation, question_type, difficulty, question_category, is_published, points, sort_order)
 VALUES (
-  'a0000001-0000-0000-0000-000000000001',
+  'c0de0001-0000-0000-0000-000000000001',
   E'次のJavaコードの出力結果はどれですか？\n\n```java\ntry {\n    int[] arr = new int[3];\n    arr[5] = 10;\n    System.out.println("A");\n} catch (ArrayIndexOutOfBoundsException e) {\n    System.out.println("B");\n} finally {\n    System.out.println("C");\n}\n```',
   'arr[5]で例外発生→catch実行(B)→finally実行(C)。finallyは常に実行される。',
   'code_reading', 'hard', 'java', true, 1, 5
 );
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'A C', false, 1 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=5;
+SELECT id, 'A C', false, 1 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=5;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'B C', true, 2 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=5;
+SELECT id, 'B C', true, 2 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=5;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'A B C', false, 3 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=5;
+SELECT id, 'A B C', false, 3 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=5;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'B', false, 4 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=5;
+SELECT id, 'B', false, 4 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=5;
 
 -- Java Hard 2: 継承とポリモーフィズム
 INSERT INTO quiz_questions (quiz_id, question_text, explanation, question_type, difficulty, question_category, is_published, points, sort_order)
 VALUES (
-  'a0000001-0000-0000-0000-000000000001',
+  'c0de0001-0000-0000-0000-000000000001',
   E'次のJavaコードの出力結果はどれですか？\n\n```java\nclass Animal {\n    String speak() { return "..."; }\n}\nclass Dog extends Animal {\n    String speak() { return "ワン"; }\n}\nclass Cat extends Animal {\n    String speak() { return "ニャー"; }\n}\n// main:\nAnimal a = new Dog();\nSystem.out.println(a.speak());\n```',
   '実行時の型はDogなのでDog.speak()が呼ばれる（ポリモーフィズム）。変数の宣言型ではなくインスタンスの実際の型のメソッドが実行される。',
   'code_reading', 'hard', 'java', true, 1, 6
 );
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '"..."', false, 1 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=6;
+SELECT id, '"..."', false, 1 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=6;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '"ワン"', true, 2 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=6;
+SELECT id, '"ワン"', true, 2 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=6;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '"ニャー"', false, 3 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=6;
+SELECT id, '"ニャー"', false, 3 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=6;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'コンパイルエラー', false, 4 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000001' AND sort_order=6;
+SELECT id, 'コンパイルエラー', false, 4 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000001' AND sort_order=6;
 
 -- ============================================================
 -- 4. JavaScript コード解析 quiz_questions (6問)
@@ -145,104 +154,104 @@ SELECT id, 'コンパイルエラー', false, 4 FROM quiz_questions WHERE quiz_i
 -- JS Easy 1: 型変換と文字列結合
 INSERT INTO quiz_questions (quiz_id, question_text, explanation, question_type, difficulty, question_category, is_published, points, sort_order)
 VALUES (
-  'a0000001-0000-0000-0000-000000000002',
+  'c0de0001-0000-0000-0000-000000000002',
   E'次のJavaScriptコードの出力結果はどれですか？\n\n```javascript\nlet x = "5";\nlet y = x + 3;\nconsole.log(y);\n```',
   'xは文字列"5"なので、+演算子は文字列結合として動作する。"5" + 3 = "53"。',
   'code_reading', 'easy', 'javascript', true, 1, 1
 );
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '8', false, 1 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=1;
+SELECT id, '8', false, 1 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=1;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '"53"', true, 2 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=1;
+SELECT id, '"53"', true, 2 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=1;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '53', false, 3 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=1;
+SELECT id, '53', false, 3 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=1;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'エラー', false, 4 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=1;
+SELECT id, 'エラー', false, 4 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=1;
 
 -- JS Easy 2: ==と===の違い
 INSERT INTO quiz_questions (quiz_id, question_text, explanation, question_type, difficulty, question_category, is_published, points, sort_order)
 VALUES (
-  'a0000001-0000-0000-0000-000000000002',
+  'c0de0001-0000-0000-0000-000000000002',
   E'次のJavaScriptコードの出力結果はどれですか？\n\n```javascript\nconsole.log(1 == "1");\nconsole.log(1 === "1");\n```',
   '==は型変換を行うので1=="1"はtrue。===は型も比較するので1==="1"はfalse（number vs string）。',
   'code_reading', 'easy', 'javascript', true, 1, 2
 );
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'true true', false, 1 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=2;
+SELECT id, 'true true', false, 1 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=2;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'true false', true, 2 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=2;
+SELECT id, 'true false', true, 2 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=2;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'false true', false, 3 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=2;
+SELECT id, 'false true', false, 3 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=2;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'false false', false, 4 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=2;
+SELECT id, 'false false', false, 4 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=2;
 
 -- JS Medium 1: 配列メソッドチェーン
 INSERT INTO quiz_questions (quiz_id, question_text, explanation, question_type, difficulty, question_category, is_published, points, sort_order)
 VALUES (
-  'a0000001-0000-0000-0000-000000000002',
+  'c0de0001-0000-0000-0000-000000000002',
   E'次のJavaScriptコードの出力結果はどれですか？\n\n```javascript\nconst result = [1, 2, 3].map(x => x * 2).filter(x => x > 3);\nconsole.log(result);\n```',
   'map: [2,4,6]。filter(x>3): [4,6]。mapで各要素を2倍し、filterで3より大きい要素だけ残す。',
   'code_reading', 'medium', 'javascript', true, 1, 3
 );
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '[2, 4, 6]', false, 1 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=3;
+SELECT id, '[2, 4, 6]', false, 1 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=3;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '[4, 6]', true, 2 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=3;
+SELECT id, '[4, 6]', true, 2 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=3;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '[6]', false, 3 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=3;
+SELECT id, '[6]', false, 3 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=3;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '[1, 2, 3]', false, 4 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=3;
+SELECT id, '[1, 2, 3]', false, 4 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=3;
 
 -- JS Medium 2: オブジェクトの分割代入
 INSERT INTO quiz_questions (quiz_id, question_text, explanation, question_type, difficulty, question_category, is_published, points, sort_order)
 VALUES (
-  'a0000001-0000-0000-0000-000000000002',
+  'c0de0001-0000-0000-0000-000000000002',
   E'次のJavaScriptコードの出力結果はどれですか？\n\n```javascript\nconst user = { name: "田中", age: 25, city: "東京" };\nconst { name, ...rest } = user;\nconsole.log(rest);\n```',
   '分割代入でnameを取り出し、残りの要素(...rest)は{ age: 25, city: "東京" }となる。',
   'code_reading', 'medium', 'javascript', true, 1, 4
 );
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '{ name: "田中" }', false, 1 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=4;
+SELECT id, '{ name: "田中" }', false, 1 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=4;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '{ age: 25, city: "東京" }', true, 2 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=4;
+SELECT id, '{ age: 25, city: "東京" }', true, 2 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=4;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '{ name: "田中", age: 25, city: "東京" }', false, 3 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=4;
+SELECT id, '{ name: "田中", age: 25, city: "東京" }', false, 3 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=4;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'undefined', false, 4 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=4;
+SELECT id, 'undefined', false, 4 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=4;
 
 -- JS Hard 1: クロージャ
 INSERT INTO quiz_questions (quiz_id, question_text, explanation, question_type, difficulty, question_category, is_published, points, sort_order)
 VALUES (
-  'a0000001-0000-0000-0000-000000000002',
+  'c0de0001-0000-0000-0000-000000000002',
   E'次のJavaScriptコードの出力結果はどれですか？\n\n```javascript\nfunction makeCounter() {\n    let count = 0;\n    return function() {\n        count++;\n        return count;\n    };\n}\nconst counter = makeCounter();\nconsole.log(counter());\nconsole.log(counter());\nconsole.log(counter());\n```',
   'クロージャにより内部関数はcountを参照し続ける。呼び出すたびにcountが1ずつ増え、1, 2, 3と出力される。',
   'code_reading', 'hard', 'javascript', true, 1, 5
 );
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '0 0 0', false, 1 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=5;
+SELECT id, '0 0 0', false, 1 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=5;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '1 1 1', false, 2 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=5;
+SELECT id, '1 1 1', false, 2 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=5;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '1 2 3', true, 3 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=5;
+SELECT id, '1 2 3', true, 3 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=5;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'undefined undefined undefined', false, 4 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=5;
+SELECT id, 'undefined undefined undefined', false, 4 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=5;
 
 -- JS Hard 2: Promise と setTimeout の実行順序
 INSERT INTO quiz_questions (quiz_id, question_text, explanation, question_type, difficulty, question_category, is_published, points, sort_order)
 VALUES (
-  'a0000001-0000-0000-0000-000000000002',
+  'c0de0001-0000-0000-0000-000000000002',
   E'次のJavaScriptコードの出力順序はどれですか？\n\n```javascript\nconsole.log("A");\nsetTimeout(() => console.log("B"), 0);\nPromise.resolve().then(() => console.log("C"));\nconsole.log("D");\n```',
   '同期コード(A,D)→マイクロタスク(Promise: C)→マクロタスク(setTimeout: B)の順で実行される。',
   'code_reading', 'hard', 'javascript', true, 1, 6
 );
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'A B C D', false, 1 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=6;
+SELECT id, 'A B C D', false, 1 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=6;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'A D B C', false, 2 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=6;
+SELECT id, 'A D B C', false, 2 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=6;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'A D C B', true, 3 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=6;
+SELECT id, 'A D C B', true, 3 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=6;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'A C D B', false, 4 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000002' AND sort_order=6;
+SELECT id, 'A C D B', false, 4 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000002' AND sort_order=6;
 
 -- ============================================================
 -- 5. SQL コード解析 quiz_questions (6問)
@@ -251,104 +260,104 @@ SELECT id, 'A C D B', false, 4 FROM quiz_questions WHERE quiz_id='a0000001-0000-
 -- SQL Easy 1: WHERE句
 INSERT INTO quiz_questions (quiz_id, question_text, explanation, question_type, difficulty, question_category, is_published, points, sort_order)
 VALUES (
-  'a0000001-0000-0000-0000-000000000003',
+  'c0de0001-0000-0000-0000-000000000003',
   E'次のテーブルとクエリの結果、何行返されますか？\n\n```sql\n-- employeesテーブル:\n-- | id | name   | age | dept     |\n-- |----|--------|-----|----------|\n-- | 1  | 田中   | 28  | 営業     |\n-- | 2  | 鈴木   | 35  | 開発     |\n-- | 3  | 佐藤   | 22  | 営業     |\n-- | 4  | 山田   | 40  | 人事     |\n\nSELECT * FROM employees WHERE age >= 30;\n```',
   'age >= 30の行は鈴木(35)と山田(40)の2行。',
   'code_reading', 'easy', 'sql', true, 1, 1
 );
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '1行', false, 1 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=1;
+SELECT id, '1行', false, 1 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=1;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '2行', true, 2 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=1;
+SELECT id, '2行', true, 2 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=1;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '3行', false, 3 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=1;
+SELECT id, '3行', false, 3 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=1;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '4行', false, 4 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=1;
+SELECT id, '4行', false, 4 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=1;
 
 -- SQL Easy 2: ORDER BY
 INSERT INTO quiz_questions (quiz_id, question_text, explanation, question_type, difficulty, question_category, is_published, points, sort_order)
 VALUES (
-  'a0000001-0000-0000-0000-000000000003',
+  'c0de0001-0000-0000-0000-000000000003',
   E'次のクエリの結果、最初に表示される名前はどれですか？\n\n```sql\n-- productsテーブル:\n-- | id | name     | price |\n-- |----|----------|-------|\n-- | 1  | りんご   | 150   |\n-- | 2  | バナナ   | 100   |\n-- | 3  | みかん   | 200   |\n-- | 4  | ぶどう   | 350   |\n\nSELECT name FROM products ORDER BY price DESC;\n```',
   'ORDER BY price DESCは価格の降順。最も高いぶどう(350)が最初に表示される。',
   'code_reading', 'easy', 'sql', true, 1, 2
 );
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'りんご', false, 1 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=2;
+SELECT id, 'りんご', false, 1 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=2;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'バナナ', false, 2 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=2;
+SELECT id, 'バナナ', false, 2 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=2;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'みかん', false, 3 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=2;
+SELECT id, 'みかん', false, 3 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=2;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, 'ぶどう', true, 4 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=2;
+SELECT id, 'ぶどう', true, 4 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=2;
 
 -- SQL Medium 1: INNER JOIN
 INSERT INTO quiz_questions (quiz_id, question_text, explanation, question_type, difficulty, question_category, is_published, points, sort_order)
 VALUES (
-  'a0000001-0000-0000-0000-000000000003',
+  'c0de0001-0000-0000-0000-000000000003',
   E'次のクエリの結果は何行ですか？\n\n```sql\n-- ordersテーブル:\n-- | id | customer_id | amount |\n-- |----|-------------|--------|\n-- | 1  | 10          | 5000   |\n-- | 2  | 20          | 3000   |\n-- | 3  | 30          | 7000   |\n\n-- customersテーブル:\n-- | id | name   |\n-- |----|--------|\n-- | 10 | 田中   |\n-- | 20 | 鈴木   |\n-- | 40 | 高橋   |\n\nSELECT c.name, o.amount\nFROM orders o\nINNER JOIN customers c ON o.customer_id = c.id;\n```',
   'INNER JOINは両テーブルに一致する行のみ返す。customer_id=10(田中),20(鈴木)は一致、30は顧客テーブルに無し、40は注文テーブルに無し。結果2行。',
   'code_reading', 'medium', 'sql', true, 1, 3
 );
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '1行', false, 1 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=3;
+SELECT id, '1行', false, 1 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=3;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '2行', true, 2 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=3;
+SELECT id, '2行', true, 2 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=3;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '3行', false, 3 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=3;
+SELECT id, '3行', false, 3 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=3;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '4行', false, 4 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=3;
+SELECT id, '4行', false, 4 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=3;
 
 -- SQL Medium 2: GROUP BYと集約関数
 INSERT INTO quiz_questions (quiz_id, question_text, explanation, question_type, difficulty, question_category, is_published, points, sort_order)
 VALUES (
-  'a0000001-0000-0000-0000-000000000003',
+  'c0de0001-0000-0000-0000-000000000003',
   E'次のクエリの結果で、開発部の平均年齢はいくつですか？\n\n```sql\n-- employeesテーブル:\n-- | id | name   | age | dept |\n-- |----|--------|-----|------|\n-- | 1  | 田中   | 28  | 営業 |\n-- | 2  | 鈴木   | 32  | 開発 |\n-- | 3  | 佐藤   | 24  | 営業 |\n-- | 4  | 山田   | 38  | 開発 |\n-- | 5  | 高橋   | 30  | 開発 |\n\nSELECT dept, AVG(age) as avg_age\nFROM employees\nGROUP BY dept;\n```',
   '開発部: (32+38+30)/3 = 100/3 ≒ 33.33。',
   'code_reading', 'medium', 'sql', true, 1, 4
 );
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '30', false, 1 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=4;
+SELECT id, '30', false, 1 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=4;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '33.33', true, 2 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=4;
+SELECT id, '33.33', true, 2 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=4;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '35', false, 3 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=4;
+SELECT id, '35', false, 3 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=4;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '32', false, 4 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=4;
+SELECT id, '32', false, 4 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=4;
 
 -- SQL Hard 1: サブクエリ
 INSERT INTO quiz_questions (quiz_id, question_text, explanation, question_type, difficulty, question_category, is_published, points, sort_order)
 VALUES (
-  'a0000001-0000-0000-0000-000000000003',
+  'c0de0001-0000-0000-0000-000000000003',
   E'次のクエリの結果は何行ですか？\n\n```sql\n-- salesテーブル:\n-- | id | product  | amount |\n-- |----|----------|--------|\n-- | 1  | ノートPC | 80000  |\n-- | 2  | マウス   | 3000   |\n-- | 3  | キーボード| 8000  |\n-- | 4  | モニター | 50000  |\n-- | 5  | USBメモリ | 1500  |\n\nSELECT product, amount\nFROM sales\nWHERE amount > (SELECT AVG(amount) FROM sales);\n```',
   'AVG(amount) = (80000+3000+8000+50000+1500)/5 = 28500。28500より大きいのはノートPC(80000)とモニター(50000)の2行。',
   'code_reading', 'hard', 'sql', true, 1, 5
 );
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '1行', false, 1 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=5;
+SELECT id, '1行', false, 1 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=5;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '2行', true, 2 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=5;
+SELECT id, '2行', true, 2 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=5;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '3行', false, 3 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=5;
+SELECT id, '3行', false, 3 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=5;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '4行', false, 4 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=5;
+SELECT id, '4行', false, 4 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=5;
 
 -- SQL Hard 2: GROUP BY + HAVING
 INSERT INTO quiz_questions (quiz_id, question_text, explanation, question_type, difficulty, question_category, is_published, points, sort_order)
 VALUES (
-  'a0000001-0000-0000-0000-000000000003',
+  'c0de0001-0000-0000-0000-000000000003',
   E'次のクエリの結果に含まれる部署はどれですか？\n\n```sql\n-- employeesテーブル:\n-- | id | name   | salary  | dept   |\n-- |----|--------|---------|--------|\n-- | 1  | 田中   | 300000  | 営業   |\n-- | 2  | 鈴木   | 450000  | 開発   |\n-- | 3  | 佐藤   | 280000  | 営業   |\n-- | 4  | 山田   | 500000  | 開発   |\n-- | 5  | 高橋   | 350000  | 人事   |\n-- | 6  | 伊藤   | 420000  | 開発   |\n\nSELECT dept, COUNT(*) as cnt, AVG(salary) as avg_sal\nFROM employees\nGROUP BY dept\nHAVING COUNT(*) >= 2 AND AVG(salary) > 350000;\n```',
   '営業: 2人, AVG=290000 (350000以下なのでNG)。開発: 3人, AVG=456666 (OK)。人事: 1人 (2人未満なのでNG)。開発のみが条件を満たす。',
   'code_reading', 'hard', 'sql', true, 1, 6
 );
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '営業のみ', false, 1 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=6;
+SELECT id, '営業のみ', false, 1 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=6;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '開発のみ', true, 2 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=6;
+SELECT id, '開発のみ', true, 2 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=6;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '営業と開発', false, 3 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=6;
+SELECT id, '営業と開発', false, 3 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=6;
 INSERT INTO quiz_question_options (question_id, option_text, is_correct, sort_order)
-SELECT id, '全部署', false, 4 FROM quiz_questions WHERE quiz_id='a0000001-0000-0000-0000-000000000003' AND sort_order=6;
+SELECT id, '全部署', false, 4 FROM quiz_questions WHERE quiz_id='c0de0001-0000-0000-0000-000000000003' AND sort_order=6;
 
 -- ============================================================
 -- 6. Java coding_problems (6問) + test_cases
@@ -637,5 +646,8 @@ VALUES (
 );
 INSERT INTO coding_test_cases (problem_id, input, expected_output, is_sample, sort_order) VALUES
   ('b0000003-0006-0000-0000-000000000001', '', E'田中|86|A\n山田|80|A\n鈴木|73|B\n佐藤|67|B', true, 1);
+
+END
+$mig$;
 
 COMMIT;
