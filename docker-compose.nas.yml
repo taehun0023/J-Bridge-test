@@ -1,0 +1,54 @@
+# =============================================================================
+# J-Bridge — NAS 전용 Compose (사전 빌드된 이미지 + Cloudflare Tunnel)
+# =============================================================================
+# 사용 위치 (NAS):  /volume1/docker/j-bridge/docker-compose.yml
+# 필요한 파일    :  .env.production  (같은 폴더, chmod 600)
+#                  j-bridge.tar 에서 docker load 로 미리 로드된 j-bridge:latest
+# 필요 변수      :  CLOUDFLARE_TUNNEL_TOKEN (.env.production)
+# =============================================================================
+
+services:
+  web:
+    image: j-bridge:latest
+    container_name: j-bridge-web
+    restart: unless-stopped
+
+    env_file:
+      - .env.production
+
+    # 외부 노출은 cloudflared 가 처리하므로 호스트 LAN 바인딩은 127.0.0.1 로 제한.
+    # 사내 LAN 에서도 직접 접근하려면 "3000:3000" 으로 변경 가능.
+    ports:
+      - "127.0.0.1:3000:3000"
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: j-bridge-cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    # TUNNEL_TOKEN 은 .env.production 에 정의되며,
+    # env_file 을 통해 컨테이너 환경으로 직접 주입됩니다.
+    # (compose 의 ${VAR} 치환은 .env 파일만 자동 로드하므로 env_file 방식 사용)
+    env_file:
+      - .env.production
+    depends_on:
+      web:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
