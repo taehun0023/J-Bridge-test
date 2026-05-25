@@ -85,6 +85,39 @@ export async function deleteUser(userId: string) {
   return { success: true }
 }
 
+export async function assignMentor(menteeId: string, mentorId: string | null) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error } as const
+
+  if (mentorId) {
+    const { error } = await auth.serviceClient
+      .from('mentor_mentee_assignments')
+      .upsert(
+        { mentor_id: mentorId, mentee_id: menteeId, assigned_by: auth.user.id },
+        { onConflict: 'mentor_id,mentee_id' }
+      )
+    if (error) return { error: error.message }
+
+    await auth.serviceClient
+      .from('mentor_mentee_assignments')
+      .delete()
+      .eq('mentee_id', menteeId)
+      .neq('mentor_id', mentorId)
+
+    await logAuditEvent(auth.user.id, 'update', 'mentor_mentee_assignments', menteeId, null, { mentor_id: mentorId })
+  } else {
+    await auth.serviceClient
+      .from('mentor_mentee_assignments')
+      .delete()
+      .eq('mentee_id', menteeId)
+
+    await logAuditEvent(auth.user.id, 'delete', 'mentor_mentee_assignments', menteeId, null, null)
+  }
+
+  revalidatePath('/admin/users')
+  return { success: true }
+}
+
 export async function createUserAccount(formData: FormData) {
   const auth = await requireAdmin()
   if ('error' in auth) return { error: auth.error } as const

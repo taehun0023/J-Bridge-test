@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { updateUserRole, createUserAccount, updateMentorSpecialty, deleteUser } from '@/app/actions/admin/users'
+import { updateUserRole, createUserAccount, updateMentorSpecialty, deleteUser, assignMentor } from '@/app/actions/admin/users'
 import { Trash2 } from 'lucide-react'
 
 interface User {
@@ -16,13 +16,22 @@ interface User {
   japanese_score: number
   programming_score: number
   created_at: string
+  jlpt_level: string | null
+  it_certifications: string | null
+  assigned_mentor_id: string | null
+}
+
+interface Mentor {
+  id: string
+  full_name: string | null
 }
 
 interface Props {
   users: User[]
+  mentors: Mentor[]
 }
 
-export default function AdminUsersClient({ users }: Props) {
+export default function AdminUsersClient({ users, mentors }: Props) {
   const router = useRouter()
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [search, setSearch] = useState('')
@@ -57,6 +66,20 @@ export default function AdminUsersClient({ users }: Props) {
         setTimeout(() => setMessage(null), 3000)
       } else {
         setMessage({ type: 'success', text: '専門分野が変更されました' })
+        setTimeout(() => setMessage(null), 3000)
+        router.refresh()
+      }
+    })
+  }
+
+  function handleMentorChange(menteeId: string, mentorId: string) {
+    startTransition(async () => {
+      const result = await assignMentor(menteeId, mentorId || null)
+      if (result.error) {
+        setMessage({ type: 'error', text: result.error })
+        setTimeout(() => setMessage(null), 3000)
+      } else {
+        setMessage({ type: 'success', text: '担当メンターが変更されました' })
         setTimeout(() => setMessage(null), 3000)
         router.refresh()
       }
@@ -166,6 +189,8 @@ export default function AdminUsersClient({ users }: Props) {
                 <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">メール</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">役割</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">専門分野</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">担当メンター</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">資格</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">登録日</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"></th>
               </tr>
@@ -210,6 +235,47 @@ export default function AdminUsersClient({ users }: Props) {
                     ) : (
                       <span className="text-xs text-zinc-400">—</span>
                     )}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3">
+                    {user.role === 'mentee' ? (
+                      <select
+                        value={user.assigned_mentor_id ?? ''}
+                        onChange={e => handleMentorChange(user.id, e.target.value)}
+                        disabled={pending}
+                        className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
+                      >
+                        <option value="">未指定</option>
+                        {mentors.map(m => (
+                          <option key={m.id} value={m.id}>{m.full_name ?? m.id}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="text-xs text-zinc-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      {user.jlpt_level ? (
+                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${
+                          user.jlpt_level === 'N1' ? 'bg-violet-500/10 text-violet-400 ring-violet-500/20' :
+                          user.jlpt_level === 'N2' ? 'bg-blue-500/10 text-blue-400 ring-blue-500/20' :
+                          'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20'
+                        }`}>
+                          {user.jlpt_level}
+                        </span>
+                      ) : null}
+                      {user.it_certifications ? (
+                        <span
+                          className="max-w-[120px] truncate text-xs text-zinc-500 dark:text-zinc-400"
+                          title={user.it_certifications}
+                        >
+                          {user.it_certifications}
+                        </span>
+                      ) : null}
+                      {!user.jlpt_level && !user.it_certifications && (
+                        <span className="text-xs text-zinc-400">—</span>
+                      )}
+                    </div>
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
                     {new Date(user.created_at).toLocaleDateString('ja-JP')}

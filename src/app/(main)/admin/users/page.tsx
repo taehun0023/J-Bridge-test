@@ -6,21 +6,41 @@ import AdminUsersClient from './AdminUsersClient'
 export default async function AdminUsersPage() {
   const supabase = await createClient()
 
-  const { data: rawUsers } = await supabase
-    .from('profiles')
-    .select(`
-      *,
-      japanese_skills(jlpt_normalized, it_japanese_normalized),
-      coding_skills(core_normalized, framework_normalized)
-    `)
-    .order('created_at', { ascending: false })
+  const [{ data: rawUsers }, { data: mentorAssignments }, { data: mentorList }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select(`
+        *,
+        japanese_skills(jlpt_normalized, it_japanese_normalized),
+        coding_skills(core_normalized, framework_normalized)
+      `)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('mentor_mentee_assignments')
+      .select('mentor_id, mentee_id'),
+    supabase
+      .from('profiles')
+      .select('id, full_name')
+      .eq('role', 'mentor')
+      .order('full_name'),
+  ])
+
+  const mentorMap = new Map<string, string>()
+  for (const a of mentorAssignments ?? []) {
+    mentorMap.set(a.mentee_id, a.mentor_id)
+  }
 
   const users = (rawUsers ?? []).map((u) => {
     const jp = u.japanese_skills as { jlpt_normalized: number; it_japanese_normalized: number } | null
     const cs = u.coding_skills as { core_normalized: number; framework_normalized: number } | null
     const jpScore = u.is_japanese ? 200 : ((jp?.jlpt_normalized ?? 0) + (jp?.it_japanese_normalized ?? 0))
     const progScore = (cs?.core_normalized ?? 0) + (cs?.framework_normalized ?? 0)
-    return { ...u, japanese_score: jpScore, programming_score: progScore }
+    return {
+      ...u,
+      japanese_score: jpScore,
+      programming_score: progScore,
+      assigned_mentor_id: mentorMap.get(u.id) ?? null,
+    }
   })
 
   const stats = {
@@ -64,7 +84,7 @@ export default async function AdminUsersPage() {
         </Card>
       </div>
 
-      <AdminUsersClient users={users ?? []} />
+      <AdminUsersClient users={users ?? []} mentors={mentorList ?? []} />
     </div>
   )
 }
