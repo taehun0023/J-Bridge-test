@@ -4,6 +4,7 @@ import type { AxisKey } from '@/lib/assessment-config'
 import DashboardClient from './DashboardClient'
 import MentorDashboard from './MentorDashboard'
 import AdminDashboard from './AdminDashboard'
+import DashboardAnnouncements from './DashboardAnnouncements'
 import ExamGatePage from '@/components/dashboard/ExamGatePage'
 import { checkAndCreateExamCycle, getNextExamDate } from '@/app/actions/exam-scheduling'
 import { expireStaleExams } from '@/app/actions/comprehensive-exam'
@@ -39,6 +40,21 @@ export default async function DashboardPage() {
   if (activeCycle && activeCycle.cycleNumber === 1) {
     return <ExamGatePage cycle={activeCycle} userName={profile?.full_name ?? null} />
   }
+
+  // ──────────────────────────────────────────────
+  // Common: お知らせ (全role共通)
+  // ──────────────────────────────────────────────
+  const [{ data: recentAnnouncements }, { data: announcementReads }] = await Promise.all([
+    supabase.from('announcements').select('id, title, created_at').order('created_at', { ascending: false }).limit(10),
+    supabase.from('announcement_reads').select('announcement_id').eq('user_id', user.id),
+  ])
+  const readAnnouncementSet = new Set((announcementReads ?? []).map(r => r.announcement_id))
+  const announcementItems = (recentAnnouncements ?? []).map(a => ({
+    id: a.id,
+    title: a.title,
+    created_at: a.created_at,
+    is_read: readAnnouncementSet.has(a.id),
+  }))
 
   // ──────────────────────────────────────────────
   // Mentor dashboard
@@ -81,7 +97,12 @@ export default async function DashboardPage() {
       }
     })
 
-    return <MentorDashboard mentorName={profile.full_name} mentees={mentees} unreadAnnouncements={unreadAnnouncements} />
+    return (
+      <>
+        <DashboardAnnouncements announcements={announcementItems} />
+        <MentorDashboard mentorName={profile.full_name} mentees={mentees} unreadAnnouncements={unreadAnnouncements} />
+      </>
+    )
   }
 
   // ──────────────────────────────────────────────
@@ -131,7 +152,12 @@ export default async function DashboardPage() {
       }
     })
 
-    return <AdminDashboard adminName={profile.full_name} employees={employees} unreadAnnouncements={adminUnread} />
+    return (
+      <>
+        <DashboardAnnouncements announcements={announcementItems} />
+        <AdminDashboard adminName={profile.full_name} employees={employees} unreadAnnouncements={adminUnread} />
+      </>
+    )
   }
 
   // ──────────────────────────────────────────────
@@ -301,5 +327,10 @@ export default async function DashboardPage() {
     unreadAnnouncements: (menteeTotalAnn ?? 0) - (menteeReadAnn ?? 0),
   }
 
-  return <DashboardClient {...dashboardProps} />
+  return (
+    <>
+      <DashboardAnnouncements announcements={announcementItems} />
+      <DashboardClient {...dashboardProps} />
+    </>
+  )
 }
