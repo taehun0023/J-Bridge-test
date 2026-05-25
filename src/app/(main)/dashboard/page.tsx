@@ -1,9 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import type { AxisKey } from '@/lib/assessment-config'
-import { computeRankingEntry, filterUnscoredUsers, sortByCategory } from '@/lib/ranking'
-import type { RankingUserData } from '@/lib/ranking'
 import DashboardClient from './DashboardClient'
+import MentorDashboard from './MentorDashboard'
+import AdminDashboard from './AdminDashboard'
 import ExamGatePage from '@/components/dashboard/ExamGatePage'
 import { checkAndCreateExamCycle, getNextExamDate } from '@/app/actions/exam-scheduling'
 import { expireStaleExams } from '@/app/actions/comprehensive-exam'
@@ -41,7 +41,95 @@ export default async function DashboardPage() {
   }
 
   // ──────────────────────────────────────────────
-  // Phase 1: user.id만 필요한 쿼리 10개를 동시 실행
+  // Mentor dashboard
+  // ──────────────────────────────────────────────
+  if (profile?.role === 'mentor') {
+    const [{ data: menteeAssignments }, { data: menteeProfiles }] = await Promise.all([
+      supabase.from('mentor_mentee_assignments').select('mentee_id').eq('mentor_id', user.id),
+      supabase.from('profiles').select('id, full_name, email, jlpt_level').eq('role', 'mentee'),
+    ])
+    const menteeIds = (menteeAssignments ?? []).map(a => a.mentee_id)
+    const menteeMap = new Map((menteeProfiles ?? []).map(p => [p.id, p]))
+
+    let progressMap = new Map<string, { total: number; completed: number }>()
+    if (menteeIds.length > 0) {
+      const { data: assignments } = await supabase
+        .from('learning_assignments')
+        .select('assigned_to, status')
+        .in('assigned_to', menteeIds)
+      for (const a of assignments ?? []) {
+        const cur = progressMap.get(a.assigned_to) ?? { total: 0, completed: 0 }
+        cur.total++
+        if (a.status === 'completed') cur.completed++
+        progressMap.set(a.assigned_to, cur)
+      }
+    }
+
+    const mentees = menteeIds.map(id => {
+      const p = menteeMap.get(id)
+      const prog = progressMap.get(id) ?? { total: 0, completed: 0 }
+      return {
+        id,
+        full_name: p?.full_name ?? null,
+        email: p?.email ?? '',
+        jlpt_level: p?.jlpt_level ?? null,
+        total: prog.total,
+        completed: prog.completed,
+      }
+    })
+
+    return <MentorDashboard mentorName={profile.full_name} mentees={mentees} />
+  }
+
+  // ──────────────────────────────────────────────
+  // Admin dashboard
+  // ──────────────────────────────────────────────
+  if (profile?.role === 'admin') {
+    const [{ data: allMentees }, { data: allAssignments }, { data: mentorAssignments }, { data: mentorProfiles }] = await Promise.all([
+      supabase.from('profiles').select('id, full_name, email, jlpt_level, created_at').eq('role', 'mentee'),
+      supabase.from('learning_assignments').select('assigned_to, status, completed_at'),
+      supabase.from('mentor_mentee_assignments').select('mentor_id, mentee_id'),
+      supabase.from('profiles').select('id, full_name').eq('role', 'mentor'),
+    ])
+
+    const mentorMap = new Map((mentorProfiles ?? []).map(p => [p.id, p.full_name]))
+    const menteeToMentor = new Map<string, string>()
+    for (const a of mentorAssignments ?? []) {
+      menteeToMentor.set(a.mentee_id, mentorMap.get(a.mentor_id) ?? '—')
+    }
+
+    const progressMap = new Map<string, { total: number; completed: number; lastActivity: string | null }>()
+    for (const a of allAssignments ?? []) {
+      const cur = progressMap.get(a.assigned_to) ?? { total: 0, completed: 0, lastActivity: null }
+      cur.total++
+      if (a.status === 'completed') {
+        cur.completed++
+        if (a.completed_at && (!cur.lastActivity || a.completed_at > cur.lastActivity)) {
+          cur.lastActivity = a.completed_at
+        }
+      }
+      progressMap.set(a.assigned_to, cur)
+    }
+
+    const employees = (allMentees ?? []).map(p => {
+      const prog = progressMap.get(p.id) ?? { total: 0, completed: 0, lastActivity: null }
+      return {
+        id: p.id,
+        full_name: p.full_name,
+        email: p.email,
+        jlpt_level: p.jlpt_level,
+        mentor_name: menteeToMentor.get(p.id) ?? null,
+        total: prog.total,
+        completed: prog.completed,
+        last_activity: prog.lastActivity,
+      }
+    })
+
+    return <AdminDashboard adminName={profile.full_name} employees={employees} />
+  }
+
+  // ──────────────────────────────────────────────
+  // Mentee dashboard — Phase 1: fetch data
   // ──────────────────────────────────────────────
   const [
     { data: japaneseSkills },
@@ -49,8 +137,8 @@ export default async function DashboardPage() {
     { data: attitudeSkills },
     { data: recentQuizzes },
     { data: recentExams },
-    { data: rankProfiles },
     { data: learningAssignments },
+    { data: recentAssignmentDetails },
     { data: recentFeedbacks },
     { data: userCompExams },
   ] = await Promise.all([
@@ -69,14 +157,14 @@ export default async function DashboardPage() {
       .eq('user_id', user.id).in('status', ['completed', 'failed'])
       .not('completed_at', 'is', null)
       .order('completed_at', { ascending: false }).limit(5),
-    // 6. 랭킹용 전체 프로필 (user.id 불필요)
-    supabase.from('profiles').select(`
-      id, full_name, avatar_url, is_japanese,
-      japanese_skills(jlpt_normalized, it_japanese_normalized, updated_at),
-      coding_skills(core_normalized, framework_normalized, updated_at)
-    `).in('role', ['mentee', 'mentor']),
-    // 8. 학습과제 요약
+    // 6. 학습과제 요약
     supabase.from('learning_assignments').select('id, status').eq('assigned_to', user.id),
+    // 6b. 학습과제 최근 5건 (メンターからの課題 카드용)
+    supabase.from('learning_assignments')
+      .select('id, title, category, subcategory, content_level, status, due_date, created_at, assigner:profiles!learning_assignments_assigned_by_fkey(full_name)')
+      .eq('assigned_to', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5),
     // 9. 최근 피드백
     supabase.from('admin_feedbacks')
       .select('id, category, content, created_at, admin:profiles!admin_feedbacks_admin_id_fkey(full_name)')
@@ -90,58 +178,6 @@ export default async function DashboardPage() {
   // ──────────────────────────────────────────────
   // 후처리: 쿼리 결과를 가공 (CPU 연산, 네트워크 없음)
   // ──────────────────────────────────────────────
-
-  // 랭킹 계산
-  let userRanking: {
-    overall_score: number
-    overall_rank: number
-    japanese_score: number
-    programming_score: number
-  } | null = null
-  let topRanking: { user_id: string; full_name: string | null; avatar_url: string | null; overall_score: number }[] | null = null
-
-  const rankingUsers: RankingUserData[] = (rankProfiles ?? [])
-    .filter((u: Record<string, unknown>) => u.japanese_skills !== null || u.coding_skills !== null)
-    .map((u: Record<string, unknown>) => {
-      const jp = u.japanese_skills as { jlpt_normalized: number; it_japanese_normalized: number; updated_at: string } | null
-      const cs = u.coding_skills as { core_normalized: number; framework_normalized: number; updated_at: string } | null
-      return {
-        user_id: u.id as string,
-        full_name: u.full_name as string | null,
-        avatar_url: u.avatar_url as string | null,
-        is_japanese: u.is_japanese as boolean,
-        jlpt_level: null,
-        jlpt_normalized: jp?.jlpt_normalized ?? 0,
-        it_japanese_normalized: jp?.it_japanese_normalized ?? 0,
-        core_normalized: cs?.core_normalized ?? 0,
-        framework_normalized: cs?.framework_normalized ?? 0,
-        japanese_skills_updated_at: jp?.updated_at ?? null,
-        coding_skills_updated_at: cs?.updated_at ?? null,
-      }
-    })
-
-  const entries = rankingUsers.map(computeRankingEntry)
-  const sorted = sortByCategory(filterUnscoredUsers(entries), 'overall')
-
-  if (isAdmin) {
-    topRanking = sorted.slice(0, 5).map(e => ({
-      user_id: e.user_id,
-      full_name: e.full_name,
-      avatar_url: e.avatar_url,
-      overall_score: e.overall_score,
-    }))
-  } else {
-    const myIndex = sorted.findIndex(e => e.user_id === user.id)
-    if (myIndex !== -1) {
-      const me = sorted[myIndex]
-      userRanking = {
-        overall_score: me.overall_score,
-        overall_rank: myIndex + 1,
-        japanese_score: me.japanese_score,
-        programming_score: me.programming_score,
-      }
-    }
-  }
 
   // 학습과제 통계
   const learningStats = {
@@ -233,13 +269,16 @@ export default async function DashboardPage() {
     admin: Array.isArray(f.admin) ? f.admin[0] ?? null : f.admin,
   })) as { id: string; category: string; content: string; created_at: string; admin: { full_name: string | null } | null }[]
 
+  const assignmentCards = (recentAssignmentDetails ?? []).map(a => ({
+    ...a,
+    assigner: Array.isArray(a.assigner) ? a.assigner[0] ?? null : a.assigner,
+  })) as { id: string; title: string; category: string; subcategory: string; content_level: string | null; status: string; due_date: string | null; created_at: string; assigner: { full_name: string | null } | null }[]
+
   const dashboardProps = {
     profile,
     radarScores,
     recentResults,
     isJapanese,
-    userRanking,
-    topRanking,
     learningStats,
     recentFeedbacks: feedbackProps,
     compExamRetakeByCategory,
@@ -247,6 +286,7 @@ export default async function DashboardPage() {
     role: profile?.role ?? 'mentee',
     nextExamDate,
     activeCycle,
+    recentAssignments: assignmentCards,
   }
 
   return <DashboardClient {...dashboardProps} />
