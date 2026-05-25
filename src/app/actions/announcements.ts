@@ -79,6 +79,7 @@ export async function updateAnnouncement(id: string, formData: FormData) {
 
   const title = formData.get('title') as string
   const body = formData.get('body') as string
+  const newFiles = formData.getAll('new_files') as File[]
 
   if (!title?.trim() || !body?.trim()) {
     return { error: 'タイトルと本文を入力してください' }
@@ -90,6 +91,28 @@ export async function updateAnnouncement(id: string, formData: FormData) {
     .eq('id', id)
 
   if (error) return { error: error.message }
+
+  const validFiles = newFiles.filter(f => f.size > 0)
+  for (const file of validFiles) {
+    if (file.size > MAX_FILE_SIZE) continue
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase()
+    if (BLOCKED_EXTENSIONS.has(ext)) continue
+
+    const filePath = `${id}/${crypto.randomUUID()}_${file.name}`
+    const { error: uploadError } = await auth.serviceClient.storage
+      .from('announcement-attachments')
+      .upload(filePath, file, { contentType: file.type })
+
+    if (uploadError) continue
+
+    await auth.serviceClient.from('announcement_attachments').insert({
+      announcement_id: id,
+      file_path: filePath,
+      file_name: file.name,
+      file_size: file.size,
+      mime_type: file.type || null,
+    })
+  }
 
   await logAuditEvent(auth.user.id, 'update', 'announcements', id, null, { title })
 
@@ -141,11 +164,11 @@ export async function markAnnouncementRead(announcementId: string) {
   return { success: true }
 }
 
-export async function getAttachmentUrl(filePath: string) {
+export async function getAttachmentUrl(filePath: string, fileName: string) {
   const supabase = await createClient()
   const { data } = await supabase.storage
     .from('announcement-attachments')
-    .createSignedUrl(filePath, 3600)
+    .createSignedUrl(filePath, 3600, { download: fileName })
 
   return data?.signedUrl ?? null
 }

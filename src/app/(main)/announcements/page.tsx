@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import Card from '@/components/ui/Card'
 
 export default async function AnnouncementsPage() {
   const supabase = await createClient()
@@ -40,31 +39,50 @@ export default async function AnnouncementsPage() {
         )}
       </div>
 
-      <div className="space-y-3">
-        {(announcements ?? []).map(a => {
-          const isRead = readSet.has(a.id)
-          const author = Array.isArray(a.author) ? a.author[0] : a.author
-          return (
-            <Link key={a.id} href={`/announcements/${a.id}`}>
-              <Card>
-                <div className="flex items-start gap-3">
-                  {!isRead && (
-                    <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-red-500" />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <h3 className={`text-sm font-medium ${isRead ? 'text-zinc-500 dark:text-zinc-400' : 'text-zinc-900 dark:text-zinc-100'}`}>
-                      {a.title}
-                    </h3>
-                    <div className="mt-1 flex items-center gap-3 text-xs text-zinc-400">
-                      <span>{(author as { full_name: string | null } | null)?.full_name ?? '管理者'}</span>
-                      <span>{new Date(a.created_at).toLocaleDateString('ja-JP')}</span>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </Link>
-          )
-        })}
+      <div className="rounded-2xl border border-gray-200/60 bg-white/80 backdrop-blur-md dark:border-white/[0.08] dark:bg-white/[0.03]">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-white/[0.06]">
+            <thead>
+              <tr className="bg-white/[0.02] dark:bg-white/[0.02]">
+                <th className="w-16 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400">No.</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">タイトル</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">作成者</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">作成日</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-white/[0.06]">
+              {(announcements ?? []).map((a, i) => {
+                const isRead = readSet.has(a.id)
+                const author = Array.isArray(a.author) ? a.author[0] : a.author
+                return (
+                  <tr key={a.id} className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                    <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                      {(announcements?.length ?? 0) - i}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link href={`/announcements/${a.id}`} className="flex items-center gap-2">
+                        {!isRead && (
+                          <span className="inline-flex h-4 min-w-4 items-center justify-center rounded bg-red-500 text-[9px] font-bold text-white">
+                            N
+                          </span>
+                        )}
+                        <span className={`text-sm ${isRead ? 'text-zinc-500 dark:text-zinc-400' : 'font-medium text-zinc-900 dark:text-zinc-100'}`}>
+                          {a.title}
+                        </span>
+                      </Link>
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
+                      {(author as { full_name: string | null } | null)?.full_name ?? '管理者'}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
+                      {new Date(a.created_at).toLocaleDateString('ja-JP')}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
         {(announcements ?? []).length === 0 && (
           <div className="py-12 text-center text-sm text-zinc-500">お知らせはありません</div>
         )}

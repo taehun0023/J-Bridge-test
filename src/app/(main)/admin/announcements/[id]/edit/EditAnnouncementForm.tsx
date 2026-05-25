@@ -1,20 +1,46 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateAnnouncement } from '@/app/actions/announcements'
 import Card from '@/components/ui/Card'
+import { Paperclip, X } from 'lucide-react'
+
+interface ExistingAttachment {
+  id: string
+  file_name: string
+  file_size: number
+  file_path: string
+}
 
 interface Props {
   announcement: { id: string; title: string; body: string }
+  existingAttachments: ExistingAttachment[]
 }
 
-export default function EditAnnouncementForm({ announcement }: Props) {
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+export default function EditAnnouncementForm({ announcement, existingAttachments }: Props) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [newFiles, setNewFiles] = useState<File[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const added = Array.from(e.target.files ?? [])
+    setNewFiles(prev => [...prev, ...added].slice(0, 5))
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
   function handleSubmit(formData: FormData) {
+    for (const f of newFiles) {
+      formData.append('new_files', f)
+    }
     startTransition(async () => {
       const result = await updateAnnouncement(announcement.id, formData)
       if (result.error) {
@@ -52,6 +78,53 @@ export default function EditAnnouncementForm({ announcement }: Props) {
               defaultValue={announcement.body}
               className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
             />
+          </div>
+
+          {existingAttachments.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">既存の添付ファイル</label>
+              <div className="mt-1 space-y-1.5">
+                {existingAttachments.map(a => (
+                  <div key={a.id} className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 dark:border-white/[0.08]">
+                    <Paperclip className="h-3.5 w-3.5 shrink-0 text-zinc-400" />
+                    <span className="min-w-0 flex-1 truncate text-sm text-zinc-700 dark:text-zinc-300">{a.file_name}</span>
+                    <span className="shrink-0 text-xs text-zinc-400">{formatBytes(a.file_size)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              新規添付ファイル (最大5個、各25MBまで)
+            </label>
+            <div className="mt-1">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={newFiles.length >= 5}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-700 hover:bg-gray-50 disabled:opacity-50 dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/[0.08] transition-colors"
+              >
+                <Paperclip className="h-4 w-4" />
+                ファイルを追加
+              </button>
+              <input ref={fileInputRef} type="file" multiple onChange={handleFileChange} className="hidden" />
+            </div>
+            {newFiles.length > 0 && (
+              <div className="mt-2 space-y-1.5">
+                {newFiles.map((f, i) => (
+                  <div key={i} className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 dark:border-white/[0.08]">
+                    <Paperclip className="h-3.5 w-3.5 shrink-0 text-zinc-400" />
+                    <span className="min-w-0 flex-1 truncate text-sm text-zinc-700 dark:text-zinc-300">{f.name}</span>
+                    <span className="shrink-0 text-xs text-zinc-400">{(f.size / 1024).toFixed(0)} KB</span>
+                    <button type="button" onClick={() => setNewFiles(prev => prev.filter((_, j) => j !== i))} className="shrink-0 text-zinc-400 hover:text-red-400">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-3">

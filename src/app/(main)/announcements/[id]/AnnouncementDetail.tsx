@@ -56,7 +56,7 @@ export default function AnnouncementDetail({ announcement, attachments, isRead, 
   }
 
   async function handleDownload(attachment: Attachment) {
-    const url = await getAttachmentUrl(attachment.file_path)
+    const url = await getAttachmentUrl(attachment.file_path, attachment.file_name)
     if (url) window.open(url, '_blank')
   }
 
