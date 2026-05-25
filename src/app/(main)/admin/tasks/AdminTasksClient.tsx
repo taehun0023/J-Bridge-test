@@ -4,7 +4,6 @@ import { Fragment, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createLearningAssignment, deleteLearningAssignment, confirmAssignment, reassignAssignment, getAssigneeUnlockedLevels } from '@/app/actions/learning-assignments'
 import { approveExam, denyExam, deleteExam } from '@/app/actions/comprehensive-exam'
-import { approveQuizRetake, denyQuizRetake } from '@/app/actions/quiz-retake'
 import { ASSIGNMENT_CATEGORIES, JLPT_LEVELS, DEV_LEVELS, getCategoryLabel, getSubcategoryLabel, getContentLevelLabel } from '@/lib/assignment-categories'
 
 interface LearningAssignmentRow {
@@ -35,16 +34,6 @@ interface ExamRequest {
   requested_at: string
   score: number | null
   user: { full_name: string | null; email: string } | null
-}
-
-interface QuizRetakeRequest {
-  id: string
-  user_id: string
-  user_name: string
-  quiz_title: string
-  score: number | null
-  retake_request_status: string | null
-  retake_requested_at: string | null
 }
 
 interface User {
@@ -87,13 +76,12 @@ interface LearningProgressData {
 interface Props {
   learningAssignments: LearningAssignmentRow[]
   examRequests: ExamRequest[]
-  quizRetakeRequests: QuizRetakeRequest[]
   users: User[]
   currentRole: string
   learningProgress: Record<string, LearningProgressData>
 }
 
-export default function AdminTasksClient({ learningAssignments, examRequests, quizRetakeRequests, users, currentRole, learningProgress }: Props) {
+export default function AdminTasksClient({ learningAssignments, examRequests, users, currentRole, learningProgress }: Props) {
   const [activeTab, setActiveTab] = useState<'learning' | 'approvals'>('learning')
   const router = useRouter()
   const [showForm, setShowForm] = useState(false)
@@ -248,23 +236,6 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
     })
   }
 
-  function handleApproveQuizRetake(attemptId: string) {
-    startTransition(async () => {
-      const result = await approveQuizRetake(attemptId)
-      if (result.error) showMsg(result.error, 'error')
-      else showMsg('再試験を承認しました')
-    })
-  }
-
-  function handleDenyQuizRetake(attemptId: string) {
-    if (!confirm('再試験リクエストを拒否しますか？')) return
-    startTransition(async () => {
-      const result = await denyQuizRetake(attemptId)
-      if (result.error) showMsg(result.error, 'error')
-      else showMsg('再試験を拒否しました')
-    })
-  }
-
   function getProgressPercent(assignment: LearningAssignmentRow) {
     const total = assignment.required_quiz_ids?.length ?? 0
     const passed = assignment.passed_quiz_ids?.length ?? 0
@@ -283,11 +254,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
     return !approvalSearchName || (e.user as { full_name: string | null } | null)?.full_name?.toLowerCase().includes(approvalSearchName.toLowerCase())
   })
 
-  const filteredRetakeRequests = quizRetakeRequests.filter(r => {
-    return !approvalSearchName || r.user_name.toLowerCase().includes(approvalSearchName.toLowerCase())
-  })
-
-  const pendingApprovals = examRequests.filter(e => e.status === 'requested').length + quizRetakeRequests.length
+  const pendingApprovals = examRequests.filter(e => e.status === 'requested').length
 
   const tabs = [
     { key: 'learning' as const, label: '学習課題' },
@@ -766,66 +733,6 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
             </div>
           </div>
 
-          {/* Quiz Retake Requests */}
-          <div>
-            <h3 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">理解度テスト再試験リクエスト</h3>
-            <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">ユーザー名</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">テスト名</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">スコア</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">リクエスト日</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400">操作</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                    {filteredRetakeRequests.map(req => (
-                      <tr key={req.id}>
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
-                          {req.user_name}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                          {req.quiz_title}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                          {req.score != null ? `${req.score}点` : '-'}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-                          {req.retake_requested_at ? new Date(req.retake_requested_at).toLocaleDateString('ja-JP') : '-'}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => handleApproveQuizRetake(req.id)}
-                              disabled={pending}
-                              className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-                            >
-                              承認
-                            </button>
-                            <button
-                              onClick={() => handleDenyQuizRetake(req.id)}
-                              disabled={pending}
-                              className="rounded-md bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
-                            >
-                              拒否
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {filteredRetakeRequests.length === 0 && (
-                <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">
-                  {quizRetakeRequests.length === 0 ? '再試験リクエストがありません' : '該当するリクエストがありません'}
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       )}
     </div>

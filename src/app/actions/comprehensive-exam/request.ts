@@ -110,15 +110,7 @@ export async function requestRetakeExam(examId: string) {
   if (!exam) return { error: '試験が見つかりません' }
   if (exam.status !== 'failed' && exam.status !== 'completed') return { error: '完了済みまたは不合格の試験のみ再試験リクエストできます' }
 
-  // Check if user is admin or mentor
-  const { data: profile } = await queryClient
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-  const isAdminOrMentor = profile?.role === 'admin' || profile?.role === 'mentor'
-
-  // Create a new exam request (retake) — admin/mentor gets auto-approved
+  // Create a new exam — auto-approved for all roles (no approval gate)
   const { data: newExam, error: insertError } = await queryClient
     .from('comprehensive_exams')
     .insert({
@@ -126,7 +118,7 @@ export async function requestRetakeExam(examId: string) {
       category: exam.category,
       subcategory: exam.subcategory,
       content_level: exam.content_level,
-      status: isAdminOrMentor ? 'approved' : 'requested',
+      status: 'approved',
       total_questions: exam.category === 'cs' && exam.subcategory === 'comprehensive'
         ? CS_COMPREHENSIVE_TOTAL_QUESTIONS
         : undefined,
@@ -135,20 +127,6 @@ export async function requestRetakeExam(examId: string) {
     .single()
 
   if (insertError) return { error: insertError.message }
-
-  // Notify mentors and admins (skip for admin/mentor self-retake)
-  if (!isAdminOrMentor) {
-    const userName = await getUserDisplayName(user.id, queryClient)
-    await notifyMentorsAndAdmins(
-      user.id,
-      'exam_requested',
-      `${userName}さんが総合試験の再試験をリクエスト`,
-      undefined,
-      '/admin/tasks',
-      newExam.id,
-      queryClient
-    )
-  }
 
   revalidatePath('/dashboard')
   revalidatePath('/dashboard/assignments')

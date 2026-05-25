@@ -37,28 +37,7 @@ export async function startQuizAttempt(quizId: string) {
       .single()
 
     if (profile?.role === 'mentee') {
-      // Check for existing completed attempt
-      const { data: existingAttempt } = await queryClient
-        .from('quiz_attempts')
-        .select('id, retake_request_status')
-        .eq('user_id', user.id)
-        .eq('quiz_id', quizId)
-        .not('completed_at', 'is', null)
-        .order('completed_at', { ascending: false })
-        .limit(1)
-        .single()
-
-      if (existingAttempt) {
-        if (existingAttempt.retake_request_status === 'approved') {
-          // Consume the retake approval (reset to null)
-          await queryClient
-            .from('quiz_attempts')
-            .update({ retake_request_status: null })
-            .eq('id', existingAttempt.id)
-        } else {
-          return { error: 'このテストは既に受験済みです。再試験が必要な場合はリクエストしてください。' }
-        }
-      }
+      // Mentees can freely retake practice quizzes — no approval gate
     }
   }
 
