@@ -2,7 +2,6 @@
 
 import Card from '@/components/ui/Card'
 import Link from 'next/link'
-import { Megaphone } from 'lucide-react'
 
 interface MenteeProgress {
   id: string
@@ -89,19 +88,6 @@ export default function MentorDashboard({ mentorName, mentees, unreadAnnouncemen
         )}
       </Card>
 
-      <div className="mt-6">
-        <Card title="お知らせ">
-          <Link href="/announcements" className="flex items-center gap-3 text-sm text-zinc-700 hover:text-indigo-500 dark:text-zinc-300 transition-colors">
-            <Megaphone className="h-5 w-5 text-indigo-500" />
-            <span>お知らせを見る</span>
-            {unreadAnnouncements > 0 && (
-              <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
-                {unreadAnnouncements}
-              </span>
-            )}
-          </Link>
-        </Card>
-      </div>
     </div>
   )
 }

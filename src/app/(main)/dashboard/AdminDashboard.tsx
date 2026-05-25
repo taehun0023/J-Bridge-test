@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Card from '@/components/ui/Card'
 import Link from 'next/link'
-import { Megaphone } from 'lucide-react'
 
 interface EmployeeProgress {
   id: string
@@ -123,27 +122,6 @@ export default function AdminDashboard({ adminName, employees, unreadAnnouncemen
         )}
       </Card>
 
-      <div className="mt-6">
-        <Card title="お知らせ">
-          <div className="flex items-center gap-3">
-            <Link href="/announcements" className="flex items-center gap-3 text-sm text-zinc-700 hover:text-indigo-500 dark:text-zinc-300 transition-colors">
-              <Megaphone className="h-5 w-5 text-indigo-500" />
-              <span>お知らせを見る</span>
-              {unreadAnnouncements > 0 && (
-                <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
-                  {unreadAnnouncements}
-                </span>
-              )}
-            </Link>
-            <Link
-              href="/admin/announcements/new"
-              className="ml-auto rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 transition-colors"
-            >
-              + 新規作成
-            </Link>
-          </div>
-        </Card>
-      </div>
     </div>
   )
 }
