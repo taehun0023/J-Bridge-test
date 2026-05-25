@@ -1,8 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import AnnouncementListClient from './AnnouncementListClient'
 
-export default async function AnnouncementsPage() {
+const PAGE_SIZE = 10
+
+export default async function AnnouncementsPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const params = await searchParams
+  const currentPage = Math.max(1, parseInt(params.page ?? '1', 10) || 1)
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -10,17 +16,50 @@ export default async function AnnouncementsPage() {
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   const isAdmin = profile?.role === 'admin'
 
+  const { count: totalCount } = await supabase
+    .from('announcements')
+    .select('id', { count: 'exact', head: true })
+
+  const total = totalCount ?? 0
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const from = (currentPage - 1) * PAGE_SIZE
+  const to = from + PAGE_SIZE - 1
+
   const { data: announcements } = await supabase
     .from('announcements')
     .select('id, title, created_at, author:profiles!announcements_author_id_fkey(full_name)')
     .order('created_at', { ascending: false })
+    .range(from, to)
 
-  const { data: reads } = await supabase
-    .from('announcement_reads')
-    .select('announcement_id')
-    .eq('user_id', user.id)
+  const announcementIds = (announcements ?? []).map(a => a.id)
+
+  const [{ data: reads }, { data: attachments }] = await Promise.all([
+    supabase.from('announcement_reads').select('announcement_id').eq('user_id', user.id),
+    announcementIds.length > 0
+      ? supabase.from('announcement_attachments').select('announcement_id, id, file_name, file_path, file_size').in('announcement_id', announcementIds)
+      : Promise.resolve({ data: [] }),
+  ])
 
   const readSet = new Set((reads ?? []).map(r => r.announcement_id))
+  const attachmentMap = new Map<string, { id: string; file_name: string; file_path: string; file_size: number }[]>()
+  for (const att of attachments ?? []) {
+    const list = attachmentMap.get(att.announcement_id) ?? []
+    list.push({ id: att.id, file_name: att.file_name, file_path: att.file_path, file_size: att.file_size })
+    attachmentMap.set(att.announcement_id, list)
+  }
+
+  const rows = (announcements ?? []).map((a, i) => {
+    const author = Array.isArray(a.author) ? a.author[0] : a.author
+    return {
+      id: a.id,
+      rowNum: total - from - i,
+      title: a.title,
+      authorName: (author as { full_name: string | null } | null)?.full_name ?? '管理者',
+      createdAt: a.created_at,
+      isRead: readSet.has(a.id),
+      attachments: attachmentMap.get(a.id) ?? [],
+    }
+  })
 
   return (
     <div>
@@ -39,54 +78,41 @@ export default async function AnnouncementsPage() {
         )}
       </div>
 
-      <div className="rounded-2xl border border-gray-200/60 bg-white/80 backdrop-blur-md dark:border-white/[0.08] dark:bg-white/[0.03]">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-white/[0.06]">
-            <thead>
-              <tr className="bg-white/[0.02] dark:bg-white/[0.02]">
-                <th className="w-16 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400">No.</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">タイトル</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">作成者</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">作成日</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-white/[0.06]">
-              {(announcements ?? []).map((a, i) => {
-                const isRead = readSet.has(a.id)
-                const author = Array.isArray(a.author) ? a.author[0] : a.author
-                return (
-                  <tr key={a.id} className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
-                    <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-zinc-500 dark:text-zinc-400">
-                      {(announcements?.length ?? 0) - i}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Link href={`/announcements/${a.id}`} className="flex items-center gap-2">
-                        {!isRead && (
-                          <span className="inline-flex h-4 min-w-4 items-center justify-center rounded bg-red-500 text-[9px] font-bold text-white">
-                            N
-                          </span>
-                        )}
-                        <span className={`text-sm ${isRead ? 'text-zinc-500 dark:text-zinc-400' : 'font-medium text-zinc-900 dark:text-zinc-100'}`}>
-                          {a.title}
-                        </span>
-                      </Link>
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
-                      {(author as { full_name: string | null } | null)?.full_name ?? '管理者'}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
-                      {new Date(a.created_at).toLocaleDateString('ja-JP')}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+      <AnnouncementListClient rows={rows} />
+
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-center gap-2">
+          {currentPage > 1 && (
+            <Link
+              href={`/announcements?page=${currentPage - 1}`}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-zinc-700 hover:bg-gray-50 dark:border-white/[0.08] dark:text-zinc-300 dark:hover:bg-white/[0.03]"
+            >
+              前へ
+            </Link>
+          )}
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+            <Link
+              key={p}
+              href={`/announcements?page=${p}`}
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
+                p === currentPage
+                  ? 'bg-indigo-600 text-white'
+                  : 'border border-gray-200 text-zinc-700 hover:bg-gray-50 dark:border-white/[0.08] dark:text-zinc-300 dark:hover:bg-white/[0.03]'
+              }`}
+            >
+              {p}
+            </Link>
+          ))}
+          {currentPage < totalPages && (
+            <Link
+              href={`/announcements?page=${currentPage + 1}`}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-zinc-700 hover:bg-gray-50 dark:border-white/[0.08] dark:text-zinc-300 dark:hover:bg-white/[0.03]"
+            >
+              次へ
+            </Link>
+          )}
         </div>
-        {(announcements ?? []).length === 0 && (
-          <div className="py-12 text-center text-sm text-zinc-500">お知らせはありません</div>
-        )}
-      </div>
+      )}
     </div>
   )
 }
