@@ -2,7 +2,11 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 import Card from '@/components/ui/Card'
+import type { JlptLevel } from '@/lib/supabase/types'
+
+const JLPT_LEVELS: JlptLevel[] = ['N1', 'N2', 'N3', 'N4', 'N5']
 
 interface Profile {
   id: string
@@ -10,15 +14,24 @@ interface Profile {
   bio: string | null
   target_coding_area: string | null
   is_japanese: boolean
+  jlpt_level: JlptLevel | null
+  it_certifications: string | null
 }
 
 export default function ProfileForm({ profile }: { profile: Profile | null }) {
+  const router = useRouter()
   const [fullName, setFullName] = useState(profile?.full_name ?? '')
   const [bio, setBio] = useState(profile?.bio ?? '')
   const [targetCoding, setTargetCoding] = useState(profile?.target_coding_area ?? '')
   const [isJapanese, setIsJapanese] = useState(profile?.is_japanese ?? false)
+  const [jlptLevel, setJlptLevel] = useState<JlptLevel | ''>(profile?.jlpt_level ?? '')
+  const [itCertifications, setItCertifications] = useState(profile?.it_certifications ?? '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [savingCerts, setSavingCerts] = useState(false)
+  const [savedCerts, setSavedCerts] = useState(false)
+  const [certError, setCertError] = useState<string | null>(null)
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordSaving, setPasswordSaving] = useState(false)
@@ -28,9 +41,10 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
     e.preventDefault()
     setSaving(true)
     setSaved(false)
+    setSaveError(null)
 
     const supabase = createClient()
-    await supabase
+    const { error } = await supabase
       .from('profiles')
       .update({
         full_name: fullName || null,
@@ -42,8 +56,39 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
       .eq('id', profile?.id ?? '')
 
     setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    if (error) {
+      setSaveError(error.message)
+    } else {
+      setSaved(true)
+      router.refresh()
+      setTimeout(() => setSaved(false), 2000)
+    }
+  }
+
+  async function handleSaveCerts(e: React.FormEvent) {
+    e.preventDefault()
+    setSavingCerts(true)
+    setSavedCerts(false)
+    setCertError(null)
+
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        jlpt_level: jlptLevel || null,
+        it_certifications: itCertifications || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', profile?.id ?? '')
+
+    setSavingCerts(false)
+    if (error) {
+      setCertError(error.message)
+    } else {
+      setSavedCerts(true)
+      router.refresh()
+      setTimeout(() => setSavedCerts(false), 2000)
+    }
   }
 
   async function handlePasswordChange(e: React.FormEvent) {
@@ -138,6 +183,12 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
           </select>
         </div>
 
+        {saveError && (
+          <div className="rounded-xl px-3 py-2 text-sm bg-red-500/10 text-red-400 ring-1 ring-red-500/20">
+            {saveError}
+          </div>
+        )}
+
         <div className="flex items-center gap-3">
           <button
             type="submit"
@@ -147,6 +198,52 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
             {saving ? '保存中...' : '保存'}
           </button>
           {saved && <span className="text-sm text-emerald-400">保存しました</span>}
+        </div>
+      </form>
+    </Card>
+
+    <Card title="資格証明">
+      <form onSubmit={handleSaveCerts} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">日本語資格 (JLPT)</label>
+          <select
+            value={jlptLevel}
+            onChange={(e) => setJlptLevel(e.target.value as JlptLevel | '')}
+            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
+          >
+            <option value="">未選択</option>
+            {JLPT_LEVELS.map((level) => (
+              <option key={level} value={level}>{level}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">IT関連資格</label>
+          <textarea
+            value={itCertifications}
+            onChange={(e) => setItCertifications(e.target.value)}
+            rows={3}
+            placeholder="例: 基本情報技術者、AWS SAA、정보처리기사"
+            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
+          />
+        </div>
+
+        {certError && (
+          <div className="rounded-xl px-3 py-2 text-sm bg-red-500/10 text-red-400 ring-1 ring-red-500/20">
+            {certError}
+          </div>
+        )}
+
+        <div className="flex items-center gap-3">
+          <button
+            type="submit"
+            disabled={savingCerts}
+            className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+          >
+            {savingCerts ? '保存中...' : '保存'}
+          </button>
+          {savedCerts && <span className="text-sm text-emerald-400">保存しました</span>}
         </div>
       </form>
     </Card>

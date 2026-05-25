@@ -5,18 +5,20 @@ import Sidebar from './Sidebar'
 import Header from './Header'
 import MobileNav from './MobileNav'
 import VocabContextMenu from '@/components/personal-vocab/VocabContextMenu'
-import type { UserRole } from '@/lib/supabase/types'
+import type { UserRole, JlptLevel } from '@/lib/supabase/types'
 
 export default function MainShell({
   children,
   userName,
   avatarUrl,
   userRole = 'mentee',
+  jlptLevel = null,
 }: {
   children: React.ReactNode
   userName: string | null
   avatarUrl: string | null
   userRole?: UserRole
+  jlptLevel?: JlptLevel | null
 }) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -36,6 +38,7 @@ export default function MainShell({
           userName={userName}
           avatarUrl={avatarUrl}
           userRole={userRole}
+          jlptLevel={jlptLevel}
           onMenuToggle={() => setMobileOpen(true)}
         />
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">
