@@ -83,6 +83,7 @@ interface Props {
   nextExamDate?: string | null
   activeCycle?: ExamCycleInfo | null
   recentAssignments?: RecentAssignment[]
+  unreadAnnouncements?: number
 }
 
 const CYCLE_CATEGORY_LABELS: Record<string, string> = {
@@ -135,7 +136,7 @@ export default function DashboardClient({
   profile, radarScores, recentResults, isJapanese,
   learningStats, recentFeedbacks = [], compExamRetakeByCategory = {},
   hasCompletedExamByCategory = {}, role,
-  nextExamDate, activeCycle, recentAssignments = [],
+  nextExamDate, activeCycle, recentAssignments = [], unreadAnnouncements = 0,
 }: Props) {
   const isMentee = role === 'mentee'
   const relevantAxes = getRelevantAxes(isJapanese, role)

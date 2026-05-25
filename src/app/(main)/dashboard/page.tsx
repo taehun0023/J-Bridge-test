@@ -44,10 +44,13 @@ export default async function DashboardPage() {
   // Mentor dashboard
   // ──────────────────────────────────────────────
   if (profile?.role === 'mentor') {
-    const [{ data: menteeAssignments }, { data: menteeProfiles }] = await Promise.all([
+    const [{ data: menteeAssignments }, { data: menteeProfiles }, { count: totalAnnouncements }, { count: readCount }] = await Promise.all([
       supabase.from('mentor_mentee_assignments').select('mentee_id').eq('mentor_id', user.id),
       supabase.from('profiles').select('id, full_name, email, jlpt_level').eq('role', 'mentee'),
+      supabase.from('announcements').select('id', { count: 'exact', head: true }),
+      supabase.from('announcement_reads').select('announcement_id', { count: 'exact', head: true }).eq('user_id', user.id),
     ])
+    const unreadAnnouncements = (totalAnnouncements ?? 0) - (readCount ?? 0)
     const menteeIds = (menteeAssignments ?? []).map(a => a.mentee_id)
     const menteeMap = new Map((menteeProfiles ?? []).map(p => [p.id, p]))
 
@@ -78,19 +81,22 @@ export default async function DashboardPage() {
       }
     })
 
-    return <MentorDashboard mentorName={profile.full_name} mentees={mentees} />
+    return <MentorDashboard mentorName={profile.full_name} mentees={mentees} unreadAnnouncements={unreadAnnouncements} />
   }
 
   // ──────────────────────────────────────────────
   // Admin dashboard
   // ──────────────────────────────────────────────
   if (profile?.role === 'admin') {
-    const [{ data: allMentees }, { data: allAssignments }, { data: mentorAssignments }, { data: mentorProfiles }] = await Promise.all([
+    const [{ data: allMentees }, { data: allAssignments }, { data: mentorAssignments }, { data: mentorProfiles }, { count: adminTotalAnn }, { count: adminReadAnn }] = await Promise.all([
       supabase.from('profiles').select('id, full_name, email, jlpt_level, created_at').eq('role', 'mentee'),
       supabase.from('learning_assignments').select('assigned_to, status, completed_at'),
       supabase.from('mentor_mentee_assignments').select('mentor_id, mentee_id'),
       supabase.from('profiles').select('id, full_name').eq('role', 'mentor'),
+      supabase.from('announcements').select('id', { count: 'exact', head: true }),
+      supabase.from('announcement_reads').select('announcement_id', { count: 'exact', head: true }).eq('user_id', user.id),
     ])
+    const adminUnread = (adminTotalAnn ?? 0) - (adminReadAnn ?? 0)
 
     const mentorMap = new Map((mentorProfiles ?? []).map(p => [p.id, p.full_name]))
     const menteeToMentor = new Map<string, string>()
@@ -125,7 +131,7 @@ export default async function DashboardPage() {
       }
     })
 
-    return <AdminDashboard adminName={profile.full_name} employees={employees} />
+    return <AdminDashboard adminName={profile.full_name} employees={employees} unreadAnnouncements={adminUnread} />
   }
 
   // ──────────────────────────────────────────────
@@ -141,6 +147,8 @@ export default async function DashboardPage() {
     { data: recentAssignmentDetails },
     { data: recentFeedbacks },
     { data: userCompExams },
+    { count: menteeTotalAnn },
+    { count: menteeReadAnn },
   ] = await Promise.all([
     // 1. 일본어 스킬
     supabase.from('japanese_skills').select('*').eq('user_id', user.id).single(),
@@ -173,6 +181,9 @@ export default async function DashboardPage() {
     supabase.from('comprehensive_exams').select('id, category, score, status')
       .eq('user_id', user.id).in('status', ['completed', 'failed', 'requested', 'approved', 'in_progress'])
       .order('requested_at', { ascending: false }),
+    // 11. お知らせ未読数
+    supabase.from('announcements').select('id', { count: 'exact', head: true }),
+    supabase.from('announcement_reads').select('announcement_id', { count: 'exact', head: true }).eq('user_id', user.id),
   ])
 
   // ──────────────────────────────────────────────
@@ -287,6 +298,7 @@ export default async function DashboardPage() {
     nextExamDate,
     activeCycle,
     recentAssignments: assignmentCards,
+    unreadAnnouncements: (menteeTotalAnn ?? 0) - (menteeReadAnn ?? 0),
   }
 
   return <DashboardClient {...dashboardProps} />

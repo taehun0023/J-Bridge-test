@@ -14,6 +14,7 @@ import {
   ScrollText,
   HardDrive,
   Terminal,
+  Megaphone,
   type LucideIcon,
 } from 'lucide-react'
 import type { UserRole } from '@/lib/supabase/types'
@@ -114,6 +115,7 @@ export const mainNavItems: NavItem[] = [
   { key: 'dev', href: '/dev', label: '開発実務', icon: Code2 },
   { key: 'business-lit', href: '/business-literacy', label: 'ビジネスリテラシー', icon: Handshake },
   { key: 'coding', href: '/coding/problems', label: 'コーディング (Beta)', icon: Terminal },
+  { key: 'announcements', href: '/announcements', label: 'お知らせ', icon: Megaphone },
 ]
 
 export const adminNavItems: AdminNavItem[] = [
