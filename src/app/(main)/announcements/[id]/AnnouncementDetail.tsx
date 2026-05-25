@@ -6,7 +6,7 @@ import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import Card from '@/components/ui/Card'
 import { markAnnouncementRead, deleteAnnouncement, getAttachmentUrl } from '@/app/actions/announcements'
-import { ArrowLeft, Paperclip, Trash2, Download } from 'lucide-react'
+import { ArrowLeft, Paperclip, Trash2, Download, Pencil } from 'lucide-react'
 
 interface Attachment {
   id: string
@@ -77,14 +77,23 @@ export default function AnnouncementDetail({ announcement, attachments, isRead, 
             </div>
           </div>
           {isAdmin && (
-            <button
-              onClick={handleDelete}
-              disabled={pending}
-              className="shrink-0 rounded-lg p-2 text-zinc-400 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50 transition-colors"
-              title="削除"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              <Link
+                href={`/admin/announcements/${announcement.id}/edit`}
+                className="shrink-0 rounded-lg p-2 text-zinc-400 hover:bg-indigo-500/10 hover:text-indigo-400 transition-colors"
+                title="編集"
+              >
+                <Pencil className="h-4 w-4" />
+              </Link>
+              <button
+                onClick={handleDelete}
+                disabled={pending}
+                className="shrink-0 rounded-lg p-2 text-zinc-400 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50 transition-colors"
+                title="削除"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
           )}
         </div>
 
