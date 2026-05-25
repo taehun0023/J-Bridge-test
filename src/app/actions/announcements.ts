@@ -151,6 +151,24 @@ export async function deleteAnnouncement(id: string) {
   return { success: true }
 }
 
+export async function deleteAttachment(attachmentId: string) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error } as const
+
+  const { data: att } = await auth.serviceClient
+    .from('announcement_attachments')
+    .select('file_path')
+    .eq('id', attachmentId)
+    .single()
+
+  if (att) {
+    await auth.serviceClient.storage.from('announcement-attachments').remove([att.file_path])
+    await auth.serviceClient.from('announcement_attachments').delete().eq('id', attachmentId)
+  }
+
+  return { success: true }
+}
+
 export async function markAnnouncementRead(announcementId: string) {
   const auth = await requireAuth()
   if ('error' in auth) return { error: auth.error } as const

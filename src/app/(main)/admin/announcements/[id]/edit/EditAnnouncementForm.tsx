@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { updateAnnouncement } from '@/app/actions/announcements'
+import { updateAnnouncement, deleteAttachment } from '@/app/actions/announcements'
 import Card from '@/components/ui/Card'
 import { Paperclip, X } from 'lucide-react'
 
@@ -29,7 +29,14 @@ export default function EditAnnouncementForm({ announcement, existingAttachments
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [newFiles, setNewFiles] = useState<File[]>([])
+  const [removedAttachments, setRemovedAttachments] = useState<Set<string>>(new Set())
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const visibleAttachments = existingAttachments.filter(a => !removedAttachments.has(a.id))
+
+  function handleRemoveExisting(attachmentId: string) {
+    setRemovedAttachments(prev => new Set(prev).add(attachmentId))
+  }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const added = Array.from(e.target.files ?? [])
@@ -42,6 +49,9 @@ export default function EditAnnouncementForm({ announcement, existingAttachments
       formData.append('new_files', f)
     }
     startTransition(async () => {
+      for (const id of removedAttachments) {
+        await deleteAttachment(id)
+      }
       const result = await updateAnnouncement(announcement.id, formData)
       if (result.error) {
         setError(result.error)
@@ -80,15 +90,18 @@ export default function EditAnnouncementForm({ announcement, existingAttachments
             />
           </div>
 
-          {existingAttachments.length > 0 && (
+          {visibleAttachments.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">既存の添付ファイル</label>
               <div className="mt-1 space-y-1.5">
-                {existingAttachments.map(a => (
+                {visibleAttachments.map(a => (
                   <div key={a.id} className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 dark:border-white/[0.08]">
                     <Paperclip className="h-3.5 w-3.5 shrink-0 text-zinc-400" />
                     <span className="min-w-0 flex-1 truncate text-sm text-zinc-700 dark:text-zinc-300">{a.file_name}</span>
                     <span className="shrink-0 text-xs text-zinc-400">{formatBytes(a.file_size)}</span>
+                    <button type="button" onClick={() => handleRemoveExisting(a.id)} className="shrink-0 text-zinc-400 hover:text-red-400">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 ))}
               </div>

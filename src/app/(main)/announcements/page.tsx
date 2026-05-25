@@ -78,7 +78,7 @@ export default async function AnnouncementsPage({ searchParams }: { searchParams
         )}
       </div>
 
-      <AnnouncementListClient rows={rows} />
+      <AnnouncementListClient rows={rows} isAdmin={isAdmin} />
 
       {totalPages > 1 && (
         <div className="mt-4 flex items-center justify-center gap-2">
