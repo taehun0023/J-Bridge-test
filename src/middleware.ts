@@ -65,8 +65,18 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    // RBAC: /admin 경로 역할 기반 접근 제어
+    // RBAC: /ranking 경로 — admin + mentor만 접근 가능
     const { pathname } = request.nextUrl
+    if (pathname.startsWith('/ranking')) {
+      const role = profile?.role ?? 'mentee'
+      if (role === 'mentee') {
+        const url = request.nextUrl.clone()
+        url.pathname = '/dashboard'
+        return NextResponse.redirect(url)
+      }
+    }
+
+    // RBAC: /admin 경로 역할 기반 접근 제어
     if (pathname.startsWith('/admin')) {
       const role = profile?.role ?? 'mentee'
 

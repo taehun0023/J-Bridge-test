@@ -168,6 +168,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   const [claimReasons, setClaimReasons] = useState<Record<string, string>>({})
   const [claimError, setClaimError] = useState<string | null>(null)
   const [playedListeningIds, setPlayedListeningIds] = useState<Set<string>>(new Set())
+  const [showListeningWarning, setShowListeningWarning] = useState(false)
 
   const totalQuestions = questions.length
   const currentQuestion = questions[currentIndex]
@@ -350,12 +351,24 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
         setError(res.error)
         setSubmitting(false)
       } else if ('questions' in res && res.questions) {
-        setQuestions(res.questions as Question[])
+        const loadedQuestions = res.questions as Question[]
+        setQuestions(loadedQuestions)
         setRemainingSeconds(res.timeLimit! * 60)
-        setStarted(true)
-        setSubmitting(false)
+        const hasListening = loadedQuestions.some(q => q.question_category === 'listening')
+        if (hasListening) {
+          setShowListeningWarning(true)
+          setSubmitting(false)
+        } else {
+          setStarted(true)
+          setSubmitting(false)
+        }
       }
     })
+  }
+
+  function handleListeningConfirm() {
+    setShowListeningWarning(false)
+    setStarted(true)
   }
 
   function handleRetake() {
@@ -458,6 +471,35 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
             </div>
           </div>
         </Card>
+
+        {showListeningWarning && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => {}}>
+            <div className="mx-4 w-full max-w-md rounded-2xl border border-gray-200/60 bg-white p-6 shadow-xl dark:border-white/[0.08] dark:bg-zinc-900" onClick={e => e.stopPropagation()}>
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                リスニング問題のご注意
+              </h3>
+              <div className="mt-4 space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
+                <p>このテストにはリスニング問題が含まれています。</p>
+                <p>音声は1問あたり1回のみ再生可能です。</p>
+                <p>準備ができたら開始してください。</p>
+              </div>
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={() => { setShowListeningWarning(false); window.history.back() }}
+                  className="rounded-xl px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/5 transition-colors"
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick={handleListeningConfirm}
+                  className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+                >
+                  開始する
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     )
   }

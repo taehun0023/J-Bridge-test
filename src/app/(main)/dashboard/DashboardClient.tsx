@@ -625,12 +625,14 @@ export default function DashboardClient({
                   <p className="mt-1 text-sm font-mono font-bold text-zinc-900 dark:text-zinc-100">{userRanking.overall_score}</p>
                 </div>
               </div>
-              <Link
-                href="/ranking"
-                className="mt-4 block rounded-xl bg-indigo-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
-              >
-                ランキングを見る
-              </Link>
+              {!isMentee && (
+                <Link
+                  href="/ranking"
+                  className="mt-4 block rounded-xl bg-indigo-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+                >
+                  ランキングを見る
+                </Link>
+              )}
             </div>
           ) : topRanking && topRanking.length > 0 ? (
             <div>
@@ -657,12 +659,14 @@ export default function DashboardClient({
                   </div>
                 ))}
               </div>
-              <Link
-                href="/ranking"
-                className="mt-4 block rounded-xl bg-indigo-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
-              >
-                ランキングを見る
-              </Link>
+              {!isMentee && (
+                <Link
+                  href="/ranking"
+                  className="mt-4 block rounded-xl bg-indigo-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+                >
+                  ランキングを見る
+                </Link>
+              )}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-8 text-center">

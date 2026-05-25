@@ -73,6 +73,7 @@ export default function RankingClient({ rankings, category, currentUserId }: Pro
                 <th className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400">{headers.total}</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400">{headers.sub1}</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400">{headers.sub2}</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400">資格</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400">スコア更新日</th>
               </tr>
             </thead>
@@ -110,6 +111,15 @@ export default function RankingClient({ rankings, category, currentUserId }: Pro
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-right">
                       <span className="text-sm font-mono text-zinc-600 dark:text-zinc-300">{scores.sub2}</span>
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-center">
+                      {entry.jlpt_level ? (
+                        <span className="inline-flex rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold text-indigo-400 ring-1 ring-indigo-500/20">
+                          {entry.jlpt_level}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-zinc-400">—</span>
+                      )}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-right">
                       <span className="text-sm text-zinc-500 dark:text-zinc-400">

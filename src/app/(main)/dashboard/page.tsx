@@ -110,6 +110,7 @@ export default async function DashboardPage() {
         full_name: u.full_name as string | null,
         avatar_url: u.avatar_url as string | null,
         is_japanese: u.is_japanese as boolean,
+        jlpt_level: null,
         jlpt_normalized: jp?.jlpt_normalized ?? 0,
         it_japanese_normalized: jp?.it_japanese_normalized ?? 0,
         core_normalized: cs?.core_normalized ?? 0,
