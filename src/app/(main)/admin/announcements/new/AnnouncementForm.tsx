@@ -32,7 +32,7 @@ export default function AnnouncementForm() {
       if (result.error) {
         setError(result.error)
       } else if ('id' in result) {
-        router.push(`/announcements/${result.id}`)
+        router.push('/announcements')
       }
     })
   }
