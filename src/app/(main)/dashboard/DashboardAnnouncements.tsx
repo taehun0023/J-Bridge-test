@@ -15,8 +15,8 @@ interface Props {
 }
 
 export default function DashboardAnnouncements({ announcements }: Props) {
-  const unread = announcements.filter(a => !a.is_read)
-  const display = unread.length > 0 ? unread.slice(0, 5) : announcements.slice(0, 3)
+  const display = announcements.slice(0, 3)
+  const unreadCount = announcements.filter(a => !a.is_read).length
 
   if (announcements.length === 0) return null
 
@@ -25,9 +25,9 @@ export default function DashboardAnnouncements({ announcements }: Props) {
       <div className="flex items-center gap-2 mb-3">
         <Megaphone className="h-4 w-4 text-indigo-500" />
         <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">お知らせ</h3>
-        {unread.length > 0 && (
+        {unreadCount > 0 && (
           <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
-            {unread.length}
+            {unreadCount}
           </span>
         )}
         <Link
