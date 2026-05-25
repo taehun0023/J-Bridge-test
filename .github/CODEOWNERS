@@ -1,0 +1,4 @@
+# 모든 PR 에 대해 자동으로 Lawrence 가 reviewer 로 지정됩니다.
+# Branch protection 의 "Require review from Code Owners" 옵션과 함께 사용 시
+# 누락 없이 본인이 리뷰하게 됩니다.
+* @LawrenceCha
