@@ -33,21 +33,7 @@ export default async function QuizPage({ params }: { params: Promise<Params> }) 
       .eq('id', user.id)
       .single()
 
-    if (profile?.role === 'mentee') {
-      const { data: existingAttempt } = await supabase
-        .from('quiz_attempts')
-        .select('id, retake_request_status')
-        .eq('user_id', user.id)
-        .eq('quiz_id', quizId)
-        .not('completed_at', 'is', null)
-        .order('completed_at', { ascending: false })
-        .limit(1)
-        .single()
-
-      if (existingAttempt && existingAttempt.retake_request_status !== 'approved') {
-        redirect(backUrl)
-      }
-    }
+    // Mentees can freely retake practice quizzes
   }
 
   type SafeOption = { id: string; option_text: string; sort_order: number }

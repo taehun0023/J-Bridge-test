@@ -54,7 +54,7 @@ export default async function DevQuizListPage({
       .order('created_at', { ascending: true }),
     supabase
       .from('quiz_attempts')
-      .select('id, quiz_id, score, passed, retake_request_status, completed_at')
+      .select('id, quiz_id, score, passed, completed_at')
       .eq('user_id', user.id)
       .not('completed_at', 'is', null)
       .order('completed_at', { ascending: false }),
@@ -63,7 +63,7 @@ export default async function DevQuizListPage({
 
   const attemptMap: Record<
     string,
-    { id: string; score: number; passed: boolean; retake_request_status: string | null }
+    { id: string; score: number; passed: boolean }
   > = {}
 
   for (const attempt of attempts ?? []) {
@@ -72,7 +72,6 @@ export default async function DevQuizListPage({
         id: attempt.id,
         score: attempt.score,
         passed: attempt.passed,
-        retake_request_status: attempt.retake_request_status,
       }
     }
   }

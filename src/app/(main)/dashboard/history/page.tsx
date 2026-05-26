@@ -11,7 +11,7 @@ export default async function HistoryPage() {
   // Fetch all quiz attempts
   const { data: quizAttempts } = await supabase
     .from('quiz_attempts')
-    .select('id, score, passed, completed_at, retake_request_status, quizzes(title, quiz_type, is_assessment)')
+    .select('id, score, passed, completed_at, quizzes(title, quiz_type, is_assessment)')
     .eq('user_id', user.id)
     .not('completed_at', 'is', null)
     .order('completed_at', { ascending: false })

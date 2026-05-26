@@ -143,7 +143,7 @@ export async function createLearningAssignment(formData: FormData) {
   if ('error' in auth) return { error: auth.error } as const
   const { supabase, user } = auth
 
-  const assignedTo = formData.get('assigned_to') as string
+  const assignedToList = formData.getAll('assigned_to') as string[]
   const category = formData.get('category') as string
   const subcategory = formData.get('subcategory') as string
   const contentLevel = formData.get('content_level') as string || null
@@ -154,7 +154,7 @@ export async function createLearningAssignment(formData: FormData) {
   const catConfig = ASSIGNMENT_CATEGORIES[category]
   const isLevelOnly = catConfig?.levelOnly === true
 
-  if (!assignedTo || !category || !title) {
+  if (!assignedToList.length || !category || !title) {
     return { error: '必須フィールドをすべて入力してください' }
   }
   if (!isLevelOnly && !subcategory) {
@@ -164,61 +164,83 @@ export async function createLearningAssignment(formData: FormData) {
     return { error: 'レベルを選択してください' }
   }
 
-  // Check for existing completed assignment with same category/subcategory/level
-  let duplicateQuery = supabase
-    .from('learning_assignments')
-    .select('id, status')
-    .eq('assigned_to', assignedTo)
-    .eq('category', category)
-    .eq('subcategory', isLevelOnly ? 'all' : subcategory)
-    .eq('status', 'completed')
+  // Check for existing completed assignments per user
+  const skippedNames: string[] = []
+  const validAssignees: string[] = []
 
-  if (contentLevel) {
-    duplicateQuery = duplicateQuery.eq('content_level', contentLevel)
+  for (const assignedTo of assignedToList) {
+    let duplicateQuery = supabase
+      .from('learning_assignments')
+      .select('id')
+      .eq('assigned_to', assignedTo)
+      .eq('category', category)
+      .eq('subcategory', isLevelOnly ? 'all' : subcategory)
+      .eq('status', 'completed')
+
+    if (contentLevel) {
+      duplicateQuery = duplicateQuery.eq('content_level', contentLevel)
+    }
+
+    const { data: existing } = await duplicateQuery.limit(1)
+    if (existing && existing.length > 0) {
+      skippedNames.push(assignedTo)
+    } else {
+      validAssignees.push(assignedTo)
+    }
   }
 
-  const { data: existing } = await duplicateQuery.limit(1)
-  if (existing && existing.length > 0) {
-    return { error: 'この対象者には同じカテゴリ・レベルの完了済み課題が既に存在します' }
+  if (validAssignees.length === 0) {
+    return { error: '全対象者に同じカテゴリ・レベルの完了済み課題が既に存在します' }
   }
 
   // Find matching quizzes based on category/subcategory/level
   const queryClient = createServiceRoleClient() ?? supabase
   const requiredQuizIds = await resolveQuizIdsForAssignment(category, subcategory, contentLevel, queryClient)
 
+  const rows = validAssignees.map(assignedTo => ({
+    assigned_by: user.id,
+    assigned_to: assignedTo,
+    category,
+    subcategory,
+    content_level: contentLevel,
+    title,
+    description,
+    due_date: dueDate ? new Date(dueDate).toISOString() : null,
+    required_quiz_ids: requiredQuizIds,
+  }))
+
   const { data, error } = await supabase
     .from('learning_assignments')
-    .insert({
-      assigned_by: user.id,
-      assigned_to: assignedTo,
-      category,
-      subcategory,
-      content_level: contentLevel,
-      title,
-      description,
-      due_date: dueDate ? new Date(dueDate).toISOString() : null,
-      required_quiz_ids: requiredQuizIds,
-    })
-    .select('id')
-    .single()
+    .insert(rows)
+    .select('id, assigned_to')
 
   if (error) return { error: error.message }
 
-  await logAuditEvent(user.id, 'create', 'learning_assignments', data.id, null, { assigned_to: assignedTo, title, category })
+  await logAuditEvent(user.id, 'create', 'learning_assignments', data[0]?.id ?? '', null, {
+    assigned_to: validAssignees,
+    assignee_count: validAssignees.length,
+    title,
+    category,
+  })
 
-  // Send notification to assignee
-  await createNotification(
-    assignedTo,
-    'task_assigned',
-    `新しい学習課題: ${title}`,
-    description ?? undefined,
-    '/dashboard/assignments',
-    data.id
-  )
+  for (const row of data) {
+    await createNotification(
+      row.assigned_to,
+      'task_assigned',
+      `新しい学習課題: ${title}`,
+      description ?? undefined,
+      '/dashboard/assignments',
+      row.id
+    )
+  }
 
   revalidatePath('/admin/tasks')
   revalidatePath('/dashboard')
   revalidatePath('/dashboard/assignments')
+
+  if (skippedNames.length > 0) {
+    return { success: true, message: `${validAssignees.length}名に配信しました（${skippedNames.length}名は完了済みのためスキップ）` }
+  }
   return { success: true }
 }
 

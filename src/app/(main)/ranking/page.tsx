@@ -16,7 +16,7 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
   const { data: users } = await supabase
     .from('profiles')
     .select(`
-      id, full_name, avatar_url, is_japanese,
+      id, full_name, avatar_url, is_japanese, jlpt_level,
       japanese_skills(jlpt_normalized, it_japanese_normalized, updated_at),
       coding_skills(core_normalized, framework_normalized, updated_at)
     `)
@@ -32,6 +32,7 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
       full_name: u.full_name as string | null,
       avatar_url: u.avatar_url as string | null,
       is_japanese: u.is_japanese as boolean,
+      jlpt_level: (u.jlpt_level as string | null) ?? null,
       jlpt_normalized: jp?.jlpt_normalized ?? 0,
       it_japanese_normalized: jp?.it_japanese_normalized ?? 0,
       core_normalized: cs?.core_normalized ?? 0,

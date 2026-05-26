@@ -29,7 +29,6 @@ interface QuizAttempt {
   score: number
   passed: boolean
   completed_at: string
-  retake_request_status: string | null
   quizzes: { title: string; quiz_type: string; is_assessment: boolean } | null
 }
 

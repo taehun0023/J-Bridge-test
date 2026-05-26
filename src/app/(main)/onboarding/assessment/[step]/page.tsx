@@ -56,13 +56,12 @@ export default async function AssessmentPage({ params }: Props) {
   const displayStep = relevantSteps.indexOf(step) + 1
 
   if (completedAttempt) {
-    // Allow retake if 30+ days elapsed or admin approved
+    // Allow retake if 30+ days elapsed
     const completedAt = new Date(completedAttempt.completed_at).getTime()
     const daysSinceCompletion = Date.now() - completedAt
     const isAutoRetake = daysSinceCompletion > THIRTY_DAYS_MS
-    const isApprovedRetake = completedAttempt.retake_request_status === 'approved'
 
-    if (!isAutoRetake && !isApprovedRetake) {
+    if (!isAutoRetake) {
       // Don't redirect here — let client handle it so review mode works.
       // Server action re-renders this component after submission; client
       // preserves reviewMode state and keeps showing the review screen.

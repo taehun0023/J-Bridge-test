@@ -51,11 +51,11 @@ export default async function BusinessQuizTestsPage({
     .order('created_at', { ascending: true })
 
   // Fetch user's latest completed attempts for these quizzes
-  let attemptMap: Record<string, { id: string; score: number; passed: boolean; retake_request_status: string | null }> = {}
+  let attemptMap: Record<string, { id: string; score: number; passed: boolean }> = {}
   if (poolQuizzes?.length) {
     const { data: attempts } = await supabase
       .from('quiz_attempts')
-      .select('id, quiz_id, score, passed, retake_request_status')
+      .select('id, quiz_id, score, passed')
       .eq('user_id', user.id)
       .in('quiz_id', poolQuizzes.map(q => q.id))
       .not('completed_at', 'is', null)
@@ -63,7 +63,7 @@ export default async function BusinessQuizTestsPage({
 
     attempts?.forEach((a) => {
       if (!attemptMap[a.quiz_id]) {
-        attemptMap[a.quiz_id] = { id: a.id, score: a.score, passed: a.passed, retake_request_status: a.retake_request_status }
+        attemptMap[a.quiz_id] = { id: a.id, score: a.score, passed: a.passed }
       }
     })
   }

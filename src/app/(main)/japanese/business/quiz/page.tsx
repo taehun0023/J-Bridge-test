@@ -82,12 +82,12 @@ export default async function BusinessQuizListPage({ searchParams }: { searchPar
     .eq('is_pool', false)
     .order('created_at', { ascending: true })
 
-  // Fetch user's attempts (include id + retake_request_status for PracticeQuizCard)
-  let attemptMap: Record<string, { id: string; score: number; passed: boolean; retake_request_status: string | null }> = {}
+  // Fetch user's attempts for PracticeQuizCard
+  let attemptMap: Record<string, { id: string; score: number; passed: boolean }> = {}
   if (user && quizzes?.length) {
     const { data: attempts } = await supabase
       .from('quiz_attempts')
-      .select('id, quiz_id, score, passed, retake_request_status')
+      .select('id, quiz_id, score, passed')
       .eq('user_id', user.id)
       .not('completed_at', 'is', null)
       .order('completed_at', { ascending: false })
@@ -95,7 +95,7 @@ export default async function BusinessQuizListPage({ searchParams }: { searchPar
     attempts?.forEach((a) => {
       // Keep the most recent attempt per quiz
       if (!attemptMap[a.quiz_id]) {
-        attemptMap[a.quiz_id] = { id: a.id, score: a.score, passed: a.passed, retake_request_status: a.retake_request_status }
+        attemptMap[a.quiz_id] = { id: a.id, score: a.score, passed: a.passed }
       }
     })
   }

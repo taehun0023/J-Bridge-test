@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic'
 import { useState, useTransition } from 'react'
 import Card from '@/components/ui/Card'
 import Link from 'next/link'
-import { AlertTriangle, BarChart3, Trophy, BookOpen, Eye, Calendar, ClipboardCheck, CheckCircle, Clock, Circle } from 'lucide-react'
+import { AlertTriangle, BarChart3, BookOpen, Eye, Calendar, ClipboardCheck, CheckCircle, Clock, Circle } from 'lucide-react'
 import { getGrade, getGradeColor, getJlptLevel, getJlptLevelColor, DISPATCH_MINIMUM_SCORE, getRelevantAxes, AXIS_DISPLAY_LABELS } from '@/lib/assessment-config'
 import type { AxisKey } from '@/lib/assessment-config'
 import { requestExam, requestRetakeExam } from '@/app/actions/comprehensive-exam'
@@ -26,13 +26,6 @@ interface UnifiedResult {
   passed: boolean
   completed_at: string
   type: 'quiz' | 'comprehensive'
-}
-
-interface UserRanking {
-  overall_score: number
-  overall_rank: number
-  japanese_score: number
-  programming_score: number
 }
 
 interface LearningStats {
@@ -65,11 +58,16 @@ const AXIS_TO_CATEGORY: Record<AxisKey, string> = {
   attitudeCulture: 'business-lit',
 }
 
-interface TopRankingEntry {
-  user_id: string
-  full_name: string | null
-  avatar_url: string | null
-  overall_score: number
+interface RecentAssignment {
+  id: string
+  title: string
+  category: string
+  subcategory: string
+  content_level: string | null
+  status: string
+  due_date: string | null
+  created_at: string
+  assigner: { full_name: string | null } | null
 }
 
 interface Props {
@@ -77,8 +75,6 @@ interface Props {
   radarScores: Record<AxisKey, number>
   recentResults: UnifiedResult[]
   isJapanese: boolean
-  userRanking: UserRanking | null
-  topRanking?: TopRankingEntry[] | null
   learningStats?: LearningStats
   recentFeedbacks?: RecentFeedback[]
   compExamRetakeByCategory?: Record<string, { examId: string; score: number | null; retakeStatus: 'completed' | 'failed' | 'requested' | 'approved' | 'in_progress' }>
@@ -86,6 +82,8 @@ interface Props {
   role?: string
   nextExamDate?: string | null
   activeCycle?: ExamCycleInfo | null
+  recentAssignments?: RecentAssignment[]
+  unreadAnnouncements?: number
 }
 
 const CYCLE_CATEGORY_LABELS: Record<string, string> = {
@@ -136,9 +134,9 @@ function getDaysUntil(deadlineAt: string): number {
 
 export default function DashboardClient({
   profile, radarScores, recentResults, isJapanese,
-  userRanking, topRanking, learningStats, recentFeedbacks = [], compExamRetakeByCategory = {},
+  learningStats, recentFeedbacks = [], compExamRetakeByCategory = {},
   hasCompletedExamByCategory = {}, role,
-  nextExamDate, activeCycle,
+  nextExamDate, activeCycle, recentAssignments = [], unreadAnnouncements = 0,
 }: Props) {
   const isMentee = role === 'mentee'
   const relevantAxes = getRelevantAxes(isJapanese, role)
@@ -599,75 +597,43 @@ export default function DashboardClient({
           </Link>
         </Card>
 
-        {/* ランキング — right col, row 2 */}
-        <Card title="ランキング">
-          {userRanking ? (
+        {/* メンターからの課題 — right col, row 2 */}
+        <Card title="メンターからの課題">
+          {recentAssignments.length > 0 ? (
             <div>
-              <div className="flex items-center gap-3 mb-4">
-                <Trophy className="h-8 w-8 text-amber-400" />
-                <div>
-                  <p className="text-2xl font-bold font-mono text-zinc-900 dark:text-zinc-100">#{userRanking.overall_rank}</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] dark:border-white/[0.08] dark:bg-white/[0.03] border-gray-200/60 p-2 text-center">
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">日本語力 /200</p>
-                  <p className="mt-1 text-sm font-mono font-bold text-zinc-900 dark:text-zinc-100">
-                    {isJapanese ? '—' : userRanking.japanese_score}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] dark:border-white/[0.08] dark:bg-white/[0.03] border-gray-200/60 p-2 text-center">
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">プログラミング /200</p>
-                  <p className="mt-1 text-sm font-mono font-bold text-zinc-900 dark:text-zinc-100">{userRanking.programming_score}</p>
-                </div>
-                <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] dark:border-white/[0.08] dark:bg-white/[0.03] border-gray-200/60 p-2 text-center">
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">全体 /400</p>
-                  <p className="mt-1 text-sm font-mono font-bold text-zinc-900 dark:text-zinc-100">{userRanking.overall_score}</p>
-                </div>
-              </div>
-              <Link
-                href="/ranking"
-                className="mt-4 block rounded-xl bg-indigo-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
-              >
-                ランキングを見る
-              </Link>
-            </div>
-          ) : topRanking && topRanking.length > 0 ? (
-            <div>
-              <div className="space-y-2">
-                {topRanking.map((entry, i) => (
-                  <div
-                    key={entry.user_id}
-                    className="flex items-center gap-3 rounded-lg p-2 border border-white/[0.06] bg-white/[0.02] dark:border-white/[0.06] dark:bg-white/[0.02] border-gray-100 bg-gray-50/50"
-                  >
-                    <span className={`w-6 text-center text-sm font-bold ${
-                      i === 0 ? 'text-amber-400' : i === 1 ? 'text-zinc-300' : i === 2 ? 'text-amber-600' : 'text-zinc-500'
-                    }`}>
-                      {i + 1}
-                    </span>
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-500/10 text-xs font-bold text-indigo-400 ring-1 ring-indigo-500/20">
-                      {entry.full_name?.charAt(0) ?? '?'}
+              <div className="divide-y divide-gray-100 dark:divide-white/[0.06]">
+                {recentAssignments.map(a => (
+                  <div key={a.id} className="py-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">{a.title}</span>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                        a.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20' :
+                        a.status === 'in_progress' ? 'bg-blue-500/10 text-blue-400 ring-1 ring-blue-500/20' :
+                        a.status === 'overdue' ? 'bg-red-500/10 text-red-400 ring-1 ring-red-500/20' :
+                        'bg-zinc-500/10 text-zinc-400 ring-1 ring-zinc-500/20'
+                      }`}>
+                        {a.status === 'completed' ? '完了' : a.status === 'in_progress' ? '進行中' : a.status === 'overdue' ? '期限超過' : '待機'}
+                      </span>
                     </div>
-                    <span className="text-sm text-zinc-900 dark:text-zinc-100 truncate flex-1">
-                      {entry.full_name ?? 'ユーザー'}
-                    </span>
-                    <span className="ml-auto text-sm font-mono font-bold text-zinc-900 dark:text-zinc-100">
-                      {entry.overall_score}
-                    </span>
+                    <div className="mt-1 flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
+                      <span>{a.assigner?.full_name ?? '—'}</span>
+                      <span>{new Date(a.created_at).toLocaleDateString('ja-JP')}</span>
+                      {a.due_date && <span>〆 {new Date(a.due_date).toLocaleDateString('ja-JP')}</span>}
+                    </div>
                   </div>
                 ))}
               </div>
               <Link
-                href="/ranking"
-                className="mt-4 block rounded-xl bg-indigo-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+                href="/dashboard/assignments"
+                className="mt-3 block text-center text-sm font-medium text-indigo-500 hover:text-indigo-400 transition-colors"
               >
-                ランキングを見る
+                全て見る →
               </Link>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <Trophy className="h-10 w-10 text-zinc-500" />
-              <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">ランキングデータがありません</p>
+              <ClipboardCheck className="h-10 w-10 text-zinc-500" />
+              <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">現在新しい課題はありません</p>
             </div>
           )}
         </Card>

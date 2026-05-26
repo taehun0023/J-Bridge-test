@@ -3,6 +3,7 @@ export interface RankingUserData {
   full_name: string | null
   avatar_url: string | null
   is_japanese: boolean
+  jlpt_level: string | null
   jlpt_normalized: number
   it_japanese_normalized: number
   core_normalized: number
@@ -23,6 +24,7 @@ export interface ComputedRankingEntry {
   it_japanese_normalized: number
   core_normalized: number
   framework_normalized: number
+  jlpt_level: string | null
   last_exam_date: string | null
 }
 
@@ -54,6 +56,7 @@ export function computeRankingEntry(user: RankingUserData): ComputedRankingEntry
     it_japanese_normalized: user.it_japanese_normalized,
     core_normalized: user.core_normalized,
     framework_normalized: user.framework_normalized,
+    jlpt_level: user.jlpt_level,
     last_exam_date,
   }
 }

@@ -42,37 +42,6 @@ export default async function AdminTasksPage() {
       }),
     }))
 
-  // Fetch quiz retake requests
-  const { data: rawRetakeRequests } = await supabase
-    .from('quiz_attempts')
-    .select('id, user_id, quiz_id, score, retake_request_status, retake_requested_at, quizzes(title)')
-    .eq('retake_request_status', 'requested')
-    .order('retake_requested_at', { ascending: false })
-    .limit(50)
-
-  // Fetch user profiles for retake requests
-  const retakeUserIds = [...new Set((rawRetakeRequests ?? []).map(r => r.user_id))]
-  let retakeProfileMap: Record<string, string> = {}
-  if (retakeUserIds.length > 0) {
-    const { data: retakeProfiles } = await supabase
-      .from('profiles')
-      .select('id, full_name')
-      .in('id', retakeUserIds)
-    retakeProfiles?.forEach(p => {
-      retakeProfileMap[p.id] = p.full_name ?? '-'
-    })
-  }
-
-  const quizRetakeRequests = (rawRetakeRequests ?? []).map(r => ({
-    id: r.id,
-    user_id: r.user_id,
-    user_name: retakeProfileMap[r.user_id] ?? '-',
-    quiz_title: (r.quizzes as unknown as { title: string } | null)?.title ?? '-',
-    score: r.score,
-    retake_request_status: r.retake_request_status,
-    retake_requested_at: r.retake_requested_at,
-  }))
-
   // For mentors: only show their assigned mentees
   let users: { id: string; full_name: string | null; email: string; role: string }[] = []
   if (currentRole === 'mentor') {
@@ -312,7 +281,7 @@ export default async function AdminTasksPage() {
     inProgress: learningAssignments?.filter(t => t.status === 'in_progress').length ?? 0,
     completed: learningAssignments?.filter(t => t.status === 'completed').length ?? 0,
     overdue: learningAssignments?.filter(t => t.status === 'overdue').length ?? 0,
-    approvals: (examRequests?.filter(e => e.status === 'requested').length ?? 0) + awaitingConfirmation + quizRetakeRequests.length,
+    approvals: (examRequests?.filter(e => e.status === 'requested').length ?? 0) + awaitingConfirmation,
   }
 
   return (
@@ -350,7 +319,6 @@ export default async function AdminTasksPage() {
       <AdminTasksClient
         learningAssignments={learningAssignments ?? []}
         examRequests={examRequests ?? []}
-        quizRetakeRequests={quizRetakeRequests}
         users={users}
         currentRole={currentRole}
         learningProgress={learningProgress}

@@ -4,7 +4,6 @@ import { Fragment, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createLearningAssignment, deleteLearningAssignment, confirmAssignment, reassignAssignment, getAssigneeUnlockedLevels } from '@/app/actions/learning-assignments'
 import { approveExam, denyExam, deleteExam } from '@/app/actions/comprehensive-exam'
-import { approveQuizRetake, denyQuizRetake } from '@/app/actions/quiz-retake'
 import { ASSIGNMENT_CATEGORIES, JLPT_LEVELS, DEV_LEVELS, getCategoryLabel, getSubcategoryLabel, getContentLevelLabel } from '@/lib/assignment-categories'
 
 interface LearningAssignmentRow {
@@ -35,16 +34,6 @@ interface ExamRequest {
   requested_at: string
   score: number | null
   user: { full_name: string | null; email: string } | null
-}
-
-interface QuizRetakeRequest {
-  id: string
-  user_id: string
-  user_name: string
-  quiz_title: string
-  score: number | null
-  retake_request_status: string | null
-  retake_requested_at: string | null
 }
 
 interface User {
@@ -87,13 +76,12 @@ interface LearningProgressData {
 interface Props {
   learningAssignments: LearningAssignmentRow[]
   examRequests: ExamRequest[]
-  quizRetakeRequests: QuizRetakeRequest[]
   users: User[]
   currentRole: string
   learningProgress: Record<string, LearningProgressData>
 }
 
-export default function AdminTasksClient({ learningAssignments, examRequests, quizRetakeRequests, users, currentRole, learningProgress }: Props) {
+export default function AdminTasksClient({ learningAssignments, examRequests, users, currentRole, learningProgress }: Props) {
   const [activeTab, setActiveTab] = useState<'learning' | 'approvals'>('learning')
   const router = useRouter()
   const [showForm, setShowForm] = useState(false)
@@ -104,7 +92,9 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
   // Cascade form state
   const [selectedCategory, setSelectedCategory] = useState('')
   const [selectedSubcategory, setSelectedSubcategory] = useState('')
-  const [selectedAssignee, setSelectedAssignee] = useState('')
+  const [selectedAssignees, setSelectedAssignees] = useState<string[]>([])
+  const [assigneeSearch, setAssigneeSearch] = useState('')
+  const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false)
 
   // Search/filter state
   const [searchName, setSearchName] = useState('')
@@ -142,16 +132,34 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
 
   const isDevLevel = subcatConfig?.courseSubcategory != null
 
+  const menteeUsers = users.filter(u => u.role === 'mentee')
+  const filteredMentees = menteeUsers.filter(u =>
+    (u.full_name ?? '').toLowerCase().includes(assigneeSearch.toLowerCase()) ||
+    u.email.toLowerCase().includes(assigneeSearch.toLowerCase())
+  )
+
+  function toggleAssignee(userId: string) {
+    setSelectedAssignees(prev =>
+      prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
+    )
+  }
+
   async function handleCreateLearning(formData: FormData) {
+    if (selectedAssignees.length === 0) {
+      showMsg('1名以上を選択してください', 'error')
+      return
+    }
     startTransition(async () => {
       const result = await createLearningAssignment(formData)
       if (result.error) showMsg(result.error, 'error')
       else {
-        showMsg('学習課題を配信しました')
+        const msg = ('message' in result && result.message) ? result.message : '学習課題を配信しました'
+        showMsg(msg as string)
         setShowForm(false)
         setSelectedCategory('')
         setSelectedSubcategory('')
-        setSelectedAssignee('')
+        setSelectedAssignees([])
+        setAssigneeSearch('')
         setDevLevelLocks({})
       }
     })
@@ -228,23 +236,6 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
     })
   }
 
-  function handleApproveQuizRetake(attemptId: string) {
-    startTransition(async () => {
-      const result = await approveQuizRetake(attemptId)
-      if (result.error) showMsg(result.error, 'error')
-      else showMsg('再試験を承認しました')
-    })
-  }
-
-  function handleDenyQuizRetake(attemptId: string) {
-    if (!confirm('再試験リクエストを拒否しますか？')) return
-    startTransition(async () => {
-      const result = await denyQuizRetake(attemptId)
-      if (result.error) showMsg(result.error, 'error')
-      else showMsg('再試験を拒否しました')
-    })
-  }
-
   function getProgressPercent(assignment: LearningAssignmentRow) {
     const total = assignment.required_quiz_ids?.length ?? 0
     const passed = assignment.passed_quiz_ids?.length ?? 0
@@ -263,11 +254,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
     return !approvalSearchName || (e.user as { full_name: string | null } | null)?.full_name?.toLowerCase().includes(approvalSearchName.toLowerCase())
   })
 
-  const filteredRetakeRequests = quizRetakeRequests.filter(r => {
-    return !approvalSearchName || r.user_name.toLowerCase().includes(approvalSearchName.toLowerCase())
-  })
-
-  const pendingApprovals = examRequests.filter(e => e.status === 'requested').length + quizRetakeRequests.length
+  const pendingApprovals = examRequests.filter(e => e.status === 'requested').length
 
   const tabs = [
     { key: 'learning' as const, label: '学習課題' },
@@ -324,22 +311,63 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
             <form action={handleCreateLearning} className="mt-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
               <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">新規学習課題</h3>
               <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">配分対象 *</label>
-                  <select name="assigned_to" required
-                    value={selectedAssignee}
-                    onChange={e => {
-                      setSelectedAssignee(e.target.value)
-                      if (e.target.value && isDevLevel && subcatConfig?.courseSubcategory) {
-                        loadDevLevels(e.target.value, subcatConfig.courseSubcategory)
-                      }
-                    }}
-                    className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white">
-                    <option value="">選択...</option>
-                    {users.map(u => (
-                      <option key={u.id} value={u.id}>{u.full_name ?? u.email}</option>
-                    ))}
-                  </select>
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    配分対象 * <span className="text-xs font-normal text-gray-400">({selectedAssignees.length}名選択)</span>
+                  </label>
+                  {selectedAssignees.map(id => (
+                    <input key={id} type="hidden" name="assigned_to" value={id} />
+                  ))}
+                  {selectedAssignees.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      {selectedAssignees.map(id => {
+                        const u = users.find(u => u.id === id)
+                        return (
+                          <span key={id} className="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 px-2.5 py-1 text-xs font-medium text-indigo-600 ring-1 ring-indigo-500/20 dark:text-indigo-400">
+                            {u?.full_name ?? u?.email ?? id}
+                            <button type="button" onClick={() => toggleAssignee(id)} className="ml-0.5 text-indigo-400 hover:text-indigo-600">×</button>
+                          </span>
+                        )
+                      })}
+                    </div>
+                  )}
+                  <div className="relative mt-1">
+                    <input
+                      type="text"
+                      placeholder="名前またはメールで検索..."
+                      value={assigneeSearch}
+                      onChange={e => { setAssigneeSearch(e.target.value); setShowAssigneeDropdown(true) }}
+                      onFocus={() => setShowAssigneeDropdown(true)}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+                    />
+                    {showAssigneeDropdown && (
+                      <div className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-700">
+                        {filteredMentees.length === 0 ? (
+                          <div className="px-3 py-2 text-xs text-gray-400">該当なし</div>
+                        ) : (
+                          filteredMentees.map(u => (
+                            <label key={u.id} className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-600">
+                              <input
+                                type="checkbox"
+                                checked={selectedAssignees.includes(u.id)}
+                                onChange={() => toggleAssignee(u.id)}
+                                className="h-3.5 w-3.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                              />
+                              <span className="text-gray-900 dark:text-white">{u.full_name ?? u.email}</span>
+                              <span className="ml-auto text-[10px] text-gray-400">{u.email}</span>
+                            </label>
+                          ))
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setShowAssigneeDropdown(false)}
+                          className="w-full border-t border-gray-100 px-3 py-1.5 text-center text-xs text-gray-500 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-600"
+                        >
+                          閉じる
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">カテゴリ *</label>
@@ -369,8 +397,8 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
                         setSelectedSubcategory(e.target.value)
                         setDevLevelLocks({})
                         const newSubcatConfig = ASSIGNMENT_CATEGORIES[selectedCategory]?.subcategories[e.target.value]
-                        if (selectedAssignee && newSubcatConfig?.courseSubcategory) {
-                          loadDevLevels(selectedAssignee, newSubcatConfig.courseSubcategory)
+                        if (selectedAssignees[0] && newSubcatConfig?.courseSubcategory) {
+                          loadDevLevels(selectedAssignees[0], newSubcatConfig.courseSubcategory)
                         }
                       }}
                       disabled={!selectedCategory}
@@ -705,66 +733,6 @@ export default function AdminTasksClient({ learningAssignments, examRequests, qu
             </div>
           </div>
 
-          {/* Quiz Retake Requests */}
-          <div>
-            <h3 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">理解度テスト再試験リクエスト</h3>
-            <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">ユーザー名</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">テスト名</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">スコア</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">リクエスト日</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400">操作</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                    {filteredRetakeRequests.map(req => (
-                      <tr key={req.id}>
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
-                          {req.user_name}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                          {req.quiz_title}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                          {req.score != null ? `${req.score}点` : '-'}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-                          {req.retake_requested_at ? new Date(req.retake_requested_at).toLocaleDateString('ja-JP') : '-'}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => handleApproveQuizRetake(req.id)}
-                              disabled={pending}
-                              className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-                            >
-                              承認
-                            </button>
-                            <button
-                              onClick={() => handleDenyQuizRetake(req.id)}
-                              disabled={pending}
-                              className="rounded-md bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
-                            >
-                              拒否
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {filteredRetakeRequests.length === 0 && (
-                <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">
-                  {quizRetakeRequests.length === 0 ? '再試験リクエストがありません' : '該当するリクエストがありません'}
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       )}
     </div>

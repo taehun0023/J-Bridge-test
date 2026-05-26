@@ -40,22 +40,7 @@ export default async function WritingTestPage() {
     }
   }
 
-  // Mentee 1-attempt limit check (handled by startQuizAttempt, but check here for redirect)
-  if (prof?.role === 'mentee') {
-    const { data: existingAttempt } = await supabase
-      .from('quiz_attempts')
-      .select('id, retake_request_status')
-      .eq('user_id', auth.user.id)
-      .eq('quiz_id', WRITING_POOL_QUIZ_ID)
-      .not('completed_at', 'is', null)
-      .order('completed_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-
-    if (existingAttempt && existingAttempt.retake_request_status !== 'approved') {
-      redirect('/japanese/business/writing')
-    }
-  }
+  // Mentees can freely retake writing quizzes
 
   // Create quiz attempt
   const attemptResult = await startQuizAttempt(WRITING_POOL_QUIZ_ID)

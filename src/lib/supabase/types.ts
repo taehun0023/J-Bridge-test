@@ -179,6 +179,7 @@ export interface Profile {
   bio: string | null
   target_jlpt_level: JlptLevel | null
   target_coding_area: CodingLanguage | null
+  it_certifications: string | null
   coding_rank: CodingRank
   is_onboarded: boolean
   is_japanese: boolean

@@ -6,17 +6,19 @@ import NotificationBell from './NotificationBell'
 import ProfileAvatar from './ProfileAvatar'
 import { useTheme } from '@/components/theme/ThemeProvider'
 import { Menu, Sun, Moon, Shield, Settings, BookOpen, LogOut } from 'lucide-react'
-import type { UserRole } from '@/lib/supabase/types'
+import type { UserRole, JlptLevel } from '@/lib/supabase/types'
 
 export default function Header({
   userName,
   avatarUrl,
   userRole,
+  jlptLevel,
   onMenuToggle,
 }: {
   userName: string | null
   avatarUrl: string | null
   userRole: UserRole
+  jlptLevel: JlptLevel | null
   onMenuToggle: () => void
 }) {
   const { theme, toggleTheme } = useTheme()
@@ -72,6 +74,11 @@ export default function Header({
         <ProfileAvatar avatarUrl={avatarUrl} userName={userName} size="md" />
 
         <span className="text-sm text-zinc-600 dark:text-zinc-300">{userName ?? 'ユーザー'}</span>
+        {jlptLevel && (
+          <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300">
+            {jlptLevel}
+          </span>
+        )}
         <form action={signOut}>
           <button
             type="submit"

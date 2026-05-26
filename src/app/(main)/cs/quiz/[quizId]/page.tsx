@@ -91,21 +91,7 @@ export default async function CsQuizPage({ params }: { params: Promise<Params> }
       }
     }
 
-    if (isMentee) {
-      const { data: existingAttempt } = await supabase
-        .from('quiz_attempts')
-        .select('id, retake_request_status')
-        .eq('user_id', user.id)
-        .eq('quiz_id', quizId)
-        .not('completed_at', 'is', null)
-        .order('completed_at', { ascending: false })
-        .limit(1)
-        .single()
-
-      if (existingAttempt && existingAttempt.retake_request_status !== 'approved') {
-        redirect(backUrl)
-      }
-    }
+    // Mentees can freely retake practice quizzes
   }
 
   let questions: QuestionRow[]
