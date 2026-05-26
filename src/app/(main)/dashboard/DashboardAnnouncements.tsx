@@ -18,8 +18,6 @@ export default function DashboardAnnouncements({ announcements }: Props) {
   const display = announcements.slice(0, 3)
   const unreadCount = announcements.filter(a => !a.is_read).length
 
-  if (announcements.length === 0) return null
-
   return (
     <div className="mb-6 rounded-2xl border border-gray-200/60 bg-white/80 backdrop-blur-md dark:border-white/[0.08] dark:bg-white/[0.03] p-4">
       <div className="flex items-center gap-2 mb-3">
@@ -37,27 +35,31 @@ export default function DashboardAnnouncements({ announcements }: Props) {
           全て見る →
         </Link>
       </div>
-      <div className="space-y-1.5">
-        {display.map(a => (
-          <Link
-            key={a.id}
-            href={`/announcements/${a.id}`}
-            className="flex items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors"
-          >
-            {!a.is_read && (
-              <span className="inline-flex h-4 min-w-4 items-center justify-center rounded bg-red-500 text-[9px] font-bold text-white">
-                N
+      {announcements.length === 0 ? (
+        <p className="px-3 py-2 text-sm text-zinc-400 dark:text-zinc-500">お知らせはありません。</p>
+      ) : (
+        <div className="space-y-1.5">
+          {display.map(a => (
+            <Link
+              key={a.id}
+              href={`/announcements/${a.id}`}
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors"
+            >
+              {!a.is_read && (
+                <span className="inline-flex h-4 min-w-4 items-center justify-center rounded bg-red-500 text-[9px] font-bold text-white">
+                  N
+                </span>
+              )}
+              <span className={`flex-1 truncate text-sm ${!a.is_read ? 'font-medium text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 dark:text-zinc-400'}`}>
+                {a.title}
               </span>
-            )}
-            <span className={`flex-1 truncate text-sm ${!a.is_read ? 'font-medium text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 dark:text-zinc-400'}`}>
-              {a.title}
-            </span>
-            <span className="shrink-0 text-xs text-zinc-400">
-              {new Date(a.created_at).toLocaleDateString('ja-JP')}
-            </span>
-          </Link>
-        ))}
-      </div>
+              <span className="shrink-0 text-xs text-zinc-400">
+                {new Date(a.created_at).toLocaleDateString('ja-JP')}
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
