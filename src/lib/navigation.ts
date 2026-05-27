@@ -114,7 +114,7 @@ export const mainNavItems: NavItem[] = [
   { key: 'cs', href: '/cs', label: 'CS知識', icon: Cpu },
   { key: 'dev', href: '/dev', label: '開発実務', icon: Code2 },
   { key: 'business-lit', href: '/business-literacy', label: 'ビジネスリテラシー', icon: Handshake },
-  { key: 'coding', href: '/coding/problems', label: 'コーディング (Beta)', icon: Terminal },
+  { key: 'coding', href: '/coding/problems', label: 'コーディング (Betatest)', icon: Terminal },
   { key: 'announcements', href: '/announcements', label: 'お知らせ', icon: Megaphone },
 ]
 
