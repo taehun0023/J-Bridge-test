@@ -15,6 +15,32 @@
 BEGIN;
 
 -- ============================================
+-- (0) ヘルパー関数の存在保証 (本番に欠落していても安全)
+--     - is_admin / is_mentor / is_admin_or_mentor
+--     - CREATE OR REPLACE なので既存定義は上書きされない (同一なら)
+-- ============================================
+CREATE OR REPLACE FUNCTION is_admin()
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM profiles WHERE id = (SELECT auth.uid()) AND role = 'admin'
+  );
+$$ LANGUAGE sql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION is_mentor()
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM profiles WHERE id = (SELECT auth.uid()) AND role = 'mentor'
+  );
+$$ LANGUAGE sql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION is_admin_or_mentor()
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM profiles WHERE id = (SELECT auth.uid()) AND role IN ('admin', 'mentor')
+  );
+$$ LANGUAGE sql SECURITY DEFINER;
+
+-- ============================================
 -- (1) Storage bucket: file_size_limit を 25MB に
 -- ============================================
 UPDATE storage.buckets
