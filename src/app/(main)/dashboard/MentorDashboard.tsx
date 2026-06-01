@@ -1,8 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import Card from '@/components/ui/Card'
 import Link from 'next/link'
 import type { JapaneseProgressStat } from '@/lib/japanese-progress'
+import AssignTaskModal from './AssignTaskModal'
+import { Plus } from 'lucide-react'
 
 interface ExamScore {
   score: number | null
@@ -102,6 +105,18 @@ function fmtPair(c: { completed: number; total: number }): string {
 }
 
 export default function MentorDashboard({ mentorName, mentees }: Props) {
+  const [assignOpen, setAssignOpen] = useState(false)
+  const [assignTargetIds, setAssignTargetIds] = useState<string[]>([])
+
+  function openAssignForOne(menteeId: string) {
+    setAssignTargetIds([menteeId])
+    setAssignOpen(true)
+  }
+  function openAssignForAll() {
+    setAssignTargetIds([])
+    setAssignOpen(true)
+  }
+
   // 全体進捗 が低い順 (= 미완료 비율이 높은 순) 으로 정렬, 担当 0 件은 末尾.
   const sorted = [...mentees].sort((a, b) => {
     const ra = progressRatio(a.stat.all)
@@ -132,7 +147,27 @@ export default function MentorDashboard({ mentorName, mentees }: Props) {
         さんの担当メンティー進捗状況
       </p>
 
-      <Card title="担当メンティーの日本語進捗">
+      <AssignTaskModal
+        open={assignOpen}
+        onClose={() => setAssignOpen(false)}
+        mentees={mentees.map(m => ({ id: m.id, full_name: m.full_name, email: m.email }))}
+        initialMenteeIds={assignTargetIds}
+      />
+
+      <Card
+        title="担当メンティーの日本語進捗"
+        headerAction={
+          <button
+            type="button"
+            onClick={openAssignForAll}
+            disabled={mentees.length === 0}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            一括割り当て
+          </button>
+        }
+      >
         {sorted.length === 0 ? (
           <div className="py-8 text-center text-sm text-zinc-500">
             担当メンティーがいません
@@ -149,6 +184,7 @@ export default function MentorDashboard({ mentorName, mentees }: Props) {
                   <th rowSpan={2} className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400">遅延</th>
                   <th rowSpan={2} className="border-l border-gray-200/40 px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">今月進捗</th>
                   <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">全体進捗</th>
+                  <th rowSpan={2} className="border-l border-gray-200/40 px-3 py-3 text-right text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">操作</th>
                 </tr>
                 <tr>
                   <th className="border-l border-gray-200/40 px-3 py-2 text-center text-[10px] font-normal text-zinc-400 dark:border-white/[0.06] dark:text-zinc-500">生活日本語</th>
@@ -184,7 +220,7 @@ export default function MentorDashboard({ mentorName, mentees }: Props) {
                       {fmtPair(m.stat.businessJp)}
                     </td>
                     <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-right text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
-                      {m.stat.incomplete}
+                      {m.stat.incomplete}/{m.stat.all.total}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
                       <span className={m.stat.overdue > 0 ? 'font-semibold text-red-500' : 'text-zinc-500 dark:text-zinc-400'}>
@@ -196,6 +232,17 @@ export default function MentorDashboard({ mentorName, mentees }: Props) {
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300">
                       {fmtPair(m.stat.all)}
+                    </td>
+                    <td className="whitespace-nowrap border-l border-gray-200/40 px-3 py-3 text-right dark:border-white/[0.06]">
+                      <button
+                        type="button"
+                        onClick={() => openAssignForOne(m.id)}
+                        className="inline-flex items-center gap-1 rounded-lg bg-indigo-500/10 px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-500/20 dark:text-indigo-300"
+                        title={`${m.full_name ?? m.email} に課題を割り当てる`}
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        課題
+                      </button>
                     </td>
                   </tr>
                   )

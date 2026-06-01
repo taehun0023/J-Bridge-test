@@ -339,7 +339,7 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                     {fmtPair(user.progress.businessJp)}
                   </td>
                   <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-right text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
-                    {user.progress.incomplete}
+                    {user.progress.incomplete}/{user.progress.all.total}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
                     <span className={user.progress.overdue > 0 ? 'font-semibold text-red-500' : 'text-zinc-500 dark:text-zinc-400'}>
