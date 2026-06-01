@@ -191,7 +191,6 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
   const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const nameLabelSuffix = isJapanese === false ? '（漢字/アルファベット）' : isJapanese === true ? '（漢字）' : ''
-  const katakanaLabelSuffix = isJapanese === false ? '（任意）' : ''
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
@@ -207,6 +206,13 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
 
     if (isJapanese && (ALPHABET_RE.test(lastName) || ALPHABET_RE.test(firstName))) {
       setSaveError('日本人の方は名前をアルファベットではなく日本語（漢字・カタカナ）で入力してください')
+      setSaving(false)
+      return
+    }
+
+    const hasName = lastName.trim() !== '' || firstName.trim() !== ''
+    if (hasName && (katakanaLast.trim() === '' || katakanaFirst.trim() === '')) {
+      setSaveError('カタカナ名（セイ・メイ）は必須です')
       setSaving(false)
       return
     }
@@ -352,7 +358,7 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
 
           <div>
             <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              カタカナ名{katakanaLabelSuffix}
+              カタカナ名 <span className="text-red-400">*</span>
             </label>
             <div className="mt-1 grid grid-cols-2 gap-2">
               <input
