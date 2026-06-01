@@ -8,6 +8,12 @@ import DashboardAnnouncements from './DashboardAnnouncements'
 import ExamGatePage from '@/components/dashboard/ExamGatePage'
 import { checkAndCreateExamCycle, getNextExamDate } from '@/app/actions/exam-scheduling'
 import { expireStaleExams } from '@/app/actions/comprehensive-exam'
+import {
+  aggregateJapaneseProgress,
+  type JapaneseAssignmentRow,
+} from '@/lib/japanese-progress'
+
+const JP_CATEGORIES = ['seikatsu', 'business-jp', 'business_jp', '生活日本語', 'ビジネス日本語'] as const
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -62,7 +68,7 @@ export default async function DashboardPage() {
   if (profile?.role === 'mentor') {
     const [{ data: menteeAssignments }, { data: menteeProfiles }, { count: totalAnnouncements }, { count: readCount }] = await Promise.all([
       supabase.from('mentor_mentee_assignments').select('mentee_id').eq('mentor_id', user.id),
-      supabase.from('profiles').select('id, full_name, email, jlpt_level').eq('role', 'mentee'),
+      supabase.from('profiles').select('id, full_name, email').eq('role', 'mentee'),
       supabase.from('announcements').select('id', { count: 'exact', head: true }),
       supabase.from('announcement_reads').select('announcement_id', { count: 'exact', head: true }).eq('user_id', user.id),
     ])
@@ -70,30 +76,25 @@ export default async function DashboardPage() {
     const menteeIds = (menteeAssignments ?? []).map(a => a.mentee_id)
     const menteeMap = new Map((menteeProfiles ?? []).map(p => [p.id, p]))
 
-    let progressMap = new Map<string, { total: number; completed: number }>()
+    let jpRows: JapaneseAssignmentRow[] = []
     if (menteeIds.length > 0) {
       const { data: assignments } = await supabase
         .from('learning_assignments')
-        .select('assigned_to, status')
+        .select('assigned_to, category, status, due_date, created_at, completed_at')
         .in('assigned_to', menteeIds)
-      for (const a of assignments ?? []) {
-        const cur = progressMap.get(a.assigned_to) ?? { total: 0, completed: 0 }
-        cur.total++
-        if (a.status === 'completed') cur.completed++
-        progressMap.set(a.assigned_to, cur)
-      }
+        .in('category', JP_CATEGORIES as unknown as string[])
+      jpRows = (assignments ?? []) as JapaneseAssignmentRow[]
     }
+    const jpStats = aggregateJapaneseProgress(jpRows, menteeIds)
 
     const mentees = menteeIds.map(id => {
       const p = menteeMap.get(id)
-      const prog = progressMap.get(id) ?? { total: 0, completed: 0 }
+      const stat = jpStats.get(id)!
       return {
         id,
         full_name: p?.full_name ?? null,
         email: p?.email ?? '',
-        jlpt_level: p?.jlpt_level ?? null,
-        total: prog.total,
-        completed: prog.completed,
+        stat,
       }
     })
 
@@ -109,9 +110,11 @@ export default async function DashboardPage() {
   // Admin dashboard
   // ──────────────────────────────────────────────
   if (profile?.role === 'admin') {
-    const [{ data: allMentees }, { data: allAssignments }, { data: mentorAssignments }, { data: mentorProfiles }, { count: adminTotalAnn }, { count: adminReadAnn }] = await Promise.all([
-      supabase.from('profiles').select('id, full_name, email, jlpt_level, created_at').eq('role', 'mentee'),
-      supabase.from('learning_assignments').select('assigned_to, status, completed_at'),
+    const [{ data: allMentees }, { data: jpAssignments }, { data: mentorAssignments }, { data: mentorProfiles }, { count: adminTotalAnn }, { count: adminReadAnn }] = await Promise.all([
+      supabase.from('profiles').select('id, full_name, email').eq('role', 'mentee'),
+      supabase.from('learning_assignments')
+        .select('assigned_to, category, status, due_date, created_at, completed_at')
+        .in('category', JP_CATEGORIES as unknown as string[]),
       supabase.from('mentor_mentee_assignments').select('mentor_id, mentee_id'),
       supabase.from('profiles').select('id, full_name').eq('role', 'mentor'),
       supabase.from('announcements').select('id', { count: 'exact', head: true }),
@@ -125,32 +128,19 @@ export default async function DashboardPage() {
       menteeToMentor.set(a.mentee_id, mentorMap.get(a.mentor_id) ?? '—')
     }
 
-    const progressMap = new Map<string, { total: number; completed: number; lastActivity: string | null }>()
-    for (const a of allAssignments ?? []) {
-      const cur = progressMap.get(a.assigned_to) ?? { total: 0, completed: 0, lastActivity: null }
-      cur.total++
-      if (a.status === 'completed') {
-        cur.completed++
-        if (a.completed_at && (!cur.lastActivity || a.completed_at > cur.lastActivity)) {
-          cur.lastActivity = a.completed_at
-        }
-      }
-      progressMap.set(a.assigned_to, cur)
-    }
+    const menteeIds = (allMentees ?? []).map(p => p.id)
+    const jpStats = aggregateJapaneseProgress(
+      (jpAssignments ?? []) as JapaneseAssignmentRow[],
+      menteeIds,
+    )
 
-    const employees = (allMentees ?? []).map(p => {
-      const prog = progressMap.get(p.id) ?? { total: 0, completed: 0, lastActivity: null }
-      return {
-        id: p.id,
-        full_name: p.full_name,
-        email: p.email,
-        jlpt_level: p.jlpt_level,
-        mentor_name: menteeToMentor.get(p.id) ?? null,
-        total: prog.total,
-        completed: prog.completed,
-        last_activity: prog.lastActivity,
-      }
-    })
+    const employees = (allMentees ?? []).map(p => ({
+      id: p.id,
+      full_name: p.full_name,
+      email: p.email,
+      mentor_name: menteeToMentor.get(p.id) ?? null,
+      stat: jpStats.get(p.id)!,
+    }))
 
     return (
       <>
