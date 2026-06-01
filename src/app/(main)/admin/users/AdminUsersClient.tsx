@@ -5,6 +5,33 @@ import { useRouter } from 'next/navigation'
 import { updateUserRole, createUserAccount, updateMentorSpecialty, deleteUser, assignMentor } from '@/app/actions/admin/users'
 import { Trash2 } from 'lucide-react'
 
+interface NameParts {
+  lastName: string
+  firstName: string
+  katakanaLast: string
+  katakanaFirst: string
+}
+
+function splitName(fullName: string | null): NameParts {
+  const empty: NameParts = { lastName: '-', firstName: '', katakanaLast: '', katakanaFirst: '' }
+  if (!fullName) return empty
+  const trimmed = fullName.trim()
+  const withKana = trimmed.match(/^(\S+)\s+(\S+)\s*\((\S+)\s+(\S+)\)\s*$/)
+  if (withKana) {
+    return {
+      lastName: withKana[1],
+      firstName: withKana[2],
+      katakanaLast: withKana[3],
+      katakanaFirst: withKana[4],
+    }
+  }
+  const twoTokens = trimmed.match(/^(\S+)\s+(\S+)\s*$/)
+  if (twoTokens) {
+    return { lastName: twoTokens[1], firstName: twoTokens[2], katakanaLast: '', katakanaFirst: '' }
+  }
+  return { ...empty, lastName: trimmed }
+}
+
 interface User {
   id: string
   email: string
@@ -196,10 +223,26 @@ export default function AdminUsersClient({ users, mentors }: Props) {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">
-              {filtered.map(user => (
+              {filtered.map(user => {
+                const { lastName, firstName, katakanaLast, katakanaFirst } = splitName(user.full_name)
+                return (
                 <tr key={user.id}>
                   <td className="whitespace-nowrap px-4 py-3">
-                    <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{user.full_name ?? '-'}</span>
+                    <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                      <ruby>
+                        {lastName}
+                        <rt className="pb-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">{katakanaLast || ' '}</rt>
+                      </ruby>
+                      {firstName && (
+                        <>
+                          {' '}
+                          <ruby>
+                            {firstName}
+                            <rt className="pb-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">{katakanaFirst || ' '}</rt>
+                          </ruby>
+                        </>
+                      )}
+                    </span>
                     {!user.is_onboarded && (
                       <span className="ml-2 text-xs text-amber-400">(未オンボーディング)</span>
                     )}
@@ -291,7 +334,8 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                     </button>
                   </td>
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
         </div>

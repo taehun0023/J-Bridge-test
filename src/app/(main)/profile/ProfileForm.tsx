@@ -10,6 +10,118 @@ const JLPT_LEVELS: JlptLevel[] = ['N1', 'N2', 'N3', 'N4', 'N5']
 
 const ALPHABET_RE = /[A-Za-z]/
 
+const IT_CERTIFICATIONS: Record<string, readonly string[]> = {
+  '情報処理 (IPA)': [
+    'ITパスポート',
+    '情報セキュリティマネジメント',
+    '基本情報技術者',
+    '応用情報技術者',
+    'ネットワークスペシャリスト',
+    'データベーススペシャリスト',
+    '情報処理安全確保支援士',
+    'システムアーキテクト',
+    'ITストラテジスト',
+    'プロジェクトマネージャ',
+    'ITサービスマネージャ',
+    'システム監査技術者',
+    'エンベデッドシステムスペシャリスト',
+  ],
+  'AWS': [
+    'AWS Cloud Practitioner (Foundational)',
+    'AWS AI Practitioner (Foundational)',
+    'AWS Solutions Architect Associate (SAA)',
+    'AWS Developer Associate (DVA)',
+    'AWS SysOps Administrator Associate (SOA)',
+    'AWS Data Engineer Associate (DEA)',
+    'AWS Machine Learning Engineer Associate (MLA)',
+    'AWS Solutions Architect Professional (SAP)',
+    'AWS DevOps Engineer Professional (DOP)',
+    'AWS Advanced Networking Specialty',
+    'AWS Security Specialty',
+    'AWS Machine Learning Specialty',
+  ],
+  'Microsoft Azure': [
+    'Azure Fundamentals (AZ-900)',
+    'Azure Administrator Associate (AZ-104)',
+    'Azure Developer Associate (AZ-204)',
+    'Azure Solutions Architect Expert (AZ-305)',
+    'Azure DevOps Engineer Expert (AZ-400)',
+    'Azure Security Engineer Associate (AZ-500)',
+    'Azure Data Engineer Associate (DP-203)',
+    'Azure Database Administrator Associate (DP-300)',
+  ],
+  'Google Cloud': [
+    'Google Cloud Digital Leader',
+    'Google Cloud Associate Cloud Engineer',
+    'Google Cloud Professional Cloud Architect',
+    'Google Cloud Professional Data Engineer',
+    'Google Cloud Professional DevOps Engineer',
+    'Google Cloud Professional Cloud Security Engineer',
+    'Google Cloud Professional ML Engineer',
+  ],
+  'Oracle / Java': [
+    'Oracle Certified Java Programmer Bronze (OCJP Bronze)',
+    'Oracle Certified Java Programmer Silver (OCJP Silver)',
+    'Oracle Certified Java Programmer Gold (OCJP Gold)',
+    'Oracle Master Bronze (DB)',
+    'Oracle Master Silver (DB)',
+    'Oracle Master Gold (DB)',
+    'Oracle Master Platinum (DB)',
+    'Oracle Cloud Infrastructure Foundations (OCI)',
+  ],
+  'ネットワーク / Linux': [
+    'CCNA (Cisco)',
+    'CCNP (Cisco)',
+    'CCIE (Cisco)',
+    'LPIC-1',
+    'LPIC-2',
+    'LPIC-3',
+    'RHCSA (Red Hat)',
+    'RHCE (Red Hat)',
+    'CompTIA Network+',
+  ],
+  'セキュリティ': [
+    'CISSP',
+    'CEH (Certified Ethical Hacker)',
+    'CompTIA Security+',
+    'CompTIA CySA+',
+  ],
+  'プロジェクト管理 / ITIL': [
+    'PMP',
+    'PRINCE2',
+    'ITIL Foundation',
+    'Scrum Master (CSM)',
+    'Scrum Master (PSM)',
+  ],
+  '韓国国家資格': [
+    '정보처리기사',
+    '정보처리산업기사',
+    '정보보안기사',
+    '정보보안산업기사',
+    'SQLD',
+    'SQLP',
+    'ADsP',
+    'ADP',
+    '빅데이터분석기사',
+  ],
+}
+
+const ALL_CERT_VALUES: ReadonlySet<string> = new Set(
+  Object.values(IT_CERTIFICATIONS).flat(),
+)
+
+function parseCertifications(raw: string | null): string[] {
+  if (!raw) return []
+  return raw
+    .split(/[、,]/)
+    .map((s) => s.trim())
+    .filter((s) => s && ALL_CERT_VALUES.has(s))
+}
+
+function buildCertifications(known: string[]): string {
+  return known.join('、')
+}
+
 interface Profile {
   id: string
   full_name: string | null
@@ -61,12 +173,12 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
   const [katakanaLast, setKatakanaLast] = useState(initialParts.katakanaLast)
   const [katakanaFirst, setKatakanaFirst] = useState(initialParts.katakanaFirst)
   const [targetCoding, setTargetCoding] = useState(profile?.target_coding_area ?? '')
-  const [isJapanese, setIsJapanese] = useState<boolean | null>(
-    profile?.full_name ? (profile?.is_japanese ?? false) : null,
-  )
+  const [isJapanese, setIsJapanese] = useState<boolean | null>(null)
   const nationalitySelected = isJapanese !== null
   const [jlptLevel, setJlptLevel] = useState<JlptLevel | ''>(profile?.jlpt_level ?? '')
-  const [itCertifications, setItCertifications] = useState(profile?.it_certifications ?? '')
+  const [selectedCerts, setSelectedCerts] = useState<string[]>(
+    parseCertifications(profile?.it_certifications ?? null),
+  )
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -129,11 +241,12 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
     setCertError(null)
 
     const supabase = createClient()
+    const combinedCerts = buildCertifications(selectedCerts)
     const { error } = await supabase
       .from('profiles')
       .update({
         jlpt_level: jlptLevel || null,
-        it_certifications: itCertifications || null,
+        it_certifications: combinedCerts || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', profile?.id ?? '')
@@ -310,13 +423,50 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
 
         <div>
           <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">IT関連資格</label>
-          <textarea
-            value={itCertifications}
-            onChange={(e) => setItCertifications(e.target.value)}
-            rows={3}
-            placeholder="例: 基本情報技術者、AWS SAA、정보처리기사"
-            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
-          />
+
+          {selectedCerts.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {selectedCerts.map((cert) => (
+                <span
+                  key={cert}
+                  className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300"
+                >
+                  {cert}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCerts((prev) => prev.filter((c) => c !== cert))}
+                    className="text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-200"
+                    aria-label={`${cert} を削除`}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          <select
+            value=""
+            onChange={(e) => {
+              const v = e.target.value
+              if (v && !selectedCerts.includes(v)) {
+                setSelectedCerts((prev) => [...prev, v])
+              }
+            }}
+            className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
+          >
+            <option value="">資格を選択して追加…</option>
+            {Object.entries(IT_CERTIFICATIONS).map(([category, items]) => (
+              <optgroup key={category} label={category}>
+                {items.map((item) => (
+                  <option key={item} value={item} disabled={selectedCerts.includes(item)}>
+                    {item}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+
         </div>
 
         {certError && (
