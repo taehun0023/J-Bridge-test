@@ -11,7 +11,6 @@ const JLPT_LEVELS: JlptLevel[] = ['N1', 'N2', 'N3', 'N4', 'N5']
 interface Profile {
   id: string
   full_name: string | null
-  bio: string | null
   target_coding_area: string | null
   is_japanese: boolean
   jlpt_level: JlptLevel | null
@@ -21,7 +20,6 @@ interface Profile {
 export default function ProfileForm({ profile }: { profile: Profile | null }) {
   const router = useRouter()
   const [fullName, setFullName] = useState(profile?.full_name ?? '')
-  const [bio, setBio] = useState(profile?.bio ?? '')
   const [targetCoding, setTargetCoding] = useState(profile?.target_coding_area ?? '')
   const [isJapanese, setIsJapanese] = useState(profile?.is_japanese ?? false)
   const [jlptLevel, setJlptLevel] = useState<JlptLevel | ''>(profile?.jlpt_level ?? '')
@@ -48,7 +46,6 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
       .from('profiles')
       .update({
         full_name: fullName || null,
-        bio: bio || null,
         target_coding_area: targetCoding || null,
         is_japanese: isJapanese,
         updated_at: new Date().toISOString(),
@@ -128,16 +125,6 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
             type="text"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">自己紹介</label>
-          <textarea
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            rows={3}
             className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
           />
         </div>
