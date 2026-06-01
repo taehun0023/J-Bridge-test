@@ -23,7 +23,7 @@ CREATE UNIQUE INDEX idx_unique_pending_request
 CREATE TRIGGER set_content_access_requests_updated_at
   BEFORE UPDATE ON content_access_requests
   FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
+  EXECUTE FUNCTION update_updated_at();
 
 -- ============================================
 -- RLS
