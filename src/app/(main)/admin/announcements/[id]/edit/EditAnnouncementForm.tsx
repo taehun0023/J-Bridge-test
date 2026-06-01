@@ -56,7 +56,7 @@ export default function EditAnnouncementForm({ announcement, existingAttachments
       if (result.error) {
         setError(result.error)
       } else {
-        router.push(`/announcements/${announcement.id}`)
+        router.push('/announcements')
       }
     })
   }

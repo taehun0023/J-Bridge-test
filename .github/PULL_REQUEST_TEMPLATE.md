@@ -1,3 +1,10 @@
+<!--
+ブランチ運用 (GitLab Flow):
+  - feature/* → dev  (機能追加・修正は必ず dev 宛て)
+  - dev → main       (本番リリース時のみ。Lawrence が作成)
+  - 直接 main 宛て PR は禁止 (緊急 hotfix は別途相談)
+-->
+
 ## 概要
 
 <!-- 何を、なぜ変更したかを 2-3 行で -->
