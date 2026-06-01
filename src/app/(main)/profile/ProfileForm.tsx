@@ -8,6 +8,8 @@ import type { JlptLevel } from '@/lib/supabase/types'
 
 const JLPT_LEVELS: JlptLevel[] = ['N1', 'N2', 'N3', 'N4', 'N5']
 
+const ALPHABET_RE = /[A-Za-z]/
+
 interface Profile {
   id: string
   full_name: string | null
@@ -17,11 +19,52 @@ interface Profile {
   it_certifications: string | null
 }
 
+interface NameParts {
+  lastName: string
+  firstName: string
+  katakanaLast: string
+  katakanaFirst: string
+}
+
+function parseFullName(fullName: string | null): NameParts {
+  const empty: NameParts = { lastName: '', firstName: '', katakanaLast: '', katakanaFirst: '' }
+  if (!fullName) return empty
+  const trimmed = fullName.trim()
+  const withKana = trimmed.match(/^(\S+)\s+(\S+)\s*\((\S+)\s+(\S+)\)\s*$/)
+  if (withKana) {
+    return {
+      lastName: withKana[1],
+      firstName: withKana[2],
+      katakanaLast: withKana[3],
+      katakanaFirst: withKana[4],
+    }
+  }
+  const twoTokens = trimmed.match(/^(\S+)\s+(\S+)\s*$/)
+  if (twoTokens) {
+    return { lastName: twoTokens[1], firstName: twoTokens[2], katakanaLast: '', katakanaFirst: '' }
+  }
+  return { ...empty, lastName: trimmed }
+}
+
+function buildFullName(parts: NameParts): string {
+  const kanji = [parts.lastName.trim(), parts.firstName.trim()].filter(Boolean).join(' ')
+  const katakana = [parts.katakanaLast.trim(), parts.katakanaFirst.trim()].filter(Boolean).join(' ')
+  if (!kanji) return ''
+  return katakana ? `${kanji} (${katakana})` : kanji
+}
+
 export default function ProfileForm({ profile }: { profile: Profile | null }) {
   const router = useRouter()
-  const [fullName, setFullName] = useState(profile?.full_name ?? '')
+  const initialParts = parseFullName(profile?.full_name ?? null)
+  const [lastName, setLastName] = useState(initialParts.lastName)
+  const [firstName, setFirstName] = useState(initialParts.firstName)
+  const [katakanaLast, setKatakanaLast] = useState(initialParts.katakanaLast)
+  const [katakanaFirst, setKatakanaFirst] = useState(initialParts.katakanaFirst)
   const [targetCoding, setTargetCoding] = useState(profile?.target_coding_area ?? '')
-  const [isJapanese, setIsJapanese] = useState(profile?.is_japanese ?? false)
+  const [isJapanese, setIsJapanese] = useState<boolean | null>(
+    profile?.full_name ? (profile?.is_japanese ?? false) : null,
+  )
+  const nationalitySelected = isJapanese !== null
   const [jlptLevel, setJlptLevel] = useState<JlptLevel | ''>(profile?.jlpt_level ?? '')
   const [itCertifications, setItCertifications] = useState(profile?.it_certifications ?? '')
   const [saving, setSaving] = useState(false)
@@ -35,11 +78,28 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
   const [passwordSaving, setPasswordSaving] = useState(false)
   const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
+  const nameLabelSuffix = isJapanese === false ? '（漢字/アルファベット）' : isJapanese === true ? '（漢字）' : ''
+  const katakanaLabelSuffix = isJapanese === false ? '（任意）' : ''
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
     setSaved(false)
     setSaveError(null)
+
+    if (isJapanese === null) {
+      setSaveError('「日本人ですか？」を先に選択してください')
+      setSaving(false)
+      return
+    }
+
+    if (isJapanese && (ALPHABET_RE.test(lastName) || ALPHABET_RE.test(firstName))) {
+      setSaveError('日本人の方は名前をアルファベットではなく日本語（漢字・カタカナ）で入力してください')
+      setSaving(false)
+      return
+    }
+
+    const fullName = buildFullName({ lastName, firstName, katakanaLast, katakanaFirst })
 
     const supabase = createClient()
     const { error } = await supabase
@@ -120,17 +180,9 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
     <Card title="個人情報">
       <form onSubmit={handleSave} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">名前</label>
-          <input
-            type="text"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">日本人ですか？</label>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            日本人ですか？ <span className="text-red-400">*</span>
+          </label>
           <div className="mt-1 flex gap-3">
             {[
               { value: true, label: 'はい（日本語テスト省略）' },
@@ -155,20 +207,71 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
               </label>
             ))}
           </div>
+          {!nationalitySelected && (
+            <p className="mt-2 text-xs text-amber-500 dark:text-amber-400">
+              先に「日本人ですか？」を選択してください。選択するまで他の項目は入力できません。
+            </p>
+          )}
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">開発言語</label>
-          <select
-            value={targetCoding}
-            onChange={(e) => setTargetCoding(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
-          >
-            <option value="">選択</option>
-            <option value="java">Java</option>
-            <option value="javascript">JavaScript</option>
-          </select>
-        </div>
+        <fieldset disabled={!nationalitySelected} className="space-y-4 disabled:opacity-50">
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              名前{nameLabelSuffix}
+            </label>
+            <div className="mt-1 grid grid-cols-2 gap-2">
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="姓 / Last Name"
+                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none disabled:cursor-not-allowed dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
+              />
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="名 / First Name"
+                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none disabled:cursor-not-allowed dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              カタカナ名{katakanaLabelSuffix}
+            </label>
+            <div className="mt-1 grid grid-cols-2 gap-2">
+              <input
+                type="text"
+                value={katakanaLast}
+                onChange={(e) => setKatakanaLast(e.target.value)}
+                placeholder="セイ / Last Name (Katakana)"
+                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none disabled:cursor-not-allowed dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
+              />
+              <input
+                type="text"
+                value={katakanaFirst}
+                onChange={(e) => setKatakanaFirst(e.target.value)}
+                placeholder="メイ / First Name (Katakana)"
+                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none disabled:cursor-not-allowed dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">開発言語</label>
+            <select
+              value={targetCoding}
+              onChange={(e) => setTargetCoding(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 disabled:cursor-not-allowed dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
+            >
+              <option value="">選択</option>
+              <option value="java">Java</option>
+              <option value="javascript">JavaScript</option>
+            </select>
+          </div>
+        </fieldset>
 
         {saveError && (
           <div className="rounded-xl px-3 py-2 text-sm bg-red-500/10 text-red-400 ring-1 ring-red-500/20">
@@ -179,8 +282,8 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
         <div className="flex items-center gap-3">
           <button
             type="submit"
-            disabled={saving}
-            className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+            disabled={saving || !nationalitySelected}
+            className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
           >
             {saving ? '保存中...' : '保存'}
           </button>
