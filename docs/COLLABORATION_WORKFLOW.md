@@ -29,7 +29,7 @@
 
 ### 1-1. 너(팀원)의 역할
 
-- **레포 URL**: https://github.com/LawrenceCha/edu_cha
+- **레포 URL**: https://github.com/LawrenceCha/J-Bridge
 - **리뷰어/머지 담당**: Lawrence (@LawrenceCha) — 모든 PR은 Lawrence가 merge 합니다
 - **너의 작업 범위**:
   - `feature/*` 브랜치에서 작업
@@ -46,7 +46,7 @@
 
 ```
 # 너의 컨텍스트
-나는 J-Bridge 레포 (https://github.com/LawrenceCha/edu_cha) 의 팀원이다.
+나는 J-Bridge 레포 (https://github.com/LawrenceCha/J-Bridge) 의 팀원이다.
 협업 워크플로는 docs/COLLABORATION_WORKFLOW.md 에 정의되어 있다.
 특히 마지막 박스의 "Claude 에게 보내는 메타 지시"를 반드시 지켜라.
 
@@ -118,8 +118,8 @@ git push origin feature/이번-작업-이름
 작업 폴더로 이동 후:
 
 ```bash
-git clone https://github.com/LawrenceCha/edu_cha.git
-cd edu_cha
+git clone https://github.com/LawrenceCha/J-Bridge.git
+cd J-Bridge
 ```
 
 ### 3-3. 의존성 설치
@@ -156,7 +156,7 @@ npm run build
 ```bash
 git status        # working tree clean
 git branch        # * main 만 표시되면 OK
-git remote -v     # origin 이 LawrenceCha/edu_cha 가리키면 OK
+git remote -v     # origin 이 LawrenceCha/J-Bridge 가리키면 OK
 ```
 
 ---
@@ -250,27 +250,40 @@ git remote prune origin                    # 원격에서 사라진 브랜치 �
 
 ---
 
-## 5. Vercel Preview URL 사용법
+## 5. Vercel 배포 환경
 
-### 5-1. PR 만들면 자동 생성됨
+J-Bridge 는 **GitLab Flow (Environment Branches)** 방식으로 운영합니다.
 
-PR 을 만들고 1~3 분 기다리면, PR 본문 아래에 **Vercel bot 코멘트**가 달립니다:
+| 브랜치 | 환경 | Vercel 프로젝트 | Supabase |
+|---|---|---|---|
+| `main` | Production (本番) | `edu-cha` (production) | production Supabase |
+| `dev` | Staging (検証) | `edu-cha-staging` (test) | staging Supabase |
+| `feature/*` | Preview | 각 PR 마다 자동 생성 | staging Supabase (dev 와 동일) |
+
+### 5-1. PR 만들면 Preview 자동 생성됨
+
+`feature/*` 브랜치를 push 하고 `dev` 로 PR 을 만들면, 1~3 분 뒤 PR 본문에 **Vercel bot 코멘트**가 달립니다:
 
 ```
 ✅ Preview deployed
-Preview: https://edu-cha-git-feature-xxx-lawrencecha.vercel.app
+Preview: https://j-bridge-git-feature-xxx-lawrence-chas-projects.vercel.app
 ```
 
 이 URL 로 접속하면 본인 브랜치 코드가 실제 배포된 상태를 미리 볼 수 있어요.
 
 ### 5-2. staging Supabase 사용
 
-Preview 환경은 **staging 용 Supabase 프로젝트**에 연결돼 있습니다.
+`dev` 브랜치와 `feature/*` Preview 는 **staging 용 Supabase 프로젝트**에 연결돼 있습니다.
 production 데이터가 아니므로 마음껏 테스트해도 됩니다.
 
 > ⚠️ Preview URL 에서 본 데이터는 실제 사용자 데이터가 아닙니다. production 확인이 필요하면 Lawrence 에게 요청하세요.
 
-### 5-3. Preview 가 생성 안 되면
+### 5-3. dev 머지 후 staging 자동 배포
+
+`feature/* → dev` PR 이 머지되면 `dev` 브랜치 자체가 staging Vercel 에 배포됩니다.
+staging URL 에서 통합 확인을 한 뒤, Lawrence 가 `dev → main` PR 을 생성하여 production 으로 승격합니다.
+
+### 5-4. Preview 가 생성 안 되면
 
 - PR 본문에 Vercel 코멘트가 5 분 지나도 안 보임 → Lawrence 에게 핑
 - 빌드 실패: PR 의 "Checks" 탭에 빨간색 → Vercel 빌드 로그 확인
