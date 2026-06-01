@@ -4,11 +4,30 @@ import Card from '@/components/ui/Card'
 import Link from 'next/link'
 import type { JapaneseProgressStat } from '@/lib/japanese-progress'
 
+interface ExamScore {
+  score: number | null
+  passing_score: number
+}
+
 interface MenteeRow {
   id: string
   full_name: string | null
   email: string
   stat: JapaneseProgressStat
+  exam_seikatsu: ExamScore | null
+  exam_business_jp: ExamScore | null
+}
+
+function ExamCell({ exam }: { exam: ExamScore | null }) {
+  if (!exam || exam.score === null) {
+    return <span className="text-zinc-400">—</span>
+  }
+  const passed = exam.score >= exam.passing_score
+  return (
+    <span className={passed ? 'font-medium text-emerald-500' : 'font-medium text-red-500'}>
+      {exam.passing_score}/{exam.score}
+    </span>
+  )
 }
 
 interface Props {
@@ -123,13 +142,19 @@ export default function MentorDashboard({ mentorName, mentees }: Props) {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-white/[0.06]">
               <thead>
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">名前</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">生活日本語</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">ビジネス日本語</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400">未完了</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400">遅延</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">今月進捗</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">全体進捗</th>
+                  <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">名前</th>
+                  <th colSpan={2} className="border-l border-gray-200/40 px-4 py-2 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">試験</th>
+                  <th colSpan={2} className="border-l border-gray-200/40 px-4 py-2 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">課題</th>
+                  <th rowSpan={2} className="border-l border-gray-200/40 px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">未完了</th>
+                  <th rowSpan={2} className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400">遅延</th>
+                  <th rowSpan={2} className="border-l border-gray-200/40 px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">今月進捗</th>
+                  <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">全体進捗</th>
+                </tr>
+                <tr>
+                  <th className="border-l border-gray-200/40 px-3 py-2 text-center text-[10px] font-normal text-zinc-400 dark:border-white/[0.06] dark:text-zinc-500">生活日本語</th>
+                  <th className="px-3 py-2 text-center text-[10px] font-normal text-zinc-400 dark:text-zinc-500">ビジネス日本語</th>
+                  <th className="border-l border-gray-200/40 px-3 py-2 text-center text-[10px] font-normal text-zinc-400 dark:border-white/[0.06] dark:text-zinc-500">生活日本語</th>
+                  <th className="px-3 py-2 text-center text-[10px] font-normal text-zinc-400 dark:text-zinc-500">ビジネス日本語</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-white/[0.06]">
@@ -146,13 +171,19 @@ export default function MentorDashboard({ mentorName, mentees }: Props) {
                         {hasName ? <RubyName parts={parts} /> : m.email}
                       </Link>
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300">
+                    <td className="whitespace-nowrap border-l border-gray-200/40 px-3 py-3 text-center text-sm dark:border-white/[0.06]">
+                      <ExamCell exam={m.exam_seikatsu} />
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-3 text-center text-sm">
+                      <ExamCell exam={m.exam_business_jp} />
+                    </td>
+                    <td className="whitespace-nowrap border-l border-gray-200/40 px-3 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
                       {fmtPair(m.stat.seikatsu)}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300">
+                    <td className="whitespace-nowrap px-3 py-3 text-center text-sm text-zinc-700 dark:text-zinc-300">
                       {fmtPair(m.stat.businessJp)}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-zinc-700 dark:text-zinc-300">
+                    <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-right text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
                       {m.stat.incomplete}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
@@ -160,7 +191,7 @@ export default function MentorDashboard({ mentorName, mentees }: Props) {
                         {m.stat.overdue}
                       </span>
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300">
+                    <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
                       {fmtPair(m.stat.thisMonth)}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300">

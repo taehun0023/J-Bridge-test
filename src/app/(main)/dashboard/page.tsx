@@ -77,24 +77,54 @@ export default async function DashboardPage() {
     const menteeMap = new Map((menteeProfiles ?? []).map(p => [p.id, p]))
 
     let jpRows: JapaneseAssignmentRow[] = []
+    let jpExams: { user_id: string; category: string; score: number | null; passing_score: number; completed_at: string | null }[] = []
     if (menteeIds.length > 0) {
-      const { data: assignments } = await supabase
-        .from('learning_assignments')
-        .select('assigned_to, category, status, due_date, created_at, completed_at')
-        .in('assigned_to', menteeIds)
-        .in('category', JP_CATEGORIES as unknown as string[])
+      const [{ data: assignments }, { data: exams }] = await Promise.all([
+        supabase
+          .from('learning_assignments')
+          .select('assigned_to, category, status, due_date, created_at, completed_at')
+          .in('assigned_to', menteeIds)
+          .in('category', JP_CATEGORIES as unknown as string[]),
+        supabase
+          .from('comprehensive_exams')
+          .select('user_id, category, score, passing_score, completed_at, status')
+          .in('user_id', menteeIds)
+          .in('category', JP_CATEGORIES as unknown as string[])
+          .in('status', ['completed', 'failed'])
+          .order('completed_at', { ascending: false }),
+      ])
       jpRows = (assignments ?? []) as JapaneseAssignmentRow[]
+      jpExams = (exams ?? []) as typeof jpExams
     }
     const jpStats = aggregateJapaneseProgress(jpRows, menteeIds)
+
+    // 最新試験スコア（カテゴリ別、各メンティーごと）
+    const latestExam = new Map<string, { seikatsu?: { score: number | null; passing_score: number }; businessJp?: { score: number | null; passing_score: number } }>()
+    for (const e of jpExams) {
+      const bucket = e.category === 'seikatsu' || e.category === '生活日本語'
+        ? 'seikatsu'
+        : (e.category === 'business-jp' || e.category === 'business_jp' || e.category === 'ビジネス日本語')
+          ? 'businessJp'
+          : null
+      if (!bucket) continue
+      const cur = latestExam.get(e.user_id) ?? {}
+      if (!cur[bucket]) {
+        cur[bucket] = { score: e.score, passing_score: e.passing_score }
+        latestExam.set(e.user_id, cur)
+      }
+    }
 
     const mentees = menteeIds.map(id => {
       const p = menteeMap.get(id)
       const stat = jpStats.get(id)!
+      const exams = latestExam.get(id) ?? {}
       return {
         id,
         full_name: p?.full_name ?? null,
         email: p?.email ?? '',
         stat,
+        exam_seikatsu: exams.seikatsu ?? null,
+        exam_business_jp: exams.businessJp ?? null,
       }
     })
 
