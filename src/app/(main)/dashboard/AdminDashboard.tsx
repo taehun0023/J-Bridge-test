@@ -4,6 +4,8 @@ import { useState } from 'react'
 import Card from '@/components/ui/Card'
 import Link from 'next/link'
 import type { JapaneseProgressStat } from '@/lib/japanese-progress'
+import AssignTaskModal from './AssignTaskModal'
+import { Plus } from 'lucide-react'
 
 interface EmployeeRow {
   id: string
@@ -30,6 +32,17 @@ function fmtPair(c: { completed: number; total: number }): string {
 
 export default function AdminDashboard({ adminName, employees }: Props) {
   const [search, setSearch] = useState('')
+  const [assignOpen, setAssignOpen] = useState(false)
+  const [assignTargetIds, setAssignTargetIds] = useState<string[]>([])
+
+  function openAssignForOne(menteeId: string) {
+    setAssignTargetIds([menteeId])
+    setAssignOpen(true)
+  }
+  function openAssignForAll() {
+    setAssignTargetIds([])
+    setAssignOpen(true)
+  }
 
   const filtered = employees.filter(e =>
     (e.full_name ?? '').toLowerCase().includes(search.toLowerCase()) ||
@@ -58,7 +71,27 @@ export default function AdminDashboard({ adminName, employees }: Props) {
         {adminName ?? '管理者'}さん — 全社員の日本語進捗状況
       </p>
 
-      <Card title="全社員の日本語進捗">
+      <AssignTaskModal
+        open={assignOpen}
+        onClose={() => setAssignOpen(false)}
+        mentees={employees.map(e => ({ id: e.id, full_name: e.full_name, email: e.email }))}
+        initialMenteeIds={assignTargetIds}
+      />
+
+      <Card
+        title="全社員の日本語進捗"
+        headerAction={
+          <button
+            type="button"
+            onClick={openAssignForAll}
+            disabled={employees.length === 0}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            一括割り当て
+          </button>
+        }
+      >
         <div className="mb-4">
           <input
             type="text"
@@ -80,6 +113,7 @@ export default function AdminDashboard({ adminName, employees }: Props) {
                 <th className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400">遅延</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">今月進捗</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">全体進捗</th>
+                <th className="px-3 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400">操作</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-white/[0.06]">
@@ -103,7 +137,7 @@ export default function AdminDashboard({ adminName, employees }: Props) {
                     {fmtPair(e.stat.businessJp)}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-zinc-700 dark:text-zinc-300">
-                    {e.stat.incomplete}
+                    {e.stat.incomplete}/{e.stat.all.total}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
                     <span className={e.stat.overdue > 0 ? 'font-semibold text-red-500' : 'text-zinc-500 dark:text-zinc-400'}>
@@ -115,6 +149,17 @@ export default function AdminDashboard({ adminName, employees }: Props) {
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300">
                     {fmtPair(e.stat.all)}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3 text-right">
+                    <button
+                      type="button"
+                      onClick={() => openAssignForOne(e.id)}
+                      className="inline-flex items-center gap-1 rounded-lg bg-indigo-500/10 px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-500/20 dark:text-indigo-300"
+                      title={`${e.full_name ?? e.email} に課題を割り当てる`}
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      課題
+                    </button>
                   </td>
                 </tr>
               ))}

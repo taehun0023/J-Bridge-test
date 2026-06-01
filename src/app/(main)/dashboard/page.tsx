@@ -77,24 +77,54 @@ export default async function DashboardPage() {
     const menteeMap = new Map((menteeProfiles ?? []).map(p => [p.id, p]))
 
     let jpRows: JapaneseAssignmentRow[] = []
+    let jpExams: { user_id: string; category: string; score: number | null; passing_score: number; completed_at: string | null }[] = []
     if (menteeIds.length > 0) {
-      const { data: assignments } = await supabase
-        .from('learning_assignments')
-        .select('assigned_to, category, status, due_date, created_at, completed_at')
-        .in('assigned_to', menteeIds)
-        .in('category', JP_CATEGORIES as unknown as string[])
+      const [{ data: assignments }, { data: exams }] = await Promise.all([
+        supabase
+          .from('learning_assignments')
+          .select('assigned_to, category, status, due_date, created_at, completed_at')
+          .in('assigned_to', menteeIds)
+          .in('category', JP_CATEGORIES as unknown as string[]),
+        supabase
+          .from('comprehensive_exams')
+          .select('user_id, category, score, passing_score, completed_at, status')
+          .in('user_id', menteeIds)
+          .in('category', JP_CATEGORIES as unknown as string[])
+          .in('status', ['completed', 'failed'])
+          .order('completed_at', { ascending: false }),
+      ])
       jpRows = (assignments ?? []) as JapaneseAssignmentRow[]
+      jpExams = (exams ?? []) as typeof jpExams
     }
     const jpStats = aggregateJapaneseProgress(jpRows, menteeIds)
+
+    // 最新試験スコア（カテゴリ別、各メンティーごと）
+    const latestExam = new Map<string, { seikatsu?: { score: number | null; passing_score: number }; businessJp?: { score: number | null; passing_score: number } }>()
+    for (const e of jpExams) {
+      const bucket = e.category === 'seikatsu' || e.category === '生活日本語'
+        ? 'seikatsu'
+        : (e.category === 'business-jp' || e.category === 'business_jp' || e.category === 'ビジネス日本語')
+          ? 'businessJp'
+          : null
+      if (!bucket) continue
+      const cur = latestExam.get(e.user_id) ?? {}
+      if (!cur[bucket]) {
+        cur[bucket] = { score: e.score, passing_score: e.passing_score }
+        latestExam.set(e.user_id, cur)
+      }
+    }
 
     const mentees = menteeIds.map(id => {
       const p = menteeMap.get(id)
       const stat = jpStats.get(id)!
+      const exams = latestExam.get(id) ?? {}
       return {
         id,
         full_name: p?.full_name ?? null,
         email: p?.email ?? '',
         stat,
+        exam_seikatsu: exams.seikatsu ?? null,
+        exam_business_jp: exams.businessJp ?? null,
       }
     })
 
@@ -194,7 +224,7 @@ export default async function DashboardPage() {
       .select('id, category, content, created_at, admin:profiles!admin_feedbacks_admin_id_fkey(full_name)')
       .eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
     // 10. 종합시험 재시험 정보
-    supabase.from('comprehensive_exams').select('id, category, score, status')
+    supabase.from('comprehensive_exams').select('id, category, content_level, score, status')
       .eq('user_id', user.id).in('status', ['completed', 'failed', 'requested', 'approved', 'in_progress'])
       .order('requested_at', { ascending: false }),
     // 11. お知らせ未読数
@@ -250,6 +280,20 @@ export default async function DashboardPage() {
     coreProgramming: codingSkills?.core_normalized ?? 0,
     framework: codingSkills?.framework_normalized ?? 0,
     attitudeCulture: attitudeSkills?.attitude_normalized ?? 0,
+  }
+
+  // 生活日本語: 응시한 시험중 가장 높은 N-level (N1 > N2 > ... > N5)
+  const SEIKATSU_LEVEL_RANK: Record<string, number> = { N1: 5, N2: 4, N3: 3, N4: 2, N5: 1 }
+  let seikatsuExamLevel: 'N1' | 'N2' | 'N3' | 'N4' | 'N5' | null = null
+  let _bestSeikatsuRank = 0
+  for (const exam of userCompExams ?? []) {
+    if (exam.category !== 'seikatsu') continue
+    const level = (exam as { content_level?: string | null }).content_level
+    const rank = SEIKATSU_LEVEL_RANK[level ?? ''] ?? 0
+    if (rank > _bestSeikatsuRank) {
+      _bestSeikatsuRank = rank
+      seikatsuExamLevel = level as 'N1' | 'N2' | 'N3' | 'N4' | 'N5'
+    }
   }
 
   // 최근 시험결과 통합
@@ -310,6 +354,7 @@ export default async function DashboardPage() {
     recentFeedbacks: feedbackProps,
     compExamRetakeByCategory,
     hasCompletedExamByCategory,
+    seikatsuExamLevel,
     role: profile?.role ?? 'mentee',
     nextExamDate,
     activeCycle,

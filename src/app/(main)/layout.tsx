@@ -21,7 +21,8 @@ export default async function MainLayout({
       .select('full_name, role, avatar_url, jlpt_level')
       .eq('id', user.id)
       .single()
-    userName = profile?.full_name ?? user.email ?? null
+    const rawName = profile?.full_name ?? user.email ?? null
+    userName = rawName ? rawName.replace(/\s*\([^()]*\)\s*$/, '').trim() : null
     avatarUrl = profile?.avatar_url ?? null
     userRole = (profile?.role as UserRole) ?? 'mentee'
     jlptLevel = (profile?.jlpt_level as JlptLevel) ?? null

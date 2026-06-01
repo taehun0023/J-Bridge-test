@@ -191,7 +191,7 @@ function MenteeAccordion({ mentee }: { mentee: MenteeOverview }) {
                     {mentee.compExamResults.map(r => {
                       const isSeikatsu = r.category === 'seikatsu'
                       const gradeLabel = r.score !== null
-                        ? (isSeikatsu ? getJlptLevel(r.score) : getGrade(r.score))
+                        ? (isSeikatsu ? (r.contentLevel ?? getJlptLevel(r.score)) : getGrade(r.score))
                         : null
                       const gradeColor = gradeLabel !== null
                         ? (isSeikatsu ? getJlptLevelColor(gradeLabel as JlptLevel) : getGradeColor(gradeLabel as SkillGrade))

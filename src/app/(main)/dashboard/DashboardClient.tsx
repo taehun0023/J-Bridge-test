@@ -79,6 +79,7 @@ interface Props {
   recentFeedbacks?: RecentFeedback[]
   compExamRetakeByCategory?: Record<string, { examId: string; score: number | null; retakeStatus: 'completed' | 'failed' | 'requested' | 'approved' | 'in_progress' }>
   hasCompletedExamByCategory?: Record<string, boolean>
+  seikatsuExamLevel?: 'N1' | 'N2' | 'N3' | 'N4' | 'N5' | null
   role?: string
   nextExamDate?: string | null
   activeCycle?: ExamCycleInfo | null
@@ -135,7 +136,7 @@ function getDaysUntil(deadlineAt: string): number {
 export default function DashboardClient({
   profile, radarScores, recentResults, isJapanese,
   learningStats, recentFeedbacks = [], compExamRetakeByCategory = {},
-  hasCompletedExamByCategory = {}, role,
+  hasCompletedExamByCategory = {}, seikatsuExamLevel = null, role,
   nextExamDate, activeCycle, recentAssignments = [], unreadAnnouncements = 0,
 }: Props) {
   const isMentee = role === 'mentee'
@@ -377,7 +378,9 @@ export default function DashboardClient({
                   const isSeikatsu = key === 'jlpt'
                   const category = AXIS_TO_CATEGORY[key]
                   const hasCompleted = hasCompletedExamByCategory[category] ?? false
-                  const gradeLabel = isSeikatsu ? getJlptLevel(score) : getGrade(score)
+                  const gradeLabel = isSeikatsu
+                    ? (seikatsuExamLevel ?? getJlptLevel(score))
+                    : getGrade(score)
                   const colorClass = isSeikatsu ? getJlptLevelColor(gradeLabel as 'N1'|'N2'|'N3'|'N4'|'N5') : getGradeColor(gradeLabel as 'S'|'A'|'B'|'C'|'D')
                   const isBelowB = hasCompleted && score < DISPATCH_MINIMUM_SCORE
                   const retakeInfo = compExamRetakeByCategory[category]

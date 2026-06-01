@@ -5,6 +5,52 @@ import { useRouter } from 'next/navigation'
 import { updateUserRole, createUserAccount, updateMentorSpecialty, deleteUser, assignMentor } from '@/app/actions/admin/users'
 import { Trash2 } from 'lucide-react'
 
+interface NameParts {
+  lastName: string
+  firstName: string
+  katakanaLast: string
+  katakanaFirst: string
+}
+
+function splitName(fullName: string | null): NameParts {
+  const empty: NameParts = { lastName: '-', firstName: '', katakanaLast: '', katakanaFirst: '' }
+  if (!fullName) return empty
+  const trimmed = fullName.trim()
+  const withKana = trimmed.match(/^(\S+)\s+(\S+)\s*\((\S+)\s+(\S+)\)\s*$/)
+  if (withKana) {
+    return {
+      lastName: withKana[1],
+      firstName: withKana[2],
+      katakanaLast: withKana[3],
+      katakanaFirst: withKana[4],
+    }
+  }
+  const twoTokens = trimmed.match(/^(\S+)\s+(\S+)\s*$/)
+  if (twoTokens) {
+    return { lastName: twoTokens[1], firstName: twoTokens[2], katakanaLast: '', katakanaFirst: '' }
+  }
+  return { ...empty, lastName: trimmed }
+}
+
+interface CountPair {
+  completed: number
+  total: number
+}
+
+interface ProgressStat {
+  seikatsu: CountPair
+  businessJp: CountPair
+  incomplete: number
+  overdue: number
+  thisMonth: CountPair
+  all: CountPair
+}
+
+interface ExamScore {
+  score: number | null
+  passing_score: number
+}
+
 interface User {
   id: string
   email: string
@@ -19,6 +65,26 @@ interface User {
   jlpt_level: string | null
   it_certifications: string | null
   assigned_mentor_id: string | null
+  mentor_name: string | null
+  exam_seikatsu: ExamScore | null
+  exam_business_jp: ExamScore | null
+  progress: ProgressStat
+}
+
+function fmtPair(c: CountPair): string {
+  return `${c.completed}/${c.total}`
+}
+
+function ExamCell({ exam }: { exam: ExamScore | null }) {
+  if (!exam || exam.score === null) {
+    return <span className="text-zinc-400">—</span>
+  }
+  const passed = exam.score >= exam.passing_score
+  return (
+    <span className={passed ? 'font-medium text-emerald-500' : 'font-medium text-red-500'}>
+      {exam.passing_score}/{exam.score}
+    </span>
+  )
 }
 
 interface Mentor {
@@ -185,21 +251,45 @@ export default function AdminUsersClient({ users, mentors }: Props) {
           <table className="min-w-full divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-200">
             <thead>
               <tr className="bg-white/[0.02] dark:bg-white/[0.02]">
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">名前</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">メール</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">役割</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">専門分野</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">担当メンター</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">資格</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">登録日</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"></th>
+                <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">名前</th>
+                <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">担当メンター</th>
+                <th colSpan={2} className="border-l border-gray-200/40 px-4 py-2 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">試験</th>
+                <th colSpan={2} className="border-l border-gray-200/40 px-4 py-2 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">課題</th>
+                <th rowSpan={2} className="border-l border-gray-200/40 px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">未完了</th>
+                <th rowSpan={2} className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400">遅延</th>
+                <th rowSpan={2} className="border-l border-gray-200/40 px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">今月進捗</th>
+                <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">全体進捗</th>
+                <th rowSpan={2} className="border-l border-gray-200/40 px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">役割</th>
+                <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"></th>
+              </tr>
+              <tr className="bg-white/[0.02] dark:bg-white/[0.02]">
+                <th className="border-l border-gray-200/40 px-3 py-2 text-center text-[10px] font-normal text-zinc-400 dark:border-white/[0.06] dark:text-zinc-500">生活日本語</th>
+                <th className="px-3 py-2 text-center text-[10px] font-normal text-zinc-400 dark:text-zinc-500">ビジネス日本語</th>
+                <th className="border-l border-gray-200/40 px-3 py-2 text-center text-[10px] font-normal text-zinc-400 dark:border-white/[0.06] dark:text-zinc-500">生活日本語</th>
+                <th className="px-3 py-2 text-center text-[10px] font-normal text-zinc-400 dark:text-zinc-500">ビジネス日本語</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">
-              {filtered.map(user => (
+              {filtered.map(user => {
+                const { lastName, firstName, katakanaLast, katakanaFirst } = splitName(user.full_name)
+                return (
                 <tr key={user.id}>
                   <td className="whitespace-nowrap px-4 py-3">
-                    <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{user.full_name ?? '-'}</span>
+                    <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                      <ruby>
+                        {lastName}
+                        <rt className="pb-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">{katakanaLast || ' '}</rt>
+                      </ruby>
+                      {firstName && (
+                        <>
+                          {' '}
+                          <ruby>
+                            {firstName}
+                            <rt className="pb-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">{katakanaFirst || ' '}</rt>
+                          </ruby>
+                        </>
+                      )}
+                    </span>
                     {!user.is_onboarded && (
                       <span className="ml-2 text-xs text-amber-400">(未オンボーディング)</span>
                     )}
@@ -207,36 +297,7 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                       <span className="ml-1 inline-flex rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-400 ring-1 ring-amber-500/20">JP</span>
                     )}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">{user.email}</td>
-                  <td className="whitespace-nowrap px-4 py-3">
-                    <select
-                      value={user.role}
-                      onChange={e => handleRoleChange(user.id, e.target.value)}
-                      disabled={pending}
-                      className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
-                    >
-                      <option value="mentee">メンティー</option>
-                      <option value="mentor">メンター</option>
-                      <option value="admin">管理者</option>
-                    </select>
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3">
-                    {user.role === 'mentor' ? (
-                      <select
-                        value={user.mentor_specialty ?? ''}
-                        onChange={e => handleSpecialtyChange(user.id, e.target.value)}
-                        disabled={pending}
-                        className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
-                      >
-                        <option value="">未設定</option>
-                        <option value="japanese">日本語</option>
-                        <option value="technical">技術</option>
-                      </select>
-                    ) : (
-                      <span className="text-xs text-zinc-400">—</span>
-                    )}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3">
+                  <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300">
                     {user.role === 'mentee' ? (
                       <select
                         value={user.assigned_mentor_id ?? ''}
@@ -249,36 +310,59 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                           <option key={m.id} value={m.id}>{m.full_name ?? m.id}</option>
                         ))}
                       </select>
+                    ) : user.role === 'mentor' ? (
+                      <select
+                        value={user.mentor_specialty ?? ''}
+                        onChange={e => handleSpecialtyChange(user.id, e.target.value)}
+                        disabled={pending}
+                        className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
+                        title="メンターの専門分野"
+                      >
+                        <option value="">専門 未設定</option>
+                        <option value="japanese">日本語</option>
+                        <option value="technical">技術</option>
+                      </select>
                     ) : (
                       <span className="text-xs text-zinc-400">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5">
-                      {user.jlpt_level ? (
-                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${
-                          user.jlpt_level === 'N1' ? 'bg-violet-500/10 text-violet-400 ring-violet-500/20' :
-                          user.jlpt_level === 'N2' ? 'bg-blue-500/10 text-blue-400 ring-blue-500/20' :
-                          'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20'
-                        }`}>
-                          {user.jlpt_level}
-                        </span>
-                      ) : null}
-                      {user.it_certifications ? (
-                        <span
-                          className="max-w-[120px] truncate text-xs text-zinc-500 dark:text-zinc-400"
-                          title={user.it_certifications}
-                        >
-                          {user.it_certifications}
-                        </span>
-                      ) : null}
-                      {!user.jlpt_level && !user.it_certifications && (
-                        <span className="text-xs text-zinc-400">—</span>
-                      )}
-                    </div>
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-3 py-3 text-center text-sm dark:border-white/[0.06]">
+                    <ExamCell exam={user.exam_seikatsu} />
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
-                    {new Date(user.created_at).toLocaleDateString('ja-JP')}
+                  <td className="whitespace-nowrap px-3 py-3 text-center text-sm">
+                    <ExamCell exam={user.exam_business_jp} />
+                  </td>
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-3 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
+                    {fmtPair(user.progress.seikatsu)}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3 text-center text-sm text-zinc-700 dark:text-zinc-300">
+                    {fmtPair(user.progress.businessJp)}
+                  </td>
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-right text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
+                    {user.progress.incomplete}/{user.progress.all.total}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
+                    <span className={user.progress.overdue > 0 ? 'font-semibold text-red-500' : 'text-zinc-500 dark:text-zinc-400'}>
+                      {user.progress.overdue}
+                    </span>
+                  </td>
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
+                    {fmtPair(user.progress.thisMonth)}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300">
+                    {fmtPair(user.progress.all)}
+                  </td>
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 dark:border-white/[0.06]">
+                    <select
+                      value={user.role}
+                      onChange={e => handleRoleChange(user.id, e.target.value)}
+                      disabled={pending}
+                      className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
+                    >
+                      <option value="mentee">メンティー</option>
+                      <option value="mentor">メンター</option>
+                      <option value="admin">管理者</option>
+                    </select>
                   </td>
                   <td className="whitespace-nowrap px-4 py-3">
                     <button
@@ -291,7 +375,8 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                     </button>
                   </td>
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
         </div>

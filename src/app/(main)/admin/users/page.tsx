@@ -2,11 +2,29 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import Card from '@/components/ui/Card'
 import AdminUsersClient from './AdminUsersClient'
+import {
+  aggregateJapaneseProgress,
+  type JapaneseAssignmentRow,
+} from '@/lib/japanese-progress'
+
+const JP_CATEGORIES = ['seikatsu', 'business-jp', 'business_jp', '生活日本語', 'ビジネス日本語'] as const
+
+function normalizeExamCategory(c: string | null): 'seikatsu' | 'businessJp' | null {
+  if (c === 'seikatsu' || c === '生活日本語') return 'seikatsu'
+  if (c === 'business-jp' || c === 'business_jp' || c === 'ビジネス日本語') return 'businessJp'
+  return null
+}
 
 export default async function AdminUsersPage() {
   const supabase = await createClient()
 
-  const [{ data: rawUsers }, { data: mentorAssignments }, { data: mentorList }] = await Promise.all([
+  const [
+    { data: rawUsers },
+    { data: mentorAssignments },
+    { data: mentorList },
+    { data: jpAssignments },
+    { data: jpExams },
+  ] = await Promise.all([
     supabase
       .from('profiles')
       .select(`
@@ -23,6 +41,16 @@ export default async function AdminUsersPage() {
       .select('id, full_name')
       .eq('role', 'mentor')
       .order('full_name'),
+    supabase
+      .from('learning_assignments')
+      .select('assigned_to, category, status, due_date, created_at, completed_at')
+      .in('category', JP_CATEGORIES as unknown as string[]),
+    supabase
+      .from('comprehensive_exams')
+      .select('user_id, category, score, passing_score, completed_at, status')
+      .in('category', JP_CATEGORIES as unknown as string[])
+      .in('status', ['completed', 'failed'])
+      .order('completed_at', { ascending: false }),
   ])
 
   const mentorMap = new Map<string, string>()
@@ -30,16 +58,59 @@ export default async function AdminUsersPage() {
     mentorMap.set(a.mentee_id, a.mentor_id)
   }
 
+  const mentorNameById = new Map<string, string>()
+  for (const m of mentorList ?? []) {
+    mentorNameById.set(m.id, m.full_name ?? '')
+  }
+
+  // 最新試験スコア（カテゴリ別、各ユーザーごと）
+  type ExamRow = { user_id: string; category: string; score: number | null; passing_score: number; completed_at: string | null }
+  const latestExam = new Map<string, { seikatsu?: ExamRow; businessJp?: ExamRow }>()
+  for (const e of (jpExams ?? []) as ExamRow[]) {
+    const bucket = normalizeExamCategory(e.category)
+    if (!bucket) continue
+    const cur = latestExam.get(e.user_id) ?? {}
+    // jpExams は completed_at desc。各 bucket の初出を採用
+    if (!cur[bucket]) {
+      cur[bucket] = e
+      latestExam.set(e.user_id, cur)
+    }
+  }
+
+  const allUserIds = (rawUsers ?? []).map((u) => u.id)
+  const jpStats = aggregateJapaneseProgress(
+    (jpAssignments ?? []) as JapaneseAssignmentRow[],
+    allUserIds,
+  )
+
   const users = (rawUsers ?? []).map((u) => {
     const jp = u.japanese_skills as { jlpt_normalized: number; it_japanese_normalized: number } | null
     const cs = u.coding_skills as { core_normalized: number; framework_normalized: number } | null
     const jpScore = u.is_japanese ? 200 : ((jp?.jlpt_normalized ?? 0) + (jp?.it_japanese_normalized ?? 0))
     const progScore = (cs?.core_normalized ?? 0) + (cs?.framework_normalized ?? 0)
+    const mentorId = mentorMap.get(u.id) ?? null
+    const exams = latestExam.get(u.id) ?? {}
+    const stat = jpStats.get(u.id) ?? {
+      seikatsu: { completed: 0, total: 0 },
+      businessJp: { completed: 0, total: 0 },
+      incomplete: 0,
+      overdue: 0,
+      thisMonth: { completed: 0, total: 0 },
+      all: { completed: 0, total: 0 },
+    }
     return {
       ...u,
       japanese_score: jpScore,
       programming_score: progScore,
-      assigned_mentor_id: mentorMap.get(u.id) ?? null,
+      assigned_mentor_id: mentorId,
+      mentor_name: mentorId ? (mentorNameById.get(mentorId) ?? null) : null,
+      exam_seikatsu: exams.seikatsu
+        ? { score: exams.seikatsu.score, passing_score: exams.seikatsu.passing_score }
+        : null,
+      exam_business_jp: exams.businessJp
+        ? { score: exams.businessJp.score, passing_score: exams.businessJp.passing_score }
+        : null,
+      progress: stat,
     }
   })
 

@@ -60,7 +60,7 @@ export async function fetchScoringData(
         .eq('passed', true),
       client
         .from('comprehensive_exams')
-        .select('category, score, completed_at')
+        .select('category, score, content_level, completed_at')
         .eq('user_id', userId)
         .in('status', ['completed', 'failed'])
         .not('score', 'is', null)
@@ -129,23 +129,48 @@ export async function fetchScoringData(
   }
 }
 
+// 生活日本語 (seikatsu) 用: N1 が最上位、N5 が最下位
+const SEIKATSU_LEVEL_RANK: Record<string, number> = { N1: 5, N2: 4, N3: 3, N4: 2, N5: 1 }
+
 /**
- * Merge comprehensive exam scores into assessment scores using latest strategy.
- * For each category, the most recent comprehensive exam score wins.
+ * Merge comprehensive exam scores into assessment scores.
+ *
+ * Strategy per category:
+ *   - seikatsu (生活日本語): highest content_level wins (N1 > N2 > ... > N5).
+ *     Ties broken by most recent completed_at.
+ *   - other categories: latest completed_at wins (compExams sorted DESC).
+ *
  * compExams must be sorted by completed_at DESC (most recent first).
  */
 export function mergeCompExamScores(
   assessmentScores: AssessmentScores,
-  compExams: { category: string; score: number | null; completed_at?: string | null }[]
+  compExams: { category: string; score: number | null; content_level?: string | null; completed_at?: string | null }[]
 ): void {
-  const seen = new Set<number>()
-  for (const compExam of compExams) {
-    if (compExam.score == null) continue
-    const step = COMP_EXAM_CATEGORY_TO_STEP[compExam.category]
+  const byCategory = new Map<string, typeof compExams>()
+  for (const e of compExams) {
+    if (e.score == null) continue
+    const arr = byCategory.get(e.category)
+    if (arr) arr.push(e)
+    else byCategory.set(e.category, [e])
+  }
+
+  for (const [category, exams] of byCategory) {
+    const step = COMP_EXAM_CATEGORY_TO_STEP[category]
     if (!step) continue
-    // Already saw a more recent exam for this category — skip
-    if (seen.has(step)) continue
-    seen.add(step)
-    assessmentScores[step] = compExam.score
+
+    let chosen: (typeof exams)[number]
+    if (category === 'seikatsu') {
+      chosen = exams.reduce((best, cur) => {
+        const bestRank = SEIKATSU_LEVEL_RANK[best.content_level ?? ''] ?? 0
+        const curRank = SEIKATSU_LEVEL_RANK[cur.content_level ?? ''] ?? 0
+        if (curRank > bestRank) return cur
+        if (curRank < bestRank) return best
+        return (cur.completed_at ?? '') > (best.completed_at ?? '') ? cur : best
+      })
+    } else {
+      chosen = exams[0]
+    }
+
+    assessmentScores[step] = chosen.score!
   }
 }
