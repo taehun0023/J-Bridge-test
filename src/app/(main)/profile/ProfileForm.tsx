@@ -132,7 +132,6 @@ function buildCertifications(known: string[]): string {
 interface Profile {
   id: string
   full_name: string | null
-  target_coding_area: string | null
   jlpt_level: JlptLevel | null
   it_certifications: string | null
 }
@@ -178,7 +177,6 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
   const [firstName, setFirstName] = useState(initialParts.firstName)
   const [katakanaLast, setKatakanaLast] = useState(initialParts.katakanaLast)
   const [katakanaFirst, setKatakanaFirst] = useState(initialParts.katakanaFirst)
-  const [targetCoding, setTargetCoding] = useState(profile?.target_coding_area ?? '')
   const [jlptLevel, setJlptLevel] = useState<JlptLevel | ''>(profile?.jlpt_level ?? '')
   const [selectedCerts, setSelectedCerts] = useState<string[]>(
     parseCertifications(profile?.it_certifications ?? null),
@@ -224,7 +222,6 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
       .from('profiles')
       .update({
         full_name: fullName || null,
-        target_coding_area: targetCoding || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', profile?.id ?? '')
@@ -342,19 +339,6 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
               className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
             />
           </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">開発言語</label>
-          <select
-            value={targetCoding}
-            onChange={(e) => setTargetCoding(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
-          >
-            <option value="">選択</option>
-            <option value="java">Java</option>
-            <option value="javascript">JavaScript</option>
-          </select>
         </div>
 
         {saveError && (
