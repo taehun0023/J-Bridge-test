@@ -198,7 +198,7 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
     const hasName = trimmedLast !== '' || trimmedFirst !== ''
 
     if (hasName && (!KANJI_ONLY_RE.test(trimmedLast) || !KANJI_ONLY_RE.test(trimmedFirst))) {
-      setSaveError('名前は漢字のみで入力してください（英字・ひらがな・カタカナ・ハングルは使用できません）')
+      setSaveError('名前は漢字のみ入力できます。カタカナは下の欄に入力してください。')
       setSaving(false)
       return
     }
@@ -310,7 +310,7 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
             />
           </div>
           <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-            漢字のみ入力できます（英字・ひらがな・カタカナ・ハングルは使用できません）。
+            名前は漢字のみ入力できます。カタカナは下の欄に入力してください。
           </p>
         </div>
 
