@@ -3,6 +3,8 @@
 import { useState, useTransition } from 'react'
 import { assignMenteeToMentor, removeMenteeFromMentor } from '@/app/actions/mentor'
 import { UserPlus, X } from 'lucide-react'
+import NameRuby from '@/components/ui/NameRuby'
+import NameSelect from '@/components/ui/NameSelect'
 
 interface Mentor {
   id: string
@@ -103,7 +105,7 @@ export default function AdminMentorsClient({ mentors, mentorAssignments, allMent
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {mentor.full_name ?? mentor.email}
+                    {mentor.full_name ? <NameRuby name={mentor.full_name} /> : mentor.email}
                   </h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400">{mentor.email}</p>
                 </div>
@@ -123,7 +125,7 @@ export default function AdminMentorsClient({ mentors, mentorAssignments, allMent
                       <div key={a.id} className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-700/50">
                         <div>
                           <p className="text-sm font-medium text-gray-900 dark:text-white">
-                            {mentee?.full_name ?? 'Unknown'}
+                            <NameRuby name={mentee?.full_name} fallback="Unknown" />
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
                             {mentee?.email}
@@ -147,16 +149,14 @@ export default function AdminMentorsClient({ mentors, mentorAssignments, allMent
 
               {/* Add mentee */}
               <div className="mt-4 flex items-center gap-2">
-                <select
-                  value={selectedMentee[mentor.id] ?? ''}
-                  onChange={e => setSelectedMentee(prev => ({ ...prev, [mentor.id]: e.target.value }))}
-                  className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                >
-                  <option value="">メンティーを選択...</option>
-                  {availableMentees.map(m => (
-                    <option key={m.id} value={m.id}>{m.full_name ?? m.email}</option>
-                  ))}
-                </select>
+                <div className="flex-1">
+                  <NameSelect
+                    value={selectedMentee[mentor.id] ?? ''}
+                    onChange={(v) => setSelectedMentee(prev => ({ ...prev, [mentor.id]: v }))}
+                    options={availableMentees}
+                    placeholder="メンティーを選択..."
+                  />
+                </div>
                 <button
                   onClick={() => handleAssign(mentor.id)}
                   disabled={pending || !selectedMentee[mentor.id]}

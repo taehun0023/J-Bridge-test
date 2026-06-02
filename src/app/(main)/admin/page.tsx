@@ -154,6 +154,7 @@ export default async function AdminDashboardPage() {
       resource_type: entry.resource_type,
       created_at: entry.created_at,
       actorName: profile?.full_name ?? profile?.email ?? entry.actor_id,
+      actorFullName: profile?.full_name ?? null,
     }
   })
 

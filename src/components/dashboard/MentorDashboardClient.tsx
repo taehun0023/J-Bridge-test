@@ -9,6 +9,8 @@ import { getGrade, getGradeColor, getJlptLevel, getJlptLevelColor, AXIS_DISPLAY_
 import type { AxisKey, JlptLevel, SkillGrade } from '@/lib/assessment-config'
 import type { MenteeOverview } from '@/app/actions/mentor'
 import { ClipboardList, FileBarChart, MessageSquare, ChevronDown, Calendar, CheckCircle2, Clock, AlertTriangle, Eye } from 'lucide-react'
+import NameRuby from '@/components/ui/NameRuby'
+import { initialOf } from '@/lib/name-format'
 
 const RadarChart = dynamic(() => import('./RadarChart'), { ssr: false })
 
@@ -97,12 +99,12 @@ function MenteeAccordion({ mentee }: { mentee: MenteeOverview }) {
           <img src={mentee.avatar_url} alt="" className="h-9 w-9 rounded-full object-cover shrink-0" />
         ) : (
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-sm font-medium text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300 shrink-0">
-            {mentee.full_name?.charAt(0) ?? '?'}
+            {initialOf(mentee.full_name)}
           </div>
         )}
 
         <span className="font-semibold text-gray-900 dark:text-white min-w-0 truncate">
-          {mentee.full_name ?? '名前未設定'}
+          <NameRuby name={mentee.full_name} fallback="名前未設定" />
         </span>
 
         <AxisDots scores={mentee.radarScores} isJapanese={mentee.is_japanese} />

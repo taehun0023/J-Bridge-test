@@ -20,6 +20,8 @@ import {
   MessageSquare,
 } from 'lucide-react'
 
+import NameRuby from '@/components/ui/NameRuby'
+
 const UserRoleChart = dynamic(() => import('@/components/charts/UserRoleChart'), { ssr: false })
 const ActivityTrendChart = dynamic(() => import('@/components/charts/ActivityTrendChart'), { ssr: false })
 const MentorWorkloadChart = dynamic(() => import('@/components/charts/MentorWorkloadChart'), { ssr: false })
@@ -30,6 +32,7 @@ interface AuditEntry {
   resource_type: string
   created_at: string
   actorName: string
+  actorFullName: string | null
 }
 
 interface AdminDashboardProps {
@@ -291,7 +294,9 @@ export default function AdminDashboardClient({
                     className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2 text-sm dark:bg-zinc-800"
                   >
                     <div className="min-w-0 flex-1">
-                      <span className="font-medium text-gray-900 dark:text-white">{entry.actorName}</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        <NameRuby name={entry.actorFullName} fallback={entry.actorName} />
+                      </span>
                       <span className="mx-1 text-gray-400">·</span>
                       <span className="text-gray-600 dark:text-gray-400">
                         {ACTION_LABELS[entry.action] ?? entry.action}

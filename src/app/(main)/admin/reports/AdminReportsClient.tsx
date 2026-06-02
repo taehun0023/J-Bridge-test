@@ -15,6 +15,8 @@ const EXAM_CATEGORY_GROUPS = {
 type TabKey = keyof typeof EXAM_CATEGORY_GROUPS
 import { getCategoryLabel, getSubcategoryLabel, getContentLevelLabel } from '@/lib/assignment-categories'
 import { ClipboardCopy, Check, Sparkles, X } from 'lucide-react'
+import NameRuby from '@/components/ui/NameRuby'
+import NameSelect from '@/components/ui/NameSelect'
 
 const ScoreBarChart = dynamic(() => import('@/components/charts/ScoreBarChart'), { ssr: false })
 const ErrorRateTrendChart = dynamic(() => import('@/components/charts/ErrorRateTrendChart'), { ssr: false })
@@ -150,22 +152,15 @@ export default function AdminReportsClient({
   return (
     <div className="mt-6 space-y-6">
       {/* User select dropdown */}
-      <select
+      <NameSelect
         value={selectedId ?? ''}
-        onChange={e => {
-          const val = e.target.value
-          if (val) handleSelect(val)
+        onChange={(v) => {
+          if (v) handleSelect(v)
           else setSelectedId(null)
         }}
-        className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
-      >
-        <option value="">{userRole === 'mentor' ? 'メンティーを選択...' : '社員を選択...'}</option>
-        {users.map(u => (
-          <option key={u.id} value={u.id}>
-            {u.full_name ?? u.email}
-          </option>
-        ))}
-      </select>
+        options={users}
+        placeholder={userRole === 'mentor' ? 'メンティーを選択...' : '社員を選択...'}
+      />
 
       {error && (
         <div className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-400 ring-1 ring-red-500/20">
@@ -247,7 +242,14 @@ export default function AdminReportsClient({
             </Card>
           )}
 
-          <Card title={`${selectedUser.full_name ?? selectedUser.email} - スコア推移`}>
+          <Card title={
+            <span>
+              {selectedUser.full_name
+                ? <NameRuby name={selectedUser.full_name} />
+                : selectedUser.email}
+              {' - スコア推移'}
+            </span>
+          }>
             <TabBar
               tabs={[
                 { key: 'nihongo', label: '日本語' },

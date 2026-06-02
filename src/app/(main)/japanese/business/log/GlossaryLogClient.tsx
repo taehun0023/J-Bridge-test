@@ -6,6 +6,7 @@ import Pagination from '@/components/ui/Pagination'
 import { getGlossaryLog, revertGlossaryChange } from '@/app/actions/admin/glossary'
 import type { GlossaryLogEntry } from '@/app/actions/admin/glossary'
 import { Undo2 } from 'lucide-react'
+import NameRuby from '@/components/ui/NameRuby'
 
 const ACTION_LABELS: Record<string, string> = {
   create: '作成',
@@ -191,7 +192,8 @@ export default function GlossaryLogClient() {
           <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {items.map(entry => {
               const profile = entry.profiles as { full_name: string | null; email: string } | null
-              const actorName = profile?.full_name ?? profile?.email ?? entry.actor_id
+              const actorFullName = profile?.full_name ?? null
+              const actorFallback = profile?.email ?? entry.actor_id
               const termName = getTermName(entry)
               const category = getCategory(entry)
               const changes = getChangedFields(entry)
@@ -209,7 +211,9 @@ export default function GlossaryLogClient() {
                         <span className="text-xs text-gray-400">
                           {new Date(entry.created_at).toLocaleString('ja-JP')}
                         </span>
-                        <span className="text-xs font-medium text-gray-600 dark:text-gray-300">{actorName}</span>
+                        <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                          <NameRuby name={actorFullName} fallback={actorFallback} />
+                        </span>
                         <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${ACTION_COLORS[entry.action] ?? 'bg-gray-100 text-gray-600'}`}>
                           {ACTION_LABELS[entry.action] ?? entry.action}
                         </span>

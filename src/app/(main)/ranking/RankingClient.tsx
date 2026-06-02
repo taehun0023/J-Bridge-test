@@ -3,6 +3,8 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Crown, Medal, Award } from 'lucide-react'
 import TabBar from '@/components/ui/TabBar'
+import NameRuby from '@/components/ui/NameRuby'
+import { initialOf } from '@/lib/name-format'
 import type { ComputedRankingEntry, RankingCategory } from '@/lib/ranking'
 
 interface Props {
@@ -94,11 +96,11 @@ export default function RankingClient({ rankings, category, currentUserId }: Pro
                           <img src={entry.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
                         ) : (
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-white text-xs font-medium">
-                            {(entry.full_name ?? 'U').charAt(0).toUpperCase()}
+                            {initialOf(entry.full_name).toUpperCase()}
                           </div>
                         )}
                         <span className={`text-sm ${isMe ? 'font-bold text-indigo-400' : 'text-zinc-900 dark:text-zinc-100'}`}>
-                          {entry.full_name ?? 'ユーザー'}
+                          <NameRuby name={entry.full_name} fallback="ユーザー" />
                           {isMe && ' (自分)'}
                         </span>
                       </div>

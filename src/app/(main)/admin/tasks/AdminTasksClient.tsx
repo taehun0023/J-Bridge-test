@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createLearningAssignment, deleteLearningAssignment, confirmAssignment, reassignAssignment, getAssigneeUnlockedLevels } from '@/app/actions/learning-assignments'
 import { approveExam, denyExam, deleteExam } from '@/app/actions/comprehensive-exam'
 import { ASSIGNMENT_CATEGORIES, JLPT_LEVELS, DEV_LEVELS, getCategoryLabel, getSubcategoryLabel, getContentLevelLabel } from '@/lib/assignment-categories'
+import NameRuby from '@/components/ui/NameRuby'
 
 interface LearningAssignmentRow {
   id: string
@@ -324,7 +325,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, us
                         const u = users.find(u => u.id === id)
                         return (
                           <span key={id} className="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 px-2.5 py-1 text-xs font-medium text-indigo-600 ring-1 ring-indigo-500/20 dark:text-indigo-400">
-                            {u?.full_name ?? u?.email ?? id}
+                            {u ? <NameRuby name={u.full_name} fallback={u.email ?? id} /> : id}
                             <button type="button" onClick={() => toggleAssignee(id)} className="ml-0.5 text-indigo-400 hover:text-indigo-600">×</button>
                           </span>
                         )
@@ -353,7 +354,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, us
                                 onChange={() => toggleAssignee(u.id)}
                                 className="h-3.5 w-3.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                               />
-                              <span className="text-gray-900 dark:text-white">{u.full_name ?? u.email}</span>
+                              <span className="text-gray-900 dark:text-white"><NameRuby name={u.full_name} fallback={u.email} /></span>
                               <span className="ml-auto text-[10px] text-gray-400">{u.email}</span>
                             </label>
                           ))
@@ -513,7 +514,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, us
                         >
                           <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{la.title}</td>
                           <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                            {(la.assignee as { full_name: string | null } | null)?.full_name ?? '-'}
+                            <NameRuby name={(la.assignee as { full_name: string | null } | null)?.full_name} fallback="-" />
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
                             {getCategoryLabel(la.category)} &gt; {getSubcategoryLabel(la.category, la.subcategory)}
@@ -677,7 +678,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, us
                     {filteredExamRequests.map(exam => (
                       <tr key={exam.id}>
                         <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
-                          {(exam.user as { full_name: string | null } | null)?.full_name ?? '-'}
+                          <NameRuby name={(exam.user as { full_name: string | null } | null)?.full_name} fallback="-" />
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
                           {getCategoryLabel(exam.category)} &gt; {getSubcategoryLabel(exam.category, exam.subcategory)}

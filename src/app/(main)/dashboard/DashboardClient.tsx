@@ -9,6 +9,8 @@ import { getGrade, getGradeColor, getJlptLevel, getJlptLevelColor, DISPATCH_MINI
 import type { AxisKey } from '@/lib/assessment-config'
 import { requestExam, requestRetakeExam } from '@/app/actions/comprehensive-exam'
 import type { ExamCycleInfo, CycleExam } from '@/app/actions/exam-scheduling'
+import NameRuby from '@/components/ui/NameRuby'
+import { initialOf } from '@/lib/name-format'
 
 const RadarChart = dynamic(() => import('@/components/dashboard/RadarChart'), { ssr: false })
 
@@ -191,7 +193,11 @@ export default function DashboardClient({
     <div>
       <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">ダッシュボード</h1>
       <p className="mt-1 text-zinc-500 dark:text-zinc-400">
-        {profile?.full_name ? `${profile.full_name}さんの` : '自分の'}エンジニア力量現況
+        {profile?.full_name ? (
+          <><NameRuby name={profile.full_name} />さんのエンジニア力量現況</>
+        ) : (
+          '自分のエンジニア力量現況'
+        )}
       </p>
 
       {/* Mentee priority: assignments + feedback */}
@@ -619,7 +625,7 @@ export default function DashboardClient({
                       </span>
                     </div>
                     <div className="mt-1 flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-                      <span>{a.assigner?.full_name ?? '—'}</span>
+                      <span><NameRuby name={a.assigner?.full_name} /></span>
                       <span>{new Date(a.created_at).toLocaleDateString('ja-JP')}</span>
                       {a.due_date && <span>〆 {new Date(a.due_date).toLocaleDateString('ja-JP')}</span>}
                     </div>
@@ -691,7 +697,7 @@ export default function DashboardClient({
                       {feedbackCategoryLabels[fb.category] ?? fb.category}
                     </span>
                     <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                      {(fb.admin as { full_name: string | null } | null)?.full_name ?? '管理者'}
+                      <NameRuby name={(fb.admin as { full_name: string | null } | null)?.full_name} fallback="管理者" />
                     </span>
                     <span className="text-xs text-zinc-500 dark:text-zinc-400">
                       {new Date(fb.created_at).toLocaleDateString('ja-JP')}
