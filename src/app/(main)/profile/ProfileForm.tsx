@@ -7,7 +7,13 @@ import { useRouter } from 'next/navigation'
 import Card from '@/components/ui/Card'
 import type { JlptLevel } from '@/lib/supabase/types'
 
-const JLPT_LEVELS: JlptLevel[] = ['N1', 'N2', 'N3', 'N4', 'N5']
+const JLPT_BAR: { value: JlptLevel; label: string; fill: string }[] = [
+  { value: 'N5', label: '初級', fill: 'bg-emerald-500' },
+  { value: 'N4', label: '初中級', fill: 'bg-lime-500' },
+  { value: 'N3', label: '中級', fill: 'bg-amber-500' },
+  { value: 'N2', label: '中上級', fill: 'bg-orange-500' },
+  { value: 'N1', label: '上級', fill: 'bg-rose-500' },
+]
 
 const KANJI_ONLY_RE = /^[一-鿿㐀-䶿々〆〇]+$/
 
@@ -373,17 +379,47 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
     <Card title="資格証明">
       <form onSubmit={handleSaveCerts} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">日本語資格 (JLPT)</label>
-          <select
-            value={jlptLevel}
-            onChange={(e) => setJlptLevel(e.target.value as JlptLevel | '')}
-            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
-          >
-            <option value="">未選択</option>
-            {JLPT_LEVELS.map((level) => (
-              <option key={level} value={level}>{level}</option>
-            ))}
-          </select>
+          <div className="flex items-baseline justify-between">
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">日本語資格 (JLPT)</label>
+            {jlptLevel && (
+              <button
+                type="button"
+                onClick={() => setJlptLevel('')}
+                className="text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+              >
+                解除
+              </button>
+            )}
+          </div>
+
+          <div className="mt-2 flex overflow-hidden rounded-2xl ring-1 ring-gray-200 dark:ring-white/[0.08]">
+            {JLPT_BAR.map((seg, idx) => {
+              const selectedIdx = JLPT_BAR.findIndex((s) => s.value === jlptLevel)
+              const filled = selectedIdx >= 0 && idx <= selectedIdx
+              const isCurrent = jlptLevel === seg.value
+              return (
+                <button
+                  key={seg.value}
+                  type="button"
+                  onClick={() => setJlptLevel(isCurrent ? '' : seg.value)}
+                  aria-pressed={isCurrent}
+                  className={`relative flex flex-1 flex-col items-center justify-center gap-0.5 px-2 py-3 text-sm font-bold transition-colors ${
+                    filled
+                      ? `${seg.fill} text-white`
+                      : 'bg-white text-zinc-400 hover:bg-zinc-50 dark:bg-white/[0.02] dark:text-zinc-500 dark:hover:bg-white/[0.05]'
+                  } ${isCurrent ? 'ring-2 ring-inset ring-zinc-900/20 dark:ring-white/30' : ''}`}
+                >
+                  <span>{seg.value}</span>
+                  <span className={`text-[10px] font-normal ${filled ? 'text-white/90' : 'text-zinc-400 dark:text-zinc-500'}`}>
+                    {seg.label}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+          <p className="mt-1.5 text-[10px] text-zinc-500 dark:text-zinc-400">
+            取得済みの最高レベルを選択してください（N5: 初級 → N1: 上級）
+          </p>
         </div>
 
         <div>
