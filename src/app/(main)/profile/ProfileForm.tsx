@@ -8,7 +8,7 @@ import type { JlptLevel } from '@/lib/supabase/types'
 
 const JLPT_LEVELS: JlptLevel[] = ['N1', 'N2', 'N3', 'N4', 'N5']
 
-const ALPHABET_RE = /[A-Za-z]/
+const KANJI_ONLY_RE = /^[一-鿿㐀-䶿々〆〇]+$/
 
 const IT_CERTIFICATIONS: Record<string, readonly string[]> = {
   '情報処理 (IPA)': [
@@ -126,7 +126,6 @@ interface Profile {
   id: string
   full_name: string | null
   target_coding_area: string | null
-  is_japanese: boolean
   jlpt_level: JlptLevel | null
   it_certifications: string | null
 }
@@ -173,8 +172,6 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
   const [katakanaLast, setKatakanaLast] = useState(initialParts.katakanaLast)
   const [katakanaFirst, setKatakanaFirst] = useState(initialParts.katakanaFirst)
   const [targetCoding, setTargetCoding] = useState(profile?.target_coding_area ?? '')
-  const [isJapanese, setIsJapanese] = useState<boolean | null>(null)
-  const nationalitySelected = isJapanese !== null
   const [jlptLevel, setJlptLevel] = useState<JlptLevel | ''>(profile?.jlpt_level ?? '')
   const [selectedCerts, setSelectedCerts] = useState<string[]>(
     parseCertifications(profile?.it_certifications ?? null),
@@ -190,27 +187,22 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
   const [passwordSaving, setPasswordSaving] = useState(false)
   const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  const nameLabelSuffix = isJapanese === false ? '（漢字/アルファベット）' : isJapanese === true ? '（漢字）' : ''
-
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
     setSaved(false)
     setSaveError(null)
 
-    if (isJapanese === null) {
-      setSaveError('「日本人ですか？」を先に選択してください')
+    const trimmedLast = lastName.trim()
+    const trimmedFirst = firstName.trim()
+    const hasName = trimmedLast !== '' || trimmedFirst !== ''
+
+    if (hasName && (!KANJI_ONLY_RE.test(trimmedLast) || !KANJI_ONLY_RE.test(trimmedFirst))) {
+      setSaveError('名前は漢字のみで入力してください（英字・ひらがな・カタカナ・ハングルは使用できません）')
       setSaving(false)
       return
     }
 
-    if (isJapanese && (ALPHABET_RE.test(lastName) || ALPHABET_RE.test(firstName))) {
-      setSaveError('日本人の方は名前をアルファベットではなく日本語（漢字・カタカナ）で入力してください')
-      setSaving(false)
-      return
-    }
-
-    const hasName = lastName.trim() !== '' || firstName.trim() !== ''
     if (hasName && (katakanaLast.trim() === '' || katakanaFirst.trim() === '')) {
       setSaveError('カタカナ名（セイ・メイ）は必須です')
       setSaving(false)
@@ -225,7 +217,6 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
       .update({
         full_name: fullName || null,
         target_coding_area: targetCoding || null,
-        is_japanese: isJapanese,
         updated_at: new Date().toISOString(),
       })
       .eq('id', profile?.id ?? '')
@@ -300,97 +291,63 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
       <form onSubmit={handleSave} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            日本人ですか？ <span className="text-red-400">*</span>
+            名前（漢字）<span className="text-red-400">*</span>
           </label>
-          <div className="mt-1 flex gap-3">
-            {[
-              { value: true, label: 'はい（日本語テスト省略）' },
-              { value: false, label: 'いいえ（全テスト受験）' },
-            ].map((opt) => (
-              <label
-                key={String(opt.value)}
-                className={`flex-1 cursor-pointer rounded-xl border-2 px-3 py-2 text-center text-sm transition-colors ${
-                  isJapanese === opt.value
-                    ? 'border-indigo-500 bg-indigo-500/5 text-indigo-400 dark:bg-indigo-500/10 dark:text-indigo-400'
-                    : 'border-gray-200 dark:border-white/[0.08] text-zinc-700 dark:text-zinc-300 hover:border-gray-300 dark:hover:border-white/[0.15]'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="is_japanese"
-                  checked={isJapanese === opt.value}
-                  onChange={() => setIsJapanese(opt.value)}
-                  className="sr-only"
-                />
-                {opt.label}
-              </label>
-            ))}
+          <div className="mt-1 grid grid-cols-2 gap-2">
+            <input
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="姓"
+              className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
+            />
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="名"
+              className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
+            />
           </div>
-          {!nationalitySelected && (
-            <p className="mt-2 text-xs text-amber-500 dark:text-amber-400">
-              先に「日本人ですか？」を選択してください。選択するまで他の項目は入力できません。
-            </p>
-          )}
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            漢字のみ入力できます（英字・ひらがな・カタカナ・ハングルは使用できません）。
+          </p>
         </div>
 
-        <fieldset disabled={!nationalitySelected} className="space-y-4 disabled:opacity-50">
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              名前{nameLabelSuffix}
-            </label>
-            <div className="mt-1 grid grid-cols-2 gap-2">
-              <input
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder="姓 / Last Name"
-                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none disabled:cursor-not-allowed dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
-              />
-              <input
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="名 / First Name"
-                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none disabled:cursor-not-allowed dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
-              />
-            </div>
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            カタカナ名 <span className="text-red-400">*</span>
+          </label>
+          <div className="mt-1 grid grid-cols-2 gap-2">
+            <input
+              type="text"
+              value={katakanaLast}
+              onChange={(e) => setKatakanaLast(e.target.value)}
+              placeholder="セイ"
+              className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
+            />
+            <input
+              type="text"
+              value={katakanaFirst}
+              onChange={(e) => setKatakanaFirst(e.target.value)}
+              placeholder="メイ"
+              className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
+            />
           </div>
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              カタカナ名 <span className="text-red-400">*</span>
-            </label>
-            <div className="mt-1 grid grid-cols-2 gap-2">
-              <input
-                type="text"
-                value={katakanaLast}
-                onChange={(e) => setKatakanaLast(e.target.value)}
-                placeholder="セイ / Last Name (Katakana)"
-                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none disabled:cursor-not-allowed dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
-              />
-              <input
-                type="text"
-                value={katakanaFirst}
-                onChange={(e) => setKatakanaFirst(e.target.value)}
-                placeholder="メイ / First Name (Katakana)"
-                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none disabled:cursor-not-allowed dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">開発言語</label>
-            <select
-              value={targetCoding}
-              onChange={(e) => setTargetCoding(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 disabled:cursor-not-allowed dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
-            >
-              <option value="">選択</option>
-              <option value="java">Java</option>
-              <option value="javascript">JavaScript</option>
-            </select>
-          </div>
-        </fieldset>
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">開発言語</label>
+          <select
+            value={targetCoding}
+            onChange={(e) => setTargetCoding(e.target.value)}
+            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
+          >
+            <option value="">選択</option>
+            <option value="java">Java</option>
+            <option value="javascript">JavaScript</option>
+          </select>
+        </div>
 
         {saveError && (
           <div className="rounded-xl px-3 py-2 text-sm bg-red-500/10 text-red-400 ring-1 ring-red-500/20">
@@ -401,7 +358,7 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
         <div className="flex items-center gap-3">
           <button
             type="submit"
-            disabled={saving || !nationalitySelected}
+            disabled={saving}
             className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
           >
             {saving ? '保存中...' : '保存'}
