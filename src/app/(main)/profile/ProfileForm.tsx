@@ -385,51 +385,69 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">IT関連資格</label>
+          <div className="flex items-baseline justify-between">
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">IT関連資格</label>
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">
+              選択中 <span className="font-semibold text-indigo-600 dark:text-indigo-300">{selectedCerts.length}</span> 件
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            該当する資格をクリックして選択してください（複数選択可）。
+          </p>
 
-          {selectedCerts.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-2">
-              {selectedCerts.map((cert) => (
-                <span
-                  key={cert}
-                  className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300"
-                >
-                  {cert}
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCerts((prev) => prev.filter((c) => c !== cert))}
-                    className="text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-200"
-                    aria-label={`${cert} を削除`}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-
-          <select
-            value=""
-            onChange={(e) => {
-              const v = e.target.value
-              if (v && !selectedCerts.includes(v)) {
-                setSelectedCerts((prev) => [...prev, v])
-              }
-            }}
-            className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
-          >
-            <option value="">資格を選択して追加…</option>
-            {Object.entries(IT_CERTIFICATIONS).map(([category, items]) => (
-              <optgroup key={category} label={category}>
-                {items.map((item) => (
-                  <option key={item} value={item} disabled={selectedCerts.includes(item)}>
-                    {item}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-
+          <div className="mt-3 space-y-4">
+            {Object.entries(IT_CERTIFICATIONS).map(([category, items]) => {
+              const selectedInCat = items.filter((item) => selectedCerts.includes(item)).length
+              return (
+                <div key={category}>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-400">
+                      {category}
+                    </h4>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 ${
+                        selectedInCat > 0
+                          ? 'bg-indigo-50 text-indigo-700 ring-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-300 dark:ring-indigo-500/30'
+                          : 'bg-zinc-50 text-zinc-500 ring-zinc-200 dark:bg-white/[0.04] dark:text-zinc-400 dark:ring-white/[0.08]'
+                      }`}
+                    >
+                      {selectedInCat}/{items.length}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {items.map((item) => {
+                      const active = selectedCerts.includes(item)
+                      return (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() =>
+                            setSelectedCerts((prev) =>
+                              active ? prev.filter((c) => c !== item) : [...prev, item],
+                            )
+                          }
+                          aria-pressed={active}
+                          className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition-colors ${
+                            active
+                              ? 'bg-indigo-600 text-white ring-indigo-600 hover:bg-indigo-500 dark:bg-indigo-500 dark:ring-indigo-500'
+                              : 'bg-white text-zinc-700 ring-gray-200 hover:bg-indigo-50 hover:text-indigo-700 hover:ring-indigo-200 dark:bg-white/[0.04] dark:text-zinc-300 dark:ring-white/[0.08] dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300 dark:hover:ring-indigo-500/30'
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-2 w-2 rounded-full ${
+                              active ? 'bg-white' : 'bg-zinc-300 dark:bg-white/20'
+                            }`}
+                            aria-hidden
+                          />
+                          {item}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
 
         {certError && (
