@@ -3,7 +3,8 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateUserRole, createUserAccount, updateMentorSpecialty, deleteUser, assignMentor } from '@/app/actions/admin/users'
-import { Trash2 } from 'lucide-react'
+import { Trash2, Plus } from 'lucide-react'
+import AssignTaskModal from '@/app/(main)/dashboard/AssignTaskModal'
 
 interface NameParts {
   lastName: string
@@ -104,11 +105,27 @@ export default function AdminUsersClient({ users, mentors }: Props) {
   const [pending, startTransition] = useTransition()
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null)
+  const [assignOpen, setAssignOpen] = useState(false)
+  const [assignTargetIds, setAssignTargetIds] = useState<string[]>([])
 
   const filtered = users.filter(u =>
     (u.full_name ?? '').toLowerCase().includes(search.toLowerCase()) ||
     u.email.toLowerCase().includes(search.toLowerCase())
   )
+
+  // 課題を割り当てる対象はメンティーのみ
+  const menteeUsers = users
+    .filter(u => u.role === 'mentee')
+    .map(u => ({ id: u.id, full_name: u.full_name, email: u.email }))
+
+  function openAssignForOne(menteeId: string) {
+    setAssignTargetIds([menteeId])
+    setAssignOpen(true)
+  }
+  function openAssignForAll() {
+    setAssignTargetIds([])
+    setAssignOpen(true)
+  }
 
   function handleRoleChange(userId: string, newRole: string) {
     startTransition(async () => {
@@ -202,13 +219,31 @@ export default function AdminUsersClient({ users, mentors }: Props) {
           onChange={e => setSearch(e.target.value)}
           className="w-full max-w-xs rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100 dark:placeholder-zinc-500"
         />
-        <button
-          onClick={() => setShowCreateForm(!showCreateForm)}
-          className="shrink-0 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
-        >
-          {showCreateForm ? 'キャンセル' : '+ アカウント作成'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={openAssignForAll}
+            disabled={menteeUsers.length === 0}
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            一括割り当て
+          </button>
+          <button
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            className="shrink-0 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+          >
+            {showCreateForm ? 'キャンセル' : '+ アカウント作成'}
+          </button>
+        </div>
       </div>
+
+      <AssignTaskModal
+        open={assignOpen}
+        onClose={() => setAssignOpen(false)}
+        mentees={menteeUsers}
+        initialMenteeIds={assignTargetIds}
+      />
 
       {showCreateForm && (
         <form action={handleCreate} className="mt-4 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 backdrop-blur-md dark:border-white/[0.08] dark:bg-white/[0.03] border-gray-200/60 bg-white/80">
@@ -365,14 +400,28 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                     </select>
                   </td>
                   <td className="whitespace-nowrap px-4 py-3">
-                    <button
-                      onClick={() => setDeleteTarget(user)}
-                      disabled={pending}
-                      className="rounded-lg p-1.5 text-zinc-400 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50 transition-colors"
-                      title="削除"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      {user.role === 'mentee' && (
+                        <button
+                          type="button"
+                          onClick={() => openAssignForOne(user.id)}
+                          disabled={pending}
+                          className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-600 hover:bg-emerald-500/20 disabled:opacity-50 dark:text-emerald-300"
+                          title={`${user.full_name ?? user.email} に課題を割り当てる`}
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          課題
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setDeleteTarget(user)}
+                        disabled={pending}
+                        className="rounded-lg p-1.5 text-zinc-400 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50 transition-colors"
+                        title="削除"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
                 )
