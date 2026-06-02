@@ -32,6 +32,24 @@ async function overrideWithItemProgress(
   }
 }
 
+interface ExamPair { score: number | null; passing_score: number }
+/** comprehensive_exams(완료/실패, completed_at desc 정렬) → 유저별 최신 試験 점수(생활/비즈니스). */
+function buildLatestExamMap(
+  exams: { user_id: string; category: string; score: number | null; passing_score: number }[],
+): Map<string, { seikatsu?: ExamPair; businessJp?: ExamPair }> {
+  const m = new Map<string, { seikatsu?: ExamPair; businessJp?: ExamPair }>()
+  for (const e of exams) {
+    const bucket = e.category === 'seikatsu' || e.category === '生活日本語'
+      ? 'seikatsu'
+      : (e.category === 'business-jp' || e.category === 'business_jp' || e.category === 'ビジネス日本語')
+        ? 'businessJp' : null
+    if (!bucket) continue
+    const cur = m.get(e.user_id) ?? {}
+    if (!cur[bucket]) { cur[bucket] = { score: e.score, passing_score: e.passing_score }; m.set(e.user_id, cur) }
+  }
+  return m
+}
+
 const JP_CATEGORIES = ['seikatsu', 'business-jp', 'business_jp', '生活日本語', 'ビジネス日本語'] as const
 
 export default async function DashboardPage() {
@@ -161,11 +179,16 @@ export default async function DashboardPage() {
   // Admin dashboard
   // ──────────────────────────────────────────────
   if (profile?.role === 'admin') {
-    const [{ data: allMentees }, { data: jpAssignments }, { data: mentorAssignments }, { data: mentorProfiles }, { count: adminTotalAnn }, { count: adminReadAnn }] = await Promise.all([
+    const [{ data: allMentees }, { data: jpAssignments }, { data: jpExams }, { data: mentorAssignments }, { data: mentorProfiles }, { count: adminTotalAnn }, { count: adminReadAnn }] = await Promise.all([
       supabase.from('profiles').select('id, full_name, email').eq('role', 'mentee'),
       supabase.from('learning_assignments')
         .select('assigned_to, category, status, due_date, created_at, completed_at')
         .in('category', JP_CATEGORIES as unknown as string[]),
+      supabase.from('comprehensive_exams')
+        .select('user_id, category, score, passing_score, completed_at, status')
+        .in('category', JP_CATEGORIES as unknown as string[])
+        .in('status', ['completed', 'failed'])
+        .order('completed_at', { ascending: false }),
       supabase.from('mentor_mentee_assignments').select('mentor_id, mentee_id'),
       supabase.from('profiles').select('id, full_name').eq('role', 'mentor'),
       supabase.from('announcements').select('id', { count: 'exact', head: true }),
@@ -186,13 +209,20 @@ export default async function DashboardPage() {
     )
     await overrideWithItemProgress(jpStats, menteeIds)
 
-    const employees = (allMentees ?? []).map(p => ({
-      id: p.id,
-      full_name: p.full_name,
-      email: p.email,
-      mentor_name: menteeToMentor.get(p.id) ?? null,
-      stat: jpStats.get(p.id)!,
-    }))
+    const latestExam = buildLatestExamMap((jpExams ?? []) as Parameters<typeof buildLatestExamMap>[0])
+
+    const employees = (allMentees ?? []).map(p => {
+      const exams = latestExam.get(p.id) ?? {}
+      return {
+        id: p.id,
+        full_name: p.full_name,
+        email: p.email,
+        mentor_name: menteeToMentor.get(p.id) ?? null,
+        stat: jpStats.get(p.id)!,
+        exam_seikatsu: exams.seikatsu ?? null,
+        exam_business_jp: exams.businessJp ?? null,
+      }
+    })
 
     return (
       <>

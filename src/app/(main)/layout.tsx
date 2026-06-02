@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import MainShell from '@/components/ui/MainShell'
 import Providers from '@/app/providers'
 import type { UserRole, JlptLevel } from '@/lib/supabase/types'
+import { kanjiOnly } from '@/lib/name-format'
 
 export default async function MainLayout({
   children,
@@ -21,8 +22,7 @@ export default async function MainLayout({
       .select('full_name, role, avatar_url, jlpt_level')
       .eq('id', user.id)
       .single()
-    const rawName = profile?.full_name ?? user.email ?? null
-    userName = rawName ? rawName.replace(/\s*\([^()]*\)\s*$/, '').trim() : null
+    userName = kanjiOnly(profile?.full_name) ?? user.email ?? null
     avatarUrl = profile?.avatar_url ?? null
     userRole = (profile?.role as UserRole) ?? 'mentee'
     jlptLevel = (profile?.jlpt_level as JlptLevel) ?? null

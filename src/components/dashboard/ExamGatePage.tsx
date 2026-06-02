@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { ClipboardCheck, CheckCircle, Clock, Circle, Hourglass } from 'lucide-react'
 import type { ExamCycleInfo, CycleExam } from '@/app/actions/exam-scheduling'
+import NameRuby from '@/components/ui/NameRuby'
 
 const CATEGORY_LABELS: Record<string, string> = {
   seikatsu: '生活日本語',
@@ -90,7 +91,7 @@ export default function ExamGatePage({ cycle, userName }: Props) {
                   総合試験を受けてください
                 </h1>
                 <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-                  {userName ? `${userName}さん、` : ''}J-Bridgeへようこそ！
+                  {userName ? <><NameRuby name={userName} />さん、</> : null}J-Bridgeへようこそ！
                 </p>
                 <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
                   まず、日本語の実力を測定する試験を受けてください。管理者の承認後に受験可能です。

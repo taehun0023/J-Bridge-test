@@ -5,33 +5,7 @@ import { useRouter } from 'next/navigation'
 import { updateUserRole, createUserAccount, updateMentorSpecialty, deleteUser, assignMentor } from '@/app/actions/admin/users'
 import { Trash2, Plus } from 'lucide-react'
 import AssignTaskModal from '@/app/(main)/dashboard/AssignTaskModal'
-
-interface NameParts {
-  lastName: string
-  firstName: string
-  katakanaLast: string
-  katakanaFirst: string
-}
-
-function splitName(fullName: string | null): NameParts {
-  const empty: NameParts = { lastName: '-', firstName: '', katakanaLast: '', katakanaFirst: '' }
-  if (!fullName) return empty
-  const trimmed = fullName.trim()
-  const withKana = trimmed.match(/^(\S+)\s+(\S+)\s*\((\S+)\s+(\S+)\)\s*$/)
-  if (withKana) {
-    return {
-      lastName: withKana[1],
-      firstName: withKana[2],
-      katakanaLast: withKana[3],
-      katakanaFirst: withKana[4],
-    }
-  }
-  const twoTokens = trimmed.match(/^(\S+)\s+(\S+)\s*$/)
-  if (twoTokens) {
-    return { lastName: twoTokens[1], firstName: twoTokens[2], katakanaLast: '', katakanaFirst: '' }
-  }
-  return { ...empty, lastName: trimmed }
-}
+import NameRuby from '@/components/ui/NameRuby'
 
 interface CountPair {
   completed: number
@@ -306,24 +280,11 @@ export default function AdminUsersClient({ users, mentors }: Props) {
             </thead>
             <tbody className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">
               {filtered.map(user => {
-                const { lastName, firstName, katakanaLast, katakanaFirst } = splitName(user.full_name)
                 return (
                 <tr key={user.id}>
                   <td className="whitespace-nowrap px-4 py-3">
                     <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                      <ruby>
-                        {lastName}
-                        <rt className="pb-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">{katakanaLast || ' '}</rt>
-                      </ruby>
-                      {firstName && (
-                        <>
-                          {' '}
-                          <ruby>
-                            {firstName}
-                            <rt className="pb-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">{katakanaFirst || ' '}</rt>
-                          </ruby>
-                        </>
-                      )}
+                      <NameRuby name={user.full_name} fallback="-" />
                     </span>
                     {!user.is_onboarded && (
                       <span className="ml-2 text-xs text-amber-400">(未オンボーディング)</span>
@@ -445,7 +406,7 @@ export default function AdminUsersClient({ users, mentors }: Props) {
               <p>関連する全てのデータ（試験結果、学習記録等）も削除されます。</p>
             </div>
             <div className="mt-4 rounded-xl bg-zinc-50 p-3 dark:bg-white/5">
-              <p className="text-sm text-zinc-900 dark:text-zinc-100"><span className="text-zinc-500 dark:text-zinc-400">名前:</span> {deleteTarget.full_name ?? '-'}</p>
+              <p className="text-sm text-zinc-900 dark:text-zinc-100"><span className="text-zinc-500 dark:text-zinc-400">名前:</span> <NameRuby name={deleteTarget.full_name} fallback="-" /></p>
               <p className="text-sm text-zinc-900 dark:text-zinc-100"><span className="text-zinc-500 dark:text-zinc-400">メール:</span> {deleteTarget.email}</p>
             </div>
             <div className="mt-6 flex justify-end gap-3">
