@@ -7,6 +7,8 @@ import { resolveQuizIdsForAssignment } from '@/app/actions/learning-assignments'
 import { AlertTriangle, ArrowLeft, BookOpen, CheckCircle2, Clock, GraduationCap, Lock } from 'lucide-react'
 import OverdueReasonForm from './OverdueReasonForm'
 import { detectAndMarkOverdue } from '@/app/actions/learning-assignments'
+import { updateItemAssignmentStatuses } from '@/app/actions/item-assignments'
+import { areaSpec, areaLabel, categoryLabel, itemContentUrl, isItemCategory } from '@/lib/item-assignments'
 
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
@@ -31,6 +33,9 @@ export default async function AssignmentsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  // 항목 과제(count형) 상태를 마스터 수 기준으로 갱신 (완료 동결 / 7일 정체)
+  await updateItemAssignmentStatuses(user.id)
+
   const { data: userProfile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   const isAdminOrMentor = userProfile?.role === 'admin' || userProfile?.role === 'mentor'
 
@@ -41,9 +46,43 @@ export default async function AssignmentsPage() {
     .eq('assigned_to', user.id)
     .order('created_at', { ascending: false })
 
-  // Resolve quizzes dynamically for all assignments (always use latest quiz list)
+  // JLPT 항목 과제(count형)와 기존 퀴즈형 과제를 분리.
+  // 퀴즈 해석·진척 로직은 퀴즈형에만 적용 (count형 행의 required_quiz_ids 오염 방지).
+  const countAssignments = (assignments ?? []).filter(a => a.target_count != null)
+  const quizAssignments = (assignments ?? []).filter(a => a.target_count == null)
+
+  // count형: (카테고리×레벨×영역)별 마스터 수 산정
+  const countMasteredMap: Record<string, number> = {}
+  if (countAssignments.length > 0) {
+    const itemTypes = [...new Set(
+      countAssignments
+        .map(a => (isItemCategory(a.category) ? areaSpec(a.category, a.subcategory)?.itemType : null))
+        .filter(Boolean)
+    )] as string[]
+    const { data: cm } = await supabase
+      .from('user_mastered_items')
+      .select('item_type, item_id')
+      .eq('user_id', user.id)
+      .in('item_type', itemTypes)
+
+    const combos = [...new Set(countAssignments.map(a => `${a.category}::${a.content_level ?? ''}::${a.subcategory}`))]
+    for (const combo of combos) {
+      const [cat, level, area] = combo.split('::')
+      if (!isItemCategory(cat)) continue
+      const spec = areaSpec(cat, area)
+      if (!spec) continue
+      let q = supabase.from(spec.table).select('id')
+      if (spec.levelColumn && level) q = q.eq(spec.levelColumn, level)
+      if (spec.filter) q = q.in(spec.filter.column, spec.filter.values)
+      const { data: poolRows } = await q.limit(10000)
+      const poolSet = new Set((poolRows ?? []).map(r => String(r.id)))
+      countMasteredMap[combo] = (cm ?? []).filter(m => m.item_type === spec.itemType && poolSet.has(String(m.item_id))).length
+    }
+  }
+
+  // Resolve quizzes dynamically for quiz-based assignments (always use latest quiz list)
   const resolvedQuizIdsMap: Record<string, string[]> = {}
-  for (const a of assignments ?? []) {
+  for (const a of quizAssignments) {
     const resolvedIds = await resolveQuizIdsForAssignment(a.category, a.subcategory, a.content_level, supabase)
     if (resolvedIds.length > 0) {
       const existingIds = a.required_quiz_ids ?? []
@@ -66,7 +105,7 @@ export default async function AssignmentsPage() {
   }
 
   // Fetch quiz titles for display
-  const allQuizIds = (assignments ?? []).flatMap(a => [
+  const allQuizIds = quizAssignments.flatMap(a => [
     ...(resolvedQuizIdsMap[a.id] ?? a.required_quiz_ids ?? []),
   ]).filter(Boolean)
 
@@ -102,7 +141,7 @@ export default async function AssignmentsPage() {
   }
 
   // Fetch reading progress for business-lit assignments
-  const businessLitAssignments = (assignments ?? []).filter(a => a.category === 'business-lit')
+  const businessLitAssignments = quizAssignments.filter(a => a.category === 'business-lit')
   const readingItemTypes = businessLitAssignments.flatMap(a => {
     const config = ASSIGNMENT_CATEGORIES['business-lit']?.subcategories[a.subcategory]
     return config?.readingItemTypes ?? []
@@ -122,7 +161,7 @@ export default async function AssignmentsPage() {
   }
 
   // Fetch JLPT mastery progress for seikatsu assignments
-  const seikatsuAssignments = (assignments ?? []).filter(a => a.category === 'seikatsu')
+  const seikatsuAssignments = quizAssignments.filter(a => a.category === 'seikatsu')
   const jlptLevels = [...new Set(seikatsuAssignments.map(a => a.content_level).filter(Boolean))] as string[]
 
   const jlptProgressMap: Record<string, { mastered: number; total: number; pct: number }> = {}
@@ -167,7 +206,7 @@ export default async function AssignmentsPage() {
   }
 
   // Fetch business-jp mastery progress
-  const bizJpAssignments = (assignments ?? []).filter(a => a.category === 'business-jp')
+  const bizJpAssignments = quizAssignments.filter(a => a.category === 'business-jp')
   const bizJpProgressMap: Record<string, { mastered: number; total: number; pct: number }> = {}
 
   if (bizJpAssignments.length > 0) {
@@ -272,7 +311,56 @@ export default async function AssignmentsPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {assignments.map(assignment => {
+          {/* 항목 수 과제 (count형 — 생활/비즈니스 공통) */}
+          {countAssignments.map(a => {
+            const combo = `${a.category}::${a.content_level ?? ''}::${a.subcategory}`
+            const mastered = countMasteredMap[combo] ?? 0
+            const cumulative = a.cumulative_target ?? 0
+            const pct = cumulative > 0 ? Math.min(100, Math.round((mastered / cumulative) * 100)) : 0
+            const contentUrl = isItemCategory(a.category)
+              ? itemContentUrl(a.category, a.subcategory, a.content_level)
+              : '/dashboard/assignments'
+            return (
+              <Card key={a.id}>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-base font-semibold">
+                      <Link href={contentUrl} className="text-zinc-900 dark:text-zinc-100 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">
+                        {a.title} →
+                      </Link>
+                    </h3>
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-900/30 dark:text-violet-400">{categoryLabel(a.category)}</span>
+                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">{areaLabel(a.category, a.subcategory)}</span>
+                      {a.content_level && (
+                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">{a.content_level}</span>
+                      )}
+                    </div>
+                  </div>
+                  <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors[a.status] ?? ''}`}>
+                    {statusLabels[a.status] ?? a.status}
+                  </span>
+                </div>
+
+                <div className="mt-4">
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="text-xs text-zinc-500 dark:text-zinc-400">習得進捗: {mastered}/{cumulative} 項目</span>
+                    <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300">{pct}%</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-600">
+                    <div className={`h-2 rounded-full transition-all ${mastered >= cumulative ? 'bg-emerald-500' : 'bg-violet-500'}`} style={{ width: `${pct}%` }} />
+                  </div>
+                  <p className="mt-2 text-xs text-zinc-400 dark:text-zinc-500">
+                    今回付与 {a.target_count}項目 ・ 累計目標 {cumulative}項目
+                    {a.status === 'overdue' && <span className="ml-1 text-red-500">・7日間進捗なし</span>}
+                  </p>
+                </div>
+              </Card>
+            )
+          })}
+
+          {/* 기존 퀴즈형 과제 */}
+          {quizAssignments.map(assignment => {
             const requiredIds = resolvedQuizIdsMap[assignment.id] ?? assignment.required_quiz_ids ?? []
             const passedIds = new Set(assignment.passed_quiz_ids ?? [])
             const total = requiredIds.length

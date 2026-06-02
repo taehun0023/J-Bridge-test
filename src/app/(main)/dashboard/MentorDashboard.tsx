@@ -5,7 +5,8 @@ import Card from '@/components/ui/Card'
 import Link from 'next/link'
 import type { JapaneseProgressStat } from '@/lib/japanese-progress'
 import AssignTaskModal from './AssignTaskModal'
-import { Plus } from 'lucide-react'
+import ItemAssignModal from './ItemAssignModal'
+import { Plus, Languages } from 'lucide-react'
 
 interface ExamScore {
   score: number | null
@@ -107,6 +108,8 @@ function fmtPair(c: { completed: number; total: number }): string {
 export default function MentorDashboard({ mentorName, mentees }: Props) {
   const [assignOpen, setAssignOpen] = useState(false)
   const [assignTargetIds, setAssignTargetIds] = useState<string[]>([])
+  const [jlptOpen, setJlptOpen] = useState(false)
+  const [jlptTargetIds, setJlptTargetIds] = useState<string[]>([])
 
   function openAssignForOne(menteeId: string) {
     setAssignTargetIds([menteeId])
@@ -115,6 +118,14 @@ export default function MentorDashboard({ mentorName, mentees }: Props) {
   function openAssignForAll() {
     setAssignTargetIds([])
     setAssignOpen(true)
+  }
+  function openJlptForOne(menteeId: string) {
+    setJlptTargetIds([menteeId])
+    setJlptOpen(true)
+  }
+  function openJlptForAll() {
+    setJlptTargetIds([])
+    setJlptOpen(true)
   }
 
   // 全体進捗 が低い順 (= 미완료 비율이 높은 순) 으로 정렬, 担当 0 件은 末尾.
@@ -154,18 +165,36 @@ export default function MentorDashboard({ mentorName, mentees }: Props) {
         initialMenteeIds={assignTargetIds}
       />
 
+      <ItemAssignModal
+        open={jlptOpen}
+        onClose={() => setJlptOpen(false)}
+        mentees={mentees.map(m => ({ id: m.id, full_name: m.full_name, email: m.email }))}
+        initialMenteeIds={jlptTargetIds}
+      />
+
       <Card
         title="担当メンティーの日本語進捗"
         headerAction={
-          <button
-            type="button"
-            onClick={openAssignForAll}
-            disabled={mentees.length === 0}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            一括割り当て
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={openJlptForAll}
+              disabled={mentees.length === 0}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+            >
+              <Languages className="h-3.5 w-3.5" />
+              項目課題
+            </button>
+            <button
+              type="button"
+              onClick={openAssignForAll}
+              disabled={mentees.length === 0}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              一括割り当て
+            </button>
+          </div>
         }
       >
         {sorted.length === 0 ? (
@@ -234,15 +263,26 @@ export default function MentorDashboard({ mentorName, mentees }: Props) {
                       {fmtPair(m.stat.all)}
                     </td>
                     <td className="whitespace-nowrap border-l border-gray-200/40 px-3 py-3 text-right dark:border-white/[0.06]">
-                      <button
-                        type="button"
-                        onClick={() => openAssignForOne(m.id)}
-                        className="inline-flex items-center gap-1 rounded-lg bg-indigo-500/10 px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-500/20 dark:text-indigo-300"
-                        title={`${m.full_name ?? m.email} に課題を割り当てる`}
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                        課題
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => openJlptForOne(m.id)}
+                          className="inline-flex items-center gap-1 rounded-lg bg-violet-500/10 px-2 py-1 text-xs font-medium text-violet-600 hover:bg-violet-500/20 dark:text-violet-300"
+                          title={`${m.full_name ?? m.email} に項目課題を割り当てる`}
+                        >
+                          <Languages className="h-3.5 w-3.5" />
+                          項目
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openAssignForOne(m.id)}
+                          className="inline-flex items-center gap-1 rounded-lg bg-indigo-500/10 px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-500/20 dark:text-indigo-300"
+                          title={`${m.full_name ?? m.email} に課題を割り当てる`}
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          課題
+                        </button>
+                      </div>
                     </td>
                   </tr>
                   )

@@ -575,11 +575,13 @@ export async function updateLearningStatuses() {
   const serviceClient = createServiceRoleClient()
   if (!serviceClient) return
 
-  // Find all pending assignments
+  // Find all pending assignments (quiz-based only; JLPT item-count assignments
+  // carry target_count and are handled by updateJlptAssignmentStatuses)
   const { data: pendingAssignments } = await serviceClient
     .from('learning_assignments')
     .select('id, assigned_to, category, subcategory, content_level')
     .eq('status', 'pending')
+    .is('target_count', null)
 
   if (!pendingAssignments?.length) return
 

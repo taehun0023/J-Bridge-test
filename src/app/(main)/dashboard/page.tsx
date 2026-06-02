@@ -11,7 +11,26 @@ import { expireStaleExams } from '@/app/actions/comprehensive-exam'
 import {
   aggregateJapaneseProgress,
   type JapaneseAssignmentRow,
+  type JapaneseProgressStat,
 } from '@/lib/japanese-progress'
+import { aggregateItemProgress } from '@/app/actions/item-assignments'
+
+/** 生活/ビジネス 집계를 "완료항목 / 부여항목"(항목 수 기준)으로 덮어쓴다. */
+async function overrideWithItemProgress(
+  jpStats: Map<string, JapaneseProgressStat>,
+  menteeIds: string[],
+) {
+  if (menteeIds.length === 0) return
+  const itemProg = await aggregateItemProgress(menteeIds)
+  for (const id of menteeIds) {
+    const s = jpStats.get(id)
+    const ip = itemProg[id]
+    if (s && ip) {
+      s.seikatsu = { completed: ip.seikatsu.completed, total: ip.seikatsu.assigned }
+      s.businessJp = { completed: ip.businessJp.completed, total: ip.businessJp.assigned }
+    }
+  }
+}
 
 const JP_CATEGORIES = ['seikatsu', 'business-jp', 'business_jp', '生活日本語', 'ビジネス日本語'] as const
 
@@ -97,6 +116,8 @@ export default async function DashboardPage() {
       jpExams = (exams ?? []) as typeof jpExams
     }
     const jpStats = aggregateJapaneseProgress(jpRows, menteeIds)
+    // 生活/ビジネス 칸은 "완료항목 / 부여항목"(항목 수 기준)으로 덮어쓴다.
+    await overrideWithItemProgress(jpStats, menteeIds)
 
     // 最新試験スコア（カテゴリ別、各メンティーごと）
     const latestExam = new Map<string, { seikatsu?: { score: number | null; passing_score: number }; businessJp?: { score: number | null; passing_score: number } }>()
@@ -163,6 +184,7 @@ export default async function DashboardPage() {
       (jpAssignments ?? []) as JapaneseAssignmentRow[],
       menteeIds,
     )
+    await overrideWithItemProgress(jpStats, menteeIds)
 
     const employees = (allMentees ?? []).map(p => ({
       id: p.id,
