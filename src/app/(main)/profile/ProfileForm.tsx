@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { ChevronDown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Card from '@/components/ui/Card'
@@ -176,6 +177,7 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
   const [selectedCerts, setSelectedCerts] = useState<string[]>(
     parseCertifications(profile?.it_certifications ?? null),
   )
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -395,55 +397,85 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
             該当する資格をクリックして選択してください（複数選択可）。
           </p>
 
-          <div className="mt-3 space-y-4">
+          <div className="mt-3 space-y-2">
             {Object.entries(IT_CERTIFICATIONS).map(([category, items]) => {
               const selectedInCat = items.filter((item) => selectedCerts.includes(item)).length
+              const isOpen = expandedCategory === category
+              const hasSelection = selectedInCat > 0
               return (
-                <div key={category}>
-                  <div className="flex items-center gap-2">
-                    <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-400">
-                      {category}
-                    </h4>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 ${
-                        selectedInCat > 0
-                          ? 'bg-indigo-50 text-indigo-700 ring-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-300 dark:ring-indigo-500/30'
-                          : 'bg-zinc-50 text-zinc-500 ring-zinc-200 dark:bg-white/[0.04] dark:text-zinc-400 dark:ring-white/[0.08]'
+                <div
+                  key={category}
+                  className={`overflow-hidden rounded-2xl ring-1 transition-colors ${
+                    hasSelection
+                      ? 'bg-indigo-50/40 ring-indigo-200 dark:bg-indigo-500/5 dark:ring-indigo-500/30'
+                      : 'bg-white ring-gray-200 dark:bg-white/[0.02] dark:ring-white/[0.08]'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setExpandedCategory(isOpen ? null : category)}
+                    aria-expanded={isOpen}
+                    className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-zinc-50/60 dark:hover:bg-white/[0.04]"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className={`inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-xs font-semibold ${
+                          hasSelection
+                            ? 'bg-indigo-600 text-white dark:bg-indigo-500'
+                            : 'bg-zinc-100 text-zinc-500 dark:bg-white/[0.08] dark:text-zinc-400'
+                        }`}
+                      >
+                        {selectedInCat}
+                      </span>
+                      <span className="text-sm font-medium text-zinc-800 dark:text-zinc-100">
+                        {category}
+                      </span>
+                      <span className="text-xs text-zinc-400 dark:text-zinc-500">
+                        全{items.length}件
+                      </span>
+                    </div>
+                    <ChevronDown
+                      className={`h-4 w-4 text-zinc-400 transition-transform dark:text-zinc-500 ${
+                        isOpen ? 'rotate-180' : ''
                       }`}
-                    >
-                      {selectedInCat}/{items.length}
-                    </span>
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {items.map((item) => {
-                      const active = selectedCerts.includes(item)
-                      return (
-                        <button
-                          key={item}
-                          type="button"
-                          onClick={() =>
-                            setSelectedCerts((prev) =>
-                              active ? prev.filter((c) => c !== item) : [...prev, item],
-                            )
-                          }
-                          aria-pressed={active}
-                          className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition-colors ${
-                            active
-                              ? 'bg-indigo-600 text-white ring-indigo-600 hover:bg-indigo-500 dark:bg-indigo-500 dark:ring-indigo-500'
-                              : 'bg-white text-zinc-700 ring-gray-200 hover:bg-indigo-50 hover:text-indigo-700 hover:ring-indigo-200 dark:bg-white/[0.04] dark:text-zinc-300 dark:ring-white/[0.08] dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300 dark:hover:ring-indigo-500/30'
-                          }`}
-                        >
-                          <span
-                            className={`inline-block h-2 w-2 rounded-full ${
-                              active ? 'bg-white' : 'bg-zinc-300 dark:bg-white/20'
-                            }`}
-                            aria-hidden
-                          />
-                          {item}
-                        </button>
-                      )
-                    })}
-                  </div>
+                      aria-hidden
+                    />
+                  </button>
+
+                  {isOpen && (
+                    <div className="border-t border-zinc-200/70 px-4 py-3 dark:border-white/[0.06]">
+                      <div className="flex flex-wrap gap-2">
+                        {items.map((item) => {
+                          const active = selectedCerts.includes(item)
+                          return (
+                            <button
+                              key={item}
+                              type="button"
+                              onClick={() =>
+                                setSelectedCerts((prev) =>
+                                  active ? prev.filter((c) => c !== item) : [...prev, item],
+                                )
+                              }
+                              aria-pressed={active}
+                              className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition-colors ${
+                                active
+                                  ? 'bg-indigo-600 text-white ring-indigo-600 hover:bg-indigo-500 dark:bg-indigo-500 dark:ring-indigo-500'
+                                  : 'bg-white text-zinc-700 ring-gray-200 hover:bg-indigo-50 hover:text-indigo-700 hover:ring-indigo-200 dark:bg-white/[0.04] dark:text-zinc-300 dark:ring-white/[0.08] dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300 dark:hover:ring-indigo-500/30'
+                              }`}
+                            >
+                              <span
+                                className={`inline-block h-2 w-2 rounded-full ${
+                                  active ? 'bg-white' : 'bg-zinc-300 dark:bg-white/20'
+                                }`}
+                                aria-hidden
+                              />
+                              {item}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )
             })}
