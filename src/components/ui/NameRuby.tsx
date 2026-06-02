@@ -13,10 +13,13 @@ export default function NameRuby({
   name,
   fallback = '—',
   className = '',
+  rtClassName = 'text-[0.55em] font-normal tracking-tight text-zinc-500 dark:text-zinc-400',
 }: {
   name: string | null | undefined
   fallback?: string
   className?: string
+  /** override styles applied to the <rt> furigana element */
+  rtClassName?: string
 }) {
   const { kanji, kana } = parseFullName(name)
   if (!kanji) return <span className={className}>{fallback}</span>
@@ -28,9 +31,7 @@ export default function NameRuby({
   return (
     <ruby className={`leading-tight ${className}`}>
       {kanji}
-      <rt className="text-[0.55em] font-normal tracking-tight text-zinc-500 dark:text-zinc-400">
-        {kana}
-      </rt>
+      <rt className={rtClassName}>{kana}</rt>
     </ruby>
   )
 }

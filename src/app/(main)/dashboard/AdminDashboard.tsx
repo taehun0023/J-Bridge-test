@@ -6,6 +6,7 @@ import Link from 'next/link'
 import type { JapaneseProgressStat } from '@/lib/japanese-progress'
 import AssignTaskModal from './AssignTaskModal'
 import { Plus } from 'lucide-react'
+import NameRuby from '@/components/ui/NameRuby'
 
 interface EmployeeRow {
   id: string
@@ -68,7 +69,7 @@ export default function AdminDashboard({ adminName, employees }: Props) {
         </span>
       </div>
       <p className="mb-6 text-sm text-zinc-500 dark:text-zinc-400">
-        {adminName ?? '管理者'}さん — 全社員の日本語進捗状況
+        {adminName ? <NameRuby name={adminName} /> : '管理者'}さん — 全社員の日本語進捗状況
       </p>
 
       <AssignTaskModal
@@ -124,11 +125,11 @@ export default function AdminDashboard({ adminName, employees }: Props) {
                       href={`/admin/reports?mentee=${e.id}`}
                       className="text-sm font-medium text-zinc-900 hover:text-indigo-500 dark:text-zinc-100"
                     >
-                      {e.full_name ?? e.email}
+                      <NameRuby name={e.full_name} fallback={e.email} />
                     </Link>
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
-                    {e.mentor_name ?? '—'}
+                    <NameRuby name={e.mentor_name} />
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300">
                     {fmtPair(e.stat.seikatsu)}
