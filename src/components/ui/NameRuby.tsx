@@ -6,7 +6,7 @@ import { parseFullName } from '@/lib/name-format'
  *   - "홍길동"                  → 홍길동 (rt 미표시)
  *   - null/undefined             → fallback ('—')
  *
- * 폰트 사이즈는 부모를 따르며, rt 는 0.55em 정도로 표시된다.
+ * 폰트 사이즈는 부모를 따르며, rt 는 0.7em 으로 표시된다.
  * inline-block 으로 줄바꿈을 막아 셀 안에서 깔끔하게 정렬되도록 함.
  */
 export default function NameRuby({

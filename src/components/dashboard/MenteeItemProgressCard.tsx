@@ -22,12 +22,14 @@ export default function MenteeItemProgressCard({ rows }: { rows: MyItemRow[] }) 
                   {r.areaLabel}
                   {done && <span className="ml-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">✓ 達成</span>}
                 </span>
-                <Link
-                  href={`/japanese/jlpt/${r.area}?level=${r.level}&mastery=unmastered`}
-                  className="text-xs font-medium text-indigo-500 hover:text-indigo-400"
-                >
-                  続きを学ぶ →
-                </Link>
+                {!done && (
+                  <Link
+                    href={`/japanese/jlpt/${r.area}?level=${r.level}&mastery=unmastered`}
+                    className="text-xs font-medium text-indigo-500 hover:text-indigo-400"
+                  >
+                    続きを学ぶ →
+                  </Link>
+                )}
               </div>
               <div className="flex items-center gap-3">
                 <div className="h-2 flex-1 rounded-full bg-gray-200 dark:bg-gray-700">

@@ -3,9 +3,10 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateUserRole, createUserAccount, updateMentorSpecialty, deleteUser, assignMentor } from '@/app/actions/admin/users'
-import { Trash2 } from 'lucide-react'
+import { Trash2, Plus } from 'lucide-react'
 import NameRuby from '@/components/ui/NameRuby'
 import EditUserModal from './EditUserModal'
+import AssignTaskModal from '@/app/(main)/dashboard/AssignTaskModal'
 
 interface User {
   id: string
@@ -40,11 +41,17 @@ export default function AdminUsersClient({ users, mentors }: Props) {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null)
   const [editTarget, setEditTarget] = useState<User | null>(null)
+  const [assignTarget, setAssignTarget] = useState<User | null>(null)
 
   const filtered = users.filter(u =>
     (u.full_name ?? '').toLowerCase().includes(search.toLowerCase()) ||
     u.email.toLowerCase().includes(search.toLowerCase())
   )
+
+  // 理解テスト(課題) 配信モーダル用メンティー一覧
+  const menteeOptions = users
+    .filter(u => u.role === 'mentee')
+    .map(u => ({ id: u.id, full_name: u.full_name, email: u.email }))
 
   function handleRoleChange(userId: string, newRole: string) {
     startTransition(async () => {
@@ -262,6 +269,17 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                   </td>
                   <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center dark:border-white/[0.06]">
                     <div className="flex items-center justify-center gap-1">
+                      {user.role === 'mentee' && (
+                        <button
+                          onClick={() => setAssignTarget(user)}
+                          disabled={pending}
+                          className="inline-flex items-center gap-1 rounded-lg bg-indigo-500/10 px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-500/20 disabled:opacity-50 dark:text-indigo-300"
+                          title="課題を割り当てる"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          課題
+                        </button>
+                      )}
                       <button
                         onClick={() => setDeleteTarget(user)}
                         disabled={pending}
@@ -293,6 +311,14 @@ export default function AdminUsersClient({ users, mentors }: Props) {
             setTimeout(() => setMessage(null), 3000)
             router.refresh()
           }}
+        />
+      )}
+      {assignTarget && (
+        <AssignTaskModal
+          open={!!assignTarget}
+          onClose={() => setAssignTarget(null)}
+          mentees={menteeOptions}
+          initialMenteeIds={[assignTarget.id]}
         />
       )}
       {deleteTarget && (
