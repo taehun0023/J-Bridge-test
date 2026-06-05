@@ -13,7 +13,8 @@ import type { UserRole } from '@/lib/supabase/types'
 const ENABLED_SUPABASE_REFS = ['nyymasirfrawsxobmfwi', 'jpjvzlmwzeiyukqqbdit']
 const VALID_ROLES: UserRole[] = ['admin', 'mentor', 'mentee']
 
-export function isRoleSwitcherEnabled(): boolean {
+// 'use server' ファイルでは export 関数は async 必須のため、内部ヘルパー(非 export)にする。
+function isRoleSwitcherEnabled(): boolean {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
   return ENABLED_SUPABASE_REFS.some((ref) => url.includes(ref))
 }
