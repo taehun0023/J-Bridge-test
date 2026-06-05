@@ -5,6 +5,7 @@ import { ChevronDown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Card from '@/components/ui/Card'
+import NameRuby from '@/components/ui/NameRuby'
 import type { JlptLevel } from '@/lib/supabase/types'
 import { IT_CERTIFICATIONS, parseCertifications, buildCertifications } from '@/lib/certifications'
 
@@ -61,7 +62,7 @@ function buildFullName(parts: NameParts): string {
   return katakana ? `${kanji} (${katakana})` : kanji
 }
 
-export default function ProfileForm({ profile }: { profile: Profile | null }) {
+export default function ProfileForm({ profile, mentorName }: { profile: Profile | null; mentorName?: string | null }) {
   const router = useRouter()
   const initialParts = parseFullName(profile?.full_name ?? null)
   const [lastName, setLastName] = useState(initialParts.lastName)
@@ -237,6 +238,20 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
               className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
             />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">担当メンター</label>
+          <div className="mt-1 text-sm">
+            {mentorName ? (
+              <NameRuby name={mentorName} />
+            ) : (
+              <span className="text-zinc-400">未割り当て</span>
+            )}
+          </div>
+          <p className="mt-1.5 text-[10px] text-zinc-500 dark:text-zinc-400">
+            管理者が割り当てます。
+          </p>
         </div>
 
         {saveError && (
