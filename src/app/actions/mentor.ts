@@ -3,6 +3,7 @@
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { requireAdmin, requireAdminOrMentor } from '@/lib/auth-helpers'
+import { parseFullName } from '@/lib/name-format'
 
 export async function assignMenteeToMentor(mentorId: string, menteeId: string) {
   const auth = await requireAdmin()
@@ -236,6 +237,13 @@ export async function getMentorDashboardData() {
       nextExamDate,
       recentQuizAttempts,
     }
+  })
+
+  // 멘티 이름순 정렬 (카타카나 후리가나 우선, 없으면 본명) — 아이우에오/가나다 빠른순
+  mentees.sort((a, b) => {
+    const an = parseFullName(a.full_name)
+    const bn = parseFullName(b.full_name)
+    return (an.kana ?? an.kanji).localeCompare(bn.kana ?? bn.kanji, 'ja')
   })
 
   return { mentees }

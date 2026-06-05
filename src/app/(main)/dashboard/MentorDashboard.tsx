@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Card from '@/components/ui/Card'
 import Link from 'next/link'
 import type { JapaneseProgressStat } from '@/lib/japanese-progress'
-import AssignTaskModal from './AssignTaskModal'
 import ItemAssignModal from './ItemAssignModal'
 import { Plus, Languages } from 'lucide-react'
 import NameRuby from '@/components/ui/NameRuby'
@@ -91,23 +90,14 @@ export default function MentorDashboard({ mentorName, mentees }: Props) {
           メンター
         </span>
       </div>
-      <p className="mb-6 rounded-2xl border border-sky-200/60 bg-sky-100 px-5 py-4 text-lg font-medium text-sky-900 dark:border-sky-500/20 dark:bg-sky-500/15 dark:text-sky-100">
-        {mentorName ? (
-          <NameRuby
-            name={mentorName}
-            rtClassName="pb-1 text-xs font-medium text-sky-700 dark:text-sky-200"
-          />
-        ) : (
-          'メンター'
-        )}
-        さんの担当メンティー進捗状況
-      </p>
 
-      <AssignTaskModal
+      <ItemAssignModal
         open={assignOpen}
         onClose={() => setAssignOpen(false)}
         mentees={mentees.map(m => ({ id: m.id, full_name: m.full_name, email: m.email }))}
         initialMenteeIds={assignTargetIds}
+        categories={['seikatsu-quiz', 'business-jp-quiz']}
+        heading="理解テストを割り当てる（増分）"
       />
 
       <ItemAssignModal
@@ -128,7 +118,7 @@ export default function MentorDashboard({ mentorName, mentees }: Props) {
               className="inline-flex items-center gap-1.5 rounded-xl bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
             >
               <Languages className="h-3.5 w-3.5" />
-              項目課題
+              課題
             </button>
             <button
               type="button"
@@ -137,7 +127,7 @@ export default function MentorDashboard({ mentorName, mentees }: Props) {
               className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
             >
               <Plus className="h-3.5 w-3.5" />
-              一括割り当て
+              理解テスト
             </button>
           </div>
         }

@@ -3,28 +3,9 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateUserRole, createUserAccount, updateMentorSpecialty, deleteUser, assignMentor } from '@/app/actions/admin/users'
-import { Trash2, Plus } from 'lucide-react'
-import AssignTaskModal from '@/app/(main)/dashboard/AssignTaskModal'
+import { Trash2 } from 'lucide-react'
 import NameRuby from '@/components/ui/NameRuby'
-
-interface CountPair {
-  completed: number
-  total: number
-}
-
-interface ProgressStat {
-  seikatsu: CountPair
-  businessJp: CountPair
-  incomplete: number
-  overdue: number
-  thisMonth: CountPair
-  all: CountPair
-}
-
-interface ExamScore {
-  score: number | null
-  passing_score: number
-}
+import EditUserModal from './EditUserModal'
 
 interface User {
   id: string
@@ -34,32 +15,11 @@ interface User {
   mentor_specialty: string | null
   is_onboarded: boolean
   is_japanese: boolean
-  japanese_score: number
-  programming_score: number
   created_at: string
+  assigned_mentor_id: string | null
+  target_certification: string | null
   jlpt_level: string | null
   it_certifications: string | null
-  assigned_mentor_id: string | null
-  mentor_name: string | null
-  exam_seikatsu: ExamScore | null
-  exam_business_jp: ExamScore | null
-  progress: ProgressStat
-}
-
-function fmtPair(c: CountPair): string {
-  return `${c.completed}/${c.total}`
-}
-
-function ExamCell({ exam }: { exam: ExamScore | null }) {
-  if (!exam || exam.score === null) {
-    return <span className="text-zinc-400">—</span>
-  }
-  const passed = exam.score >= exam.passing_score
-  return (
-    <span className={passed ? 'font-medium text-emerald-500' : 'font-medium text-red-500'}>
-      {exam.passing_score}/{exam.score}
-    </span>
-  )
 }
 
 interface Mentor {
@@ -79,27 +39,12 @@ export default function AdminUsersClient({ users, mentors }: Props) {
   const [pending, startTransition] = useTransition()
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null)
-  const [assignOpen, setAssignOpen] = useState(false)
-  const [assignTargetIds, setAssignTargetIds] = useState<string[]>([])
+  const [editTarget, setEditTarget] = useState<User | null>(null)
 
   const filtered = users.filter(u =>
     (u.full_name ?? '').toLowerCase().includes(search.toLowerCase()) ||
     u.email.toLowerCase().includes(search.toLowerCase())
   )
-
-  // 課題を割り当てる対象はメンティーのみ
-  const menteeUsers = users
-    .filter(u => u.role === 'mentee')
-    .map(u => ({ id: u.id, full_name: u.full_name, email: u.email }))
-
-  function openAssignForOne(menteeId: string) {
-    setAssignTargetIds([menteeId])
-    setAssignOpen(true)
-  }
-  function openAssignForAll() {
-    setAssignTargetIds([])
-    setAssignOpen(true)
-  }
 
   function handleRoleChange(userId: string, newRole: string) {
     startTransition(async () => {
@@ -193,31 +138,13 @@ export default function AdminUsersClient({ users, mentors }: Props) {
           onChange={e => setSearch(e.target.value)}
           className="w-full max-w-xs rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100 dark:placeholder-zinc-500"
         />
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={openAssignForAll}
-            disabled={menteeUsers.length === 0}
-            className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            一括割り当て
-          </button>
-          <button
-            onClick={() => setShowCreateForm(!showCreateForm)}
-            className="shrink-0 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
-          >
-            {showCreateForm ? 'キャンセル' : '+ アカウント作成'}
-          </button>
-        </div>
+        <button
+          onClick={() => setShowCreateForm(!showCreateForm)}
+          className="shrink-0 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+        >
+          {showCreateForm ? 'キャンセル' : '+ アカウント作成'}
+        </button>
       </div>
-
-      <AssignTaskModal
-        open={assignOpen}
-        onClose={() => setAssignOpen(false)}
-        mentees={menteeUsers}
-        initialMenteeIds={assignTargetIds}
-      />
 
       {showCreateForm && (
         <form action={handleCreate} className="mt-4 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 backdrop-blur-md dark:border-white/[0.08] dark:bg-white/[0.03] border-gray-200/60 bg-white/80">
@@ -260,32 +187,27 @@ export default function AdminUsersClient({ users, mentors }: Props) {
           <table className="min-w-full divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-200">
             <thead>
               <tr className="bg-white/[0.02] dark:bg-white/[0.02]">
-                <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">名前</th>
-                <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">担当メンター</th>
-                <th colSpan={2} className="border-l border-gray-200/40 px-4 py-2 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">試験</th>
-                <th colSpan={2} className="border-l border-gray-200/40 px-4 py-2 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">課題</th>
-                <th rowSpan={2} className="border-l border-gray-200/40 px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">未完了</th>
-                <th rowSpan={2} className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400">遅延</th>
-                <th rowSpan={2} className="border-l border-gray-200/40 px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">今月進捗</th>
-                <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">全体進捗</th>
-                <th rowSpan={2} className="border-l border-gray-200/40 px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">役割</th>
-                <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"></th>
-              </tr>
-              <tr className="bg-white/[0.02] dark:bg-white/[0.02]">
-                <th className="border-l border-gray-200/40 px-3 py-2 text-center text-[10px] font-normal text-zinc-400 dark:border-white/[0.06] dark:text-zinc-500">生活日本語</th>
-                <th className="px-3 py-2 text-center text-[10px] font-normal text-zinc-400 dark:text-zinc-500">ビジネス日本語</th>
-                <th className="border-l border-gray-200/40 px-3 py-2 text-center text-[10px] font-normal text-zinc-400 dark:border-white/[0.06] dark:text-zinc-500">生活日本語</th>
-                <th className="px-3 py-2 text-center text-[10px] font-normal text-zinc-400 dark:text-zinc-500">ビジネス日本語</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400">名前</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">メール</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">担当メンター</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">役割</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">登録日</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">
               {filtered.map(user => {
                 return (
                 <tr key={user.id}>
-                  <td className="whitespace-nowrap px-4 py-3">
-                    <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                  <td className="whitespace-nowrap px-4 py-3 text-left">
+                    <button
+                      type="button"
+                      onClick={() => setEditTarget(user)}
+                      className="text-sm font-medium text-zinc-900 hover:text-indigo-600 hover:underline dark:text-zinc-100 dark:hover:text-indigo-400"
+                      title="プロフィールを編集"
+                    >
                       <NameRuby name={user.full_name} fallback="-" />
-                    </span>
+                    </button>
                     {!user.is_onboarded && (
                       <span className="ml-2 text-xs text-amber-400">(未オンボーディング)</span>
                     )}
@@ -293,7 +215,8 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                       <span className="ml-1 inline-flex rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-400 ring-1 ring-amber-500/20">JP</span>
                     )}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300">
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">{user.email}</td>
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
                     {user.role === 'mentee' ? (
                       <select
                         value={user.assigned_mentor_id ?? ''}
@@ -322,33 +245,7 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                       <span className="text-xs text-zinc-400">—</span>
                     )}
                   </td>
-                  <td className="whitespace-nowrap border-l border-gray-200/40 px-3 py-3 text-center text-sm dark:border-white/[0.06]">
-                    <ExamCell exam={user.exam_seikatsu} />
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-3 text-center text-sm">
-                    <ExamCell exam={user.exam_business_jp} />
-                  </td>
-                  <td className="whitespace-nowrap border-l border-gray-200/40 px-3 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
-                    {fmtPair(user.progress.seikatsu)}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-3 text-center text-sm text-zinc-700 dark:text-zinc-300">
-                    {fmtPair(user.progress.businessJp)}
-                  </td>
-                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-right text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
-                    {user.progress.incomplete}/{user.progress.all.total}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
-                    <span className={user.progress.overdue > 0 ? 'font-semibold text-red-500' : 'text-zinc-500 dark:text-zinc-400'}>
-                      {user.progress.overdue}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
-                    {fmtPair(user.progress.thisMonth)}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300">
-                    {fmtPair(user.progress.all)}
-                  </td>
-                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 dark:border-white/[0.06]">
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center dark:border-white/[0.06]">
                     <select
                       value={user.role}
                       onChange={e => handleRoleChange(user.id, e.target.value)}
@@ -360,20 +257,11 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                       <option value="admin">管理者</option>
                     </select>
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3">
-                    <div className="flex items-center gap-1">
-                      {user.role === 'mentee' && (
-                        <button
-                          type="button"
-                          onClick={() => openAssignForOne(user.id)}
-                          disabled={pending}
-                          className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-600 hover:bg-emerald-500/20 disabled:opacity-50 dark:text-emerald-300"
-                          title={`${user.full_name ?? user.email} に課題を割り当てる`}
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                          課題
-                        </button>
-                      )}
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
+                    {new Date(user.created_at).toLocaleDateString('ja-JP')}
+                  </td>
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center dark:border-white/[0.06]">
+                    <div className="flex items-center justify-center gap-1">
                       <button
                         onClick={() => setDeleteTarget(user)}
                         disabled={pending}
@@ -394,6 +282,19 @@ export default function AdminUsersClient({ users, mentors }: Props) {
           <div className="py-8 text-center text-sm text-zinc-500">検索結果がありません</div>
         )}
       </div>
+      {editTarget && (
+        <EditUserModal
+          user={editTarget}
+          mentors={mentors}
+          onClose={() => setEditTarget(null)}
+          onSaved={(msg) => {
+            setEditTarget(null)
+            setMessage({ type: 'success', text: msg })
+            setTimeout(() => setMessage(null), 3000)
+            router.refresh()
+          }}
+        />
+      )}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setDeleteTarget(null)}>
           <div className="mx-4 w-full max-w-md rounded-2xl border border-gray-200/60 bg-white p-6 shadow-xl dark:border-white/[0.08] dark:bg-zinc-900" onClick={e => e.stopPropagation()}>

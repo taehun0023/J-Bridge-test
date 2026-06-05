@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Card from '@/components/ui/Card'
 import type { JlptLevel } from '@/lib/supabase/types'
+import { IT_CERTIFICATIONS, parseCertifications, buildCertifications } from '@/lib/certifications'
 
 const JLPT_BAR: { value: JlptLevel; label: string; fill: string }[] = [
   { value: 'N5', label: '初級', fill: 'bg-emerald-500' },
@@ -17,123 +18,13 @@ const JLPT_BAR: { value: JlptLevel; label: string; fill: string }[] = [
 
 const KANJI_ONLY_RE = /^[一-鿿㐀-䶿々〆〇]+$/
 
-const IT_CERTIFICATIONS: Record<string, readonly string[]> = {
-  '情報処理 (IPA)': [
-    'ITパスポート',
-    '情報セキュリティマネジメント',
-    '基本情報技術者',
-    '応用情報技術者',
-    'ネットワークスペシャリスト',
-    'データベーススペシャリスト',
-    '情報処理安全確保支援士',
-    'システムアーキテクト',
-    'ITストラテジスト',
-    'プロジェクトマネージャ',
-    'ITサービスマネージャ',
-    'システム監査技術者',
-    'エンベデッドシステムスペシャリスト',
-  ],
-  'AWS': [
-    'AWS Cloud Practitioner (Foundational)',
-    'AWS AI Practitioner (Foundational)',
-    'AWS Solutions Architect Associate (SAA)',
-    'AWS Developer Associate (DVA)',
-    'AWS SysOps Administrator Associate (SOA)',
-    'AWS Data Engineer Associate (DEA)',
-    'AWS Machine Learning Engineer Associate (MLA)',
-    'AWS Solutions Architect Professional (SAP)',
-    'AWS DevOps Engineer Professional (DOP)',
-    'AWS Advanced Networking Specialty',
-    'AWS Security Specialty',
-    'AWS Machine Learning Specialty',
-  ],
-  'Microsoft Azure': [
-    'Azure Fundamentals (AZ-900)',
-    'Azure Administrator Associate (AZ-104)',
-    'Azure Developer Associate (AZ-204)',
-    'Azure Solutions Architect Expert (AZ-305)',
-    'Azure DevOps Engineer Expert (AZ-400)',
-    'Azure Security Engineer Associate (AZ-500)',
-    'Azure Data Engineer Associate (DP-203)',
-    'Azure Database Administrator Associate (DP-300)',
-  ],
-  'Google Cloud': [
-    'Google Cloud Digital Leader',
-    'Google Cloud Associate Cloud Engineer',
-    'Google Cloud Professional Cloud Architect',
-    'Google Cloud Professional Data Engineer',
-    'Google Cloud Professional DevOps Engineer',
-    'Google Cloud Professional Cloud Security Engineer',
-    'Google Cloud Professional ML Engineer',
-  ],
-  'Oracle / Java': [
-    'Oracle Certified Java Programmer Bronze (OCJP Bronze)',
-    'Oracle Certified Java Programmer Silver (OCJP Silver)',
-    'Oracle Certified Java Programmer Gold (OCJP Gold)',
-    'Oracle Master Bronze (DB)',
-    'Oracle Master Silver (DB)',
-    'Oracle Master Gold (DB)',
-    'Oracle Master Platinum (DB)',
-    'Oracle Cloud Infrastructure Foundations (OCI)',
-  ],
-  'ネットワーク / Linux': [
-    'CCNA (Cisco)',
-    'CCNP (Cisco)',
-    'CCIE (Cisco)',
-    'LPIC-1',
-    'LPIC-2',
-    'LPIC-3',
-    'RHCSA (Red Hat)',
-    'RHCE (Red Hat)',
-    'CompTIA Network+',
-  ],
-  'セキュリティ': [
-    'CISSP',
-    'CEH (Certified Ethical Hacker)',
-    'CompTIA Security+',
-    'CompTIA CySA+',
-  ],
-  'プロジェクト管理 / ITIL': [
-    'PMP',
-    'PRINCE2',
-    'ITIL Foundation',
-    'Scrum Master (CSM)',
-    'Scrum Master (PSM)',
-  ],
-  '韓国国家資格': [
-    '정보처리기사',
-    '정보처리산업기사',
-    '정보보안기사',
-    '정보보안산업기사',
-    'SQLD',
-    'SQLP',
-    'ADsP',
-    'ADP',
-    '빅데이터분석기사',
-  ],
-}
-
-const ALL_CERT_VALUES: ReadonlySet<string> = new Set(
-  Object.values(IT_CERTIFICATIONS).flat(),
-)
-
-function parseCertifications(raw: string | null): string[] {
-  if (!raw) return []
-  return raw
-    .split(/[、,]/)
-    .map((s) => s.trim())
-    .filter((s) => s && ALL_CERT_VALUES.has(s))
-}
-
-function buildCertifications(known: string[]): string {
-  return known.join('、')
-}
-
 interface Profile {
   id: string
+  email: string
   full_name: string | null
   jlpt_level: JlptLevel | null
   it_certifications: string | null
+  target_certification: string | null
 }
 
 interface NameParts {
@@ -295,6 +186,16 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
     <Card title="個人情報">
       <form onSubmit={handleSave} className="space-y-4">
         <div>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">ID（メールアドレス）</label>
+          <input
+            type="text"
+            value={profile?.email ?? ''}
+            readOnly
+            disabled
+            className="mt-1 w-full cursor-not-allowed rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-zinc-500 dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-400"
+          />
+        </div>
+        <div>
           <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
             名前（漢字）<span className="text-red-400">*</span>
           </label>
@@ -314,9 +215,6 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
               className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
             />
           </div>
-          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-            名前は漢字のみ入力できます。カタカナは下の欄に入力してください。
-          </p>
         </div>
 
         <div>
@@ -377,6 +275,21 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
           </div>
 
           <div className="mt-2 flex overflow-hidden rounded-2xl ring-1 ring-gray-200 dark:ring-white/[0.08]">
+            <button
+              type="button"
+              onClick={() => setJlptLevel('')}
+              aria-pressed={jlptLevel === ''}
+              className={`relative flex flex-1 flex-col items-center justify-center gap-0.5 border-r border-gray-200 px-2 py-3 text-sm font-bold transition-colors dark:border-white/[0.08] ${
+                jlptLevel === ''
+                  ? 'bg-zinc-400 text-white ring-2 ring-inset ring-zinc-900/20 dark:bg-zinc-600 dark:ring-white/30'
+                  : 'bg-white text-zinc-400 hover:bg-zinc-50 dark:bg-white/[0.02] dark:text-zinc-500 dark:hover:bg-white/[0.05]'
+              }`}
+            >
+              <span>なし</span>
+              <span className={`text-[10px] font-normal ${jlptLevel === '' ? 'text-white/90' : 'text-zinc-400 dark:text-zinc-500'}`}>
+                無資格
+              </span>
+            </button>
             {JLPT_BAR.map((seg, idx) => {
               const selectedIdx = JLPT_BAR.findIndex((s) => s.value === jlptLevel)
               const filled = selectedIdx >= 0 && idx <= selectedIdx
@@ -401,8 +314,21 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
               )
             })}
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">目標資格</label>
+          <div className="mt-2">
+            {profile?.target_certification ? (
+              <span className="inline-flex items-center rounded-lg bg-indigo-50 px-3 py-1.5 text-sm font-semibold text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+                {profile.target_certification}
+              </span>
+            ) : (
+              <span className="text-sm text-zinc-400">未設定</span>
+            )}
+          </div>
           <p className="mt-1.5 text-[10px] text-zinc-500 dark:text-zinc-400">
-            取得済みの最高レベルを選択してください（N5: 初級 → N1: 上級）
+            管理者・メンターが設定します（課題付与の基準）。
           </p>
         </div>
 

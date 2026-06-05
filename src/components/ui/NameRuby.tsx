@@ -13,7 +13,7 @@ export default function NameRuby({
   name,
   fallback = '—',
   className = '',
-  rtClassName = 'text-[0.55em] font-normal tracking-tight text-zinc-500 dark:text-zinc-400',
+  rtClassName = 'text-[0.7em] font-normal tracking-tight text-zinc-500 dark:text-zinc-400 pb-0.5',
 }: {
   name: string | null | undefined
   fallback?: string

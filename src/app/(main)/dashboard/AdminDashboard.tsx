@@ -4,10 +4,19 @@ import { useState } from 'react'
 import Card from '@/components/ui/Card'
 import Link from 'next/link'
 import type { JapaneseProgressStat } from '@/lib/japanese-progress'
-import AssignTaskModal from './AssignTaskModal'
 import ItemAssignModal from './ItemAssignModal'
 import { Plus, Languages } from 'lucide-react'
 import NameRuby from '@/components/ui/NameRuby'
+import { getJlptLevel, getJlptLevelColor, type JlptLevel } from '@/lib/assessment-config'
+
+const JLPT_LEVELS = ['N1', 'N2', 'N3', 'N4', 'N5']
+function LevelBadge({ level }: { level: string | null }) {
+  if (!level) return <span className="text-zinc-400">—</span>
+  const cls = JLPT_LEVELS.includes(level)
+    ? getJlptLevelColor(level as JlptLevel)
+    : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+  return <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${cls}`}>{level}</span>
+}
 
 interface ExamScore {
   score: number | null
@@ -19,15 +28,19 @@ interface EmployeeRow {
   full_name: string | null
   email: string
   mentor_name: string | null
+  target_certification: string | null
   stat: JapaneseProgressStat
   exam_seikatsu: ExamScore | null
   exam_business_jp: ExamScore | null
+  quiz: { total: number; passed: number; attempted: number }
 }
 
 interface Props {
   adminName: string | null
   employees: EmployeeRow[]
   unreadAnnouncements?: number
+  /** 'admin' = 全社員 / 'mentor' = 担当メンティーのみ。レイアウト・機能は同一、ラベルのみ切替。 */
+  variant?: 'admin' | 'mentor'
 }
 
 function ExamCell({ exam }: { exam: ExamScore | null }) {
@@ -37,7 +50,7 @@ function ExamCell({ exam }: { exam: ExamScore | null }) {
   const passed = exam.score >= exam.passing_score
   return (
     <span className={passed ? 'font-medium text-emerald-500' : 'font-medium text-red-500'}>
-      {exam.passing_score}/{exam.score}
+      {exam.score}/{exam.passing_score}
     </span>
   )
 }
@@ -51,24 +64,21 @@ function fmtPair(c: { completed: number; total: number }): string {
   return `${c.completed}/${c.total}`
 }
 
-export default function AdminDashboard({ adminName, employees }: Props) {
+function fmtPct(c: { completed: number; total: number }): string {
+  return c.total > 0 ? `${Math.round((c.completed / c.total) * 100)}%` : '—'
+}
+
+export default function AdminDashboard({ adminName, employees, variant = 'admin' }: Props) {
+  const isMentor = variant === 'mentor'
   const [search, setSearch] = useState('')
   const [assignOpen, setAssignOpen] = useState(false)
   const [assignTargetIds, setAssignTargetIds] = useState<string[]>([])
   const [jlptOpen, setJlptOpen] = useState(false)
   const [jlptTargetIds, setJlptTargetIds] = useState<string[]>([])
 
-  function openAssignForOne(menteeId: string) {
-    setAssignTargetIds([menteeId])
-    setAssignOpen(true)
-  }
   function openAssignForAll() {
     setAssignTargetIds([])
     setAssignOpen(true)
-  }
-  function openJlptForOne(menteeId: string) {
-    setJlptTargetIds([menteeId])
-    setJlptOpen(true)
   }
   function openJlptForAll() {
     setJlptTargetIds([])
@@ -94,30 +104,35 @@ export default function AdminDashboard({ adminName, employees }: Props) {
     <div>
       <div className="mb-6 flex items-center gap-3">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ダッシュボード</h1>
-        <span className="rounded-full bg-red-500/10 px-3 py-1 text-xs font-bold text-red-500 ring-1 ring-red-500/20">
-          管理者
-        </span>
+        {isMentor ? (
+          <span className="rounded-full bg-sky-500/10 px-3 py-1 text-xs font-bold text-sky-500 ring-1 ring-sky-500/20">
+            メンター
+          </span>
+        ) : (
+          <span className="rounded-full bg-red-500/10 px-3 py-1 text-xs font-bold text-red-500 ring-1 ring-red-500/20">
+            管理者
+          </span>
+        )}
       </div>
-      <p className="mb-6 text-sm text-zinc-500 dark:text-zinc-400">
-        {adminName ? <NameRuby name={adminName} /> : '管理者'}さん — 全社員の日本語進捗状況
-      </p>
 
-      <AssignTaskModal
+      <ItemAssignModal
         open={assignOpen}
         onClose={() => setAssignOpen(false)}
-        mentees={employees.map(e => ({ id: e.id, full_name: e.full_name, email: e.email }))}
+        mentees={employees.map(e => ({ id: e.id, full_name: e.full_name, email: e.email, target: e.target_certification }))}
         initialMenteeIds={assignTargetIds}
+        categories={['seikatsu-quiz', 'business-jp-quiz']}
+        heading="理解テストを割り当てる（増分）"
       />
 
       <ItemAssignModal
         open={jlptOpen}
         onClose={() => setJlptOpen(false)}
-        mentees={employees.map(e => ({ id: e.id, full_name: e.full_name, email: e.email }))}
+        mentees={employees.map(e => ({ id: e.id, full_name: e.full_name, email: e.email, target: e.target_certification }))}
         initialMenteeIds={jlptTargetIds}
       />
 
       <Card
-        title="全社員の日本語進捗"
+        title={isMentor ? '担当メンティーの日本語進捗' : '全社員の日本語進捗'}
         headerAction={
           <div className="flex items-center gap-2">
             <button
@@ -127,7 +142,7 @@ export default function AdminDashboard({ adminName, employees }: Props) {
               className="inline-flex items-center gap-1.5 rounded-xl bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
             >
               <Languages className="h-3.5 w-3.5" />
-              項目課題
+              課題
             </button>
             <button
               type="button"
@@ -136,7 +151,7 @@ export default function AdminDashboard({ adminName, employees }: Props) {
               className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
             >
               <Plus className="h-3.5 w-3.5" />
-              一括割り当て
+              理解テスト
             </button>
           </div>
         }
@@ -154,27 +169,24 @@ export default function AdminDashboard({ adminName, employees }: Props) {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-white/[0.06]">
             <thead>
               <tr>
-                <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">名前</th>
-                <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">担当メンター</th>
-                <th colSpan={2} className="border-l border-gray-200/40 px-4 py-2 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">試験</th>
-                <th colSpan={2} className="border-l border-gray-200/40 px-4 py-2 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">課題</th>
-                <th rowSpan={2} className="border-l border-gray-200/40 px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">未完了</th>
-                <th rowSpan={2} className="px-4 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400">遅延</th>
-                <th rowSpan={2} className="border-l border-gray-200/40 px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">今月進捗</th>
-                <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">全体進捗</th>
-                <th rowSpan={2} className="border-l border-gray-200/40 px-3 py-3 text-right text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">操作</th>
-              </tr>
-              <tr>
-                <th className="border-l border-gray-200/40 px-3 py-2 text-center text-[10px] font-normal text-zinc-400 dark:border-white/[0.06] dark:text-zinc-500">生活日本語</th>
-                <th className="px-3 py-2 text-center text-[10px] font-normal text-zinc-400 dark:text-zinc-500">ビジネス日本語</th>
-                <th className="border-l border-gray-200/40 px-3 py-2 text-center text-[10px] font-normal text-zinc-400 dark:border-white/[0.06] dark:text-zinc-500">生活日本語</th>
-                <th className="px-3 py-2 text-center text-[10px] font-normal text-zinc-400 dark:text-zinc-500">ビジネス日本語</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400">名前</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">担当メンター</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">目標レベル</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">試験レベル</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">試験</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">課題</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">未完了</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">遅延</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">理解度テスト</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">今月進捗</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">全体進捗</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">%</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-white/[0.06]">
               {sorted.map(e => (
                 <tr key={e.id} className="hover:bg-gray-50 dark:hover:bg-white/[0.02]">
-                  <td className="whitespace-nowrap px-4 py-3">
+                  <td className="whitespace-nowrap px-4 py-3 text-left">
                     <Link
                       href={`/admin/reports?mentee=${e.id}`}
                       className="text-sm font-medium text-zinc-900 hover:text-indigo-500 dark:text-zinc-100"
@@ -182,56 +194,48 @@ export default function AdminDashboard({ adminName, employees }: Props) {
                       <NameRuby name={e.full_name} fallback={e.email} />
                     </Link>
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-left text-sm text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">
                     <NameRuby name={e.mentor_name} />
+                  </td>
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm dark:border-white/[0.06]">
+                    <LevelBadge level={e.target_certification} />
+                  </td>
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm dark:border-white/[0.06]">
+                    <LevelBadge level={e.exam_seikatsu && e.exam_seikatsu.score != null ? getJlptLevel(e.exam_seikatsu.score) : null} />
                   </td>
                   <td className="whitespace-nowrap border-l border-gray-200/40 px-3 py-3 text-center text-sm dark:border-white/[0.06]">
                     <ExamCell exam={e.exam_seikatsu} />
                   </td>
-                  <td className="whitespace-nowrap px-3 py-3 text-center text-sm">
-                    <ExamCell exam={e.exam_business_jp} />
-                  </td>
                   <td className="whitespace-nowrap border-l border-gray-200/40 px-3 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
                     {fmtPair(e.stat.seikatsu)}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-3 text-center text-sm text-zinc-700 dark:text-zinc-300">
-                    {fmtPair(e.stat.businessJp)}
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
+                    {Math.max(0, e.stat.seikatsu.total - e.stat.seikatsu.completed)}/{e.stat.seikatsu.total}
                   </td>
-                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-right text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
-                    {e.stat.incomplete}/{e.stat.all.total}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm dark:border-white/[0.06]">
                     <span className={e.stat.overdue > 0 ? 'font-semibold text-red-500' : 'text-zinc-500 dark:text-zinc-400'}>
                       {e.stat.overdue}
                     </span>
                   </td>
-                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-3 py-3 text-center text-sm dark:border-white/[0.06]">
+                    {e.quiz.total === 0 ? (
+                      <span className="text-zinc-400">—/—</span>
+                    ) : e.quiz.attempted === 0 ? (
+                      <span className="text-zinc-500 dark:text-zinc-400">—/{e.quiz.total}</span>
+                    ) : (
+                      <span className={e.quiz.passed === e.quiz.total ? 'font-medium text-emerald-500' : 'text-zinc-700 dark:text-zinc-300'}>
+                        {e.quiz.passed}/{e.quiz.total}{e.quiz.passed === e.quiz.total ? ' ✓' : ''}
+                      </span>
+                    )}
+                  </td>
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
                     {fmtPair(e.stat.thisMonth)}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300">
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
                     {fmtPair(e.stat.all)}
                   </td>
-                  <td className="whitespace-nowrap border-l border-gray-200/40 px-3 py-3 text-right dark:border-white/[0.06]">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => openJlptForOne(e.id)}
-                        className="inline-flex items-center gap-1 rounded-lg bg-violet-500/10 px-2 py-1 text-xs font-medium text-violet-600 hover:bg-violet-500/20 dark:text-violet-300"
-                        title={`${e.full_name ?? e.email} に項目課題を割り当てる`}
-                      >
-                        <Languages className="h-3.5 w-3.5" />
-                        項目
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openAssignForOne(e.id)}
-                        className="inline-flex items-center gap-1 rounded-lg bg-indigo-500/10 px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-500/20 dark:text-indigo-300"
-                        title={`${e.full_name ?? e.email} に課題を割り当てる`}
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                        課題
-                      </button>
-                    </div>
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm font-semibold text-zinc-800 dark:border-white/[0.06] dark:text-zinc-200">
+                    {fmtPct(e.stat.all)}
                   </td>
                 </tr>
               ))}

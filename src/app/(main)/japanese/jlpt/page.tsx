@@ -6,7 +6,6 @@ import { categoryChildren } from '@/lib/navigation'
 import GuideCard from '@/components/japanese/JlptGuideCard'
 
 const JLPT_LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'] as const
-const KANJI_CAP = 100
 
 const LEVEL_COLORS: Record<string, string> = {
   N5: 'text-gray-700 dark:text-gray-300',
@@ -64,8 +63,8 @@ export default async function JlptHubPage() {
     const listeningMastered = listeningIds.filter(l => masteredSet.has(`jlpt_listening:${l.id}`)).length
     const kanjiMasteredRaw = kanjiIds.filter(k => masteredSet.has(`jlpt_kanji:${k.id}`)).length
 
-    const total = vocabIds.length + grammarIds.length + readingIds.length + listeningIds.length + Math.min(kanjiIds.length, KANJI_CAP)
-    const mastered = vocabMastered + grammarMastered + readingMastered + listeningMastered + Math.min(kanjiMasteredRaw, KANJI_CAP)
+    const total = vocabIds.length + grammarIds.length + readingIds.length + listeningIds.length + kanjiIds.length
+    const mastered = vocabMastered + grammarMastered + readingMastered + listeningMastered + kanjiMasteredRaw
     const pct = total > 0 ? Math.round((mastered / total) * 100) : 0
 
     return { level, mastered, total, pct }

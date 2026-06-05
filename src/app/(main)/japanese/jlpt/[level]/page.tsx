@@ -4,7 +4,6 @@ import Link from 'next/link'
 import Card from '@/components/ui/Card'
 
 const VALID_LEVELS = ['n5', 'n4', 'n3', 'n2', 'n1'] as const
-const KANJI_CAP = 100
 const THRESHOLD = 80
 
 const CATEGORIES = [
@@ -74,9 +73,7 @@ export default async function JlptLevelPage({ params }: { params: Promise<{ leve
     })(),
     jlpt_kanji: (() => {
       const ids = kanjiResult.data?.map(k => k.id) ?? []
-      const total = Math.min(ids.length, KANJI_CAP)
-      const mastered = Math.min(ids.filter(id => masteredSet.has(`jlpt_kanji:${id}`)).length, KANJI_CAP)
-      return { ids, total, mastered }
+      return { ids, total: ids.length, mastered: ids.filter(id => masteredSet.has(`jlpt_kanji:${id}`)).length }
     })(),
   }
 

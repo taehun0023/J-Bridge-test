@@ -374,19 +374,39 @@ export async function confirmAssignment(assignmentId: string) {
   return { success: true }
 }
 
-export async function deleteLearningAssignment(assignmentId: string) {
-  const auth = await requireAuth()
-  if ('error' in auth) return { error: auth.error } as const
-  const { supabase, user } = auth
+/** 멘토는 담당 멘티의 과제만 조작 가능. admin은 전체 허용. */
+async function canManageAssignee(role: string, userId: string, assigneeId: string): Promise<boolean> {
+  if (role === 'admin') return true
+  if (role !== 'mentor') return false
+  const client = createServiceRoleClient() ?? (await createClient())
+  const { data } = await client
+    .from('mentor_mentee_assignments')
+    .select('mentee_id')
+    .eq('mentor_id', userId)
+    .eq('mentee_id', assigneeId)
+    .limit(1)
+  return (data?.length ?? 0) > 0
+}
 
-  // Fetch old data for audit
-  const { data: oldData } = await supabase
+export async function deleteLearningAssignment(assignmentId: string) {
+  const auth = await requireAdminOrMentor()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user, profile } = auth
+  const service = createServiceRoleClient() ?? supabase
+
+  // Fetch old data for audit + ownership check
+  const { data: oldData } = await service
     .from('learning_assignments')
     .select('*')
     .eq('id', assignmentId)
     .single()
 
-  const { error } = await supabase
+  if (!oldData) return { error: ERR.NOT_FOUND }
+  if (!(await canManageAssignee(profile.role, user.id, oldData.assigned_to))) {
+    return { error: ERR.FORBIDDEN }
+  }
+
+  const { error } = await service
     .from('learning_assignments')
     .delete()
     .eq('id', assignmentId)
@@ -394,6 +414,68 @@ export async function deleteLearningAssignment(assignmentId: string) {
   if (error) return { error: error.message }
 
   await logAuditEvent(user.id, 'delete', 'learning_assignments', assignmentId, oldData, null)
+
+  revalidatePath('/admin/tasks')
+  revalidatePath('/dashboard/assignments')
+  return { success: true }
+}
+
+/**
+ * 과제 수정 — 제목·기한·설명, 그리고 카운트형(항목/이해테스트) 과제는 부여개수(target_count)도.
+ * target_count 수정 시 누적 래더(cumulative_target)를 이전 앵커 유지하며 보정하고 상태를 재계산한다.
+ * 멘토는 담당 멘티의 과제만 수정 가능.
+ */
+export async function updateLearningAssignment(
+  assignmentId: string,
+  fields: { title?: string; due_date?: string | null; description?: string | null; target_count?: number | null },
+) {
+  const auth = await requireAdminOrMentor()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user, profile } = auth
+  const service = createServiceRoleClient() ?? supabase
+
+  const { data: a } = await service
+    .from('learning_assignments')
+    .select('id, assigned_to, target_count, cumulative_target, mastered_snapshot, status, title, due_date, description')
+    .eq('id', assignmentId)
+    .single()
+  if (!a) return { error: ERR.NOT_FOUND }
+  if (!(await canManageAssignee(profile.role, user.id, a.assigned_to))) {
+    return { error: ERR.FORBIDDEN }
+  }
+
+  const update: Record<string, unknown> = {}
+  if (typeof fields.title === 'string' && fields.title.trim()) update.title = fields.title.trim()
+  if (fields.due_date !== undefined) update.due_date = fields.due_date || null
+  if (fields.description !== undefined) update.description = fields.description?.trim() || null
+
+  // 카운트형 과제만 부여개수 수정 허용 (target_count != null)
+  if (fields.target_count != null && a.target_count != null) {
+    const newCount = Math.max(1, Math.floor(fields.target_count))
+    const prevAnchor = (a.cumulative_target ?? 0) - (a.target_count ?? 0) // 이전 누적 앵커 보존
+    const cumulative = prevAnchor + newCount
+    update.target_count = newCount
+    update.cumulative_target = cumulative
+    if (a.status !== 'overdue') {
+      const mastered = a.mastered_snapshot ?? 0
+      update.status = mastered >= cumulative ? 'completed' : (mastered > prevAnchor ? 'in_progress' : 'pending')
+      update.completed_at = update.status === 'completed' ? new Date().toISOString() : null
+    }
+  }
+
+  if (Object.keys(update).length === 0) return { success: true }
+
+  const { error } = await service
+    .from('learning_assignments')
+    .update(update)
+    .eq('id', assignmentId)
+  if (error) return { error: error.message }
+
+  await logAuditEvent(
+    user.id, 'update', 'learning_assignments', assignmentId,
+    { title: a.title, due_date: a.due_date, description: a.description, target_count: a.target_count, cumulative_target: a.cumulative_target },
+    update,
+  )
 
   revalidatePath('/admin/tasks')
   revalidatePath('/dashboard/assignments')

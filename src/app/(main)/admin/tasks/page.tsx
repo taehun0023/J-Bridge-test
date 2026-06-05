@@ -20,47 +20,33 @@ export default async function AdminTasksPage() {
 
   const currentRole = currentProfile?.role ?? 'mentee'
 
-  // Fetch learning assignments
-  const { data: learningAssignments } = await supabase
-    .from('learning_assignments')
-    .select('*, assignee:profiles!learning_assignments_assigned_to_fkey(full_name, email)')
-    .order('created_at', { ascending: false })
-    .limit(100)
-
-  // Fetch comprehensive exam requests (mentee only — exclude admin/mentor self-requests)
-  const { data: examRequests } = await supabase
-    .from('comprehensive_exams')
-    .select('*, user:profiles!comprehensive_exams_user_id_fkey(full_name, email, role)')
-    .in('status', ['requested', 'approved', 'in_progress'])
-    .order('requested_at', { ascending: false })
-    .limit(50)
-    .then(res => ({
-      ...res,
-      data: (res.data ?? []).filter(e => {
-        const role = (e.user as unknown as { role: string } | null)?.role
-        return role === 'mentee'
-      }),
-    }))
-
-  // For mentors: only show their assigned mentees
-  let users: { id: string; full_name: string | null; email: string; role: string }[] = []
+  // ─── 멘티 목록 (관리자 = 전체, 멘토 = 담당 멘티만) ───
+  let mentees: { id: string; full_name: string | null; email: string }[] = []
   if (currentRole === 'mentor') {
     const { data: menteeAssignments } = await supabase
       .from('mentor_mentee_assignments')
       .select('mentee:profiles!mentor_mentee_assignments_mentee_id_fkey(id, full_name, email, role)')
       .eq('mentor_id', user!.id)
-
-    users = (menteeAssignments ?? [])
+    mentees = (menteeAssignments ?? [])
       .map(a => a.mentee as unknown as { id: string; full_name: string | null; email: string; role: string })
-      .filter(Boolean)
+      .filter(m => m && m.role === 'mentee')
+      .map(m => ({ id: m.id, full_name: m.full_name, email: m.email }))
   } else {
     const { data } = await supabase
       .from('profiles')
-      .select('id, full_name, email, role')
-      .in('role', ['mentee', 'mentor'])
+      .select('id, full_name, email')
+      .eq('role', 'mentee')
       .order('full_name')
-    users = data ?? []
+    mentees = data ?? []
   }
+  const menteeIds = mentees.map(m => m.id)
+
+  // ─── 해당 멘티들의 모든 학습과제 ───
+  const { data: learningAssignments } = await supabase
+    .from('learning_assignments')
+    .select('*, assignee:profiles!learning_assignments_assigned_to_fkey(full_name, email)')
+    .in('assigned_to', menteeIds.length > 0 ? menteeIds : ['00000000-0000-0000-0000-000000000000'])
+    .order('created_at', { ascending: false })
 
   // ─── Learning progress calculation ───
   const learningProgress: Record<string, { mastered: number; total: number; pct: number }> = {}
@@ -274,22 +260,34 @@ export default async function AdminTasksPage() {
     }
   }
 
-  const awaitingConfirmation = learningAssignments?.filter(t => t.status === 'awaiting_confirmation').length ?? 0
+  // ─── 멘티별 그룹핑 ───
+  type LARow = NonNullable<typeof learningAssignments>[number]
+  const assignmentsByMentee: Record<string, LARow[]> = {}
+  for (const m of mentees) assignmentsByMentee[m.id] = []
+  for (const la of learningAssignments ?? []) {
+    if (!assignmentsByMentee[la.assigned_to]) assignmentsByMentee[la.assigned_to] = []
+    assignmentsByMentee[la.assigned_to]!.push(la)
+  }
+
+  // 관리자는 과제를 부여받은 멘티만, 멘토는 담당 멘티 전체를 표시
+  const visibleMentees = currentRole === 'mentor'
+    ? mentees
+    : mentees.filter(m => (assignmentsByMentee[m.id]?.length ?? 0) > 0)
+
   const taskStats = {
     total: learningAssignments?.length ?? 0,
     pending: learningAssignments?.filter(t => t.status === 'pending').length ?? 0,
     inProgress: learningAssignments?.filter(t => t.status === 'in_progress').length ?? 0,
     completed: learningAssignments?.filter(t => t.status === 'completed').length ?? 0,
     overdue: learningAssignments?.filter(t => t.status === 'overdue').length ?? 0,
-    approvals: (examRequests?.filter(e => e.status === 'requested').length ?? 0) + awaitingConfirmation,
   }
 
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white">課題配信</h1>
-      <p className="mt-1 text-gray-500 dark:text-gray-400">課題作成及び進捗状況管理</p>
+      <p className="mt-1 text-gray-500 dark:text-gray-400">メンティーごとの課題管理（配信・修正・削除）</p>
 
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-6">
+      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-5">
         <Card>
           <p className="text-sm text-gray-500 dark:text-gray-400">全体</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">{taskStats.total}</p>
@@ -310,16 +308,11 @@ export default async function AdminTasksPage() {
           <p className="text-sm text-gray-500 dark:text-gray-400">期限超過</p>
           <p className="text-2xl font-bold text-red-600">{taskStats.overdue}</p>
         </Card>
-        <Card>
-          <p className="text-sm text-gray-500 dark:text-gray-400">承認待ち</p>
-          <p className="text-2xl font-bold text-orange-600">{taskStats.approvals}</p>
-        </Card>
       </div>
 
       <AdminTasksClient
-        learningAssignments={learningAssignments ?? []}
-        examRequests={examRequests ?? []}
-        users={users}
+        mentees={visibleMentees}
+        assignmentsByMentee={assignmentsByMentee ?? {}}
         currentRole={currentRole}
         learningProgress={learningProgress}
       />

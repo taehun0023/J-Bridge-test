@@ -30,10 +30,14 @@ function openPicker(e: React.SyntheticEvent<HTMLInputElement>) {
   }
 }
 
-const CATEGORY_OPTIONS = Object.entries(ASSIGNMENT_CATEGORIES).map(([value, cfg]) => ({
-  value,
-  label: cfg.label,
-}))
+// 理解テスト(퀴즈) 부여는 生活/ビジネス日本語만 (CS·開発·リテラシー 제외)
+const ALLOWED_CATEGORIES = ['seikatsu', 'business-jp']
+const CATEGORY_OPTIONS = Object.entries(ASSIGNMENT_CATEGORIES)
+  .filter(([value]) => ALLOWED_CATEGORIES.includes(value))
+  .map(([value, cfg]) => ({
+    value,
+    label: cfg.label,
+  }))
 
 function displayName(m: AssignableMentee): string {
   if (!m.full_name) return m.email

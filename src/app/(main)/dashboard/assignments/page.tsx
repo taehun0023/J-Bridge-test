@@ -320,12 +320,22 @@ export default async function AssignmentsPage() {
             const contentUrl = isItemCategory(a.category)
               ? itemContentUrl(a.category, a.subcategory, a.content_level)
               : '/dashboard/assignments'
+            // 이어보기: 미클리어(미마스터) 항목만 표시 → 푸는 순서와 무관하게 "남은 것"으로 바로 이동
+            const linkUrl = (isItemCategory(a.category) && a.content_level)
+              ? `${contentUrl}${contentUrl.includes('?') ? '&' : '?'}mastery=unmastered`
+              : contentUrl
+            const achieved = cumulative > 0 && mastered >= cumulative
             return (
               <Card key={a.id}>
+                {achieved && (
+                  <p className="mb-2 flex items-center gap-1 text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="h-4 w-4" /> 今月の課題達成
+                  </p>
+                )}
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="text-base font-semibold">
-                      <Link href={contentUrl} className="text-zinc-900 dark:text-zinc-100 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">
+                      <Link href={linkUrl} className="text-zinc-900 dark:text-zinc-100 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">
                         {a.title} →
                       </Link>
                     </h3>

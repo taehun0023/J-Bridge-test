@@ -1,11 +1,18 @@
 'use client'
 
-import { Fragment, useState, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { createLearningAssignment, deleteLearningAssignment, confirmAssignment, reassignAssignment, getAssigneeUnlockedLevels } from '@/app/actions/learning-assignments'
-import { approveExam, denyExam, deleteExam } from '@/app/actions/comprehensive-exam'
+import {
+  createLearningAssignment,
+  deleteLearningAssignment,
+  updateLearningAssignment,
+  confirmAssignment,
+  reassignAssignment,
+  getAssigneeUnlockedLevels,
+} from '@/app/actions/learning-assignments'
 import { ASSIGNMENT_CATEGORIES, JLPT_LEVELS, DEV_LEVELS, getCategoryLabel, getSubcategoryLabel, getContentLevelLabel } from '@/lib/assignment-categories'
 import NameRuby from '@/components/ui/NameRuby'
+import { ChevronDown, ChevronRight, Plus } from 'lucide-react'
 
 interface LearningAssignmentRow {
   id: string
@@ -19,29 +26,18 @@ interface LearningAssignmentRow {
   status: string
   required_quiz_ids: string[]
   passed_quiz_ids: string[]
+  target_count: number | null
+  cumulative_target: number | null
+  mastered_snapshot: number | null
   created_at: string
-  assignee: { full_name: string | null; email: string } | null
   overdue_reason: string | null
   overdue_reason_at: string | null
 }
 
-interface ExamRequest {
-  id: string
-  user_id: string
-  category: string
-  subcategory: string
-  content_level: string | null
-  status: string
-  requested_at: string
-  score: number | null
-  user: { full_name: string | null; email: string } | null
-}
-
-interface User {
+interface Mentee {
   id: string
   full_name: string | null
   email: string
-  role: string
 }
 
 const statusColors: Record<string, string> = {
@@ -50,9 +46,6 @@ const statusColors: Record<string, string> = {
   completed: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
   awaiting_confirmation: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
   overdue: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  requested: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-  approved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  denied: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
   failed: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
 }
 
@@ -62,9 +55,6 @@ const statusLabels: Record<string, string> = {
   completed: '完了',
   awaiting_confirmation: '確認待ち',
   overdue: '期限超過',
-  requested: 'リクエスト中',
-  approved: '承認済',
-  denied: '拒否',
   failed: '不合格',
 }
 
@@ -75,40 +65,41 @@ interface LearningProgressData {
 }
 
 interface Props {
-  learningAssignments: LearningAssignmentRow[]
-  examRequests: ExamRequest[]
-  users: User[]
+  mentees: Mentee[]
+  assignmentsByMentee: Record<string, LearningAssignmentRow[]>
   currentRole: string
   learningProgress: Record<string, LearningProgressData>
 }
 
-export default function AdminTasksClient({ learningAssignments, examRequests, users, currentRole, learningProgress }: Props) {
-  const [activeTab, setActiveTab] = useState<'learning' | 'approvals'>('learning')
+export default function AdminTasksClient({ mentees, assignmentsByMentee, learningProgress }: Props) {
   const router = useRouter()
-  const [showForm, setShowForm] = useState(false)
   const [pending, startTransition] = useTransition()
   const [message, setMessage] = useState<string | null>(null)
   const [messageType, setMessageType] = useState<'success' | 'error'>('success')
 
-  // Cascade form state
+  // Create form state
+  const [showForm, setShowForm] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('')
   const [selectedSubcategory, setSelectedSubcategory] = useState('')
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>([])
   const [assigneeSearch, setAssigneeSearch] = useState('')
   const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false)
+  const [devLevelLocks, setDevLevelLocks] = useState<Record<string, boolean>>({})
+  const [loadingLevels, setLoadingLevels] = useState(false)
 
-  // Search/filter state
+  // Mentee-centric state
   const [searchName, setSearchName] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [approvalSearchName, setApprovalSearchName] = useState('')
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 
   // Overdue handling state
   const [reassignDate, setReassignDate] = useState<Record<string, string>>({})
   const [expandedReassign, setExpandedReassign] = useState<Record<string, boolean>>({})
 
-  // Dev level unlock state
-  const [devLevelLocks, setDevLevelLocks] = useState<Record<string, boolean>>({})
-  const [loadingLevels, setLoadingLevels] = useState(false)
+  // Edit state
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editValues, setEditValues] = useState<{ title: string; due_date: string; description: string; target_count: string }>({
+    title: '', due_date: '', description: '', target_count: '',
+  })
 
   function showMsg(msg: string, type: 'success' | 'error' = 'success') {
     setMessage(msg)
@@ -118,38 +109,24 @@ export default function AdminTasksClient({ learningAssignments, examRequests, us
 
   const catConfig = selectedCategory ? ASSIGNMENT_CATEGORIES[selectedCategory] : null
   const isLevelOnly = catConfig?.levelOnly === true
-
-  const subcategories = selectedCategory && !isLevelOnly
-    ? catConfig?.subcategories ?? {}
-    : {}
-
+  const subcategories = selectedCategory && !isLevelOnly ? catConfig?.subcategories ?? {} : {}
   const subcatConfig = selectedCategory && selectedSubcategory
     ? ASSIGNMENT_CATEGORIES[selectedCategory]?.subcategories[selectedSubcategory]
     : null
-
-  const hasLevel = isLevelOnly
-    ? true
-    : (subcatConfig?.hasLevel ?? false)
-
+  const hasLevel = isLevelOnly ? true : (subcatConfig?.hasLevel ?? false)
   const isDevLevel = subcatConfig?.courseSubcategory != null
 
-  const menteeUsers = users.filter(u => u.role === 'mentee')
-  const filteredMentees = menteeUsers.filter(u =>
+  const filteredAssignees = mentees.filter(u =>
     (u.full_name ?? '').toLowerCase().includes(assigneeSearch.toLowerCase()) ||
     u.email.toLowerCase().includes(assigneeSearch.toLowerCase())
   )
 
   function toggleAssignee(userId: string) {
-    setSelectedAssignees(prev =>
-      prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
-    )
+    setSelectedAssignees(prev => prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId])
   }
 
   async function handleCreateLearning(formData: FormData) {
-    if (selectedAssignees.length === 0) {
-      showMsg('1名以上を選択してください', 'error')
-      return
-    }
+    if (selectedAssignees.length === 0) { showMsg('1名以上を選択してください', 'error'); return }
     startTransition(async () => {
       const result = await createLearningAssignment(formData)
       if (result.error) showMsg(result.error, 'error')
@@ -157,11 +134,7 @@ export default function AdminTasksClient({ learningAssignments, examRequests, us
         const msg = ('message' in result && result.message) ? result.message : '学習課題を配信しました'
         showMsg(msg as string)
         setShowForm(false)
-        setSelectedCategory('')
-        setSelectedSubcategory('')
-        setSelectedAssignees([])
-        setAssigneeSearch('')
-        setDevLevelLocks({})
+        setSelectedCategory(''); setSelectedSubcategory(''); setSelectedAssignees([]); setAssigneeSearch(''); setDevLevelLocks({})
       }
     })
   }
@@ -169,17 +142,15 @@ export default function AdminTasksClient({ learningAssignments, examRequests, us
   function handleConfirmAssignment(id: string) {
     startTransition(async () => {
       const result = await confirmAssignment(id)
-      if (result.error) showMsg(result.error, 'error')
-      else showMsg('確認完了しました')
+      if (result.error) showMsg(result.error, 'error'); else showMsg('確認完了しました')
     })
   }
 
   function handleDeleteLearning(id: string) {
-    if (!confirm('学習課題を削除しますか？')) return
+    if (!confirm('この課題を削除しますか？')) return
     startTransition(async () => {
       const result = await deleteLearningAssignment(id)
-      if (result.error) showMsg(result.error, 'error')
-      else showMsg('削除されました')
+      if (result.error) showMsg(result.error, 'error'); else showMsg('削除されました')
     })
   }
 
@@ -197,70 +168,63 @@ export default function AdminTasksClient({ learningAssignments, examRequests, us
     })
   }
 
+  function startEdit(la: LearningAssignmentRow) {
+    setEditingId(la.id)
+    setEditValues({
+      title: la.title,
+      due_date: la.due_date ? la.due_date.slice(0, 10) : '',
+      description: la.description ?? '',
+      target_count: la.target_count != null ? String(la.target_count) : '',
+    })
+  }
+
+  function handleSaveEdit(la: LearningAssignmentRow) {
+    startTransition(async () => {
+      const result = await updateLearningAssignment(la.id, {
+        title: editValues.title,
+        due_date: editValues.due_date || null,
+        description: editValues.description,
+        target_count: la.target_count != null && editValues.target_count !== ''
+          ? parseInt(editValues.target_count, 10)
+          : undefined,
+      })
+      if (result.error) showMsg(result.error, 'error')
+      else { showMsg('修正しました'); setEditingId(null) }
+    })
+  }
+
   async function loadDevLevels(assigneeId: string, courseSubcategory: string) {
     setLoadingLevels(true)
     try {
       const result = await getAssigneeUnlockedLevels(assigneeId, courseSubcategory)
       const locks: Record<string, boolean> = {}
-      for (const l of result.levels) {
-        locks[l.difficulty] = l.isLocked
-      }
+      for (const l of result.levels) locks[l.difficulty] = l.isLocked
       setDevLevelLocks(locks)
     } finally {
       setLoadingLevels(false)
     }
   }
 
-  function handleApproveExam(examId: string) {
-    startTransition(async () => {
-      const result = await approveExam(examId)
-      if (result.error) showMsg(result.error, 'error')
-      else showMsg('試験を承認しました')
-    })
+  const filteredMentees = mentees.filter(m =>
+    !searchName ||
+    (m.full_name ?? '').toLowerCase().includes(searchName.toLowerCase()) ||
+    m.email.toLowerCase().includes(searchName.toLowerCase())
+  )
+
+  function progressLabel(la: LearningAssignmentRow): string {
+    // 카운트형(항목/이해테스트): 습득 / 누적목표
+    if (la.target_count != null) {
+      return `習得 ${la.mastered_snapshot ?? 0}/${la.cumulative_target ?? la.target_count}`
+    }
+    // 레거시: 학습 진척 + 테스트 진척
+    const lp = learningProgress[la.id]
+    const total = la.required_quiz_ids?.length ?? 0
+    const passed = la.passed_quiz_ids?.length ?? 0
+    const parts: string[] = []
+    if (lp && lp.total > 0) parts.push(`学習 ${lp.pct}%`)
+    if (total > 0) parts.push(`テスト ${passed}/${total}`)
+    return parts.join(' · ') || '-'
   }
-
-  function handleDenyExam(examId: string) {
-    if (!confirm('試験リクエストを拒否しますか？')) return
-    startTransition(async () => {
-      const result = await denyExam(examId)
-      if (result.error) showMsg(result.error, 'error')
-      else showMsg('試験を拒否しました')
-    })
-  }
-
-  function handleDeleteExam(examId: string) {
-    if (!confirm('この試験リクエストを削除しますか？関連する回答データも削除されます。')) return
-    startTransition(async () => {
-      const result = await deleteExam(examId)
-      if (result.error) showMsg(result.error, 'error')
-      else showMsg('試験を削除しました')
-    })
-  }
-
-  function getProgressPercent(assignment: LearningAssignmentRow) {
-    const total = assignment.required_quiz_ids?.length ?? 0
-    const passed = assignment.passed_quiz_ids?.length ?? 0
-    if (total === 0) return 0
-    return Math.round((passed / total) * 100)
-  }
-
-  // Filtered data
-  const filteredAssignments = learningAssignments.filter(la => {
-    const nameMatch = !searchName || (la.assignee as { full_name: string | null } | null)?.full_name?.toLowerCase().includes(searchName.toLowerCase())
-    const statusMatch = statusFilter === 'all' || la.status === statusFilter
-    return nameMatch && statusMatch
-  })
-
-  const filteredExamRequests = examRequests.filter(e => {
-    return !approvalSearchName || (e.user as { full_name: string | null } | null)?.full_name?.toLowerCase().includes(approvalSearchName.toLowerCase())
-  })
-
-  const pendingApprovals = examRequests.filter(e => e.status === 'requested').length
-
-  const tabs = [
-    { key: 'learning' as const, label: '学習課題' },
-    { key: 'approvals' as const, label: '承認リクエスト' },
-  ]
 
   return (
     <div className="mt-6">
@@ -276,466 +240,350 @@ export default function AdminTasksClient({ learningAssignments, examRequests, us
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="flex gap-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-800 mb-4">
-        {tabs.map(tab => (
-          <button
-            key={tab.key}
-            onClick={() => { setActiveTab(tab.key); setShowForm(false) }}
-            className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-              activeTab === tab.key
-                ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white'
-                : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
-            }`}
-          >
-            {tab.label}
-            {tab.key === 'approvals' && pendingApprovals > 0 && (
-              <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-                {pendingApprovals}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+      {/* Create button + form */}
+      <button
+        onClick={() => setShowForm(!showForm)}
+        className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+      >
+        {showForm ? 'キャンセル' : <><Plus className="h-4 w-4" /> 学習課題配信</>}
+      </button>
 
-      {/* Learning Assignments Tab */}
-      {activeTab === 'learning' && (
-        <>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-          >
-            {showForm ? 'キャンセル' : '+ 学習課題配信'}
-          </button>
-
-          {showForm && (
-            <form action={handleCreateLearning} className="mt-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-              <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">新規学習課題</h3>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    配分対象 * <span className="text-xs font-normal text-gray-400">({selectedAssignees.length}名選択)</span>
-                  </label>
-                  {selectedAssignees.map(id => (
-                    <input key={id} type="hidden" name="assigned_to" value={id} />
-                  ))}
-                  {selectedAssignees.length > 0 && (
-                    <div className="mt-1 flex flex-wrap gap-1.5">
-                      {selectedAssignees.map(id => {
-                        const u = users.find(u => u.id === id)
-                        return (
-                          <span key={id} className="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 px-2.5 py-1 text-xs font-medium text-indigo-600 ring-1 ring-indigo-500/20 dark:text-indigo-400">
-                            {u ? <NameRuby name={u.full_name} fallback={u.email ?? id} /> : id}
-                            <button type="button" onClick={() => toggleAssignee(id)} className="ml-0.5 text-indigo-400 hover:text-indigo-600">×</button>
-                          </span>
-                        )
-                      })}
-                    </div>
-                  )}
-                  <div className="relative mt-1">
-                    <input
-                      type="text"
-                      placeholder="名前またはメールで検索..."
-                      value={assigneeSearch}
-                      onChange={e => { setAssigneeSearch(e.target.value); setShowAssigneeDropdown(true) }}
-                      onFocus={() => setShowAssigneeDropdown(true)}
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-                    />
-                    {showAssigneeDropdown && (
-                      <div className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-700">
-                        {filteredMentees.length === 0 ? (
-                          <div className="px-3 py-2 text-xs text-gray-400">該当なし</div>
-                        ) : (
-                          filteredMentees.map(u => (
-                            <label key={u.id} className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-600">
-                              <input
-                                type="checkbox"
-                                checked={selectedAssignees.includes(u.id)}
-                                onChange={() => toggleAssignee(u.id)}
-                                className="h-3.5 w-3.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                              />
-                              <span className="text-gray-900 dark:text-white"><NameRuby name={u.full_name} fallback={u.email} /></span>
-                              <span className="ml-auto text-[10px] text-gray-400">{u.email}</span>
-                            </label>
-                          ))
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => setShowAssigneeDropdown(false)}
-                          className="w-full border-t border-gray-100 px-3 py-1.5 text-center text-xs text-gray-500 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-600"
-                        >
-                          閉じる
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">カテゴリ *</label>
-                  <select
-                    name="category"
-                    required
-                    value={selectedCategory}
-                    onChange={e => { setSelectedCategory(e.target.value); setSelectedSubcategory(''); setDevLevelLocks({}) }}
-                    className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  >
-                    <option value="">選択...</option>
-                    {Object.entries(ASSIGNMENT_CATEGORIES).map(([key, cat]) => (
-                      <option key={key} value={key}>{cat.label}</option>
-                    ))}
-                  </select>
-                </div>
-                {isLevelOnly ? (
-                  <input type="hidden" name="subcategory" value="all" />
-                ) : (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">サブカテゴリ *</label>
-                    <select
-                      name="subcategory"
-                      required
-                      value={selectedSubcategory}
-                      onChange={e => {
-                        setSelectedSubcategory(e.target.value)
-                        setDevLevelLocks({})
-                        const newSubcatConfig = ASSIGNMENT_CATEGORIES[selectedCategory]?.subcategories[e.target.value]
-                        if (selectedAssignees[0] && newSubcatConfig?.courseSubcategory) {
-                          loadDevLevels(selectedAssignees[0], newSubcatConfig.courseSubcategory)
-                        }
-                      }}
-                      disabled={!selectedCategory}
-                      className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                    >
-                      <option value="">選択...</option>
-                      {Object.entries(subcategories).map(([key, sub]) => (
-                        <option key={key} value={key}>{sub.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-                {hasLevel && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">レベル{isLevelOnly || isDevLevel ? ' *' : ''}</label>
-                    <select name="content_level" required={isLevelOnly || isDevLevel}
-                      disabled={isDevLevel && loadingLevels}
-                      className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
-                      <option value="">{isLevelOnly || isDevLevel ? '選択...' : '全レベル'}</option>
-                      {isDevLevel ? (
-                        DEV_LEVELS.map(level => (
-                          <option key={level.value} value={level.value} disabled={devLevelLocks[level.value] === true}>
-                            {level.label}{devLevelLocks[level.value] === true ? ' (ロック)' : ''}
-                          </option>
-                        ))
-                      ) : (
-                        JLPT_LEVELS.map(level => (
-                          <option key={level} value={level}>{level}</option>
-                        ))
-                      )}
-                    </select>
-                  </div>
-                )}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">タイトル *</label>
-                  <input name="title" required
-                    className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">期限</label>
-                  <input name="due_date" type="date"
-                    className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">説明</label>
-                  <textarea name="description" rows={2}
-                    className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
-                </div>
-              </div>
-              <button type="submit" disabled={pending}
-                className="mt-4 rounded-lg bg-indigo-600 px-6 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
-                {pending ? '配信中...' : '配信'}
-              </button>
-            </form>
-          )}
-
-          {/* Filter bar */}
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <input
-              type="text"
-              placeholder="対象者名で検索..."
-              value={searchName}
-              onChange={e => setSearchName(e.target.value)}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-            />
-            <select
-              value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-            >
-              <option value="all">全て</option>
-              <option value="pending">待機</option>
-              <option value="in_progress">進行中</option>
-              <option value="completed">完了</option>
-              <option value="awaiting_confirmation">確認待ち</option>
-              <option value="overdue">期限超過</option>
-            </select>
-            {(searchName || statusFilter !== 'all') && (
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                {filteredAssignments.length}/{learningAssignments.length}件
-              </span>
-            )}
-          </div>
-
-          {/* Learning assignments table */}
-          <div className="mt-3 rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">タイトル</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">対象者</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">カテゴリ</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">学習進捗</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">テスト進捗</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">状態</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">期限</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400">操作</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                  {filteredAssignments.map(la => {
-                    const progress = getProgressPercent(la)
-                    const totalQuizzes = la.required_quiz_ids?.length ?? 0
-                    const passedQuizzes = la.passed_quiz_ids?.length ?? 0
-                    const lp = learningProgress[la.id]
+      {showForm && (
+        <form action={handleCreateLearning} className="mt-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+          <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">新規学習課題</h3>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                配分対象 * <span className="text-xs font-normal text-gray-400">({selectedAssignees.length}名選択)</span>
+              </label>
+              {selectedAssignees.map(id => (
+                <input key={id} type="hidden" name="assigned_to" value={id} />
+              ))}
+              {selectedAssignees.length > 0 && (
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {selectedAssignees.map(id => {
+                    const u = mentees.find(u => u.id === id)
                     return (
-                      <Fragment key={la.id}>
-                        <tr
-                          onClick={() => router.push(`/admin/reports?mentee=${la.assigned_to}`)}
-                          className="cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                        >
-                          <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{la.title}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                            <NameRuby name={(la.assignee as { full_name: string | null } | null)?.full_name} fallback="-" />
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                            {getCategoryLabel(la.category)} &gt; {getSubcategoryLabel(la.category, la.subcategory)}
-                            {la.content_level && ` (${getContentLevelLabel(la.category, la.content_level)})`}
-                          </td>
-                          <td className="px-4 py-3">
-                            {lp && lp.total > 0 ? (
-                              <div className="flex items-center gap-2">
-                                <div className="h-2 w-16 rounded-full bg-gray-200 dark:bg-gray-600">
-                                  <div
-                                    className="h-2 rounded-full bg-amber-500 transition-all"
-                                    style={{ width: `${lp.pct}%` }}
-                                  />
-                                </div>
-                                <span className="text-xs text-gray-500 dark:text-gray-400">{lp.pct}%</span>
-                              </div>
-                            ) : (
-                              <span className="text-xs text-gray-400">-</span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <div className="h-2 w-16 rounded-full bg-gray-200 dark:bg-gray-600">
-                                <div
-                                  className="h-2 rounded-full bg-indigo-500 transition-all"
-                                  style={{ width: `${progress}%` }}
-                                />
-                              </div>
-                              <span className="text-xs text-gray-500 dark:text-gray-400">{passedQuizzes}/{totalQuizzes}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[la.status] ?? 'bg-gray-100 text-gray-600'}`}>
-                              {statusLabels[la.status] ?? la.status}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-                            {la.due_date ? new Date(la.due_date).toLocaleDateString('ja-JP') : '-'}
-                          </td>
-                          <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex flex-col items-end gap-2">
-                              <div className="flex justify-end gap-2">
-                                {la.status === 'awaiting_confirmation' && (
-                                  <button
-                                    onClick={() => handleConfirmAssignment(la.id)}
-                                    disabled={pending}
-                                    className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-                                  >
-                                    確認完了
-                                  </button>
-                                )}
-                                {la.status === 'overdue' && !expandedReassign[la.id] && (
-                                  <button
-                                    onClick={() => setExpandedReassign(prev => ({ ...prev, [la.id]: true }))}
-                                    disabled={pending}
-                                    className="rounded-md bg-indigo-600 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
-                                  >
-                                    再配信
-                                  </button>
-                                )}
-                                <button
-                                  onClick={() => handleDeleteLearning(la.id)}
-                                  disabled={pending}
-                                  className="text-xs text-red-600 hover:underline disabled:opacity-50 dark:text-red-400"
-                                >
-                                  削除
-                                </button>
-                              </div>
-                              {la.status === 'overdue' && expandedReassign[la.id] && (
-                                <div className="flex items-center gap-1">
-                                  <input
-                                    type="date"
-                                    value={reassignDate[la.id] ?? ''}
-                                    onChange={e => setReassignDate(prev => ({ ...prev, [la.id]: e.target.value }))}
-                                    className="rounded border border-gray-300 px-2 py-1 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                  />
-                                  <button
-                                    onClick={() => handleReassign(la.id)}
-                                    disabled={pending}
-                                    className="rounded-md bg-indigo-600 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
-                                  >
-                                    確定
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setExpandedReassign(prev => { const n = { ...prev }; delete n[la.id]; return n })
-                                      setReassignDate(prev => { const n = { ...prev }; delete n[la.id]; return n })
-                                    }}
-                                    className="rounded-md bg-gray-200 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
-                                  >
-                                    取消
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                        {la.status === 'overdue' && (
-                          <tr>
-                            <td colSpan={8} className="px-4 py-2">
-                              {la.overdue_reason ? (
-                                <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
-                                  <span className="font-medium">遅延理由:</span> {la.overdue_reason}
-                                  <span className="ml-2 text-xs text-red-400">
-                                    ({la.overdue_reason_at ? new Date(la.overdue_reason_at).toLocaleDateString('ja-JP') : ''})
-                                  </span>
-                                </div>
-                              ) : (
-                                <div className="rounded-lg bg-yellow-50 px-3 py-2 text-sm text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300">
-                                  <span className="font-medium">遅延理由:</span> 未提出
-                                </div>
-                              )}
-                            </td>
-                          </tr>
-                        )}
-                      </Fragment>
+                      <span key={id} className="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 px-2.5 py-1 text-xs font-medium text-indigo-600 ring-1 ring-indigo-500/20 dark:text-indigo-400">
+                        {u ? <NameRuby name={u.full_name} fallback={u.email ?? id} /> : id}
+                        <button type="button" onClick={() => toggleAssignee(id)} className="ml-0.5 text-indigo-400 hover:text-indigo-600">×</button>
+                      </span>
                     )
                   })}
-                </tbody>
-              </table>
+                </div>
+              )}
+              <div className="relative mt-1">
+                <input
+                  type="text"
+                  placeholder="名前またはメールで検索..."
+                  value={assigneeSearch}
+                  onChange={e => { setAssigneeSearch(e.target.value); setShowAssigneeDropdown(true) }}
+                  onFocus={() => setShowAssigneeDropdown(true)}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+                />
+                {showAssigneeDropdown && (
+                  <div className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-700">
+                    {filteredAssignees.length === 0 ? (
+                      <div className="px-3 py-2 text-xs text-gray-400">該当なし</div>
+                    ) : (
+                      filteredAssignees.map(u => (
+                        <label key={u.id} className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-600">
+                          <input
+                            type="checkbox"
+                            checked={selectedAssignees.includes(u.id)}
+                            onChange={() => toggleAssignee(u.id)}
+                            className="h-3.5 w-3.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                          />
+                          <span className="text-gray-900 dark:text-white"><NameRuby name={u.full_name} fallback={u.email} /></span>
+                          <span className="ml-auto text-[10px] text-gray-400">{u.email}</span>
+                        </label>
+                      ))
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowAssigneeDropdown(false)}
+                      className="w-full border-t border-gray-100 px-3 py-1.5 text-center text-xs text-gray-500 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-600"
+                    >
+                      閉じる
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-            {filteredAssignments.length === 0 && (
-              <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">
-                {learningAssignments.length === 0 ? '学習課題がありません' : '該当する課題がありません'}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">カテゴリ *</label>
+              <select
+                name="category"
+                required
+                value={selectedCategory}
+                onChange={e => { setSelectedCategory(e.target.value); setSelectedSubcategory(''); setDevLevelLocks({}) }}
+                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="">選択...</option>
+                {Object.entries(ASSIGNMENT_CATEGORIES).map(([key, cat]) => (
+                  <option key={key} value={key}>{cat.label}</option>
+                ))}
+              </select>
+            </div>
+            {isLevelOnly ? (
+              <input type="hidden" name="subcategory" value="all" />
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">サブカテゴリ *</label>
+                <select
+                  name="subcategory"
+                  required
+                  value={selectedSubcategory}
+                  onChange={e => {
+                    setSelectedSubcategory(e.target.value)
+                    setDevLevelLocks({})
+                    const newSubcatConfig = ASSIGNMENT_CATEGORIES[selectedCategory]?.subcategories[e.target.value]
+                    if (selectedAssignees[0] && newSubcatConfig?.courseSubcategory) {
+                      loadDevLevels(selectedAssignees[0], newSubcatConfig.courseSubcategory)
+                    }
+                  }}
+                  disabled={!selectedCategory}
+                  className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">選択...</option>
+                  {Object.entries(subcategories).map(([key, sub]) => (
+                    <option key={key} value={key}>{sub.label}</option>
+                  ))}
+                </select>
               </div>
             )}
+            {hasLevel && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">レベル{isLevelOnly || isDevLevel ? ' *' : ''}</label>
+                <select name="content_level" required={isLevelOnly || isDevLevel}
+                  disabled={isDevLevel && loadingLevels}
+                  className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                  <option value="">{isLevelOnly || isDevLevel ? '選択...' : '全レベル'}</option>
+                  {isDevLevel ? (
+                    DEV_LEVELS.map(level => (
+                      <option key={level.value} value={level.value} disabled={devLevelLocks[level.value] === true}>
+                        {level.label}{devLevelLocks[level.value] === true ? ' (ロック)' : ''}
+                      </option>
+                    ))
+                  ) : (
+                    JLPT_LEVELS.map(level => (
+                      <option key={level} value={level}>{level}</option>
+                    ))
+                  )}
+                </select>
+              </div>
+            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">タイトル *</label>
+              <input name="title" required
+                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">期限</label>
+              <input name="due_date" type="date"
+                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">説明</label>
+              <textarea name="description" rows={2}
+                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
+            </div>
           </div>
-        </>
+          <button type="submit" disabled={pending}
+            className="mt-4 rounded-lg bg-indigo-600 px-6 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
+            {pending ? '配信中...' : '配信'}
+          </button>
+        </form>
       )}
 
-      {/* Approvals Tab */}
-      {activeTab === 'approvals' && (
-        <div className="space-y-6">
-          {/* Approval search bar */}
-          <div className="flex items-center gap-3">
-            <input
-              type="text"
-              placeholder="ユーザー名で検索..."
-              value={approvalSearchName}
-              onChange={e => setApprovalSearchName(e.target.value)}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-            />
-          </div>
+      {/* Mentee search */}
+      <div className="mt-4">
+        <input
+          type="text"
+          placeholder="メンティー名で検索..."
+          value={searchName}
+          onChange={e => setSearchName(e.target.value)}
+          className="w-full max-w-xs rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+        />
+      </div>
 
-          {/* Comprehensive Exam Requests */}
-          <div>
-            <h3 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">総合試験リクエスト</h3>
-            <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">ユーザー名</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">カテゴリ</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">状態</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">リクエスト日</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400">操作</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                    {filteredExamRequests.map(exam => (
-                      <tr key={exam.id}>
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
-                          <NameRuby name={(exam.user as { full_name: string | null } | null)?.full_name} fallback="-" />
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                          {getCategoryLabel(exam.category)} &gt; {getSubcategoryLabel(exam.category, exam.subcategory)}
-                          {exam.content_level && ` (${exam.content_level})`}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[exam.status] ?? 'bg-gray-100 text-gray-600'}`}>
-                            {statusLabels[exam.status] ?? exam.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-                          {new Date(exam.requested_at).toLocaleDateString('ja-JP')}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex justify-end gap-2">
-                            {exam.status === 'requested' && (
-                              <>
+      {/* Mentee-centric accordion */}
+      <div className="mt-3 space-y-2">
+        {filteredMentees.map(m => {
+          const list = assignmentsByMentee[m.id] ?? []
+          const overdueCount = list.filter(a => a.status === 'overdue').length
+          const isOpen = expanded[m.id] === true
+          return (
+            <div key={m.id} className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+              {/* Mentee header */}
+              <button
+                onClick={() => setExpanded(prev => ({ ...prev, [m.id]: !prev[m.id] }))}
+                className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50"
+              >
+                {isOpen ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
+                <span className="font-medium text-gray-900 dark:text-white">
+                  <NameRuby name={m.full_name} fallback={m.email} />
+                </span>
+                <span className="text-xs text-gray-400">{m.email}</span>
+                <span className="ml-auto flex items-center gap-2">
+                  {overdueCount > 0 && (
+                    <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                      遅延 {overdueCount}
+                    </span>
+                  )}
+                  <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                    課題 {list.length}
+                  </span>
+                </span>
+              </button>
+
+              {/* Assignment dropdown */}
+              {isOpen && (
+                <div className="border-t border-gray-100 dark:border-gray-700">
+                  {list.length === 0 ? (
+                    <div className="px-4 py-6 text-center text-sm text-gray-400">配信された課題がありません</div>
+                  ) : (
+                    <ul className="divide-y divide-gray-100 dark:divide-gray-700">
+                      {list.map(la => (
+                        <li key={la.id} className="px-4 py-3">
+                          {editingId === la.id ? (
+                            /* ── Edit form ── */
+                            <div className="space-y-2">
+                              <div>
+                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">タイトル</label>
+                                <input
+                                  value={editValues.title}
+                                  onChange={e => setEditValues(v => ({ ...v, title: e.target.value }))}
+                                  className="mt-0.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                />
+                              </div>
+                              <div className="grid gap-2 sm:grid-cols-2">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">期限</label>
+                                  <input
+                                    type="date"
+                                    value={editValues.due_date}
+                                    onChange={e => setEditValues(v => ({ ...v, due_date: e.target.value }))}
+                                    className="mt-0.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                  />
+                                </div>
+                                {la.target_count != null && (
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">付与個数</label>
+                                    <input
+                                      type="number"
+                                      min={1}
+                                      value={editValues.target_count}
+                                      onChange={e => setEditValues(v => ({ ...v, target_count: e.target.value }))}
+                                      className="mt-0.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">説明</label>
+                                <textarea
+                                  rows={2}
+                                  value={editValues.description}
+                                  onChange={e => setEditValues(v => ({ ...v, description: e.target.value }))}
+                                  className="mt-0.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                />
+                              </div>
+                              <div className="flex justify-end gap-2">
                                 <button
-                                  onClick={() => handleApproveExam(exam.id)}
-                                  disabled={pending}
-                                  className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                                  onClick={() => setEditingId(null)}
+                                  className="rounded-md bg-gray-200 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
                                 >
-                                  承認
+                                  取消
                                 </button>
                                 <button
-                                  onClick={() => handleDenyExam(exam.id)}
+                                  onClick={() => handleSaveEdit(la)}
                                   disabled={pending}
-                                  className="rounded-md bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                                  className="rounded-md bg-indigo-600 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
                                 >
-                                  拒否
+                                  保存
                                 </button>
-                              </>
-                            )}
-                            <button
-                              onClick={() => handleDeleteExam(exam.id)}
-                              disabled={pending}
-                              className="text-xs text-red-600 hover:underline disabled:opacity-50 dark:text-red-400"
-                            >
-                              削除
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {filteredExamRequests.length === 0 && (
-                <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">
-                  {examRequests.length === 0 ? '試験リクエストがありません' : '該当するリクエストがありません'}
+                              </div>
+                            </div>
+                          ) : (
+                            /* ── Display row ── */
+                            <div className="flex items-start gap-3">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="text-sm font-medium text-gray-900 dark:text-white">{la.title}</span>
+                                  <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[la.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                                    {statusLabels[la.status] ?? la.status}
+                                  </span>
+                                </div>
+                                <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                  {getCategoryLabel(la.category)} &gt; {getSubcategoryLabel(la.category, la.subcategory)}
+                                  {la.content_level && ` (${getContentLevelLabel(la.category, la.content_level)})`}
+                                  {' · '}{progressLabel(la)}
+                                  {' · '}期限 {la.due_date ? new Date(la.due_date).toLocaleDateString('ja-JP') : '-'}
+                                </div>
+                                {la.status === 'overdue' && (
+                                  <div className="mt-1.5 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs text-red-700 dark:bg-red-900/20 dark:text-red-300">
+                                    <span className="font-medium">遅延理由:</span>{' '}
+                                    {la.overdue_reason ?? '未提出'}
+                                    {la.overdue_reason_at && (
+                                      <span className="ml-1 text-red-400">({new Date(la.overdue_reason_at).toLocaleDateString('ja-JP')})</span>
+                                    )}
+                                  </div>
+                                )}
+                                {la.status === 'overdue' && expandedReassign[la.id] && (
+                                  <div className="mt-1.5 flex items-center gap-1">
+                                    <input
+                                      type="date"
+                                      value={reassignDate[la.id] ?? ''}
+                                      onChange={e => setReassignDate(prev => ({ ...prev, [la.id]: e.target.value }))}
+                                      className="rounded border border-gray-300 px-2 py-1 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    />
+                                    <button onClick={() => handleReassign(la.id)} disabled={pending}
+                                      className="rounded-md bg-indigo-600 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50">確定</button>
+                                    <button onClick={() => {
+                                      setExpandedReassign(prev => { const n = { ...prev }; delete n[la.id]; return n })
+                                      setReassignDate(prev => { const n = { ...prev }; delete n[la.id]; return n })
+                                    }} className="rounded-md bg-gray-200 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">取消</button>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex shrink-0 items-center gap-2">
+                                <button
+                                  onClick={() => router.push(`/admin/reports?mentee=${la.assigned_to}`)}
+                                  className="text-xs text-gray-500 hover:underline dark:text-gray-400"
+                                >
+                                  詳細
+                                </button>
+                                {la.status === 'awaiting_confirmation' && (
+                                  <button onClick={() => handleConfirmAssignment(la.id)} disabled={pending}
+                                    className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50">確認完了</button>
+                                )}
+                                {la.status === 'overdue' && !expandedReassign[la.id] && (
+                                  <button onClick={() => setExpandedReassign(prev => ({ ...prev, [la.id]: true }))} disabled={pending}
+                                    className="rounded-md bg-indigo-600 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50">再配信</button>
+                                )}
+                                <button onClick={() => startEdit(la)} disabled={pending}
+                                  className="rounded-md bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">修正</button>
+                                <button onClick={() => handleDeleteLearning(la.id)} disabled={pending}
+                                  className="text-xs text-red-600 hover:underline disabled:opacity-50 dark:text-red-400">削除</button>
+                              </div>
+                            </div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               )}
             </div>
+          )
+        })}
+        {filteredMentees.length === 0 && (
+          <div className="rounded-xl border border-gray-200 bg-white py-8 text-center text-sm text-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500">
+            {mentees.length === 0 ? 'メンティーがいません' : '該当するメンティーがいません'}
           </div>
-
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

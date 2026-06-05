@@ -2,13 +2,13 @@
 
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { requireAdminOrMentor } from '@/lib/auth-helpers'
+import { requireAdminOrMentor, requireAuth } from '@/lib/auth-helpers'
 import { createNotification } from './notifications'
 import { getUserDisplayName } from '@/lib/notification-helpers'
 import { logAuditEvent } from '@/app/actions/audit'
 import { ERR } from '@/lib/action-types'
 import {
-  ITEM_CATEGORIES, areaKeys, areaSpec, STALL_DAYS,
+  ITEM_CATEGORIES, QUIZ_CATEGORIES, areaKeys, areaSpec, STALL_DAYS,
   isItemCategory, isJlptLevel, type ItemCategory, type AreaSpec,
 } from '@/lib/item-assignments'
 
@@ -22,6 +22,13 @@ const STALL_MS = STALL_DAYS * 86_400_000
 
 /** 영역+레벨에 해당하는 콘텐츠 항목 id 집합 (= 풀) */
 async function getPoolIds(client: DbClient, spec: AreaSpec, level: string | null): Promise<Set<string>> {
+  if (spec.quizType) {
+    // 퀴즈형 풀 = is_pool quizzes of this quiz_type (生活은 제목 접두로 레벨 필터)
+    let q = client.from('quizzes').select('id').eq('quiz_type', spec.quizType).eq('is_pool', true)
+    if (spec.levelByTitle && level) q = q.ilike('title', `${level}%`)
+    const { data } = await q.limit(10000)
+    return new Set((data ?? []).map((r: { id: string }) => String(r.id)))
+  }
   let q = client.from(spec.table).select('id')
   if (spec.levelColumn && level) q = q.eq(spec.levelColumn, level)
   if (spec.filter) q = q.in(spec.filter.column, spec.filter.values)
@@ -36,6 +43,19 @@ async function getMasteredIds(client: DbClient, userId: string, itemType: string
     .eq('user_id', userId)
     .eq('item_type', itemType)
   return new Set((data ?? []).map((r: { item_id: string }) => String(r.item_id)))
+}
+
+/** 완료 집합: 퀴즈형이면 합격한 quiz_id, 아니면 마스터한 item_id */
+async function getCompletedIds(client: DbClient, userId: string, spec: AreaSpec): Promise<Set<string>> {
+  if (spec.quizType) {
+    const { data } = await client
+      .from('quiz_attempts')
+      .select('quiz_id')
+      .eq('user_id', userId)
+      .eq('passed', true)
+    return new Set((data ?? []).map((r: { quiz_id: string }) => String(r.quiz_id)))
+  }
+  return getMasteredIds(client, userId, spec.itemType ?? '')
 }
 
 function intersectCount(a: Set<string>, b: Set<string>): number {
@@ -114,7 +134,7 @@ export async function createItemAssignments(formData: FormData) {
       const capped = Math.min(count, remaining)
       const cumulative = prev + capped
 
-      const mastIds = await getMasteredIds(service, menteeId, spec.itemType)
+      const mastIds = await getCompletedIds(service, menteeId, spec)
       const mastered = intersectCount(poolIds, mastIds)
       const status = mastered >= cumulative ? 'completed' : (mastered > prev ? 'in_progress' : 'pending')
 
@@ -179,7 +199,7 @@ export async function updateItemAssignmentStatuses(userId: string) {
     .from('learning_assignments')
     .select('id, category, content_level, subcategory, target_count, cumulative_target, mastered_snapshot, last_progress_at, last_stall_notified_at, created_at, assigned_by, title, status')
     .eq('assigned_to', userId)
-    .in('category', ['seikatsu', 'business-jp'])
+    .in('category', ['seikatsu', 'business-jp', 'seikatsu-quiz', 'business-jp-quiz'])
     .not('target_count', 'is', null)
     .neq('status', 'completed')
 
@@ -202,7 +222,7 @@ export async function updateItemAssignmentStatuses(userId: string) {
     if (!spec) continue
 
     const poolIds = await getPoolIds(service, spec, first.content_level)
-    const mastIds = await getMasteredIds(service, userId, spec.itemType)
+    const mastIds = await getCompletedIds(service, userId, spec)
     const mastered = intersectCount(poolIds, mastIds)
 
     for (const a of list) {
@@ -317,19 +337,33 @@ export async function getMenteeItemStatus(
     poolByArea.set(area, await getPoolIds(service, spec, lvl))
   }
 
-  // 마스터 집합: item_type별 1쿼리로 모든 멘티 일괄
-  const itemTypes = [...new Set(areas.map(a => areaSpec(category, a)!.itemType))]
+  // 완료 집합: 퀴즈형이면 합격 quiz_id(영역 무관), 아니면 item_type별 — 전 멘티 일괄
+  const catIsQuiz = (QUIZ_CATEGORIES as readonly string[]).includes(category)
   const masteredByUserType = new Map<string, Set<string>>()
-  for (const itemType of itemTypes) {
+  if (catIsQuiz) {
     const { data } = await service
-      .from('user_mastered_items')
-      .select('user_id, item_id')
-      .eq('item_type', itemType)
+      .from('quiz_attempts')
+      .select('user_id, quiz_id')
+      .eq('passed', true)
       .in('user_id', ids)
     for (const r of data ?? []) {
-      const k = `${r.user_id}::${itemType}`
+      const k = `${r.user_id}::quiz`
       if (!masteredByUserType.has(k)) masteredByUserType.set(k, new Set())
-      masteredByUserType.get(k)!.add(String(r.item_id))
+      masteredByUserType.get(k)!.add(String(r.quiz_id))
+    }
+  } else {
+    const itemTypes = [...new Set(areas.map(a => areaSpec(category, a)!.itemType))]
+    for (const itemType of itemTypes) {
+      const { data } = await service
+        .from('user_mastered_items')
+        .select('user_id, item_id')
+        .eq('item_type', itemType)
+        .in('user_id', ids)
+      for (const r of data ?? []) {
+        const k = `${r.user_id}::${itemType}`
+        if (!masteredByUserType.has(k)) masteredByUserType.set(k, new Set())
+        masteredByUserType.get(k)!.add(String(r.item_id))
+      }
     }
   }
 
@@ -352,7 +386,7 @@ export async function getMenteeItemStatus(
       const completedCount = mine
         .filter(a => a.status === 'completed')
         .reduce((s, a) => s + (a.target_count ?? 0), 0)
-      const mastIds = masteredByUserType.get(`${menteeId}::${spec.itemType}`) ?? new Set<string>()
+      const mastIds = masteredByUserType.get(catIsQuiz ? `${menteeId}::quiz` : `${menteeId}::${spec.itemType}`) ?? new Set<string>()
       const mastered = intersectCount(poolIds, mastIds)
       const stalled = mine.some(a => a.status === 'overdue')
       rows.push({ menteeId, area, assignedCumulative, completedCount, mastered, pool: poolIds.size, stalled })
@@ -365,7 +399,88 @@ export async function getMenteeItemStatus(
 // ─── 대시보드 집계 (완료항목 / 부여항목, 멘티별 카테고리별) ───
 
 export interface ItemProgressPair { assigned: number; completed: number }
-export interface MenteeItemProgress { seikatsu: ItemProgressPair; businessJp: ItemProgressPair }
+export interface MenteeItemProgress { seikatsu: ItemProgressPair; businessJp: ItemProgressPair; overall: ItemProgressPair }
+
+export interface QuizProgress { total: number; passed: number; attempted: number }
+
+/**
+ * 멘티별 理解度テスト(퀴즈형: seikatsu-quiz / business-jp-quiz) 집계.
+ * total    = 각 사다리(카테고리·레벨·영역) MAX cumulative_target 합 (부여 개수)
+ * passed   = min(풀 내 합격 퀴즈 수, 부여 개수) 합
+ * attempted= min(풀 내 응시 퀴즈 수, 부여 개수) 합
+ */
+export async function aggregateQuizProgress(menteeIds: string[]): Promise<Record<string, QuizProgress>> {
+  const result: Record<string, QuizProgress> = {}
+  for (const id of menteeIds) result[id] = { total: 0, passed: 0, attempted: 0 }
+  const ids = menteeIds.map(String).filter(Boolean)
+  if (!ids.length) return result
+
+  const service = createServiceRoleClient()
+  if (!service) return result
+
+  const { data: assigns } = await service
+    .from('learning_assignments')
+    .select('assigned_to, category, subcategory, content_level, cumulative_target')
+    .in('assigned_to', ids)
+    .in('category', QUIZ_CATEGORIES as unknown as string[])
+    .not('target_count', 'is', null)
+
+  // 사다리별 최대 누적 (mentee, category, level, area)
+  const ladderMax = new Map<string, { menteeId: string; category: ItemCategory; level: string | null; area: string; cum: number }>()
+  for (const a of assigns ?? []) {
+    if (!isItemCategory(a.category)) continue
+    const key = `${a.assigned_to}::${a.category}::${a.content_level ?? ''}::${a.subcategory}`
+    const cur = ladderMax.get(key)
+    const cum = a.cumulative_target ?? 0
+    if (!cur || cum > cur.cum) ladderMax.set(key, { menteeId: a.assigned_to, category: a.category, level: a.content_level, area: a.subcategory, cum })
+  }
+  if (ladderMax.size === 0) return result
+
+  // 풀 캐시 (category::level::area → quizId 집합)
+  const poolCache = new Map<string, Set<string>>()
+  for (const L of ladderMax.values()) {
+    const spec = areaSpec(L.category, L.area)
+    if (!spec) continue
+    const poolKey = `${L.category}::${L.level ?? ''}::${L.area}`
+    if (!poolCache.has(poolKey)) poolCache.set(poolKey, await getPoolIds(service, spec, L.level))
+  }
+
+  // 합격 점수 + 최고 점수 조회
+  const allQuizIds = new Set<string>()
+  for (const s of poolCache.values()) s.forEach(i => allQuizIds.add(i))
+  const passingByQuiz = new Map<string, number>()
+  const bestScore = new Map<string, number>() // `${userId}::${quizId}` → best score
+  if (allQuizIds.size) {
+    const idList = [...allQuizIds]
+    const [{ data: qz }, { data: att }] = await Promise.all([
+      service.from('quizzes').select('id, passing_score').in('id', idList),
+      service.from('quiz_attempts').select('user_id, quiz_id, score').in('user_id', ids).in('quiz_id', idList).not('score', 'is', null),
+    ])
+    for (const q of qz ?? []) passingByQuiz.set(String(q.id), q.passing_score ?? 70)
+    for (const a of att ?? []) {
+      const k = `${a.user_id}::${a.quiz_id}`
+      const cur = bestScore.get(k)
+      if (cur == null || a.score > cur) bestScore.set(k, a.score)
+    }
+  }
+
+  for (const L of ladderMax.values()) {
+    const pool = poolCache.get(`${L.category}::${L.level ?? ''}::${L.area}`) ?? new Set<string>()
+    let passedInPool = 0, attemptedInPool = 0
+    for (const qid of pool) {
+      const score = bestScore.get(`${L.menteeId}::${qid}`)
+      if (score != null) {
+        attemptedInPool++
+        if (score >= (passingByQuiz.get(qid) ?? 70)) passedInPool++
+      }
+    }
+    const r = result[L.menteeId]
+    r.total += L.cum
+    r.passed += Math.min(passedInPool, L.cum)
+    r.attempted += Math.min(attemptedInPool, L.cum)
+  }
+  return result
+}
 
 /**
  * 멘티별 (생활/비즈니스) 항목 집계.
@@ -375,7 +490,7 @@ export interface MenteeItemProgress { seikatsu: ItemProgressPair; businessJp: It
 export async function aggregateItemProgress(menteeIds: string[]): Promise<Record<string, MenteeItemProgress>> {
   const result: Record<string, MenteeItemProgress> = {}
   for (const id of menteeIds) {
-    result[id] = { seikatsu: { assigned: 0, completed: 0 }, businessJp: { assigned: 0, completed: 0 } }
+    result[id] = { seikatsu: { assigned: 0, completed: 0 }, businessJp: { assigned: 0, completed: 0 }, overall: { assigned: 0, completed: 0 } }
   }
   const ids = menteeIds.map(String).filter(Boolean)
   if (!ids.length) return result
@@ -390,11 +505,9 @@ export async function aggregateItemProgress(menteeIds: string[]): Promise<Record
     .in('category', ['seikatsu', 'business-jp'])
     .not('target_count', 'is', null)
 
-  if (!assigns?.length) return result
-
   // 사다리별 최대 누적 (mentee, category, level, area)
   const ladderMax = new Map<string, { menteeId: string; category: ItemCategory; level: string | null; area: string; cum: number }>()
-  for (const a of assigns) {
+  for (const a of (assigns ?? [])) {
     if (!isItemCategory(a.category)) continue
     const key = `${a.assigned_to}::${a.category}::${a.content_level ?? ''}::${a.subcategory}`
     const cur = ladderMax.get(key)
@@ -421,11 +534,185 @@ export async function aggregateItemProgress(menteeIds: string[]): Promise<Record
     let mastIds = masteredCache.get(mKey)
     if (!mastIds) { mastIds = await getMasteredIds(service, L.menteeId, spec.itemType); masteredCache.set(mKey, mastIds) }
 
+    // 課題 컬럼: 부여분까지의 완료 (부여 상한 캡)
     const mastered = Math.min(intersectCount(poolIds, mastIds), L.cum)
     const bucket = L.category === 'seikatsu' ? result[L.menteeId].seikatsu : result[L.menteeId].businessJp
     bucket.assigned += L.cum
     bucket.completed += mastered
   }
 
+  // ── 全体進捗 = 목표 레벨의 生活日本語 전 영역: 마스터(실제·상한없음) / 전체 풀 ──
+  // 과제 부여와 무관하게 항상 계산 (부여보다 더 진행한 것도 포함)
+  const { data: profs } = await service.from('profiles').select('id, target_certification').in('id', ids)
+  const targetById = new Map((profs ?? []).map(p => [p.id, p.target_certification as string | null]))
+  const seikatsuAreas = areaKeys('seikatsu')
+  const targetLevels = [...new Set([...targetById.values()].filter((v): v is string => !!v))]
+  const lvlAreaPool = new Map<string, Set<string>>()
+  for (const lvl of targetLevels) {
+    for (const area of seikatsuAreas) {
+      const spec = areaSpec('seikatsu', area)!
+      lvlAreaPool.set(`${lvl}::${area}`, await getPoolIds(service, spec, lvl))
+    }
+  }
+  const seikatsuItemTypes = [...new Set(seikatsuAreas.map(a => areaSpec('seikatsu', a)!.itemType))]
+  const masteredAll = new Map<string, Set<string>>()
+  for (const itemType of seikatsuItemTypes) {
+    const { data } = await service.from('user_mastered_items').select('user_id, item_id').eq('item_type', itemType).in('user_id', ids)
+    for (const r of data ?? []) {
+      const k = `${r.user_id}::${itemType}`
+      if (!masteredAll.has(k)) masteredAll.set(k, new Set())
+      masteredAll.get(k)!.add(String(r.item_id))
+    }
+  }
+  for (const id of ids) {
+    const tgt = targetById.get(id)
+    if (!tgt) { result[id].overall = { assigned: 0, completed: 0 }; continue }
+    let completed = 0, total = 0
+    for (const area of seikatsuAreas) {
+      const spec = areaSpec('seikatsu', area)!
+      const pool = lvlAreaPool.get(`${tgt}::${area}`)
+      if (!pool) continue
+      total += pool.size
+      completed += intersectCount(pool, masteredAll.get(`${id}::${spec.itemType}`) ?? new Set<string>())
+    }
+    result[id].overall = { assigned: total, completed }
+  }
+
   return result
+}
+
+// ─── 멘티 본인 항목 과제 진척 (대시보드용) ───
+
+export interface MyItemRow {
+  level: string
+  area: string
+  areaLabel: string
+  assigned: number   // 부여 누적
+  mastered: number   // 내가 마스터(완료)한 수 (초과분 포함)
+  pool: number       // 해당 레벨·영역 전체
+}
+
+export async function getMyItemAssignmentProgress(): Promise<MyItemRow[]> {
+  const auth = await requireAuth()
+  if ('error' in auth) return []
+  const { supabase, user } = auth
+
+  const { data: assigns } = await supabase
+    .from('learning_assignments')
+    .select('subcategory, content_level, cumulative_target')
+    .eq('assigned_to', user.id)
+    .eq('category', 'seikatsu')
+    .not('target_count', 'is', null)
+
+  if (!assigns?.length) return []
+
+  // (레벨·영역)별 최대 누적
+  const ladder = new Map<string, { level: string; area: string; cum: number }>()
+  for (const a of assigns) {
+    if (!a.content_level) continue
+    const key = `${a.content_level}::${a.subcategory}`
+    const cum = a.cumulative_target ?? 0
+    const cur = ladder.get(key)
+    if (!cur || cum > cur.cum) ladder.set(key, { level: a.content_level, area: a.subcategory, cum })
+  }
+
+  const rows: MyItemRow[] = []
+  for (const L of ladder.values()) {
+    const spec = areaSpec('seikatsu', L.area)
+    if (!spec) continue
+    const poolIds = await getPoolIds(supabase, spec, L.level)
+    const mastIds = await getMasteredIds(supabase, user.id, spec.itemType)
+    rows.push({
+      level: L.level, area: L.area, areaLabel: spec.label,
+      assigned: L.cum, mastered: intersectCount(poolIds, mastIds), pool: poolIds.size,
+    })
+  }
+
+  const areaOrder = areaKeys('seikatsu')
+  rows.sort((a, b) => (a.level === b.level ? areaOrder.indexOf(a.area) - areaOrder.indexOf(b.area) : a.level.localeCompare(b.level)))
+  return rows
+}
+
+// ─── 월간 자동 부여 (매달 1회, lazy: 달 바뀐 뒤 첫 접근 시 실행) ───
+
+const MONTHLY_COUNTS: Record<string, number> = { vocabulary: 100, grammar: 10, reading: 10, listening: 10, kanji: 170 }
+
+/**
+ * 목표 레벨이 설정된 멘티 전원에게 그 달 1회 항목과제를 자동 부여한다.
+ * (어휘100·문법10·독해10·청해10·한자170, 각자 잔량까지만 캡, 앞에서부터 누적)
+ * dedup: profiles.last_auto_assign_month. 크론 없이 대시보드 로드 시 호출.
+ */
+export async function runMonthlyAutoAssignment(): Promise<void> {
+  const service = createServiceRoleClient()
+  if (!service) return
+
+  const now = new Date()
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+
+  const { data: mentees } = await service
+    .from('profiles')
+    .select('id, target_certification, last_auto_assign_month')
+    .eq('role', 'mentee')
+    .not('target_certification', 'is', null)
+    .or(`last_auto_assign_month.is.null,last_auto_assign_month.neq.${currentMonth}`)
+
+  if (!mentees?.length) return
+
+  const { data: adminRow } = await service.from('profiles').select('id').eq('role', 'admin').limit(1).maybeSingle()
+  const nowIso = now.toISOString()
+  const areas = areaKeys('seikatsu')
+  const poolCache = new Map<string, Set<string>>()
+
+  for (const m of mentees) {
+    const level = m.target_certification as string
+    if (!isJlptLevel(level)) continue
+    const assignedBy = adminRow?.id ?? m.id
+
+    for (const area of areas) {
+      const want = MONTHLY_COUNTS[area] ?? 0
+      if (want <= 0) continue
+      const spec = areaSpec('seikatsu', area)
+      if (!spec) continue
+
+      const poolKey = `${level}::${area}`
+      let poolIds = poolCache.get(poolKey)
+      if (!poolIds) { poolIds = await getPoolIds(service, spec, level); poolCache.set(poolKey, poolIds) }
+
+      const { data: prevRows } = await service
+        .from('learning_assignments')
+        .select('cumulative_target')
+        .eq('assigned_to', m.id).eq('category', 'seikatsu').eq('subcategory', area).eq('content_level', level)
+        .not('target_count', 'is', null)
+        .order('cumulative_target', { ascending: false }).limit(1)
+      const prev: number = prevRows?.[0]?.cumulative_target ?? 0
+      const remaining = poolIds.size - prev
+      if (remaining <= 0) continue
+      const capped = Math.min(want, remaining)
+      const cumulative = prev + capped
+
+      const mastered = intersectCount(poolIds, await getCompletedIds(service, m.id, spec))
+      const status = mastered >= cumulative ? 'completed' : (mastered > prev ? 'in_progress' : 'pending')
+
+      const { data: ins } = await service.from('learning_assignments').insert({
+        assigned_by: assignedBy,
+        assigned_to: m.id,
+        category: 'seikatsu',
+        subcategory: area,
+        content_level: level,
+        title: `${level} ${spec.label} ${capped}項目`,
+        target_count: capped,
+        cumulative_target: cumulative,
+        mastered_snapshot: mastered,
+        last_progress_at: nowIso,
+        status,
+        completed_at: status === 'completed' ? nowIso : null,
+      }).select('id').single()
+
+      if (ins && status !== 'completed') {
+        await createNotification(m.id, 'task_assigned', `今月の学習課題: ${level} ${spec.label} ${capped}項目`, undefined, '/dashboard/assignments', ins.id)
+      }
+    }
+
+    await service.from('profiles').update({ last_auto_assign_month: currentMonth }).eq('id', m.id)
+  }
 }

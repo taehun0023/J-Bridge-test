@@ -3,8 +3,6 @@
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { requireAuth } from '@/lib/auth-helpers'
-import { ASSIGNMENT_CATEGORIES } from '@/lib/assignment-categories'
-import { notifyMentorsAndAdmins, getUserDisplayName } from '@/lib/notification-helpers'
 import { CS_COMPREHENSIVE_TOTAL_QUESTIONS } from '@/lib/assessment-config'
 
 export async function requestExam(category: string, subcategory: string, contentLevel: string | null) {
@@ -15,14 +13,6 @@ export async function requestExam(category: string, subcategory: string, content
   // Use serviceClient for RLS bypass (admin/mentor may not have RLS access to comprehensive_exams)
   const serviceClient = createServiceRoleClient()
   const queryClient = serviceClient ?? supabase
-
-  // Check role for auto-approval
-  const { data: profile } = await queryClient
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-  const isAdminOrMentor = profile?.role === 'admin' || profile?.role === 'mentor'
 
   // Check for existing pending/in_progress exam
   const { data: existing } = await queryClient
@@ -38,15 +28,7 @@ export async function requestExam(category: string, subcategory: string, content
     return { error: '既にリクエスト中または進行中の試験があります' }
   }
 
-  // Check if this is the user's first exam for this category (any subcategory, any status).
-  // First exams are auto-approved regardless of role to remove the approval friction.
-  const { count: categoryCount } = await queryClient
-    .from('comprehensive_exams')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-    .eq('category', category)
-  const isFirstExam = (categoryCount ?? 0) === 0
-  const autoApprove = isAdminOrMentor || isFirstExam
+  // 承認制は廃止 — すべての試験は即座に承認済みで作成される（メンティーは承認なしで受験可能）
   const nowIso = new Date().toISOString()
 
   const { data, error } = await queryClient
@@ -56,36 +38,17 @@ export async function requestExam(category: string, subcategory: string, content
       category,
       subcategory,
       content_level: contentLevel,
-      status: autoApprove ? 'approved' : 'requested',
+      status: 'approved',
       total_questions: category === 'cs' && subcategory === 'comprehensive'
         ? CS_COMPREHENSIVE_TOTAL_QUESTIONS
         : undefined,
-      ...(autoApprove && {
-        approved_at: nowIso,
-        approved_by: user.id,
-      }),
+      approved_at: nowIso,
+      approved_by: user.id,
     })
     .select('id')
     .single()
 
   if (error) return { error: error.message }
-
-  // Notify mentors and admins only when an approval is actually needed
-  if (!autoApprove) {
-    const userName = await getUserDisplayName(user.id)
-    const catLabel = ASSIGNMENT_CATEGORIES[category]?.label ?? category
-    const subLabel = ASSIGNMENT_CATEGORIES[category]?.subcategories[subcategory]?.label ?? subcategory
-    const levelStr = contentLevel ? ` ${contentLevel}` : ''
-
-    await notifyMentorsAndAdmins(
-      user.id,
-      'exam_requested',
-      `${userName}さんが総合試験をリクエスト`,
-      `${catLabel} > ${subLabel}${levelStr}`,
-      '/admin/tasks',
-      data.id
-    )
-  }
 
   revalidatePath('/dashboard/assignments')
   return { success: true, examId: data.id }
