@@ -1,5 +1,6 @@
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { createNotification } from '@/app/actions/notifications'
+import { kanjiOnly } from '@/lib/name-format'
 import type { NotificationType } from '@/lib/supabase/types'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
@@ -104,5 +105,7 @@ export async function getUserDisplayName(
     .eq('id', userId)
     .single()
 
-  return data?.full_name ?? 'メンティー'
+  // 他画面(NameRuby)と表記を統一: "(カタカナ)" を除いた漢字名のみを返す。
+  // 通知は平文のため furigana ルビは付かないが、インラインの「(カナ)」重複は解消される。
+  return kanjiOnly(data?.full_name) ?? 'メンティー'
 }
