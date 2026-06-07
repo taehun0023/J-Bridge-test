@@ -18,6 +18,9 @@ const serverSchema = z.object({
 
   // Google Cloud TTS (optional — TTS features disabled without it)
   GOOGLE_CLOUD_TTS_API_KEY: z.string().min(1).optional(),
+
+  // Weavusys service-to-service API key (optional — J-Bridge BFF disabled without it)
+  WEAVUSYS_API_KEY: z.string().min(1).optional(),
 })
 
 export type ServerEnv = z.infer<typeof serverSchema>
