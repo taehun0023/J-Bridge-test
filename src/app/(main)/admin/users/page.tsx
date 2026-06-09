@@ -2,13 +2,13 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import Card from '@/components/ui/Card'
 import AdminUsersClient from './AdminUsersClient'
+import { getMenteeMentorsMap } from '@/lib/mentor-helpers'
 
 export default async function AdminUsersPage() {
   const supabase = await createClient()
 
   const [
     { data: rawUsers },
-    { data: mentorAssignments },
     { data: mentorList },
   ] = await Promise.all([
     supabase
@@ -16,23 +16,19 @@ export default async function AdminUsersPage() {
       .select('id, email, full_name, role, mentor_specialty, is_onboarded, is_japanese, created_at, target_certification, jlpt_level, it_certifications')
       .order('created_at', { ascending: false }),
     supabase
-      .from('mentor_mentee_assignments')
-      .select('mentor_id, mentee_id'),
-    supabase
       .from('profiles')
-      .select('id, full_name')
+      .select('id, full_name, mentor_specialty')
       .eq('role', 'mentor')
       .order('full_name'),
   ])
 
-  const mentorMap = new Map<string, string>()
-  for (const a of mentorAssignments ?? []) {
-    mentorMap.set(a.mentee_id, a.mentor_id)
-  }
+  const menteeIds = (rawUsers ?? []).filter(u => u.role === 'mentee').map(u => u.id)
+  const mentorsMap = await getMenteeMentorsMap(supabase, menteeIds)
 
   const users = (rawUsers ?? []).map((u) => ({
     ...u,
-    assigned_mentor_id: mentorMap.get(u.id) ?? null,
+    assigned_japanese_mentor_id: mentorsMap[u.id]?.japanese?.id ?? null,
+    assigned_tech_mentor_id: mentorsMap[u.id]?.technical?.id ?? null,
   }))
 
   const stats = {

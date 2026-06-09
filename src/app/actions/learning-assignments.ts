@@ -3,7 +3,7 @@
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { requireAuth, requireAdminOrMentor } from '@/lib/auth-helpers'
-import { ASSIGNMENT_CATEGORIES } from '@/lib/assignment-categories'
+import { ASSIGNMENT_CATEGORIES, buildAssignmentTitle, endOfMonthDueDate } from '@/lib/assignment-categories'
 import { createNotification } from './notifications'
 import { getUserDisplayName } from '@/lib/notification-helpers'
 import { logAuditEvent } from '@/app/actions/audit'
@@ -147,14 +147,11 @@ export async function createLearningAssignment(formData: FormData) {
   const category = formData.get('category') as string
   const subcategory = formData.get('subcategory') as string
   const contentLevel = formData.get('content_level') as string || null
-  const title = formData.get('title') as string
-  const description = formData.get('description') as string || null
-  const dueDate = formData.get('due_date') as string || null
 
   const catConfig = ASSIGNMENT_CATEGORIES[category]
   const isLevelOnly = catConfig?.levelOnly === true
 
-  if (!assignedToList.length || !category || !title) {
+  if (!assignedToList.length || !category) {
     return { error: '必須フィールドをすべて入力してください' }
   }
   if (!isLevelOnly && !subcategory) {
@@ -163,6 +160,11 @@ export async function createLearningAssignment(formData: FormData) {
   if (isLevelOnly && !contentLevel) {
     return { error: 'レベルを選択してください' }
   }
+
+  // タイトルはカテゴリ等から自動生成。期限は手動設定せず常に「부여한 달의 말일 23:59」。
+  const title = buildAssignmentTitle(category, subcategory, contentLevel)
+  const description: string | null = null
+  const dueDate = endOfMonthDueDate()
 
   // Check for existing completed assignments per user
   const skippedNames: string[] = []

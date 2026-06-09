@@ -27,7 +27,8 @@ interface EmployeeRow {
   id: string
   full_name: string | null
   email: string
-  mentor_name: string | null
+  japanese_mentor_name: string | null
+  tech_mentor_name: string | null
   target_certification: string | null
   stat: JapaneseProgressStat
   exam_seikatsu: ExamScore | null
@@ -88,7 +89,8 @@ export default function AdminDashboard({ adminName, employees, variant = 'admin'
   const filtered = employees.filter(e =>
     (e.full_name ?? '').toLowerCase().includes(search.toLowerCase()) ||
     e.email.toLowerCase().includes(search.toLowerCase()) ||
-    (e.mentor_name ?? '').toLowerCase().includes(search.toLowerCase())
+    (e.japanese_mentor_name ?? '').toLowerCase().includes(search.toLowerCase()) ||
+    (e.tech_mentor_name ?? '').toLowerCase().includes(search.toLowerCase())
   )
 
   const sorted = [...filtered].sort((a, b) => {
@@ -170,7 +172,8 @@ export default function AdminDashboard({ adminName, employees, variant = 'admin'
             <thead>
               <tr>
                 <th className="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400">名前</th>
-                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">担当メンター</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">日本語メンター</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">技術メンター</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">目標レベル</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">試験レベル</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">試験</th>
@@ -194,8 +197,11 @@ export default function AdminDashboard({ adminName, employees, variant = 'admin'
                       <NameRuby name={e.full_name} fallback={e.email} />
                     </Link>
                   </td>
-                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-left text-sm text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">
-                    <NameRuby name={e.mentor_name} />
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">
+                    {e.japanese_mentor_name ? <NameRuby name={e.japanese_mentor_name} /> : '—'}
+                  </td>
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">
+                    {e.tech_mentor_name ? <NameRuby name={e.tech_mentor_name} /> : '—'}
                   </td>
                   <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm dark:border-white/[0.06]">
                     <LevelBadge level={e.target_certification} />

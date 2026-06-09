@@ -116,6 +116,21 @@ export function getContentLevelLabel(category: string, contentLevel: string | nu
   return contentLevel
 }
 
+/** 과제 제목을 카테고리·서브카테고리·레벨에서 자동 생성. (예: 「生活日本語 N4」「開発実務能力 Java Gold」) */
+export function buildAssignmentTitle(category: string, subcategory: string, contentLevel: string | null): string {
+  const parts = [getCategoryLabel(category)]
+  if (subcategory && subcategory !== 'all') parts.push(getSubcategoryLabel(category, subcategory))
+  const levelLabel = getContentLevelLabel(category, contentLevel)
+  if (levelLabel) parts.push(levelLabel)
+  return parts.join(' ')
+}
+
+/** 부여한 달의 말일 23:59:59 (ISO). 課題の期限は手動設定せず常にこの値に自動設定する。 */
+export function endOfMonthDueDate(): string {
+  const now = new Date()
+  return new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString()
+}
+
 export function getQuizUrl(
   quizType: string,
   quizId: string,

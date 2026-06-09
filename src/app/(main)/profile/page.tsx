@@ -1,4 +1,5 @@
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
+import { getMenteeMentors } from '@/lib/mentor-helpers'
 import { redirect } from 'next/navigation'
 import { Shield, GraduationCap, User } from 'lucide-react'
 import ProfileForm from './ProfileForm'
@@ -37,17 +38,14 @@ export default async function ProfilePage() {
   const roleMeta = ROLE_META[role] ?? ROLE_META.mentee
   const { Icon } = roleMeta
 
-  // 担当メンター (mentor_mentee_assignments 経由). RLS 回避のため service role で取得。
-  let mentorName: string | null = null
+  // 担当メンター (일본어/기술). メンティーのみ表示。RLS 回避のため service role で取得。
+  let japaneseMentorName: string | null = null
+  let techMentorName: string | null = null
   const serviceClient = createServiceRoleClient()
-  if (serviceClient) {
-    const { data: assignment } = await serviceClient
-      .from('mentor_mentee_assignments')
-      .select('mentor:profiles!mentor_mentee_assignments_mentor_id_fkey(full_name)')
-      .eq('mentee_id', user.id)
-      .maybeSingle()
-    const m = assignment?.mentor as unknown as { full_name: string | null } | { full_name: string | null }[] | null
-    mentorName = (Array.isArray(m) ? m[0]?.full_name : m?.full_name) ?? null
+  if (serviceClient && role === 'mentee') {
+    const mentors = await getMenteeMentors(serviceClient, user.id)
+    japaneseMentorName = mentors.japanese?.name ?? null
+    techMentorName = mentors.technical?.name ?? null
   }
 
   return (
@@ -63,7 +61,7 @@ export default async function ProfilePage() {
       </div>
 
       <div className="mt-6">
-        <ProfileForm profile={profile} mentorName={mentorName} />
+        <ProfileForm profile={profile} japaneseMentorName={japaneseMentorName} techMentorName={techMentorName} role={role} />
       </div>
     </div>
   )

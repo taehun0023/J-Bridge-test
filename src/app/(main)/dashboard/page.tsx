@@ -14,6 +14,7 @@ import {
 } from '@/lib/japanese-progress'
 import { aggregateItemProgress, aggregateQuizProgress, getMyItemAssignmentProgress, runMonthlyAutoAssignment } from '@/app/actions/item-assignments'
 import { resolveQuizIdsForAssignment } from '@/app/actions/learning-assignments'
+import { getMenteeMentorsMap } from '@/lib/mentor-helpers'
 import MenteeItemProgressCard from '@/components/dashboard/MenteeItemProgressCard'
 
 /** 生活/ビジネス 집계를 "완료항목 / 부여항목"(항목 수 기준)으로 덮어쓴다. */
@@ -68,7 +69,7 @@ async function buildEmployeeRows(
   const menteeIds = menteeProfiles.map(p => p.id)
   if (menteeIds.length === 0) return []
 
-  const [{ data: jpAssignments }, { data: jpExams }, { data: mentorAssignments }, { data: mentorProfiles }] = await Promise.all([
+  const [{ data: jpAssignments }, { data: jpExams }] = await Promise.all([
     supabase.from('learning_assignments')
       .select('assigned_to, category, status, due_date, created_at, completed_at')
       .in('assigned_to', menteeIds)
@@ -79,15 +80,9 @@ async function buildEmployeeRows(
       .in('category', JP_CATEGORIES as unknown as string[])
       .in('status', ['completed', 'failed'])
       .order('completed_at', { ascending: false }),
-    supabase.from('mentor_mentee_assignments').select('mentor_id, mentee_id').in('mentee_id', menteeIds),
-    supabase.from('profiles').select('id, full_name').eq('role', 'mentor'),
   ])
 
-  const mentorMap = new Map((mentorProfiles ?? []).map(p => [p.id, p.full_name]))
-  const menteeToMentor = new Map<string, string>()
-  for (const a of mentorAssignments ?? []) {
-    menteeToMentor.set(a.mentee_id, mentorMap.get(a.mentor_id) ?? '—')
-  }
+  const mentorsMap = await getMenteeMentorsMap(supabase, menteeIds)
 
   const jpStats = aggregateJapaneseProgress((jpAssignments ?? []) as JapaneseAssignmentRow[], menteeIds)
   await overrideWithItemProgress(jpStats, menteeIds)
@@ -161,7 +156,8 @@ async function buildEmployeeRows(
       id: p.id,
       full_name: p.full_name,
       email: p.email,
-      mentor_name: menteeToMentor.get(p.id) ?? null,
+      japanese_mentor_name: mentorsMap[p.id]?.japanese?.name ?? null,
+      tech_mentor_name: mentorsMap[p.id]?.technical?.name ?? null,
       target_certification: p.target_certification ?? null,
       stat: jpStats.get(p.id)!,
       exam_seikatsu: exams.seikatsu ?? null,

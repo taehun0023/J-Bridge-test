@@ -13,7 +13,8 @@ export interface EditableUser {
   full_name: string | null
   role: string
   mentor_specialty: string | null
-  assigned_mentor_id: string | null
+  assigned_japanese_mentor_id: string | null
+  assigned_tech_mentor_id: string | null
   target_certification: string | null
   jlpt_level: string | null
   it_certifications: string | null
@@ -22,6 +23,7 @@ export interface EditableUser {
 interface Mentor {
   id: string
   full_name: string | null
+  mentor_specialty: string | null
 }
 
 interface NameParts {
@@ -76,8 +78,11 @@ export default function EditUserModal({
   const [katakanaLast, setKatakanaLast] = useState(init.katakanaLast)
   const [katakanaFirst, setKatakanaFirst] = useState(init.katakanaFirst)
   const [role, setRole] = useState(user.role)
-  const [mentorId, setMentorId] = useState(user.assigned_mentor_id ?? '')
+  const [japaneseMentorId, setJapaneseMentorId] = useState(user.assigned_japanese_mentor_id ?? '')
+  const [techMentorId, setTechMentorId] = useState(user.assigned_tech_mentor_id ?? '')
   const [specialty, setSpecialty] = useState(user.mentor_specialty ?? '')
+  const japaneseMentors = mentors.filter(m => m.mentor_specialty === 'japanese')
+  const techMentors = mentors.filter(m => m.mentor_specialty === 'technical')
   const [target, setTarget] = useState(user.target_certification ?? '')
   const [jlpt, setJlpt] = useState(user.jlpt_level ?? '')
   const [selectedCerts, setSelectedCerts] = useState<string[]>(parseCertifications(user.it_certifications))
@@ -97,7 +102,8 @@ export default function EditUserModal({
         full_name: buildFullName({ lastName, firstName, katakanaLast, katakanaFirst }) || null,
         role,
         mentor_specialty: role === 'mentor' ? (specialty || null) : null,
-        mentor_id: role === 'mentee' ? (mentorId || null) : null,
+        japanese_mentor_id: role === 'mentee' ? (japaneseMentorId || null) : null,
+        tech_mentor_id: role === 'mentee' ? (techMentorId || null) : null,
         target_certification: target || null,
         jlpt_level: jlpt || null,
         it_certifications: buildCertifications(selectedCerts) || null,
@@ -148,14 +154,20 @@ export default function EditUserModal({
               </select>
             </div>
 
-            {/* 担当メンター (mentee) / 専門分野 (mentor) */}
+            {/* 担当メンター (mentee, 日本語/技術) / 専門分野 (mentor) */}
             {role === 'mentee' ? (
               <div>
                 <label className={labelCls}>担当メンター</label>
-                <select value={mentorId} onChange={e => setMentorId(e.target.value)} className={selectCls}>
-                  <option value="">未指定</option>
-                  {mentors.map(m => (
-                    <option key={m.id} value={m.id}>{m.full_name ?? m.id}</option>
+                <select value={japaneseMentorId} onChange={e => setJapaneseMentorId(e.target.value)} title="日本語メンター" className={selectCls}>
+                  <option value="">日本語: 未指定</option>
+                  {japaneseMentors.map(m => (
+                    <option key={m.id} value={m.id}>日本語: {m.full_name ?? m.id}</option>
+                  ))}
+                </select>
+                <select value={techMentorId} onChange={e => setTechMentorId(e.target.value)} title="技術メンター" className={selectCls}>
+                  <option value="">技術: 未指定</option>
+                  {techMentors.map(m => (
+                    <option key={m.id} value={m.id}>技術: {m.full_name ?? m.id}</option>
                   ))}
                 </select>
               </div>

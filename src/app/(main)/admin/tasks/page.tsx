@@ -2,11 +2,14 @@ import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import Card from '@/components/ui/Card'
 import AdminTasksClient from './AdminTasksClient'
 import { detectAndMarkOverdue, updateLearningStatuses, resolveQuizIdsForAssignment } from '@/app/actions/learning-assignments'
+import { getMonthlyAssignmentConfig } from '@/app/actions/item-assignments'
+import { getMenteeMentorsMap } from '@/lib/mentor-helpers'
 import { getReadingTotalCount } from '@/lib/assignment-categories'
 
 export default async function AdminTasksPage() {
   await detectAndMarkOverdue()
   await updateLearningStatuses()
+  const monthlyConfig = await getMonthlyAssignmentConfig()
 
   const supabase = await createClient()
   const serviceClient = createServiceRoleClient()
@@ -21,25 +24,35 @@ export default async function AdminTasksPage() {
   const currentRole = currentProfile?.role ?? 'mentee'
 
   // ─── 멘티 목록 (관리자 = 전체, 멘토 = 담당 멘티만) ───
-  let mentees: { id: string; full_name: string | null; email: string }[] = []
+  let mentees: { id: string; full_name: string | null; email: string; target_certification: string | null; japanese_mentor_name?: string | null; tech_mentor_name?: string | null }[] = []
   if (currentRole === 'mentor') {
     const { data: menteeAssignments } = await supabase
       .from('mentor_mentee_assignments')
-      .select('mentee:profiles!mentor_mentee_assignments_mentee_id_fkey(id, full_name, email, role)')
+      .select('mentee:profiles!mentor_mentee_assignments_mentee_id_fkey(id, full_name, email, role, target_certification)')
       .eq('mentor_id', user!.id)
     mentees = (menteeAssignments ?? [])
-      .map(a => a.mentee as unknown as { id: string; full_name: string | null; email: string; role: string })
+      .map(a => a.mentee as unknown as { id: string; full_name: string | null; email: string; role: string; target_certification: string | null })
       .filter(m => m && m.role === 'mentee')
-      .map(m => ({ id: m.id, full_name: m.full_name, email: m.email }))
+      .map(m => ({ id: m.id, full_name: m.full_name, email: m.email, target_certification: m.target_certification }))
   } else {
     const { data } = await supabase
       .from('profiles')
-      .select('id, full_name, email')
+      .select('id, full_name, email, target_certification')
       .eq('role', 'mentee')
       .order('full_name')
     mentees = data ?? []
   }
   const menteeIds = mentees.map(m => m.id)
+
+  // ─── 각 멘티의 담당 멘토 (일본어/기술, RLS 회피 위해 service role) ───
+  if (menteeIds.length > 0) {
+    const mentorsMap = await getMenteeMentorsMap(serviceClient ?? supabase, menteeIds)
+    mentees = mentees.map(m => ({
+      ...m,
+      japanese_mentor_name: mentorsMap[m.id]?.japanese?.name ?? null,
+      tech_mentor_name: mentorsMap[m.id]?.technical?.name ?? null,
+    }))
+  }
 
   // ─── 해당 멘티들의 모든 학습과제 ───
   const { data: learningAssignments } = await supabase
@@ -312,9 +325,11 @@ export default async function AdminTasksPage() {
 
       <AdminTasksClient
         mentees={visibleMentees}
+        allMentees={mentees}
         assignmentsByMentee={assignmentsByMentee ?? {}}
         currentRole={currentRole}
         learningProgress={learningProgress}
+        monthlyConfig={monthlyConfig}
       />
     </div>
   )

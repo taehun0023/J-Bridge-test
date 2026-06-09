@@ -3,16 +3,17 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  createLearningAssignment,
   deleteLearningAssignment,
   updateLearningAssignment,
   confirmAssignment,
   reassignAssignment,
-  getAssigneeUnlockedLevels,
 } from '@/app/actions/learning-assignments'
-import { ASSIGNMENT_CATEGORIES, JLPT_LEVELS, DEV_LEVELS, getCategoryLabel, getSubcategoryLabel, getContentLevelLabel } from '@/lib/assignment-categories'
+import { getCategoryLabel, getSubcategoryLabel, getContentLevelLabel } from '@/lib/assignment-categories'
+import { areaLabel, categoryLabel as itemCategoryLabel, isItemCategory } from '@/lib/item-assignments'
+import { updateMonthlyAssignmentConfig, type MonthlyAssignConfig } from '@/app/actions/item-assignments'
+import ItemAssignModal from '@/app/(main)/dashboard/ItemAssignModal'
 import NameRuby from '@/components/ui/NameRuby'
-import { ChevronDown, ChevronRight, Plus } from 'lucide-react'
+import { Plus, Languages, ChevronDown, ChevronRight } from 'lucide-react'
 
 interface LearningAssignmentRow {
   id: string
@@ -38,6 +39,9 @@ interface Mentee {
   id: string
   full_name: string | null
   email: string
+  target_certification?: string | null
+  japanese_mentor_name?: string | null
+  tech_mentor_name?: string | null
 }
 
 const statusColors: Record<string, string> = {
@@ -64,42 +68,86 @@ interface LearningProgressData {
   pct: number
 }
 
+/** 우측 상세 페이징: 한 페이지 과제 수 */
+const PAGE_SIZE = 20
+
+/**
+ * 서브카테고리 라벨. 항목 과제(target_count)는 subcategory에 영역키(vocabulary/kanji 등)를
+ * 영어로 저장하므로 item-assignments의 일본어 영역 라벨을 사용. 그 외(퀴즈형)는 기존 매핑.
+ */
+function subcategoryLabel(la: LearningAssignmentRow): string {
+  if (la.target_count != null && isItemCategory(la.category)) {
+    return areaLabel(la.category, la.subcategory)
+  }
+  return getSubcategoryLabel(la.category, la.subcategory)
+}
+
+/**
+ * 카테고리 라벨. 항목/이해테스트 과제(seikatsu-quiz/business-jp-quiz 등)는 ASSIGNMENT_CATEGORIES에
+ * 없어 영어 키가 노출되므로 item-assignments의 일본어 라벨을 사용.
+ */
+function categoryDisplayLabel(la: LearningAssignmentRow): string {
+  if (la.target_count != null && isItemCategory(la.category)) {
+    return itemCategoryLabel(la.category)
+  }
+  return getCategoryLabel(la.category)
+}
+
+/**
+ * 期限 표시 — 정책상 "부여한 달 말일 23:59". due_date가 있으면 그 달, 없으면(항목/자동 과제)
+ * created_at 의 달 말일로 계산해 「M月D日 23時59分」으로 표기.
+ */
+function formatDeadline(la: LearningAssignmentRow): string {
+  const base = la.due_date ? new Date(la.due_date) : new Date(la.created_at)
+  const eom = new Date(base.getFullYear(), base.getMonth() + 1, 0)
+  return `${eom.getMonth() + 1}月${eom.getDate()}日 23時59分`
+}
+
 interface Props {
   mentees: Mentee[]
+  /** 課題/理解テスト 배분 모달용 전체 멘티 목록 (target 포함) */
+  allMentees: Mentee[]
   assignmentsByMentee: Record<string, LearningAssignmentRow[]>
   currentRole: string
   learningProgress: Record<string, LearningProgressData>
+  monthlyConfig: MonthlyAssignConfig
 }
 
-export default function AdminTasksClient({ mentees, assignmentsByMentee, learningProgress }: Props) {
+/** 월별 자동부여 설정 영역 키 (생활일본어 5영역) */
+const CONFIG_AREAS = ['vocabulary', 'grammar', 'reading', 'listening', 'kanji'] as const
+
+export default function AdminTasksClient({ mentees, allMentees, assignmentsByMentee, learningProgress, monthlyConfig }: Props) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [message, setMessage] = useState<string | null>(null)
   const [messageType, setMessageType] = useState<'success' | 'error'>('success')
 
-  // Create form state
-  const [showForm, setShowForm] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState('')
-  const [selectedSubcategory, setSelectedSubcategory] = useState('')
-  const [selectedAssignees, setSelectedAssignees] = useState<string[]>([])
-  const [assigneeSearch, setAssigneeSearch] = useState('')
-  const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false)
-  const [devLevelLocks, setDevLevelLocks] = useState<Record<string, boolean>>({})
-  const [loadingLevels, setLoadingLevels] = useState(false)
+  // 課題(JLPT項目) / 理解テスト 배분 모달 (대시보드와 동일한 ItemAssignModal)
+  const [jlptOpen, setJlptOpen] = useState(false)
+  const [quizOpen, setQuizOpen] = useState(false)
 
-  // Mentee-centric state
+  // 월별 자동부여 개수 설정
+  const [cfg, setCfg] = useState<MonthlyAssignConfig>(monthlyConfig)
+
+  // Mentee-centric state (마스터-디테일: 선택 멘티 + 날짜 드롭다운 + 페이징)
   const [searchName, setSearchName] = useState('')
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+  const [selectedMentee, setSelectedMentee] = useState<string | null>(null)
+  const [openDates, setOpenDates] = useState<Record<string, boolean>>({})
+  const [page, setPage] = useState(1)
+
+  function selectMentee(id: string) {
+    setSelectedMentee(id)
+    setPage(1)
+    setOpenDates({})
+  }
 
   // Overdue handling state
   const [reassignDate, setReassignDate] = useState<Record<string, string>>({})
   const [expandedReassign, setExpandedReassign] = useState<Record<string, boolean>>({})
 
-  // Edit state
+  // Edit state — 付与個数(target_count)만 수정 가능. 타이틀·期限·説明은 자동/제거됨.
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editValues, setEditValues] = useState<{ title: string; due_date: string; description: string; target_count: string }>({
-    title: '', due_date: '', description: '', target_count: '',
-  })
+  const [editValues, setEditValues] = useState<{ target_count: string }>({ target_count: '' })
 
   function showMsg(msg: string, type: 'success' | 'error' = 'success') {
     setMessage(msg)
@@ -107,35 +155,11 @@ export default function AdminTasksClient({ mentees, assignmentsByMentee, learnin
     setTimeout(() => setMessage(null), 4000)
   }
 
-  const catConfig = selectedCategory ? ASSIGNMENT_CATEGORIES[selectedCategory] : null
-  const isLevelOnly = catConfig?.levelOnly === true
-  const subcategories = selectedCategory && !isLevelOnly ? catConfig?.subcategories ?? {} : {}
-  const subcatConfig = selectedCategory && selectedSubcategory
-    ? ASSIGNMENT_CATEGORIES[selectedCategory]?.subcategories[selectedSubcategory]
-    : null
-  const hasLevel = isLevelOnly ? true : (subcatConfig?.hasLevel ?? false)
-  const isDevLevel = subcatConfig?.courseSubcategory != null
-
-  const filteredAssignees = mentees.filter(u =>
-    (u.full_name ?? '').toLowerCase().includes(assigneeSearch.toLowerCase()) ||
-    u.email.toLowerCase().includes(assigneeSearch.toLowerCase())
-  )
-
-  function toggleAssignee(userId: string) {
-    setSelectedAssignees(prev => prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId])
-  }
-
-  async function handleCreateLearning(formData: FormData) {
-    if (selectedAssignees.length === 0) { showMsg('1名以上を選択してください', 'error'); return }
+  function handleSaveConfig() {
     startTransition(async () => {
-      const result = await createLearningAssignment(formData)
-      if (result.error) showMsg(result.error, 'error')
-      else {
-        const msg = ('message' in result && result.message) ? result.message : '学習課題を配信しました'
-        showMsg(msg as string)
-        setShowForm(false)
-        setSelectedCategory(''); setSelectedSubcategory(''); setSelectedAssignees([]); setAssigneeSearch(''); setDevLevelLocks({})
-      }
+      const res = await updateMonthlyAssignmentConfig(cfg)
+      if (res.error) showMsg(res.error, 'error')
+      else showMsg('月別自動付与の個数を保存しました')
     })
   }
 
@@ -170,20 +194,12 @@ export default function AdminTasksClient({ mentees, assignmentsByMentee, learnin
 
   function startEdit(la: LearningAssignmentRow) {
     setEditingId(la.id)
-    setEditValues({
-      title: la.title,
-      due_date: la.due_date ? la.due_date.slice(0, 10) : '',
-      description: la.description ?? '',
-      target_count: la.target_count != null ? String(la.target_count) : '',
-    })
+    setEditValues({ target_count: la.target_count != null ? String(la.target_count) : '' })
   }
 
   function handleSaveEdit(la: LearningAssignmentRow) {
     startTransition(async () => {
       const result = await updateLearningAssignment(la.id, {
-        title: editValues.title,
-        due_date: editValues.due_date || null,
-        description: editValues.description,
         target_count: la.target_count != null && editValues.target_count !== ''
           ? parseInt(editValues.target_count, 10)
           : undefined,
@@ -193,17 +209,9 @@ export default function AdminTasksClient({ mentees, assignmentsByMentee, learnin
     })
   }
 
-  async function loadDevLevels(assigneeId: string, courseSubcategory: string) {
-    setLoadingLevels(true)
-    try {
-      const result = await getAssigneeUnlockedLevels(assigneeId, courseSubcategory)
-      const locks: Record<string, boolean> = {}
-      for (const l of result.levels) locks[l.difficulty] = l.isLocked
-      setDevLevelLocks(locks)
-    } finally {
-      setLoadingLevels(false)
-    }
-  }
+  const modalMentees = allMentees.map(m => ({
+    id: m.id, full_name: m.full_name, email: m.email, target: m.target_certification ?? null,
+  }))
 
   const filteredMentees = mentees.filter(m =>
     !searchName ||
@@ -226,6 +234,175 @@ export default function AdminTasksClient({ mentees, assignmentsByMentee, learnin
     return parts.join(' · ') || '-'
   }
 
+  /** 개별 과제 행 (요약 드릴다운 / 퀴즈형 평면 리스트 공용) */
+  function renderAssignmentRow(la: LearningAssignmentRow) {
+    return (
+      <li key={la.id} className="px-4 py-3">
+        {editingId === la.id ? (
+          /* ── Edit form (付与個数のみ) ── */
+          <div className="space-y-2">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">付与個数</label>
+              <input
+                type="number"
+                min={1}
+                value={editValues.target_count}
+                onChange={e => setEditValues(v => ({ ...v, target_count: e.target.value }))}
+                className="mt-0.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setEditingId(null)}
+                className="rounded-md bg-gray-200 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => handleSaveEdit(la)}
+                disabled={pending}
+                className="rounded-md bg-indigo-600 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+              >
+                保存
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* ── Display row ── */
+          <div className="flex items-start gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-medium text-gray-900 dark:text-white">{la.title}</span>
+                <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[la.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                  {statusLabels[la.status] ?? la.status}
+                </span>
+              </div>
+              <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                {categoryDisplayLabel(la)} &gt; {subcategoryLabel(la)}
+                {la.content_level && ` (${getContentLevelLabel(la.category, la.content_level)})`}
+                {' · '}{progressLabel(la)}
+                {' · '}付与 {new Date(la.created_at).toLocaleDateString('ja-JP')}
+                {' · '}期限 {formatDeadline(la)}
+              </div>
+              {la.status === 'overdue' && (
+                <div className="mt-1.5 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs text-red-700 dark:bg-red-900/20 dark:text-red-300">
+                  <span className="font-medium">遅延理由:</span>{' '}
+                  {la.overdue_reason ?? '未提出'}
+                  {la.overdue_reason_at && (
+                    <span className="ml-1 text-red-400">({new Date(la.overdue_reason_at).toLocaleDateString('ja-JP')})</span>
+                  )}
+                </div>
+              )}
+              {la.status === 'overdue' && expandedReassign[la.id] && (
+                <div className="mt-1.5 flex items-center gap-1">
+                  <input
+                    type="date"
+                    value={reassignDate[la.id] ?? ''}
+                    onChange={e => setReassignDate(prev => ({ ...prev, [la.id]: e.target.value }))}
+                    className="rounded border border-gray-300 px-2 py-1 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  />
+                  <button onClick={() => handleReassign(la.id)} disabled={pending}
+                    className="rounded-md bg-indigo-600 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50">確定</button>
+                  <button onClick={() => {
+                    setExpandedReassign(prev => { const n = { ...prev }; delete n[la.id]; return n })
+                    setReassignDate(prev => { const n = { ...prev }; delete n[la.id]; return n })
+                  }} className="rounded-md bg-gray-200 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">取消</button>
+                </div>
+              )}
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                onClick={() => router.push(`/admin/reports?mentee=${la.assigned_to}`)}
+                className="text-xs text-gray-500 hover:underline dark:text-gray-400"
+              >
+                詳細
+              </button>
+              {la.status === 'awaiting_confirmation' && (
+                <button onClick={() => handleConfirmAssignment(la.id)} disabled={pending}
+                  className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50">確認完了</button>
+              )}
+              {la.status === 'overdue' && !expandedReassign[la.id] && (
+                <button onClick={() => setExpandedReassign(prev => ({ ...prev, [la.id]: true }))} disabled={pending}
+                  className="rounded-md bg-indigo-600 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50">再配信</button>
+              )}
+              {la.target_count != null && (
+                <button onClick={() => startEdit(la)} disabled={pending}
+                  className="rounded-md bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">修正</button>
+              )}
+              <button onClick={() => handleDeleteLearning(la.id)} disabled={pending}
+                className="text-xs text-red-600 hover:underline disabled:opacity-50 dark:text-red-400">削除</button>
+            </div>
+          </div>
+        )}
+      </li>
+    )
+  }
+
+  /** 선택된 멘티의 과제 이력 상세 — 부여한 날짜별 드롭다운 + 20건 페이징 (최신순) */
+  function renderMenteeDetail(menteeId: string) {
+    const list = assignmentsByMentee[menteeId] ?? []
+    if (list.length === 0) {
+      return <div className="px-4 py-12 text-center text-sm text-gray-400">配信された課題がありません</div>
+    }
+    const sorted = [...list].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
+    const safePage = Math.min(page, totalPages)
+    const pageItems = sorted.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
+
+    const byDate = new Map<string, LearningAssignmentRow[]>()
+    for (const a of pageItems) {
+      const d = new Date(a.created_at).toLocaleDateString('ja-JP')
+      if (!byDate.has(d)) byDate.set(d, [])
+      byDate.get(d)!.push(a)
+    }
+
+    return (
+      <div>
+        {/* 20건 페이징 영역 — 고정 높이, 내부 스크롤 */}
+        <div className="h-[600px] divide-y divide-gray-100 overflow-y-auto dark:divide-gray-700">
+          {[...byDate.entries()].map(([date, rows]) => {
+            const open = openDates[date] !== false
+            return (
+              <div key={date}>
+                <button
+                  onClick={() => setOpenDates(prev => ({ ...prev, [date]: !prev[date] }))}
+                  className="flex w-full items-center gap-2 bg-gray-50 px-4 py-2 text-left text-xs font-semibold text-gray-600 hover:bg-gray-100 dark:bg-gray-900/30 dark:text-gray-300 dark:hover:bg-gray-900/50"
+                >
+                  {open ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-gray-400" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0 text-gray-400" />}
+                  {date}
+                  <span className="font-normal text-gray-400">· {rows.length}件</span>
+                </button>
+                {open && (
+                  <ul className="divide-y divide-gray-100 dark:divide-gray-700">
+                    {rows.map(renderAssignmentRow)}
+                  </ul>
+                )}
+              </div>
+            )
+          })}
+        </div>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between gap-2 border-t border-gray-100 px-4 py-2.5 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
+            <span>{sorted.length}件中 {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, sorted.length)}</span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={safePage <= 1}
+                className="rounded-md border border-gray-200 px-2 py-1 hover:bg-gray-50 disabled:opacity-40 dark:border-gray-600 dark:hover:bg-gray-700"
+              >前へ</button>
+              <span className="px-1 tabular-nums">{safePage} / {totalPages}</span>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={safePage >= totalPages}
+                className="rounded-md border border-gray-200 px-2 py-1 hover:bg-gray-50 disabled:opacity-40 dark:border-gray-600 dark:hover:bg-gray-700"
+              >次へ</button>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="mt-6">
       {message && (
@@ -240,349 +417,143 @@ export default function AdminTasksClient({ mentees, assignmentsByMentee, learnin
         </div>
       )}
 
-      {/* Create button + form */}
-      <button
-        onClick={() => setShowForm(!showForm)}
-        className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-      >
-        {showForm ? 'キャンセル' : <><Plus className="h-4 w-4" /> 学習課題配信</>}
-      </button>
-
-      {showForm && (
-        <form action={handleCreateLearning} className="mt-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-          <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">新規学習課題</h3>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                配分対象 * <span className="text-xs font-normal text-gray-400">({selectedAssignees.length}名選択)</span>
-              </label>
-              {selectedAssignees.map(id => (
-                <input key={id} type="hidden" name="assigned_to" value={id} />
-              ))}
-              {selectedAssignees.length > 0 && (
-                <div className="mt-1 flex flex-wrap gap-1.5">
-                  {selectedAssignees.map(id => {
-                    const u = mentees.find(u => u.id === id)
-                    return (
-                      <span key={id} className="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 px-2.5 py-1 text-xs font-medium text-indigo-600 ring-1 ring-indigo-500/20 dark:text-indigo-400">
-                        {u ? <NameRuby name={u.full_name} fallback={u.email ?? id} /> : id}
-                        <button type="button" onClick={() => toggleAssignee(id)} className="ml-0.5 text-indigo-400 hover:text-indigo-600">×</button>
-                      </span>
-                    )
-                  })}
-                </div>
-              )}
-              <div className="relative mt-1">
-                <input
-                  type="text"
-                  placeholder="名前またはメールで検索..."
-                  value={assigneeSearch}
-                  onChange={e => { setAssigneeSearch(e.target.value); setShowAssigneeDropdown(true) }}
-                  onFocus={() => setShowAssigneeDropdown(true)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-                />
-                {showAssigneeDropdown && (
-                  <div className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-700">
-                    {filteredAssignees.length === 0 ? (
-                      <div className="px-3 py-2 text-xs text-gray-400">該当なし</div>
-                    ) : (
-                      filteredAssignees.map(u => (
-                        <label key={u.id} className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-600">
-                          <input
-                            type="checkbox"
-                            checked={selectedAssignees.includes(u.id)}
-                            onChange={() => toggleAssignee(u.id)}
-                            className="h-3.5 w-3.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                          />
-                          <span className="text-gray-900 dark:text-white"><NameRuby name={u.full_name} fallback={u.email} /></span>
-                          <span className="ml-auto text-[10px] text-gray-400">{u.email}</span>
-                        </label>
-                      ))
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => setShowAssigneeDropdown(false)}
-                      className="w-full border-t border-gray-100 px-3 py-1.5 text-center text-xs text-gray-500 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-600"
-                    >
-                      閉じる
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">カテゴリ *</label>
-              <select
-                name="category"
-                required
-                value={selectedCategory}
-                onChange={e => { setSelectedCategory(e.target.value); setSelectedSubcategory(''); setDevLevelLocks({}) }}
-                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-              >
-                <option value="">選択...</option>
-                {Object.entries(ASSIGNMENT_CATEGORIES).map(([key, cat]) => (
-                  <option key={key} value={key}>{cat.label}</option>
-                ))}
-              </select>
-            </div>
-            {isLevelOnly ? (
-              <input type="hidden" name="subcategory" value="all" />
-            ) : (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">サブカテゴリ *</label>
-                <select
-                  name="subcategory"
-                  required
-                  value={selectedSubcategory}
-                  onChange={e => {
-                    setSelectedSubcategory(e.target.value)
-                    setDevLevelLocks({})
-                    const newSubcatConfig = ASSIGNMENT_CATEGORIES[selectedCategory]?.subcategories[e.target.value]
-                    if (selectedAssignees[0] && newSubcatConfig?.courseSubcategory) {
-                      loadDevLevels(selectedAssignees[0], newSubcatConfig.courseSubcategory)
-                    }
-                  }}
-                  disabled={!selectedCategory}
-                  className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                >
-                  <option value="">選択...</option>
-                  {Object.entries(subcategories).map(([key, sub]) => (
-                    <option key={key} value={key}>{sub.label}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-            {hasLevel && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">レベル{isLevelOnly || isDevLevel ? ' *' : ''}</label>
-                <select name="content_level" required={isLevelOnly || isDevLevel}
-                  disabled={isDevLevel && loadingLevels}
-                  className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
-                  <option value="">{isLevelOnly || isDevLevel ? '選択...' : '全レベル'}</option>
-                  {isDevLevel ? (
-                    DEV_LEVELS.map(level => (
-                      <option key={level.value} value={level.value} disabled={devLevelLocks[level.value] === true}>
-                        {level.label}{devLevelLocks[level.value] === true ? ' (ロック)' : ''}
-                      </option>
-                    ))
-                  ) : (
-                    JLPT_LEVELS.map(level => (
-                      <option key={level} value={level}>{level}</option>
-                    ))
-                  )}
-                </select>
-              </div>
-            )}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">タイトル *</label>
-              <input name="title" required
-                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">期限</label>
-              <input name="due_date" type="date"
-                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">説明</label>
-              <textarea name="description" rows={2}
-                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
-            </div>
-          </div>
-          <button type="submit" disabled={pending}
-            className="mt-4 rounded-lg bg-indigo-600 px-6 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
-            {pending ? '配信中...' : '配信'}
-          </button>
-        </form>
-      )}
-
-      {/* Mentee search */}
-      <div className="mt-4">
-        <input
-          type="text"
-          placeholder="メンティー名で検索..."
-          value={searchName}
-          onChange={e => setSearchName(e.target.value)}
-          className="w-full max-w-xs rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-        />
+      {/* 課題(JLPT項目) / 理解テスト 배분 — 대시보드와 동일한 ItemAssignModal */}
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setJlptOpen(true)}
+          disabled={allMentees.length === 0}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Languages className="h-4 w-4" /> 課題
+        </button>
+        <button
+          type="button"
+          onClick={() => setQuizOpen(true)}
+          disabled={allMentees.length === 0}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Plus className="h-4 w-4" /> 理解テスト
+        </button>
       </div>
 
-      {/* Mentee-centric accordion */}
-      <div className="mt-3 space-y-2">
-        {filteredMentees.map(m => {
-          const list = assignmentsByMentee[m.id] ?? []
-          const overdueCount = list.filter(a => a.status === 'overdue').length
-          const isOpen = expanded[m.id] === true
-          return (
-            <div key={m.id} className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-              {/* Mentee header */}
-              <button
-                onClick={() => setExpanded(prev => ({ ...prev, [m.id]: !prev[m.id] }))}
-                className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50"
-              >
-                {isOpen ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
-                <span className="font-medium text-gray-900 dark:text-white">
-                  <NameRuby name={m.full_name} fallback={m.email} />
-                </span>
-                <span className="text-xs text-gray-400">{m.email}</span>
-                <span className="ml-auto flex items-center gap-2">
-                  {overdueCount > 0 && (
-                    <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                      遅延 {overdueCount}
-                    </span>
-                  )}
-                  <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-                    課題 {list.length}
-                  </span>
-                </span>
-              </button>
+      <ItemAssignModal
+        open={jlptOpen}
+        onClose={() => setJlptOpen(false)}
+        mentees={modalMentees}
+      />
+      <ItemAssignModal
+        open={quizOpen}
+        onClose={() => setQuizOpen(false)}
+        mentees={modalMentees}
+        categories={['seikatsu-quiz', 'business-jp-quiz']}
+        heading="理解テストを割り当てる（増分）"
+      />
 
-              {/* Assignment dropdown */}
-              {isOpen && (
-                <div className="border-t border-gray-100 dark:border-gray-700">
-                  {list.length === 0 ? (
-                    <div className="px-4 py-6 text-center text-sm text-gray-400">配信された課題がありません</div>
-                  ) : (
-                    <ul className="divide-y divide-gray-100 dark:divide-gray-700">
-                      {list.map(la => (
-                        <li key={la.id} className="px-4 py-3">
-                          {editingId === la.id ? (
-                            /* ── Edit form ── */
-                            <div className="space-y-2">
-                              <div>
-                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">タイトル</label>
-                                <input
-                                  value={editValues.title}
-                                  onChange={e => setEditValues(v => ({ ...v, title: e.target.value }))}
-                                  className="mt-0.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                />
-                              </div>
-                              <div className="grid gap-2 sm:grid-cols-2">
-                                <div>
-                                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">期限</label>
-                                  <input
-                                    type="date"
-                                    value={editValues.due_date}
-                                    onChange={e => setEditValues(v => ({ ...v, due_date: e.target.value }))}
-                                    className="mt-0.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                  />
-                                </div>
-                                {la.target_count != null && (
-                                  <div>
-                                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">付与個数</label>
-                                    <input
-                                      type="number"
-                                      min={1}
-                                      value={editValues.target_count}
-                                      onChange={e => setEditValues(v => ({ ...v, target_count: e.target.value }))}
-                                      className="mt-0.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                              <div>
-                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">説明</label>
-                                <textarea
-                                  rows={2}
-                                  value={editValues.description}
-                                  onChange={e => setEditValues(v => ({ ...v, description: e.target.value }))}
-                                  className="mt-0.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                />
-                              </div>
-                              <div className="flex justify-end gap-2">
-                                <button
-                                  onClick={() => setEditingId(null)}
-                                  className="rounded-md bg-gray-200 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
-                                >
-                                  取消
-                                </button>
-                                <button
-                                  onClick={() => handleSaveEdit(la)}
-                                  disabled={pending}
-                                  className="rounded-md bg-indigo-600 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
-                                >
-                                  保存
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            /* ── Display row ── */
-                            <div className="flex items-start gap-3">
-                              <div className="min-w-0 flex-1">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <span className="text-sm font-medium text-gray-900 dark:text-white">{la.title}</span>
-                                  <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[la.status] ?? 'bg-gray-100 text-gray-600'}`}>
-                                    {statusLabels[la.status] ?? la.status}
-                                  </span>
-                                </div>
-                                <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                  {getCategoryLabel(la.category)} &gt; {getSubcategoryLabel(la.category, la.subcategory)}
-                                  {la.content_level && ` (${getContentLevelLabel(la.category, la.content_level)})`}
-                                  {' · '}{progressLabel(la)}
-                                  {' · '}期限 {la.due_date ? new Date(la.due_date).toLocaleDateString('ja-JP') : '-'}
-                                </div>
-                                {la.status === 'overdue' && (
-                                  <div className="mt-1.5 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs text-red-700 dark:bg-red-900/20 dark:text-red-300">
-                                    <span className="font-medium">遅延理由:</span>{' '}
-                                    {la.overdue_reason ?? '未提出'}
-                                    {la.overdue_reason_at && (
-                                      <span className="ml-1 text-red-400">({new Date(la.overdue_reason_at).toLocaleDateString('ja-JP')})</span>
-                                    )}
-                                  </div>
-                                )}
-                                {la.status === 'overdue' && expandedReassign[la.id] && (
-                                  <div className="mt-1.5 flex items-center gap-1">
-                                    <input
-                                      type="date"
-                                      value={reassignDate[la.id] ?? ''}
-                                      onChange={e => setReassignDate(prev => ({ ...prev, [la.id]: e.target.value }))}
-                                      className="rounded border border-gray-300 px-2 py-1 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                    />
-                                    <button onClick={() => handleReassign(la.id)} disabled={pending}
-                                      className="rounded-md bg-indigo-600 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50">確定</button>
-                                    <button onClick={() => {
-                                      setExpandedReassign(prev => { const n = { ...prev }; delete n[la.id]; return n })
-                                      setReassignDate(prev => { const n = { ...prev }; delete n[la.id]; return n })
-                                    }} className="rounded-md bg-gray-200 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">取消</button>
-                                  </div>
-                                )}
-                              </div>
-                              <div className="flex shrink-0 items-center gap-2">
-                                <button
-                                  onClick={() => router.push(`/admin/reports?mentee=${la.assigned_to}`)}
-                                  className="text-xs text-gray-500 hover:underline dark:text-gray-400"
-                                >
-                                  詳細
-                                </button>
-                                {la.status === 'awaiting_confirmation' && (
-                                  <button onClick={() => handleConfirmAssignment(la.id)} disabled={pending}
-                                    className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50">確認完了</button>
-                                )}
-                                {la.status === 'overdue' && !expandedReassign[la.id] && (
-                                  <button onClick={() => setExpandedReassign(prev => ({ ...prev, [la.id]: true }))} disabled={pending}
-                                    className="rounded-md bg-indigo-600 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50">再配信</button>
-                                )}
-                                <button onClick={() => startEdit(la)} disabled={pending}
-                                  className="rounded-md bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">修正</button>
-                                <button onClick={() => handleDeleteLearning(la.id)} disabled={pending}
-                                  className="text-xs text-red-600 hover:underline disabled:opacity-50 dark:text-red-400">削除</button>
-                              </div>
-                            </div>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              )}
+      {/* 월별 자동부여 개수 설정 (생활일본어) */}
+      <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">月別自動付与の個数（生活日本語）</h3>
+          <button
+            type="button"
+            onClick={handleSaveConfig}
+            disabled={pending}
+            className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+          >保存</button>
+        </div>
+        <p className="mt-1 text-xs text-gray-400">毎月1日、目標レベル設定済みのメンティーへ自動付与される領域別の項目数。</p>
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
+          {CONFIG_AREAS.map(a => (
+            <div key={a}>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300">{areaLabel('seikatsu', a)}</label>
+              <input
+                type="number"
+                min={0}
+                value={cfg[a]}
+                onChange={e => setCfg(prev => ({ ...prev, [a]: Math.max(0, parseInt(e.target.value || '0', 10) || 0) }))}
+                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              />
             </div>
-          )
-        })}
-        {filteredMentees.length === 0 && (
-          <div className="rounded-xl border border-gray-200 bg-white py-8 text-center text-sm text-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500">
-            {mentees.length === 0 ? 'メンティーがいません' : '該当するメンティーがいません'}
+          ))}
+        </div>
+      </div>
+
+      {/* 마스터-디테일: 좌측 멘티 목록 / 우측 선택 멘티 상세 (높이 독립) */}
+      <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-start">
+        {/* Left: mentee list */}
+        <div className="w-full shrink-0 lg:max-w-xs">
+          <input
+            type="text"
+            placeholder="メンティー名で検索..."
+            value={searchName}
+            onChange={e => setSearchName(e.target.value)}
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+          />
+          <div className="mt-3 divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800">
+            {filteredMentees.map(m => {
+              const list = assignmentsByMentee[m.id] ?? []
+              const overdueCount = list.filter(a => a.status === 'overdue').length
+              const sel = selectedMentee === m.id
+              return (
+                <button
+                  key={m.id}
+                  onClick={() => selectMentee(m.id)}
+                  className={`flex w-full items-center gap-2 px-3 py-2.5 text-left transition-colors ${
+                    sel
+                      ? 'bg-indigo-50 dark:bg-indigo-500/15'
+                      : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                  }`}
+                >
+                  <span className="min-w-0 flex-1 truncate font-medium text-gray-900 dark:text-white">
+                    <NameRuby name={m.full_name} fallback={m.email} />
+                  </span>
+                  {overdueCount > 0 && (
+                    <span className="inline-flex shrink-0 items-center rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">遅延 {overdueCount}</span>
+                  )}
+                  <span className="inline-flex shrink-0 items-center rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">{list.length}</span>
+                </button>
+              )
+            })}
+            {filteredMentees.length === 0 && (
+              <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+                {mentees.length === 0 ? 'メンティーがいません' : '該当なし'}
+              </div>
+            )}
           </div>
-        )}
+        </div>
+
+        {/* Right: selected mentee detail */}
+        <div className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+          {(() => {
+            const sm = selectedMentee ? mentees.find(x => x.id === selectedMentee) : null
+            if (!sm) {
+              return (
+                <div className="flex min-h-[20rem] items-center justify-center px-4 py-16 text-center text-sm text-gray-400 dark:text-gray-500">
+                  左のメンティーを選択すると、課題履歴が表示されます
+                </div>
+              )
+            }
+            return (
+              <>
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-1 border-b border-gray-100 px-4 py-3 dark:border-gray-700">
+                  <span className="flex items-center gap-2">
+                    <span className="font-medium text-gray-500 dark:text-gray-400">日本語メンター</span>
+                    {sm.japanese_mentor_name
+                      ? <span className="font-semibold text-gray-900 dark:text-white"><NameRuby name={sm.japanese_mentor_name} /></span>
+                      : <span className="text-gray-400">未割り当て</span>}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className="font-medium text-gray-500 dark:text-gray-400">技術メンター</span>
+                    {sm.tech_mentor_name
+                      ? <span className="font-semibold text-gray-900 dark:text-white"><NameRuby name={sm.tech_mentor_name} /></span>
+                      : <span className="text-gray-400">未割り当て</span>}
+                  </span>
+                </div>
+                {renderMenteeDetail(sm.id)}
+              </>
+            )
+          })()}
+        </div>
       </div>
     </div>
   )

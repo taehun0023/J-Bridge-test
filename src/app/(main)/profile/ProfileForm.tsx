@@ -62,7 +62,7 @@ function buildFullName(parts: NameParts): string {
   return katakana ? `${kanji} (${katakana})` : kanji
 }
 
-export default function ProfileForm({ profile, mentorName }: { profile: Profile | null; mentorName?: string | null }) {
+export default function ProfileForm({ profile, japaneseMentorName, techMentorName, role }: { profile: Profile | null; japaneseMentorName?: string | null; techMentorName?: string | null; role?: string }) {
   const router = useRouter()
   const initialParts = parseFullName(profile?.full_name ?? null)
   const [lastName, setLastName] = useState(initialParts.lastName)
@@ -240,19 +240,25 @@ export default function ProfileForm({ profile, mentorName }: { profile: Profile 
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">担当メンター</label>
-          <div className="mt-1 text-sm">
-            {mentorName ? (
-              <NameRuby name={mentorName} />
-            ) : (
-              <span className="text-zinc-400">未割り当て</span>
-            )}
+        {role === 'mentee' && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">日本語メンター</label>
+              <div className="mt-1 text-sm">
+                {japaneseMentorName ? <NameRuby name={japaneseMentorName} /> : <span className="text-zinc-400">未割り当て</span>}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">技術メンター</label>
+              <div className="mt-1 text-sm">
+                {techMentorName ? <NameRuby name={techMentorName} /> : <span className="text-zinc-400">未割り当て</span>}
+              </div>
+            </div>
+            <p className="mt-0.5 text-[10px] text-zinc-500 dark:text-zinc-400 sm:col-span-2">
+              管理者が割り当てます。
+            </p>
           </div>
-          <p className="mt-1.5 text-[10px] text-zinc-500 dark:text-zinc-400">
-            管理者が割り当てます。
-          </p>
-        </div>
+        )}
 
         {saveError && (
           <div className="rounded-xl px-3 py-2 text-sm bg-red-500/10 text-red-400 ring-1 ring-red-500/20">

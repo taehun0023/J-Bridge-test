@@ -2,7 +2,7 @@
 
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { requireAdminOrMentor, requireAuth } from '@/lib/auth-helpers'
+import { requireAdmin, requireAdminOrMentor, requireAuth } from '@/lib/auth-helpers'
 import { createNotification } from './notifications'
 import { getUserDisplayName } from '@/lib/notification-helpers'
 import { logAuditEvent } from '@/app/actions/audit'
@@ -635,17 +635,60 @@ export async function getMyItemAssignmentProgress(): Promise<MyItemRow[]> {
 
 // ─── 월간 자동 부여 (매달 1회, lazy: 달 바뀐 뒤 첫 접근 시 실행) ───
 
-const MONTHLY_COUNTS: Record<string, number> = { vocabulary: 100, grammar: 10, reading: 10, listening: 10, kanji: 170 }
+export interface MonthlyAssignConfig {
+  vocabulary: number; grammar: number; reading: number; listening: number; kanji: number
+}
+const DEFAULT_MONTHLY_COUNTS: MonthlyAssignConfig = { vocabulary: 100, grammar: 10, reading: 10, listening: 10, kanji: 170 }
+
+/** 월별 자동부여 개수 설정 조회 (없으면 기본값) */
+export async function getMonthlyAssignmentConfig(): Promise<MonthlyAssignConfig> {
+  const service = createServiceRoleClient()
+  if (!service) return DEFAULT_MONTHLY_COUNTS
+  const { data } = await service
+    .from('monthly_assignment_config')
+    .select('vocabulary, grammar, reading, listening, kanji')
+    .eq('id', true)
+    .maybeSingle()
+  if (!data) return DEFAULT_MONTHLY_COUNTS
+  return {
+    vocabulary: data.vocabulary ?? DEFAULT_MONTHLY_COUNTS.vocabulary,
+    grammar: data.grammar ?? DEFAULT_MONTHLY_COUNTS.grammar,
+    reading: data.reading ?? DEFAULT_MONTHLY_COUNTS.reading,
+    listening: data.listening ?? DEFAULT_MONTHLY_COUNTS.listening,
+    kanji: data.kanji ?? DEFAULT_MONTHLY_COUNTS.kanji,
+  }
+}
+
+/** 월별 자동부여 개수 설정 수정 (관리자 전용) */
+export async function updateMonthlyAssignmentConfig(counts: MonthlyAssignConfig) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error } as const
+  const service = createServiceRoleClient()
+  if (!service) return { error: 'サービスが利用できません' }
+  const clean = (n: unknown) => Math.max(0, Math.floor(Number(n) || 0))
+  const { error } = await service
+    .from('monthly_assignment_config')
+    .update({
+      vocabulary: clean(counts.vocabulary), grammar: clean(counts.grammar), reading: clean(counts.reading),
+      listening: clean(counts.listening), kanji: clean(counts.kanji),
+      updated_at: new Date().toISOString(), updated_by: auth.user.id,
+    })
+    .eq('id', true)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/tasks')
+  return { success: true }
+}
 
 /**
  * 목표 레벨이 설정된 멘티 전원에게 그 달 1회 항목과제를 자동 부여한다.
- * (어휘100·문법10·독해10·청해10·한자170, 각자 잔량까지만 캡, 앞에서부터 누적)
+ * 영역별 개수는 monthly_assignment_config(관리자 설정)에서 읽음, 각자 잔량까지만 캡·누적.
  * dedup: profiles.last_auto_assign_month. 크론 없이 대시보드 로드 시 호출.
  */
 export async function runMonthlyAutoAssignment(): Promise<void> {
   const service = createServiceRoleClient()
   if (!service) return
 
+  const monthlyCounts = await getMonthlyAssignmentConfig()
   const now = new Date()
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
@@ -669,7 +712,7 @@ export async function runMonthlyAutoAssignment(): Promise<void> {
     const assignedBy = adminRow?.id ?? m.id
 
     for (const area of areas) {
-      const want = MONTHLY_COUNTS[area] ?? 0
+      const want = monthlyCounts[area as keyof MonthlyAssignConfig] ?? 0
       if (want <= 0) continue
       const spec = areaSpec('seikatsu', area)
       if (!spec) continue

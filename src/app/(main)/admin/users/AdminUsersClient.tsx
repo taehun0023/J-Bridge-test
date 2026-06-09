@@ -3,10 +3,9 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateUserRole, createUserAccount, updateMentorSpecialty, deleteUser, assignMentor } from '@/app/actions/admin/users'
-import { Trash2, Plus } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import NameRuby from '@/components/ui/NameRuby'
 import EditUserModal from './EditUserModal'
-import AssignTaskModal from '@/app/(main)/dashboard/AssignTaskModal'
 
 interface User {
   id: string
@@ -17,7 +16,8 @@ interface User {
   is_onboarded: boolean
   is_japanese: boolean
   created_at: string
-  assigned_mentor_id: string | null
+  assigned_japanese_mentor_id: string | null
+  assigned_tech_mentor_id: string | null
   target_certification: string | null
   jlpt_level: string | null
   it_certifications: string | null
@@ -26,6 +26,7 @@ interface User {
 interface Mentor {
   id: string
   full_name: string | null
+  mentor_specialty: string | null
 }
 
 interface Props {
@@ -41,17 +42,14 @@ export default function AdminUsersClient({ users, mentors }: Props) {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null)
   const [editTarget, setEditTarget] = useState<User | null>(null)
-  const [assignTarget, setAssignTarget] = useState<User | null>(null)
 
   const filtered = users.filter(u =>
     (u.full_name ?? '').toLowerCase().includes(search.toLowerCase()) ||
     u.email.toLowerCase().includes(search.toLowerCase())
   )
 
-  // 理解テスト(課題) 配信モーダル用メンティー一覧
-  const menteeOptions = users
-    .filter(u => u.role === 'mentee')
-    .map(u => ({ id: u.id, full_name: u.full_name, email: u.email }))
+  const japaneseMentors = mentors.filter(m => m.mentor_specialty === 'japanese')
+  const techMentors = mentors.filter(m => m.mentor_specialty === 'technical')
 
   function handleRoleChange(userId: string, newRole: string) {
     startTransition(async () => {
@@ -81,9 +79,9 @@ export default function AdminUsersClient({ users, mentors }: Props) {
     })
   }
 
-  function handleMentorChange(menteeId: string, mentorId: string) {
+  function handleMentorChange(menteeId: string, mentorId: string, specialty: 'japanese' | 'technical') {
     startTransition(async () => {
-      const result = await assignMentor(menteeId, mentorId || null)
+      const result = await assignMentor(menteeId, mentorId || null, specialty)
       if (result.error) {
         setMessage({ type: 'error', text: result.error })
         setTimeout(() => setMessage(null), 3000)
@@ -196,7 +194,8 @@ export default function AdminUsersClient({ users, mentors }: Props) {
               <tr className="bg-white/[0.02] dark:bg-white/[0.02]">
                 <th className="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400">名前</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">メール</th>
-                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">担当メンター</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">日本語メンター</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">技術メンター</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">役割</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">登録日</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400"></th>
@@ -223,20 +222,39 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                     )}
                   </td>
                   <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">{user.email}</td>
-                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
-                    {user.role === 'mentee' ? (
-                      <select
-                        value={user.assigned_mentor_id ?? ''}
-                        onChange={e => handleMentorChange(user.id, e.target.value)}
-                        disabled={pending}
-                        className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
-                      >
-                        <option value="">未指定</option>
-                        {mentors.map(m => (
-                          <option key={m.id} value={m.id}>{m.full_name ?? m.id}</option>
-                        ))}
-                      </select>
-                    ) : user.role === 'mentor' ? (
+                  {user.role === 'mentee' ? (
+                    <>
+                      <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
+                        <select
+                          value={user.assigned_japanese_mentor_id ?? ''}
+                          onChange={e => handleMentorChange(user.id, e.target.value, 'japanese')}
+                          disabled={pending}
+                          title="日本語メンター"
+                          className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
+                        >
+                          <option value="">未指定</option>
+                          {japaneseMentors.map(m => (
+                            <option key={m.id} value={m.id}>{m.full_name ?? m.id}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
+                        <select
+                          value={user.assigned_tech_mentor_id ?? ''}
+                          onChange={e => handleMentorChange(user.id, e.target.value, 'technical')}
+                          disabled={pending}
+                          title="技術メンター"
+                          className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
+                        >
+                          <option value="">未指定</option>
+                          {techMentors.map(m => (
+                            <option key={m.id} value={m.id}>{m.full_name ?? m.id}</option>
+                          ))}
+                        </select>
+                      </td>
+                    </>
+                  ) : user.role === 'mentor' ? (
+                    <td colSpan={2} className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
                       <select
                         value={user.mentor_specialty ?? ''}
                         onChange={e => handleSpecialtyChange(user.id, e.target.value)}
@@ -248,10 +266,12 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                         <option value="japanese">日本語</option>
                         <option value="technical">技術</option>
                       </select>
-                    ) : (
+                    </td>
+                  ) : (
+                    <td colSpan={2} className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center dark:border-white/[0.06]">
                       <span className="text-xs text-zinc-400">—</span>
-                    )}
-                  </td>
+                    </td>
+                  )}
                   <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center dark:border-white/[0.06]">
                     <select
                       value={user.role}
@@ -269,17 +289,6 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                   </td>
                   <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center dark:border-white/[0.06]">
                     <div className="flex items-center justify-center gap-1">
-                      {user.role === 'mentee' && (
-                        <button
-                          onClick={() => setAssignTarget(user)}
-                          disabled={pending}
-                          className="inline-flex items-center gap-1 rounded-lg bg-indigo-500/10 px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-500/20 disabled:opacity-50 dark:text-indigo-300"
-                          title="課題を割り当てる"
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                          課題
-                        </button>
-                      )}
                       <button
                         onClick={() => setDeleteTarget(user)}
                         disabled={pending}
@@ -311,14 +320,6 @@ export default function AdminUsersClient({ users, mentors }: Props) {
             setTimeout(() => setMessage(null), 3000)
             router.refresh()
           }}
-        />
-      )}
-      {assignTarget && (
-        <AssignTaskModal
-          open={!!assignTarget}
-          onClose={() => setAssignTarget(null)}
-          mentees={menteeOptions}
-          initialMenteeIds={[assignTarget.id]}
         />
       )}
       {deleteTarget && (
