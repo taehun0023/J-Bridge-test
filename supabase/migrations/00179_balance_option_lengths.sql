@@ -1,0 +1,168 @@
+-- ============================================================
+-- 00179_balance_option_lengths.sql
+-- ============================================================
+-- 콘텐츠 수정: 종합시험(생활일본어) 독해/청해 풀에서 "정답 보기가 유일하게
+-- 가장 길다" 패턴(83문제, 정답이 최장 오답보다 3자 이상 긴 경우)을 해소.
+-- 오답 보기만 재작성(의미는 명백한 오답 유지, 길이 보강). 정답 보기는 불변.
+-- 대상: 마스터 퀴즈 a0000001 + jlpt_reading/jlpt_listening 풀, UPDATE 151건.
+-- 생성: scripts/build-balance-migration.mjs (감사: scripts/audit-option-balance.mjs)
+-- 주의: WHERE에 기존 option_text를 포함해 멱등 적용 (이미 적용된 행은 0건 매치).
+
+BEGIN;
+
+UPDATE quiz_question_options SET option_text = '大規模ショッピングモールや商業施設を積極的に地域へ誘致すること' WHERE id = '47ea2d63-bbbc-47bc-bab0-b3f52dfeb1ad' AND option_text = '大規模ショッピングモールの誘致';
+UPDATE quiz_question_options SET option_text = '製造業の工場を新たに誘致して雇用を拡大すること' WHERE id = 'bd8ed59f-8949-42ec-8534-18e02238e75d' AND option_text = '工場建設の誘致';
+UPDATE quiz_question_options SET option_text = '近隣都市とを結ぶ高速道路を整備して物流を改善すること' WHERE id = '07950bbe-953e-494b-b907-77a5dc2630ff' AND option_text = '高速道路の建設';
+UPDATE quiz_question_options SET option_text = '画一的な一斉授業から個別最適化された学びへの移行が全国的に進んでいないこと' WHERE id = '3e98aab5-7b92-4ac4-9e9d-917117618524' AND option_text = '画一的教育から個別最適化への転換不足';
+UPDATE quiz_question_options SET option_text = '全国の公立学校における校舎や設備の老朽化が深刻に進んでいること' WHERE id = 'f51e40fe-8402-46d3-a58d-557090cbd458' AND option_text = '学校施設の老朽化';
+UPDATE quiz_question_options SET option_text = '少子化が進む地方を中心に教員の採用・確保が年々難しくなっていること' WHERE id = 'e88e8a63-85a2-4fcb-bf4b-3c6c8f6ad80c' AND option_text = '教員数の不足';
+UPDATE quiz_question_options SET option_text = '生徒の負担を減らすために学校での部活動を全面的に廃止すべきだ' WHERE id = '8fef382b-8f9f-46a1-9493-5b1685550b82' AND option_text = '部活動を廃止すべきだ';
+UPDATE quiz_question_options SET option_text = '教育の質を高めるために国が予算を増やして教員を大幅に採用すべきだ' WHERE id = 'f7f70aac-6741-4d4a-9e28-27e95e666942' AND option_text = '教員をもっと採用すべきだ';
+UPDATE quiz_question_options SET option_text = '学校運営に保護者や地域住民がもっと積極的に関わって参加すべきだ' WHERE id = 'ad183633-6271-4cfd-96f1-9168f73bd950' AND option_text = '保護者がもっと参加すべきだ';
+UPDATE quiz_question_options SET option_text = 'コードの変更に伴って予期しないバグが以前より増えてしまった' WHERE id = '5d52303d-f58b-43ce-af88-76aacc24b94e' AND option_text = 'バグが増えた';
+UPDATE quiz_question_options SET option_text = 'ドキュメントがなく仕様が不明のためユニットテストをうまく書けなかった' WHERE id = '7a19e554-e165-41c4-8257-3aabe63e5233' AND option_text = 'テストが書けなかった';
+UPDATE quiz_question_options SET option_text = '環境設定の不整合が原因で本番環境へのデプロイが何度も失敗した' WHERE id = 'c4e4e160-17d8-4127-8989-6adb5c385b56' AND option_text = 'デプロイに失敗した';
+UPDATE quiz_question_options SET option_text = '外国人労働者に対して日本の文化やマナーだけを一方的に学ばせること' WHERE id = 'fe6f808a-3b85-4f6c-b07e-15eb237c1cb0' AND option_text = '外国人に日本文化だけ一方的に教える';
+UPDATE quiz_question_options SET option_text = '職場内で国籍ごとにグループを分けて同じ国の人同士だけでまとめて働かせること' WHERE id = 'af9df61e-31fe-47f9-990a-2c6c499cfd38' AND option_text = '同じ国の人同士だけでまとめて働く';
+UPDATE quiz_question_options SET option_text = '遅刻や欠勤などに関する職場のルールをさらに厳しく細かく設定していくこと' WHERE id = '80c2469a-8985-424b-b57a-7754bd55a889' AND option_text = 'ルールをさらに厳格化していく';
+UPDATE quiz_question_options SET option_text = 'リーダーが全ての業務内容を細かく決めて部下に強制的に指示すること' WHERE id = 'ada61ee0-9914-4cac-bd8a-97e68426c339' AND option_text = 'リーダーが部下に強く指示する';
+UPDATE quiz_question_options SET option_text = 'リーダーが戦略から日常業務の細部まで独断ですべてを一人で決めていくこと' WHERE id = '782e73a3-b610-4f9e-b495-df62e28f56a7' AND option_text = 'リーダーがすべてを決めていく';
+UPDATE quiz_question_options SET option_text = '組織が成熟すると最終的にはリーダーという役職自体が不要になっていくこと' WHERE id = 'a4882d52-dd73-4d7d-bb4f-843328950ce2' AND option_text = 'リーダー自体が必要なくなる';
+UPDATE quiz_question_options SET option_text = '非正規雇用の拡大により正社員の人件費を大幅かつ継続的に削減する経営戦略' WHERE id = '0272912b-3648-4352-85fd-0a0fa4fc8f37' AND option_text = '人件費を大幅に削減する経営戦略';
+UPDATE quiz_question_options SET option_text = 'グローバル市場への参入や海外拠点の設立を目的とした特定の取り組みにすぎない' WHERE id = 'db4df9f1-45c5-4335-a834-ac48f7384269' AND option_text = '海外進出のためだけの取り組みだ';
+UPDATE quiz_question_options SET option_text = '政府が定めた雇用機会均等に関する法的義務を最低限満たすためだけのものだ' WHERE id = 'd44b5f8a-4674-4c97-b4f7-dbec514ae577' AND option_text = '法的義務を満たすためのものだ';
+UPDATE quiz_question_options SET option_text = 'コミュニケーション上の誤解を防ぐために曖昧な表現は日本語から完全になくしていくべきだ' WHERE id = '5da2a67f-9a44-4bdb-873b-0382c70f4b20' AND option_text = '曖昧な表現を完全になくしていくべきだ';
+UPDATE quiz_question_options SET option_text = '曖昧な表現は他言語にはない日本語だけが持つ独自の文化的長所であり守るべきだ' WHERE id = '2472d52d-4800-4a23-8d6a-0112627e4abe' AND option_text = '曖昧な表現は日本語固有の長所だ';
+UPDATE quiz_question_options SET option_text = '異文化間の誤解を避けるため外国人と話す際は常に明確で直接的な表現だけを使うべきだ' WHERE id = '3655f780-6a40-4e57-b9b0-6e749cf3053f' AND option_text = '外国人には明確な表現だけ使うべきだ';
+UPDATE quiz_question_options SET option_text = '書店で買った日本語の教科書や問題集だけを使って毎日独学で勉強する' WHERE id = 'd4c1f2a6-bbf0-4cfe-8016-3605efc684b6' AND option_text = '教科書や参考書だけで勉強する';
+UPDATE quiz_question_options SET option_text = '仕事が休みの平日を使って近所の日本語学校に毎週通って授業を受けて学ぶ' WHERE id = '1bde01d5-df2b-4664-8843-6f24aa293e16' AND option_text = '平日に日本語学校に通って学ぶ';
+UPDATE quiz_question_options SET option_text = '日本語の力を伸ばすために毎晩その日の出来事を日本語で日記に書き続けること' WHERE id = '8bf84377-b317-4dc6-88e9-9ec956d3d23f' AND option_text = '毎日日本語で日記を書き続ける';
+UPDATE quiz_question_options SET option_text = '新技術への投資に充てるべき研究開発費が慢性的に予算不足のため削減されていること' WHERE id = '364d42e8-7c05-4350-a59d-4372038e3fe4' AND option_text = '研究開発費が慢性的に不足している';
+UPDATE quiz_question_options SET option_text = '同一市場に参入する競合他社の数が急増して価格競争が激化している状況になること' WHERE id = '91e0123f-20a4-4618-a621-5c56a5268af3' AND option_text = '競合他社が市場に多すぎる状況';
+UPDATE quiz_question_options SET option_text = '長期にわたって消費者の購買行動や嗜好が安定していて市場に変化が起きないこと' WHERE id = '016f1252-454b-4833-a065-54fe65333e57' AND option_text = '消費者の好みが全く変わらない';
+UPDATE quiz_question_options SET option_text = '10時にはすでに別の人と大切な約束が入っているから' WHERE id = 'bb5fc406-57e2-404a-afb5-3db09e531a6a' AND option_text = '10時には約束があるから';
+UPDATE quiz_question_options SET option_text = '待ち合わせ場所の公園や施設が10時にはまだ開いていないから' WHERE id = '54d1aa40-d2ff-40e0-bef3-462e29dec38e' AND option_text = '公園が10時に開かないから';
+UPDATE quiz_question_options SET option_text = 'その日は土曜日なので朝から出かけることにあまり乗り気ではないから' WHERE id = '80694915-bfbb-426c-8172-4d2633de6f76' AND option_text = '土曜日に行きたくないから';
+UPDATE quiz_question_options SET option_text = '大雨とは別に震度4以上の地震が同時に発生する危険性が高まっている' WHERE id = 'a26fe249-ddf7-4dbb-a65e-0aa17792f308' AND option_text = '地震が発生する危険がある';
+UPDATE quiz_question_options SET option_text = '翌朝にかけて大型の台風が沿岸部へ勢力を保ったまま直接接近している' WHERE id = '4f8431a9-5a0d-42d2-9f47-896df97f7918' AND option_text = '台風が接近している';
+UPDATE quiz_question_options SET option_text = '川から十分に離れた高台に住んでいる人は現時点では避難する必要がない' WHERE id = '032707ce-3d2e-47eb-8f26-b690480ebc1e' AND option_text = '避難する必要がない';
+UPDATE quiz_question_options SET option_text = 'パフォーマンス上の懸念を無視して社内外のAPI全てをRESTに統一する' WHERE id = 'b415bfd6-0981-4407-852c-f7f6832d73ab' AND option_text = '全てRESTに統一する';
+UPDATE quiz_question_options SET option_text = '外部公開が必要な部分も含めてシステム全体のAPIをgRPCだけに統一する' WHERE id = 'a46a9b91-4538-4062-b445-2837d2493df5' AND option_text = '全てgRPCに統一する';
+UPDATE quiz_question_options SET option_text = 'RESTともgRPCとも異なるGraphQLなど全く別の第三の技術を新たに採用する' WHERE id = '329d69fe-fa0c-4919-a8fb-8dc552172d77' AND option_text = '第三の技術を採用する';
+UPDATE quiz_question_options SET option_text = 'バージョン番号がURLに入ることでエンドポイントのテストや検証が複雑になる' WHERE id = 'fabbaa9a-3fc3-4fb4-bfe0-233aeb76d7b1' AND option_text = 'テストが複雑になる';
+UPDATE quiz_question_options SET option_text = 'URLにバージョン番号を含める形式は開発者にとって直感的でなく分かりにくい' WHERE id = 'eef68963-5188-471e-a812-0fb1358b0aa3' AND option_text = '直感的でない';
+UPDATE quiz_question_options SET option_text = 'バージョンを頻繁に更新するたびに古いクライアントへの後方互換性を維持できなくなる' WHERE id = '14db5f37-8d38-423c-a999-2babdf56d8cb' AND option_text = '後方互換性を維持できない';
+UPDATE quiz_question_options SET option_text = '中に飲み物が少し残ったままの状態で洗わずにそのままゴミ袋に入れて出す' WHERE id = 'b5a64644-8726-402f-9024-df47ef6a2596' AND option_text = '洗わずにそのまま出す';
+UPDATE quiz_question_options SET option_text = 'ハサミを使ってできるだけ細かく切り小さくしてからゴミ袋に入れて出す' WHERE id = 'f0f3009e-90b6-4cc2-a4f5-93c0466fb4fe' AND option_text = '細かく切ってから出す';
+UPDATE quiz_question_options SET option_text = '何本かまとめてスーパーでもらった紙袋や段ボール箱に入れてまとめて捨てる' WHERE id = '4d095e5c-379f-4417-a78e-90d22507eff4' AND option_text = '紙袋にまとめて捨てる';
+UPDATE quiz_question_options SET option_text = '社会の大多数が支持する選択こそが常に正義であるとする民主主義的な原則' WHERE id = '7399f5a4-64a0-4cac-a833-9068eb48cbfd' AND option_text = '多数決が常に正義であるという原則';
+UPDATE quiz_question_options SET option_text = '他者への影響を考慮せず個人の自由と権利が何より絶対的に優先されるという考え方' WHERE id = 'd0f89439-2b2f-4ce4-b724-2139fb487026' AND option_text = '個人の自由が絶対的だという考え方';
+UPDATE quiz_question_options SET option_text = '社会的な立場や能力の差を無視してすべての人に全く同じ量の富を分配するべきという原則' WHERE id = '8d881e7f-2a8b-47d0-a760-f166776ad6eb' AND option_text = 'すべての人に同じ量を分配する原則';
+UPDATE quiz_question_options SET option_text = 'セキュリティリスクが高すぎるためAIコーディングアシスタントを今は導入すべきではない' WHERE id = '8c61e59f-faf4-493e-a227-0968395e092a' AND option_text = 'AIを導入すべきではない';
+UPDATE quiz_question_options SET option_text = '生産性を最大化するために開発業務のほぼ全てをAIコーディングアシスタントに任せるべきだ' WHERE id = '56b568f2-2cd4-405f-b84f-c93ff9496e4b' AND option_text = 'AIに全てを任せるべきだ';
+UPDATE quiz_question_options SET option_text = 'AI生成コードは自動的に品質が保証されるためレビュー担当者によるコードレビューは必要ない' WHERE id = 'b022c4e6-b024-423e-af9c-41652816fe0f' AND option_text = 'コードレビューは必要ない';
+UPDATE quiz_question_options SET option_text = '現在の業務に加えて個人的にコードの品質をさらに継続的に高め続けること' WHERE id = '2945c2c6-ae76-4966-88cc-ca45bab78e77' AND option_text = 'コードの品質を上げること';
+UPDATE quiz_question_options SET option_text = '業務効率を改善してプロジェクトの納期に間に合うよう毎日の残業時間を減らすこと' WHERE id = '941dac38-f57a-41a5-b98d-e1acab03f624' AND option_text = '残業を減らすこと';
+UPDATE quiz_question_options SET option_text = '業務に必要な最新フレームワークやプログラミング言語などの新しい技術を積極的に学ぶこと' WHERE id = '84208e2f-e93b-4ec8-8067-66fcfd8ebc43' AND option_text = '新しい技術を学ぶこと';
+UPDATE quiz_question_options SET option_text = '個人のスキルや担当業務の難易度といった能力に応じて毎年給与が見直される制度' WHERE id = '4c528510-6495-4da1-9eec-c7e996ca9fdf' AND option_text = '能力に応じて給与が決まる制度';
+UPDATE quiz_question_options SET option_text = '担当プロジェクトの達成度や売上目標の達成など実際の業績成果に応じて昇進が決まること' WHERE id = '09eafeab-e1a4-4353-b8c0-54e4502b006b' AND option_text = '成果に応じて昇進が決まること';
+UPDATE quiz_question_options SET option_text = '客観的な評価基準がなく直属の上司の個人的な判断と裁量だけで部下の給与が決まること' WHERE id = 'af25d922-eb93-46a2-b33a-2d048bed1bb0' AND option_text = '上司の判断で給与が決まること';
+UPDATE quiz_question_options SET option_text = '紙や対面で行っていた既存の業務プロセスをそのままデジタルツールに置き換えてIT化すること' WHERE id = '2119bba2-e38c-44ff-9965-4ac75c569bc8' AND option_text = '既存業務を単にIT化すること';
+UPDATE quiz_question_options SET option_text = '社内の稟議書や契約書など紙で行っていた業務をPDFや電子フォームに替えるデジタル化に留まること' WHERE id = '2fb84bc0-8f49-4c50-8434-21663a19b4a6' AND option_text = '紙業務のデジタル化に留まること';
+UPDATE quiz_question_options SET option_text = 'AIやクラウドなどの最新技術をビジョンなく競合他社に合わせて次々と導入し続けること' WHERE id = 'b41cdabe-21f5-4a1a-8d46-24ab23b15f92' AND option_text = '最新技術を次々と導入すること';
+UPDATE quiz_question_options SET option_text = '現在使われている暗号アルゴリズムが複雑すぎて実装や運用が困難になってきたから' WHERE id = '1a0141eb-6972-43bd-87a9-90143a4128f9' AND option_text = '現在の暗号が複雑だから';
+UPDATE quiz_question_options SET option_text = '旧来の暗号処理に伴う計算コストやサーバー運用コストを大幅に削減する必要があるため' WHERE id = '33895e91-5df1-4a84-be3e-a06fccd1a74e' AND option_text = 'コストを削減するため';
+UPDATE quiz_question_options SET option_text = '暗号化・復号処理のレイテンシを下げてシステム全体の処理速度を向上させるため' WHERE id = '7756e77f-14f4-4f2a-9148-81052b1ff5fc' AND option_text = '速度を上げるため';
+UPDATE quiz_question_options SET option_text = '毎日自宅でテレワークをして出社しないこと' WHERE id = '11fede53-87ea-473d-beea-b4119b47226d' AND option_text = '毎日在宅勤務をすること';
+UPDATE quiz_question_options SET option_text = '毎日オフィスに通勤して在宅勤務は一切しないこと' WHERE id = '8934dab5-77bf-4b05-bbed-054bad71eee6' AND option_text = '毎日オフィスに行くこと';
+UPDATE quiz_question_options SET option_text = '被害額の全額を罰金として自主的に支払う' WHERE id = '9a436fd8-5597-452a-b921-c087d3175a53' AND option_text = '罰金を自主的に支払う';
+UPDATE quiz_question_options SET option_text = '漏洩したデータを直ちにすべてのシステムから削除する' WHERE id = '43feb6f7-ed00-40af-b738-ade5a21b93cc' AND option_text = 'データを全て削除する';
+UPDATE quiz_question_options SET option_text = 'としょかんで一緒に勉強して、その後すぐに帰る' WHERE id = 'c8e6d118-8dd7-4795-a6d7-0e4dcdcdfb6a' AND option_text = '一緒に勉強だけして帰る';
+UPDATE quiz_question_options SET option_text = '学校で友達と一緒に映画を見てから帰る' WHERE id = 'a533f66f-a545-4e28-9280-9ac62dca60b1' AND option_text = '学校で映画を一緒に見る';
+UPDATE quiz_question_options SET option_text = '問題が起きても上司に相談せず一人で静かに解決すること' WHERE id = '5dfc8323-ecf0-4834-a201-c6a683391f7c' AND option_text = '一人で問題を抱え込んで解決すること';
+UPDATE quiz_question_options SET option_text = '上司から指示があった時だけ動き、自分からは何も報告しないこと' WHERE id = 'fd4c6821-0a02-405d-8605-e0656bc463c3' AND option_text = '上司の指示にだけ黙って従うこと';
+UPDATE quiz_question_options SET option_text = '残業を法律で禁止するだけで労働環境の問題が根本的に解決する' WHERE id = '06430b2b-07d7-4991-aba8-d948491164aa' AND option_text = '残業時間の削減だけで根本的に解決する';
+UPDATE quiz_question_options SET option_text = '社員をひたすら採用して増やすことで業務量を分散させていくこと' WHERE id = '1f30e7e2-5368-4107-b745-32d641b6a2d3' AND option_text = '社員の数をひたすら増やしていく';
+UPDATE quiz_question_options SET option_text = 'フリーランスのエンジニアとして海外で独立して働くこと' WHERE id = 'fab15494-f6fa-4c7d-a56a-98abea8cc05f' AND option_text = 'フリーランス開発者になること';
+UPDATE quiz_question_options SET option_text = '自分でスタートアップ企業を立ち上げてCEOになること' WHERE id = '0c6b8d5f-11f8-4d60-a340-fc622aaec30b' AND option_text = '自分の会社を起業すること';
+UPDATE quiz_question_options SET option_text = '本番データの定期バックアップが全く取られていない' WHERE id = '0715f470-8ad1-4885-9f4f-b48cfb1f537c' AND option_text = 'バックアップがない';
+UPDATE quiz_question_options SET option_text = 'システム操作の監査ログが記録されていない' WHERE id = '1b44dc23-4928-4277-ad6c-40dbab31803b' AND option_text = '監査ログがない';
+UPDATE quiz_question_options SET option_text = 'テストコードの作成と実行確認に予想以上に時間がかかっている' WHERE id = 'efe7a30b-370f-4864-bcec-69897f2d1556' AND option_text = 'テストに時間がかかっている';
+UPDATE quiz_question_options SET option_text = '別の優先度の高いタスクが重なって時間が取れなかった' WHERE id = '71334064-0e04-4e1b-8c13-6f0a45d345b7' AND option_text = '他のタスクが忙しかった';
+UPDATE quiz_question_options SET option_text = 'チームの規模に関係なく今すぐマイクロサービスに完全移行する' WHERE id = '98f048c4-5823-4d5e-b2b6-280438504c2e' AND option_text = 'すぐにマイクロサービスに移行する';
+UPDATE quiz_question_options SET option_text = '現在のモノリシックなアーキテクチャをそのまま変更せずに維持する' WHERE id = '33b4b9ef-00f2-481e-bfb3-51e6e335e000' AND option_text = 'モノリシックのまま維持する';
+UPDATE quiz_question_options SET option_text = '薬局で市販の睡眠改善薬を購入して毎晩飲む' WHERE id = '7334c0cc-b33e-4d5f-9b99-a75468089da2' AND option_text = '薬局で睡眠薬を買って飲む';
+UPDATE quiz_question_options SET option_text = '眠れない原因のスマートフォンを処分して使うのをやめる' WHERE id = 'f0492ac7-bef6-4bf7-aa56-9755f50afd30' AND option_text = 'スマートフォンを捨てる';
+UPDATE quiz_question_options SET option_text = '短期間で総人口が急激に増加し続けること' WHERE id = '283b1b0a-31c4-4a6b-89b9-9586f845fc93' AND option_text = '人口が急激に増加すること';
+UPDATE quiz_question_options SET option_text = '若い世代が仕事を求めて海外に移住してしまうこと' WHERE id = '2ea7958a-98d9-4405-b390-5ce41571e74b' AND option_text = '若い人が海外に移住すること';
+UPDATE quiz_question_options SET option_text = '賞味期限が近い商品の3分の1を強制的に値引き販売するルール' WHERE id = 'e3b67bc4-42a2-4d40-9a84-a880ab3ee487' AND option_text = '商品の3分の1を割引するルール';
+UPDATE quiz_question_options SET option_text = '食品ロスの削減のために食品の3分の1を廃棄してもよいルール' WHERE id = '39bd21c5-13c3-4236-9b14-5583f3d2db38' AND option_text = '食品の3分の1は捨ててもいいルール';
+UPDATE quiz_question_options SET option_text = '外国人労働者を積極的に受け入れれば少子化問題は一気に解決する' WHERE id = '2e6cdb6f-65a6-4e6f-80b9-d25bc53d24ee' AND option_text = '外国人労働者を増やせば一気に解決';
+UPDATE quiz_question_options SET option_text = '高齢者が引退を遅らせてより長期間働き続けることで問題が解決する' WHERE id = '653d383d-be82-4f83-b714-7bbb8b1fec7a' AND option_text = '高齢者がもっと長く働けば解決';
+UPDATE quiz_question_options SET option_text = '同じ金額でも利益から得られる喜びの方をより大きく感じる傾向' WHERE id = '376701f6-6cb0-47d6-bc29-e6a0c88c0ab5' AND option_text = '同額でも利益を大きく感じる傾向';
+UPDATE quiz_question_options SET option_text = '不確実な状況であえてリスクの高い選択肢を好んで選ぶ傾向' WHERE id = 'bafa6ec2-066f-46e5-bdcd-18b4417c5ae9' AND option_text = 'リスクを好んで行動する傾向';
+UPDATE quiz_question_options SET option_text = '株主に対して短期的な利益を最大化すること' WHERE id = 'c4f005ff-2462-49c5-84e8-375450764af8' AND option_text = '株主の短期利益だけ';
+UPDATE quiz_question_options SET option_text = '経営幹部の報酬や待遇の向上だけを考えること' WHERE id = 'be745928-55d3-4eb2-9438-c99f67ac71ee' AND option_text = '経営者の報酬だけ';
+UPDATE quiz_question_options SET option_text = '教室の席が物理的に離れて遠くなってしまうという意味' WHERE id = '18ef4423-f81b-4364-a630-738db629582e' AND option_text = '物理的な距離が遠くなるという意味';
+UPDATE quiz_question_options SET option_text = '友達と直接会って話す機会がだんだん少なくなるという意味' WHERE id = '7583c559-2df8-42e2-8fc7-fb2971d992bc' AND option_text = '友達と会いにくくなるという意味';
+UPDATE quiz_question_options SET option_text = '従来のデータベースより高速で大量のデータを処理できる' WHERE id = 'bdb52d7d-c1bc-4391-aedb-ce61bbc51981' AND option_text = '高速処理が可能だ';
+UPDATE quiz_question_options SET option_text = '一度記録されたデータをいつでも自由に削除・修正できる' WHERE id = 'eb39d2fe-42e9-4499-9d2f-4cb46f8208d1' AND option_text = 'データを削除できる';
+UPDATE quiz_question_options SET option_text = '技術の発展が社会的に不可避だという技術的慣性の考え方' WHERE id = '2c9c0073-e3ad-4ed8-92f6-a8b73f250d2d' AND option_text = '技術的慣性の不可避性';
+UPDATE quiz_question_options SET option_text = '技術そのものには善悪がなく倫理的に中立であるという考え方' WHERE id = '7a74afbe-55d9-4d82-991c-2cc83378c974' AND option_text = '技術の倫理的中立性';
+UPDATE quiz_question_options SET option_text = '失敗が起きた際に責任者を特定して明確に責任を取らせること' WHERE id = 'bc52930e-d270-4bee-87f5-daca9d20ceee' AND option_text = '責任者を明確にすること';
+UPDATE quiz_question_options SET option_text = '効率化のために定期的な振り返りミーティングの回数を減らすこと' WHERE id = '50d0bb03-4fdb-49b7-8626-bdc7fed87655' AND option_text = '振り返り会議を減らすこと';
+UPDATE quiz_question_options SET option_text = '血圧の数値が平均より少し高めだった' WHERE id = '5d808eea-95d5-4dd0-81eb-0b24e15a862d' AND option_text = '血圧の数値が少し高い';
+UPDATE quiz_question_options SET option_text = '両目の視力の数値がどちらも少し悪かった' WHERE id = '74a086f5-ac68-4c3e-b21a-2fce1d402742' AND option_text = '視力の数値が少し悪い';
+UPDATE quiz_question_options SET option_text = '友達と一緒に本屋に行くこと' WHERE id = '614a5fa3-6b51-4a59-88fb-a968deaf71c8' AND option_text = '同じ本';
+UPDATE quiz_question_options SET option_text = '現金で直接渡すお金' WHERE id = '87762763-779f-47aa-8622-0e7267e89e31' AND option_text = '現金のみ';
+UPDATE quiz_question_options SET option_text = '花束と手紙のセット' WHERE id = 'efd2e8fe-c0e9-4b8e-bded-12a510aafb5c' AND option_text = '花束';
+UPDATE quiz_question_options SET option_text = '大きな声で話したり電話したりしても全く問題ない' WHERE id = '52efae2d-1355-423d-b4f5-92ec8da71963' AND option_text = '大きな声で電話しても構わない';
+UPDATE quiz_question_options SET option_text = '優先席の付近に座っているときだけ声を小さくする' WHERE id = '131af2f7-61e8-40f4-aa84-a56eac0fef97' AND option_text = '優先席の近くでのみ静かにする';
+UPDATE quiz_question_options SET option_text = '自宅でのインターネット通信費が別途かかること' WHERE id = '352efcbd-6efe-4222-bfe8-54a281c48fe1' AND option_text = 'インターネットの費用がかかる';
+UPDATE quiz_question_options SET option_text = 'テレワーク手当がなく毎月の給与が大きく下がること' WHERE id = '3090a735-1eaa-4d50-a5e3-e70a911cee97' AND option_text = '給料が大幅に減額される';
+UPDATE quiz_question_options SET option_text = '人が自分の手で直接行う作業のスピードを急激に高めること' WHERE id = '7f7b06dc-d400-45a5-ab8e-0c67ea0e1f5d' AND option_text = '作業速度を急激に上げること';
+UPDATE quiz_question_options SET option_text = '後輩を指導することで先輩社員の昇進が自動的に保証されること' WHERE id = 'd51f4928-bbf3-4ea3-930a-a9dcebbc72b0' AND option_text = '先輩社員の昇進が保証される';
+UPDATE quiz_question_options SET option_text = '社内ネットワークのみを安全とみなし外部からのアクセスを制限する' WHERE id = 'f2dc0a4e-d9ba-49b8-83ec-d2705f902af3' AND option_text = '社内ネットワークだけ信頼する';
+UPDATE quiz_question_options SET option_text = '自分が何かを話したり説明したりするとき' WHERE id = '2f3042da-2cc7-491a-970e-298d27b44d65' AND option_text = '自分が言うとき';
+UPDATE quiz_question_options SET option_text = 'インターネット接続の速度が遅すぎて市民参加が難しくなること' WHERE id = '6bb4e964-62a1-4b77-a28b-ec2274553a36' AND option_text = 'インターネットの速度が遅い';
+UPDATE quiz_question_options SET option_text = '駅から少し離れたホテルのレストラン' WHERE id = '3731ccc3-262b-4916-9680-735d846a401d' AND option_text = 'ホテルのレストラン';
+UPDATE quiz_question_options SET option_text = '14時から使う会議室の事前予約' WHERE id = '09d49e71-3f50-4c99-b5a0-adba1142fbb2' AND option_text = '会議室の予約';
+UPDATE quiz_question_options SET option_text = '晴れていて今日より気温が高く暖かい' WHERE id = '8dcfae03-98ff-419f-bc32-9e16996d8179' AND option_text = '晴れで暖かい';
+UPDATE quiz_question_options SET option_text = '6月15日より前に佐藤リーダーから資料を事前にもらっておく' WHERE id = '410569f8-9894-4b27-8d33-57594d5ce987' AND option_text = '資料を事前にダウンロードする';
+UPDATE quiz_question_options SET option_text = '定型的な事務作業のみをAIで自動化して人間は関わらないべきだ' WHERE id = '1a2de075-6af0-4e44-b7ed-f5f23de5f643' AND option_text = '定型的な作業だけ自動化すべきだ';
+UPDATE quiz_question_options SET option_text = '書面なしでも口頭での承諾さえあれば自由に再委託することができる' WHERE id = '71088aa9-4713-40e8-a021-62835246964b' AND option_text = '口頭の承諾があれば再委託できる';
+UPDATE quiz_question_options SET option_text = '利便性が多少低下してもセキュリティを常に最優先に考えるべきだ' WHERE id = '7655ab6c-7b29-4bf5-bb94-8ffef2b3b444' AND option_text = 'セキュリティを最優先にすべきだ';
+UPDATE quiz_question_options SET option_text = '日本企業に在籍する外国人エンジニアをより効果的に管理・監督するため' WHERE id = 'ec521313-c1af-4c2a-828e-ad4d8d0d11da' AND option_text = '外国人エンジニアを管理するため';
+UPDATE quiz_question_options SET option_text = '日本語があまりにも難しすぎてこれ以上勉強するのをやめたいと感じている' WHERE id = '9684d8de-9fd2-48a5-b521-075af6673c53' AND option_text = '日本語が難しすぎてあきらめたい';
+UPDATE quiz_question_options SET option_text = '退去後に次の入居者のために大家さんを通じて渡される' WHERE id = 'dc7627dd-4fec-4bf7-a232-121361bb479c' AND option_text = '次の大家さんに渡される';
+UPDATE quiz_question_options SET option_text = '失敗を経験したらそれ以上無駄な努力をせず早くあきらめるべきだ' WHERE id = '7dcec882-6122-405f-82a4-f04ec8be1328' AND option_text = '失敗したら早くあきらめるべきだ';
+UPDATE quiz_question_options SET option_text = '従来通りの紙に手書きで記入する出退勤記録' WHERE id = '92e65aff-d3d8-4494-9811-498e7d54f64e' AND option_text = '紙の手書き記録';
+UPDATE quiz_question_options SET option_text = '環境に配慮した紙袋や布袋の利用が消費者の間で主流になった' WHERE id = '1608497f-273b-45a1-82c9-ce064d358ecc' AND option_text = '紙袋の利用が主流になった';
+UPDATE quiz_question_options SET option_text = 'その時代に広く流行している一般的な文化や慣習' WHERE id = '6f47b706-06ea-4f77-b6e1-bb95608536e4' AND option_text = '流行している文化';
+UPDATE quiz_question_options SET option_text = '顧客の要望をすべて無条件に受け入れてしまう' WHERE id = '26e914f4-cb57-4aa5-a15a-8a3ca8c42646' AND option_text = 'すべての要望を受け入れる';
+UPDATE quiz_question_options SET option_text = 'ブランド品や高級品への所有欲がさらに高まっている' WHERE id = 'c65fff64-30a3-448c-a646-e622b6de2252' AND option_text = 'ブランド品の購入がさらに増えた';
+UPDATE quiz_question_options SET option_text = '転職すること自体を完全にあきらめてしまう' WHERE id = 'b966ac98-cd7b-4660-a8f1-5c5387a7587e' AND option_text = '転職をあきらめる';
+UPDATE quiz_question_options SET option_text = '正社員の人件費全体を大幅に削減するため' WHERE id = '36731daa-9e0f-4d4d-8e31-8a676b5f241d' AND option_text = '人件費を減らすため';
+UPDATE quiz_question_options SET option_text = 'いかなる商業目的にも一切利用することができない' WHERE id = '2959982c-9ca3-44df-be2f-df328c18fd5f' AND option_text = '商業利用ができない';
+UPDATE quiz_question_options SET option_text = '新技術を開発した企業に対して直接補助金を支給する' WHERE id = '2bdcab51-4a43-49e0-8fef-9ad15121312d' AND option_text = '企業に補助金を支給する';
+UPDATE quiz_question_options SET option_text = '正社員と一部の長期契約社員のみを対象とする' WHERE id = 'd391e315-9bbe-4af3-b8cc-945045977fb5' AND option_text = '正社員のみ対象';
+UPDATE quiz_question_options SET option_text = 'プレゼン用のハンドアウトを別途作成すること' WHERE id = '3be076b5-2845-47bb-8204-d4411d8a49a0' AND option_text = '資料の作成';
+UPDATE quiz_question_options SET option_text = '会議終了後に英語の議事録を作成して配布すること' WHERE id = '02044a3b-3ca7-40a9-8b68-b58793713dc8' AND option_text = '英語への翻訳';
+UPDATE quiz_question_options SET option_text = '変数名が略語ばかりで非常に分かりにくくなっている' WHERE id = 'ca410940-da04-4a6f-afff-fcd552a93459' AND option_text = '変数名が分かりにくい';
+UPDATE quiz_question_options SET option_text = 'カナリアリリースより手順が少なく運用が格段に簡単だから' WHERE id = '347067b1-e951-43c4-aafa-7e95249387d3' AND option_text = 'カナリアリリースより簡単だから';
+UPDATE quiz_question_options SET option_text = '偽の銀行サイトに誘導してパスワードや口座情報を盗む' WHERE id = '90a36485-000d-47e2-bdb4-2399e55537a7' AND option_text = '偽のログインページに誘導する';
+UPDATE quiz_question_options SET option_text = '月1回開催される定期的な社内勉強会' WHERE id = '1d3ff662-9e37-4ceb-8cd2-1ae3b70446fc' AND option_text = '社内勉強会';
+UPDATE quiz_question_options SET option_text = '新しいアパートへの引っ越し費用の援助をお願いするため' WHERE id = '7fa6674a-bcc2-43fc-86bc-c7e021040f7a' AND option_text = '新しいアパートの欠点を伝えるため';
+UPDATE quiz_question_options SET option_text = '日本料理のレストランが若者離れで全国的に減少していること' WHERE id = '13e186f7-2aa6-4453-880d-cd42639720d0' AND option_text = '日本料理の価格が高くなりすぎること';
+UPDATE quiz_question_options SET option_text = '繰り返し開発によって全体の開発コストが大幅に削減される' WHERE id = '318943e6-f08e-4f14-9bf5-f1f3150f13a9' AND option_text = '開発コストが大幅に減る';
+UPDATE quiz_question_options SET option_text = 'すべての行政サービスをできる限り早期にオンラインのみに移行させる' WHERE id = '87990e2b-ffef-4331-9523-8b6dea94f65c' AND option_text = 'すべてのサービスをオンラインに移行する';
+UPDATE quiz_question_options SET option_text = '祝日のため平日よりも運行本数が大幅に増加している' WHERE id = '196cf1c8-f5c9-4df9-b666-a4108e9da2ae' AND option_text = '普段より運行本数が多い';
+UPDATE quiz_question_options SET option_text = 'プレゼンテーションで説明する発表の内容そのもの' WHERE id = '48e52f6d-5bdb-4392-83d8-697e58c24be1' AND option_text = 'プレゼンテーションの内容';
+UPDATE quiz_question_options SET option_text = '管理費および修繕積立金の大幅な値上げについて' WHERE id = 'd185a7c5-ffb8-4cb4-a48d-c38b924cc0e8' AND option_text = '管理費の値上げ';
+UPDATE quiz_question_options SET option_text = 'ベテラン社員の暗黙知を集約した社内Wikiの整備と活用' WHERE id = '72149214-62c8-4b72-b00d-0906cfede9ca' AND option_text = '社内Wikiの活用';
+UPDATE quiz_question_options SET option_text = '全チームで毎日ペアプログラミングを取り入れること' WHERE id = 'c273eee6-8d95-4950-b06f-1c6e1c809c6f' AND option_text = 'ペアプログラミング';
+
+COMMIT;
+
+-- 적용 후 확인용 (정답=유일최장 & 마진>=3 인 문제 수가 0이어야 함):
+-- scripts/audit-option-balance.mjs 재실행으로 확인 가능
