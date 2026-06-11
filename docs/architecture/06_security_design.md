@@ -4,6 +4,8 @@
 > **최종 갱신:** 2026-02-13
 > **대상 독자:** Senior Architect / Security Engineer
 > **프로젝트:** J-Bridge (Japan IT Engineer Dispatch Platform)
+>
+> **갱신 노트 (2026-06-11):** 본문이 지적한 최대 갭 **G2(퀴즈 정답 직접 조회)는 마이그레이션 00178로 해결**되었다 — `quiz_question_options` SELECT를 `is_admin_or_mentor()`로 제한하고 채점·리뷰 경로를 service role로 전환. 아울러 `'use server'` 모듈의 무인증 service-role 함수 노출 차단, CSV 수식 인젝션 대응, BFF 키 비교 timingSafeEqual화, `server-only` 가드, 답안 UNIQUE 제약(00180)이 적용되었다 (CHANGELOG 참조). §4~§8의 G2 관련 서술은 작성 시점(2026-02) 기준이다.
 
 ---
 
@@ -403,7 +405,7 @@ const { data: correctOptions } = await supabase
 | # | 보안 갭 | 심각도 | 현황 | 설명 |
 |---|---------|--------|------|------|
 | G1 | 레이트 리밋 부재 | **높음** | 미구현 | Server Actions, API Routes에 레이트 리밋 없음. 브루트포스 로그인, 대량 퀴즈 제출 등 남용 가능 |
-| G2 | 퀴즈 정답 직접 조회 | **높음** | 취약 | `quiz_question_options` 테이블 SELECT 정책이 authenticated 전체 허용. `is_correct` 직접 조회 가능 |
+| G2 | 퀴즈 정답 직접 조회 | **높음** | **해결됨 (2026-06-11, 00178)** | ~~`quiz_question_options` 테이블 SELECT 정책이 authenticated 전체 허용~~ → SELECT를 admin/mentor로 제한, 채점·리뷰는 service role 경유 |
 | G3 | Judge0 privileged 모드 | **높음** | 확인 | `docker-compose.yml:L8,33`에서 `privileged: true` 설정. 컨테이너 탈출 위험 |
 | G4 | Storage 소유자 검증 부재 | 중간 | 취약 | avatars 버킷에서 타인 파일 덮어쓰기 가능 |
 | G5 | CSP 헤더 미설정 | 중간 | 미구현 | Content-Security-Policy 헤더 없음. XSS 2차 방어선 부재 |

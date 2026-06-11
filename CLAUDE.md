@@ -32,7 +32,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Validation:** Zod 4
 - **Code Editor:** @monaco-editor/react
 - **Code Execution:** Judge0 (self-hosted API)
-- **Data Fetching:** @tanstack/react-query
 - **TTS:** Google Cloud Text-to-Speech API
 
 ## Build & Dev Commands
@@ -75,7 +74,7 @@ src/
     scoring/         # 5-axis score calculation (pure functions + DB fetch/write)
 ```
 
-## DB Schema Summary (107 migrations, 48 tables)
+## DB Schema Summary (migrations ~00180, 48 tables)
 
 | Category | Tables |
 |---|---|
@@ -117,7 +116,7 @@ npm run test:coverage # coverage report
 ```
 
 - Vitest 4 configured (`vitest.config.ts`)
-- Unit tests in `src/modules/scoring/` (33 tests for axis calculators + utils)
+- 116 unit tests: scoring axes/utils, exam question selection (`pickByCategoryAndDifficulty`), auth helpers, notification helpers, CS content, BFF readiness contract
 
 ## Project Status
 

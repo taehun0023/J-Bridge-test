@@ -85,7 +85,7 @@ Header: Authorization: Bearer <WEAVUSYS_API_KEY>
 | `scripts/bff-readiness-contract-smoke.ps1` | 라이브 curl 스모크 스크립트 |
 
 ### 3.2 route.ts 로직 (요지)
-1. `Authorization: Bearer <token>` 추출 → `token !== env.WEAVUSYS_API_KEY` 면 **401**. (키 미설정 시 token≠undefined → 항상 401 = 엔드포인트 잠금)
+1. `Authorization: Bearer <token>` 추출 → SHA-256 해시 후 `timingSafeEqual`로 `env.WEAVUSYS_API_KEY`와 상수시간 비교, 불일치면 **401**. (키 미설정 시에도 항상 401 = 엔드포인트 잠금. 2026-06-11 `!==` 비교에서 타이밍 세이프로 강화)
 2. `createServiceRoleClient()` (`src/lib/supabase/server.ts`) — null이면 500. (RLS 우회는 서비스롤 + 키 통과 후에만)
 3. `decodeURIComponent(email)` 로 `profiles` 조회 → 없으면 404.
 4. 그 `user_id`로 `dispatch_readiness_scores` 최신 1건(`recorded_at DESC limit 1`) → 없으면 404. (`fetchDispatchReadiness` 패턴 재사용)
@@ -97,7 +97,7 @@ Header: Authorization: Bearer <WEAVUSYS_API_KEY>
 - **`WEAVUSYS_API_KEY`** = 위버시스와 공유하는 무작위 시크릿(서비스-투-서비스). 양쪽 동일 값:
   - edu_cha: Vercel 프로젝트 → Settings → Environment Variables → `WEAVUSYS_API_KEY` (Production)
   - weavusys: `JBRIDGE_API_KEY` (서버 env / GitHub Secret)
-- 비교 방식: BFF가 수신 Bearer 토큰 == `WEAVUSYS_API_KEY` 면 통과. (위버시스는 `JBRIDGE_API_KEY`를 그 Bearer로 전송)
+- 비교 방식: BFF가 수신 Bearer 토큰을 `WEAVUSYS_API_KEY`와 **타이밍 세이프 비교**(SHA-256 + `timingSafeEqual`)해 통과. (위버시스는 `JBRIDGE_API_KEY`를 그 Bearer로 전송 — 위버시스 측 변경 불요)
 - **edu_cha는 스키마 변경 없음** — 기존 `profiles`(email) + `dispatch_readiness_scores` 조회만. 사번 컬럼 추가 없이 **email 기반 매핑**(PoC).
 
 ### 3.4 배포 (Vercel + Supabase)

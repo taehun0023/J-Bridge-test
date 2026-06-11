@@ -362,7 +362,7 @@ process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 | `react` / `react-dom` | 19.2.3 | UI 렌더링 엔진 | Server Components 지원 |
 | `@supabase/ssr` | ^0.8.0 | Supabase SSR 통합 (쿠키 기반 인증) | Middleware + Server/Client 양쪽 지원 |
 | `@supabase/supabase-js` | ^2.95.3 | Supabase 코어 클라이언트 | DB, Auth, Storage 접근 |
-| `@tanstack/react-query` | ^5.90.20 | Client-side 데이터 캐싱/페칭 | staleTime: 60s, refetchOnWindowFocus: false |
+| ~~`@tanstack/react-query`~~ | — | 2026-06-11 제거 (마운트만 되고 사용처 0건) | — |
 | `recharts` | ^3.7.0 | 차트 라이브러리 (Radar Chart 등) | D3 기반 React 차트 |
 | `@monaco-editor/react` | ^4.7.0 | 코드 에디터 (Monaco Editor wrapper) | 코딩 문제 풀이용 |
 | `zod` | ^4.3.6 | 런타임 스키마 검증 | Server Actions 입력 검증 |
