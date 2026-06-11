@@ -1,6 +1,7 @@
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { selectCsComprehensiveQuestionsFromPool } from '@/lib/cs-comprehensive-selector'
 import { BUCKET, getCacheKey } from '@/lib/tts-utils'
+import { parseExamListeningQuestion } from '@/lib/listening'
 
 export interface QuestionWithOptions {
   id: string
@@ -35,19 +36,6 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 /**
- * Extract the TTS script the exam player will request — must replicate
- * ExamClient.parseListeningQuestion exactly (\n\n split, all parts except the
- * last). Returns null when the format doesn't produce a player; in that case
- * the full text is displayed and no audio is required.
- */
-function getExamListeningScript(questionText: string): string | null {
-  const normalized = questionText.replace(/\\n/g, '\n')
-  const parts = normalized.split('\n\n')
-  if (parts.length < 3) return null
-  return parts.slice(0, parts.length - 1).join('\n\n')
-}
-
-/**
  * Safety net: exclude listening questions whose TTS audio is not in the cache
  * bucket. A cache miss at exam time falls back to live synthesis, which can
  * fail and leave the question unanswerable (audio plays only once). Fails open
@@ -56,7 +44,7 @@ function getExamListeningScript(questionText: string): string | null {
  */
 async function filterListeningByTtsCache(pool: QuestionWithOptions[]): Promise<QuestionWithOptions[]> {
   const needsAudio = pool.filter(
-    q => q.question_category === 'listening' && getExamListeningScript(q.question_text) !== null
+    q => q.question_category === 'listening' && parseExamListeningQuestion(q.question_text) !== null
   )
   if (needsAudio.length === 0) return pool
 
@@ -73,7 +61,7 @@ async function filterListeningByTtsCache(pool: QuestionWithOptions[]): Promise<Q
   const uncachedIds = new Set(
     needsAudio
       // The exam player always requests speed 1.0 (ExamClient ListeningPlayer)
-      .filter(q => !cachedFiles.has(`${getCacheKey(getExamListeningScript(q.question_text)!, 1.0)}.mp3`))
+      .filter(q => !cachedFiles.has(`${getCacheKey(parseExamListeningQuestion(q.question_text)!.script, 1.0)}.mp3`))
       .map(q => q.id)
   )
   if (uncachedIds.size > 0) {
@@ -211,120 +199,65 @@ export async function fetchCsComprehensiveQuestions(quizIds: string | string[]):
   return selectCsComprehensiveQuestionsFromPool(allQuestions)
 }
 
-/** Step 1 JLPT-style selection: listening 15 + grammar 30 + reading 15 = 60, with N-level difficulty distribution.
- *  Questions are grouped by category (order from STEP1_CATEGORY_WEIGHTS), shuffled within each category. */
+/** Category-weighted + difficulty-ratio selection shared by Steps 1-3.
+ *  Per category: pick by difficulty ratios (rounded), refill any rounding
+ *  shortfall from the category pool, then shuffle within the category and
+ *  trim rounding overshoot (e.g. 15 → 17) so each category lands exactly on
+ *  its target. Category order follows the weights object; exported for tests. */
+export function pickByCategoryAndDifficulty(
+  allQuestions: QuestionWithOptions[],
+  categoryWeights: Record<string, number>,
+  difficultyRatios: Record<string, number>
+): QuestionWithOptions[] {
+  const result: QuestionWithOptions[] = []
+  const usedIds = new Set<string>()
+
+  for (const [category, targetCount] of Object.entries(categoryWeights)) {
+    const categoryPool = allQuestions.filter(q => q.question_category === category)
+    if (categoryPool.length === 0) continue
+
+    const picked: QuestionWithOptions[] = []
+
+    for (const [difficulty, ratio] of Object.entries(difficultyRatios)) {
+      const count = Math.round(targetCount * ratio)
+      const pool = shuffle(categoryPool.filter(q => q.difficulty === difficulty && !usedIds.has(q.id)))
+      const selected = pool.slice(0, count)
+      selected.forEach(q => usedIds.add(q.id))
+      picked.push(...selected)
+    }
+
+    // Rounding error correction: fill shortfall from remaining pool
+    if (picked.length < targetCount) {
+      const remaining = shuffle(categoryPool.filter(q => !usedIds.has(q.id)))
+      const needed = remaining.slice(0, targetCount - picked.length)
+      needed.forEach(q => usedIds.add(q.id))
+      picked.push(...needed)
+    }
+
+    // Shuffle within category (trim cuts uniformly across difficulties)
+    result.push(...shuffle(picked).slice(0, targetCount))
+  }
+
+  return result
+}
+
+/** Step 1 JLPT-style selection: listening 15 + grammar 30 + reading 15 = 60, with N-level difficulty distribution. */
 async function fetchStep1JlptStyle(quizIds: string | string[]): Promise<QuestionWithOptions[]> {
   const { STEP1_CATEGORY_WEIGHTS, STEP1_DIFFICULTY_RATIOS } = await import('@/lib/assessment-config')
   const allQuestions = await filterListeningByTtsCache(await fetchAllQuestions(quizIds))
-
-  const result: QuestionWithOptions[] = []
-  const usedIds = new Set<string>()
-
-  for (const [category, targetCount] of Object.entries(STEP1_CATEGORY_WEIGHTS)) {
-    const categoryPool = allQuestions.filter(q => q.question_category === category)
-    if (categoryPool.length === 0) continue
-
-    const picked: QuestionWithOptions[] = []
-
-    for (const [difficulty, ratio] of Object.entries(STEP1_DIFFICULTY_RATIOS)) {
-      const count = Math.round(targetCount * ratio)
-      const pool = shuffle(categoryPool.filter(q => q.difficulty === difficulty && !usedIds.has(q.id)))
-      const selected = pool.slice(0, count)
-      selected.forEach(q => usedIds.add(q.id))
-      picked.push(...selected)
-    }
-
-    // Rounding error correction: fill shortfall from remaining pool
-    if (picked.length < targetCount) {
-      const remaining = shuffle(categoryPool.filter(q => !usedIds.has(q.id)))
-      const needed = remaining.slice(0, targetCount - picked.length)
-      needed.forEach(q => usedIds.add(q.id))
-      picked.push(...needed)
-    }
-
-    // Shuffle within category, but keep category order intact.
-    // Math.round per difficulty can overshoot targetCount (e.g. 15 → 17) —
-    // trim after shuffling so the cut falls uniformly across difficulties.
-    result.push(...shuffle(picked).slice(0, targetCount))
-  }
-
-  return result
+  return pickByCategoryAndDifficulty(allQuestions, STEP1_CATEGORY_WEIGHTS, STEP1_DIFFICULTY_RATIOS)
 }
 
-/** Step 2 Business JP selection: vocabulary 15 + sentence_pattern 15 + business_expression 15 + reading 15 = 60, with 初級/中級/上級 distribution.
- *  Questions are grouped by category (order from STEP2_CATEGORY_WEIGHTS), shuffled within each category. */
+/** Step 2 Business JP selection: vocabulary/sentence_pattern/business_expression/keigo/reading × 12 = 60, with 初級/中級/上級 distribution. */
 async function fetchStep2BusinessStyle(quizIds: string | string[]): Promise<QuestionWithOptions[]> {
   const { STEP2_CATEGORY_WEIGHTS, STEP2_DIFFICULTY_RATIOS } = await import('@/lib/assessment-config')
-  const allQuestions = await fetchAllQuestions(quizIds)
-
-  const result: QuestionWithOptions[] = []
-  const usedIds = new Set<string>()
-
-  for (const [category, targetCount] of Object.entries(STEP2_CATEGORY_WEIGHTS)) {
-    const categoryPool = allQuestions.filter(q => q.question_category === category)
-    if (categoryPool.length === 0) continue
-
-    const picked: QuestionWithOptions[] = []
-
-    for (const [difficulty, ratio] of Object.entries(STEP2_DIFFICULTY_RATIOS)) {
-      const count = Math.round(targetCount * ratio)
-      const pool = shuffle(categoryPool.filter(q => q.difficulty === difficulty && !usedIds.has(q.id)))
-      const selected = pool.slice(0, count)
-      selected.forEach(q => usedIds.add(q.id))
-      picked.push(...selected)
-    }
-
-    // Rounding error correction: fill shortfall from remaining pool
-    if (picked.length < targetCount) {
-      const remaining = shuffle(categoryPool.filter(q => !usedIds.has(q.id)))
-      const needed = remaining.slice(0, targetCount - picked.length)
-      needed.forEach(q => usedIds.add(q.id))
-      picked.push(...needed)
-    }
-
-    // Shuffle within category, but keep category order intact.
-    // Math.round per difficulty can overshoot targetCount (e.g. 15 → 17) —
-    // trim after shuffling so the cut falls uniformly across difficulties.
-    result.push(...shuffle(picked).slice(0, targetCount))
-  }
-
-  return result
+  return pickByCategoryAndDifficulty(await fetchAllQuestions(quizIds), STEP2_CATEGORY_WEIGHTS, STEP2_DIFFICULTY_RATIOS)
 }
 
-/** Step 3 CS Knowledge selection: category-weighted + difficulty-distributed.
- *  Uses STEP3_DIFFICULTY_RATIOS within each category from CS_KNOWLEDGE_WEIGHTS. */
+/** Step 3 CS Knowledge selection: category-weighted (CS_KNOWLEDGE_WEIGHTS) + difficulty-distributed. */
 async function fetchStep3CsStyle(quizIds: string | string[]): Promise<QuestionWithOptions[]> {
   const { CS_KNOWLEDGE_WEIGHTS, STEP3_DIFFICULTY_RATIOS } = await import('@/lib/assessment-config')
-  const allQuestions = await fetchAllQuestions(quizIds)
-
-  const result: QuestionWithOptions[] = []
-  const usedIds = new Set<string>()
-
-  for (const [category, targetCount] of Object.entries(CS_KNOWLEDGE_WEIGHTS)) {
-    const categoryPool = allQuestions.filter(q => q.question_category === category)
-    if (categoryPool.length === 0) continue
-
-    const picked: QuestionWithOptions[] = []
-
-    for (const [difficulty, ratio] of Object.entries(STEP3_DIFFICULTY_RATIOS)) {
-      const count = Math.round(targetCount * ratio)
-      const pool = shuffle(categoryPool.filter(q => q.difficulty === difficulty && !usedIds.has(q.id)))
-      const selected = pool.slice(0, count)
-      selected.forEach(q => usedIds.add(q.id))
-      picked.push(...selected)
-    }
-
-    // Rounding error correction: fill shortfall from remaining pool
-    if (picked.length < targetCount) {
-      const remaining = shuffle(categoryPool.filter(q => !usedIds.has(q.id)))
-      const needed = remaining.slice(0, targetCount - picked.length)
-      needed.forEach(q => usedIds.add(q.id))
-      picked.push(...needed)
-    }
-
-    result.push(...shuffle(picked).slice(0, targetCount))
-  }
-
+  const result = pickByCategoryAndDifficulty(await fetchAllQuestions(quizIds), CS_KNOWLEDGE_WEIGHTS, STEP3_DIFFICULTY_RATIOS)
   return result.length > 0 ? result : fetchRandomByDifficulty(quizIds, 30)
 }
 

@@ -6,6 +6,8 @@ import { submitQuestionClaim } from '@/app/actions/claims'
 import { useRouter } from 'next/navigation'
 import Card from '@/components/ui/Card'
 import QuizQuestion from '@/components/quiz/QuizQuestion'
+import { useAntiCheat } from '@/components/quiz/useAntiCheat'
+import { parseExamListeningQuestion } from '@/lib/listening'
 
 interface ExamData {
   id: string
@@ -22,21 +24,6 @@ interface Question {
   question_text: string
   question_category?: string | null
   options: { id: string; option_text: string; sort_order: number }[]
-}
-
-/**
- * Parse listening question: split into script (for TTS) and question (for display).
- * Format: "次の会話を聞いて...\n\n[dialogue]\n\n質問？"
- */
-function parseListeningQuestion(text: string): { script: string; question: string } | null {
-  const normalized = text.replace(/\\n/g, '\n')
-  // Split by double newline
-  const parts = normalized.split('\n\n')
-  if (parts.length < 3) return null
-  // First part: instruction, middle parts: script, last part: question
-  const question = parts[parts.length - 1]
-  const script = parts.slice(0, parts.length - 1).join('\n\n')
-  return { script, question }
 }
 
 /** Inline TTS player for listening questions — play state lifted to parent */
@@ -259,26 +246,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   }, [started, submitting, reviewMode, questions.length, handleSubmit])
 
   // Anti-cheat: prevent drag, copy, select, right-click during exam (not in review)
-  useEffect(() => {
-    if (!started || submitting || reviewMode) return
-
-    const prevent = (e: Event) => e.preventDefault()
-    document.addEventListener('dragstart', prevent)
-    document.addEventListener('drop', prevent)
-    document.addEventListener('copy', prevent)
-    document.addEventListener('cut', prevent)
-    document.addEventListener('selectstart', prevent)
-    document.addEventListener('contextmenu', prevent)
-
-    return () => {
-      document.removeEventListener('dragstart', prevent)
-      document.removeEventListener('drop', prevent)
-      document.removeEventListener('copy', prevent)
-      document.removeEventListener('cut', prevent)
-      document.removeEventListener('selectstart', prevent)
-      document.removeEventListener('contextmenu', prevent)
-    }
-  }, [started, submitting, reviewMode])
+  useAntiCheat(started && !submitting && !reviewMode)
 
   // Intercept link clicks during exam — warn and submit partial answers
   useEffect(() => {
@@ -798,7 +766,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
       {/* Current question */}
       {currentQuestion && (() => {
         const isListening = currentQuestion.question_category === 'listening'
-        const parsed = isListening ? parseListeningQuestion(currentQuestion.question_text) : null
+        const parsed = isListening ? parseExamListeningQuestion(currentQuestion.question_text) : null
 
         return (
           <div className="rounded-2xl border border-gray-200/60 bg-white/80 backdrop-blur-md p-6 dark:border-white/[0.08] dark:bg-white/[0.03]">
