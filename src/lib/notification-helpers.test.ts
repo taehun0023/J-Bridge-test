@@ -32,7 +32,7 @@ vi.mock('@/lib/supabase/server', () => ({
   createServiceRoleClient: vi.fn(() => mockServiceClient),
 }))
 
-let deleteNotificationsByRelatedId: typeof import('./notifications').deleteNotificationsByRelatedId
+let deleteNotificationsByRelatedId: typeof import('./notification-helpers').deleteNotificationsByRelatedId
 
 beforeEach(async () => {
   vi.clearAllMocks()
@@ -41,7 +41,7 @@ beforeEach(async () => {
   mockChain.delete.mockReturnValue(mockChain)
   mockChain.eq.mockReturnValue(mockChain)
 
-  const mod = await import('./notifications')
+  const mod = await import('./notification-helpers')
   deleteNotificationsByRelatedId = mod.deleteNotificationsByRelatedId
 })
 

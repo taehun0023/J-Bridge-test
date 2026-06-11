@@ -3,7 +3,7 @@
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { requireAdminOrMentor } from '@/lib/auth-helpers'
-import { createNotification, deleteNotificationsByRelatedId } from '@/app/actions/notifications'
+import { createNotification, deleteNotificationsByRelatedId } from '@/lib/notification-helpers'
 
 export async function approveExam(examId: string) {
   const auth = await requireAdminOrMentor()

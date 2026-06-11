@@ -30,8 +30,19 @@ export default function NotificationBell() {
 
   useEffect(() => {
     fetchCount()
-    const interval = setInterval(fetchCount, 5000)
-    return () => clearInterval(interval)
+    // Each tick is a Supabase round-trip per open tab — poll sparingly and
+    // only while the tab is visible; refresh immediately on return.
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') fetchCount()
+    }, 30000)
+    function handleVisibility() {
+      if (document.visibilityState === 'visible') fetchCount()
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
   }, [fetchCount])
 
   useEffect(() => {
