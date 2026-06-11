@@ -53,9 +53,13 @@ export async function getQuizAttemptReview(attemptId: string): Promise<{ data?: 
 
   if (!answers || answers.length === 0) return { error: '回答データが見つかりません' }
 
-  // Fetch questions with options
+  // Fetch questions with options — service role required: is_correct base-table
+  // SELECT is admin/mentor-only under RLS (00178); attempt ownership verified above.
+  const serviceClient = createServiceRoleClient()
+  if (!serviceClient) return { error: 'レビューを表示できませんでした' }
+
   const questionIds = answers.map(a => a.question_id)
-  const { data: questions } = await supabase
+  const { data: questions } = await serviceClient
     .from('quiz_questions')
     .select('id, question_text, explanation, quiz_question_options(id, option_text, is_correct, sort_order)')
     .in('id', questionIds)
@@ -129,9 +133,13 @@ export async function getCompExamReview(examId: string): Promise<{ data?: Review
 
   if (!answers || answers.length === 0) return { error: '回答データが見つかりません' }
 
-  // Fetch questions with options
+  // Fetch questions with options — service role required: is_correct base-table
+  // SELECT is admin/mentor-only under RLS (00178); exam ownership verified above.
+  const serviceClient = createServiceRoleClient()
+  if (!serviceClient) return { error: 'レビューを表示できませんでした' }
+
   const questionIds = answers.map(a => a.question_id)
-  const { data: questions } = await supabase
+  const { data: questions } = await serviceClient
     .from('quiz_questions')
     .select('id, question_text, explanation, quiz_question_options(id, option_text, is_correct, sort_order)')
     .in('id', questionIds)

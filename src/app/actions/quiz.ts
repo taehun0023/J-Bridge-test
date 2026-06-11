@@ -72,9 +72,13 @@ export async function submitQuizAnswers(
 
   if (!attempt) return { error: '無効な試行です' }
 
-  // Get correct answers (server-side only)
+  // Get correct answers (server-side only — base-table SELECT is admin/mentor-only
+  // under RLS since 00178; mentees only see the is_correct-free safe view)
+  const serviceClient = createServiceRoleClient()
+  if (!serviceClient) return { error: '採点処理を実行できませんでした' }
+
   const questionIds = answers.map(a => a.questionId)
-  const { data: correctOptions } = await supabase
+  const { data: correctOptions } = await serviceClient
     .from('quiz_question_options')
     .select('id, question_id, is_correct')
     .in('question_id', questionIds)

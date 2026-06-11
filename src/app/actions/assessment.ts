@@ -71,17 +71,19 @@ export async function submitAssessment(
   const quizId = ASSESSMENT_QUIZ_IDS[step]
   if (!quizId) return { error: '無効なステップです' }
 
-  // Delete previous attempts for this user + quiz (retake = overwrite)
-  // Use service role client to bypass RLS (no DELETE policy on quiz_attempts)
-  // quiz_answers are cascade-deleted via FK ON DELETE CASCADE
+  // Service role client is required: deleting previous attempts bypasses RLS
+  // (no DELETE policy on quiz_attempts), and grading reads is_correct, whose
+  // base-table SELECT is admin/mentor-only under RLS since 00178.
   const serviceClient = createServiceRoleClient()
-  if (serviceClient) {
-    await serviceClient
-      .from('quiz_attempts')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('quiz_id', quizId)
-  }
+  if (!serviceClient) return { error: '採点処理を実行できませんでした' }
+
+  // Delete previous attempts for this user + quiz (retake = overwrite)
+  // quiz_answers are cascade-deleted via FK ON DELETE CASCADE
+  await serviceClient
+    .from('quiz_attempts')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('quiz_id', quizId)
 
   // Create attempt
   const { data: attempt, error: attemptError } = await supabase
@@ -94,7 +96,7 @@ export async function submitAssessment(
 
   // Get correct answers
   const questionIds = answers.map(a => a.questionId)
-  const { data: correctOptions } = await supabase
+  const { data: correctOptions } = await serviceClient
     .from('quiz_question_options')
     .select('id, question_id, is_correct')
     .in('question_id', questionIds)

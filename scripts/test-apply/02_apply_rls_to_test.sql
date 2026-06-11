@@ -182,6 +182,7 @@ DROP POLICY IF EXISTS "Authenticated users can view project_requirements" ON pub
 DROP POLICY IF EXISTS "Authenticated users can view projects" ON public.projects;
 DROP POLICY IF EXISTS "Authenticated users can view published exams" ON public.coding_skill_exams;
 DROP POLICY IF EXISTS "Authenticated users can view quiz_options" ON public.quiz_question_options;
+DROP POLICY IF EXISTS "Admins and mentors can view quiz_options" ON public.quiz_question_options;
 DROP POLICY IF EXISTS "Authenticated users can view quiz_questions" ON public.quiz_questions;
 DROP POLICY IF EXISTS "Authenticated users can view quizzes" ON public.quizzes;
 DROP POLICY IF EXISTS "Authenticated users can view ranking_seasons" ON public.ranking_seasons;
@@ -384,7 +385,9 @@ CREATE POLICY "Authenticated users can view lessons" ON public.lessons FOR SELEC
 CREATE POLICY "Authenticated users can view project_requirements" ON public.project_requirements FOR SELECT TO public USING ((auth.role() = 'authenticated'::text));
 CREATE POLICY "Authenticated users can view projects" ON public.projects FOR SELECT TO public USING ((auth.role() = 'authenticated'::text));
 CREATE POLICY "Authenticated users can view published exams" ON public.coding_skill_exams FOR SELECT TO public USING (((auth.role() = 'authenticated'::text) AND (is_published = true)));
-CREATE POLICY "Authenticated users can view quiz_options" ON public.quiz_question_options FOR SELECT TO public USING ((auth.role() = 'authenticated'::text));
+-- [2026-06-11 / 00178] is_correct(정답) 노출 차단: SELECT를 admin/mentor로 제한
+-- (멘티 표시는 quiz_question_options_safe 뷰 경유, 채점은 service role)
+CREATE POLICY "Admins and mentors can view quiz_options" ON public.quiz_question_options FOR SELECT TO public USING (is_admin_or_mentor());
 CREATE POLICY "Authenticated users can view quiz_questions" ON public.quiz_questions FOR SELECT TO public USING ((auth.role() = 'authenticated'::text));
 CREATE POLICY "Authenticated users can view quizzes" ON public.quizzes FOR SELECT TO public USING ((auth.role() = 'authenticated'::text));
 CREATE POLICY "Authenticated users can view ranking_seasons" ON public.ranking_seasons FOR SELECT TO public USING ((auth.role() = 'authenticated'::text));
