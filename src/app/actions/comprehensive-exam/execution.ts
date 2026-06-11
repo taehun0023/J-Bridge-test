@@ -315,8 +315,9 @@ export async function startExam(examId: string) {
 
 /**
  * Load questions for an in-progress exam (handles page refresh mid-exam).
- * Reloads the persisted question set; exams started before persistence was
- * introduced fall back to regenerating a random set (legacy behavior).
+ * All exam types persist their drawn set at startExam, so this only reloads it.
+ * (The pre-persistence regeneration fallback was removed once no in-progress
+ * exams without a persisted set remained — verified against prod 2026-06-11.)
  */
 export async function loadExamQuestions(examId: string) {
   const auth = await requireAuth()
@@ -336,128 +337,22 @@ export async function loadExamQuestions(examId: string) {
   if (!exam) return { error: 'Exam not found' }
   if (exam.status !== 'in_progress') return { error: 'Exam is not in progress' }
 
-  if (exam.category === 'cs' && exam.subcategory === 'comprehensive') {
-    const { error: persistedErr, questions } = await loadPersistedExamQuestions(serviceClient, examId)
-    if (persistedErr || questions.length === 0) {
-      console.error('Failed to load persisted CS comprehensive exam questions:', persistedErr)
-      return { error: 'Failed to load persisted CS comprehensive exam questions' }
-    }
-
-    return {
-      questions: formatExamQuestions(questions),
-      timeLimit: exam.time_limit_minutes,
-      startedAt: exam.started_at,
-    }
+  const { error: persistedErr, questions } = await loadPersistedExamQuestions(serviceClient, examId)
+  if (persistedErr || questions.length === 0) {
+    console.error('Failed to load persisted exam questions:', examId, persistedErr)
+    return { error: 'Failed to load exam questions' }
   }
 
-  if (exam.subcategory === 'comprehensive') {
+  // Non-CS comprehensive exams use config time limits (config wins over DB columns)
+  let timeLimit = exam.time_limit_minutes
+  if (exam.subcategory === 'comprehensive' && exam.category !== 'cs') {
     const step = COMP_EXAM_CATEGORY_TO_STEP[exam.category]
-    if (!step) return { error: 'Unsupported comprehensive exam category' }
-
-    // Reload the persisted set — the same questions the user started with.
-    const { error: persistedErr, questions: persisted } = await loadPersistedExamQuestions(serviceClient, examId)
-    if (!persistedErr && persisted.length > 0) {
-      return {
-        questions: formatExamQuestions(persisted),
-        timeLimit: ASSESSMENT_TIME_LIMITS[step] ?? exam.time_limit_minutes,
-        startedAt: exam.started_at,
-      }
-    }
-
-    // Legacy fallback: exams started before persistence existed (re-randomizes).
-    console.warn('No persisted question set for comprehensive exam (legacy), regenerating:', examId)
-
-    const assessmentQuizId = ASSESSMENT_QUIZ_IDS[step]
-    if (!assessmentQuizId) return { error: 'Assessment quiz not found' }
-
-    const quizIds: string[] = [assessmentQuizId]
-    const contentQuizTypes = ASSESSMENT_CONTENT_QUIZ_TYPES[step]
-    if (contentQuizTypes) {
-      const { data: contentQuizzes } = await serviceClient
-        .from('quizzes')
-        .select('id')
-        .in('quiz_type', contentQuizTypes)
-        .eq('is_assessment', false)
-      if (contentQuizzes?.length) {
-        quizIds.push(...contentQuizzes.map(q => q.id))
-      }
-    }
-
-    let targetCodingArea: string | null = null
-    let isJapanese: boolean | undefined
-    if (step >= 3) {
-      const { data: profile } = await serviceClient
-        .from('profiles')
-        .select('target_coding_area, is_japanese')
-        .eq('id', user.id)
-        .single()
-      targetCodingArea = profile?.target_coding_area ?? null
-      isJapanese = profile?.is_japanese ?? undefined
-    }
-
-    const questions = await fetchRandomAssessmentQuestions(
-      quizIds.length === 1 ? quizIds[0] : quizIds,
-      step,
-      targetCodingArea,
-      isJapanese
-    )
-    if (questions.length === 0) return { error: 'No comprehensive questions available' }
-
-    const totalQ = ASSESSMENT_TOTAL_QUESTIONS[step] ?? exam.total_questions
-    const timeLimit = ASSESSMENT_TIME_LIMITS[step] ?? exam.time_limit_minutes
-
-    return {
-      questions: formatExamQuestions(questions.slice(0, totalQ)),
-      timeLimit,
-      startedAt: exam.started_at,
-    }
+    if (step) timeLimit = ASSESSMENT_TIME_LIMITS[step] ?? exam.time_limit_minutes
   }
-
-  // Standard exams: reload the persisted set; legacy exams regenerate below.
-  const { error: stdPersistedErr, questions: stdPersisted } = await loadPersistedExamQuestions(serviceClient, examId)
-  if (!stdPersistedErr && stdPersisted.length > 0) {
-    return {
-      questions: formatExamQuestions(stdPersisted),
-      timeLimit: exam.time_limit_minutes,
-      startedAt: exam.started_at,
-    }
-  }
-
-  const subcatConfig = ASSIGNMENT_CATEGORIES[exam.category]?.subcategories[exam.subcategory]
-  const quizTypes = subcatConfig?.quizType ? [subcatConfig.quizType] : []
-  if (quizTypes.length === 0) return { error: 'No quiz types configured for this exam' }
-
-  const quizQuery = serviceClient
-    .from('quizzes')
-    .select('id')
-    .in('quiz_type', quizTypes)
-    .eq('is_published', true)
-
-  if (exam.content_level) {
-    quizQuery.eq('content_level', exam.content_level)
-  }
-
-  const { data: matchingQuizzes } = await quizQuery
-  const quizIds = (matchingQuizzes ?? []).map(q => q.id)
-  if (quizIds.length === 0) return { error: 'No published quizzes found' }
-
-  const { data: allQuestions } = await serviceClient
-    .from('quiz_questions')
-    .select('id, question_text, quiz_question_options(id, option_text)')
-    .in('quiz_id', quizIds)
-
-  if (!allQuestions || allQuestions.length === 0) return { error: 'No questions available' }
-
-  const shuffled = shuffleArray(allQuestions)
-  const selected = shuffled.slice(0, exam.total_questions)
 
   return {
-    questions: selected.map(q => ({
-      id: q.id,
-      question_text: q.question_text,
-      options: shuffleOptions(q.quiz_question_options as { id: string; option_text: string }[]),
-    })),
-    timeLimit: exam.time_limit_minutes,
+    questions: formatExamQuestions(questions),
+    timeLimit,
     startedAt: exam.started_at,
   }
 }
