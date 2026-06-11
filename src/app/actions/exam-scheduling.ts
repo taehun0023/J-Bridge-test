@@ -1,5 +1,6 @@
-'use server'
-
+// Deliberately NOT a 'use server' module: these helpers take arbitrary userIds
+// and use the service-role client (RLS bypass), so they must never be exposed
+// as client-callable server actions. Import from server-side code only.
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { recalculateUserScores } from '@/modules/scoring'
 import { notifyMentorsOf, notifyAdmins, getUserDisplayName } from '@/lib/notification-helpers'

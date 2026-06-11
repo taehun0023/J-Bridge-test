@@ -129,6 +129,11 @@ export async function submitCode(problemId: string, sourceCode: string, language
 }
 
 export async function runCode(sourceCode: string, language: string, input: string) {
+  const auth = await requireAuth()
+  if ('error' in auth) {
+    return { error: auth.error, output: '', status: 'runtime_error', time: null, memory: null }
+  }
+
   try {
     const token = await createSubmission({
       source_code: sourceCode,

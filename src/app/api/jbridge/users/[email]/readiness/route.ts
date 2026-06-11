@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createHash, timingSafeEqual } from 'crypto'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { env } from '@/lib/env'
 import { getJlptLevel } from '@/lib/assessment-config'
 
 export const dynamic = 'force-dynamic'
+
+/** Constant-time API-key check; hashing both sides equalizes buffer lengths. */
+function isAuthorized(token: string | null, expected: string | undefined): boolean {
+  if (!token || !expected) return false
+  const a = createHash('sha256').update(token).digest()
+  const b = createHash('sha256').update(expected).digest()
+  return timingSafeEqual(a, b)
+}
 
 export async function GET(
   request: NextRequest,
@@ -12,7 +21,7 @@ export async function GET(
   // 1. API key authentication
   const authHeader = request.headers.get('Authorization')
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
-  if (!token || token !== env.WEAVUSYS_API_KEY) {
+  if (!isAuthorized(token, env.WEAVUSYS_API_KEY)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

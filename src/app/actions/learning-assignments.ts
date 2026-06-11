@@ -4,8 +4,7 @@ import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { requireAuth, requireAdminOrMentor } from '@/lib/auth-helpers'
 import { ASSIGNMENT_CATEGORIES } from '@/lib/assignment-categories'
-import { createNotification } from './notifications'
-import { getUserDisplayName } from '@/lib/notification-helpers'
+import { createNotification, getUserDisplayName } from '@/lib/notification-helpers'
 import { logAuditEvent } from '@/app/actions/audit'
 import { ERR } from '@/lib/action-types'
 import { getCoursesWithProgress } from '@/lib/course-progress'
@@ -278,6 +277,10 @@ export async function getMyLearningAssignments() {
 }
 
 export async function checkAssignmentProgress(userId: string, quizId: string) {
+  // Self-only: callers pass the authenticated user's own id (quiz/writing submit).
+  const auth = await requireAuth()
+  if ('error' in auth || auth.user.id !== userId) return
+
   const serviceClient = createServiceRoleClient()
   if (!serviceClient) {
     console.warn('[checkAssignmentProgress] Service role client unavailable — assignment status will not be updated')
@@ -403,6 +406,11 @@ export async function deleteLearningAssignment(assignmentId: string) {
 // ─── Overdue detection & actions ───
 
 export async function detectAndMarkOverdue() {
+  // Maintenance sweep triggered by page loads (admin tasks + mentee assignments) —
+  // any authenticated user may trigger it, but never anonymous callers.
+  const auth = await requireAuth()
+  if ('error' in auth) return
+
   const serviceClient = createServiceRoleClient()
   if (!serviceClient) return
 
@@ -572,6 +580,9 @@ export async function cancelAssignment(assignmentId: string) {
 // ─── Auto-detect learning progress → update pending to in_progress ───
 
 export async function updateLearningStatuses() {
+  const auth = await requireAdminOrMentor()
+  if ('error' in auth) return
+
   const serviceClient = createServiceRoleClient()
   if (!serviceClient) return
 
@@ -626,6 +637,9 @@ export async function updateLearningStatuses() {
 // ─── Dev level unlock check ───
 
 export async function getAssigneeUnlockedLevels(assigneeId: string, courseSubcategory: string) {
+  const auth = await requireAdminOrMentor()
+  if ('error' in auth) return { levels: [] }
+
   const serviceClient = createServiceRoleClient()
   if (!serviceClient) return { levels: [] }
 

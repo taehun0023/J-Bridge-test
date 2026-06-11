@@ -442,7 +442,24 @@ export async function submitExam(
   if (!exam) return { error: 'Exam not found' }
   if (exam.status !== 'in_progress') return { error: 'Exam is not in progress' }
 
-  if (answers.length === 0) {
+  // Answers are client-controlled: accept at most one answer per question, and
+  // only questions actually assigned to this exam when a persisted set exists
+  // (CS exams persist their set; other types fall back to dedupe only).
+  const { data: assignedRows } = await serviceClient
+    .from('comprehensive_exam_questions')
+    .select('question_id')
+    .eq('exam_id', examId)
+  const assignedIds = new Set((assignedRows ?? []).map(r => r.question_id))
+
+  const seenQuestionIds = new Set<string>()
+  const validAnswers = answers.filter(a => {
+    if (assignedIds.size > 0 && !assignedIds.has(a.questionId)) return false
+    if (seenQuestionIds.has(a.questionId)) return false
+    seenQuestionIds.add(a.questionId)
+    return true
+  })
+
+  if (validAnswers.length === 0) {
     const { data: updated, error: statusErr } = await serviceClient
       .from('comprehensive_exams')
       .update({
@@ -480,7 +497,7 @@ export async function submitExam(
     return { score: 0, passed: false, correctCount: 0, totalCount: exam.total_questions, results: [] }
   }
 
-  const questionIds = answers.map(a => a.questionId)
+  const questionIds = validAnswers.map(a => a.questionId)
   const { data: correctOptions } = await serviceClient
     .from('quiz_question_options')
     .select('id, question_id, is_correct')
@@ -501,7 +518,7 @@ export async function submitExam(
   )
 
   let correctCount = 0
-  const answerRows = answers.map((a, index) => {
+  const answerRows = validAnswers.map((a, index) => {
     const isCorrect = correctMap.get(a.questionId) === a.selectedOptionId
     if (isCorrect) correctCount++
     return {
@@ -519,8 +536,8 @@ export async function submitExam(
     return { error: 'Failed to save exam answers' }
   }
 
-  const totalQ = exam.total_questions > 0 ? exam.total_questions : answers.length
-  const score = totalQ > 0 ? Math.round((correctCount / totalQ) * 100) : 0
+  const totalQ = exam.total_questions > 0 ? exam.total_questions : validAnswers.length
+  const score = totalQ > 0 ? Math.min(100, Math.round((correctCount / totalQ) * 100)) : 0
   const passed = score >= exam.passing_score
   const newStatus = passed ? 'completed' : 'failed'
 
@@ -563,7 +580,7 @@ export async function submitExam(
     examId
   )
 
-  const results = answers.map(a => ({
+  const results = validAnswers.map(a => ({
     questionId: a.questionId,
     selectedOptionId: a.selectedOptionId,
     correctOptionId: correctMap.get(a.questionId) ?? '',
