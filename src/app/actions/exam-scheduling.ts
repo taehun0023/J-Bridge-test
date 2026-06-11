@@ -2,7 +2,6 @@
 // and use the service-role client (RLS bypass), so they must never be exposed
 // as client-callable server actions. Import from server-side code only.
 import { createServiceRoleClient } from '@/lib/supabase/server'
-import { recalculateUserScores } from '@/modules/scoring'
 import { notifyMentorsOf, notifyAdmins, getUserDisplayName } from '@/lib/notification-helpers'
 import { COMP_EXAM_CATEGORY_TO_STEP, ASSESSMENT_TIME_LIMITS, ASSESSMENT_TOTAL_QUESTIONS } from '@/lib/assessment-config'
 
@@ -330,7 +329,8 @@ async function completeExamCycle(cycleId: string, userId: string, cycleCreatedAt
     })
     .eq('id', cycleId)
 
-  await recalculateUserScores(userId)
+  // No recalc here: submitExam (the only path into cycle completion) has
+  // already recalculated this user's scores for the exam that closed the cycle.
 
   // NOTE: No revalidatePath here — it would cause the calling page's server component
   // to re-render. Dashboard gets fresh data via full page navigation.

@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { requireAuth } from '@/lib/auth-helpers'
 import { fetchRandomAssessmentQuestions, fetchAssessmentQuiz } from '@/lib/supabase/queries/assessments'
-import { recalculateUserScores } from './scores'
+import { recalculateUserScores } from '@/modules/scoring'
 import { ASSESSMENT_QUIZ_IDS } from '@/lib/assessment-config'
 import { checkAndCreateExamCycle } from './exam-scheduling'
 

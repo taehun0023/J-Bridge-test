@@ -4,8 +4,9 @@ import { revalidatePath } from 'next/cache'
 import { requireAuth, requireAdminOrMentor } from '@/lib/auth-helpers'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { scoreWriting } from '@/lib/writing-scorer'
-import { recalculateUserScores } from '@/app/actions/scores'
+import { recalculateUserScores } from '@/modules/scoring'
 import { checkAssignmentProgress } from '@/app/actions/learning-assignments'
+import { shuffleArray } from '@/lib/shuffle'
 
 const WRITING_POOL_QUIZ_ID = 'f0000001-0000-0000-0000-000000000005'
 const WRITING_PASS_SCORE = 70
@@ -239,13 +240,13 @@ export async function getWritingTestQuestions() {
 
   if (unanswered.length === 0 && lowScore.length === 0) {
     // All >= 80: random
-    questions = highScore.sort(() => Math.random() - 0.5)
+    questions = shuffleArray(highScore)
   } else {
     // Priority: unanswered (shuffled) → low score (ascending) → high score (shuffled)
     questions = [
-      ...unanswered.sort(() => Math.random() - 0.5),
+      ...shuffleArray(unanswered),
       ...lowScore.map(l => l.item),
-      ...highScore.sort(() => Math.random() - 0.5),
+      ...shuffleArray(highScore),
     ]
   }
 

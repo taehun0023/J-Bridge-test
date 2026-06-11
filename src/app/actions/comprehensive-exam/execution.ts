@@ -15,10 +15,10 @@ import {
   CS_COMPREHENSIVE_TOTAL_QUESTIONS,
 } from '@/lib/assessment-config'
 import { fetchCsComprehensiveQuestions, fetchRandomAssessmentQuestions } from '@/lib/supabase/queries/assessments'
+import { shuffleArray } from '@/lib/shuffle'
 
 function shuffleOptions(options: { id: string; option_text: string; sort_order?: number }[]) {
-  const shuffled = [...options].sort(() => Math.random() - 0.5)
-  return shuffled.map((o, i) => ({ id: o.id, option_text: o.option_text, sort_order: i + 1 }))
+  return shuffleArray(options).map((o, i) => ({ id: o.id, option_text: o.option_text, sort_order: i + 1 }))
 }
 
 type RuntimeQuestion = {
@@ -278,7 +278,7 @@ export async function startExam(examId: string) {
     return { error: 'No questions available' }
   }
 
-  const shuffled = allQuestions.sort(() => Math.random() - 0.5)
+  const shuffled = shuffleArray(allQuestions)
   const selected = shuffled.slice(0, exam.total_questions)
   const standardStartedAt = new Date().toISOString()
 
@@ -448,7 +448,7 @@ export async function loadExamQuestions(examId: string) {
 
   if (!allQuestions || allQuestions.length === 0) return { error: 'No questions available' }
 
-  const shuffled = allQuestions.sort(() => Math.random() - 0.5)
+  const shuffled = shuffleArray(allQuestions)
   const selected = shuffled.slice(0, exam.total_questions)
 
   return {
@@ -520,6 +520,19 @@ export async function submitExam(
       return { error: 'Failed to submit exam' }
     }
 
+    // Notification doesn't depend on the recalc below — run it concurrently,
+    // but await before returning so serverless doesn't drop it.
+    const notifyPromise = getUserDisplayName(user.id)
+      .then(userName => notifyMentorsOf(
+        user.id,
+        'exam_completed',
+        `${userName} completed a comprehensive exam (0 points - failed)`,
+        undefined,
+        '/admin/tasks',
+        examId
+      ))
+      .catch(err => console.error('[submitExam] mentor notification failed:', err))
+
     await recalculateUserScores(user.id)
 
     if (exam.subcategory === 'comprehensive') {
@@ -527,34 +540,27 @@ export async function submitExam(
       await resetCycleCompletedAt(user.id)
     }
 
-    const userName = await getUserDisplayName(user.id)
-    await notifyMentorsOf(
-      user.id,
-      'exam_completed',
-      `${userName} completed a comprehensive exam (0 points - failed)`,
-      undefined,
-      '/admin/tasks',
-      examId
-    )
+    await notifyPromise
 
     return { score: 0, passed: false, correctCount: 0, totalCount: exam.total_questions, results: [] }
   }
 
   const questionIds = validAnswers.map(a => a.questionId)
-  const { data: correctOptions } = await serviceClient
-    .from('quiz_question_options')
-    .select('id, question_id, is_correct')
-    .in('question_id', questionIds)
-    .eq('is_correct', true)
+  const [{ data: correctOptions }, { data: questionRows }] = await Promise.all([
+    serviceClient
+      .from('quiz_question_options')
+      .select('id, question_id, is_correct')
+      .in('question_id', questionIds)
+      .eq('is_correct', true),
+    serviceClient
+      .from('quiz_questions')
+      .select('id, explanation')
+      .in('id', questionIds),
+  ])
 
   const correctMap = new Map(
     correctOptions?.map(o => [o.question_id, o.id]) ?? []
   )
-
-  const { data: questionRows } = await serviceClient
-    .from('quiz_questions')
-    .select('id, explanation')
-    .in('id', questionIds)
 
   const explanationMap = new Map(
     questionRows?.map(q => [q.id, q.explanation]) ?? []
@@ -608,6 +614,19 @@ export async function submitExam(
     return { error: 'Exam status update mismatch' }
   }
 
+  // Notification doesn't depend on the recalc below — run it concurrently,
+  // but await before returning so serverless doesn't drop it.
+  const notifyPromise = getUserDisplayName(user.id)
+    .then(userName => notifyMentorsOf(
+      user.id,
+      'exam_completed',
+      `${userName} completed a comprehensive exam (${score} points - ${passed ? 'passed' : 'failed'})`,
+      undefined,
+      '/admin/tasks',
+      examId
+    ))
+    .catch(err => console.error('[submitExam] mentor notification failed:', err))
+
   await recalculateUserScores(user.id)
 
   if (exam.subcategory === 'comprehensive') {
@@ -615,15 +634,7 @@ export async function submitExam(
     await resetCycleCompletedAt(user.id)
   }
 
-  const userName = await getUserDisplayName(user.id)
-  await notifyMentorsOf(
-    user.id,
-    'exam_completed',
-    `${userName} completed a comprehensive exam (${score} points - ${passed ? 'passed' : 'failed'})`,
-    undefined,
-    '/admin/tasks',
-    examId
-  )
+  await notifyPromise
 
   const results = validAnswers.map(a => ({
     questionId: a.questionId,

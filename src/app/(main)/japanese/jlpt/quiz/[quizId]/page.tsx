@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import QuizTaker from '@/components/japanese/QuizTaker'
 import { shuffleArray } from '@/lib/shuffle'
 
@@ -24,19 +24,7 @@ export default async function QuizPage({ params }: { params: Promise<Params> }) 
   const quizLevel = quiz.title.match(/N[1-5]/)?.[0]
   const backUrl = quizLevel ? `/japanese/jlpt/quiz?level=${quizLevel}` : '/japanese/jlpt/quiz'
 
-  // 1-attempt guard for mentees
-  const { data: { user } } = await supabase.auth.getUser()
-  if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    // Mentees can freely retake practice quizzes
-  }
-
-  type SafeOption = { id: string; option_text: string; sort_order: number }
+  type SafeOption ={ id: string; option_text: string; sort_order: number }
   type QuestionRow = {
     id: string
     question_text: string

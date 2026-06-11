@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import QuizTaker from '@/components/japanese/QuizTaker'
 import { shuffleArray } from '@/lib/shuffle'
 import { STEP2_DIFFICULTY_RATIOS } from '@/lib/assessment-config'
@@ -26,19 +26,7 @@ export default async function BusinessQuizPage({ params }: { params: Promise<Par
     ? `/japanese/business/quiz/tests?type=${quiz.quiz_type}`
     : `/japanese/business/quiz?type=${quiz.quiz_type}`
 
-  // 1-attempt guard for mentees
-  const { data: { user } } = await supabase.auth.getUser()
-  if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    // Mentees can freely retake practice quizzes
-  }
-
-  type SafeOption = { id: string; option_text: string; sort_order: number }
+  type SafeOption ={ id: string; option_text: string; sort_order: number }
   type QuestionRow = {
     id: string
     question_text: string

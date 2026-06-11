@@ -419,9 +419,10 @@ export async function fetchRandomAssessmentQuestions(
 
   if (step === 5) {
     // ビジネスリテラシー: weighted category selection (30 total)
+    const { STEP5_CATEGORY_WEIGHTS_JP, STEP5_CATEGORY_WEIGHTS_NON_JP } = await import('@/lib/assessment-config')
     const weights: Record<string, number> = isJapanese
-      ? { business_manner: 10, communication: 10, security: 10 }
-      : { business_manner: 8, communication: 8, cross_culture: 7, security: 7 }
+      ? STEP5_CATEGORY_WEIGHTS_JP
+      : STEP5_CATEGORY_WEIGHTS_NON_JP
     const result = await fetchRandomByWeightedCategory(quizIds, weights)
     if (result.length > 0) return result
     return fetchRandomByDifficulty(quizIds, 30)

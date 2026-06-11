@@ -58,6 +58,20 @@ export const STEP2_DIFFICULTY_RATIOS: Record<string, number> = {
   上級: 0.4,
 }
 
+/** Step 5 ビジネスリテラシー category weights (30 questions total) */
+export const STEP5_CATEGORY_WEIGHTS_JP: Record<string, number> = {
+  business_manner: 10,
+  communication: 10,
+  security: 10,
+}
+
+export const STEP5_CATEGORY_WEIGHTS_NON_JP: Record<string, number> = {
+  business_manner: 8,
+  communication: 8,
+  cross_culture: 7,
+  security: 7,
+}
+
 export const ASSESSMENT_CONTENT_QUIZ_TYPES: Record<number, string[]> = {
   1: ['jlpt_grammar', 'jlpt_reading', 'jlpt_listening'],
   2: ['it_terminology', 'sentence_pattern', 'business_expression', 'keigo'],

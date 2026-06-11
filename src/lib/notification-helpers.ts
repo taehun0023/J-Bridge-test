@@ -97,16 +97,18 @@ export async function notifyMentorsOf(
     .select('mentor_id')
     .eq('mentee_id', menteeId)
 
-  for (const assignment of mentorAssignments ?? []) {
-    await createNotification(
-      assignment.mentor_id,
-      type,
-      title,
-      message,
-      link,
-      relatedId
-    )
-  }
+  const rows = (mentorAssignments ?? []).map(assignment => ({
+    user_id: assignment.mentor_id,
+    type,
+    title,
+    message: message ?? null,
+    link: link ?? null,
+    related_id: relatedId ?? null,
+  }))
+  if (rows.length === 0) return
+
+  const { error } = await client.from('notifications').insert(rows)
+  if (error) console.error('[notifyMentorsOf] bulk insert failed:', error.message)
 }
 
 /**
@@ -129,16 +131,18 @@ export async function notifyAdmins(
     .select('id')
     .eq('role', 'admin')
 
-  for (const admin of admins ?? []) {
-    await createNotification(
-      admin.id,
-      type,
-      title,
-      message,
-      link,
-      relatedId
-    )
-  }
+  const rows = (admins ?? []).map(admin => ({
+    user_id: admin.id,
+    type,
+    title,
+    message: message ?? null,
+    link: link ?? null,
+    related_id: relatedId ?? null,
+  }))
+  if (rows.length === 0) return
+
+  const { error } = await client.from('notifications').insert(rows)
+  if (error) console.error('[notifyAdmins] bulk insert failed:', error.message)
 }
 
 /**

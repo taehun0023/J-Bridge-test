@@ -4,7 +4,7 @@ import { createSubmission, pollSubmissionResult, getLanguageId, mapJudge0Status 
 import { analyzeCode } from '@/lib/code-review/analyzer'
 import { revalidatePath } from 'next/cache'
 import { requireAuth } from '@/lib/auth-helpers'
-import { recalculateUserScores } from './scores'
+import { recalculateUserScores } from '@/modules/scoring'
 
 export async function submitCode(problemId: string, sourceCode: string, language: string) {
   const auth = await requireAuth()

@@ -2,44 +2,13 @@
 
 import { requireAuth } from '@/lib/auth-helpers'
 import { createServiceRoleClient } from '@/lib/supabase/server'
-import { recalculateUserScores } from './scores'
+import { recalculateUserScores } from '@/modules/scoring'
 import { checkAssignmentProgress } from './learning-assignments'
-
-// Practice quiz types that are subject to 1-attempt limit (pool quizzes)
-const PRACTICE_QUIZ_TYPES = [
-  'jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening', 'jlpt_kanji',
-  'it_terminology', 'sentence_pattern', 'business_expression', 'keigo',
-  'cs_knowledge',
-  'core_programming', 'framework',
-]
 
 export async function startQuizAttempt(quizId: string) {
   const auth = await requireAuth()
   if ('error' in auth) return { error: auth.error } as const
   const { supabase, user } = auth
-
-  const serviceClient = createServiceRoleClient()
-  const queryClient = serviceClient ?? supabase
-
-  // Check if this is a practice quiz with 1-attempt limit
-  const { data: quiz } = await queryClient
-    .from('quizzes')
-    .select('quiz_type, is_assessment, is_pool')
-    .eq('id', quizId)
-    .single()
-
-  if (quiz && !quiz.is_assessment && PRACTICE_QUIZ_TYPES.includes(quiz.quiz_type)) {
-    // Check user role
-    const { data: profile } = await queryClient
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (profile?.role === 'mentee') {
-      // Mentees can freely retake practice quizzes — no approval gate
-    }
-  }
 
   const { data, error } = await supabase
     .from('quiz_attempts')
