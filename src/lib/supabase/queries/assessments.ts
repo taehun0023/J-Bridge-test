@@ -242,8 +242,10 @@ async function fetchStep1JlptStyle(quizIds: string | string[]): Promise<Question
       picked.push(...needed)
     }
 
-    // Shuffle within category, but keep category order intact
-    result.push(...shuffle(picked))
+    // Shuffle within category, but keep category order intact.
+    // Math.round per difficulty can overshoot targetCount (e.g. 15 → 17) —
+    // trim after shuffling so the cut falls uniformly across difficulties.
+    result.push(...shuffle(picked).slice(0, targetCount))
   }
 
   return result
@@ -280,8 +282,10 @@ async function fetchStep2BusinessStyle(quizIds: string | string[]): Promise<Ques
       picked.push(...needed)
     }
 
-    // Shuffle within category, but keep category order intact
-    result.push(...shuffle(picked))
+    // Shuffle within category, but keep category order intact.
+    // Math.round per difficulty can overshoot targetCount (e.g. 15 → 17) —
+    // trim after shuffling so the cut falls uniformly across difficulties.
+    result.push(...shuffle(picked).slice(0, targetCount))
   }
 
   return result
@@ -318,7 +322,7 @@ async function fetchStep3CsStyle(quizIds: string | string[]): Promise<QuestionWi
       picked.push(...needed)
     }
 
-    result.push(...shuffle(picked))
+    result.push(...shuffle(picked).slice(0, targetCount))
   }
 
   return result.length > 0 ? result : fetchRandomByDifficulty(quizIds, 30)

@@ -110,6 +110,20 @@ export async function requestRetakeExam(examId: string) {
   if (!exam) return { error: '試験が見つかりません' }
   if (exam.status !== 'failed' && exam.status !== 'completed') return { error: '完了済みまたは不合格の試験のみ再試験リクエストできます' }
 
+  // Prevent parallel retakes — same duplicate check as requestExam
+  const { data: existing } = await queryClient
+    .from('comprehensive_exams')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('category', exam.category)
+    .eq('subcategory', exam.subcategory)
+    .in('status', ['requested', 'approved', 'in_progress'])
+    .limit(1)
+
+  if (existing && existing.length > 0) {
+    return { error: '既にリクエスト中または進行中の試験があります' }
+  }
+
   // Create a new exam — auto-approved for all roles (no approval gate)
   const { data: newExam, error: insertError } = await queryClient
     .from('comprehensive_exams')

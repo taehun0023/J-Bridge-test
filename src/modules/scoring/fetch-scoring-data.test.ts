@@ -1,6 +1,51 @@
 import { describe, it, expect } from 'vitest'
-import { mergeCompExamScores } from './fetch-scoring-data'
-import type { AssessmentScores } from './types'
+import { fetchScoringData, mergeCompExamScores } from './fetch-scoring-data'
+import type { AssessmentScores, ScoringClient } from './types'
+
+// Minimal thenable query-builder fake: every chained method returns itself,
+// awaiting it resolves to the configured { data, error } result.
+function makeBuilder(result: { data: unknown; error: { message: string } | null }) {
+  const builder: Record<string, unknown> = {}
+  for (const method of ['select', 'eq', 'not', 'in', 'order', 'single']) {
+    builder[method] = () => builder
+  }
+  builder.then = (resolve: (value: unknown) => void) => resolve(result)
+  return builder
+}
+
+function makeClient(perTable: Record<string, { data: unknown; error: { message: string } | null }>) {
+  return {
+    from: (table: string) => makeBuilder(perTable[table] ?? { data: [], error: null }),
+  } as unknown as ScoringClient
+}
+
+describe('fetchScoringData() error guard', () => {
+  const happyProfile = { profiles: { data: { is_japanese: false }, error: null } }
+
+  it('throws when any read fails instead of computing all-zero scores', async () => {
+    const client = makeClient({
+      ...happyProfile,
+      quiz_attempts: { data: null, error: { message: 'connection reset' } },
+    })
+    await expect(fetchScoringData(client, 'user-1')).rejects.toThrow(/quiz_attempts/)
+  })
+
+  it('throws when the profile read fails', async () => {
+    const client = makeClient({
+      profiles: { data: null, error: { message: 'no rows' } },
+    })
+    await expect(fetchScoringData(client, 'user-1')).rejects.toThrow(/profiles/)
+  })
+
+  it('resolves with empty scoring data when all reads succeed', async () => {
+    const client = makeClient(happyProfile)
+    const data = await fetchScoringData(client, 'user-1')
+    expect(data.isJapanese).toBe(false)
+    expect(data.assessmentScores).toEqual({})
+    expect(data.quizScoresByType).toEqual({})
+    expect(data.highestRankScore).toBe(0)
+  })
+})
 
 describe('mergeCompExamScores()', () => {
   it('applies comprehensive exam scores when no assessment scores exist', () => {

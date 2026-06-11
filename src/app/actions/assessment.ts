@@ -94,8 +94,17 @@ export async function submitAssessment(
 
   if (attemptError || !attempt) return { error: '試験の開始に失敗しました' }
 
+  // At most one answer per question — payload is client-controlled, and
+  // quiz_answers enforces UNIQUE(attempt_id, question_id) since 00180
+  const seenQuestionIds = new Set<string>()
+  const uniqueAnswers = answers.filter(a => {
+    if (seenQuestionIds.has(a.questionId)) return false
+    seenQuestionIds.add(a.questionId)
+    return true
+  })
+
   // Get correct answers
-  const questionIds = answers.map(a => a.questionId)
+  const questionIds = uniqueAnswers.map(a => a.questionId)
   const { data: correctOptions } = await serviceClient
     .from('quiz_question_options')
     .select('id, question_id, is_correct')
@@ -108,7 +117,7 @@ export async function submitAssessment(
 
   // Grade and insert answers
   let correctCount = 0
-  const answerRows = answers.map((a, index) => {
+  const answerRows = uniqueAnswers.map((a, index) => {
     const isCorrect = correctMap.get(a.questionId) === a.selectedOptionId
     if (isCorrect) correctCount++
     return {
@@ -123,7 +132,7 @@ export async function submitAssessment(
   await supabase.from('quiz_answers').insert(answerRows)
 
   // Score: correct / totalQuestions (unanswered = wrong)
-  const denominator = Math.max(totalQuestions, answers.length)
+  const denominator = Math.max(totalQuestions, uniqueAnswers.length)
   const score = Math.max(1, Math.round((correctCount / denominator) * 100))
 
   await supabase

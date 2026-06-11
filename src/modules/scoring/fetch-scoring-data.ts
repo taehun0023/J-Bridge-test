@@ -67,6 +67,21 @@ export async function fetchScoringData(
         .order('completed_at', { ascending: false }),
     ])
 
+  // A failed read here would silently compute all-zero scores and overwrite
+  // real HR data downstream — fail loudly instead (caller logs and aborts).
+  const reads: [string, { error: { message: string } | null }][] = [
+    ['profiles', profileResult],
+    ['quiz_attempts', quizAttemptsResult],
+    ['code_submissions', submissionsResult],
+    ['coding_exam_attempts', examAttemptsResult],
+    ['comprehensive_exams', compExamResult],
+  ]
+  for (const [table, result] of reads) {
+    if (result.error) {
+      throw new Error(`[scoring] ${table} read failed for ${userId}: ${result.error.message}`)
+    }
+  }
+
   const isJapanese = profileResult.data?.is_japanese ?? false
 
   // Classify quiz attempts into assessment vs regular

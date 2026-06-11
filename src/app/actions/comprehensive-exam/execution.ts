@@ -219,6 +219,15 @@ export async function startExam(examId: string) {
     const totalQ = ASSESSMENT_TOTAL_QUESTIONS[step] ?? exam.total_questions
     const timeLimit = ASSESSMENT_TIME_LIMITS[step] ?? exam.time_limit_minutes
     const startedAt = new Date().toISOString()
+    const selected = questions.slice(0, totalQ)
+
+    // Persist the drawn set so a mid-exam refresh reloads the same questions
+    // and submitExam can validate answers against it (CS path does the same).
+    const persistErr = await persistExamQuestions(serviceClient, examId, selected)
+    if (persistErr) {
+      console.error('Failed to persist comprehensive exam questions:', persistErr)
+      return { error: 'Failed to persist comprehensive exam questions' }
+    }
 
     const { error: updateErr } = await serviceClient
       .from('comprehensive_exams')
@@ -236,7 +245,7 @@ export async function startExam(examId: string) {
     }
 
     return {
-      questions: formatExamQuestions(questions.slice(0, totalQ)),
+      questions: formatExamQuestions(selected),
       timeLimit,
       startedAt,
     }
@@ -262,7 +271,7 @@ export async function startExam(examId: string) {
 
   const { data: allQuestions } = await serviceClient
     .from('quiz_questions')
-    .select('id, question_text, quiz_question_options(id, option_text)')
+    .select('id, question_text, question_category, difficulty, quiz_question_options(id, option_text)')
     .in('quiz_id', quizIds)
 
   if (!allQuestions || allQuestions.length === 0) {
@@ -272,6 +281,13 @@ export async function startExam(examId: string) {
   const shuffled = allQuestions.sort(() => Math.random() - 0.5)
   const selected = shuffled.slice(0, exam.total_questions)
   const standardStartedAt = new Date().toISOString()
+
+  // Persist the drawn set so a mid-exam refresh reloads the same questions
+  const stdPersistErr = await persistExamQuestions(serviceClient, examId, selected)
+  if (stdPersistErr) {
+    console.error('Failed to persist exam questions:', stdPersistErr)
+    return { error: 'Failed to persist exam questions' }
+  }
 
   const { error: stdUpdateErr } = await serviceClient
     .from('comprehensive_exams')
@@ -299,6 +315,8 @@ export async function startExam(examId: string) {
 
 /**
  * Load questions for an in-progress exam (handles page refresh mid-exam).
+ * Reloads the persisted question set; exams started before persistence was
+ * introduced fall back to regenerating a random set (legacy behavior).
  */
 export async function loadExamQuestions(examId: string) {
   const auth = await requireAuth()
@@ -335,6 +353,19 @@ export async function loadExamQuestions(examId: string) {
   if (exam.subcategory === 'comprehensive') {
     const step = COMP_EXAM_CATEGORY_TO_STEP[exam.category]
     if (!step) return { error: 'Unsupported comprehensive exam category' }
+
+    // Reload the persisted set — the same questions the user started with.
+    const { error: persistedErr, questions: persisted } = await loadPersistedExamQuestions(serviceClient, examId)
+    if (!persistedErr && persisted.length > 0) {
+      return {
+        questions: formatExamQuestions(persisted),
+        timeLimit: ASSESSMENT_TIME_LIMITS[step] ?? exam.time_limit_minutes,
+        startedAt: exam.started_at,
+      }
+    }
+
+    // Legacy fallback: exams started before persistence existed (re-randomizes).
+    console.warn('No persisted question set for comprehensive exam (legacy), regenerating:', examId)
 
     const assessmentQuizId = ASSESSMENT_QUIZ_IDS[step]
     if (!assessmentQuizId) return { error: 'Assessment quiz not found' }
@@ -378,6 +409,16 @@ export async function loadExamQuestions(examId: string) {
     return {
       questions: formatExamQuestions(questions.slice(0, totalQ)),
       timeLimit,
+      startedAt: exam.started_at,
+    }
+  }
+
+  // Standard exams: reload the persisted set; legacy exams regenerate below.
+  const { error: stdPersistedErr, questions: stdPersisted } = await loadPersistedExamQuestions(serviceClient, examId)
+  if (!stdPersistedErr && stdPersisted.length > 0) {
+    return {
+      questions: formatExamQuestions(stdPersisted),
+      timeLimit: exam.time_limit_minutes,
       startedAt: exam.started_at,
     }
   }
@@ -469,6 +510,8 @@ export async function submitExam(
         passed: false,
       })
       .eq('id', examId)
+      // Double-submit guard: only the first concurrent submit matches
+      .eq('status', 'in_progress')
       .select('id, status, score')
       .single()
 
@@ -550,6 +593,8 @@ export async function submitExam(
       passed,
     })
     .eq('id', examId)
+    // Double-submit guard: only the first concurrent submit matches
+    .eq('status', 'in_progress')
     .select('id, status, score')
     .single()
 

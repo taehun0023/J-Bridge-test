@@ -266,7 +266,9 @@ async function createExamCycle(
 
 /**
  * Check if all exams in a cycle are done, and if so mark cycle as completed.
- * Uses timestamp-based query (not exam_cycle_id FK) for reliability.
+ * Matches the cycle's exams by exam_cycle_id FK so retakes (created without a
+ * cycle) can't shadow the cycle's own exams; cycles whose exams predate the FK
+ * being populated fall back to the legacy timestamp heuristic.
  */
 async function completeExamCycle(cycleId: string, userId: string, cycleCreatedAt: string): Promise<boolean> {
   const serviceClient = createServiceRoleClient()
@@ -281,15 +283,26 @@ async function completeExamCycle(cycleId: string, userId: string, cycleCreatedAt
     .single()
   const cycleCategories = profile?.is_japanese ? JAPANESE_EXAM_CATEGORIES : FIRST_CYCLE_NON_JAPANESE
 
-  // Find cycle exams by timestamp (not FK — PostgREST schema cache issue)
-  const { data: allExams } = await serviceClient
+  // Match by FK first; fall back to the legacy timestamp heuristic when the
+  // cycle's exams were created before exam_cycle_id was populated.
+  let { data: allExams } = await serviceClient
     .from('comprehensive_exams')
     .select('id, category, status')
-    .eq('user_id', userId)
+    .eq('exam_cycle_id', cycleId)
     .eq('subcategory', 'comprehensive')
     .in('category', cycleCategories)
-    .gte('requested_at', cycleCreatedAt)
-    .order('requested_at', { ascending: true })
+
+  if (!allExams || allExams.length === 0) {
+    const { data: legacyExams } = await serviceClient
+      .from('comprehensive_exams')
+      .select('id, category, status')
+      .eq('user_id', userId)
+      .eq('subcategory', 'comprehensive')
+      .in('category', cycleCategories)
+      .gte('requested_at', cycleCreatedAt)
+      .order('requested_at', { ascending: true })
+    allExams = legacyExams
+  }
 
   // Deduplicate by category (keep highest-priority status)
   const STATUS_PRIORITY: Record<string, number> = { completed: 4, failed: 3, in_progress: 2, approved: 1 }

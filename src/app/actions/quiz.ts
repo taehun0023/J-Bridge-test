@@ -72,12 +72,21 @@ export async function submitQuizAnswers(
 
   if (!attempt) return { error: '無効な試行です' }
 
+  // At most one answer per question — payload is client-controlled, and
+  // quiz_answers enforces UNIQUE(attempt_id, question_id) since 00180
+  const seenQuestionIds = new Set<string>()
+  const uniqueAnswers = answers.filter(a => {
+    if (seenQuestionIds.has(a.questionId)) return false
+    seenQuestionIds.add(a.questionId)
+    return true
+  })
+
   // Get correct answers (server-side only — base-table SELECT is admin/mentor-only
   // under RLS since 00178; mentees only see the is_correct-free safe view)
   const serviceClient = createServiceRoleClient()
   if (!serviceClient) return { error: '採点処理を実行できませんでした' }
 
-  const questionIds = answers.map(a => a.questionId)
+  const questionIds = uniqueAnswers.map(a => a.questionId)
   const { data: correctOptions } = await serviceClient
     .from('quiz_question_options')
     .select('id, question_id, is_correct')
@@ -90,7 +99,7 @@ export async function submitQuizAnswers(
 
   // Grade and insert answers
   let correctCount = 0
-  const answerRows = answers.map((a, index) => {
+  const answerRows = uniqueAnswers.map((a, index) => {
     const isCorrect = correctMap.get(a.questionId) === a.selectedOptionId
     if (isCorrect) correctCount++
     return {
@@ -106,7 +115,7 @@ export async function submitQuizAnswers(
   if (answersError) return { error: '回答の保存に失敗しました: ' + answersError.message }
 
   // Calculate score: use totalQuestions (full quiz length) as denominator when provided
-  const denominator = totalQuestions && totalQuestions > 0 ? totalQuestions : answers.length
+  const denominator = totalQuestions && totalQuestions > 0 ? totalQuestions : uniqueAnswers.length
   const score = denominator > 0 ? Math.round((correctCount / denominator) * 100) : 0
 
   // Get passing score
@@ -120,7 +129,8 @@ export async function submitQuizAnswers(
 
   const passed = score >= (quiz?.passing_score ?? 70)
 
-  const { error: updateError } = await supabase
+  // Double-submit guard: only complete an attempt that is still open
+  const { data: completedAttempt, error: updateError } = await supabase
     .from('quiz_attempts')
     .update({
       score,
@@ -128,8 +138,11 @@ export async function submitQuizAnswers(
       completed_at: new Date().toISOString(),
     })
     .eq('id', attemptId)
+    .is('completed_at', null)
+    .select('id')
+    .single()
 
-  if (updateError) return { error: 'クイズ結果の保存に失敗しました: ' + updateError.message }
+  if (updateError || !completedAttempt) return { error: 'クイズ結果の保存に失敗しました' }
 
   // Recalculate user scores after quiz completion
   recalculateUserScores(user.id).catch((err) =>
