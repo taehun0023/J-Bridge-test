@@ -1,5 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { selectCsComprehensiveQuestionsFromPool } from '@/lib/cs-comprehensive-selector'
+import { BUCKET, getCacheKey } from '@/lib/tts-utils'
 
 export interface QuestionWithOptions {
   id: string
@@ -31,6 +32,54 @@ function shuffle<T>(arr: T[]): T[] {
     ;[result[i], result[j]] = [result[j], result[i]]
   }
   return result
+}
+
+/**
+ * Extract the TTS script the exam player will request — must replicate
+ * ExamClient.parseListeningQuestion exactly (\n\n split, all parts except the
+ * last). Returns null when the format doesn't produce a player; in that case
+ * the full text is displayed and no audio is required.
+ */
+function getExamListeningScript(questionText: string): string | null {
+  const normalized = questionText.replace(/\\n/g, '\n')
+  const parts = normalized.split('\n\n')
+  if (parts.length < 3) return null
+  return parts.slice(0, parts.length - 1).join('\n\n')
+}
+
+/**
+ * Safety net: exclude listening questions whose TTS audio is not in the cache
+ * bucket. A cache miss at exam time falls back to live synthesis, which can
+ * fail and leave the question unanswerable (audio plays only once). Fails open
+ * (returns the pool unchanged) if Storage can't be listed, so exams still
+ * start when the bucket is unreachable.
+ */
+async function filterListeningByTtsCache(pool: QuestionWithOptions[]): Promise<QuestionWithOptions[]> {
+  const needsAudio = pool.filter(
+    q => q.question_category === 'listening' && getExamListeningScript(q.question_text) !== null
+  )
+  if (needsAudio.length === 0) return pool
+
+  const storageClient = createServiceRoleClient() ?? (await createClient())
+  const cachedFiles = new Set<string>()
+  const PAGE = 1000
+  for (let offset = 0; offset < PAGE * 10; offset += PAGE) {
+    const { data, error } = await storageClient.storage.from(BUCKET).list('', { limit: PAGE, offset })
+    if (error) return pool
+    for (const file of data ?? []) cachedFiles.add(file.name)
+    if (!data || data.length < PAGE) break
+  }
+
+  const uncachedIds = new Set(
+    needsAudio
+      // The exam player always requests speed 1.0 (ExamClient ListeningPlayer)
+      .filter(q => !cachedFiles.has(`${getCacheKey(getExamListeningScript(q.question_text)!, 1.0)}.mp3`))
+      .map(q => q.id)
+  )
+  if (uncachedIds.size > 0) {
+    console.warn(`[TTS Cache Filter] Excluded ${uncachedIds.size}/${needsAudio.length} listening question(s) without cached audio`)
+  }
+  return pool.filter(q => !uncachedIds.has(q.id))
 }
 
 export async function fetchAssessmentQuiz(quizId: string) {
@@ -166,7 +215,7 @@ export async function fetchCsComprehensiveQuestions(quizIds: string | string[]):
  *  Questions are grouped by category (order from STEP1_CATEGORY_WEIGHTS), shuffled within each category. */
 async function fetchStep1JlptStyle(quizIds: string | string[]): Promise<QuestionWithOptions[]> {
   const { STEP1_CATEGORY_WEIGHTS, STEP1_DIFFICULTY_RATIOS } = await import('@/lib/assessment-config')
-  const allQuestions = await fetchAllQuestions(quizIds)
+  const allQuestions = await filterListeningByTtsCache(await fetchAllQuestions(quizIds))
 
   const result: QuestionWithOptions[] = []
   const usedIds = new Set<string>()
