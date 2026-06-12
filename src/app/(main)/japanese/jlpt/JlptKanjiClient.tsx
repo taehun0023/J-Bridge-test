@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Pagination from '@/components/ui/Pagination'
 import EmptyState from '@/components/ui/EmptyState'
 import KanjiList from '@/components/japanese/KanjiList'
+import RangeQuizModal from '@/components/japanese/RangeQuizModal'
+import { generateKanjiQuiz } from '@/app/actions/range-quiz'
 import { toggleMastery } from '@/app/actions/mastery'
 import type { JlptLevel } from '@/lib/supabase/types'
 
@@ -45,6 +47,7 @@ export default function JlptKanjiClient({
   const router = useRouter()
   const searchParams = useSearchParams()
   const [searchInput, setSearchInput] = useState(search)
+  const [showQuiz, setShowQuiz] = useState(false)
 
   function updateParams(updates: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString())
@@ -64,6 +67,10 @@ export default function JlptKanjiClient({
   const handleToggleMastery = useCallback(async (itemId: string) => {
     await toggleMastery('jlpt_kanji', itemId)
   }, [])
+
+  const fetchQuestions = useCallback(async (start: number, end: number, count: number) => {
+    return generateKanjiQuiz({ level, rangeStart: start, rangeEnd: end, questionCount: count })
+  }, [level])
 
   return (
     <div>
@@ -100,7 +107,16 @@ export default function JlptKanjiClient({
           ))}
         </div>
 
-        <span className="ml-auto text-sm text-gray-500 dark:text-gray-400">{totalCount}字</span>
+        <div className="ml-auto flex items-center gap-3">
+          <span className="text-sm text-gray-500 dark:text-gray-400">{totalCount}字</span>
+          <button
+            onClick={() => setShowQuiz(true)}
+            disabled={totalCount === 0}
+            className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+          >
+            範囲クイズ
+          </button>
+        </div>
       </div>
 
       <div className="mt-4 rounded-xl border border-gray-200 bg-white px-4 dark:border-gray-700 dark:bg-gray-800">
@@ -116,6 +132,14 @@ export default function JlptKanjiClient({
         totalPages={totalPages}
         onPageChange={(page) => updateParams({ page: String(page) })}
       />
+
+      {showQuiz && (
+        <RangeQuizModal
+          totalCount={totalCount}
+          onClose={() => setShowQuiz(false)}
+          fetchQuestions={fetchQuestions}
+        />
+      )}
     </div>
   )
 }

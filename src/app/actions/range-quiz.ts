@@ -220,3 +220,58 @@ export async function generateVocabQuiz({
   return { questions }
 }
 
+export async function generateKanjiQuiz({
+  level,
+  rangeStart,
+  rangeEnd,
+  questionCount = 10,
+}: {
+  level: string
+  rangeStart: number
+  rangeEnd: number
+  questionCount?: number
+}): Promise<{ questions?: QuizQuestion[]; error?: string }> {
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase } = auth
+
+  // Match the kanji page sort order (sort_order ascending)
+  const query = supabase
+    .from('jlpt_kanji')
+    .select('id, kanji, reading_on, reading_kun, meaning_ko')
+    .eq('jlpt_level', level)
+    .order('sort_order', { ascending: true })
+    .range(rangeStart - 1, rangeEnd - 1)
+
+  const { data: rangeItems, error } = await query
+  if (error || !rangeItems || rangeItems.length === 0) {
+    return { error: '指定範囲にデータがありません' }
+  }
+
+  // Wrong answer pool from same level
+  const { data: poolData } = await supabase
+    .from('jlpt_kanji')
+    .select('meaning_ko')
+    .eq('jlpt_level', level)
+
+  const allAnswers = [...new Set(poolData?.map(p => p.meaning_ko) ?? [])]
+
+  const selected = shuffle(rangeItems).slice(0, questionCount)
+
+  const questions: QuizQuestion[] = selected.map(item => {
+    const wrongAnswers = shuffle(allAnswers.filter(a => a !== item.meaning_ko)).slice(0, 3)
+    const options = shuffle([
+      { label: item.meaning_ko, correct: true },
+      ...wrongAnswers.map(w => ({ label: w, correct: false })),
+    ])
+    return {
+      id: item.id,
+      question: item.kanji,
+      reading: item.reading_on ?? item.reading_kun ?? undefined,
+      options,
+    }
+  })
+
+  return { questions }
+}
+
