@@ -15,6 +15,7 @@ interface KanjiItem {
   reading_kun: string | null
   meaning_ko: string
   meaning_en: string | null
+  korean_gloss: string | null
   stroke_count: number | null
   jlpt_level: string
   example_words: { word: string; reading: string; meaning: string }[] | null

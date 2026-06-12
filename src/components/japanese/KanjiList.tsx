@@ -11,6 +11,7 @@ interface KanjiItem {
   reading_kun: string | null
   meaning_ko: string
   meaning_en: string | null
+  korean_gloss: string | null
   stroke_count: number | null
   jlpt_level: string
   example_words: { word: string; reading: string; meaning: string }[] | null
@@ -85,6 +86,9 @@ export default function KanjiList({ items, level, offset = 0, masteredIds = [], 
                   )}
                   {item.reading_kun && (
                     <p className="text-sm text-gray-500 dark:text-gray-400">訓: {item.reading_kun}</p>
+                  )}
+                  {item.korean_gloss && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">韓: {item.korean_gloss}</p>
                   )}
                 </div>
                 {item.stroke_count && (
