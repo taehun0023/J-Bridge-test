@@ -633,6 +633,32 @@ export async function getMyItemAssignmentProgress(): Promise<MyItemRow[]> {
   return rows
 }
 
+/**
+ * 단일 과제(項目/理解テスト)의 진척 — 멘토/관리자 리포트 카드용.
+ * mastered = 풀 ∩ 완료(마스ター item 또는 합격 quiz), 부여 누적 상한 캡.
+ * total    = 부여 누적(cumulative_target). 항목/퀴즈형 공통, 한자 포함.
+ * item 카테고리가 아니면 null → 호출측에서 별도 처리(business-lit 등).
+ */
+export async function getReportItemProgress(
+  service: DbClient,
+  userId: string,
+  category: string,
+  subcategory: string,
+  contentLevel: string | null,
+  cumulativeTarget: number | null,
+): Promise<{ mastered: number; total: number } | null> {
+  if (!isItemCategory(category)) return null
+  const spec = areaSpec(category, subcategory)
+  if (!spec) return null
+  const [pool, completed] = await Promise.all([
+    getPoolIds(service, spec, contentLevel),
+    getCompletedIds(service, userId, spec),
+  ])
+  const total = cumulativeTarget && cumulativeTarget > 0 ? cumulativeTarget : pool.size
+  const mastered = Math.min(intersectCount(pool, completed), total)
+  return { mastered, total }
+}
+
 // ─── 월간 자동 부여 (매달 1회, lazy: 달 바뀐 뒤 첫 접근 시 실행) ───
 
 export interface MonthlyAssignConfig {
@@ -711,6 +737,17 @@ export async function runMonthlyAutoAssignment(): Promise<void> {
     if (!isJlptLevel(level)) continue
     const assignedBy = adminRow?.id ?? m.id
 
+    // Atomically claim this month for this mentee BEFORE inserting, so concurrent
+    // dashboard-triggered runs can't each pass the stale guard and insert duplicates.
+    // Only the invocation that actually flips the flag proceeds; the rest skip.
+    const { data: claimed } = await service
+      .from('profiles')
+      .update({ last_auto_assign_month: currentMonth })
+      .eq('id', m.id)
+      .or(`last_auto_assign_month.is.null,last_auto_assign_month.neq.${currentMonth}`)
+      .select('id')
+    if (!claimed || claimed.length === 0) continue
+
     for (const area of areas) {
       const want = monthlyCounts[area as keyof MonthlyAssignConfig] ?? 0
       if (want <= 0) continue
@@ -755,7 +792,5 @@ export async function runMonthlyAutoAssignment(): Promise<void> {
         await createNotification(m.id, 'task_assigned', `今月の学習課題: ${level} ${spec.label} ${capped}項目`, undefined, '/dashboard/assignments', ins.id)
       }
     }
-
-    await service.from('profiles').update({ last_auto_assign_month: currentMonth }).eq('id', m.id)
   }
 }

@@ -2,6 +2,7 @@ import type { QuizType } from '@/lib/supabase/types'
 import { getAllSubsectionIds as getAttitudeIds } from '@/lib/attitude-manual-data'
 import { getAllSubsectionIds as getCultureIds } from '@/lib/culture-manual-data'
 import { getAllSubsectionIds as getSecurityIds } from '@/lib/security-manual-data'
+import { isItemCategory, categoryLabel as itemCategoryLabel, areaLabel as itemAreaLabel } from '@/lib/item-assignments'
 
 export interface SubcategoryConfig {
   label: string
@@ -89,11 +90,15 @@ export const DEV_LEVELS = [
 ] as const
 
 export function getCategoryLabel(category: string): string {
-  return ASSIGNMENT_CATEGORIES[category]?.label ?? category
+  return ASSIGNMENT_CATEGORIES[category]?.label
+    ?? (isItemCategory(category) ? itemCategoryLabel(category) : category)
 }
 
 export function getSubcategoryLabel(category: string, subcategory: string): string {
-  return ASSIGNMENT_CATEGORIES[category]?.subcategories[subcategory]?.label ?? subcategory
+  const direct = ASSIGNMENT_CATEGORIES[category]?.subcategories[subcategory]?.label
+  if (direct) return direct
+  if (isItemCategory(category)) return itemAreaLabel(category, subcategory)
+  return subcategory
 }
 
 export function getContentUrl(category: string, subcategory: string): string {

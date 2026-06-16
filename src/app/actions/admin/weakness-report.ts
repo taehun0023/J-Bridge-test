@@ -5,6 +5,8 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import { ERR } from '@/lib/action-types'
 import { getReadingTotalCount } from '@/lib/assignment-categories'
 import { resolveQuizIdsForAssignment } from '@/app/actions/learning-assignments'
+import { getReportItemProgress } from '@/app/actions/item-assignments'
+import { isItemCategory, areaSpec } from '@/lib/item-assignments'
 
 export interface ExamScorePoint {
   examId: string
@@ -246,7 +248,7 @@ export async function getMenteeAssignments(userId: string) {
 
   const { data: assignments } = await serviceClient
     .from('learning_assignments')
-    .select('id, title, category, subcategory, content_level, status, due_date, created_at, required_quiz_ids, passed_quiz_ids')
+    .select('id, title, category, subcategory, content_level, status, due_date, created_at, required_quiz_ids, passed_quiz_ids, cumulative_target')
     .eq('assigned_to', userId)
     .order('created_at', { ascending: false })
 
@@ -267,81 +269,35 @@ export async function getMenteeAssignments(userId: string) {
     masteryByType.get(m.item_type)!.add(m.item_id)
   }
 
-  // Collect unique levels/subcategories needed
-  const seikatsuLevels = [...new Set(
-    assignments.filter(a => a.category === 'seikatsu' && a.content_level).map(a => a.content_level as string)
-  )]
-  const bizSubcats = [...new Set(
-    assignments.filter(a => a.category === 'business-jp').map(a => a.subcategory)
-  )]
-
-  // JLPT item sets
-  const jlptItemSets: Record<string, { vocab: Set<string>; grammar: Set<string>; reading: Set<string>; listening: Set<string>; total: number }> = {}
-  for (const level of seikatsuLevels) {
-    const [vocabRes, grammarRes, readingRes, listeningRes] = await Promise.all([
-      serviceClient.from('jlpt_vocabulary').select('id').eq('jlpt_level', level),
-      serviceClient.from('jlpt_grammar').select('id').eq('jlpt_level', level),
-      serviceClient.from('jlpt_reading_passages').select('id').eq('jlpt_level', level),
-      serviceClient.from('jlpt_listening_scripts').select('id').eq('jlpt_level', level),
-    ])
-    const vocab = new Set((vocabRes.data ?? []).map(v => v.id))
-    const grammar = new Set((grammarRes.data ?? []).map(g => g.id))
-    const reading = new Set((readingRes.data ?? []).map(r => r.id))
-    const listening = new Set((listeningRes.data ?? []).map(l => l.id))
-    jlptItemSets[level] = { vocab, grammar, reading, listening, total: vocab.size + grammar.size + reading.size + listening.size }
+  // Consolidate item-ladder rows: ONE card per (category, area, level), keeping the
+  // latest rung (max cumulative_target). Monthly auto-assign stacks rows per ladder over
+  // time — the card should show the current total, not one card per month.
+  const ladderBest = new Map<string, (typeof assignments)[number]>()
+  const consolidated: typeof assignments = []
+  for (const a of assignments) {
+    if (a.cumulative_target == null) { consolidated.push(a); continue }
+    const key = `${a.category}::${a.subcategory ?? ''}::${a.content_level ?? ''}`
+    const cur = ladderBest.get(key)
+    if (!cur || (a.cumulative_target ?? 0) > (cur.cumulative_target ?? 0)) ladderBest.set(key, a)
   }
-
-  // Business JP item sets
-  const bizSubcatDbMap: Record<string, string[]> = {
-    glossary: ['business', 'it', 'dev'],
-    'sentence-patterns': ['sentence_pattern'],
-    expressions: ['expression'],
-    keigo: ['keigo'],
-  }
-  const bizJpInfo: Record<string, { ids: Set<string>; total: number }> = {}
-  for (const subcat of bizSubcats) {
-    const cats = bizSubcatDbMap[subcat]
-    if (!cats) continue
-    const { data: items } = await serviceClient.from('it_glossary').select('id').in('category', cats)
-    const ids = new Set((items ?? []).map(i => i.id))
-    bizJpInfo[subcat] = { ids, total: ids.size }
-  }
+  for (const a of ladderBest.values()) consolidated.push(a)
+  consolidated.sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''))
 
   // Dynamically resolve quiz IDs and calculate mastery per assignment
   const result: MenteeAssignment[] = []
-  for (const la of assignments) {
+  for (const la of consolidated) {
     let mastered = 0
     let total = 0
 
-    if (la.category === 'seikatsu' && la.content_level) {
-      const sets = jlptItemSets[la.content_level]
-      if (sets) {
-        total = sets.total
-        for (const [type, idSet] of [
-          ['jlpt_vocabulary', sets.vocab],
-          ['jlpt_grammar', sets.grammar],
-          ['jlpt_reading', sets.reading],
-          ['jlpt_listening', sets.listening],
-        ] as const) {
-          const masteredIds = masteryByType.get(type)
-          if (masteredIds) {
-            for (const id of masteredIds) {
-              if ((idSet as Set<string>).has(id)) mastered++
-            }
-          }
-        }
-      }
-    } else if (la.category === 'business-jp') {
-      const info = bizJpInfo[la.subcategory]
-      if (info) {
-        total = info.total
-        const masteredIds = masteryByType.get('it_glossary')
-        if (masteredIds) {
-          for (const id of masteredIds) {
-            if (info.ids.has(id)) mastered++
-          }
-        }
-      }
+    // Item / 理解テスト assignments (seikatsu, business-jp, seikatsu-quiz, business-jp-quiz):
+    // reuse the canonical per-area progress so mentee activity — including kanji and
+    // quiz passes — is reflected for mentors/admins, consistent with the mentee's own view.
+    const itemProg = await getReportItemProgress(
+      serviceClient, userId, la.category, la.subcategory, la.content_level, la.cumulative_target
+    )
+    if (itemProg) {
+      mastered = itemProg.mastered
+      total = itemProg.total
     } else if (la.category === 'business-lit') {
       total = getReadingTotalCount(la.category, la.subcategory)
       const types = la.subcategory === 'attitude-culture'
@@ -418,13 +374,14 @@ export async function getAssignmentDetail(assignmentId: string) {
     .eq('user_id', assignment.assigned_to)
     .gte('created_at', sevenDaysAgo.toISOString())
 
-  // Filter mastered items to assignment scope
+  // Filter mastered items to this assignment's scope (area-specific).
+  // Item areas → that area's item_type (kanji included); 理解テスト(quiz) areas have no
+  // item mastery, so their trend stays empty (progress shows via test results instead).
   const scopedItems = (masteredItems ?? []).filter(m => {
-    if (assignment.category === 'seikatsu') {
-      return ['jlpt_vocabulary', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening'].includes(m.item_type)
-    }
-    if (assignment.category === 'business-jp') {
-      return m.item_type === 'it_glossary'
+    if (isItemCategory(assignment.category)) {
+      const spec = areaSpec(assignment.category, assignment.subcategory)
+      if (!spec || spec.quizType) return false
+      return m.item_type === spec.itemType
     }
     if (assignment.category === 'business-lit') {
       const types = assignment.subcategory === 'attitude-culture'
