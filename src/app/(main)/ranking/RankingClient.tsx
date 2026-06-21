@@ -31,7 +31,7 @@ function getColumnHeaders(category: RankingCategory) {
     case 'overall':
       return { total: '全体 /400', sub1: '日本語力', sub2: 'プログラミング技術力' }
     case 'japanese':
-      return { total: '日本語力 /200', sub1: '生活日本語', sub2: 'ビジネス日本語' }
+      return { total: '日本語力 /200', sub1: 'JLPT', sub2: 'ビジネス日本語' }
     case 'programming':
       return { total: 'プログラミング /200', sub1: 'CS知識', sub2: '開発実務能力' }
   }

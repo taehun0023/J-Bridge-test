@@ -12,12 +12,12 @@ import {
   type JapaneseAssignmentRow,
   type JapaneseProgressStat,
 } from '@/lib/japanese-progress'
-import { aggregateItemProgress, aggregateQuizProgress, getMyItemAssignmentProgress, runMonthlyAutoAssignment } from '@/app/actions/item-assignments'
+import { aggregateItemProgress, aggregateQuizProgress, aggregateTestPoolProgress, getMyItemAssignmentProgress, runMonthlyAutoAssignment } from '@/app/actions/item-assignments'
 import { resolveQuizIdsForAssignment } from '@/app/actions/learning-assignments'
 import { getMenteeMentorsMap } from '@/lib/mentor-helpers'
 import MenteeItemProgressCard from '@/components/dashboard/MenteeItemProgressCard'
 
-/** 生活/ビジネス 집계를 "완료항목 / 부여항목"(항목 수 기준)으로 덮어쓴다. */
+/** 課題(生活/ビジネス) 집계를 "当月 완료 / 当月 부여"(항목 수)로, 全体進捗은 목표레벨 누적으로 덮어쓴다. */
 async function overrideWithItemProgress(
   jpStats: Map<string, JapaneseProgressStat>,
   menteeIds: string[],
@@ -28,8 +28,10 @@ async function overrideWithItemProgress(
     const s = jpStats.get(id)
     const ip = itemProg[id]
     if (s && ip) {
-      s.seikatsu = { completed: ip.seikatsu.completed, total: ip.seikatsu.assigned }
-      s.businessJp = { completed: ip.businessJp.completed, total: ip.businessJp.assigned }
+      // 今月課題 = 이번 달 부여분 / 完了 = 누적 완료·부여
+      s.seikatsu = { completed: ip.seikatsuThisMonth.completed, total: ip.seikatsuThisMonth.assigned }
+      s.seikatsuCumulative = { completed: ip.seikatsu.completed, total: ip.seikatsu.assigned }
+      s.businessJp = { completed: ip.businessJpThisMonth.completed, total: ip.businessJpThisMonth.assigned }
       // 全体進捗 = 목표 자격증 레벨의 生活日本語 항목만
       s.all = { completed: ip.overall.completed, total: ip.overall.assigned }
     }
@@ -71,7 +73,7 @@ async function buildEmployeeRows(
 
   const [{ data: jpAssignments }, { data: jpExams }] = await Promise.all([
     supabase.from('learning_assignments')
-      .select('assigned_to, category, status, due_date, created_at, completed_at')
+      .select('assigned_to, category, status, due_date, created_at, completed_at, target_count')
       .in('assigned_to', menteeIds)
       .in('category', JP_CATEGORIES as unknown as string[]),
     supabase.from('comprehensive_exams')
@@ -90,6 +92,8 @@ async function buildEmployeeRows(
 
   // 理解度テスト 진척: 부여된 (카테고리·영역·레벨)의 현재 퀴즈 풀을 동적 재조회
   // → 콘텐츠(理解度テスト)가 추가되면 분모(total)에 자동 반영, 추가분도 합격 대상
+  // 今月テスト(=부여된 테스트) 진척: 부여된 (카테고리·영역·레벨)의 현재 퀴즈 풀을 동적 재조회
+  // → 콘텐츠가 추가되면 분모(total)에 자동 반영, 추가분도 합격 대상
   const { data: quizAssigns } = await supabase
     .from('learning_assignments')
     .select('assigned_to, category, subcategory, content_level')
@@ -138,16 +142,43 @@ async function buildEmployeeRows(
     quizProg[id] = { total: qids.size, passed, attempted }
   }
 
-  // 새 방식 理解テスト(seikatsu-quiz / business-jp-quiz) 집계를 합산
+  // 새 방식 理解テスト(seikatsu-quiz / business-jp-quiz) 부여분을 合算
   const newQuizProg = await aggregateQuizProgress(menteeIds)
   for (const id of menteeIds) {
     const a = quizProg[id] ?? { total: 0, passed: 0, attempted: 0 }
     const b = newQuizProg[id] ?? { total: 0, passed: 0, attempted: 0 }
-    quizProg[id] = {
-      total: a.total + b.total,
-      passed: a.passed + b.passed,
-      attempted: a.attempted + b.attempted,
+    quizProg[id] = { total: a.total + b.total, passed: a.passed + b.passed, attempted: a.attempted + b.attempted }
+  }
+
+  // 全体テスト = 목표레벨 理解度テスト 전체 풀(부여 무관)
+  const quizPoolProg = await aggregateTestPoolProgress(menteeIds)
+
+  // 遅延에 합산할 테스트 = 부여 理解度テスト 중 overdue (항목과 동일하게 target_count 기준)
+  const { data: overdueTests } = await supabase
+    .from('learning_assignments')
+    .select('assigned_to, target_count')
+    .in('assigned_to', menteeIds)
+    .in('category', ['seikatsu-quiz', 'business-jp-quiz'])
+    .eq('status', 'overdue')
+  const overdueTestByMentee: Record<string, number> = {}
+  for (const t of overdueTests ?? []) overdueTestByMentee[t.assigned_to] = (overdueTestByMentee[t.assigned_to] ?? 0) + (t.target_count ?? 0)
+
+  // 테스트도 課題 카운트에 포함:
+  //   全体進捗 = 목표레벨 항목 풀 + 理解度テスト 전체 풀
+  //   今月課題 = 이번 달 항목 + 부여 테스트(今月テスト)
+  //   完了    = 누적 항목 + 부여 테스트
+  //   遅延    = 항목 overdue + 테스트 overdue
+  for (const id of menteeIds) {
+    const s = jpStats.get(id)
+    if (!s) continue
+    const qp = quizPoolProg[id]
+    if (qp) s.all = { completed: s.all.completed + qp.passed, total: s.all.total + qp.total }
+    const qa = quizProg[id]
+    if (qa) {
+      s.seikatsu = { completed: s.seikatsu.completed + qa.passed, total: s.seikatsu.total + qa.total }
+      s.seikatsuCumulative = { completed: s.seikatsuCumulative.completed + qa.passed, total: s.seikatsuCumulative.total + qa.total }
     }
+    s.overdue += overdueTestByMentee[id] ?? 0
   }
 
   return menteeProfiles.map(p => {
@@ -162,7 +193,6 @@ async function buildEmployeeRows(
       stat: jpStats.get(p.id)!,
       exam_seikatsu: exams.seikatsu ?? null,
       exam_business_jp: exams.businessJp ?? null,
-      quiz: quizProg[p.id] ?? { total: 0, passed: 0, attempted: 0 },
     }
   })
 }
@@ -384,7 +414,7 @@ export default async function DashboardPage() {
 
   // 최근 시험결과 통합
   const EXAM_CATEGORY_LABELS: Record<string, string> = {
-    seikatsu: '生活日本語 総合試験',
+    seikatsu: 'JLPT 総合試験',
     'business-jp': 'ビジネス日本語 総合試験',
     cs: 'CS知識 総合試験',
     dev: '開発実務能力 総合試験',

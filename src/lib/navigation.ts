@@ -48,7 +48,7 @@ export const categoryChildren: Record<
   }
 > = {
   seikatsu: {
-    title: '生活日本語',
+    title: 'JLPT',
     description: 'JLPT の語彙、文法、読解、聴解、漢字を段階的に学習します。',
     children: [
       { href: '/japanese/jlpt/n5', label: 'N5', description: '基礎的な日本語を学びます' },

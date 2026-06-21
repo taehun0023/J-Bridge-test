@@ -399,12 +399,18 @@ export async function getMenteeItemStatus(
 // ─── 대시보드 집계 (완료항목 / 부여항목, 멘티별 카테고리별) ───
 
 export interface ItemProgressPair { assigned: number; completed: number }
-export interface MenteeItemProgress { seikatsu: ItemProgressPair; businessJp: ItemProgressPair; overall: ItemProgressPair }
+export interface MenteeItemProgress {
+  seikatsu: ItemProgressPair            // 누적(完了 컬럼용): 전체 부여 누적 / 누적 완료
+  businessJp: ItemProgressPair
+  seikatsuThisMonth: ItemProgressPair   // 이번 달 부여분(今月課題 컬럼용)
+  businessJpThisMonth: ItemProgressPair
+  overall: ItemProgressPair             // 목표레벨 전체 풀(全体進捗 컬럼용)
+}
 
 export interface QuizProgress { total: number; passed: number; attempted: number }
 
 /**
- * 멘티별 理解度テスト(퀴즈형: seikatsu-quiz / business-jp-quiz) 집계.
+ * 멘티별 理解度テスト(퀴즈형: seikatsu-quiz / business-jp-quiz) 부여분 집계.
  * total    = 각 사다리(카테고리·레벨·영역) MAX cumulative_target 합 (부여 개수)
  * passed   = min(풀 내 합격 퀴즈 수, 부여 개수) 합
  * attempted= min(풀 내 응시 퀴즈 수, 부여 개수) 합
@@ -483,6 +489,75 @@ export async function aggregateQuizProgress(menteeIds: string[]): Promise<Record
 }
 
 /**
+ * 멘티별 全体テスト 집계 = 부여와 무관하게 "목표 자격증 레벨의 生活 理解度テスト 전체 풀".
+ * total = 목표레벨 seikatsu-quiz 5영역 풀 합, passed = 그중 합격 수.
+ * (全体進捗(항목)의 테스트 버전 — 부여 안 받아도 풀 전체가 분모)
+ */
+export async function aggregateTestPoolProgress(menteeIds: string[]): Promise<Record<string, QuizProgress>> {
+  const result: Record<string, QuizProgress> = {}
+  for (const id of menteeIds) result[id] = { total: 0, passed: 0, attempted: 0 }
+  const ids = menteeIds.map(String).filter(Boolean)
+  if (!ids.length) return result
+
+  const service = createServiceRoleClient()
+  if (!service) return result
+
+  const { data: profs } = await service.from('profiles').select('id, target_certification').in('id', ids)
+  const targetById = new Map((profs ?? []).map(p => [String(p.id), p.target_certification as string | null]))
+  const targetLevels = [...new Set([...targetById.values()].filter((v): v is string => !!v))]
+  if (!targetLevels.length) return result
+
+  const quizAreas = areaKeys('seikatsu-quiz')
+  // 레벨×영역 풀 + 전체 quizId
+  const lvlAreaPool = new Map<string, Set<string>>()
+  const allQuizIds = new Set<string>()
+  for (const lvl of targetLevels) {
+    for (const area of quizAreas) {
+      const spec = areaSpec('seikatsu-quiz', area)!
+      const pool = await getPoolIds(service, spec, lvl)
+      lvlAreaPool.set(`${lvl}::${area}`, pool)
+      pool.forEach(i => allQuizIds.add(i))
+    }
+  }
+
+  const passingByQuiz = new Map<string, number>()
+  const bestScore = new Map<string, number>() // `${userId}::${quizId}` → best score
+  if (allQuizIds.size) {
+    const idList = [...allQuizIds]
+    const [{ data: qz }, { data: att }] = await Promise.all([
+      service.from('quizzes').select('id, passing_score').in('id', idList),
+      service.from('quiz_attempts').select('user_id, quiz_id, score').in('user_id', ids).in('quiz_id', idList).not('score', 'is', null),
+    ])
+    for (const q of qz ?? []) passingByQuiz.set(String(q.id), q.passing_score ?? 70)
+    for (const a of att ?? []) {
+      const k = `${a.user_id}::${a.quiz_id}`
+      const cur = bestScore.get(k)
+      if (cur == null || a.score > cur) bestScore.set(k, a.score)
+    }
+  }
+
+  for (const id of ids) {
+    const lvl = targetById.get(id)
+    if (!lvl) continue
+    let total = 0, passed = 0, attempted = 0
+    for (const area of quizAreas) {
+      const pool = lvlAreaPool.get(`${lvl}::${area}`)
+      if (!pool) continue
+      total += pool.size
+      for (const qid of pool) {
+        const score = bestScore.get(`${id}::${qid}`)
+        if (score != null) {
+          attempted++
+          if (score >= (passingByQuiz.get(qid) ?? 70)) passed++
+        }
+      }
+    }
+    result[id] = { total, passed, attempted }
+  }
+  return result
+}
+
+/**
  * 멘티별 (생활/비즈니스) 항목 집계.
  * 부여항목 = 각 사다리(카테고리·레벨·영역)의 MAX cumulative_target 합.
  * 완료항목 = min(마스터 수, 부여누적) 합 (실제 학습 완료 항목).
@@ -490,7 +565,11 @@ export async function aggregateQuizProgress(menteeIds: string[]): Promise<Record
 export async function aggregateItemProgress(menteeIds: string[]): Promise<Record<string, MenteeItemProgress>> {
   const result: Record<string, MenteeItemProgress> = {}
   for (const id of menteeIds) {
-    result[id] = { seikatsu: { assigned: 0, completed: 0 }, businessJp: { assigned: 0, completed: 0 }, overall: { assigned: 0, completed: 0 } }
+    result[id] = {
+      seikatsu: { assigned: 0, completed: 0 }, businessJp: { assigned: 0, completed: 0 },
+      seikatsuThisMonth: { assigned: 0, completed: 0 }, businessJpThisMonth: { assigned: 0, completed: 0 },
+      overall: { assigned: 0, completed: 0 },
+    }
   }
   const ids = menteeIds.map(String).filter(Boolean)
   if (!ids.length) return result
@@ -500,21 +579,26 @@ export async function aggregateItemProgress(menteeIds: string[]): Promise<Record
 
   const { data: assigns } = await service
     .from('learning_assignments')
-    .select('assigned_to, category, subcategory, content_level, cumulative_target')
+    .select('assigned_to, category, subcategory, content_level, cumulative_target, target_count, created_at')
     .in('assigned_to', ids)
     .in('category', ['seikatsu', 'business-jp'])
     .not('target_count', 'is', null)
 
-  // 사다리별 최대 누적 (mentee, category, level, area)
-  const ladderMax = new Map<string, { menteeId: string; category: ItemCategory; level: string | null; area: string; cum: number }>()
+  // 사다리별(mentee, category, level, area):
+  //   maxCum          = 누적목표(cumulative_target) 최댓값      → 完了(누적) 분모
+  //   prevCum         = 이번 달 이전까지의 누적목표 최댓값
+  //   thisMonthTarget = 이번 달 생성 rung의 target_count 합     → 今月課題 분모
+  const nowMonth = new Date().toISOString().slice(0, 7) // 'YYYY-MM' (UTC)
+  const ladders = new Map<string, { menteeId: string; category: ItemCategory; level: string | null; area: string; maxCum: number; prevCum: number; thisMonthTarget: number }>()
   for (const a of (assigns ?? [])) {
     if (!isItemCategory(a.category)) continue
     const key = `${a.assigned_to}::${a.category}::${a.content_level ?? ''}::${a.subcategory}`
-    const cur = ladderMax.get(key)
+    let L = ladders.get(key)
+    if (!L) { L = { menteeId: a.assigned_to, category: a.category, level: a.content_level, area: a.subcategory, maxCum: 0, prevCum: 0, thisMonthTarget: 0 }; ladders.set(key, L) }
     const cum = a.cumulative_target ?? 0
-    if (!cur || cum > cur.cum) {
-      ladderMax.set(key, { menteeId: a.assigned_to, category: a.category, level: a.content_level, area: a.subcategory, cum })
-    }
+    L.maxCum = Math.max(L.maxCum, cum)
+    if (String(a.created_at ?? '').slice(0, 7) === nowMonth) L.thisMonthTarget += a.target_count ?? 0
+    else L.prevCum = Math.max(L.prevCum, cum)
   }
 
   // 풀 캐시 (category::level::area)
@@ -522,7 +606,7 @@ export async function aggregateItemProgress(menteeIds: string[]): Promise<Record
   // 마스터 캐시 (userId::itemType)
   const masteredCache = new Map<string, Set<string>>()
 
-  for (const L of ladderMax.values()) {
+  for (const L of ladders.values()) {
     const spec = areaSpec(L.category, L.area)
     if (!spec) continue
 
@@ -534,11 +618,18 @@ export async function aggregateItemProgress(menteeIds: string[]): Promise<Record
     let mastIds = masteredCache.get(mKey)
     if (!mastIds) { mastIds = await getMasteredIds(service, L.menteeId, spec.itemType); masteredCache.set(mKey, mastIds) }
 
-    // 課題 컬럼: 부여분까지의 완료 (부여 상한 캡)
-    const mastered = Math.min(intersectCount(poolIds, mastIds), L.cum)
-    const bucket = L.category === 'seikatsu' ? result[L.menteeId].seikatsu : result[L.menteeId].businessJp
-    bucket.assigned += L.cum
-    bucket.completed += mastered
+    const rawMastered = intersectCount(poolIds, mastIds)
+    const isSeikatsu = L.category === 'seikatsu'
+
+    // 完了(누적): 부여 누적까지의 완료
+    const cumBucket = isSeikatsu ? result[L.menteeId].seikatsu : result[L.menteeId].businessJp
+    cumBucket.assigned += L.maxCum
+    cumBucket.completed += Math.min(rawMastered, L.maxCum)
+
+    // 今月課題: (습득 − 이전달까지 누적목표)를 이번 달 부여분으로 캡
+    const tmBucket = isSeikatsu ? result[L.menteeId].seikatsuThisMonth : result[L.menteeId].businessJpThisMonth
+    tmBucket.assigned += L.thisMonthTarget
+    tmBucket.completed += Math.max(0, Math.min(rawMastered - L.prevCum, L.thisMonthTarget))
   }
 
   // ── 全体進捗 = 목표 레벨의 生活日本語 전 영역: 마스터(실제·상한없음) / 전체 풀 ──

@@ -7,7 +7,7 @@ export const ASSESSMENT_QUIZ_IDS: Record<number, string> = {
 }
 
 export const ASSESSMENT_LABELS: Record<number, string> = {
-  1: '生活日本語総合試験',
+  1: 'JLPT総合試験',
   2: 'ビジネス日本語総合試験',
   3: 'CS知識総合試験',
   4: '開発実務総合試験',
@@ -236,7 +236,7 @@ export const JAPANESE_USER_AXES = ['coreProgramming', 'framework', 'attitudeCult
 export type AxisKey = typeof ALL_AXES[number]
 
 export const AXIS_DISPLAY_LABELS: Record<AxisKey, string> = {
-  jlpt: '生活日本語',
+  jlpt: 'JLPT',
   itJapanese: 'ビジネス日本語',
   coreProgramming: 'CS知識',
   framework: '開発実務',

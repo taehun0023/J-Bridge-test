@@ -37,7 +37,7 @@ const EXAM_CATEGORY_GROUPS = {
 
 
 const categoryLabels: Record<string, string> = {
-  seikatsu: '生活日本語',
+  seikatsu: 'JLPT',
   'business-jp': 'ビジネス日本語',
   cs: 'CS知識',
   dev: '開発実務能力',
@@ -311,9 +311,22 @@ export async function getMenteeAssignments(userId: string) {
     // Dynamically resolve quiz IDs (always use latest from DB)
     const resolvedQuizIds = await resolveQuizIdsForAssignment(la.category, la.subcategory, la.content_level, serviceClient)
 
+    // Ladder rows are consolidated to one card showing the cumulative total — the stored
+    // title still carries the single-month付与 (e.g. "N1 漢字 170項目"), so regenerate it
+    // from cumulative_target (e.g. "N1 漢字 340項目") to reflect the real running total.
+    let title = la.title
+    if (la.cumulative_target != null && isItemCategory(la.category)) {
+      const spec = areaSpec(la.category, la.subcategory)
+      if (spec) {
+        title = la.content_level
+          ? `${la.content_level} ${spec.label} ${la.cumulative_target}項目`
+          : `${spec.label} ${la.cumulative_target}項目`
+      }
+    }
+
     result.push({
       id: la.id,
-      title: la.title,
+      title,
       category: la.category,
       subcategory: la.subcategory,
       content_level: la.content_level,

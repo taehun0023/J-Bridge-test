@@ -8,7 +8,7 @@ import NameRuby from '@/components/ui/NameRuby'
 import NameSelect from '@/components/ui/NameSelect'
 
 const categoryLabels: Record<string, string> = {
-  seikatsu: '生活日本語',
+  seikatsu: 'JLPT',
   business_jp: 'ビジネス日本語',
   cs: 'CS知識',
   dev: '開発実務能力',

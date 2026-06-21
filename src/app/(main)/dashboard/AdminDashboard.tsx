@@ -33,7 +33,6 @@ interface EmployeeRow {
   stat: JapaneseProgressStat
   exam_seikatsu: ExamScore | null
   exam_business_jp: ExamScore | null
-  quiz: { total: number; passed: number; attempted: number }
 }
 
 interface Props {
@@ -54,11 +53,6 @@ function ExamCell({ exam }: { exam: ExamScore | null }) {
       {exam.score}/{exam.passing_score}
     </span>
   )
-}
-
-function progressRatio(c: { completed: number; total: number }): number {
-  if (c.total === 0) return -1
-  return c.completed / c.total
 }
 
 function fmtPair(c: { completed: number; total: number }): string {
@@ -93,13 +87,10 @@ export default function AdminDashboard({ adminName, employees, variant = 'admin'
     (e.tech_mentor_name ?? '').toLowerCase().includes(search.toLowerCase())
   )
 
+  // 정렬: 遅延 많은 순 → (동률 시) 今月課題 적은 순
   const sorted = [...filtered].sort((a, b) => {
-    const ra = progressRatio(a.stat.all)
-    const rb = progressRatio(b.stat.all)
-    if (ra < 0 && rb < 0) return 0
-    if (ra < 0) return 1
-    if (rb < 0) return -1
-    return ra - rb
+    if (b.stat.overdue !== a.stat.overdue) return b.stat.overdue - a.stat.overdue
+    return a.stat.seikatsu.total - b.stat.seikatsu.total
   })
 
   return (
@@ -177,11 +168,9 @@ export default function AdminDashboard({ adminName, employees, variant = 'admin'
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">目標レベル</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">試験レベル</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">試験</th>
-                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">課題</th>
-                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">未完了</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">今月課題</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">完了</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">遅延</th>
-                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">理解度テスト</th>
-                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">今月進捗</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">全体進捗</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">%</th>
               </tr>
@@ -216,26 +205,12 @@ export default function AdminDashboard({ adminName, employees, variant = 'admin'
                     {fmtPair(e.stat.seikatsu)}
                   </td>
                   <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
-                    {Math.max(0, e.stat.seikatsu.total - e.stat.seikatsu.completed)}/{e.stat.seikatsu.total}
+                    {e.stat.seikatsuCumulative.completed}/{e.stat.seikatsuCumulative.total}
                   </td>
                   <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm dark:border-white/[0.06]">
                     <span className={e.stat.overdue > 0 ? 'font-semibold text-red-500' : 'text-zinc-500 dark:text-zinc-400'}>
                       {e.stat.overdue}
                     </span>
-                  </td>
-                  <td className="whitespace-nowrap border-l border-gray-200/40 px-3 py-3 text-center text-sm dark:border-white/[0.06]">
-                    {e.quiz.total === 0 ? (
-                      <span className="text-zinc-400">—/—</span>
-                    ) : e.quiz.attempted === 0 ? (
-                      <span className="text-zinc-500 dark:text-zinc-400">—/{e.quiz.total}</span>
-                    ) : (
-                      <span className={e.quiz.passed === e.quiz.total ? 'font-medium text-emerald-500' : 'text-zinc-700 dark:text-zinc-300'}>
-                        {e.quiz.passed}/{e.quiz.total}{e.quiz.passed === e.quiz.total ? ' ✓' : ''}
-                      </span>
-                    )}
-                  </td>
-                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
-                    {fmtPair(e.stat.thisMonth)}
                   </td>
                   <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
                     {fmtPair(e.stat.all)}

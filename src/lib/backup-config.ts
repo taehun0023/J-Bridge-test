@@ -122,7 +122,7 @@ export const COURSE_CATEGORY_GROUPS: Record<string, { group: BackupGroup; catego
 }
 
 export const QUIZ_TYPE_GROUPS: Record<string, { label: string; group: BackupGroup; quizTypes: string[] }> = {
-  step1: { label: '生活日本語', group: 'step1', quizTypes: ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening', 'jlpt_kanji'] },
+  step1: { label: 'JLPT', group: 'step1', quizTypes: ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening', 'jlpt_kanji'] },
   step2: { label: 'ビジネス日本語', group: 'step2', quizTypes: ['it_terminology', 'sentence_pattern', 'business_expression', 'keigo'] },
   step3: { label: 'CS知識', group: 'step3', quizTypes: ['cs_knowledge'] },
   step4: { label: '開発実務', group: 'step4', quizTypes: ['core_programming', 'framework'] },
@@ -131,7 +131,7 @@ export const QUIZ_TYPE_GROUPS: Record<string, { label: string; group: BackupGrou
 
 export const GROUP_LABELS: Record<BackupGroup, string> = {
   user: 'ユーザー情報',
-  step1: '生活日本語',
+  step1: 'JLPT',
   step2: 'ビジネス日本語',
   step3: 'CS知識',
   step4: '開発実務',

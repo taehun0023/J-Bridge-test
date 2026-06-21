@@ -45,7 +45,7 @@ interface RecentFeedback {
 }
 
 const feedbackCategoryLabels: Record<string, string> = {
-  seikatsu: '生活日本語',
+  seikatsu: 'JLPT',
   business_jp: 'ビジネス日本語',
   cs: 'CS知識',
   dev: '開発実務能力',
@@ -90,7 +90,7 @@ interface Props {
 }
 
 const CYCLE_CATEGORY_LABELS: Record<string, string> = {
-  seikatsu: '生活日本語',
+  seikatsu: 'JLPT',
   'business-jp': 'ビジネス日本語',
   cs: 'CS知識',
   dev: '開発実務',

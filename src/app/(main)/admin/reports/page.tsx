@@ -40,7 +40,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
     const { data } = await supabase
       .from('profiles')
       .select('id, full_name, email')
-      .in('role', ['mentee', 'mentor'])
+      .eq('role', 'mentee')
       .order('full_name')
 
     users = data ?? []

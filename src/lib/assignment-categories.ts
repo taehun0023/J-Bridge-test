@@ -22,7 +22,7 @@ export interface CategoryConfig {
 
 export const ASSIGNMENT_CATEGORIES: Record<string, CategoryConfig> = {
   seikatsu: {
-    label: '生活日本語',
+    label: 'JLPT',
     levelOnly: true,
     quizTypes: ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening', 'jlpt_kanji'],
     subcategories: {},

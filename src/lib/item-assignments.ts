@@ -42,7 +42,7 @@ export interface CategorySpec {
 
 export const ITEM_CATEGORIES: Record<ItemCategory, CategorySpec> = {
   seikatsu: {
-    label: '生活日本語',
+    label: 'JLPT',
     hasLevel: true,
     contentBase: '/japanese/jlpt',
     areas: {
@@ -65,7 +65,7 @@ export const ITEM_CATEGORIES: Record<ItemCategory, CategorySpec> = {
     },
   },
   'seikatsu-quiz': {
-    label: '生活日本語（理解テスト）',
+    label: 'JLPT（理解テスト）',
     hasLevel: true,
     contentBase: '/japanese/jlpt',
     areas: {

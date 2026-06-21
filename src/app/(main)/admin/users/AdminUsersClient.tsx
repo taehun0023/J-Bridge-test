@@ -43,10 +43,17 @@ export default function AdminUsersClient({ users, mentors }: Props) {
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null)
   const [editTarget, setEditTarget] = useState<User | null>(null)
 
-  const filtered = users.filter(u =>
-    (u.full_name ?? '').toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
-  )
+  const roleOrder: Record<string, number> = { admin: 0, mentor: 1, mentee: 2 }
+  const filtered = users
+    .filter(u =>
+      (u.full_name ?? '').toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => {
+      const roleDiff = (roleOrder[a.role] ?? 99) - (roleOrder[b.role] ?? 99)
+      if (roleDiff !== 0) return roleDiff
+      return (a.full_name ?? '').localeCompare(b.full_name ?? '', 'ja')
+    })
 
   const japaneseMentors = mentors.filter(m => m.mentor_specialty === 'japanese')
   const techMentors = mentors.filter(m => m.mentor_specialty === 'technical')
@@ -198,7 +205,7 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">技術メンター</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">役割</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">登録日</th>
-                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400"></th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">操作</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">
@@ -221,7 +228,7 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                       <span className="ml-1 inline-flex rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-400 ring-1 ring-amber-500/20">JP</span>
                     )}
                   </td>
-                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">{user.email}</td>
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-left text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">{user.email}</td>
                   {user.role === 'mentee' ? (
                     <>
                       <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">

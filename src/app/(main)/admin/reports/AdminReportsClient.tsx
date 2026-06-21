@@ -145,7 +145,7 @@ export default function AdminReportsClient({
 
   const nihongoSubButtons = [
     { key: 'all' as const, label: '全体' },
-    { key: 'seikatsu' as const, label: '生活日本語' },
+    { key: 'seikatsu' as const, label: 'JLPT' },
     { key: 'business-jp' as const, label: 'ビジネス日本語' },
   ]
 

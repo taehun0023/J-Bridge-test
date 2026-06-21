@@ -287,12 +287,17 @@ export default async function AdminTasksPage() {
     ? mentees
     : mentees.filter(m => (assignmentsByMentee[m.id]?.length ?? 0) > 0)
 
+  // 항목 수(target_count) 기준 집계 — 1과제=영역 rung이 아니라 실제 항목 수로 표시
+  const sumItems = (status?: string) =>
+    (learningAssignments ?? [])
+      .filter(t => status == null || t.status === status)
+      .reduce((s, t) => s + (t.target_count ?? 0), 0)
   const taskStats = {
-    total: learningAssignments?.length ?? 0,
-    pending: learningAssignments?.filter(t => t.status === 'pending').length ?? 0,
-    inProgress: learningAssignments?.filter(t => t.status === 'in_progress').length ?? 0,
-    completed: learningAssignments?.filter(t => t.status === 'completed').length ?? 0,
-    overdue: learningAssignments?.filter(t => t.status === 'overdue').length ?? 0,
+    total: sumItems(),
+    pending: sumItems('pending'),
+    inProgress: sumItems('in_progress'),
+    completed: sumItems('completed'),
+    overdue: sumItems('overdue'),
   }
 
   return (

@@ -14,6 +14,7 @@ export interface JapaneseAssignmentRow {
   due_date: string | null
   created_at: string | null
   completed_at: string | null
+  target_count: number | null
 }
 
 export interface CountPair {
@@ -22,11 +23,11 @@ export interface CountPair {
 }
 
 export interface JapaneseProgressStat {
-  seikatsu: CountPair
+  seikatsu: CountPair            // 今月課題(이번 달 부여분) — override 후 채워짐
+  seikatsuCumulative: CountPair  // 完了(누적 완료/누적 부여) — override 후 채워짐
   businessJp: CountPair
   incomplete: number
   overdue: number
-  thisMonth: CountPair
   all: CountPair
 }
 
@@ -48,18 +49,12 @@ export function normalizeJapaneseCategory(
 function emptyStat(): JapaneseProgressStat {
   return {
     seikatsu: { completed: 0, total: 0 },
+    seikatsuCumulative: { completed: 0, total: 0 },
     businessJp: { completed: 0, total: 0 },
     incomplete: 0,
     overdue: 0,
-    thisMonth: { completed: 0, total: 0 },
     all: { completed: 0, total: 0 },
   }
-}
-
-function currentMonthBoundsUtc(now: Date = new Date()): { start: Date; end: Date } {
-  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
-  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1))
-  return { start, end }
 }
 
 /**
@@ -75,7 +70,6 @@ export function aggregateJapaneseProgress(
   const result = new Map<string, JapaneseProgressStat>()
   for (const id of menteeIds) result.set(id, emptyStat())
 
-  const { start: monthStart, end: monthEnd } = currentMonthBoundsUtc(now)
   const nowMs = now.getTime()
 
   for (const row of rows) {
@@ -90,14 +84,6 @@ export function aggregateJapaneseProgress(
       !isCompleted &&
       (row.status === 'overdue' || (dueMs !== null && dueMs < nowMs))
 
-    // 月判定: due_date 우선, 없으면 created_at fallback
-    const monthBasis = row.due_date ?? row.created_at
-    let inThisMonth = false
-    if (monthBasis) {
-      const t = new Date(monthBasis).getTime()
-      inThisMonth = t >= monthStart.getTime() && t < monthEnd.getTime()
-    }
-
     // 누적 카테고리별
     if (bucket === 'seikatsu') {
       stat.seikatsu.total++
@@ -111,15 +97,9 @@ export function aggregateJapaneseProgress(
     stat.all.total++
     if (isCompleted) stat.all.completed++
 
-    // 미완료 / 지연
+    // 미완료 / 지연 (지연은 항목 수(target_count) 합산 — rung 행 수가 아니라 실제 항목 수)
     if (!isCompleted) stat.incomplete++
-    if (isOverdue) stat.overdue++
-
-    // 이번달
-    if (inThisMonth) {
-      stat.thisMonth.total++
-      if (isCompleted) stat.thisMonth.completed++
-    }
+    if (isOverdue) stat.overdue += row.target_count ?? 0
   }
 
   return result

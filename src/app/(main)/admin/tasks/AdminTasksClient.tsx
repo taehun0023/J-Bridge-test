@@ -344,7 +344,22 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
     if (list.length === 0) {
       return <div className="px-4 py-12 text-center text-sm text-gray-400">配信された課題がありません</div>
     }
-    const sorted = [...list].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    const sorted = [...list].sort((a, b) => {
+      // 1차: 부여일 최신순. 2차: 영역 순서(漢字→語彙→読解→文法→聴解). 그 외 항목/동률은 안정 정렬
+      const byDate = new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      if (byDate !== 0) return byDate
+      const areaRank = (s: string) => {
+        const order = ['kanji', 'vocabulary', 'reading', 'grammar', 'listening']
+        const i = order.indexOf(s)
+        return i === -1 ? order.length : i
+      }
+      return areaRank(a.subcategory) - areaRank(b.subcategory)
+        || a.category.localeCompare(b.category)
+        || a.subcategory.localeCompare(b.subcategory)
+        || (a.content_level ?? '').localeCompare(b.content_level ?? '')
+        || a.title.localeCompare(b.title)
+        || a.id.localeCompare(b.id)
+    })
     const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
     const safePage = Math.min(page, totalPages)
     const pageItems = sorted.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
@@ -361,7 +376,7 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
         {/* 20건 페이징 영역 — 고정 높이, 내부 스크롤 */}
         <div className="h-[600px] divide-y divide-gray-100 overflow-y-auto dark:divide-gray-700">
           {[...byDate.entries()].map(([date, rows]) => {
-            const open = openDates[date] !== false
+            const open = openDates[date] === true
             return (
               <div key={date}>
                 <button
@@ -453,7 +468,7 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
       {/* 월별 자동부여 개수 설정 (생활일본어) */}
       <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">月別自動付与の個数（生活日本語）</h3>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">月別自動付与の個数（JLPT）</h3>
           <button
             type="button"
             onClick={handleSaveConfig}
@@ -492,7 +507,9 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
           <div className="mt-3 divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800">
             {filteredMentees.map(m => {
               const list = assignmentsByMentee[m.id] ?? []
-              const overdueCount = list.filter(a => a.status === 'overdue').length
+              // 항목 수(target_count) 기준 — rung 행 수가 아니라 실제 항목 수
+              const overdueCount = list.filter(a => a.status === 'overdue').reduce((s, a) => s + (a.target_count ?? 0), 0)
+              const totalItems = list.reduce((s, a) => s + (a.target_count ?? 0), 0)
               const sel = selectedMentee === m.id
               return (
                 <button
@@ -510,7 +527,7 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
                   {overdueCount > 0 && (
                     <span className="inline-flex shrink-0 items-center rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">遅延 {overdueCount}</span>
                   )}
-                  <span className="inline-flex shrink-0 items-center rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">{list.length}</span>
+                  <span className="inline-flex shrink-0 items-center rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">{totalItems}</span>
                 </button>
               )
             })}
