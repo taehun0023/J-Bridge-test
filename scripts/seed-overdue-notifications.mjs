@@ -3,7 +3,11 @@
 // Skips (user, assignment) pairs that already have one. Run: node scripts/seed-overdue-notifications.mjs [--commit]
 import { createClient } from '@supabase/supabase-js'
 
-const db = createClient('https://jpjvzlmwzeiyukqqbdit.supabase.co', 'sb_secret_REDACTED', { auth: { persistSession: false } })
+// 시크릿 하드코딩 금지 — 환경변수로만 주입 (이전 하드코딩 키는 노출되어 회전 필요)
+const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+if (!SB_URL || !SB_KEY) { console.error('NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY 환경변수가 필요합니다'); process.exit(1) }
+const db = createClient(SB_URL, SB_KEY, { auth: { persistSession: false } })
 const COMMIT = process.argv.includes('--commit')
 const STALL_DAYS = 7
 

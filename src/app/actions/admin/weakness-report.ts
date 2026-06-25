@@ -142,23 +142,26 @@ export async function getMockExamReport(menteeId: string): Promise<MockExamRepor
   if (!exams?.length) return empty
   const examIds = exams.map(e => e.id)
 
-  // 모의고사 세트 타이틀 (리스트 페이지와 동일 표기: "N1 " 접두 제거 → "模擬試験 1")
-  const { data: mockSetRows } = await service.from('jlpt_mock_sets')
-    .select('level, set_no, title')
-    .in('level', [...new Set(exams.map(e => e.content_level ?? 'N1'))])
+  // 독립적인 3 fetch를 병렬로: 세트 타이틀 + 전체 출제문항(미응답 포함) + 답안
+  const fetchExamQs = (async () => {
+    const rows: { exam_id: string; question_id: string; section: string | null; sort_order: number | null }[] = []
+    for (let i = 0; i < examIds.length; i += 50) {
+      const { data } = await service.from('comprehensive_exam_questions')
+        .select('exam_id, question_id, section, sort_order').in('exam_id', examIds.slice(i, i + 50))
+      for (const r of data ?? []) rows.push(r)
+    }
+    return rows
+  })()
+  const [{ data: mockSetRows }, examQs, { data: answers }] = await Promise.all([
+    service.from('jlpt_mock_sets').select('level, set_no, title')
+      .in('level', [...new Set(exams.map(e => e.content_level ?? 'N1'))]),
+    fetchExamQs,
+    service.from('comprehensive_exam_answers')
+      .select('exam_id, question_id, is_correct, selected_option_id').in('exam_id', examIds),
+  ])
   const setTitleByKey = new Map<string, string>()
   for (const s of mockSetRows ?? []) setTitleByKey.set(`${s.level}::${s.set_no}`, (s.title ?? '').replace(/^N[1-5]\s*/, ''))
 
-  // 전체 출제 문항(미응답 포함)
-  const examQs: { exam_id: string; question_id: string; section: string | null; sort_order: number | null }[] = []
-  for (let i = 0; i < examIds.length; i += 50) {
-    const { data } = await service.from('comprehensive_exam_questions')
-      .select('exam_id, question_id, section, sort_order').in('exam_id', examIds.slice(i, i + 50))
-    for (const r of data ?? []) examQs.push(r)
-  }
-
-  const { data: answers } = await service.from('comprehensive_exam_answers')
-    .select('exam_id, question_id, is_correct, selected_option_id').in('exam_id', examIds)
   const correctKey = new Set<string>()
   const selectedByKey = new Map<string, string | null>()
   for (const a of answers ?? []) {

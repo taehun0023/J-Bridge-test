@@ -227,16 +227,15 @@ async function buildEmployeeRows(
   //   今月課題     = 이번달 배정된 세트 / 그중 응시(완료·불합격)한 세트
   //   完了·全体進捗 = 공개된 전체 세트(레벨) / 응시한 세트
   const mockMonthStart = `${new Date().toISOString().slice(0, 7)}-01`
-  const { data: pubSets } = await supabase
-    .from('jlpt_mock_sets').select('level, set_no').eq('is_published', true)
+  const [{ data: pubSets }, { data: allMockRows }] = await Promise.all([
+    supabase.from('jlpt_mock_sets').select('level, set_no').eq('is_published', true),
+    supabase.from('comprehensive_exams')
+      .select('user_id, content_level, mock_set_no, mock_session, status, requested_at')
+      .in('user_id', menteeIds)
+      .eq('category', 'jlpt-mock'),
+  ])
   const setsCountByLevel = new Map<string, number>()
   for (const ps of pubSets ?? []) setsCountByLevel.set(ps.level, (setsCountByLevel.get(ps.level) ?? 0) + 1)
-
-  const { data: allMockRows } = await supabase
-    .from('comprehensive_exams')
-    .select('user_id, content_level, mock_set_no, mock_session, status, requested_at')
-    .in('user_id', menteeIds)
-    .eq('category', 'jlpt-mock')
   const takenSetsByUser = new Map<string, Set<string>>()  // 응시(완료·불합격)한 세트
   const monthSetsByUser = new Map<string, Set<string>>()  // 이번달 배정된 세트
   for (const m of allMockRows ?? []) {
@@ -352,9 +351,11 @@ export default async function DashboardPage() {
       ? await supabase.from('profiles').select('id, full_name, email, target_certification, monthly_auto_assign').eq('role', 'mentee').in('id', menteeIds)
       : { data: [] as MenteeProfile[] }
 
-    // 担当メンティーのみ — 管理者ダッシュボードと同一の集計・レイアウトを共有
-    const employees = await buildEmployeeRows(supabase, (menteeProfiles ?? []) as MenteeProfile[])
-    const jlptRows = await buildJlptProgressRows((menteeProfiles ?? []) as MenteeProfile[])
+    // 担当メンティーのみ — 管理者ダッシュボードと同一の集計・レイアウトを共有 (독립 집계 → 병렬)
+    const [employees, jlptRows] = await Promise.all([
+      buildEmployeeRows(supabase, (menteeProfiles ?? []) as MenteeProfile[]),
+      buildJlptProgressRows((menteeProfiles ?? []) as MenteeProfile[]),
+    ])
 
     return (
       <>
@@ -378,9 +379,11 @@ export default async function DashboardPage() {
     ])
     const adminUnread = (adminTotalAnn ?? 0) - (adminReadAnn ?? 0)
 
-    // 全社員(메ンティー) — メンターダッシュボードと同一の集計・レイアウトを共有
-    const employees = await buildEmployeeRows(supabase, (allMentees ?? []) as MenteeProfile[])
-    const jlptRows = await buildJlptProgressRows((allMentees ?? []) as MenteeProfile[])
+    // 全社員(메ンティー) — メンターダッシュボードと同一の集計・レイアウトを共有 (독립 집계 → 병렬)
+    const [employees, jlptRows] = await Promise.all([
+      buildEmployeeRows(supabase, (allMentees ?? []) as MenteeProfile[]),
+      buildJlptProgressRows((allMentees ?? []) as MenteeProfile[]),
+    ])
 
     return (
       <>

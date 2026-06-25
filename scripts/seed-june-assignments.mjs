@@ -3,8 +3,10 @@
 // Run from project root:  node scripts/seed-june-assignments.mjs [--commit]
 import { createClient } from '@supabase/supabase-js'
 
-const URL = 'https://jpjvzlmwzeiyukqqbdit.supabase.co'
-const SERVICE_KEY = 'sb_secret_REDACTED'
+// 시크릿 하드코딩 금지 — 환경변수로만 주입 (이전 하드코딩 키는 노출되어 회전 필요)
+const URL = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+if (!URL || !SERVICE_KEY) { console.error('NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY 환경변수가 필요합니다'); process.exit(1) }
 const CURRENT_MONTH = '2026-06'
 const COMMIT = process.argv.includes('--commit')
 
