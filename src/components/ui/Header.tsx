@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { signOut } from '@/app/actions/auth'
 import NotificationBell from './NotificationBell'
 import ProfileAvatar from './ProfileAvatar'
-import RoleSwitcher from './RoleSwitcher'
 import { useTheme } from '@/components/theme/ThemeProvider'
 import { Menu, Sun, Moon, Shield, BookOpen, LogOut } from 'lucide-react'
 import type { UserRole, JlptLevel } from '@/lib/supabase/types'
@@ -61,8 +60,6 @@ export default function Header({
         >
           {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </button>
-
-        <RoleSwitcher currentRole={userRole} />
 
         <NotificationBell />
 
