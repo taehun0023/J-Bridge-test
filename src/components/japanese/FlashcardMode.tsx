@@ -62,6 +62,10 @@ export default function FlashcardMode({ items, onClose, masteredIds = [], onTogg
       setTimeout(() => { setToast(false); next() }, 700)
     } else {
       setResult('wrong')
+      // 暗記済みを再テストして不正解 → リアルタイムでチェック解除
+      if (onToggleMastery && localMastered.has(current.id)) {
+        const n = new Set(localMastered); n.delete(current.id); setLocalMastered(n); onToggleMastery(current.id); emitMastery(-1)
+      }
     }
   }
 
