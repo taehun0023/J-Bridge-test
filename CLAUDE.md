@@ -118,6 +118,8 @@ src/
 
 **4. Implement the user's stated spec exactly — don't re-interpret.** E.g. "count goes up only when the assigned exam is taken (after assignment)" means base done/total on the **latest assigned instance's status**, not "any completion this month". If the spec is ambiguous, ask one short question instead of guessing.
 
+**5. JLPT 콘텐츠 레벨(N1~N5)은 Claude 임의 판단 금지 — 권위있는 출처 기준으로 정확히.** 단어/문법/한자의 JLPT 레벨은 추측하지 말고 **사전의 JLPT 태그(jisho.org 등)·공식 단어 리스트** 등 출처로 확정한다. 나쁜 사례: 교차레벨 중복정리 때 "N2 우선" 같은 **임의 규칙**으로 N1 단어(`遂げる`·`覆す`·`免れる`·`怠る` 등)를 N2로 잘못 내림. 레벨 배정·이동은 반드시 출처 확인 후.
+
 **Mock exam (jlpt-mock) facts:** stored in `comprehensive_exams` with `category='jlpt-mock'`, `subcategory='mock'`, `mock_set_no`, optional `mock_session` (1=1教時 placeholder `passed=false`, 2=合算 final verdict; null=single-session admin-assigned final). JLPT radar axis = passed jlpt-mock level only (legacy `seikatsu` comp exams deprecated/deleted).
 
 ## Testing
