@@ -1,9 +1,7 @@
 # RLS (Row Level Security) ポリシー・マトリクス
 
-**最終更新**: 2026-06-11 (マイグレーション 00180 時点)
+**最終更新**: 2026-04-30 (マイグレーション 00170 時点)
 **対象**: Supabase PostgreSQL の全テーブル (48 テーブル)
-
-> **00178 変更点**: `quiz_question_options` の SELECT を admin/mentor に制限 (正解 `is_correct` の露出遮断)。一般ユーザーの表示は `quiz_question_options_safe` ビュー経由、採点・レビューは service role 経由。
 
 本文書は J-Bridge の RLS ポリシーをカテゴリ別に整理し、データアクセス境界の**設計意図**と**現状**を明文化する。新規テーブル追加時、または RLS 関連の本番障害発生時の参照基準とする。
 
@@ -57,7 +55,7 @@ RLS ポリシーは以下のヘルパー関数を共通利用する。定義は 
 |---|---|---|
 | `quizzes` | 全員 (`is_published=true` のみ非 admin) | admin / tech mentor |
 | `quiz_questions` | 全員 | admin / tech mentor |
-| `quiz_question_options` | admin / mentor のみ (一般は `quiz_question_options_safe` ビュー経由 — 00178) | admin / tech mentor |
+| `quiz_question_options` | 全員 | admin / tech mentor |
 | `quiz_attempts` | 自分 / admin / mentor (担当) | 自分 (受験時) |
 | `quiz_answers` | 自分 / admin / mentor (担当) | 自分 (受験時) |
 

@@ -32,6 +32,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Validation:** Zod 4
 - **Code Editor:** @monaco-editor/react
 - **Code Execution:** Judge0 (self-hosted API)
+- **Data Fetching:** @tanstack/react-query
 - **TTS:** Google Cloud Text-to-Speech API
 
 ## Build & Dev Commands
@@ -74,7 +75,7 @@ src/
     scoring/         # 5-axis score calculation (pure functions + DB fetch/write)
 ```
 
-## DB Schema Summary (migrations ~00180, 48 tables)
+## DB Schema Summary (107 migrations, 48 tables)
 
 | Category | Tables |
 |---|---|
@@ -107,6 +108,18 @@ src/
 
 - Auth pattern uses `requireAuth`/`requireAdmin`/`requireAdminOrMentor` helpers (consolidated in Phase 1)
 
+## Pitfalls / Lessons (do NOT repeat)
+
+**1. `comprehensive_exams` has NO `created_at` column.** Timestamp columns are `requested_at` (creation, DEFAULT NOW()), `approved_at`, `started_at`, `completed_at`. Querying `.gte('created_at', ...)` / `.order('created_at')` on this table **silently errors** (PostgREST returns `{ data: null }`, no throw) → looks like "0 rows". Use `requested_at` for "when assigned".
+
+**2. Verify DB schema/columns before querying — and check the query `error`.** A select with a non-existent column returns null data, not an exception. A `head:true` count can succeed while a full select on the same table returns "0 rows" → that mismatch means a bad column, NOT empty data. Never report "0 rows / data missing / DB wiped" without confirming via `select('*')` or a count, and always destructure `{ data, error }` and check `error` in diagnostic scripts.
+
+**3. Don't claim "confirmed / checked" from a query that may have silently failed.** If two independent checks disagree, suspect the query, not the data.
+
+**4. Implement the user's stated spec exactly — don't re-interpret.** E.g. "count goes up only when the assigned exam is taken (after assignment)" means base done/total on the **latest assigned instance's status**, not "any completion this month". If the spec is ambiguous, ask one short question instead of guessing.
+
+**Mock exam (jlpt-mock) facts:** stored in `comprehensive_exams` with `category='jlpt-mock'`, `subcategory='mock'`, `mock_set_no`, optional `mock_session` (1=1教時 placeholder `passed=false`, 2=合算 final verdict; null=single-session admin-assigned final). JLPT radar axis = passed jlpt-mock level only (legacy `seikatsu` comp exams deprecated/deleted).
+
 ## Testing
 
 ```bash
@@ -116,7 +129,7 @@ npm run test:coverage # coverage report
 ```
 
 - Vitest 4 configured (`vitest.config.ts`)
-- 116 unit tests: scoring axes/utils, exam question selection (`pickByCategoryAndDifficulty`), auth helpers, notification helpers, CS content, BFF readiness contract
+- Unit tests in `src/modules/scoring/` (33 tests for axis calculators + utils)
 
 ## Project Status
 

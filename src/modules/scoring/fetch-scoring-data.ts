@@ -1,4 +1,4 @@
-import { ASSESSMENT_QUIZ_IDS, COMP_EXAM_CATEGORY_TO_STEP } from '@/lib/assessment-config'
+import { ASSESSMENT_QUIZ_IDS, COMP_EXAM_CATEGORY_TO_STEP, JLPT_MOCK_LEVEL_RANK, JLPT_MOCK_LEVEL_NORMALIZED, type JlptLevel } from '@/lib/assessment-config'
 import { DIFFICULTY_MULTIPLIER, RANK_SCORES } from './utils'
 import type { Joined } from '@/lib/supabase/types'
 import type { ScoringClient, ScoringData, AssessmentScores, QuizScoresByType, BestSubmission } from './types'
@@ -60,27 +60,12 @@ export async function fetchScoringData(
         .eq('passed', true),
       client
         .from('comprehensive_exams')
-        .select('category, score, completed_at')
+        .select('category, score, content_level, completed_at, passed')
         .eq('user_id', userId)
         .in('status', ['completed', 'failed'])
         .not('score', 'is', null)
         .order('completed_at', { ascending: false }),
     ])
-
-  // A failed read here would silently compute all-zero scores and overwrite
-  // real HR data downstream — fail loudly instead (caller logs and aborts).
-  const reads: [string, { error: { message: string } | null }][] = [
-    ['profiles', profileResult],
-    ['quiz_attempts', quizAttemptsResult],
-    ['code_submissions', submissionsResult],
-    ['coding_exam_attempts', examAttemptsResult],
-    ['comprehensive_exams', compExamResult],
-  ]
-  for (const [table, result] of reads) {
-    if (result.error) {
-      throw new Error(`[scoring] ${table} read failed for ${userId}: ${result.error.message}`)
-    }
-  }
 
   const isJapanese = profileResult.data?.is_japanese ?? false
 
@@ -94,6 +79,8 @@ export async function fetchScoringData(
 
     const assessmentStep = ASSESSMENT_ID_TO_STEP.get(attempt.quiz_id)
     if (assessmentStep) {
+      // JLPT축(step 1)은 JLPT模試(jlpt-mock) 결과만 반영 — 옛 온보딩 JLPT総合試験 평가퀴즈는 제외
+      if (assessmentStep === 1) continue
       if (!assessmentScores[assessmentStep] || attempt.score > assessmentScores[assessmentStep]) {
         assessmentScores[assessmentStep] = attempt.score
       }
@@ -145,22 +132,51 @@ export async function fetchScoringData(
 }
 
 /**
- * Merge comprehensive exam scores into assessment scores using latest strategy.
- * For each category, the most recent comprehensive exam score wins.
+ * Merge comprehensive exam scores into assessment scores.
+ *
+ * Strategy per category:
+ *   - jlpt-mock (JLPT模試): highest passed content_level → level-based normalized score.
+ *     This is the only source for the JLPT axis (step 1).
+ *   - seikatsu (legacy 生活日本語 総合試験): no longer reflected in scores.
+ *   - other categories: latest completed_at wins (compExams sorted DESC).
+ *
  * compExams must be sorted by completed_at DESC (most recent first).
  */
 export function mergeCompExamScores(
   assessmentScores: AssessmentScores,
-  compExams: { category: string; score: number | null; completed_at?: string | null }[]
+  compExams: { category: string; score: number | null; content_level?: string | null; completed_at?: string | null; passed?: boolean | null }[]
 ): void {
-  const seen = new Set<number>()
-  for (const compExam of compExams) {
-    if (compExam.score == null) continue
-    const step = COMP_EXAM_CATEGORY_TO_STEP[compExam.category]
+  const byCategory = new Map<string, typeof compExams>()
+  for (const e of compExams) {
+    if (e.score == null) continue
+    const arr = byCategory.get(e.category)
+    if (arr) arr.push(e)
+    else byCategory.set(e.category, [e])
+  }
+
+  for (const [category, exams] of byCategory) {
+    const step = COMP_EXAM_CATEGORY_TO_STEP[category]
     if (!step) continue
-    // Already saw a more recent exam for this category — skip
-    if (seen.has(step)) continue
-    seen.add(step)
-    assessmentScores[step] = compExam.score
+
+    // 레거시 seikatsu 종합시험은 더 이상 점수에 반영하지 않음 (JLPT축은 JLPT模試만)
+    if (category === 'seikatsu') continue
+
+    // JLPT 모의시험: 합격한 최고 레벨 → 레벨 기반 정규화 점수
+    if (category === 'jlpt-mock') {
+      const passedExams = exams.filter(e => e.passed)
+      if (passedExams.length === 0) continue
+      const chosen = passedExams.reduce((best, cur) => {
+        const bestRank = JLPT_MOCK_LEVEL_RANK[(best.content_level ?? '') as JlptLevel] ?? 0
+        const curRank = JLPT_MOCK_LEVEL_RANK[(cur.content_level ?? '') as JlptLevel] ?? 0
+        if (curRank > bestRank) return cur
+        if (curRank < bestRank) return best
+        return (cur.completed_at ?? '') > (best.completed_at ?? '') ? cur : best
+      })
+      assessmentScores[step] = JLPT_MOCK_LEVEL_NORMALIZED[(chosen.content_level ?? '') as JlptLevel] ?? chosen.score ?? 0
+      continue
+    }
+
+    // 기타 카테고리: 최신 완료
+    assessmentScores[step] = exams[0].score!
   }
 }

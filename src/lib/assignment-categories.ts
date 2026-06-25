@@ -2,6 +2,7 @@ import type { QuizType } from '@/lib/supabase/types'
 import { getAllSubsectionIds as getAttitudeIds } from '@/lib/attitude-manual-data'
 import { getAllSubsectionIds as getCultureIds } from '@/lib/culture-manual-data'
 import { getAllSubsectionIds as getSecurityIds } from '@/lib/security-manual-data'
+import { isItemCategory, categoryLabel as itemCategoryLabel, areaLabel as itemAreaLabel } from '@/lib/item-assignments'
 
 export interface SubcategoryConfig {
   label: string
@@ -21,7 +22,7 @@ export interface CategoryConfig {
 
 export const ASSIGNMENT_CATEGORIES: Record<string, CategoryConfig> = {
   seikatsu: {
-    label: '生活日本語',
+    label: 'JLPT',
     levelOnly: true,
     quizTypes: ['jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening', 'jlpt_kanji'],
     subcategories: {},
@@ -89,11 +90,15 @@ export const DEV_LEVELS = [
 ] as const
 
 export function getCategoryLabel(category: string): string {
-  return ASSIGNMENT_CATEGORIES[category]?.label ?? category
+  return ASSIGNMENT_CATEGORIES[category]?.label
+    ?? (isItemCategory(category) ? itemCategoryLabel(category) : category)
 }
 
 export function getSubcategoryLabel(category: string, subcategory: string): string {
-  return ASSIGNMENT_CATEGORIES[category]?.subcategories[subcategory]?.label ?? subcategory
+  const direct = ASSIGNMENT_CATEGORIES[category]?.subcategories[subcategory]?.label
+  if (direct) return direct
+  if (isItemCategory(category)) return itemAreaLabel(category, subcategory)
+  return subcategory
 }
 
 export function getContentUrl(category: string, subcategory: string): string {
@@ -114,6 +119,21 @@ export function getContentLevelLabel(category: string, contentLevel: string | nu
     return found?.label ?? contentLevel
   }
   return contentLevel
+}
+
+/** 과제 제목을 카테고리·서브카테고리·레벨에서 자동 생성. (예: 「生活日本語 N4」「開発実務能力 Java Gold」) */
+export function buildAssignmentTitle(category: string, subcategory: string, contentLevel: string | null): string {
+  const parts = [getCategoryLabel(category)]
+  if (subcategory && subcategory !== 'all') parts.push(getSubcategoryLabel(category, subcategory))
+  const levelLabel = getContentLevelLabel(category, contentLevel)
+  if (levelLabel) parts.push(levelLabel)
+  return parts.join(' ')
+}
+
+/** 부여한 달의 말일 23:59:59 (ISO). 課題の期限は手動設定せず常にこの値に自動設定する。 */
+export function endOfMonthDueDate(): string {
+  const now = new Date()
+  return new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString()
 }
 
 export function getQuizUrl(

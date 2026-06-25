@@ -38,12 +38,12 @@ export default function DashboardAnnouncements({ announcements }: Props) {
       {announcements.length === 0 ? (
         <p className="px-3 py-2 text-sm text-zinc-400 dark:text-zinc-500">お知らせはありません。</p>
       ) : (
-        <div className="space-y-1.5">
+        <div className="divide-y divide-gray-100 dark:divide-white/[0.06]">
           {display.map(a => (
             <Link
               key={a.id}
               href={`/announcements/${a.id}`}
-              className="flex items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors"
+              className="flex items-center gap-2.5 px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors"
             >
               {!a.is_read && (
                 <span className="inline-flex h-4 min-w-4 items-center justify-center rounded bg-red-500 text-[9px] font-bold text-white">

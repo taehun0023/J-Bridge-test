@@ -1,0 +1,13 @@
+{
+  "regions": ["hnd1"],
+  "crons": [
+    {
+      "path": "/api/cron/study-pattern-check",
+      "schedule": "0 22 * * *"
+    },
+    {
+      "path": "/api/cron/monthly-alerts",
+      "schedule": "5 22 * * *"
+    }
+  ]
+}

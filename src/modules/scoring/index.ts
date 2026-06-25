@@ -16,24 +16,18 @@ import { writeScores } from './write-scores'
  *   5. writeScores()      — DB writes
  */
 export async function recalculateUserScores(userId: string) {
-  try {
-    const client = createServiceRoleClient() ?? await createClient()
+  const client = createServiceRoleClient() ?? await createClient()
 
-    // 1. Fetch all scoring data in parallel
-    const data = await fetchScoringData(client, userId)
+  // 1. Fetch all scoring data in parallel
+  const data = await fetchScoringData(client, userId)
 
-    // 2-4. Calculate each axis (pure functions, independently testable)
-    const japanese = calcJapaneseAxes(data)
-    const coding = calcCodingAxes(data)
-    const attitude = calcAttitudeAxis(data)
+  // 2-4. Calculate each axis (pure functions, independently testable)
+  const japanese = calcJapaneseAxes(data)
+  const coding = calcCodingAxes(data)
+  const attitude = calcAttitudeAxis(data)
 
-    // 5. Write results to DB
-    await writeScores(client, userId, data.isJapanese, { japanese, coding, attitude })
+  // 5. Write results to DB
+  await writeScores(client, userId, data.isJapanese, { japanese, coding, attitude })
 
-    return { success: true } as const
-  } catch (err) {
-    // Never let a transient DB failure zero out real scores — skip this recalc.
-    console.error('[recalculateUserScores] failed for', userId, err)
-    return { success: false, error: err instanceof Error ? err.message : String(err) } as const
-  }
+  return { success: true }
 }

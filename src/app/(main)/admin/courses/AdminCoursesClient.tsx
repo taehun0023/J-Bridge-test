@@ -1,10 +1,12 @@
 'use client'
 
-import React, { useState, useTransition, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import Badge from '@/components/ui/Badge'
 import { createQuestion, updateQuestion, deleteQuestion, toggleQuestionPublished, fetchQuestionsPage } from '@/app/actions/admin/questions'
 import { resolveQuestionClaims, resolveMultipleQuestionClaims } from '@/app/actions/claims'
 import { CS_QUIZ_SET_DEFINITIONS } from '@/lib/cs-quiz'
+import { useRouter } from 'next/navigation'
 
 interface QuestionOption {
   id: string
@@ -175,6 +177,9 @@ const normalizedDifficultyLabels: Record<string, string> = {
   初級: '初級',
   中級: '中級',
   上級: '上級',
+  '?앯킎': '初級',
+  '訝?킎': '中級',
+  '訝딁킎': '上級',
 }
 
 Object.assign(categoryLabels, normalizedCategoryLabels, {
@@ -211,9 +216,10 @@ export default function AdminCoursesClient({
 }: {
   axes: AxisConfig[]
 }) {
+  const router = useRouter()
   const [selectedStep, setSelectedStep] = useState(1)
   const [activeSection, setActiveSection] = useState<'assessment' | 'practice'>('assessment')
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
   const [message, setMessage] = useState<string | null>(null)
   const [messageType, setMessageType] = useState<'success' | 'error'>('success')
   const [filters, setFilters] = useState<FilterState>({
@@ -248,6 +254,17 @@ export default function AdminCoursesClient({
       ? 'understanding_only'
       : null
 
+  const CS_SUBJECT_LABELS: Record<string, string> = {
+    basic_theory: '情報表現',
+    data_structure: 'データ構造',
+    algorithm: 'アルゴリズム',
+    computer_architecture: 'コンピュータ構成',
+    database: 'データベース',
+    network: 'ネットワーク',
+    os: 'オペレーティングシステム',
+    security: 'セキュリティ',
+  }
+
   const csSubjectLabels = {
     basic_theory: '情報表現',
     data_structure: 'データ構造',
@@ -279,6 +296,27 @@ export default function AdminCoursesClient({
     if (!rawCategory) return null
     const direct = rawCategory.replace(/_(check_[12]|final)$/, '')
     return csSubjectLabels[direct as keyof typeof csSubjectLabels] ? direct : null
+  }
+
+  function getCsDifficultyLabel(value: string | null | undefined) {
+    if (value === 'easy') return '初級'
+    if (value === 'medium') return '中級'
+    if (value === 'hard') return '上級'
+    return value ?? '未設定'
+  }
+
+  function getCategoryLabel(rawCategory: string | null | undefined) {
+    if (!rawCategory) return '未分類(旧データ)'
+    if (isCsPracticeSection) {
+      const subject = getCsSubjectCategory(rawCategory)
+      return subject ? CS_SUBJECT_LABELS[subject] : '未分類(旧データ)'
+    }
+    return categoryLabels[rawCategory] ?? rawCategory
+  }
+
+  function getDifficultyLabel(value: string | null | undefined) {
+    if (isCsPracticeSection) return getCsDifficultyLabel(value)
+    return value ? (difficultyLabels[value] ?? value) : '未設定'
   }
 
   function getDisplayCategoryLabel(rawCategory: string | null | undefined) {
@@ -509,6 +547,13 @@ export default function AdminCoursesClient({
   ))
   const filteredToolbarCategories = displayToolbarCategories.filter((cat) => cat.value !== '__legacy_unclassified__')
 
+  function getSectionLabel(section: 'assessment' | 'practice') {
+    if (currentAxis.step === 3) {
+      return section === 'assessment' ? '종합시험' : '이해도테스트'
+    }
+    return section === 'assessment' ? 'Assessment' : 'Practice'
+  }
+
   function getResetFilters(step: number, section: 'assessment' | 'practice'): FilterState {
     return {
       difficulty: '',
@@ -517,6 +562,57 @@ export default function AdminCoursesClient({
       subtype: '',
       claimsOnly: false,
     }
+  }
+
+  function openAddForm(section: 'assessment' | 'practice') {
+    setFormSection(section)
+    setEditingQuestion(null)
+    setFormText('')
+    setFormDifficulty(currentAxis.step === 1 ? 'N3' : '中級')
+    setFormCategory(
+      section === 'assessment'
+        ? (practiceCategories[0]?.value ?? '')
+        : (currentAxis.step === 3 ? (csUnderstandingCategoryOptions[0]?.value ?? '') : '')
+    )
+    setFormSubtype(isDevStep ? 'concept' : '')
+    setFormExplanation('')
+    setFormOptions([
+      { option_text: '', is_correct: true },
+      { option_text: '', is_correct: false },
+      { option_text: '', is_correct: false },
+      { option_text: '', is_correct: false },
+    ])
+    setShowAddForm(true)
+  }
+
+  function openEditForm(q: QuestionData) {
+    const isAssessment = currentAxis.step === 3
+      ? activeSection === 'assessment'
+      : (currentAxis.assessmentQuizIds ?? [currentAxis.assessmentQuizId]).includes(q.quiz_id)
+    setFormSection(isAssessment ? 'assessment' : 'practice')
+    setFormText(q.question_text)
+    setFormDifficulty(q.difficulty ?? '中級')
+    setFormCategory(q.question_category ?? '')
+    setFormSubtype(q.question_subtype ?? '')
+    if (q.question_category === 'writing') {
+      setFormExplanation('')
+      setFormModelAnswer(q.explanation ?? '')
+    } else {
+      setFormExplanation(q.explanation ?? '')
+      setFormModelAnswer('')
+    }
+    setFormOptions(
+      q.options.length >= 2
+        ? q.options.map(o => ({ option_text: o.option_text, is_correct: o.is_correct }))
+        : [
+            { option_text: '', is_correct: true },
+            { option_text: '', is_correct: false },
+            { option_text: '', is_correct: false },
+            { option_text: '', is_correct: false },
+          ]
+    )
+    setEditingQuestion(q)
+    setShowAddForm(true)
   }
 
   function openManagedAddForm(section: 'assessment' | 'practice') {

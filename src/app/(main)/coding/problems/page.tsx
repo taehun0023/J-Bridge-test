@@ -1,4 +1,4 @@
-import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Card from '@/components/ui/Card'
@@ -73,10 +73,7 @@ export default async function CodingProblemsPage({ searchParams }: { searchParam
 
   // ─── コード解析: 全問一括クイズ ───
   if (mode === 'reading') {
-    // Instant client-side grading needs is_correct; base-table SELECT is
-    // admin/mentor-only under RLS (00178), so read via service role.
-    const dbClient = createServiceRoleClient() ?? supabase
-    const { data: questions } = await dbClient
+    const { data: questions } = await supabase
       .from('quiz_questions')
       .select('id, question_text, difficulty, explanation, quiz_question_options(id, option_text, is_correct, sort_order)')
       .eq('question_type', 'code_reading')

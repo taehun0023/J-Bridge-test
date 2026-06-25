@@ -18,6 +18,19 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
+// 漢字の meaning_ko は問題の漢字そのものを含む形式があり、選択肢に出すと答えがバレる。
+// 主な形式: A「음(漢字), 뜻」 / B「뜻(漢字)」 / C「漢字, 뜻」。漢字部分を除去し意味だけ残す。
+function stripKanjiHint(meaningKo: string): string {
+  let s = meaningKo
+  // A) 「음(漢字), 뜻」→ 先頭の「読み + (漢字),」を除去
+  s = s.replace(/^[^(,]*\([^)]*\)\s*,\s*/, '')
+  // B) 残った「(漢字)」括弧（漢字を含むもの）を除去: 「고개(峠)」→「고개」
+  s = s.replace(/\s*\([^)]*[一-鿿][^)]*\)/g, '')
+  // C) 先頭にむき出しの漢字が残る場合を除去: 「届, 닿다」→「닿다」
+  s = s.replace(/^[一-鿿]+\s*[,/]\s*/, '')
+  return s.trim() || meaningKo
+}
+
 export async function generateGlossaryQuiz({
   category,
   subcategory,
@@ -213,6 +226,62 @@ export async function generateVocabQuiz({
       id: item.id,
       question: item.word,
       reading: item.reading ?? undefined,
+      options,
+    }
+  })
+
+  return { questions }
+}
+
+export async function generateKanjiQuiz({
+  level,
+  rangeStart,
+  rangeEnd,
+  questionCount = 10,
+}: {
+  level: string
+  rangeStart: number
+  rangeEnd: number
+  questionCount?: number
+}): Promise<{ questions?: QuizQuestion[]; error?: string }> {
+  const auth = await requireAuth()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase } = auth
+
+  // Match the kanji page sort order (sort_order ascending)
+  const query = supabase
+    .from('jlpt_kanji')
+    .select('id, kanji, reading_on, reading_kun, meaning_ko')
+    .eq('jlpt_level', level)
+    .order('sort_order', { ascending: true })
+    .range(rangeStart - 1, rangeEnd - 1)
+
+  const { data: rangeItems, error } = await query
+  if (error || !rangeItems || rangeItems.length === 0) {
+    return { error: '指定範囲にデータがありません' }
+  }
+
+  // Wrong answer pool from same level
+  const { data: poolData } = await supabase
+    .from('jlpt_kanji')
+    .select('meaning_ko')
+    .eq('jlpt_level', level)
+
+  const allAnswers = [...new Set(poolData?.map(p => stripKanjiHint(p.meaning_ko)) ?? [])]
+
+  const selected = shuffle(rangeItems).slice(0, questionCount)
+
+  const questions: QuizQuestion[] = selected.map(item => {
+    const answer = stripKanjiHint(item.meaning_ko)
+    const wrongAnswers = shuffle(allAnswers.filter(a => a !== answer)).slice(0, 3)
+    const options = shuffle([
+      { label: answer, correct: true },
+      ...wrongAnswers.map(w => ({ label: w, correct: false })),
+    ])
+    return {
+      id: item.id,
+      question: item.kanji,
+      reading: item.reading_on ?? item.reading_kun ?? undefined,
       options,
     }
   })

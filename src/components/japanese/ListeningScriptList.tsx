@@ -2,6 +2,9 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import Badge from '@/components/ui/Badge'
+import MasteryCheck from './MasteryCheck'
+import { emitMastery } from './MasteryProgress'
+import { logStudyAttempt } from '@/app/actions/study-log'
 import type { JlptLevel, JlptListeningScript, ListeningScriptType } from '@/lib/supabase/types'
 
 interface Props {
@@ -33,21 +36,27 @@ export default function ListeningScriptList({ items, level, masteredIds = [], on
   const audioBlobUrlRef = useRef<string | null>(null)
   const [localMastered, setLocalMastered] = useState<Set<string>>(new Set(masteredIds))
 
+  const [answers, setAnswers] = useState<Record<string, number>>({})
+  const [results, setResults] = useState<Record<string, 'correct' | 'wrong'>>({})
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({})
+  const shownAtRef = useRef<Record<string, number>>({})
+
   useEffect(() => {
     setLocalMastered(new Set(masteredIds))
   }, [masteredIds])
 
-  function handleToggle(e: React.MouseEvent, itemId: string) {
-    e.stopPropagation()
-    e.preventDefault()
-    const next = new Set(localMastered)
-    if (next.has(itemId)) {
-      next.delete(itemId)
-    } else {
-      next.add(itemId)
+  function submitQuiz(item: JlptListeningScript) {
+    const sel = answers[item.id]
+    if (sel == null || !item.comprehension || results[item.id]) return
+    const ok = sel === item.comprehension.answer
+    setResults(prev => ({ ...prev, [item.id]: ok ? 'correct' : 'wrong' }))
+    const start = shownAtRef.current[item.id]
+    void logStudyAttempt({ contentType: 'jlpt_listening', itemId: item.id, isCorrect: ok, answerText: item.comprehension.options[sel], durationMs: start ? Date.now() - start : undefined })
+    if (!ok) setRevealed(prev => ({ ...prev, [item.id]: true }))
+    if (ok && !localMastered.has(item.id)) {
+      setLocalMastered(prev => { const n = new Set(prev); n.add(item.id); return n })
+      onToggleMastery?.(item.id); emitMastery(1)
     }
-    setLocalMastered(next)
-    onToggleMastery?.(itemId)
   }
 
   function toggleTranslation(id: string) {
@@ -140,26 +149,12 @@ export default function ListeningScriptList({ items, level, masteredIds = [], on
           <div
             role="button"
             tabIndex={0}
-            onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setExpandedId(expandedId === item.id ? null : item.id) }}
+            onClick={() => { const opening = expandedId !== item.id; setExpandedId(opening ? item.id : null); if (opening && !shownAtRef.current[item.id]) shownAtRef.current[item.id] = Date.now() }}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { const opening = expandedId !== item.id; setExpandedId(opening ? item.id : null); if (opening && !shownAtRef.current[item.id]) shownAtRef.current[item.id] = Date.now() } }}
             className="flex w-full cursor-pointer items-center gap-4 text-left"
           >
             {onToggleMastery && (
-              <button
-                onClick={(e) => handleToggle(e, item.id)}
-                title={localMastered.has(item.id) ? '学習完了' : '未完了'}
-                className="-m-1.5 shrink-0 p-1.5"
-              >
-                {localMastered.has(item.id) ? (
-                  <svg className="h-5 w-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                ) : (
-                  <svg className="h-5 w-5 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 20 20" stroke="currentColor">
-                    <circle cx="10" cy="10" r="7" strokeWidth="2" />
-                  </svg>
-                )}
-              </button>
+              <MasteryCheck done={localMastered.has(item.id)} title={localMastered.has(item.id) ? '学習完了' : '未完了（聴解チェックに正解で完了）'} />
             )}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
@@ -182,7 +177,7 @@ export default function ListeningScriptList({ items, level, masteredIds = [], on
           </div>
 
           {expandedId === item.id && (
-            <div className="mt-3 space-y-3 rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
+            <div className="mt-3 space-y-3 select-none rounded-lg bg-gray-50 p-4 dark:bg-gray-700" onCopy={(e) => e.preventDefault()}>
               {/* TTS Playback Controls */}
               <div className="flex items-center gap-3">
                 {playingId === item.id && playState === 'loading' ? (
@@ -289,12 +284,6 @@ export default function ListeningScriptList({ items, level, masteredIds = [], on
                 </div>
               )}
 
-              {/* Script text — fix \n literal bug */}
-              <div>
-                <p className="text-xs font-medium uppercase text-gray-500 dark:text-gray-400">スクリプト</p>
-                <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-gray-900 dark:text-white">{item.script.replace(/\\n/g, '\n')}</p>
-              </div>
-
               {/* Vocabulary notes */}
               {item.vocabulary_notes.length > 0 && (
                 <div>
@@ -327,6 +316,49 @@ export default function ListeningScriptList({ items, level, masteredIds = [], on
                   {showTranslation[item.id] && (
                     <p className="mt-1 whitespace-pre-line text-sm text-gray-600 dark:text-gray-300">{item.translation_ko.replace(/\\n/g, '\n')}</p>
                   )}
+                </div>
+              )}
+
+              {/* 聴解チェック(객관식) — 제일 아래 */}
+              {item.comprehension && (
+                <div className="border-t border-gray-200 pt-3 dark:border-gray-600">
+                  <p className="text-xs font-medium uppercase text-gray-500 dark:text-gray-400">聴解チェック</p>
+                  <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">{item.comprehension.question}</p>
+                  <div className="mt-2 space-y-1.5">
+                    {item.comprehension.options.map((opt, i) => {
+                      const sel = answers[item.id] === i
+                      const r = results[item.id]
+                      let cls = 'border-gray-200 dark:border-gray-600'
+                      if (r === 'correct') {
+                        if (i === item.comprehension!.answer) cls = 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                      } else if (r === 'wrong') {
+                        if (sel) cls = 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                      } else if (sel) cls = 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                      return (
+                        <button key={i} disabled={r === 'correct'}
+                          onClick={() => { if (results[item.id] === 'wrong') setResults(prev => { const n = { ...prev }; delete n[item.id]; return n }); setAnswers(prev => ({ ...prev, [item.id]: i })) }}
+                          className={`block w-full rounded-lg border px-3 py-2 text-left text-sm text-gray-800 dark:text-gray-200 ${cls}`}>
+                          {i + 1}. {opt}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  {!results[item.id] ? (
+                    <button onClick={() => submitQuiz(item)} disabled={answers[item.id] == null}
+                      className="mt-2 rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50">確認</button>
+                  ) : results[item.id] === 'correct' ? (
+                    <p className="mt-2 text-sm font-semibold text-emerald-600">正解！完了チェックが付きました</p>
+                  ) : (
+                    <p className="mt-2 text-sm font-semibold text-red-600">不正解です。下のスクリプトを確認して選び直してください。</p>
+                  )}
+                </div>
+              )}
+
+              {/* Script text — 한 번 오답이면 계속 노출 (퀴즈 아래라 버튼이 밀리지 않음) */}
+              {(!item.comprehension || revealed[item.id]) && (
+                <div>
+                  <p className="text-xs font-medium uppercase text-gray-500 dark:text-gray-400">スクリプト</p>
+                  <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-gray-900 dark:text-white">{item.script.replace(/\\n/g, '\n')}</p>
                 </div>
               )}
             </div>

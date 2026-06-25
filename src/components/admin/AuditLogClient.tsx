@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import Card from '@/components/ui/Card'
 import Pagination from '@/components/ui/Pagination'
 import { getAuditLog, restoreResource, exportAuditLogCsv } from '@/app/actions/audit'
 import type { AuditLogEntry } from '@/app/actions/audit'
 import { RotateCcw, Download } from 'lucide-react'
+import NameRuby from '@/components/ui/NameRuby'
 
 const ACTION_LABELS: Record<string, string> = {
   create: '作成',
@@ -25,16 +27,17 @@ const ACTION_COLORS: Record<string, string> = {
   restore: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
 }
 
-export default function AuditLogClient() {
+export default function AuditLogClient({ users = [] }: { users?: { id: string; name: string }[] }) {
   const [items, setItems] = useState<AuditLogEntry[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [action, setAction] = useState('all')
   const [resourceType, setResourceType] = useState('all')
+  const [actorId, setActorId] = useState('all')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
 
   function loadData(p?: number) {
     const targetPage = p ?? page
@@ -42,6 +45,7 @@ export default function AuditLogClient() {
       const result = await getAuditLog({
         action: action !== 'all' ? action : undefined,
         resourceType: resourceType !== 'all' ? resourceType : undefined,
+        actorId: actorId !== 'all' ? actorId : undefined,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
         page: targetPage,
@@ -80,6 +84,7 @@ export default function AuditLogClient() {
       const result = await exportAuditLogCsv({
         action: action !== 'all' ? action : undefined,
         resourceType: resourceType !== 'all' ? resourceType : undefined,
+        actorId: actorId !== 'all' ? actorId : undefined,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
       })
@@ -175,6 +180,17 @@ export default function AuditLogClient() {
               <option value="cs_terms">CS用語</option>
             </select>
           </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">ユーザー</label>
+            <select
+              value={actorId}
+              onChange={e => setActorId(e.target.value)}
+              className="mt-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
+            >
+              <option value="all">全ユーザー</option>
+              {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+            </select>
+          </div>
           <button
             onClick={handleFilter}
             disabled={pending}
@@ -203,7 +219,8 @@ export default function AuditLogClient() {
           <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {items.map(entry => {
               const profile = entry.profiles as { full_name: string | null; email: string } | null
-              const actorName = profile?.full_name ?? profile?.email ?? entry.actor_id
+              const actorFullName = profile?.full_name ?? null
+              const actorFallback = profile?.email ?? entry.actor_id
               return (
                 <div key={entry.id} className="flex items-start justify-between gap-4 py-3">
                   <div className="min-w-0 flex-1">
@@ -211,7 +228,9 @@ export default function AuditLogClient() {
                       <span className="text-xs text-gray-400">
                         {new Date(entry.created_at).toLocaleString('ja-JP')}
                       </span>
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-300">{actorName}</span>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                        <NameRuby name={actorFullName} fallback={actorFallback} />
+                      </span>
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${ACTION_COLORS[entry.action] ?? 'bg-gray-100 text-gray-600'}`}>
                         {ACTION_LABELS[entry.action] ?? entry.action}
                       </span>

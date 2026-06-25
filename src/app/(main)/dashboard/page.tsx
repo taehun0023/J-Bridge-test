@@ -1,13 +1,294 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import type { AxisKey } from '@/lib/assessment-config'
+import { jlptMockTotalPass } from '@/lib/assessment-config'
 import DashboardClient from './DashboardClient'
-import MentorDashboard from './MentorDashboard'
 import AdminDashboard from './AdminDashboard'
 import DashboardAnnouncements from './DashboardAnnouncements'
-import ExamGatePage from '@/components/dashboard/ExamGatePage'
-import { checkAndCreateExamCycle, getNextExamDate } from '@/app/actions/exam-scheduling'
+import DashboardJlptProgress, { type MenteeJlptProgress } from './DashboardJlptProgress'
+import { getNextExamDate } from '@/app/actions/exam-scheduling'
 import { expireStaleExams } from '@/app/actions/comprehensive-exam'
+import {
+  aggregateJapaneseProgress,
+  type JapaneseAssignmentRow,
+  type JapaneseProgressStat,
+} from '@/lib/japanese-progress'
+import { aggregateItemProgress, aggregateJlptPartProgress, aggregateQuizProgress, aggregateTestPoolProgress, getMyItemAssignmentProgress, runMonthlyAutoAssignment } from '@/app/actions/item-assignments'
+import { resolveQuizIdsForAssignment } from '@/app/actions/learning-assignments'
+import { getCategoryLabel, getSubcategoryLabel, getContentLevelLabel, getContentUrl } from '@/lib/assignment-categories'
+import { isItemCategory, itemContentUrl, type ItemCategory } from '@/lib/item-assignments'
+import { getMenteeMentorsMap } from '@/lib/mentor-helpers'
+
+/** 課題(生活/ビジネス) 집계를 "当月 완료 / 当月 부여"(항목 수)로, 全体進捗은 목표레벨 누적으로 덮어쓴다. */
+async function overrideWithItemProgress(
+  jpStats: Map<string, JapaneseProgressStat>,
+  menteeIds: string[],
+) {
+  if (menteeIds.length === 0) return
+  const itemProg = await aggregateItemProgress(menteeIds)
+  for (const id of menteeIds) {
+    const s = jpStats.get(id)
+    const ip = itemProg[id]
+    if (s && ip) {
+      // 今月課題 = 이번 달 부여분 / 完了 = 누적 완료·부여
+      s.seikatsu = { completed: ip.seikatsuThisMonth.completed, total: ip.seikatsuThisMonth.assigned }
+      s.seikatsuCumulative = { completed: ip.seikatsu.completed, total: ip.seikatsu.assigned }
+      s.businessJp = { completed: ip.businessJpThisMonth.completed, total: ip.businessJpThisMonth.assigned }
+      // 全体進捗 = 목표 자격증 레벨의 生活日本語 항목만
+      s.all = { completed: ip.overall.completed, total: ip.overall.assigned }
+      // 遅延 = 항목 기준(과거 누적목표 − 습득항목). 행 기준 target_count 합산을 대체.
+      s.overdue = ip.overdueItems
+    }
+  }
+}
+
+interface ExamPair { score: number | null; passing_score: number }
+/** comprehensive_exams(완료/실패, completed_at desc 정렬) → 유저별 최신 試験 점수(생활/비즈니스). */
+function buildLatestExamMap(
+  exams: { user_id: string; category: string; score: number | null; passing_score: number }[],
+): Map<string, { seikatsu?: ExamPair; businessJp?: ExamPair }> {
+  const m = new Map<string, { seikatsu?: ExamPair; businessJp?: ExamPair }>()
+  for (const e of exams) {
+    const bucket = e.category === 'seikatsu' || e.category === '生活日本語'
+      ? 'seikatsu'
+      : (e.category === 'business-jp' || e.category === 'business_jp' || e.category === 'ビジネス日本語')
+        ? 'businessJp' : null
+    if (!bucket) continue
+    const cur = m.get(e.user_id) ?? {}
+    if (!cur[bucket]) { cur[bucket] = { score: e.score, passing_score: e.passing_score }; m.set(e.user_id, cur) }
+  }
+  return m
+}
+
+const JP_CATEGORIES = ['seikatsu', 'business-jp', 'business_jp', '生活日本語', 'ビジネス日本語'] as const
+
+type MenteeProfile = { id: string; full_name: string | null; email: string; target_certification: string | null; monthly_auto_assign?: boolean | null }
+
+/** 멘티 목록 → JLPT 영역별 습득 현황(목표레벨 기준) 리스트. 목표가 JLPT가 아닌 멘티는 제외. */
+async function buildJlptProgressRows(menteeProfiles: MenteeProfile[]): Promise<MenteeJlptProgress[]> {
+  if (menteeProfiles.length === 0) return []
+  const progress = await aggregateJlptPartProgress(menteeProfiles.map(p => p.id))
+  return menteeProfiles
+    .filter(p => progress[p.id])
+    .map(p => ({
+      id: p.id,
+      name: p.full_name,
+      fallback: p.email,
+      level: progress[p.id].level,
+      parts: progress[p.id].parts,
+      mock: progress[p.id].mock,
+    }))
+}
+
+/**
+ * 대시보드 테이블 1행(EmployeeRow) 데이터를 멘티 목록 기준으로 생성한다.
+ * 관리자 = 전체 멘티, 멘토 = 담당 멘티만 — 대상 목록만 다르고 집계 로직은 동일.
+ */
+async function buildEmployeeRows(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  menteeProfiles: MenteeProfile[],
+) {
+  const menteeIds = menteeProfiles.map(p => p.id)
+  if (menteeIds.length === 0) return []
+
+  const [{ data: jpAssignments }, { data: jpExams }] = await Promise.all([
+    supabase.from('learning_assignments')
+      .select('assigned_to, category, status, due_date, created_at, completed_at, target_count')
+      .in('assigned_to', menteeIds)
+      .in('category', JP_CATEGORIES as unknown as string[]),
+    supabase.from('comprehensive_exams')
+      .select('user_id, category, score, passing_score, completed_at, status')
+      .in('user_id', menteeIds)
+      .in('category', JP_CATEGORIES as unknown as string[])
+      .in('status', ['completed', 'failed'])
+      .order('completed_at', { ascending: false }),
+  ])
+
+  const mentorsMap = await getMenteeMentorsMap(supabase, menteeIds)
+
+  const jpStats = aggregateJapaneseProgress((jpAssignments ?? []) as JapaneseAssignmentRow[], menteeIds)
+  await overrideWithItemProgress(jpStats, menteeIds)
+  const latestExam = buildLatestExamMap((jpExams ?? []) as Parameters<typeof buildLatestExamMap>[0])
+
+  // JLPT 시험 컬럼 = 제일 높은 등급(레벨)의 제일 높은 점수. 더 낮은 점수는 갱신 안 함.
+  // 1교시 placeholder(mock_session=1)는 제외(2교시/단일세션=null의 최종판정만).
+  const { data: mockExams } = await supabase
+    .from('comprehensive_exams')
+    .select('user_id, content_level, mock_session, score, passed')
+    .in('user_id', menteeIds)
+    .eq('category', 'jlpt-mock')
+    .in('status', ['completed', 'failed'])
+  const JLPT_RANK: Record<string, number> = { N1: 5, N2: 4, N3: 3, N4: 2, N5: 1 }
+  const jlptMockByUser = new Map<string, { score: number | null; passed: boolean | null; level: string | null }>()
+  for (const e of mockExams ?? []) {
+    if (e.mock_session != null && e.mock_session !== 2) continue
+    const cur = jlptMockByUser.get(e.user_id)
+    if (!cur) { jlptMockByUser.set(e.user_id, { score: e.score, passed: e.passed, level: e.content_level }); continue }
+    const eRank = JLPT_RANK[e.content_level ?? ''] ?? 0
+    const curRank = JLPT_RANK[cur.level ?? ''] ?? 0
+    // 더 높은 등급 우선, 같은 등급이면 더 높은 점수
+    if (eRank > curRank || (eRank === curRank && (e.score ?? -1) > (cur.score ?? -1))) {
+      jlptMockByUser.set(e.user_id, { score: e.score, passed: e.passed, level: e.content_level })
+    }
+  }
+
+  // 理解度テスト 진척: 부여된 (카테고리·영역·레벨)의 현재 퀴즈 풀을 동적 재조회
+  // → 콘텐츠(理解度テスト)가 추가되면 분모(total)에 자동 반영, 추가분도 합격 대상
+  // 今月テスト(=부여된 테스트) 진척: 부여된 (카테고리·영역·레벨)의 현재 퀴즈 풀을 동적 재조회
+  // → 콘텐츠가 추가되면 분모(total)에 자동 반영, 추가분도 합격 대상
+  const { data: quizAssigns } = await supabase
+    .from('learning_assignments')
+    .select('assigned_to, category, subcategory, content_level')
+    .in('assigned_to', menteeIds)
+    .in('category', ['seikatsu', 'business-jp', 'business_jp'])
+    .is('target_count', null)
+  const comboKeyOf = (c: string, s: string, l: string | null) => `${c}::${s}::${l ?? ''}`
+  const comboPool = new Map<string, string[]>()
+  const menteeCombos: Record<string, Set<string>> = {}
+  for (const id of menteeIds) menteeCombos[id] = new Set()
+  for (const q of quizAssigns ?? []) {
+    const k = comboKeyOf(q.category, q.subcategory, q.content_level)
+    menteeCombos[q.assigned_to]?.add(k)
+    if (!comboPool.has(k)) {
+      comboPool.set(k, await resolveQuizIdsForAssignment(q.category, q.subcategory, q.content_level, supabase))
+    }
+  }
+  const allAssignedQuizIds = new Set<string>()
+  for (const ids of comboPool.values()) ids.forEach(i => allAssignedQuizIds.add(i))
+  const passingByQuiz: Record<string, number> = {}
+  const bestScore: Record<string, number> = {} // key = `${userId}::${quizId}`
+  if (allAssignedQuizIds.size) {
+    const idList = [...allAssignedQuizIds]
+    const [{ data: qz }, { data: att }] = await Promise.all([
+      supabase.from('quizzes').select('id, passing_score').in('id', idList),
+      supabase.from('quiz_attempts').select('user_id, quiz_id, score').in('user_id', menteeIds).in('quiz_id', idList).not('score', 'is', null),
+    ])
+    for (const x of qz ?? []) passingByQuiz[x.id] = x.passing_score ?? 70
+    for (const a of att ?? []) {
+      const k = `${a.user_id}::${a.quiz_id}`
+      if (bestScore[k] == null || a.score > bestScore[k]) bestScore[k] = a.score
+    }
+  }
+  const quizProg: Record<string, { total: number; passed: number; attempted: number }> = {}
+  for (const id of menteeIds) {
+    const qids = new Set<string>()
+    for (const k of menteeCombos[id]) (comboPool.get(k) ?? []).forEach(i => qids.add(i))
+    let passed = 0, attempted = 0
+    for (const q of qids) {
+      const score = bestScore[`${id}::${q}`]
+      if (score != null) {
+        attempted++
+        if (score >= (passingByQuiz[q] ?? 70)) passed++
+      }
+    }
+    quizProg[id] = { total: qids.size, passed, attempted }
+  }
+
+  // 새 방식 理解テスト(seikatsu-quiz / business-jp-quiz) 부여분을 合算
+  const newQuizProg = await aggregateQuizProgress(menteeIds)
+  for (const id of menteeIds) {
+    const a = quizProg[id] ?? { total: 0, passed: 0, attempted: 0 }
+    const b = newQuizProg[id] ?? { total: 0, passed: 0, attempted: 0 }
+    quizProg[id] = { total: a.total + b.total, passed: a.passed + b.passed, attempted: a.attempted + b.attempted }
+  }
+
+  // 全体テスト = 목표레벨 理解度テスト 전체 풀(부여 무관)
+  const quizPoolProg = await aggregateTestPoolProgress(menteeIds)
+
+  // 遅延에 합산할 테스트 = 부여 理解度テスト 중 overdue (항목과 동일하게 target_count 기준)
+  const { data: overdueTests } = await supabase
+    .from('learning_assignments')
+    .select('assigned_to, target_count')
+    .in('assigned_to', menteeIds)
+    .in('category', ['seikatsu-quiz', 'business-jp-quiz'])
+    .eq('status', 'overdue')
+  const overdueTestByMentee: Record<string, number> = {}
+  for (const t of overdueTests ?? []) overdueTestByMentee[t.assigned_to] = (overdueTestByMentee[t.assigned_to] ?? 0) + (t.target_count ?? 0)
+
+  // 테스트도 課題 카운트에 포함:
+  //   全体進捗 = 목표레벨 항목 풀 + 理解度テスト 전체 풀
+  //   今月課題 = 이번 달 항목 + 부여 테스트(今月テスト)
+  //   完了    = 누적 항목 + 부여 테스트
+  //   遅延    = 항목 overdue + 테스트 overdue
+  for (const id of menteeIds) {
+    const s = jpStats.get(id)
+    if (!s) continue
+    const qp = quizPoolProg[id]
+    if (qp) s.all = { completed: s.all.completed + qp.passed, total: s.all.total + qp.total }
+    const qa = quizProg[id]
+    if (qa) {
+      s.seikatsu = { completed: s.seikatsu.completed + qa.passed, total: s.seikatsu.total + qa.total }
+      s.seikatsuCumulative = { completed: s.seikatsuCumulative.completed + qa.passed, total: s.seikatsuCumulative.total + qa.total }
+    }
+    s.overdue += overdueTestByMentee[id] ?? 0
+  }
+
+  // 모의시험도 課題 카운트에 세트 단위로 포함
+  //   今月課題     = 이번달 배정된 세트 / 그중 응시(완료·불합격)한 세트
+  //   完了·全体進捗 = 공개된 전체 세트(레벨) / 응시한 세트
+  const mockMonthStart = `${new Date().toISOString().slice(0, 7)}-01`
+  const [{ data: pubSets }, { data: allMockRows }] = await Promise.all([
+    supabase.from('jlpt_mock_sets').select('level, set_no').eq('is_published', true),
+    supabase.from('comprehensive_exams')
+      .select('user_id, content_level, mock_set_no, mock_session, status, requested_at')
+      .in('user_id', menteeIds)
+      .eq('category', 'jlpt-mock'),
+  ])
+  const setsCountByLevel = new Map<string, number>()
+  for (const ps of pubSets ?? []) setsCountByLevel.set(ps.level, (setsCountByLevel.get(ps.level) ?? 0) + 1)
+  const takenSetsByUser = new Map<string, Set<string>>()  // 응시(완료·불합격)한 세트
+  const monthSetsByUser = new Map<string, Set<string>>()  // 이번달 배정된 세트
+  for (const m of allMockRows ?? []) {
+    if (m.mock_session === 1) continue
+    const key = `${m.content_level}::${m.mock_set_no}`
+    if (m.status === 'completed' || m.status === 'failed') {
+      let set = takenSetsByUser.get(m.user_id)
+      if (!set) { set = new Set(); takenSetsByUser.set(m.user_id, set) }
+      set.add(key)
+    }
+    if ((m.requested_at ?? '') >= mockMonthStart) {
+      let set = monthSetsByUser.get(m.user_id)
+      if (!set) { set = new Set(); monthSetsByUser.set(m.user_id, set) }
+      set.add(key)
+    }
+  }
+  const mockTgtById = new Map(menteeProfiles.map(p => [p.id, (p.target_certification as string | null) ?? null]))
+  for (const id of menteeIds) {
+    const s = jpStats.get(id)
+    if (!s) continue
+    const tgt = mockTgtById.get(id)
+    const taken = takenSetsByUser.get(id) ?? new Set<string>()
+    const monthSets = monthSetsByUser.get(id) ?? new Set<string>()
+    s.seikatsu = {
+      completed: s.seikatsu.completed + [...monthSets].filter(k => taken.has(k)).length,
+      total: s.seikatsu.total + monthSets.size,
+    }
+    const cumTotal = tgt ? (setsCountByLevel.get(tgt) ?? 0) : 0
+    const cumDone = tgt ? [...taken].filter(k => k.startsWith(`${tgt}::`)).length : 0
+    s.seikatsuCumulative = { completed: s.seikatsuCumulative.completed + cumDone, total: s.seikatsuCumulative.total + cumTotal }
+    s.all = { completed: s.all.completed + cumDone, total: s.all.total + cumTotal }
+  }
+
+  return menteeProfiles.map(p => {
+    const exams = latestExam.get(p.id) ?? {}
+    const mock = jlptMockByUser.get(p.id)
+    return {
+      id: p.id,
+      full_name: p.full_name,
+      email: p.email,
+      japanese_mentor_name: mentorsMap[p.id]?.japanese?.name ?? null,
+      tech_mentor_name: mentorsMap[p.id]?.technical?.name ?? null,
+      target_certification: p.target_certification ?? null,
+      monthly_auto_assign: p.monthly_auto_assign ?? null,
+      stat: jpStats.get(p.id)!,
+      // JLPT 시험 = jlpt-mock 결과 (score는 /180, passing은 레벨별 커트라인, passed는 합산 판정)
+      exam_seikatsu: mock
+        ? { score: mock.score, passing_score: jlptMockTotalPass(mock.level ?? 'N1'), passed: mock.passed, level: mock.level }
+        : null,
+      exam_business_jp: exams.businessJp ?? null,
+    }
+  })
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -28,18 +309,16 @@ export default async function DashboardPage() {
   // ──────────────────────────────────────────────
   await expireStaleExams(user.id)
 
+  // 매달 1회 항목과제 자동 부여 (달 바뀐 뒤 첫 대시보드 로드 시 1회 실행, dedup으로 idempotent)
+  await runMonthlyAutoAssignment()
+
   // ──────────────────────────────────────────────
   // Phase 0.5: Mentee active cycle
   // Cycle 1 → full-screen dashboard gate (initial onboarding exams)
   // Cycle 2+ → rendered as an inline card via DashboardClient
   // ──────────────────────────────────────────────
-  const activeCycle = profile?.role === 'mentee'
-    ? await checkAndCreateExamCycle(user.id, isJapanese)
-    : null
-
-  if (activeCycle && activeCycle.cycleNumber === 1) {
-    return <ExamGatePage cycle={activeCycle} userName={profile?.full_name ?? null} />
-  }
+  // 온보딩 강제시험 제거: 시험 사이클 자동 생성/풀스크린 게이트 비활성화
+  const activeCycle = null
 
   // ──────────────────────────────────────────────
   // Common: お知らせ (全role共通)
@@ -60,47 +339,31 @@ export default async function DashboardPage() {
   // Mentor dashboard
   // ──────────────────────────────────────────────
   if (profile?.role === 'mentor') {
-    const [{ data: menteeAssignments }, { data: menteeProfiles }, { count: totalAnnouncements }, { count: readCount }] = await Promise.all([
+    const [{ data: menteeAssignments }, { count: totalAnnouncements }, { count: readCount }] = await Promise.all([
       supabase.from('mentor_mentee_assignments').select('mentee_id').eq('mentor_id', user.id),
-      supabase.from('profiles').select('id, full_name, email, jlpt_level').eq('role', 'mentee'),
       supabase.from('announcements').select('id', { count: 'exact', head: true }),
       supabase.from('announcement_reads').select('announcement_id', { count: 'exact', head: true }).eq('user_id', user.id),
     ])
     const unreadAnnouncements = (totalAnnouncements ?? 0) - (readCount ?? 0)
     const menteeIds = (menteeAssignments ?? []).map(a => a.mentee_id)
-    const menteeMap = new Map((menteeProfiles ?? []).map(p => [p.id, p]))
 
-    let progressMap = new Map<string, { total: number; completed: number }>()
-    if (menteeIds.length > 0) {
-      const { data: assignments } = await supabase
-        .from('learning_assignments')
-        .select('assigned_to, status')
-        .in('assigned_to', menteeIds)
-      for (const a of assignments ?? []) {
-        const cur = progressMap.get(a.assigned_to) ?? { total: 0, completed: 0 }
-        cur.total++
-        if (a.status === 'completed') cur.completed++
-        progressMap.set(a.assigned_to, cur)
-      }
-    }
+    const { data: menteeProfiles } = menteeIds.length > 0
+      ? await supabase.from('profiles').select('id, full_name, email, target_certification, monthly_auto_assign').eq('role', 'mentee').in('id', menteeIds)
+      : { data: [] as MenteeProfile[] }
 
-    const mentees = menteeIds.map(id => {
-      const p = menteeMap.get(id)
-      const prog = progressMap.get(id) ?? { total: 0, completed: 0 }
-      return {
-        id,
-        full_name: p?.full_name ?? null,
-        email: p?.email ?? '',
-        jlpt_level: p?.jlpt_level ?? null,
-        total: prog.total,
-        completed: prog.completed,
-      }
-    })
+    // 担当メンティーのみ — 管理者ダッシュボードと同一の集計・レイアウトを共有 (독립 집계 → 병렬)
+    const [employees, jlptRows] = await Promise.all([
+      buildEmployeeRows(supabase, (menteeProfiles ?? []) as MenteeProfile[]),
+      buildJlptProgressRows((menteeProfiles ?? []) as MenteeProfile[]),
+    ])
 
     return (
       <>
         <DashboardAnnouncements announcements={announcementItems} />
-        <MentorDashboard mentorName={profile.full_name} mentees={mentees} unreadAnnouncements={unreadAnnouncements} />
+        <AdminDashboard adminName={profile.full_name} employees={employees} unreadAnnouncements={unreadAnnouncements} variant="mentor" />
+        <div className="mt-6">
+          <DashboardJlptProgress mentees={jlptRows} />
+        </div>
       </>
     )
   }
@@ -109,53 +372,26 @@ export default async function DashboardPage() {
   // Admin dashboard
   // ──────────────────────────────────────────────
   if (profile?.role === 'admin') {
-    const [{ data: allMentees }, { data: allAssignments }, { data: mentorAssignments }, { data: mentorProfiles }, { count: adminTotalAnn }, { count: adminReadAnn }] = await Promise.all([
-      supabase.from('profiles').select('id, full_name, email, jlpt_level, created_at').eq('role', 'mentee'),
-      supabase.from('learning_assignments').select('assigned_to, status, completed_at'),
-      supabase.from('mentor_mentee_assignments').select('mentor_id, mentee_id'),
-      supabase.from('profiles').select('id, full_name').eq('role', 'mentor'),
+    const [{ data: allMentees }, { count: adminTotalAnn }, { count: adminReadAnn }] = await Promise.all([
+      supabase.from('profiles').select('id, full_name, email, target_certification, monthly_auto_assign').eq('role', 'mentee'),
       supabase.from('announcements').select('id', { count: 'exact', head: true }),
       supabase.from('announcement_reads').select('announcement_id', { count: 'exact', head: true }).eq('user_id', user.id),
     ])
     const adminUnread = (adminTotalAnn ?? 0) - (adminReadAnn ?? 0)
 
-    const mentorMap = new Map((mentorProfiles ?? []).map(p => [p.id, p.full_name]))
-    const menteeToMentor = new Map<string, string>()
-    for (const a of mentorAssignments ?? []) {
-      menteeToMentor.set(a.mentee_id, mentorMap.get(a.mentor_id) ?? '—')
-    }
-
-    const progressMap = new Map<string, { total: number; completed: number; lastActivity: string | null }>()
-    for (const a of allAssignments ?? []) {
-      const cur = progressMap.get(a.assigned_to) ?? { total: 0, completed: 0, lastActivity: null }
-      cur.total++
-      if (a.status === 'completed') {
-        cur.completed++
-        if (a.completed_at && (!cur.lastActivity || a.completed_at > cur.lastActivity)) {
-          cur.lastActivity = a.completed_at
-        }
-      }
-      progressMap.set(a.assigned_to, cur)
-    }
-
-    const employees = (allMentees ?? []).map(p => {
-      const prog = progressMap.get(p.id) ?? { total: 0, completed: 0, lastActivity: null }
-      return {
-        id: p.id,
-        full_name: p.full_name,
-        email: p.email,
-        jlpt_level: p.jlpt_level,
-        mentor_name: menteeToMentor.get(p.id) ?? null,
-        total: prog.total,
-        completed: prog.completed,
-        last_activity: prog.lastActivity,
-      }
-    })
+    // 全社員(메ンティー) — メンターダッシュボードと同一の集計・レイアウトを共有 (독립 집계 → 병렬)
+    const [employees, jlptRows] = await Promise.all([
+      buildEmployeeRows(supabase, (allMentees ?? []) as MenteeProfile[]),
+      buildJlptProgressRows((allMentees ?? []) as MenteeProfile[]),
+    ])
 
     return (
       <>
         <DashboardAnnouncements announcements={announcementItems} />
         <AdminDashboard adminName={profile.full_name} employees={employees} unreadAnnouncements={adminUnread} />
+        <div className="mt-6">
+          <DashboardJlptProgress mentees={jlptRows} />
+        </div>
       </>
     )
   }
@@ -204,7 +440,7 @@ export default async function DashboardPage() {
       .select('id, category, content, created_at, admin:profiles!admin_feedbacks_admin_id_fkey(full_name)')
       .eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
     // 10. 종합시험 재시험 정보
-    supabase.from('comprehensive_exams').select('id, category, score, status')
+    supabase.from('comprehensive_exams').select('id, category, content_level, score, status, passed')
       .eq('user_id', user.id).in('status', ['completed', 'failed', 'requested', 'approved', 'in_progress'])
       .order('requested_at', { ascending: false }),
     // 11. お知らせ未読数
@@ -262,9 +498,34 @@ export default async function DashboardPage() {
     attitudeCulture: attitudeSkills?.attitude_normalized ?? 0,
   }
 
+  // JLPT 레벨: 합격한 모의시험(jlpt-mock) 중 가장 높은 레벨. 없으면 레거시 seikatsu 종합시험 최상위.
+  const SEIKATSU_LEVEL_RANK: Record<string, number> = { N1: 5, N2: 4, N3: 3, N4: 2, N5: 1 }
+  let seikatsuExamLevel: 'N1' | 'N2' | 'N3' | 'N4' | 'N5' | null = null
+  let _bestMockRank = 0
+  let _bestLegacyRank = 0
+  let _legacyLevel: 'N1' | 'N2' | 'N3' | 'N4' | 'N5' | null = null
+  for (const exam of userCompExams ?? []) {
+    const e = exam as { category: string; content_level?: string | null; passed?: boolean | null }
+    const level = e.content_level as 'N1' | 'N2' | 'N3' | 'N4' | 'N5' | null
+    const rank = SEIKATSU_LEVEL_RANK[level ?? ''] ?? 0
+    if (e.category === 'jlpt-mock' && e.passed) {
+      if (rank > _bestMockRank) { _bestMockRank = rank; seikatsuExamLevel = level }
+    } else if (e.category === 'seikatsu') {
+      if (rank > _bestLegacyRank) { _bestLegacyRank = rank; _legacyLevel = level }
+    }
+  }
+  if (!seikatsuExamLevel) seikatsuExamLevel = _legacyLevel
+  // 합격한 모의고사가 없으면 → 가장 최근 응시한 모의고사 레벨을 표시(불합격이어도 응시 레벨 반영)
+  if (!seikatsuExamLevel) {
+    const latestMock = (userCompExams ?? []).find(e => (e as { category: string }).category === 'jlpt-mock')
+    const lvl = (latestMock as { content_level?: string | null } | undefined)?.content_level
+    if (lvl && ['N1', 'N2', 'N3', 'N4', 'N5'].includes(lvl)) seikatsuExamLevel = lvl as 'N1' | 'N2' | 'N3' | 'N4' | 'N5'
+  }
+
   // 최근 시험결과 통합
   const EXAM_CATEGORY_LABELS: Record<string, string> = {
-    seikatsu: '生活日本語 総合試験',
+    'jlpt-mock': 'JLPT模試',
+    seikatsu: 'JLPT 総合試験',
     'business-jp': 'ビジネス日本語 総合試験',
     cs: 'CS知識 総合試験',
     dev: '開発実務能力 総合試験',
@@ -311,6 +572,83 @@ export default async function DashboardPage() {
     assigner: Array.isArray(a.assigner) ? a.assigner[0] ?? null : a.assigner,
   })) as { id: string; title: string; category: string; subcategory: string; content_level: string | null; status: string; due_date: string | null; created_at: string; assigner: { full_name: string | null } | null }[]
 
+  // 대시보드 월별 과제 보드: 미완료 + 이번달 완료(초록)만. 지난달 완료는 제외(사라짐).
+  const nowMonth = new Date().toISOString().slice(0, 7)
+  const myProgressRows = await getMyItemAssignmentProgress()
+  const masteredByArea = new Map(myProgressRows.map(r => [`${r.level}::${r.area}`, r.mastered]))
+  const { data: openAssignments } = await supabase
+    .from('learning_assignments')
+    .select('id, category, subcategory, content_level, status, due_date, created_at, target_count, cumulative_target')
+    .eq('assigned_to', user.id)
+    .or(`status.neq.completed,due_date.gte.${nowMonth}-01`)
+    .order('due_date', { ascending: true })
+  const assignmentBoardCards = (openAssignments ?? []).map(a => {
+    const sub = a.subcategory && a.subcategory !== 'all' ? a.subcategory : ''
+    const total = (a.target_count ?? null) as number | null
+    const cum = (a.cumulative_target ?? null) as number | null
+    let done: number | null = null, rangeFrom: number | null = null, rangeTo: number | null = null
+    if (total != null && cum != null) {
+      const prev = cum - total
+      rangeFrom = prev + 1; rangeTo = cum
+      const m = masteredByArea.get(`${a.content_level}::${sub}`)
+      if (m != null) done = Math.max(0, Math.min(m - prev, total))
+    }
+    return {
+      id: a.id as string,
+      month: (a.due_date ?? a.created_at ?? '').slice(0, 7),
+      catLabel: getCategoryLabel(a.category),
+      areaLabel: sub ? getSubcategoryLabel(a.category, sub) : '',
+      areaKey: sub,
+      levelLabel: getContentLevelLabel(a.category, a.content_level),
+      count: total,
+      done,
+      rangeFrom,
+      rangeTo,
+      status: a.status as string,
+      dueDate: a.due_date as string | null,
+      // 카드 클릭 시 범위 시작 항목(rangeFrom)이 있는 페이지로 이동 (어휘/문법/독해/청해)
+      url: (() => {
+        const base = isItemCategory(a.category) ? itemContentUrl(a.category as ItemCategory, sub, a.content_level) : getContentUrl(a.category, sub)
+        if (isItemCategory(a.category) && rangeFrom != null) {
+          return `${base}${base.includes('?') ? '&' : '?'}start=${rangeFrom}`
+        }
+        return base
+      })(),
+    }
+  })
+
+  // 이번달 JLPT模試 — 부여되면 課題 보드에 카드로 표시 (모의고사는 월마다 부여 안 될 수 있음)
+  const { data: myMocks } = await supabase
+    .from('comprehensive_exams')
+    .select('id, content_level, status, requested_at')
+    .eq('user_id', user.id)
+    .eq('category', 'jlpt-mock')
+    .gte('requested_at', `${nowMonth}-01`)
+    .order('requested_at', { ascending: false })
+  const mockRows = myMocks ?? []
+  if (mockRows.length > 0) {
+    const unfinished = mockRows.find(r => r.status === 'approved' || r.status === 'in_progress')
+    const mockStatus = unfinished ? (unfinished.status === 'in_progress' ? 'in_progress' : 'pending') : 'completed'
+    // 해당 자격증(레벨)의 모의시험 페이지로 이동
+    const mockLevel = mockRows[0].content_level ?? ''
+    const mockUrl = `/japanese/jlpt/quiz?level=${mockLevel}`
+    assignmentBoardCards.push({
+      id: `mock-${mockRows[0].id}`,
+      month: nowMonth,
+      catLabel: 'JLPT模試',
+      areaLabel: '模試',
+      areaKey: 'mock',
+      levelLabel: mockRows[0].content_level ?? '',
+      count: null,
+      done: null,
+      rangeFrom: null,
+      rangeTo: null,
+      status: mockStatus,
+      dueDate: null,
+      url: mockUrl,
+    })
+  }
+
   const dashboardProps = {
     profile,
     radarScores,
@@ -320,10 +658,13 @@ export default async function DashboardPage() {
     recentFeedbacks: feedbackProps,
     compExamRetakeByCategory,
     hasCompletedExamByCategory,
+    seikatsuExamLevel,
     role: profile?.role ?? 'mentee',
     nextExamDate,
     activeCycle,
     recentAssignments: assignmentCards,
+    assignmentBoardCards,
+    assignmentMonth: nowMonth,
     unreadAnnouncements: (menteeTotalAnn ?? 0) - (menteeReadAnn ?? 0),
   }
 

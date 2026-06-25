@@ -9,10 +9,7 @@ function buildCsv(headers: string[], data: Record<string, unknown>[]): string {
     headers.map(h => {
       const val = row[h]
       if (val === null || val === undefined) return ''
-      let str = String(val).replace(/"/g, '""')
-      // Excel/Sheets evaluate cells starting with = + - @ or tab/CR as formulas;
-      // user-authored content (shared_vocab, profiles) flows into this export.
-      if (/^[=+\-@\t\r]/.test(str)) str = `'${str}`
+      const str = String(val).replace(/"/g, '""')
       return `"${str}"`
     }).join(',')
   )

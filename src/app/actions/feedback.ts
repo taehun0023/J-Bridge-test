@@ -3,7 +3,7 @@
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { requireAuth } from '@/lib/auth-helpers'
-import { createNotification } from '@/lib/notification-helpers'
+import { createNotification } from '@/app/actions/notifications'
 
 export async function bulkDeleteFeedbacks() {
   const auth = await requireAuth()

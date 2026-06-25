@@ -2,20 +2,30 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { env } from '@/lib/env'
 import { BUCKET, getCacheKey, synthesize, synthesizeWithDialogue, narratorVoice } from '@/lib/tts-utils'
-import { parseExamListeningQuestion, parsePoolListeningQuestion } from '@/lib/listening'
 
 const BATCH_SIZE = 10
 
-/** Collect every TTS script variant a listening question can request at runtime:
- *  ExamClient (\n\n contract) and QuizTaker (質問： marker) may extract different
- *  scripts from the same question_text — both cache keys must be warmed. */
-function extractListeningScripts(questionText: string): string[] {
-  const scripts = new Set<string>()
-  const exam = parseExamListeningQuestion(questionText)
-  if (exam?.script) scripts.add(exam.script)
-  const pool = parsePoolListeningQuestion(questionText)
-  if (pool.script) scripts.add(pool.script)
-  return [...scripts]
+/** Extract the TTS script portion from a listening quiz question_text.
+ *  Tries 質問： marker first (QuizTaker), then \n\n split (ExamClient). */
+function extractListeningScript(questionText: string): string | null {
+  const cleaned = questionText.replace(/\\n/g, '\n')
+
+  // QuizTaker style: split at 質問：
+  const marker = '質問：'
+  const markerIdx = cleaned.lastIndexOf(marker)
+  if (markerIdx !== -1) {
+    const script = cleaned.substring(0, markerIdx).trim()
+    if (script) return script
+  }
+
+  // ExamClient style: split by \n\n, take all but last part
+  const parts = cleaned.split('\n\n')
+  if (parts.length >= 3) {
+    const script = parts.slice(0, parts.length - 1).join('\n\n')
+    if (script) return script
+  }
+
+  return null
 }
 
 type SourceName = 'jlpt_vocabulary' | 'jlpt_grammar' | 'it_glossary' | 'jlpt_listening' | 'listening_quiz'
@@ -137,9 +147,8 @@ async function getSourceItems(
 
       for (const row of data) {
         const questionText = String((row as unknown as Record<string, unknown>).question_text ?? '')
-        for (const script of extractListeningScripts(questionText)) {
-          items.push(toCacheItem(script))
-        }
+        const script = extractListeningScript(questionText)
+        if (script) items.push(toCacheItem(script))
       }
 
       if (data.length < PAGE) break

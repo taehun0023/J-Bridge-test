@@ -4,7 +4,7 @@ import { createSubmission, pollSubmissionResult, getLanguageId, mapJudge0Status 
 import { analyzeCode } from '@/lib/code-review/analyzer'
 import { revalidatePath } from 'next/cache'
 import { requireAuth } from '@/lib/auth-helpers'
-import { recalculateUserScores } from '@/modules/scoring'
+import { recalculateUserScores } from './scores'
 
 export async function submitCode(problemId: string, sourceCode: string, language: string) {
   const auth = await requireAuth()
@@ -129,11 +129,6 @@ export async function submitCode(problemId: string, sourceCode: string, language
 }
 
 export async function runCode(sourceCode: string, language: string, input: string) {
-  const auth = await requireAuth()
-  if ('error' in auth) {
-    return { error: auth.error, output: '', status: 'runtime_error', time: null, memory: null }
-  }
-
   try {
     const token = await createSubmission({
       source_code: sourceCode,

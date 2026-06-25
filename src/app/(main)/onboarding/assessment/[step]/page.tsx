@@ -2,7 +2,6 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getAssessmentForStep } from '@/app/actions/assessment'
 import { ASSESSMENT_LABELS, ASSESSMENT_TIME_LIMITS, ASSESSMENT_QUIZ_IDS, getRelevantSteps } from '@/lib/assessment-config'
-import { shuffleArray } from '@/lib/shuffle'
 import AssessmentTaker from './AssessmentTaker'
 
 interface Props {
@@ -93,7 +92,8 @@ export default async function AssessmentPage({ params }: Props) {
 
   // Shuffle options so correct answer isn't always in position 1
   const serializedQuestions = result.questions.map(q => {
-    const shuffled = shuffleArray(q.quiz_question_options_safe)
+    const shuffled = [...q.quiz_question_options_safe]
+      .sort(() => Math.random() - 0.5)
       .map((o, i) => ({
         id: o.id,
         option_text: o.option_text,

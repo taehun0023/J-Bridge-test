@@ -1,12 +1,15 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import Card from '@/components/ui/Card'
 import { createFeedback, updateFeedback, deleteFeedback } from '@/app/actions/admin/feedback'
 import { createFeedbackReply, updateFeedbackReply, deleteFeedbackReply, bulkDeleteFeedbacks } from '@/app/actions/feedback'
+import NameRuby from '@/components/ui/NameRuby'
+import NameSelect from '@/components/ui/NameSelect'
 
 const categoryLabels: Record<string, string> = {
-  seikatsu: '生活日本語',
+  seikatsu: 'JLPT',
   business_jp: 'ビジネス日本語',
   cs: 'CS知識',
   dev: '開発実務能力',
@@ -57,8 +60,9 @@ export default function FeedbackClient({ feedbacks, currentUserId, userRole, fee
   const canBulkDelete = userRole === 'admin'
   const canCreate = userRole === 'admin' || userRole === 'mentor'
   const [message, setMessage] = useState<string | null>(null)
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [targetUserId, setTargetUserId] = useState('')
 
   function showMessage(msg: string) {
     setMessage(msg)
@@ -114,16 +118,16 @@ export default function FeedbackClient({ feedbacks, currentUserId, userRole, fee
               <form action={handleCreateFeedback} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">対象ユーザー *</label>
-                  <select
-                    name="user_id"
-                    required
-                    className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-gray-700 dark:text-white"
-                  >
-                    <option value="">ユーザーを選択...</option>
-                    {feedbackTargetUsers.map(u => (
-                      <option key={u.id} value={u.id}>{u.full_name ?? u.email}</option>
-                    ))}
-                  </select>
+                  <div className="mt-1">
+                    <NameSelect
+                      name="user_id"
+                      required
+                      value={targetUserId}
+                      onChange={setTargetUserId}
+                      options={feedbackTargetUsers}
+                      placeholder="ユーザーを選択..."
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">カテゴリ</label>
@@ -232,8 +236,8 @@ function FeedbackCard({
   const [editingReplyId, setEditingReplyId] = useState<string | null>(null)
   const [editReplyText, setEditReplyText] = useState('')
 
-  const senderName = feedback.admin?.full_name ?? '不明'
-  const receiverName = feedback.user?.full_name ?? '不明'
+  const senderName = feedback.admin?.full_name ?? null
+  const receiverName = feedback.user?.full_name ?? null
   const isFeedbackAuthor = feedback.admin?.id === currentUserId
   const isAdmin = userRole === 'admin'
   const replyCount = feedback.feedback_replies?.length ?? 0
@@ -298,7 +302,7 @@ function FeedbackCard({
             {categoryLabels[feedback.category] ?? feedback.category}
           </span>
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
-            From: {senderName} → {receiverName}
+            From: <NameRuby name={senderName} fallback="不明" /> → <NameRuby name={receiverName} fallback="不明" />
           </span>
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
             {new Date(feedback.created_at).toLocaleDateString('ja-JP')}
@@ -372,7 +376,7 @@ function FeedbackCard({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                    {reply.user?.full_name ?? 'ユーザー'}
+                    <NameRuby name={reply.user?.full_name} fallback="ユーザー" />
                   </span>
                   <span className="text-xs text-zinc-500 dark:text-zinc-400">
                     {new Date(reply.created_at).toLocaleDateString('ja-JP')}

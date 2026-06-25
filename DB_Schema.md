@@ -2,18 +2,13 @@
 
 Supabase (PostgreSQL) 기반 DB 스키마. 총 48개 테이블 (+ coding_exam_problems junction).
 
-> **Migration 기준:** `00001` ~ `00180` (2026-06-11 기준)
+> **Migration 기준:** `00001` ~ `00170` (2026-04 기준 — 인수 시점 최신)
 >
-> 인수 시점(00170) 이후 추가된 마이그레이션:
+> 이후 추가된 마이그레이션은 다음을 포함:
 > - `00148`~`00163`: JLPT/BJ/CS 품질 감사 수정 + N5 grammar answer-leak 수정
 > - `00164`: shared_vocab 테이블 폐기
 > - `00165`~`00169`: 작문(writing_exercises) 시스템 도입 + 한국어 예시 + claims + 설명 수정
 > - `00170`: 코딩 학습(coding_learning) 시스템
-> - `00171`~`00175`: 코드리딩 재배치, IT 자격증, 재시험 컬럼 정리, 공지사항(announcements) + 첨부 버킷
-> - `00176`~`00177`: 누락 RLS 활성화 + test DB 스키마 동기화
-> - `00178`: **quiz_question_options SELECT를 admin/mentor로 제한** (is_correct 정답 노출 차단 — 채점/리뷰는 service role 경유)
-> - `00179`: 독해/청해 보기 길이 밸런스 수정 (정답=유일최장 83문제, 오답 151건 재작성)
-> - `00180`: **답안 UNIQUE 제약** — `comprehensive_exam_answers(exam_id, question_id)`, `quiz_answers(attempt_id, question_id)` (이중 제출 레이스 대응)
 
 ## ERD 개요
 
@@ -423,8 +418,6 @@ CREATE TABLE quiz_question_options (
 );
 ```
 
-> **RLS (00178):** base 테이블 SELECT는 `is_admin_or_mentor()`로 제한 (이전엔 authenticated 전체 허용 → `is_correct` 정답이 클라이언트에서 직접 조회 가능했음). 멘티 표시용 조회는 `quiz_question_options_safe` 뷰(is_correct 제외, security definer) 경유, 채점·본인 리뷰는 service role 경유.
-
 ### 18. quiz_attempts
 
 ```sql
@@ -457,10 +450,7 @@ CREATE TABLE quiz_answers (
   selected_option_id UUID REFERENCES quiz_question_options(id) ON DELETE SET NULL,
   text_answer TEXT,
   is_correct BOOLEAN,
-  answered_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-  -- 00180: 이중 제출 레이스 대응
-  CONSTRAINT quiz_answers_attempt_question_key UNIQUE (attempt_id, question_id)
+  answered_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ```
 
@@ -946,10 +936,7 @@ CREATE TABLE comprehensive_exam_answers (
   question_id UUID NOT NULL REFERENCES quiz_questions(id),
   selected_option_id UUID REFERENCES quiz_question_options(id),
   is_correct BOOLEAN,
-  answered_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-  -- 00180: 이중 제출 레이스 대응
-  CONSTRAINT comprehensive_exam_answers_exam_question_key UNIQUE (exam_id, question_id)
+  answered_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ```
 

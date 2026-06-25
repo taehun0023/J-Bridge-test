@@ -56,3 +56,9 @@ next-env.d.ts
 # Docker image exports (NAS deployment artifacts, never commit)
 *.tar
 *.tar.gz
+
+# Claude Code local settings (contains machine-local permission allowlist; may hold secrets)
+.claude/settings.local.json
+
+# Local content export artifacts (TSV/TXT dumps — regenerated locally, not for repo)
+/_export/

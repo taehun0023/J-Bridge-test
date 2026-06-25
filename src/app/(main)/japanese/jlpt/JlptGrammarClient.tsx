@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Pagination from '@/components/ui/Pagination'
 import EmptyState from '@/components/ui/EmptyState'
@@ -21,6 +21,7 @@ interface Props {
   offset: number
   masteredIds: string[]
   mastery: string
+  seqMap: Record<string, number>
 }
 
 const categoryLabels: Record<GrammarCategory, string> = {
@@ -49,12 +50,16 @@ const MASTERY_FILTERS = [
 
 export default function JlptGrammarClient({
   items, level, totalPages, currentPage, search, category, categoryOptions, totalCount,
-  offset, masteredIds, mastery
+  offset, masteredIds, mastery, seqMap
 }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [showFlashcard, setShowFlashcard] = useState(false)
+  const [flashcardItems, setFlashcardItems] = useState<typeof items>([])
   const [searchInput, setSearchInput] = useState(search)
+  const [masteredSet, setMasteredSet] = useState<Set<string>>(() => new Set(masteredIds))
+  useEffect(() => { setMasteredSet(new Set(masteredIds)) }, [masteredIds])
+  const masteredArr = useMemo(() => [...masteredSet], [masteredSet])
 
   function updateParams(updates: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString())
@@ -72,6 +77,7 @@ export default function JlptGrammarClient({
   }
 
   const handleToggleMastery = useCallback(async (itemId: string) => {
+    setMasteredSet(prev => { const n = new Set(prev); if (n.has(itemId)) n.delete(itemId); else n.add(itemId); return n })
     await toggleMastery('jlpt_grammar', itemId)
   }, [])
 
@@ -126,11 +132,11 @@ export default function JlptGrammarClient({
         <div className="ml-auto flex items-center gap-3">
           <span className="text-sm text-gray-500 dark:text-gray-400">{totalCount}項目</span>
           <button
-            onClick={() => setShowFlashcard(true)}
+            onClick={() => { setFlashcardItems(items.filter(it => !masteredSet.has(it.id))); setShowFlashcard(true) }}
             disabled={items.length === 0}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            フラッシュカード
+            暗記
           </button>
         </div>
       </div>
@@ -140,7 +146,7 @@ export default function JlptGrammarClient({
         {items.length === 0 ? (
           <EmptyState title="文法項目がありません" description="検索条件を変更してください" icon="📝" />
         ) : (
-          <GrammarList items={items} level={level} offset={offset} masteredIds={masteredIds} onToggleMastery={handleToggleMastery} />
+          <GrammarList items={items} level={level} offset={offset} masteredIds={masteredArr} onToggleMastery={handleToggleMastery} seqMap={seqMap} />
         )}
       </div>
 
@@ -153,7 +159,7 @@ export default function JlptGrammarClient({
 
       {/* Flashcard mode */}
       {showFlashcard && (
-        <GrammarFlashcard items={items} onClose={() => setShowFlashcard(false)} masteredIds={masteredIds} onToggleMastery={handleToggleMastery} />
+        <GrammarFlashcard items={flashcardItems} onClose={() => setShowFlashcard(false)} masteredIds={masteredArr} onToggleMastery={handleToggleMastery} />
       )}
     </div>
   )

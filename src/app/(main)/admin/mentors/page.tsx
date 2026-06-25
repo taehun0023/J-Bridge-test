@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import AdminMentorsClient from './AdminMentorsClient'
 
 export default async function AdminMentorsPage() {
@@ -47,8 +48,18 @@ export default async function AdminMentorsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">メンター管理</h1>
-      <p className="mt-1 text-gray-500 dark:text-gray-400">メンターとメンティーの紐付けを管理します</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">メンター管理</h1>
+          <p className="mt-1 text-gray-500 dark:text-gray-400">メンターとメンティーの紐付けを管理します</p>
+        </div>
+        <Link
+          href="/admin/users"
+          className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-colors"
+        >
+          ユーザー管理へ
+        </Link>
+      </div>
 
       <AdminMentorsClient
         mentors={mentors ?? []}

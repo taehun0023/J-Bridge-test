@@ -5,9 +5,8 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { requireAuth } from '@/lib/auth-helpers'
 import { fetchRandomAssessmentQuestions, fetchAssessmentQuiz } from '@/lib/supabase/queries/assessments'
-import { recalculateUserScores } from '@/modules/scoring'
+import { recalculateUserScores } from './scores'
 import { ASSESSMENT_QUIZ_IDS } from '@/lib/assessment-config'
-import { checkAndCreateExamCycle } from './exam-scheduling'
 
 /** Save onboarding preferences and mark as onboarded → dashboard */
 export async function savePreferences(formData: FormData) {
@@ -36,10 +35,7 @@ export async function savePreferences(formData: FormData) {
 
   if (error) return { error: '保存中にエラーが発生しました' }
 
-  // Create first exam cycle (cycle_number=1) on onboarding completion
-  // This triggers the exam gate on the dashboard
-  await checkAndCreateExamCycle(user.id, isJapanese)
-
+  // 온보딩 강제시험 제거: 첫 시험 사이클 자동 생성 안 함
   revalidatePath('/', 'layout')
   redirect('/dashboard')
 }
@@ -71,19 +67,17 @@ export async function submitAssessment(
   const quizId = ASSESSMENT_QUIZ_IDS[step]
   if (!quizId) return { error: '無効なステップです' }
 
-  // Service role client is required: deleting previous attempts bypasses RLS
-  // (no DELETE policy on quiz_attempts), and grading reads is_correct, whose
-  // base-table SELECT is admin/mentor-only under RLS since 00178.
-  const serviceClient = createServiceRoleClient()
-  if (!serviceClient) return { error: '採点処理を実行できませんでした' }
-
   // Delete previous attempts for this user + quiz (retake = overwrite)
+  // Use service role client to bypass RLS (no DELETE policy on quiz_attempts)
   // quiz_answers are cascade-deleted via FK ON DELETE CASCADE
-  await serviceClient
-    .from('quiz_attempts')
-    .delete()
-    .eq('user_id', user.id)
-    .eq('quiz_id', quizId)
+  const serviceClient = createServiceRoleClient()
+  if (serviceClient) {
+    await serviceClient
+      .from('quiz_attempts')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('quiz_id', quizId)
+  }
 
   // Create attempt
   const { data: attempt, error: attemptError } = await supabase
@@ -94,18 +88,9 @@ export async function submitAssessment(
 
   if (attemptError || !attempt) return { error: '試験の開始に失敗しました' }
 
-  // At most one answer per question — payload is client-controlled, and
-  // quiz_answers enforces UNIQUE(attempt_id, question_id) since 00180
-  const seenQuestionIds = new Set<string>()
-  const uniqueAnswers = answers.filter(a => {
-    if (seenQuestionIds.has(a.questionId)) return false
-    seenQuestionIds.add(a.questionId)
-    return true
-  })
-
   // Get correct answers
-  const questionIds = uniqueAnswers.map(a => a.questionId)
-  const { data: correctOptions } = await serviceClient
+  const questionIds = answers.map(a => a.questionId)
+  const { data: correctOptions } = await supabase
     .from('quiz_question_options')
     .select('id, question_id, is_correct')
     .in('question_id', questionIds)
@@ -117,7 +102,7 @@ export async function submitAssessment(
 
   // Grade and insert answers
   let correctCount = 0
-  const answerRows = uniqueAnswers.map((a, index) => {
+  const answerRows = answers.map((a, index) => {
     const isCorrect = correctMap.get(a.questionId) === a.selectedOptionId
     if (isCorrect) correctCount++
     return {
@@ -132,7 +117,7 @@ export async function submitAssessment(
   await supabase.from('quiz_answers').insert(answerRows)
 
   // Score: correct / totalQuestions (unanswered = wrong)
-  const denominator = Math.max(totalQuestions, uniqueAnswers.length)
+  const denominator = Math.max(totalQuestions, answers.length)
   const score = Math.max(1, Math.round((correctCount / denominator) * 100))
 
   await supabase

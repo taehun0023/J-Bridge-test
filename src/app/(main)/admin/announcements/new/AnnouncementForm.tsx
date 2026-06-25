@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useTransition, useRef } from 'react'
+import { useState, useRef } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import { useRouter } from 'next/navigation'
 import { createAnnouncement } from '@/app/actions/announcements'
 import Card from '@/components/ui/Card'
@@ -8,7 +9,7 @@ import { Paperclip, X } from 'lucide-react'
 
 export default function AnnouncementForm() {
   const router = useRouter()
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
   const [error, setError] = useState<string | null>(null)
   const [files, setFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)

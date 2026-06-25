@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Pagination from '@/components/ui/Pagination'
 import EmptyState from '@/components/ui/EmptyState'
 import KanjiList from '@/components/japanese/KanjiList'
+import RangeQuizModal from '@/components/japanese/RangeQuizModal'
+import { generateKanjiQuiz } from '@/app/actions/range-quiz'
 import { toggleMastery } from '@/app/actions/mastery'
 import type { JlptLevel } from '@/lib/supabase/types'
 
@@ -15,6 +17,7 @@ interface KanjiItem {
   reading_kun: string | null
   meaning_ko: string
   meaning_en: string | null
+  korean_gloss: string | null
   stroke_count: number | null
   jlpt_level: string
   example_words: { word: string; reading: string; meaning: string }[] | null
@@ -30,6 +33,7 @@ interface Props {
   offset: number
   masteredIds: string[]
   mastery: string
+  seqMap: Record<string, number>
 }
 
 const MASTERY_FILTERS = [
@@ -39,11 +43,12 @@ const MASTERY_FILTERS = [
 ]
 
 export default function JlptKanjiClient({
-  items, level, totalPages, currentPage, search, totalCount, offset, masteredIds, mastery
+  items, level, totalPages, currentPage, search, totalCount, offset, masteredIds, mastery, seqMap
 }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [searchInput, setSearchInput] = useState(search)
+  const [showQuiz, setShowQuiz] = useState(false)
 
   function updateParams(updates: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString())
@@ -63,6 +68,10 @@ export default function JlptKanjiClient({
   const handleToggleMastery = useCallback(async (itemId: string) => {
     await toggleMastery('jlpt_kanji', itemId)
   }, [])
+
+  const fetchQuestions = useCallback(async (start: number, end: number, count: number) => {
+    return generateKanjiQuiz({ level, rangeStart: start, rangeEnd: end, questionCount: count })
+  }, [level])
 
   return (
     <div>
@@ -99,14 +108,23 @@ export default function JlptKanjiClient({
           ))}
         </div>
 
-        <span className="ml-auto text-sm text-gray-500 dark:text-gray-400">{totalCount}字</span>
+        <div className="ml-auto flex items-center gap-3">
+          <span className="text-sm text-gray-500 dark:text-gray-400">{totalCount}字</span>
+          <button
+            onClick={() => setShowQuiz(true)}
+            disabled={totalCount === 0}
+            className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+          >
+            範囲クイズ
+          </button>
+        </div>
       </div>
 
       <div className="mt-4 rounded-xl border border-gray-200 bg-white px-4 dark:border-gray-700 dark:bg-gray-800">
         {items.length === 0 ? (
           <EmptyState title="漢字がありません" description="検索条件を変更してください" icon="漢" />
         ) : (
-          <KanjiList items={items} level={level} offset={offset} masteredIds={masteredIds} onToggleMastery={handleToggleMastery} />
+          <KanjiList items={items} level={level} offset={offset} masteredIds={masteredIds} onToggleMastery={handleToggleMastery} seqMap={seqMap} />
         )}
       </div>
 
@@ -115,6 +133,14 @@ export default function JlptKanjiClient({
         totalPages={totalPages}
         onPageChange={(page) => updateParams({ page: String(page) })}
       />
+
+      {showQuiz && (
+        <RangeQuizModal
+          totalCount={totalCount}
+          onClose={() => setShowQuiz(false)}
+          fetchQuestions={fetchQuestions}
+        />
+      )}
     </div>
   )
 }

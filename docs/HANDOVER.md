@@ -122,7 +122,7 @@ J-Bridge を社内保守チームへ引き継ぐ際の運用者向けドキュ�
 
 ### 5-5. 採点結果が乱高下する (スコア計算バグ)
 
-- ユニットテスト 116 件あり (`src/modules/scoring/` の採点ロジック、出題選抜 `pickByCategoryAndDifficulty` 等)、回帰検出可能
+- `src/modules/scoring/` にユニットテスト 33 件あり、回帰検出可能
 - `npm run test:coverage` で実行
 - 影響範囲を見たい場合: `dispatch_readiness_scores` テーブルの `updated_at` で affected rows を絞り込み
 

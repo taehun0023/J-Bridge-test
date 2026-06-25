@@ -14,13 +14,7 @@ export async function writeScores(
   const { japanese, coding, attitude } = results
   const now = new Date().toISOString()
 
-  // A swallowed write error would leave score tables silently stale/partial —
-  // fail loudly instead (caller logs and reports failure).
-  const assertWritten = (table: string, error: { message: string } | null) => {
-    if (error) throw new Error(`[scoring] ${table} write failed for ${userId}: ${error.message}`)
-  }
-
-  const japaneseRes = await client.from('japanese_skills').upsert({
+  await client.from('japanese_skills').upsert({
     user_id: userId,
     vocab_mastery: japanese.vocabMastery,
     grammar_mastery: japanese.grammarMastery,
@@ -33,9 +27,8 @@ export async function writeScores(
     it_japanese_normalized: japanese.itJapaneseNormalized,
     updated_at: now,
   }, { onConflict: 'user_id' })
-  assertWritten('japanese_skills', japaneseRes.error)
 
-  const codingRes = await client.from('coding_skills').upsert({
+  await client.from('coding_skills').upsert({
     user_id: userId,
     java_score: coding.javaScore,
     javascript_score: coding.jsScore,
@@ -49,9 +42,8 @@ export async function writeScores(
     framework_normalized: coding.frameworkNormalized,
     updated_at: now,
   }, { onConflict: 'user_id' })
-  assertWritten('coding_skills', codingRes.error)
 
-  const attitudeRes = await client.from('attitude_culture_skills').upsert({
+  await client.from('attitude_culture_skills').upsert({
     user_id: userId,
     punctuality_score: attitude.attitudeNormalized,
     horenso_score: attitude.attitudeNormalized,
@@ -62,10 +54,9 @@ export async function writeScores(
     attitude_normalized: attitude.attitudeNormalized,
     updated_at: now,
   }, { onConflict: 'user_id' })
-  assertWritten('attitude_culture_skills', attitudeRes.error)
 
   // Dispatch readiness snapshot
-  const readinessRes = await client.from('dispatch_readiness_scores').insert({
+  await client.from('dispatch_readiness_scores').insert({
     user_id: userId,
     jlpt_score: japanese.jlptNormalized,
     it_japanese_score: japanese.itJapaneseNormalized,
@@ -74,5 +65,4 @@ export async function writeScores(
     attitude_culture_score: attitude.attitudeNormalized,
     is_japanese: isJapanese,
   })
-  assertWritten('dispatch_readiness_scores', readinessRes.error)
 }

@@ -30,19 +30,8 @@ export default function NotificationBell() {
 
   useEffect(() => {
     fetchCount()
-    // Each tick is a Supabase round-trip per open tab — poll sparingly and
-    // only while the tab is visible; refresh immediately on return.
-    const interval = setInterval(() => {
-      if (document.visibilityState === 'visible') fetchCount()
-    }, 30000)
-    function handleVisibility() {
-      if (document.visibilityState === 'visible') fetchCount()
-    }
-    document.addEventListener('visibilitychange', handleVisibility)
-    return () => {
-      clearInterval(interval)
-      document.removeEventListener('visibilitychange', handleVisibility)
-    }
+    const interval = setInterval(fetchCount, 5000)
+    return () => clearInterval(interval)
   }, [fetchCount])
 
   useEffect(() => {
@@ -199,6 +188,11 @@ export default function NotificationBell() {
                 </div>
               ))
             )}
+          </div>
+          <div className="border-t border-gray-100 px-4 py-2 text-center dark:border-white/[0.06]">
+            <button onClick={() => { setIsOpen(false); router.push('/notifications') }} className="text-xs font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
+              すべて見る
+            </button>
           </div>
         </div>
       )}

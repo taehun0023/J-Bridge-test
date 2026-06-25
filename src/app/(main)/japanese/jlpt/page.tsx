@@ -3,10 +3,8 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Card from '@/components/ui/Card'
 import { categoryChildren } from '@/lib/navigation'
-import GuideCard from '@/components/japanese/JlptGuideCard'
 
 const JLPT_LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'] as const
-const KANJI_CAP = 100
 
 const LEVEL_COLORS: Record<string, string> = {
   N5: 'text-gray-700 dark:text-gray-300',
@@ -32,40 +30,50 @@ export default async function JlptHubPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Parallel batch: vocabulary (paginated) + kanji (paginated) + 3 content tables + mastered items
-  const [vocabBatch1, vocabBatch2, kanjiBatch1, kanjiBatch2, grammarAll, readingAll, listeningAll, masteredResult] = await Promise.all([
-    supabase.from('jlpt_vocabulary').select('id, jlpt_level').range(0, 999),
-    supabase.from('jlpt_vocabulary').select('id, jlpt_level').range(1000, 1999),
-    supabase.from('jlpt_kanji').select('id, jlpt_level').range(0, 999),
-    supabase.from('jlpt_kanji').select('id, jlpt_level').range(1000, 1999),
-    supabase.from('jlpt_grammar').select('id, jlpt_level'),
-    supabase.from('jlpt_reading_passages').select('id, jlpt_level'),
-    supabase.from('jlpt_listening_scripts').select('id, jlpt_level'),
-    supabase.from('user_mastered_items').select('item_type, item_id')
-      .eq('user_id', user.id)
-      .in('item_type', ['jlpt_vocabulary', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening', 'jlpt_kanji']),
-  ])
+  // 레벨별 합계는 count(exact)로 — select('id').length 는 1,000행 제한에 걸려 어휘처럼 큰 영역이 잘림.
+  const TABLES = [
+    { table: 'jlpt_vocabulary', type: 'jlpt_vocabulary' },
+    { table: 'jlpt_kanji', type: 'jlpt_kanji' },
+    { table: 'jlpt_grammar', type: 'jlpt_grammar' },
+    { table: 'jlpt_reading_passages', type: 'jlpt_reading' },
+    { table: 'jlpt_listening_scripts', type: 'jlpt_listening' },
+  ] as const
 
-  const vocabAllData = [...(vocabBatch1.data ?? []), ...(vocabBatch2.data ?? [])]
-  const kanjiAllData = [...(kanjiBatch1.data ?? []), ...(kanjiBatch2.data ?? [])]
-  const masteredSet = new Set(masteredResult.data?.map(m => `${m.item_type}:${m.item_id}`) ?? [])
+  const masteredResult = await supabase.from('user_mastered_items').select('item_type, item_id')
+    .eq('user_id', user.id)
+    .in('item_type', ['jlpt_vocabulary', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening', 'jlpt_kanji'])
+
+  const totalByLevel: Record<string, number> = {}
+  const masteredByLevel: Record<string, number> = {}
+  for (const lvl of JLPT_LEVELS) { totalByLevel[lvl] = 0; masteredByLevel[lvl] = 0 }
+
+  // 1) 영역×레벨 전체 개수(정확)
+  const totalCounts = await Promise.all(
+    TABLES.flatMap(t => JLPT_LEVELS.map(async lvl => {
+      const { count } = await supabase.from(t.table).select('id', { count: 'exact', head: true }).eq('jlpt_level', lvl)
+      return { lvl, n: count ?? 0 }
+    }))
+  )
+  for (const r of totalCounts) totalByLevel[r.lvl] += r.n
+
+  // 2) 마스터한 항목을 레벨별로 집계 (사용자 마스터 목록 → 각 id의 레벨 조회)
+  const masteredByType = new Map<string, string[]>()
+  for (const m of masteredResult.data ?? []) {
+    if (!masteredByType.has(m.item_type)) masteredByType.set(m.item_type, [])
+    masteredByType.get(m.item_type)!.push(m.item_id)
+  }
+  await Promise.all(TABLES.map(async t => {
+    const ids = masteredByType.get(t.type) ?? []
+    for (let i = 0; i < ids.length; i += 150) {
+      const { data } = await supabase.from(t.table).select('jlpt_level').in('id', ids.slice(i, i + 150))
+      for (const r of data ?? []) if (r.jlpt_level) masteredByLevel[r.jlpt_level] = (masteredByLevel[r.jlpt_level] ?? 0) + 1
+    }
+  }))
 
   // Calculate overall progress per level
   const levelData = JLPT_LEVELS.map(level => {
-    const vocabIds = vocabAllData.filter(v => v.jlpt_level === level)
-    const grammarIds = grammarAll.data?.filter(g => g.jlpt_level === level) ?? []
-    const readingIds = readingAll.data?.filter(r => r.jlpt_level === level) ?? []
-    const listeningIds = listeningAll.data?.filter(l => l.jlpt_level === level) ?? []
-    const kanjiIds = kanjiAllData.filter(k => k.jlpt_level === level)
-
-    const vocabMastered = vocabIds.filter(v => masteredSet.has(`jlpt_vocabulary:${v.id}`)).length
-    const grammarMastered = grammarIds.filter(g => masteredSet.has(`jlpt_grammar:${g.id}`)).length
-    const readingMastered = readingIds.filter(r => masteredSet.has(`jlpt_reading:${r.id}`)).length
-    const listeningMastered = listeningIds.filter(l => masteredSet.has(`jlpt_listening:${l.id}`)).length
-    const kanjiMasteredRaw = kanjiIds.filter(k => masteredSet.has(`jlpt_kanji:${k.id}`)).length
-
-    const total = vocabIds.length + grammarIds.length + readingIds.length + listeningIds.length + Math.min(kanjiIds.length, KANJI_CAP)
-    const mastered = vocabMastered + grammarMastered + readingMastered + listeningMastered + Math.min(kanjiMasteredRaw, KANJI_CAP)
+    const total = totalByLevel[level] ?? 0
+    const mastered = masteredByLevel[level] ?? 0
     const pct = total > 0 ? Math.round((mastered / total) * 100) : 0
 
     return { level, mastered, total, pct }
@@ -75,16 +83,7 @@ export default async function JlptHubPage() {
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{config.title}</h1>
-        <p className="mt-1 text-gray-500 dark:text-gray-400">{config.description}</p>
       </div>
-
-      <GuideCard storageKey="jlpt-guide-dismissed">
-        <ol className="mt-2 list-inside list-decimal space-y-1 text-sm text-blue-800 dark:text-blue-300">
-          <li>レベルを選び、語彙・文法・読解・聴解・漢字を学習してください</li>
-          <li>各カテゴリの進行率80%以上で理解度テストが解放されます</li>
-          <li>テストに合格して次のレベルへ進みましょう</li>
-        </ol>
-      </GuideCard>
 
       {/* Level cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

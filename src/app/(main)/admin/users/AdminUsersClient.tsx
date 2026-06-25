@@ -1,9 +1,12 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import { useRouter } from 'next/navigation'
 import { updateUserRole, createUserAccount, updateMentorSpecialty, deleteUser, assignMentor } from '@/app/actions/admin/users'
 import { Trash2 } from 'lucide-react'
+import NameRuby from '@/components/ui/NameRuby'
+import EditUserModal from './EditUserModal'
 
 interface User {
   id: string
@@ -13,17 +16,18 @@ interface User {
   mentor_specialty: string | null
   is_onboarded: boolean
   is_japanese: boolean
-  japanese_score: number
-  programming_score: number
   created_at: string
+  assigned_japanese_mentor_id: string | null
+  assigned_tech_mentor_id: string | null
+  target_certification: string | null
   jlpt_level: string | null
   it_certifications: string | null
-  assigned_mentor_id: string | null
 }
 
 interface Mentor {
   id: string
   full_name: string | null
+  mentor_specialty: string | null
 }
 
 interface Props {
@@ -35,14 +39,26 @@ export default function AdminUsersClient({ users, mentors }: Props) {
   const router = useRouter()
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [search, setSearch] = useState('')
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null)
+  const [editTarget, setEditTarget] = useState<User | null>(null)
 
-  const filtered = users.filter(u =>
-    (u.full_name ?? '').toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
-  )
+  const roleOrder: Record<string, number> = { admin: 0, mentor: 1, mentee: 2 }
+  const filtered = users
+    .filter(u =>
+      (u.full_name ?? '').toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => {
+      const roleDiff = (roleOrder[a.role] ?? 99) - (roleOrder[b.role] ?? 99)
+      if (roleDiff !== 0) return roleDiff
+      return (a.full_name ?? '').localeCompare(b.full_name ?? '', 'ja')
+    })
+
+  // 전문(専門) 구분 폐지 — 모든 멘토를 일본어·기술 양쪽에 배정 가능
+  const japaneseMentors = mentors
+  const techMentors = mentors
 
   function handleRoleChange(userId: string, newRole: string) {
     startTransition(async () => {
@@ -72,9 +88,9 @@ export default function AdminUsersClient({ users, mentors }: Props) {
     })
   }
 
-  function handleMentorChange(menteeId: string, mentorId: string) {
+  function handleMentorChange(menteeId: string, mentorId: string, specialty: 'japanese' | 'technical') {
     startTransition(async () => {
-      const result = await assignMentor(menteeId, mentorId || null)
+      const result = await assignMentor(menteeId, mentorId || null, specialty)
       if (result.error) {
         setMessage({ type: 'error', text: result.error })
         setTimeout(() => setMessage(null), 3000)
@@ -185,21 +201,28 @@ export default function AdminUsersClient({ users, mentors }: Props) {
           <table className="min-w-full divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-200">
             <thead>
               <tr className="bg-white/[0.02] dark:bg-white/[0.02]">
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">名前</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">メール</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">役割</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">専門分野</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">担当メンター</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">資格</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400">登録日</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400"></th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400">名前</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">メール</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">日本語メンター</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">技術メンター</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">役割</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">登録日</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">操作</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">
-              {filtered.map(user => (
+              {filtered.map(user => {
+                return (
                 <tr key={user.id}>
-                  <td className="whitespace-nowrap px-4 py-3">
-                    <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{user.full_name ?? '-'}</span>
+                  <td className="whitespace-nowrap px-4 py-3 text-left">
+                    <button
+                      type="button"
+                      onClick={() => setEditTarget(user)}
+                      className="text-sm font-medium text-zinc-900 hover:text-indigo-600 hover:underline dark:text-zinc-100 dark:hover:text-indigo-400"
+                      title="プロフィールを編集"
+                    >
+                      <NameRuby name={user.full_name} fallback="-" />
+                    </button>
                     {!user.is_onboarded && (
                       <span className="ml-2 text-xs text-amber-400">(未オンボーディング)</span>
                     )}
@@ -207,8 +230,48 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                       <span className="ml-1 inline-flex rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-400 ring-1 ring-amber-500/20">JP</span>
                     )}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">{user.email}</td>
-                  <td className="whitespace-nowrap px-4 py-3">
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-left text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">{user.email}</td>
+                  {user.role === 'mentee' ? (
+                    <>
+                      <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
+                        <select
+                          value={user.assigned_japanese_mentor_id ?? ''}
+                          onChange={e => handleMentorChange(user.id, e.target.value, 'japanese')}
+                          disabled={pending}
+                          title="日本語メンター"
+                          className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
+                        >
+                          <option value="">未指定</option>
+                          {japaneseMentors.map(m => (
+                            <option key={m.id} value={m.id}>{m.full_name ?? m.id}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
+                        <select
+                          value={user.assigned_tech_mentor_id ?? ''}
+                          onChange={e => handleMentorChange(user.id, e.target.value, 'technical')}
+                          disabled={pending}
+                          title="技術メンター"
+                          className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
+                        >
+                          <option value="">未指定</option>
+                          {techMentors.map(m => (
+                            <option key={m.id} value={m.id}>{m.full_name ?? m.id}</option>
+                          ))}
+                        </select>
+                      </td>
+                    </>
+                  ) : user.role === 'mentor' ? (
+                    <td colSpan={2} className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">
+                      日本語・技術
+                    </td>
+                  ) : (
+                    <td colSpan={2} className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center dark:border-white/[0.06]">
+                      <span className="text-xs text-zinc-400">—</span>
+                    </td>
+                  )}
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center dark:border-white/[0.06]">
                     <select
                       value={user.role}
                       onChange={e => handleRoleChange(user.id, e.target.value)}
@@ -220,78 +283,24 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                       <option value="admin">管理者</option>
                     </select>
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3">
-                    {user.role === 'mentor' ? (
-                      <select
-                        value={user.mentor_specialty ?? ''}
-                        onChange={e => handleSpecialtyChange(user.id, e.target.value)}
-                        disabled={pending}
-                        className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
-                      >
-                        <option value="">未設定</option>
-                        <option value="japanese">日本語</option>
-                        <option value="technical">技術</option>
-                      </select>
-                    ) : (
-                      <span className="text-xs text-zinc-400">—</span>
-                    )}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3">
-                    {user.role === 'mentee' ? (
-                      <select
-                        value={user.assigned_mentor_id ?? ''}
-                        onChange={e => handleMentorChange(user.id, e.target.value)}
-                        disabled={pending}
-                        className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
-                      >
-                        <option value="">未指定</option>
-                        {mentors.map(m => (
-                          <option key={m.id} value={m.id}>{m.full_name ?? m.id}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span className="text-xs text-zinc-400">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5">
-                      {user.jlpt_level ? (
-                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${
-                          user.jlpt_level === 'N1' ? 'bg-violet-500/10 text-violet-400 ring-violet-500/20' :
-                          user.jlpt_level === 'N2' ? 'bg-blue-500/10 text-blue-400 ring-blue-500/20' :
-                          'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20'
-                        }`}>
-                          {user.jlpt_level}
-                        </span>
-                      ) : null}
-                      {user.it_certifications ? (
-                        <span
-                          className="max-w-[120px] truncate text-xs text-zinc-500 dark:text-zinc-400"
-                          title={user.it_certifications}
-                        >
-                          {user.it_certifications}
-                        </span>
-                      ) : null}
-                      {!user.jlpt_level && !user.it_certifications && (
-                        <span className="text-xs text-zinc-400">—</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
                     {new Date(user.created_at).toLocaleDateString('ja-JP')}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3">
-                    <button
-                      onClick={() => setDeleteTarget(user)}
-                      disabled={pending}
-                      className="rounded-lg p-1.5 text-zinc-400 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50 transition-colors"
-                      title="削除"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center dark:border-white/[0.06]">
+                    <div className="flex items-center justify-center gap-1">
+                      <button
+                        onClick={() => setDeleteTarget(user)}
+                        disabled={pending}
+                        className="rounded-lg p-1.5 text-zinc-400 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50 transition-colors"
+                        title="削除"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -299,6 +308,19 @@ export default function AdminUsersClient({ users, mentors }: Props) {
           <div className="py-8 text-center text-sm text-zinc-500">検索結果がありません</div>
         )}
       </div>
+      {editTarget && (
+        <EditUserModal
+          user={editTarget}
+          mentors={mentors}
+          onClose={() => setEditTarget(null)}
+          onSaved={(msg) => {
+            setEditTarget(null)
+            setMessage({ type: 'success', text: msg })
+            setTimeout(() => setMessage(null), 3000)
+            router.refresh()
+          }}
+        />
+      )}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setDeleteTarget(null)}>
           <div className="mx-4 w-full max-w-md rounded-2xl border border-gray-200/60 bg-white p-6 shadow-xl dark:border-white/[0.08] dark:bg-zinc-900" onClick={e => e.stopPropagation()}>
@@ -311,7 +333,7 @@ export default function AdminUsersClient({ users, mentors }: Props) {
               <p>関連する全てのデータ（試験結果、学習記録等）も削除されます。</p>
             </div>
             <div className="mt-4 rounded-xl bg-zinc-50 p-3 dark:bg-white/5">
-              <p className="text-sm text-zinc-900 dark:text-zinc-100"><span className="text-zinc-500 dark:text-zinc-400">名前:</span> {deleteTarget.full_name ?? '-'}</p>
+              <p className="text-sm text-zinc-900 dark:text-zinc-100"><span className="text-zinc-500 dark:text-zinc-400">名前:</span> <NameRuby name={deleteTarget.full_name} fallback="-" /></p>
               <p className="text-sm text-zinc-900 dark:text-zinc-100"><span className="text-zinc-500 dark:text-zinc-400">メール:</span> {deleteTarget.email}</p>
             </div>
             <div className="mt-6 flex justify-end gap-3">

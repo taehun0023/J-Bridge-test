@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useState } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
@@ -38,7 +39,7 @@ function formatBytes(bytes: number) {
 
 export default function AnnouncementDetail({ announcement, attachments, isRead, isAdmin }: Props) {
   const router = useRouter()
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
 
   useEffect(() => {
     if (!isRead) {

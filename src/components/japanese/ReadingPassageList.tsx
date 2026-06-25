@@ -1,7 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Badge from '@/components/ui/Badge'
+import MasteryCheck from './MasteryCheck'
+import { emitMastery } from './MasteryProgress'
+import { logStudyAttempt } from '@/app/actions/study-log'
 import type { JlptLevel, JlptReadingPassage, ReadingPassageType } from '@/lib/supabase/types'
 
 interface Props {
@@ -26,23 +29,26 @@ export default function ReadingPassageList({ items, level, masteredIds = [], onT
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [showTranslation, setShowTranslation] = useState<Record<string, boolean>>({})
   const [localMastered, setLocalMastered] = useState<Set<string>>(new Set(masteredIds))
+  const [answers, setAnswers] = useState<Record<string, number>>({})
+  const [results, setResults] = useState<Record<string, 'correct' | 'wrong'>>({})
+  const shownAtRef = useRef<Record<string, number>>({})
+
+  function submitQuiz(item: JlptReadingPassage) {
+    const sel = answers[item.id]
+    if (sel == null || !item.comprehension || results[item.id]) return
+    const ok = sel === item.comprehension.answer
+    setResults(prev => ({ ...prev, [item.id]: ok ? 'correct' : 'wrong' }))
+    const start = shownAtRef.current[item.id]
+    void logStudyAttempt({ contentType: 'jlpt_reading', itemId: item.id, isCorrect: ok, answerText: item.comprehension.options[sel], durationMs: start ? Date.now() - start : undefined })
+    if (ok && !localMastered.has(item.id)) {
+      setLocalMastered(prev => { const n = new Set(prev); n.add(item.id); return n })
+      onToggleMastery?.(item.id); emitMastery(1)
+    }
+  }
 
   useEffect(() => {
     setLocalMastered(new Set(masteredIds))
   }, [masteredIds])
-
-  function handleToggle(e: React.MouseEvent, itemId: string) {
-    e.stopPropagation()
-    e.preventDefault()
-    const next = new Set(localMastered)
-    if (next.has(itemId)) {
-      next.delete(itemId)
-    } else {
-      next.add(itemId)
-    }
-    setLocalMastered(next)
-    onToggleMastery?.(itemId)
-  }
 
   function toggleTranslation(id: string) {
     setShowTranslation(prev => ({ ...prev, [id]: !prev[id] }))
@@ -55,26 +61,12 @@ export default function ReadingPassageList({ items, level, masteredIds = [], onT
           <div
             role="button"
             tabIndex={0}
-            onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
+            onClick={() => { const opening = expandedId !== item.id; setExpandedId(opening ? item.id : null); if (opening && !shownAtRef.current[item.id]) shownAtRef.current[item.id] = Date.now() }}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setExpandedId(expandedId === item.id ? null : item.id) }}
             className="flex w-full cursor-pointer items-center gap-4 text-left"
           >
             {onToggleMastery && (
-              <button
-                onClick={(e) => handleToggle(e, item.id)}
-                title={localMastered.has(item.id) ? '学習完了' : '未完了'}
-                className="-m-1.5 shrink-0 p-1.5"
-              >
-                {localMastered.has(item.id) ? (
-                  <svg className="h-5 w-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                ) : (
-                  <svg className="h-5 w-5 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 20 20" stroke="currentColor">
-                    <circle cx="10" cy="10" r="7" strokeWidth="2" />
-                  </svg>
-                )}
-              </button>
+              <MasteryCheck done={localMastered.has(item.id)} title={localMastered.has(item.id) ? '学習完了' : '未完了（読解チェックに正解で完了）'} />
             )}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
@@ -82,10 +74,6 @@ export default function ReadingPassageList({ items, level, masteredIds = [], onT
                 <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
                   {typeLabels[item.passage_type]}
                 </span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
-                {item.word_count > 0 && <span>{item.word_count}字</span>}
-                {item.topic && <span>/ {item.topic}</span>}
               </div>
             </div>
             <Badge label={level} variant="jlpt" />
@@ -98,7 +86,7 @@ export default function ReadingPassageList({ items, level, masteredIds = [], onT
           </div>
 
           {expandedId === item.id && (
-            <div className="mt-3 space-y-3 rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
+            <div className="mt-3 space-y-3 select-none rounded-lg bg-gray-50 p-4 dark:bg-gray-700" onCopy={(e) => e.preventDefault()}>
               {/* Passage text */}
               <div>
                 <p className="text-xs font-medium uppercase text-gray-500 dark:text-gray-400">本文</p>
@@ -150,6 +138,41 @@ export default function ReadingPassageList({ items, level, masteredIds = [], onT
                   </button>
                   {showTranslation[item.id] && (
                     <p className="mt-1 whitespace-pre-line text-sm text-gray-600 dark:text-gray-300">{item.translation_ko}</p>
+                  )}
+                </div>
+              )}
+
+              {/* 読解チェック(객관식) */}
+              {item.comprehension && (
+                <div className="border-t border-gray-200 pt-3 dark:border-gray-600">
+                  <p className="text-xs font-medium uppercase text-gray-500 dark:text-gray-400">読解チェック</p>
+                  <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">{item.comprehension.question}</p>
+                  <div className="mt-2 space-y-1.5">
+                    {item.comprehension.options.map((opt, i) => {
+                      const sel = answers[item.id] === i
+                      const r = results[item.id]
+                      let cls = 'border-gray-200 dark:border-gray-600'
+                      if (r === 'correct') {
+                        if (i === item.comprehension!.answer) cls = 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                      } else if (r === 'wrong') {
+                        if (sel) cls = 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                      } else if (sel) cls = 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                      return (
+                        <button key={i} disabled={r === 'correct'}
+                          onClick={() => { if (results[item.id] === 'wrong') setResults(prev => { const n = { ...prev }; delete n[item.id]; return n }); setAnswers(prev => ({ ...prev, [item.id]: i })) }}
+                          className={`block w-full rounded-lg border px-3 py-2 text-left text-sm text-gray-800 dark:text-gray-200 ${cls}`}>
+                          {i + 1}. {opt}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  {!results[item.id] ? (
+                    <button onClick={() => submitQuiz(item)} disabled={answers[item.id] == null}
+                      className="mt-2 rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50">確認</button>
+                  ) : results[item.id] === 'correct' ? (
+                    <p className="mt-2 text-sm font-semibold text-emerald-600">正解！読了チェックが付きました</p>
+                  ) : (
+                    <p className="mt-2 text-sm font-semibold text-red-600">不正解です。別の選択肢を選び直してください。</p>
                   )}
                 </div>
               )}

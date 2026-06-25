@@ -7,8 +7,6 @@ import QuizResults from '@/components/quiz/QuizResults'
 import QuizReviewMode from '@/components/quiz/QuizReviewMode'
 import { Clock, PlayCircle, ChevronLeft, ChevronRight, Play, Loader2, Send, CheckCircle } from 'lucide-react'
 import { startQuizAttempt, submitQuizAnswers } from '@/app/actions/quiz'
-import { useAntiCheat } from '@/components/quiz/useAntiCheat'
-import { parsePoolListeningQuestion } from '@/lib/listening'
 
 interface Option {
   id: string
@@ -42,6 +40,21 @@ interface Props {
 }
 
 type PlayState = 'idle' | 'loading' | 'playing'
+
+/**
+ * 청해 퀴즈의 question_text에서 대화 스크립트와 질문을 분리
+ * 포맷: "대화 스크립트...\n質問：실제 질문"
+ */
+function parseListeningQuestion(text: string): { script: string; question: string } {
+  const cleaned = text.replace(/\\n/g, '\n')
+  const marker = '質問：'
+  const idx = cleaned.lastIndexOf(marker)
+  if (idx === -1) return { script: '', question: cleaned }
+  return {
+    script: cleaned.substring(0, idx).trim(),
+    question: marker + cleaned.substring(idx + marker.length),
+  }
+}
 
 export default function QuizTaker({ quiz, questions, backUrl, quizType, hideRetry, sessionKey }: Props) {
   const router = useRouter()
@@ -187,7 +200,24 @@ export default function QuizTaker({ quiz, questions, backUrl, quizType, hideRetr
   }, [quiz.id, answers, storageKey, stableQuestions.length])
 
   // Anti-cheat: prevent copy, drag, right-click, text selection during quiz
-  useAntiCheat(started && !submitting && !result)
+  useEffect(() => {
+    if (!started || submitting || result) return
+    const prevent = (e: Event) => e.preventDefault()
+    document.addEventListener('dragstart', prevent)
+    document.addEventListener('drop', prevent)
+    document.addEventListener('copy', prevent)
+    document.addEventListener('cut', prevent)
+    document.addEventListener('selectstart', prevent)
+    document.addEventListener('contextmenu', prevent)
+    return () => {
+      document.removeEventListener('dragstart', prevent)
+      document.removeEventListener('drop', prevent)
+      document.removeEventListener('copy', prevent)
+      document.removeEventListener('cut', prevent)
+      document.removeEventListener('selectstart', prevent)
+      document.removeEventListener('contextmenu', prevent)
+    }
+  }, [started, submitting, result])
 
   // Navigation guard: warn and submit partial answers when leaving during active quiz
   const exitSubmitRef = useRef<(() => Promise<void>) | null>(null)
@@ -385,7 +415,7 @@ export default function QuizTaker({ quiz, questions, backUrl, quizType, hideRetr
 
       {/* Listening quiz audio controls */}
       {isListening && (() => {
-        const { script } = parsePoolListeningQuestion(currentQuestion.question_text)
+        const { script } = parseListeningQuestion(currentQuestion.question_text)
         if (!script) return null
         return (
           <div className="mb-4 rounded-xl border border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-900/20">
@@ -431,7 +461,7 @@ export default function QuizTaker({ quiz, questions, backUrl, quizType, hideRetr
         <QuizQuestion
           questionNumber={currentIndex + 1}
           totalQuestions={questions.length}
-          questionText={isListening ? parsePoolListeningQuestion(currentQuestion.question_text).question : currentQuestion.question_text}
+          questionText={isListening ? parseListeningQuestion(currentQuestion.question_text).question : currentQuestion.question_text}
           options={currentQuestion.quiz_question_options_safe}
           selectedOptionId={answers[currentQuestion.id] ?? null}
           onSelect={(optionId) => {

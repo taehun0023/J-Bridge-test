@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import { Download, FolderArchive, ChevronDown } from 'lucide-react'
 import JSZip from 'jszip'
 import { exportTableCsv, exportQuizQuestionsCsv, exportCoursesCsv } from '@/app/actions/admin/backup'
@@ -34,7 +35,7 @@ function today() {
 }
 
 export default function BackupClient() {
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
   const [downloading, setDownloading] = useState<string | null>(null)
   const [expandedGroups, setExpandedGroups] = useState<Set<BackupGroup>>(new Set(['user']))
   const [progress, setProgress] = useState<string | null>(null)

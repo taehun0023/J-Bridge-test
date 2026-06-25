@@ -1,0 +1,21 @@
+id|jlpt_level|pattern|category|meaning_ko
+8a4349a8-e19d-407e-88b7-4e5d8aa262cc|N1|〜かたわら|time|~하는 한편으로
+132779e5-3760-4d98-b56d-e5b826bd7387|N1|〜がてら|time|~하는 김에
+4a526844-57ea-41c3-9405-a2eb8f680ca4|N1|〜なり|time|~하자마자
+cd171129-e6ed-41bc-bf04-6dacb953cdf2|N1|〜なり〜なり|listing|~든지 ~든지
+1869f27e-acc2-47e6-b352-114bf49f4a77|N1|〜なりに|manner|~나름대로
+c7231ae8-7ec3-4e81-83bf-1e76c8eee841|N1|〜んがために|reason|~하기 위해서
+0a1da1b2-a09a-4bb1-be78-09bdd006571c|N2|〜なり〜なり|listing|~든지 ~든지
+b1c5ffc0-5d4b-42bb-8b33-5556248ff581|N3|〜ことにする|change|~하기로 하다
+7e174e28-66e9-47d7-9f23-3c5303bd413f|N3|〜ために|reason|~하기 위해
+4efdeeb5-2d05-47ce-a9ee-0adff20a28cc|N3|〜てしまう|change|~해 버리다
+8c1b1f0e-4bbd-43dd-82c0-f8a96fa072c6|N3|〜ようにする|change|~하도록 하다
+63f41ad7-4f98-4f23-9ac1-0cad88908a07|N3|〜ようになる|change|~하게 되다
+98ce0e32-bbbd-4038-af7b-f4f8505de5ab|N3|〜わけだ|reason|~인 셈이다/~인 것이다
+db2e7634-d87e-40b8-a3ef-d7aada607601|N4|〜ことにする|change|~하기로 하다
+e1c8e94b-5496-4dbf-8fe1-ac120f7267ce|N4|〜させられる|obligation|~하게 되다/~시킴을 당하다
+c3faa47b-f114-4adf-a728-180ff9b9ffdf|N4|〜ために|reason|~하기 위해/~때문에
+c35c7379-c8db-4cbe-9fef-bad966603648|N4|〜てしまう|change|~해 버리다
+7fff32f1-503e-4e50-9fd0-55091179cbc9|N4|〜ようにする|change|~하도록 하다
+a816b0b7-5b8d-44a6-a072-8aef10fa1fa6|N4|〜ようになる|change|~하게 되다
+cbf1673e-37d4-476e-81d1-b1583811deea|N5|〜始める/終わる|time|~하기 시작하다/~하기 끝나다

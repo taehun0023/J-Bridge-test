@@ -3,6 +3,7 @@
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { requireAdmin, requireAdminOrMentor } from '@/lib/auth-helpers'
+import { parseFullName } from '@/lib/name-format'
 
 export async function assignMenteeToMentor(mentorId: string, menteeId: string) {
   const auth = await requireAdmin()
@@ -53,6 +54,7 @@ export async function getMenteeProgress(menteeId: string) {
 export interface CompExamResult {
   id: string
   category: string
+  contentLevel: string | null
   score: number | null
   passed: boolean | null
   status: string
@@ -74,11 +76,14 @@ export interface MenteeOverview {
   // 5-axis radar scores (0~100)
   radarScores: { jlpt: number; itJapanese: number; coreProgramming: number; framework: number; attitudeCulture: number }
   // Assignment stats
+  assignmentsTotal: number
   assignmentsInProgress: number
   assignmentsCompleted: number
   assignmentsOverdue: number
   // Comprehensive exam results (latest per category)
   compExamResults: CompExamResult[]
+  // 生活日本語 (seikatsu) で応試した最高 N-level (N1>N5)
+  seikatsuExamLevel: 'N1' | 'N2' | 'N3' | 'N4' | 'N5' | null
   // Next exam scheduled date
   nextExamDate: string | null
   // Recent quiz attempts (up to 5)
@@ -126,7 +131,7 @@ export async function getMentorDashboardData() {
     // 3. Comprehensive exams (completed/failed)
     supabase
       .from('comprehensive_exams')
-      .select('id, user_id, category, score, passed, status, completed_at')
+      .select('id, user_id, category, content_level, score, passed, status, completed_at')
       .in('user_id', menteeIds)
       .in('status', ['completed', 'failed'])
       .not('completed_at', 'is', null)
@@ -173,11 +178,26 @@ export async function getMentorDashboardData() {
         examByCategory.set(e.category, {
           id: e.id,
           category: e.category,
+          contentLevel: (e as { content_level?: string | null }).content_level ?? null,
           score: e.score,
           passed: e.passed,
           status: e.status,
           completedAt: e.completed_at,
         })
+      }
+    }
+
+    // 生活日本語: 応試した最高 N-level (N1>N2>N3>N4>N5)
+    const SEIKATSU_LEVEL_RANK: Record<string, number> = { N1: 5, N2: 4, N3: 3, N4: 2, N5: 1 }
+    let seikatsuExamLevel: 'N1' | 'N2' | 'N3' | 'N4' | 'N5' | null = null
+    let _bestSeikatsuRank = 0
+    for (const e of userExams) {
+      if (e.category !== 'seikatsu') continue
+      const level = (e as { content_level?: string | null }).content_level ?? null
+      const rank = SEIKATSU_LEVEL_RANK[level ?? ''] ?? 0
+      if (rank > _bestSeikatsuRank) {
+        _bestSeikatsuRank = rank
+        seikatsuExamLevel = level as 'N1' | 'N2' | 'N3' | 'N4' | 'N5'
       }
     }
 
@@ -210,13 +230,22 @@ export async function getMentorDashboardData() {
         framework: cs?.framework_normalized ?? 0,
         attitudeCulture: att?.attitude_normalized ?? 0,
       },
+      assignmentsTotal: userAssignments.length,
       assignmentsInProgress: userAssignments.filter(a => a.status === 'in_progress').length,
       assignmentsCompleted: userAssignments.filter(a => a.status === 'completed').length,
       assignmentsOverdue: userAssignments.filter(a => a.status === 'overdue').length,
       compExamResults: Array.from(examByCategory.values()),
+      seikatsuExamLevel,
       nextExamDate,
       recentQuizAttempts,
     }
+  })
+
+  // 멘티 이름순 정렬 (카타카나 후리가나 우선, 없으면 본명) — 아이우에오/가나다 빠른순
+  mentees.sort((a, b) => {
+    const an = parseFullName(a.full_name)
+    const bn = parseFullName(b.full_name)
+    return (an.kana ?? an.kanji).localeCompare(bn.kana ?? bn.kanji, 'ja')
   })
 
   return { mentees }

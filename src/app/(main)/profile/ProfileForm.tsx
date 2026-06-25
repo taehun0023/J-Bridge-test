@@ -1,31 +1,79 @@
 'use client'
 
 import { useState } from 'react'
+import { ChevronDown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Card from '@/components/ui/Card'
+import NameRuby from '@/components/ui/NameRuby'
 import type { JlptLevel } from '@/lib/supabase/types'
+import { IT_CERTIFICATIONS, parseCertifications, buildCertifications } from '@/lib/certifications'
 
-const JLPT_LEVELS: JlptLevel[] = ['N1', 'N2', 'N3', 'N4', 'N5']
+const JLPT_BAR: { value: JlptLevel; label: string; fill: string }[] = [
+  { value: 'N5', label: '初級', fill: 'bg-emerald-500' },
+  { value: 'N4', label: '初中級', fill: 'bg-lime-500' },
+  { value: 'N3', label: '中級', fill: 'bg-amber-500' },
+  { value: 'N2', label: '中上級', fill: 'bg-orange-500' },
+  { value: 'N1', label: '上級', fill: 'bg-rose-500' },
+]
+
+const KANJI_ONLY_RE = /^[一-鿿㐀-䶿々〆〇]+$/
 
 interface Profile {
   id: string
+  email: string
   full_name: string | null
-  bio: string | null
-  target_coding_area: string | null
-  is_japanese: boolean
   jlpt_level: JlptLevel | null
   it_certifications: string | null
+  target_certification: string | null
 }
 
-export default function ProfileForm({ profile }: { profile: Profile | null }) {
+interface NameParts {
+  lastName: string
+  firstName: string
+  katakanaLast: string
+  katakanaFirst: string
+}
+
+function parseFullName(fullName: string | null): NameParts {
+  const empty: NameParts = { lastName: '', firstName: '', katakanaLast: '', katakanaFirst: '' }
+  if (!fullName) return empty
+  const trimmed = fullName.trim()
+  const withKana = trimmed.match(/^(\S+)\s+(\S+)\s*\((\S+)\s+(\S+)\)\s*$/)
+  if (withKana) {
+    return {
+      lastName: withKana[1],
+      firstName: withKana[2],
+      katakanaLast: withKana[3],
+      katakanaFirst: withKana[4],
+    }
+  }
+  const twoTokens = trimmed.match(/^(\S+)\s+(\S+)\s*$/)
+  if (twoTokens) {
+    return { lastName: twoTokens[1], firstName: twoTokens[2], katakanaLast: '', katakanaFirst: '' }
+  }
+  return { ...empty, lastName: trimmed }
+}
+
+function buildFullName(parts: NameParts): string {
+  const kanji = [parts.lastName.trim(), parts.firstName.trim()].filter(Boolean).join(' ')
+  const katakana = [parts.katakanaLast.trim(), parts.katakanaFirst.trim()].filter(Boolean).join(' ')
+  if (!kanji) return ''
+  return katakana ? `${kanji} (${katakana})` : kanji
+}
+
+export default function ProfileForm({ profile, japaneseMentorName, techMentorName, role }: { profile: Profile | null; japaneseMentorName?: string | null; techMentorName?: string | null; role?: string }) {
   const router = useRouter()
-  const [fullName, setFullName] = useState(profile?.full_name ?? '')
-  const [bio, setBio] = useState(profile?.bio ?? '')
-  const [targetCoding, setTargetCoding] = useState(profile?.target_coding_area ?? '')
-  const [isJapanese, setIsJapanese] = useState(profile?.is_japanese ?? false)
+  const initialParts = parseFullName(profile?.full_name ?? null)
+  const [lastName, setLastName] = useState(initialParts.lastName)
+  const [firstName, setFirstName] = useState(initialParts.firstName)
+  const [katakanaLast, setKatakanaLast] = useState(initialParts.katakanaLast)
+  const [katakanaFirst, setKatakanaFirst] = useState(initialParts.katakanaFirst)
   const [jlptLevel, setJlptLevel] = useState<JlptLevel | ''>(profile?.jlpt_level ?? '')
-  const [itCertifications, setItCertifications] = useState(profile?.it_certifications ?? '')
+  const [selectedCerts, setSelectedCerts] = useState<string[]>(
+    parseCertifications(profile?.it_certifications ?? null),
+  )
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -43,14 +91,29 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
     setSaved(false)
     setSaveError(null)
 
+    const trimmedLast = lastName.trim()
+    const trimmedFirst = firstName.trim()
+    const hasName = trimmedLast !== '' || trimmedFirst !== ''
+
+    if (hasName && (!KANJI_ONLY_RE.test(trimmedLast) || !KANJI_ONLY_RE.test(trimmedFirst))) {
+      setSaveError('名前は漢字のみ入力できます。カタカナは下の欄に入力してください。')
+      setSaving(false)
+      return
+    }
+
+    if (hasName && (katakanaLast.trim() === '' || katakanaFirst.trim() === '')) {
+      setSaveError('カタカナ名（セイ・メイ）は必須です')
+      setSaving(false)
+      return
+    }
+
+    const fullName = buildFullName({ lastName, firstName, katakanaLast, katakanaFirst })
+
     const supabase = createClient()
     const { error } = await supabase
       .from('profiles')
       .update({
         full_name: fullName || null,
-        bio: bio || null,
-        target_coding_area: targetCoding || null,
-        is_japanese: isJapanese,
         updated_at: new Date().toISOString(),
       })
       .eq('id', profile?.id ?? '')
@@ -72,11 +135,12 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
     setCertError(null)
 
     const supabase = createClient()
+    const combinedCerts = buildCertifications(selectedCerts)
     const { error } = await supabase
       .from('profiles')
       .update({
         jlpt_level: jlptLevel || null,
-        it_certifications: itCertifications || null,
+        it_certifications: combinedCerts || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', profile?.id ?? '')
@@ -123,65 +187,78 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
     <Card title="個人情報">
       <form onSubmit={handleSave} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">名前</label>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">ID（メールアドレス）</label>
           <input
             type="text"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
+            value={profile?.email ?? ''}
+            readOnly
+            disabled
+            className="mt-1 w-full cursor-not-allowed rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-zinc-500 dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-400"
           />
         </div>
-
         <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">自己紹介</label>
-          <textarea
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            rows={3}
-            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">日本人ですか？</label>
-          <div className="mt-1 flex gap-3">
-            {[
-              { value: true, label: 'はい（日本語テスト省略）' },
-              { value: false, label: 'いいえ（全テスト受験）' },
-            ].map((opt) => (
-              <label
-                key={String(opt.value)}
-                className={`flex-1 cursor-pointer rounded-xl border-2 px-3 py-2 text-center text-sm transition-colors ${
-                  isJapanese === opt.value
-                    ? 'border-indigo-500 bg-indigo-500/5 text-indigo-400 dark:bg-indigo-500/10 dark:text-indigo-400'
-                    : 'border-gray-200 dark:border-white/[0.08] text-zinc-700 dark:text-zinc-300 hover:border-gray-300 dark:hover:border-white/[0.15]'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="is_japanese"
-                  checked={isJapanese === opt.value}
-                  onChange={() => setIsJapanese(opt.value)}
-                  className="sr-only"
-                />
-                {opt.label}
-              </label>
-            ))}
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            名前（漢字）<span className="text-red-400">*</span>
+          </label>
+          <div className="mt-1 grid grid-cols-2 gap-2">
+            <input
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="姓"
+              className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
+            />
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="名"
+              className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
+            />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">開発言語</label>
-          <select
-            value={targetCoding}
-            onChange={(e) => setTargetCoding(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
-          >
-            <option value="">選択</option>
-            <option value="java">Java</option>
-            <option value="javascript">JavaScript</option>
-          </select>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            カタカナ名 <span className="text-red-400">*</span>
+          </label>
+          <div className="mt-1 grid grid-cols-2 gap-2">
+            <input
+              type="text"
+              value={katakanaLast}
+              onChange={(e) => setKatakanaLast(e.target.value)}
+              placeholder="セイ"
+              className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
+            />
+            <input
+              type="text"
+              value={katakanaFirst}
+              onChange={(e) => setKatakanaFirst(e.target.value)}
+              placeholder="メイ"
+              className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
+            />
+          </div>
         </div>
+
+        {role === 'mentee' && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">日本語メンター</label>
+              <div className="mt-1 text-sm">
+                {japaneseMentorName ? <NameRuby name={japaneseMentorName} /> : <span className="text-zinc-400">未割り当て</span>}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">技術メンター</label>
+              <div className="mt-1 text-sm">
+                {techMentorName ? <NameRuby name={techMentorName} /> : <span className="text-zinc-400">未割り当て</span>}
+              </div>
+            </div>
+            <p className="mt-0.5 text-[10px] text-zinc-500 dark:text-zinc-400 sm:col-span-2">
+              管理者が割り当てます。
+            </p>
+          </div>
+        )}
 
         {saveError && (
           <div className="rounded-xl px-3 py-2 text-sm bg-red-500/10 text-red-400 ring-1 ring-red-500/20">
@@ -193,7 +270,7 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
           <button
             type="submit"
             disabled={saving}
-            className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+            className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
           >
             {saving ? '保存中...' : '保存'}
           </button>
@@ -205,28 +282,171 @@ export default function ProfileForm({ profile }: { profile: Profile | null }) {
     <Card title="資格証明">
       <form onSubmit={handleSaveCerts} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">日本語資格 (JLPT)</label>
-          <select
-            value={jlptLevel}
-            onChange={(e) => setJlptLevel(e.target.value as JlptLevel | '')}
-            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
-          >
-            <option value="">未選択</option>
-            {JLPT_LEVELS.map((level) => (
-              <option key={level} value={level}>{level}</option>
-            ))}
-          </select>
+          <div className="flex items-baseline justify-between">
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">日本語資格 (JLPT)</label>
+            {jlptLevel && (
+              <button
+                type="button"
+                onClick={() => setJlptLevel('')}
+                className="text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+              >
+                解除
+              </button>
+            )}
+          </div>
+
+          <div className="mt-2 flex overflow-hidden rounded-2xl ring-1 ring-gray-200 dark:ring-white/[0.08]">
+            <button
+              type="button"
+              onClick={() => setJlptLevel('')}
+              aria-pressed={jlptLevel === ''}
+              className={`relative flex flex-1 flex-col items-center justify-center gap-0.5 border-r border-gray-200 px-2 py-3 text-sm font-bold transition-colors dark:border-white/[0.08] ${
+                jlptLevel === ''
+                  ? 'bg-zinc-400 text-white ring-2 ring-inset ring-zinc-900/20 dark:bg-zinc-600 dark:ring-white/30'
+                  : 'bg-white text-zinc-400 hover:bg-zinc-50 dark:bg-white/[0.02] dark:text-zinc-500 dark:hover:bg-white/[0.05]'
+              }`}
+            >
+              <span>なし</span>
+              <span className={`text-[10px] font-normal ${jlptLevel === '' ? 'text-white/90' : 'text-zinc-400 dark:text-zinc-500'}`}>
+                無資格
+              </span>
+            </button>
+            {JLPT_BAR.map((seg, idx) => {
+              const selectedIdx = JLPT_BAR.findIndex((s) => s.value === jlptLevel)
+              const filled = selectedIdx >= 0 && idx <= selectedIdx
+              const isCurrent = jlptLevel === seg.value
+              return (
+                <button
+                  key={seg.value}
+                  type="button"
+                  onClick={() => setJlptLevel(isCurrent ? '' : seg.value)}
+                  aria-pressed={isCurrent}
+                  className={`relative flex flex-1 flex-col items-center justify-center gap-0.5 px-2 py-3 text-sm font-bold transition-colors ${
+                    filled
+                      ? `${seg.fill} text-white`
+                      : 'bg-white text-zinc-400 hover:bg-zinc-50 dark:bg-white/[0.02] dark:text-zinc-500 dark:hover:bg-white/[0.05]'
+                  } ${isCurrent ? 'ring-2 ring-inset ring-zinc-900/20 dark:ring-white/30' : ''}`}
+                >
+                  <span>{seg.value}</span>
+                  <span className={`text-[10px] font-normal ${filled ? 'text-white/90' : 'text-zinc-400 dark:text-zinc-500'}`}>
+                    {seg.label}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">IT関連資格</label>
-          <textarea
-            value={itCertifications}
-            onChange={(e) => setItCertifications(e.target.value)}
-            rows={3}
-            placeholder="例: 基本情報技術者、AWS SAA、정보처리기사"
-            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100"
-          />
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">目標資格</label>
+          <div className="mt-2">
+            {profile?.target_certification ? (
+              <span className="inline-flex items-center rounded-lg bg-indigo-50 px-3 py-1.5 text-sm font-semibold text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+                {profile.target_certification}
+              </span>
+            ) : (
+              <span className="text-sm text-zinc-400">未設定</span>
+            )}
+          </div>
+          <p className="mt-1.5 text-[10px] text-zinc-500 dark:text-zinc-400">
+            管理者・メンターが設定します（課題付与の基準）。
+          </p>
+        </div>
+
+        <div>
+          <div className="flex items-baseline justify-between">
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">IT関連資格</label>
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">
+              選択中 <span className="font-semibold text-indigo-600 dark:text-indigo-300">{selectedCerts.length}</span> 件
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            該当する資格をクリックして選択してください（複数選択可）。
+          </p>
+
+          <div className="mt-3 space-y-2">
+            {Object.entries(IT_CERTIFICATIONS).map(([category, items]) => {
+              const selectedInCat = items.filter((item) => selectedCerts.includes(item)).length
+              const isOpen = expandedCategory === category
+              const hasSelection = selectedInCat > 0
+              return (
+                <div
+                  key={category}
+                  className={`overflow-hidden rounded-2xl ring-1 transition-colors ${
+                    hasSelection
+                      ? 'bg-indigo-50/40 ring-indigo-200 dark:bg-indigo-500/5 dark:ring-indigo-500/30'
+                      : 'bg-white ring-gray-200 dark:bg-white/[0.02] dark:ring-white/[0.08]'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setExpandedCategory(isOpen ? null : category)}
+                    aria-expanded={isOpen}
+                    className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-zinc-50/60 dark:hover:bg-white/[0.04]"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className={`inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-xs font-semibold ${
+                          hasSelection
+                            ? 'bg-indigo-600 text-white dark:bg-indigo-500'
+                            : 'bg-zinc-100 text-zinc-500 dark:bg-white/[0.08] dark:text-zinc-400'
+                        }`}
+                      >
+                        {selectedInCat}
+                      </span>
+                      <span className="text-sm font-medium text-zinc-800 dark:text-zinc-100">
+                        {category}
+                      </span>
+                      <span className="text-xs text-zinc-400 dark:text-zinc-500">
+                        全{items.length}件
+                      </span>
+                    </div>
+                    <ChevronDown
+                      className={`h-4 w-4 text-zinc-400 transition-transform dark:text-zinc-500 ${
+                        isOpen ? 'rotate-180' : ''
+                      }`}
+                      aria-hidden
+                    />
+                  </button>
+
+                  {isOpen && (
+                    <div className="border-t border-zinc-200/70 px-4 py-3 dark:border-white/[0.06]">
+                      <div className="flex flex-wrap gap-2">
+                        {items.map((item) => {
+                          const active = selectedCerts.includes(item)
+                          return (
+                            <button
+                              key={item}
+                              type="button"
+                              onClick={() =>
+                                setSelectedCerts((prev) =>
+                                  active ? prev.filter((c) => c !== item) : [...prev, item],
+                                )
+                              }
+                              aria-pressed={active}
+                              className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition-colors ${
+                                active
+                                  ? 'bg-indigo-600 text-white ring-indigo-600 hover:bg-indigo-500 dark:bg-indigo-500 dark:ring-indigo-500'
+                                  : 'bg-white text-zinc-700 ring-gray-200 hover:bg-indigo-50 hover:text-indigo-700 hover:ring-indigo-200 dark:bg-white/[0.04] dark:text-zinc-300 dark:ring-white/[0.08] dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300 dark:hover:ring-indigo-500/30'
+                              }`}
+                            >
+                              <span
+                                className={`inline-block h-2 w-2 rounded-full ${
+                                  active ? 'bg-white' : 'bg-zinc-300 dark:bg-white/20'
+                                }`}
+                                aria-hidden
+                              />
+                              {item}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
 
         {certError && (

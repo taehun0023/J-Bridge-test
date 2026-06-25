@@ -2,13 +2,44 @@
 
 import { requireAuth } from '@/lib/auth-helpers'
 import { createServiceRoleClient } from '@/lib/supabase/server'
-import { recalculateUserScores } from '@/modules/scoring'
+import { recalculateUserScores } from './scores'
 import { checkAssignmentProgress } from './learning-assignments'
+
+// Practice quiz types that are subject to 1-attempt limit (pool quizzes)
+const PRACTICE_QUIZ_TYPES = [
+  'jlpt_vocab', 'jlpt_grammar', 'jlpt_reading', 'jlpt_listening', 'jlpt_kanji',
+  'it_terminology', 'sentence_pattern', 'business_expression', 'keigo',
+  'cs_knowledge',
+  'core_programming', 'framework',
+]
 
 export async function startQuizAttempt(quizId: string) {
   const auth = await requireAuth()
   if ('error' in auth) return { error: auth.error } as const
   const { supabase, user } = auth
+
+  const serviceClient = createServiceRoleClient()
+  const queryClient = serviceClient ?? supabase
+
+  // Check if this is a practice quiz with 1-attempt limit
+  const { data: quiz } = await queryClient
+    .from('quizzes')
+    .select('quiz_type, is_assessment, is_pool')
+    .eq('id', quizId)
+    .single()
+
+  if (quiz && !quiz.is_assessment && PRACTICE_QUIZ_TYPES.includes(quiz.quiz_type)) {
+    // Check user role
+    const { data: profile } = await queryClient
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.role === 'mentee') {
+      // Mentees can freely retake practice quizzes — no approval gate
+    }
+  }
 
   const { data, error } = await supabase
     .from('quiz_attempts')
@@ -41,22 +72,9 @@ export async function submitQuizAnswers(
 
   if (!attempt) return { error: '無効な試行です' }
 
-  // At most one answer per question — payload is client-controlled, and
-  // quiz_answers enforces UNIQUE(attempt_id, question_id) since 00180
-  const seenQuestionIds = new Set<string>()
-  const uniqueAnswers = answers.filter(a => {
-    if (seenQuestionIds.has(a.questionId)) return false
-    seenQuestionIds.add(a.questionId)
-    return true
-  })
-
-  // Get correct answers (server-side only — base-table SELECT is admin/mentor-only
-  // under RLS since 00178; mentees only see the is_correct-free safe view)
-  const serviceClient = createServiceRoleClient()
-  if (!serviceClient) return { error: '採点処理を実行できませんでした' }
-
-  const questionIds = uniqueAnswers.map(a => a.questionId)
-  const { data: correctOptions } = await serviceClient
+  // Get correct answers (server-side only)
+  const questionIds = answers.map(a => a.questionId)
+  const { data: correctOptions } = await supabase
     .from('quiz_question_options')
     .select('id, question_id, is_correct')
     .in('question_id', questionIds)
@@ -68,7 +86,7 @@ export async function submitQuizAnswers(
 
   // Grade and insert answers
   let correctCount = 0
-  const answerRows = uniqueAnswers.map((a, index) => {
+  const answerRows = answers.map((a, index) => {
     const isCorrect = correctMap.get(a.questionId) === a.selectedOptionId
     if (isCorrect) correctCount++
     return {
@@ -84,7 +102,7 @@ export async function submitQuizAnswers(
   if (answersError) return { error: '回答の保存に失敗しました: ' + answersError.message }
 
   // Calculate score: use totalQuestions (full quiz length) as denominator when provided
-  const denominator = totalQuestions && totalQuestions > 0 ? totalQuestions : uniqueAnswers.length
+  const denominator = totalQuestions && totalQuestions > 0 ? totalQuestions : answers.length
   const score = denominator > 0 ? Math.round((correctCount / denominator) * 100) : 0
 
   // Get passing score
@@ -98,8 +116,7 @@ export async function submitQuizAnswers(
 
   const passed = score >= (quiz?.passing_score ?? 70)
 
-  // Double-submit guard: only complete an attempt that is still open
-  const { data: completedAttempt, error: updateError } = await supabase
+  const { error: updateError } = await supabase
     .from('quiz_attempts')
     .update({
       score,
@@ -107,11 +124,8 @@ export async function submitQuizAnswers(
       completed_at: new Date().toISOString(),
     })
     .eq('id', attemptId)
-    .is('completed_at', null)
-    .select('id')
-    .single()
 
-  if (updateError || !completedAttempt) return { error: 'クイズ結果の保存に失敗しました' }
+  if (updateError) return { error: 'クイズ結果の保存に失敗しました: ' + updateError.message }
 
   // Recalculate user scores after quiz completion
   recalculateUserScores(user.id).catch((err) =>

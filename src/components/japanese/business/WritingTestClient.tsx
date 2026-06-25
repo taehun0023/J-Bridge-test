@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, useTransition } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { MessageSquare } from 'lucide-react'
@@ -39,7 +40,7 @@ export default function WritingTestClient({ questions, attemptId }: { questions:
   const [currentResult, setCurrentResult] = useState<AnswerRecord | null>(null)
   const [claimContent, setClaimContent] = useState('')
   const [showClaimModal, setShowClaimModal] = useState(false)
-  const [isPending, startTransition] = useTransition()
+  const [isPending, startTransition] = useLoadingTransition()
   const [completed, setCompleted] = useState(false)
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT_SECONDS)
   const [timerPaused, setTimerPaused] = useState(false)

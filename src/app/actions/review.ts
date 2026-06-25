@@ -53,13 +53,9 @@ export async function getQuizAttemptReview(attemptId: string): Promise<{ data?: 
 
   if (!answers || answers.length === 0) return { error: '回答データが見つかりません' }
 
-  // Fetch questions with options — service role required: is_correct base-table
-  // SELECT is admin/mentor-only under RLS (00178); attempt ownership verified above.
-  const serviceClient = createServiceRoleClient()
-  if (!serviceClient) return { error: 'レビューを表示できませんでした' }
-
+  // Fetch questions with options
   const questionIds = answers.map(a => a.question_id)
-  const { data: questions } = await serviceClient
+  const { data: questions } = await supabase
     .from('quiz_questions')
     .select('id, question_text, explanation, quiz_question_options(id, option_text, is_correct, sort_order)')
     .in('id', questionIds)
@@ -133,13 +129,9 @@ export async function getCompExamReview(examId: string): Promise<{ data?: Review
 
   if (!answers || answers.length === 0) return { error: '回答データが見つかりません' }
 
-  // Fetch questions with options — service role required: is_correct base-table
-  // SELECT is admin/mentor-only under RLS (00178); exam ownership verified above.
-  const serviceClient = createServiceRoleClient()
-  if (!serviceClient) return { error: 'レビューを表示できませんでした' }
-
+  // Fetch questions with options
   const questionIds = answers.map(a => a.question_id)
-  const { data: questions } = await serviceClient
+  const { data: questions } = await supabase
     .from('quiz_questions')
     .select('id, question_text, explanation, quiz_question_options(id, option_text, is_correct, sort_order)')
     .in('id', questionIds)
@@ -152,7 +144,8 @@ export async function getCompExamReview(examId: string): Promise<{ data?: Review
   const answerMap = new Map(answers.map(a => [a.question_id, a]))
 
   const EXAM_CATEGORY_LABELS: Record<string, string> = {
-    seikatsu: '生活日本語 総合試験',
+    'jlpt-mock': 'JLPT模試',
+    seikatsu: 'JLPT 総合試験',
     'business-jp': 'ビジネス日本語 総合試験',
     cs: 'CS知識 総合試験',
     dev: '開発実務能力 総合試験',
@@ -332,7 +325,8 @@ export async function getMentorCompExamReview(examId: string): Promise<{ data?: 
   const answerMap = new Map(answers.map(a => [a.question_id, a]))
 
   const EXAM_CATEGORY_LABELS: Record<string, string> = {
-    seikatsu: '生活日本語 総合試験',
+    'jlpt-mock': 'JLPT模試',
+    seikatsu: 'JLPT 総合試験',
     'business-jp': 'ビジネス日本語 総合試験',
     cs: 'CS知識 総合試験',
     dev: '開発実務能力 総合試験',

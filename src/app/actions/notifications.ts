@@ -1,7 +1,9 @@
 'use server'
 
+import { createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { requireAuth } from '@/lib/auth-helpers'
+import type { NotificationType } from '@/lib/supabase/types'
 
 export async function getUnreadNotificationCount() {
   const auth = await requireAuth()
@@ -95,6 +97,71 @@ export async function deleteAllNotifications() {
   return { success: true }
 }
 
-// createNotification / deleteNotificationsByRelatedId moved to
-// '@/lib/notification-helpers': they are internal service-role helpers and
-// must not be exposed as client-callable server actions.
+/**
+ * Delete all notifications matching a given type and related_id.
+ * Used to clean up request notifications sent to other admins/mentors
+ * after one of them has already approved/denied.
+ */
+export async function deleteNotificationsByRelatedId(
+  relatedId: string,
+  type: NotificationType
+) {
+  const serviceClient = createServiceRoleClient()
+  if (!serviceClient) return
+
+  await serviceClient
+    .from('notifications')
+    .delete()
+    .eq('related_id', relatedId)
+    .eq('type', type)
+}
+
+export async function createNotification(
+  userId: string,
+  type: NotificationType,
+  title: string,
+  message?: string,
+  link?: string,
+  relatedId?: string
+) {
+  // Try service role client first (bypasses RLS, works for any caller)
+  const serviceClient = createServiceRoleClient()
+  if (serviceClient) {
+    const { error } = await serviceClient
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        type,
+        title,
+        message: message ?? null,
+        link: link ?? null,
+        related_id: relatedId ?? null,
+      })
+
+    if (error) return { error: error.message }
+    return { success: true }
+  }
+
+  // Fallback: use regular client (works if caller is admin/mentor via RLS INSERT policy)
+  try {
+    const auth = await requireAuth()
+    if ('error' in auth) return { error: auth.error } as const
+    const { supabase } = auth
+
+    const { error } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        type,
+        title,
+        message: message ?? null,
+        link: link ?? null,
+        related_id: relatedId ?? null,
+      })
+
+    if (error) return { error: error.message }
+    return { success: true }
+  } catch {
+    return { error: 'Notification creation failed: no service role key and insufficient permissions' }
+  }
+}

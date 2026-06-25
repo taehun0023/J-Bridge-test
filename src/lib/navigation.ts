@@ -48,7 +48,7 @@ export const categoryChildren: Record<
   }
 > = {
   seikatsu: {
-    title: '生活日本語',
+    title: 'JLPT',
     description: 'JLPT の語彙、文法、読解、聴解、漢字を段階的に学習します。',
     children: [
       { href: '/japanese/jlpt/n5', label: 'N5', description: '基礎的な日本語を学びます' },
@@ -109,7 +109,7 @@ export const categoryChildren: Record<
 
 export const mainNavItems: NavItem[] = [
   { key: 'dashboard', href: '/dashboard', label: 'ダッシュボード', icon: LayoutDashboard },
-  { key: 'seikatsu', href: '/japanese/jlpt', label: '生活日本語', icon: Languages },
+  { key: 'seikatsu', href: '/japanese/jlpt', label: 'JLPT', icon: Languages },
   { key: 'business-jp', href: '/japanese/business', label: 'ビジネス日本語', icon: Briefcase },
   { key: 'cs', href: '/cs', label: 'CS知識', icon: Cpu },
   { key: 'dev', href: '/dev', label: '開発実務', icon: Code2 },

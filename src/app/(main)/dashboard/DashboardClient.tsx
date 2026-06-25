@@ -1,14 +1,18 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import Card from '@/components/ui/Card'
 import Link from 'next/link'
-import { AlertTriangle, BarChart3, BookOpen, Eye, Calendar, ClipboardCheck, CheckCircle, Clock, Circle } from 'lucide-react'
+import { BarChart3, BookOpen, Eye, Calendar, ClipboardCheck, CheckCircle, Clock, Circle } from 'lucide-react'
+import MenteeAssignmentBoard, { type AssignmentBoardCard } from './MenteeAssignmentBoard'
 import { getGrade, getGradeColor, getJlptLevel, getJlptLevelColor, DISPATCH_MINIMUM_SCORE, getRelevantAxes, AXIS_DISPLAY_LABELS } from '@/lib/assessment-config'
 import type { AxisKey } from '@/lib/assessment-config'
 import { requestExam, requestRetakeExam } from '@/app/actions/comprehensive-exam'
 import type { ExamCycleInfo, CycleExam } from '@/app/actions/exam-scheduling'
+import NameRuby from '@/components/ui/NameRuby'
+import { initialOf } from '@/lib/name-format'
 
 const RadarChart = dynamic(() => import('@/components/dashboard/RadarChart'), { ssr: false })
 
@@ -43,7 +47,7 @@ interface RecentFeedback {
 }
 
 const feedbackCategoryLabels: Record<string, string> = {
-  seikatsu: '生活日本語',
+  seikatsu: 'JLPT',
   business_jp: 'ビジネス日本語',
   cs: 'CS知識',
   dev: '開発実務能力',
@@ -51,7 +55,7 @@ const feedbackCategoryLabels: Record<string, string> = {
 }
 
 const AXIS_TO_CATEGORY: Record<AxisKey, string> = {
-  jlpt: 'seikatsu',
+  jlpt: 'jlpt-mock',
   itJapanese: 'business-jp',
   coreProgramming: 'cs',
   framework: 'dev',
@@ -79,15 +83,19 @@ interface Props {
   recentFeedbacks?: RecentFeedback[]
   compExamRetakeByCategory?: Record<string, { examId: string; score: number | null; retakeStatus: 'completed' | 'failed' | 'requested' | 'approved' | 'in_progress' }>
   hasCompletedExamByCategory?: Record<string, boolean>
+  seikatsuExamLevel?: 'N1' | 'N2' | 'N3' | 'N4' | 'N5' | null
   role?: string
   nextExamDate?: string | null
   activeCycle?: ExamCycleInfo | null
   recentAssignments?: RecentAssignment[]
+  assignmentBoardCards?: AssignmentBoardCard[]
+  assignmentMonth?: string
   unreadAnnouncements?: number
 }
 
 const CYCLE_CATEGORY_LABELS: Record<string, string> = {
-  seikatsu: '生活日本語',
+  'jlpt-mock': 'JLPT模試',
+  seikatsu: 'JLPT',
   'business-jp': 'ビジネス日本語',
   cs: 'CS知識',
   dev: '開発実務',
@@ -133,10 +141,11 @@ function getDaysUntil(deadlineAt: string): number {
 }
 
 export default function DashboardClient({
-  profile, radarScores, recentResults, isJapanese,
+  radarScores, recentResults, isJapanese,
   learningStats, recentFeedbacks = [], compExamRetakeByCategory = {},
-  hasCompletedExamByCategory = {}, role,
-  nextExamDate, activeCycle, recentAssignments = [], unreadAnnouncements = 0,
+  hasCompletedExamByCategory = {}, seikatsuExamLevel = null, role,
+  activeCycle, unreadAnnouncements = 0,
+  assignmentBoardCards = [], assignmentMonth = '', profile = null,
 }: Props) {
   const isMentee = role === 'mentee'
   const relevantAxes = getRelevantAxes(isJapanese, role)
@@ -147,7 +156,7 @@ export default function DashboardClient({
   const gridCols = relevantAxes.length === 3 ? 'grid-cols-3' : 'grid-cols-5'
 
   const [retakeMessage, setRetakeMessage] = useState<string | null>(null)
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
 
   function handleCompRetakeRequest(examId: string) {
     startTransition(async () => {
@@ -188,46 +197,11 @@ export default function DashboardClient({
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">ダッシュボード</h1>
-      <p className="mt-1 text-zinc-500 dark:text-zinc-400">
-        {profile?.full_name ? `${profile.full_name}さんの` : '自分の'}エンジニア力量現況
-      </p>
+      {isMentee && <MenteeAssignmentBoard cards={assignmentBoardCards} currentMonth={assignmentMonth} />}
 
       {/* Mentee priority: assignments + feedback */}
       {isMentee && (
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          {/* Learning assignments card */}
-          {learningStats && learningStats.total > 0 && (
-            <div className="rounded-xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 p-5 dark:border-amber-600 dark:from-amber-900/20 dark:to-orange-900/20">
-              <div className="flex items-center gap-2 mb-3">
-                <AlertTriangle className="h-5 w-5 text-amber-500" />
-                <h2 className="text-base font-bold text-amber-900 dark:text-amber-200">学習課題</h2>
-              </div>
-              <div className="mb-3">
-                <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-amber-700 dark:text-amber-300">
-                    進行中 {learningStats.inProgress} / 完了 {learningStats.completed} / 全体 {learningStats.total}
-                  </span>
-                  <span className="font-bold text-amber-900 dark:text-amber-100">
-                    {Math.round((learningStats.completed / learningStats.total) * 100)}%
-                  </span>
-                </div>
-                <div className="h-3 w-full rounded-full bg-amber-200 dark:bg-amber-800">
-                  <div
-                    className="h-3 rounded-full bg-amber-500 transition-all"
-                    style={{ width: `${Math.round((learningStats.completed / learningStats.total) * 100)}%` }}
-                  />
-                </div>
-              </div>
-              <Link
-                href="/dashboard/assignments"
-                className="block rounded-lg bg-amber-500 px-4 py-2 text-center text-sm font-bold text-white hover:bg-amber-600 transition-colors"
-              >
-                課題一覧へ
-              </Link>
-            </div>
-          )}
-
           {/* Recent feedback card */}
           {recentFeedbacks.length > 0 && (
             <div className="rounded-xl border-2 border-blue-300 bg-gradient-to-br from-blue-50 to-indigo-50 p-5 dark:border-blue-600 dark:from-blue-900/20 dark:to-indigo-900/20">
@@ -342,18 +316,7 @@ export default function DashboardClient({
             )}
           </div>
         )
-      })() : isMentee && nextExamDate && (
-        <div className="mt-4 flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/50 px-4 py-3 dark:border-indigo-800 dark:bg-indigo-900/10">
-          <Calendar className="h-4 w-4 text-indigo-500" />
-          <span className="text-sm text-indigo-700 dark:text-indigo-300">
-            次回総合試験: {new Date(nextExamDate).toLocaleDateString('ja-JP')}
-            {(() => {
-              const days = Math.ceil((new Date(nextExamDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-              return days > 0 ? `（あと${days}日）` : '（本日）'
-            })()}
-          </span>
-        </div>
-      )}
+      })() : null}
 
       {/* Bento grid */}
       <div className="mt-6 grid gap-4 lg:grid-cols-3 lg:grid-rows-[auto_auto]">
@@ -377,7 +340,9 @@ export default function DashboardClient({
                   const isSeikatsu = key === 'jlpt'
                   const category = AXIS_TO_CATEGORY[key]
                   const hasCompleted = hasCompletedExamByCategory[category] ?? false
-                  const gradeLabel = isSeikatsu ? getJlptLevel(score) : getGrade(score)
+                  const gradeLabel = isSeikatsu
+                    ? (seikatsuExamLevel ?? getJlptLevel(score))
+                    : getGrade(score)
                   const colorClass = isSeikatsu ? getJlptLevelColor(gradeLabel as 'N1'|'N2'|'N3'|'N4'|'N5') : getGradeColor(gradeLabel as 'S'|'A'|'B'|'C'|'D')
                   const isBelowB = hasCompleted && score < DISPATCH_MINIMUM_SCORE
                   const retakeInfo = compExamRetakeByCategory[category]
@@ -403,7 +368,15 @@ export default function DashboardClient({
                           未受験
                         </span>
                       )}
-                      {retakeInfo ? (
+                      {key === 'jlpt' ? (
+                        <div className="mt-1.5">
+                          {retakeInfo?.retakeStatus === 'in_progress' ? (
+                            <Link href={`/exam/${retakeInfo.examId}`} className="rounded-md bg-blue-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-blue-500 transition-colors">試験を再開</Link>
+                          ) : (
+                            <Link href={`/japanese/jlpt/quiz?level=${profile?.target_jlpt_level || seikatsuExamLevel || 'N1'}`} className="rounded-md bg-indigo-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-indigo-500 transition-colors">{hasCompleted ? '再受験' : '模試を受ける'}</Link>
+                          )}
+                        </div>
+                      ) : retakeInfo ? (
                         <div className="mt-1.5">
                           {retakeInfo.retakeStatus === 'in_progress' ? (
                             <Link
@@ -486,7 +459,13 @@ export default function DashboardClient({
                         未受験
                       </span>
                       <div className="mt-1.5">
-                        {retakeInfo ? (
+                        {key === 'jlpt' ? (
+                          retakeInfo?.retakeStatus === 'in_progress' ? (
+                            <Link href={`/exam/${retakeInfo.examId}`} className="rounded-md bg-blue-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-blue-500 transition-colors">試験を再開</Link>
+                          ) : (
+                            <Link href="/japanese/jlpt/mock" className="rounded-md bg-indigo-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-indigo-500 transition-colors">模試を受ける</Link>
+                          )
+                        ) : retakeInfo ? (
                           retakeInfo.retakeStatus === 'in_progress' ? (
                             <Link
                               href={`/exam/${retakeInfo.examId}`}
@@ -597,46 +576,6 @@ export default function DashboardClient({
           </Link>
         </Card>
 
-        {/* メンターからの課題 — right col, row 2 */}
-        <Card title="メンターからの課題">
-          {recentAssignments.length > 0 ? (
-            <div>
-              <div className="divide-y divide-gray-100 dark:divide-white/[0.06]">
-                {recentAssignments.map(a => (
-                  <div key={a.id} className="py-2.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">{a.title}</span>
-                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                        a.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20' :
-                        a.status === 'in_progress' ? 'bg-blue-500/10 text-blue-400 ring-1 ring-blue-500/20' :
-                        a.status === 'overdue' ? 'bg-red-500/10 text-red-400 ring-1 ring-red-500/20' :
-                        'bg-zinc-500/10 text-zinc-400 ring-1 ring-zinc-500/20'
-                      }`}>
-                        {a.status === 'completed' ? '完了' : a.status === 'in_progress' ? '進行中' : a.status === 'overdue' ? '期限超過' : '待機'}
-                      </span>
-                    </div>
-                    <div className="mt-1 flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-                      <span>{a.assigner?.full_name ?? '—'}</span>
-                      <span>{new Date(a.created_at).toLocaleDateString('ja-JP')}</span>
-                      {a.due_date && <span>〆 {new Date(a.due_date).toLocaleDateString('ja-JP')}</span>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <Link
-                href="/dashboard/assignments"
-                className="mt-3 block text-center text-sm font-medium text-indigo-500 hover:text-indigo-400 transition-colors"
-              >
-                全て見る →
-              </Link>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <ClipboardCheck className="h-10 w-10 text-zinc-500" />
-              <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">現在新しい課題はありません</p>
-            </div>
-          )}
-        </Card>
       </div>
 
       {/* Learning Assignments Summary */}
@@ -688,7 +627,7 @@ export default function DashboardClient({
                       {feedbackCategoryLabels[fb.category] ?? fb.category}
                     </span>
                     <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                      {(fb.admin as { full_name: string | null } | null)?.full_name ?? '管理者'}
+                      <NameRuby name={(fb.admin as { full_name: string | null } | null)?.full_name} fallback="管理者" />
                     </span>
                     <span className="text-xs text-zinc-500 dark:text-zinc-400">
                       {new Date(fb.created_at).toLocaleDateString('ja-JP')}

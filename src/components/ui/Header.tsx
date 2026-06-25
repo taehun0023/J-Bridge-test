@@ -4,8 +4,9 @@ import Link from 'next/link'
 import { signOut } from '@/app/actions/auth'
 import NotificationBell from './NotificationBell'
 import ProfileAvatar from './ProfileAvatar'
+import RoleSwitcher from './RoleSwitcher'
 import { useTheme } from '@/components/theme/ThemeProvider'
-import { Menu, Sun, Moon, Shield, Settings, BookOpen, LogOut } from 'lucide-react'
+import { Menu, Sun, Moon, Shield, BookOpen, LogOut } from 'lucide-react'
 import type { UserRole, JlptLevel } from '@/lib/supabase/types'
 
 export default function Header({
@@ -61,19 +62,18 @@ export default function Header({
           {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </button>
 
-        <NotificationBell />
+        <RoleSwitcher currentRole={userRole} />
 
-        <Link
-          href="/profile"
-          className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/5"
-          aria-label="プロフィール"
-        >
-          <Settings className="h-5 w-5" />
-        </Link>
+        <NotificationBell />
 
         <ProfileAvatar avatarUrl={avatarUrl} userName={userName} size="md" />
 
-        <span className="text-sm text-zinc-600 dark:text-zinc-300">{userName ?? 'ユーザー'}</span>
+        <Link
+          href="/profile"
+          className="rounded-lg px-1 text-sm text-zinc-600 hover:text-indigo-600 dark:text-zinc-300 dark:hover:text-indigo-400 transition-colors"
+        >
+          {userName ?? 'ユーザー'}
+        </Link>
         {jlptLevel && (
           <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300">
             {jlptLevel}

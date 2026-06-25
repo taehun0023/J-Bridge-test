@@ -3,8 +3,9 @@
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { requireAuth, requireAdminOrMentor } from '@/lib/auth-helpers'
-import { ASSIGNMENT_CATEGORIES } from '@/lib/assignment-categories'
-import { createNotification, getUserDisplayName } from '@/lib/notification-helpers'
+import { ASSIGNMENT_CATEGORIES, buildAssignmentTitle, endOfMonthDueDate } from '@/lib/assignment-categories'
+import { createNotification } from './notifications'
+import { getUserDisplayName } from '@/lib/notification-helpers'
 import { logAuditEvent } from '@/app/actions/audit'
 import { ERR } from '@/lib/action-types'
 import { getCoursesWithProgress } from '@/lib/course-progress'
@@ -146,14 +147,11 @@ export async function createLearningAssignment(formData: FormData) {
   const category = formData.get('category') as string
   const subcategory = formData.get('subcategory') as string
   const contentLevel = formData.get('content_level') as string || null
-  const title = formData.get('title') as string
-  const description = formData.get('description') as string || null
-  const dueDate = formData.get('due_date') as string || null
 
   const catConfig = ASSIGNMENT_CATEGORIES[category]
   const isLevelOnly = catConfig?.levelOnly === true
 
-  if (!assignedToList.length || !category || !title) {
+  if (!assignedToList.length || !category) {
     return { error: '必須フィールドをすべて入力してください' }
   }
   if (!isLevelOnly && !subcategory) {
@@ -162,6 +160,11 @@ export async function createLearningAssignment(formData: FormData) {
   if (isLevelOnly && !contentLevel) {
     return { error: 'レベルを選択してください' }
   }
+
+  // タイトルはカテゴリ等から自動生成。期限は手動設定せず常に「부여한 달의 말일 23:59」。
+  const title = buildAssignmentTitle(category, subcategory, contentLevel)
+  const description: string | null = null
+  const dueDate = endOfMonthDueDate()
 
   // Check for existing completed assignments per user
   const skippedNames: string[] = []
@@ -277,10 +280,6 @@ export async function getMyLearningAssignments() {
 }
 
 export async function checkAssignmentProgress(userId: string, quizId: string) {
-  // Self-only: callers pass the authenticated user's own id (quiz/writing submit).
-  const auth = await requireAuth()
-  if ('error' in auth || auth.user.id !== userId) return
-
   const serviceClient = createServiceRoleClient()
   if (!serviceClient) {
     console.warn('[checkAssignmentProgress] Service role client unavailable — assignment status will not be updated')
@@ -374,22 +373,44 @@ export async function confirmAssignment(assignmentId: string) {
 
   revalidatePath('/admin/tasks')
   revalidatePath('/dashboard/assignments')
+  revalidatePath('/admin/reports')
+  revalidatePath('/dashboard')
   return { success: true }
 }
 
-export async function deleteLearningAssignment(assignmentId: string) {
-  const auth = await requireAuth()
-  if ('error' in auth) return { error: auth.error } as const
-  const { supabase, user } = auth
+/** 멘토는 담당 멘티의 과제만 조작 가능. admin은 전체 허용. */
+async function canManageAssignee(role: string, userId: string, assigneeId: string): Promise<boolean> {
+  if (role === 'admin') return true
+  if (role !== 'mentor') return false
+  const client = createServiceRoleClient() ?? (await createClient())
+  const { data } = await client
+    .from('mentor_mentee_assignments')
+    .select('mentee_id')
+    .eq('mentor_id', userId)
+    .eq('mentee_id', assigneeId)
+    .limit(1)
+  return (data?.length ?? 0) > 0
+}
 
-  // Fetch old data for audit
-  const { data: oldData } = await supabase
+export async function deleteLearningAssignment(assignmentId: string) {
+  const auth = await requireAdminOrMentor()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user, profile } = auth
+  const service = createServiceRoleClient() ?? supabase
+
+  // Fetch old data for audit + ownership check
+  const { data: oldData } = await service
     .from('learning_assignments')
     .select('*')
     .eq('id', assignmentId)
     .single()
 
-  const { error } = await supabase
+  if (!oldData) return { error: ERR.NOT_FOUND }
+  if (!(await canManageAssignee(profile.role, user.id, oldData.assigned_to))) {
+    return { error: ERR.FORBIDDEN }
+  }
+
+  const { error } = await service
     .from('learning_assignments')
     .delete()
     .eq('id', assignmentId)
@@ -400,17 +421,82 @@ export async function deleteLearningAssignment(assignmentId: string) {
 
   revalidatePath('/admin/tasks')
   revalidatePath('/dashboard/assignments')
+  revalidatePath('/admin/reports')
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+
+/**
+ * 과제 수정 — 제목·기한·설명, 그리고 카운트형(항목/이해테스트) 과제는 부여개수(target_count)도.
+ * target_count 수정 시 누적 래더(cumulative_target)를 이전 앵커 유지하며 보정하고 상태를 재계산한다.
+ * 멘토는 담당 멘티의 과제만 수정 가능.
+ */
+export async function updateLearningAssignment(
+  assignmentId: string,
+  fields: { title?: string; due_date?: string | null; description?: string | null; target_count?: number | null },
+) {
+  const auth = await requireAdminOrMentor()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user, profile } = auth
+  const service = createServiceRoleClient() ?? supabase
+
+  const { data: a } = await service
+    .from('learning_assignments')
+    .select('id, assigned_to, target_count, cumulative_target, mastered_snapshot, status, title, due_date, description')
+    .eq('id', assignmentId)
+    .single()
+  if (!a) return { error: ERR.NOT_FOUND }
+  if (!(await canManageAssignee(profile.role, user.id, a.assigned_to))) {
+    return { error: ERR.FORBIDDEN }
+  }
+
+  const update: Record<string, unknown> = {}
+  if (typeof fields.title === 'string' && fields.title.trim()) update.title = fields.title.trim()
+  if (fields.due_date !== undefined) update.due_date = fields.due_date || null
+  if (fields.description !== undefined) update.description = fields.description?.trim() || null
+
+  // 카운트형 과제만 부여개수 수정 허용 (target_count != null)
+  if (fields.target_count != null && a.target_count != null) {
+    const newCount = Math.max(1, Math.floor(fields.target_count))
+    const prevAnchor = (a.cumulative_target ?? 0) - (a.target_count ?? 0) // 이전 누적 앵커 보존
+    const cumulative = prevAnchor + newCount
+    update.target_count = newCount
+    update.cumulative_target = cumulative
+    // 타이틀의 "N項目" 숫자도 새 개수로 갱신 (제목을 따로 안 넘긴 경우)
+    if (!update.title && a.title && /\d+\s*項目/.test(a.title)) {
+      update.title = a.title.replace(/\d+\s*項目/, `${newCount}項目`)
+    }
+    if (a.status !== 'overdue') {
+      const mastered = a.mastered_snapshot ?? 0
+      update.status = mastered >= cumulative ? 'completed' : (mastered > prevAnchor ? 'in_progress' : 'pending')
+      update.completed_at = update.status === 'completed' ? new Date().toISOString() : null
+    }
+  }
+
+  if (Object.keys(update).length === 0) return { success: true }
+
+  const { error } = await service
+    .from('learning_assignments')
+    .update(update)
+    .eq('id', assignmentId)
+  if (error) return { error: error.message }
+
+  await logAuditEvent(
+    user.id, 'update', 'learning_assignments', assignmentId,
+    { title: a.title, due_date: a.due_date, description: a.description, target_count: a.target_count, cumulative_target: a.cumulative_target },
+    update,
+  )
+
+  revalidatePath('/admin/tasks')
+  revalidatePath('/dashboard/assignments')
+  revalidatePath('/admin/reports')
+  revalidatePath('/dashboard')
   return { success: true }
 }
 
 // ─── Overdue detection & actions ───
 
 export async function detectAndMarkOverdue() {
-  // Maintenance sweep triggered by page loads (admin tasks + mentee assignments) —
-  // any authenticated user may trigger it, but never anonymous callers.
-  const auth = await requireAuth()
-  if ('error' in auth) return
-
   const serviceClient = createServiceRoleClient()
   if (!serviceClient) return
 
@@ -539,6 +625,8 @@ export async function reassignAssignment(assignmentId: string, newDueDate: strin
 
   revalidatePath('/admin/tasks')
   revalidatePath('/dashboard/assignments')
+  revalidatePath('/admin/reports')
+  revalidatePath('/dashboard')
   return { success: true }
 }
 
@@ -574,23 +662,24 @@ export async function cancelAssignment(assignmentId: string) {
 
   revalidatePath('/admin/tasks')
   revalidatePath('/dashboard/assignments')
+  revalidatePath('/admin/reports')
+  revalidatePath('/dashboard')
   return { success: true }
 }
 
 // ─── Auto-detect learning progress → update pending to in_progress ───
 
 export async function updateLearningStatuses() {
-  const auth = await requireAdminOrMentor()
-  if ('error' in auth) return
-
   const serviceClient = createServiceRoleClient()
   if (!serviceClient) return
 
-  // Find all pending assignments
+  // Find all pending assignments (quiz-based only; JLPT item-count assignments
+  // carry target_count and are handled by updateJlptAssignmentStatuses)
   const { data: pendingAssignments } = await serviceClient
     .from('learning_assignments')
     .select('id, assigned_to, category, subcategory, content_level')
     .eq('status', 'pending')
+    .is('target_count', null)
 
   if (!pendingAssignments?.length) return
 
@@ -637,9 +726,6 @@ export async function updateLearningStatuses() {
 // ─── Dev level unlock check ───
 
 export async function getAssigneeUnlockedLevels(assigneeId: string, courseSubcategory: string) {
-  const auth = await requireAdminOrMentor()
-  if ('error' in auth) return { levels: [] }
-
   const serviceClient = createServiceRoleClient()
   if (!serviceClient) return { levels: [] }
 

@@ -1,8 +1,7 @@
-// Deliberately NOT a 'use server' module: these helpers take arbitrary userIds
-// and use the service-role client (RLS bypass), so they must never be exposed
-// as client-callable server actions. Import from server-side code only.
+'use server'
+
 import { createServiceRoleClient } from '@/lib/supabase/server'
-import { notifyMentorsOf, notifyAdmins, getUserDisplayName } from '@/lib/notification-helpers'
+import { recalculateUserScores } from '@/modules/scoring'
 import { COMP_EXAM_CATEGORY_TO_STEP, ASSESSMENT_TIME_LIMITS, ASSESSMENT_TOTAL_QUESTIONS } from '@/lib/assessment-config'
 
 /** Categories for comprehensive exam cycles */
@@ -88,7 +87,7 @@ export async function checkAndCreateExamCycle(
 
     // If truly no exams found (first insert failed), recreate
     if (exams.length === 0) {
-      const newExams = await createCycleExams(serviceClient, userId, activeCycle.id, isJapanese, activeCycle.cycle_number)
+      const newExams = await createCycleExams(serviceClient, userId, activeCycle.id, isJapanese)
       return {
         id: activeCycle.id,
         cycleNumber: activeCycle.cycle_number,
@@ -154,8 +153,7 @@ async function createCycleExams(
   serviceClient: ReturnType<typeof createServiceRoleClient> & object,
   userId: string,
   cycleId: string,
-  isJapanese: boolean,
-  cycleNumber: number
+  isJapanese: boolean
 ): Promise<CycleExam[]> {
   // Japanese users never reach here (gated in checkAndCreateExamCycle).
   // Non-Japanese: seikatsu + business-jp only (all cycles).
@@ -163,9 +161,8 @@ async function createCycleExams(
     ? JAPANESE_EXAM_CATEGORIES
     : FIRST_CYCLE_NON_JAPANESE
 
-  // Cycle 1 requires admin/mentor approval (onboarding gate workflow).
-  // Cycle 2+ auto-approves since the 14-day interval itself is the gate.
-  const isFirstCycle = cycleNumber === 1
+  // 承認制は廃止 — すべてのサイクル試験を即座に承認済みで作成（メンティーは承認なしで受験可能）。
+  // 初回ゲートの存在 / 14日間隔（サイクル2+）自体が受験タイミングの管理になる。
   const nowIso = new Date().toISOString()
 
   const examInserts = categories.map(category => {
@@ -174,15 +171,13 @@ async function createCycleExams(
       user_id: userId,
       category,
       subcategory: 'comprehensive',
-      status: isFirstCycle ? 'requested' : 'approved',
+      status: 'approved',
       exam_cycle_id: cycleId,
       time_limit_minutes: step ? ASSESSMENT_TIME_LIMITS[step] : 30,
       total_questions: step ? ASSESSMENT_TOTAL_QUESTIONS[step] : 30,
       passing_score: 70,
-      ...(isFirstCycle ? {} : {
-        approved_at: nowIso,
-        approved_by: userId,
-      }),
+      approved_at: nowIso,
+      approved_by: userId,
     }
   })
 
@@ -190,26 +185,6 @@ async function createCycleExams(
     .from('comprehensive_exams')
     .insert(examInserts)
     .select('id, category, subcategory, status, score, passed')
-
-  // First cycle needs admin/mentor approval — notify them
-  if (isFirstCycle) {
-    const userName = await getUserDisplayName(userId)
-    await Promise.all([
-      notifyMentorsOf(
-        userId,
-        'exam_requested',
-        `${userName}さんが総合試験（第${cycleNumber}回）の承認を待っています`,
-        undefined,
-        '/admin/tasks'
-      ),
-      notifyAdmins(
-        'exam_requested',
-        `${userName}さんが総合試験（第${cycleNumber}回）の承認を待っています`,
-        undefined,
-        '/admin/tasks'
-      ),
-    ])
-  }
 
   return (exams ?? []).map(e => ({
     id: e.id,
@@ -251,7 +226,7 @@ async function createExamCycle(
   }
 
   // Create comprehensive_exam records
-  const exams = await createCycleExams(serviceClient, userId, cycle.id, isJapanese, cycleNumber)
+  const exams = await createCycleExams(serviceClient, userId, cycle.id, isJapanese)
 
   return {
     id: cycle.id,
@@ -265,9 +240,7 @@ async function createExamCycle(
 
 /**
  * Check if all exams in a cycle are done, and if so mark cycle as completed.
- * Matches the cycle's exams by exam_cycle_id FK so retakes (created without a
- * cycle) can't shadow the cycle's own exams; cycles whose exams predate the FK
- * being populated fall back to the legacy timestamp heuristic.
+ * Uses timestamp-based query (not exam_cycle_id FK) for reliability.
  */
 async function completeExamCycle(cycleId: string, userId: string, cycleCreatedAt: string): Promise<boolean> {
   const serviceClient = createServiceRoleClient()
@@ -282,26 +255,15 @@ async function completeExamCycle(cycleId: string, userId: string, cycleCreatedAt
     .single()
   const cycleCategories = profile?.is_japanese ? JAPANESE_EXAM_CATEGORIES : FIRST_CYCLE_NON_JAPANESE
 
-  // Match by FK first; fall back to the legacy timestamp heuristic when the
-  // cycle's exams were created before exam_cycle_id was populated.
-  let { data: allExams } = await serviceClient
+  // Find cycle exams by timestamp (not FK — PostgREST schema cache issue)
+  const { data: allExams } = await serviceClient
     .from('comprehensive_exams')
     .select('id, category, status')
-    .eq('exam_cycle_id', cycleId)
+    .eq('user_id', userId)
     .eq('subcategory', 'comprehensive')
     .in('category', cycleCategories)
-
-  if (!allExams || allExams.length === 0) {
-    const { data: legacyExams } = await serviceClient
-      .from('comprehensive_exams')
-      .select('id, category, status')
-      .eq('user_id', userId)
-      .eq('subcategory', 'comprehensive')
-      .in('category', cycleCategories)
-      .gte('requested_at', cycleCreatedAt)
-      .order('requested_at', { ascending: true })
-    allExams = legacyExams
-  }
+    .gte('requested_at', cycleCreatedAt)
+    .order('requested_at', { ascending: true })
 
   // Deduplicate by category (keep highest-priority status)
   const STATUS_PRIORITY: Record<string, number> = { completed: 4, failed: 3, in_progress: 2, approved: 1 }
@@ -329,8 +291,7 @@ async function completeExamCycle(cycleId: string, userId: string, cycleCreatedAt
     })
     .eq('id', cycleId)
 
-  // No recalc here: submitExam (the only path into cycle completion) has
-  // already recalculated this user's scores for the exam that closed the cycle.
+  await recalculateUserScores(userId)
 
   // NOTE: No revalidatePath here — it would cause the calling page's server component
   // to re-render. Dashboard gets fresh data via full page navigation.

@@ -6,9 +6,11 @@
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
-const BACKUP_DIR = 'C:/Users/zenoa/Downloads/jbridge_backup_2026-04-05/step2_business_jp'
-const SB_URL = 'https://wxhyczlwdmeelcshqgci.supabase.co'
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind4aHljemx3ZG1lZWxjc2hxZ2NpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDU1NjQ0NCwiZXhwIjoyMDg2MTMyNDQ0fQ.BnCrF1EjFTGrCyv86-z_bSi-NPJFg1S-R9RK1rQFfrI'
+const BACKUP_DIR = process.env.BACKUP_DIR || ''
+const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+// 시크릿 하드코딩 금지 — 환경변수로만 주입 (이전 하드코딩 키는 노출되어 회전 필요)
+const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+if (!SB_URL || !SB_KEY) { console.error('NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY 환경변수가 필요합니다'); process.exit(1) }
 
 const SKIP_QUIZ_IDS = new Set(['a0000002-0000-0000-0000-000000000002'])
 

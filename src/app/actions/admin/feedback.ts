@@ -3,7 +3,7 @@
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { requireAdminOrMentor } from '@/lib/auth-helpers'
-import { createNotification } from '@/lib/notification-helpers'
+import { createNotification } from '@/app/actions/notifications'
 import { logAuditEvent } from '@/app/actions/audit'
 
 export async function createFeedback(formData: FormData) {

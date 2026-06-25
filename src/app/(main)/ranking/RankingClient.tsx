@@ -3,6 +3,8 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Crown, Medal, Award } from 'lucide-react'
 import TabBar from '@/components/ui/TabBar'
+import NameRuby from '@/components/ui/NameRuby'
+import { initialOf } from '@/lib/name-format'
 import type { ComputedRankingEntry, RankingCategory } from '@/lib/ranking'
 
 interface Props {
@@ -29,7 +31,7 @@ function getColumnHeaders(category: RankingCategory) {
     case 'overall':
       return { total: '全体 /400', sub1: '日本語力', sub2: 'プログラミング技術力' }
     case 'japanese':
-      return { total: '日本語力 /200', sub1: '生活日本語', sub2: 'ビジネス日本語' }
+      return { total: '日本語力 /200', sub1: 'JLPT', sub2: 'ビジネス日本語' }
     case 'programming':
       return { total: 'プログラミング /200', sub1: 'CS知識', sub2: '開発実務能力' }
   }
@@ -94,11 +96,11 @@ export default function RankingClient({ rankings, category, currentUserId }: Pro
                           <img src={entry.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
                         ) : (
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-white text-xs font-medium">
-                            {(entry.full_name ?? 'U').charAt(0).toUpperCase()}
+                            {initialOf(entry.full_name).toUpperCase()}
                           </div>
                         )}
                         <span className={`text-sm ${isMe ? 'font-bold text-indigo-400' : 'text-zinc-900 dark:text-zinc-100'}`}>
-                          {entry.full_name ?? 'ユーザー'}
+                          <NameRuby name={entry.full_name} fallback="ユーザー" />
                           {isMe && ' (自分)'}
                         </span>
                       </div>
