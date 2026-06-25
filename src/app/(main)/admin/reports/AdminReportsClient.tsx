@@ -212,6 +212,16 @@ export default function AdminReportsClient({
       const m = (a.due_date ?? a.created_at ?? '').slice(0, 7) || '0000-00'
       const arr = byMonth.get(m) ?? []; arr.push(a); byMonth.set(m, arr)
     }
+    // 카드 표시 순서: 語彙 → 文法 → 読解 → 聴解 → 模擬
+    const cardOrder = (a: MenteeAssignment) => {
+      if (a.category === 'seikatsu') {
+        const o = ({ vocabulary: 0, grammar: 1, reading: 2, listening: 3 } as Record<string, number>)[a.subcategory]
+        if (o !== undefined) return o
+      }
+      if (a.category === 'jlpt-mock') return 4
+      return 99
+    }
+    for (const arr of byMonth.values()) arr.sort((x, y) => cardOrder(x) - cardOrder(y))
     const curYear = String(now.getFullYear())
     const curKey = `${curYear}-${String(now.getMonth() + 1).padStart(2, '0')}`
     // 정렬: 지연(과거 미완료) → 이번달 → 과거(완료)·미래
