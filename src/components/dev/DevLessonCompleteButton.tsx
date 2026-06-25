@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import { CheckCircle2 } from 'lucide-react'
 import { markDevLessonComplete } from '@/app/actions/dev-progress'
 
@@ -14,7 +15,7 @@ export default function DevLessonCompleteButton({
   isCompleted: boolean
 }) {
   const [isCompleted, setIsCompleted] = useState(initialCompleted)
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
 
   function handleComplete() {
     startTransition(async () => {

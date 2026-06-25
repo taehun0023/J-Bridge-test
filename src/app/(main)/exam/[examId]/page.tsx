@@ -50,7 +50,14 @@ export default async function ExamPage({ params }: { params: Promise<{ examId: s
   const categoryLabel = getCategoryLabel(exam.category)
   const subcategoryLabel = exam.subcategory === 'comprehensive' ? null : getSubcategoryLabel(exam.category, exam.subcategory)
   const levelStr = exam.content_level ? ` (${exam.content_level})` : ''
-  const examLabel = subcategoryLabel ? `${categoryLabel} > ${subcategoryLabel}${levelStr}` : `${categoryLabel}${levelStr}`
+  const examLabel = exam.category === 'jlpt-mock'
+    ? `${exam.content_level ?? ''} 模擬試験${exam.mock_session ? `（${exam.mock_session}時限）` : ''}`
+    : subcategoryLabel ? `${categoryLabel} > ${subcategoryLabel}${levelStr}` : `${categoryLabel}${levelStr}`
+
+  // Completed/Failed - JLPT 모의시험은 상세 리뷰(문항별 정오) 화면으로
+  if ((exam.status === 'completed' || exam.status === 'failed') && exam.category === 'jlpt-mock') {
+    return <ExamClient exam={exam} mode="review" examLabel={examLabel} />
+  }
 
   // Completed/Failed - show score (no pass/fail message for cycle exams)
   if (exam.status === 'completed' || exam.status === 'failed') {

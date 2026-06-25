@@ -39,8 +39,9 @@ export async function getMenteeMentorsMap(
     const m = pickMentor(row.mentor)
     if (!m) continue
     const ref: MentorRef = { id: m.id, name: m.full_name }
-    if (m.mentor_specialty === 'japanese') result[row.mentee_id].japanese = ref
-    else if (m.mentor_specialty === 'technical') result[row.mentee_id].technical = ref
+    // 전문(専門) 구분 폐지 — 멘토는 일본어·기술 모두 담당. 배정된 멘토를 그대로 담당 멘토로 본다.
+    if (m.mentor_specialty === 'technical' && !result[row.mentee_id].japanese) result[row.mentee_id].technical = ref
+    else result[row.mentee_id].japanese = ref
   }
   return result
 }

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo, useTransition } from 'react'
+import { useState, useMemo } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import Link from 'next/link'
 import {
   UserCheck, Shield, Monitor, Handshake, MessageSquare, Clock, Users,
@@ -41,7 +42,7 @@ export default function ManualClient({
     sections.length === 1 ? sections[0].id : null
   )
   const [expandedSubs, setExpandedSubs] = useState<Set<string>>(new Set())
-  const [isPending, startTransition] = useTransition()
+  const [isPending, startTransition] = useLoadingTransition()
 
   const itemTypeMap = useMemo(() => {
     const map = new Map<string, ManualItemType>()

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useEffect } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import { useRouter } from 'next/navigation'
 import {
   deleteLearningAssignment,
@@ -10,10 +11,15 @@ import {
 } from '@/app/actions/learning-assignments'
 import { getCategoryLabel, getSubcategoryLabel, getContentLevelLabel } from '@/lib/assignment-categories'
 import { areaLabel, categoryLabel as itemCategoryLabel, isItemCategory } from '@/lib/item-assignments'
-import { updateMonthlyAssignmentConfig, type MonthlyAssignConfig } from '@/app/actions/item-assignments'
+import { updateMonthlyAssignmentConfig, setMenteeAutoAssign, type MonthlyAssignConfig } from '@/app/actions/item-assignments'
+import { getJlptLevelColor, type JlptLevel } from '@/lib/assessment-config'
+
+const MONTHLY_CONFIG_LEVELS = ['N1', 'N2', 'N3', 'N4', 'N5'] as const
+const isJlpt = (v: string): v is JlptLevel => (MONTHLY_CONFIG_LEVELS as readonly string[]).includes(v)
 import ItemAssignModal from '@/app/(main)/dashboard/ItemAssignModal'
+import MockExamAssignModal from './MockExamAssignModal'
 import NameRuby from '@/components/ui/NameRuby'
-import { Plus, Languages, ChevronDown, ChevronRight } from 'lucide-react'
+import { Languages, ChevronDown, ChevronRight, GraduationCap } from 'lucide-react'
 
 interface LearningAssignmentRow {
   id: string
@@ -40,6 +46,7 @@ interface Mentee {
   full_name: string | null
   email: string
   target_certification?: string | null
+  monthly_auto_assign?: boolean
   japanese_mentor_name?: string | null
   tech_mentor_name?: string | null
 }
@@ -110,24 +117,32 @@ interface Props {
   assignmentsByMentee: Record<string, LearningAssignmentRow[]>
   currentRole: string
   learningProgress: Record<string, LearningProgressData>
-  monthlyConfig: MonthlyAssignConfig
+  monthlyConfigs: Record<string, MonthlyAssignConfig>
 }
 
 /** 월별 자동부여 설정 영역 키 (생활일본어 5영역) */
-const CONFIG_AREAS = ['vocabulary', 'grammar', 'reading', 'listening', 'kanji'] as const
+const CONFIG_AREAS = ['vocabulary', 'grammar', 'reading', 'listening'] as const
 
-export default function AdminTasksClient({ mentees, allMentees, assignmentsByMentee, learningProgress, monthlyConfig }: Props) {
+export default function AdminTasksClient({ mentees, allMentees, assignmentsByMentee, learningProgress, monthlyConfigs, currentRole }: Props) {
   const router = useRouter()
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
   const [message, setMessage] = useState<string | null>(null)
   const [messageType, setMessageType] = useState<'success' | 'error'>('success')
 
   // 課題(JLPT項目) / 理解テスト 배분 모달 (대시보드와 동일한 ItemAssignModal)
   const [jlptOpen, setJlptOpen] = useState(false)
-  const [quizOpen, setQuizOpen] = useState(false)
+  const [mockOpen, setMockOpen] = useState(false)
 
   // 월별 자동부여 개수 설정
-  const [cfg, setCfg] = useState<MonthlyAssignConfig>(monthlyConfig)
+  const [configs, setConfigs] = useState<Record<string, MonthlyAssignConfig>>(monthlyConfigs)
+  const [cfgLevel, setCfgLevel] = useState<string>('N1')
+  const [assignYear, setAssignYear] = useState<string>(String(new Date().getFullYear()))
+  const cfg = configs[cfgLevel] ?? { vocabulary: 0, grammar: 0, reading: 0, listening: 0 }
+  const [autoSet, setAutoSet] = useState<Set<string>>(() => new Set(allMentees.filter(m => m.monthly_auto_assign !== false).map(m => m.id)))
+  function toggleAutoAssign(id: string, enabled: boolean) {
+    setAutoSet(prev => { const n = new Set(prev); if (enabled) n.add(id); else n.delete(id); return n })
+    startTransition(async () => { await setMenteeAutoAssign(id, enabled) })
+  }
 
   // Mentee-centric state (마스터-디테일: 선택 멘티 + 날짜 드롭다운 + 페이징)
   const [searchName, setSearchName] = useState('')
@@ -140,6 +155,11 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
     setPage(1)
     setOpenDates({})
   }
+
+  // 첫 진입 시 첫 멘티 자동 선택 → 상세(월별 과제)가 바로 표시됨
+  useEffect(() => {
+    if (!selectedMentee && mentees.length > 0) setSelectedMentee(mentees[0].id)
+  }, [selectedMentee, mentees])
 
   // Overdue handling state
   const [reassignDate, setReassignDate] = useState<Record<string, string>>({})
@@ -157,9 +177,9 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
 
   function handleSaveConfig() {
     startTransition(async () => {
-      const res = await updateMonthlyAssignmentConfig(cfg)
+      const res = await updateMonthlyAssignmentConfig(cfgLevel, configs[cfgLevel])
       if (res.error) showMsg(res.error, 'error')
-      else showMsg('月別自動付与の個数を保存しました')
+      else showMsg(`${cfgLevel} の月別自動付与の個数を保存しました`)
     })
   }
 
@@ -175,6 +195,20 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
     startTransition(async () => {
       const result = await deleteLearningAssignment(id)
       if (result.error) showMsg(result.error, 'error'); else showMsg('削除されました')
+    })
+  }
+
+  function handleDeleteMonth(items: LearningAssignmentRow[], label: string) {
+    if (!items.length) return
+    if (!confirm(`${label}の課題 ${items.length}件をすべて削除しますか？`)) return
+    startTransition(async () => {
+      let ok = 0
+      for (const a of items) {
+        const result = await deleteLearningAssignment(a.id)
+        if (result.error) { showMsg(`${result.error}（${ok}件削除済み）`, 'error'); return }
+        ok++
+      }
+      showMsg(`${ok}件を削除しました`)
     })
   }
 
@@ -220,16 +254,19 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
   )
 
   function progressLabel(la: LearningAssignmentRow): string {
-    // 카운트형(항목/이해테스트): 습득 / 누적목표
+    // 카운트형(항목): 그 회차에서 완료한 수 / 부여한 갯수(target_count)
     if (la.target_count != null) {
-      return `習得 ${la.mastered_snapshot ?? 0}/${la.cumulative_target ?? la.target_count}`
+      const tc = la.target_count
+      const prevCum = (la.cumulative_target ?? tc) - tc
+      const done = Math.max(0, Math.min((la.mastered_snapshot ?? 0) - prevCum, tc))
+      return `習得 ${done}/${tc}`
     }
     // 레거시: 학습 진척 + 테스트 진척
     const lp = learningProgress[la.id]
     const total = la.required_quiz_ids?.length ?? 0
     const passed = la.passed_quiz_ids?.length ?? 0
     const parts: string[] = []
-    if (lp && lp.total > 0) parts.push(`学習 ${lp.pct}%`)
+    if (lp && lp.total > 0) parts.push(`学習 ${lp.mastered}/${lp.total}`)
     if (total > 0) parts.push(`テスト ${passed}/${total}`)
     return parts.join(' · ') || '-'
   }
@@ -344,76 +381,62 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
     if (list.length === 0) {
       return <div className="px-4 py-12 text-center text-sm text-gray-400">配信された課題がありません</div>
     }
-    const sorted = [...list].sort((a, b) => {
-      // 1차: 부여일 최신순. 2차: 영역 순서(漢字→語彙→読解→文法→聴解). 그 외 항목/동률은 안정 정렬
-      const byDate = new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      if (byDate !== 0) return byDate
-      const areaRank = (s: string) => {
-        const order = ['kanji', 'vocabulary', 'reading', 'grammar', 'listening']
-        const i = order.indexOf(s)
-        return i === -1 ? order.length : i
-      }
-      return areaRank(a.subcategory) - areaRank(b.subcategory)
-        || a.category.localeCompare(b.category)
-        || a.subcategory.localeCompare(b.subcategory)
-        || (a.content_level ?? '').localeCompare(b.content_level ?? '')
-        || a.title.localeCompare(b.title)
-        || a.id.localeCompare(b.id)
-    })
-    const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
-    const safePage = Math.min(page, totalPages)
-    const pageItems = sorted.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
-
-    const byDate = new Map<string, LearningAssignmentRow[]>()
-    for (const a of pageItems) {
-      const d = new Date(a.created_at).toLocaleDateString('ja-JP')
-      if (!byDate.has(d)) byDate.set(d, [])
-      byDate.get(d)!.push(a)
+    // 년도 필터 + 월별 그룹 (멘티 레포트와 동일 형식)
+    const now = new Date()
+    const yearOf = (a: LearningAssignmentRow) => (a.due_date ?? a.created_at ?? '').slice(0, 4)
+    const years = [...new Set([String(now.getFullYear()), ...list.map(yearOf).filter(Boolean)])].sort((a, b) => b.localeCompare(a))
+    const year = years.includes(assignYear) ? assignYear : (years[0] ?? String(now.getFullYear()))
+    const filtered = list.filter(a => yearOf(a) === year)
+    const byMonth = new Map<string, LearningAssignmentRow[]>()
+    for (const a of filtered) {
+      const m = (a.due_date ?? a.created_at ?? '').slice(0, 7) || '0000-00'
+      if (!byMonth.has(m)) byMonth.set(m, [])
+      byMonth.get(m)!.push(a)
     }
+    const months = [...byMonth.keys()].sort((a, b) => b.localeCompare(a))
 
     return (
       <div>
-        {/* 20건 페이징 영역 — 고정 높이, 내부 스크롤 */}
-        <div className="h-[600px] divide-y divide-gray-100 overflow-y-auto dark:divide-gray-700">
-          {[...byDate.entries()].map(([date, rows]) => {
-            const open = openDates[date] === true
+        <div className="flex items-center justify-end border-b border-gray-100 px-4 py-2 dark:border-gray-700">
+          <select value={year} onChange={e => setAssignYear(e.target.value)}
+            className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+            {years.map(y => <option key={y} value={y}>{y}年</option>)}
+          </select>
+        </div>
+        <div className="h-[600px] overflow-y-auto">
+          {filtered.length === 0 ? (
+            <div className="px-4 py-12 text-center text-sm text-gray-400">{year}年の課題がありません</div>
+          ) : months.map(m => {
+            const mm = m.split('-')[1]
+            const label = mm ? `${parseInt(mm, 10)}月` : '期限なし'
+            const isOpen = openDates[m] ?? false
             return (
-              <div key={date}>
-                <button
-                  onClick={() => setOpenDates(prev => ({ ...prev, [date]: !prev[date] }))}
-                  className="flex w-full items-center gap-2 bg-gray-50 px-4 py-2 text-left text-xs font-semibold text-gray-600 hover:bg-gray-100 dark:bg-gray-900/30 dark:text-gray-300 dark:hover:bg-gray-900/50"
-                >
-                  {open ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-gray-400" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0 text-gray-400" />}
-                  {date}
-                  <span className="font-normal text-gray-400">· {rows.length}件</span>
-                </button>
-                {open && (
+              <div key={m}>
+                <div className="flex items-center bg-gray-50 hover:bg-gray-100 dark:bg-gray-900/30 dark:hover:bg-gray-900/50">
+                  <button
+                    type="button"
+                    onClick={() => setOpenDates(prev => ({ ...prev, [m]: !isOpen }))}
+                    className="flex flex-1 items-center gap-1.5 px-4 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-300"
+                  >
+                    {isOpen ? <ChevronDown className="h-3.5 w-3.5 shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
+                    {label} <span className="font-normal text-gray-400">· {byMonth.get(m)!.length}件</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteMonth(byMonth.get(m)!, label)}
+                    disabled={pending}
+                    className="mr-3 shrink-0 text-xs font-medium text-red-600 hover:underline disabled:opacity-50 dark:text-red-400"
+                  >全削除</button>
+                </div>
+                {isOpen && (
                   <ul className="divide-y divide-gray-100 dark:divide-gray-700">
-                    {rows.map(renderAssignmentRow)}
+                    {byMonth.get(m)!.map(renderAssignmentRow)}
                   </ul>
                 )}
               </div>
             )
           })}
         </div>
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between gap-2 border-t border-gray-100 px-4 py-2.5 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
-            <span>{sorted.length}件中 {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, sorted.length)}</span>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={safePage <= 1}
-                className="rounded-md border border-gray-200 px-2 py-1 hover:bg-gray-50 disabled:opacity-40 dark:border-gray-600 dark:hover:bg-gray-700"
-              >前へ</button>
-              <span className="px-1 tabular-nums">{safePage} / {totalPages}</span>
-              <button
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                disabled={safePage >= totalPages}
-                className="rounded-md border border-gray-200 px-2 py-1 hover:bg-gray-50 disabled:opacity-40 dark:border-gray-600 dark:hover:bg-gray-700"
-              >次へ</button>
-            </div>
-          </div>
-        )}
       </div>
     )
   }
@@ -444,11 +467,11 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
         </button>
         <button
           type="button"
-          onClick={() => setQuizOpen(true)}
+          onClick={() => setMockOpen(true)}
           disabled={allMentees.length === 0}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <Plus className="h-4 w-4" /> 理解テスト
+          <GraduationCap className="h-4 w-4" /> JLPT模試
         </button>
       </div>
 
@@ -456,27 +479,40 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
         open={jlptOpen}
         onClose={() => setJlptOpen(false)}
         mentees={modalMentees}
+        autoAssignIds={[...autoSet]}
       />
-      <ItemAssignModal
-        open={quizOpen}
-        onClose={() => setQuizOpen(false)}
+      <MockExamAssignModal
+        open={mockOpen}
+        onClose={() => setMockOpen(false)}
         mentees={modalMentees}
-        categories={['seikatsu-quiz', 'business-jp-quiz']}
-        heading="理解テストを割り当てる（増分）"
       />
 
       {/* 월별 자동부여 개수 설정 (생활일본어) */}
       <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white">月別自動付与の個数（JLPT）</h3>
-          <button
-            type="button"
-            onClick={handleSaveConfig}
-            disabled={pending}
-            className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
-          >保存</button>
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+              <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${isJlpt(cfgLevel) ? getJlptLevelColor(cfgLevel) : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}>{cfgLevel}</span>
+              合計 {cfg.vocabulary + cfg.grammar + cfg.reading + cfg.listening} 項目/月
+            </span>
+            <button
+              type="button"
+              onClick={handleSaveConfig}
+              disabled={pending}
+              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+            >保存</button>
+          </div>
         </div>
-        <p className="mt-1 text-xs text-gray-400">毎月1日、目標レベル設定済みのメンティーへ自動付与される領域別の項目数。</p>
+        <div className="mt-2 flex flex-wrap gap-1">
+          {MONTHLY_CONFIG_LEVELS.map(lv => (
+            <button key={lv} type="button" onClick={() => setCfgLevel(lv)}
+              className={`rounded-lg px-3 py-1 text-xs font-medium transition-colors ${cfgLevel === lv ? 'bg-indigo-600 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'}`}>
+              {lv}
+            </button>
+          ))}
+        </div>
+        <p className="mt-1 text-xs text-gray-400">毎月1日、{cfgLevel} 目標のメンティーへ自動付与される領域別の項目数。</p>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
           {CONFIG_AREAS.map(a => (
             <div key={a}>
@@ -485,11 +521,58 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
                 type="number"
                 min={0}
                 value={cfg[a]}
-                onChange={e => setCfg(prev => ({ ...prev, [a]: Math.max(0, parseInt(e.target.value || '0', 10) || 0) }))}
+                onChange={e => { const v = Math.max(0, parseInt(e.target.value || '0', 10) || 0); setConfigs(prev => ({ ...prev, [cfgLevel]: { ...(prev[cfgLevel] ?? cfg), [a]: v } })) }}
                 className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               />
             </div>
           ))}
+        </div>
+        <div className="mt-4 border-t border-gray-200 pt-3 dark:border-gray-700">
+          <p className="mb-2 text-xs font-medium text-gray-600 dark:text-gray-300">月別自動付与の対象（チェック＝毎月自動付与 / 解除＝課題ボタンで個別付与）</p>
+          {(() => {
+            const byMentor = new Map<string, typeof allMentees>()
+            for (const m of allMentees) {
+              const k = m.japanese_mentor_name ?? '未割当'
+              if (!byMentor.has(k)) byMentor.set(k, [])
+              byMentor.get(k)!.push(m)
+            }
+            const groups = [...byMentor.keys()].sort((a, b) => a === '未割当' ? 1 : b === '未割当' ? -1 : a.localeCompare(b, 'ja'))
+            return (
+              <div className="space-y-3">
+                {groups.map(mentor => (
+                  <div key={mentor}>
+                    <p className="mb-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400">{mentor === '未割当' ? 'メンター未割当' : `担当メンター: ${mentor}`}</p>
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1 sm:grid-cols-3 lg:grid-cols-4">
+                      {byMentor.get(mentor)!.map(m => {
+                        // 관리자 화면에서 멘토 담당 멘티는 멘토가 관리 → 체크 불가(이름만 표시)
+                        const adminReadonly = currentRole === 'admin' && mentor !== '未割当'
+                        const cert = m.target_certification
+                        const certBadge = cert ? (
+                          <span className={`shrink-0 rounded px-1 py-0.5 text-[9px] font-bold ${isJlpt(cert) ? getJlptLevelColor(cert) : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}>{cert}</span>
+                        ) : (
+                          <span className="shrink-0 rounded px-1 py-0.5 text-[9px] font-medium bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500">未設定</span>
+                        )
+                        const name = m.full_name ?? m.email
+                        return adminReadonly ? (
+                          <div key={m.id} className="flex items-center gap-1.5 rounded px-2 py-1 text-sm text-gray-500 dark:text-gray-400" title="担当メンターが管理">
+                            <span className={`h-2 w-2 shrink-0 rounded-full ${autoSet.has(m.id) ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                            {certBadge}
+                            <span className="min-w-0 truncate">{name}</span>
+                          </div>
+                        ) : (
+                          <label key={m.id} className="flex items-center gap-1.5 rounded px-2 py-1 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700/50">
+                            <input type="checkbox" checked={autoSet.has(m.id)} onChange={e => toggleAutoAssign(m.id, e.target.checked)} className="h-4 w-4 shrink-0 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
+                            {certBadge}
+                            <span className="min-w-0 truncate">{name}</span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          })()}
         </div>
       </div>
 
@@ -521,6 +604,9 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
                       : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
                   }`}
                 >
+                  {m.target_certification && (
+                    <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold ${isJlpt(m.target_certification) ? getJlptLevelColor(m.target_certification) : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}>{m.target_certification}</span>
+                  )}
                   <span className="min-w-0 flex-1 truncate font-medium text-gray-900 dark:text-white">
                     <NameRuby name={m.full_name} fallback={m.email} />
                   </span>
@@ -540,7 +626,7 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
         </div>
 
         {/* Right: selected mentee detail */}
-        <div className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+        <div className="min-w-0 flex-1 max-h-[calc(100vh-10rem)] overflow-y-auto rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
           {(() => {
             const sm = selectedMentee ? mentees.find(x => x.id === selectedMentee) : null
             if (!sm) {

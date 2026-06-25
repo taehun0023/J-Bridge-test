@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Badge from '@/components/ui/Badge'
 import TtsButton from './TtsButton'
+import MasteryCheck from './MasteryCheck'
 import type { JlptLevel, JlptGrammar, GrammarCategory } from '@/lib/supabase/types'
 
 interface GrammarListProps {
@@ -11,6 +12,7 @@ interface GrammarListProps {
   offset?: number
   masteredIds?: string[]
   onToggleMastery?: (itemId: string) => void
+  seqMap?: Record<string, number>
 }
 
 const categoryLabels: Record<GrammarCategory, string> = {
@@ -31,26 +33,13 @@ const categoryLabels: Record<GrammarCategory, string> = {
   formal: '丁寧',
 }
 
-export default function GrammarList({ items, level, offset = 0, masteredIds = [], onToggleMastery }: GrammarListProps) {
+export default function GrammarList({ items, level, offset = 0, masteredIds = [], onToggleMastery, seqMap }: GrammarListProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [localMastered, setLocalMastered] = useState<Set<string>>(new Set(masteredIds))
 
   useEffect(() => {
     setLocalMastered(new Set(masteredIds))
   }, [masteredIds])
-
-  function handleToggle(e: React.MouseEvent, itemId: string) {
-    e.stopPropagation()
-    e.preventDefault()
-    const next = new Set(localMastered)
-    if (next.has(itemId)) {
-      next.delete(itemId)
-    } else {
-      next.add(itemId)
-    }
-    setLocalMastered(next)
-    onToggleMastery?.(itemId)
-  }
 
   return (
     <div className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -64,24 +53,10 @@ export default function GrammarList({ items, level, offset = 0, masteredIds = []
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpandedId(expandedId === item.id ? null : item.id) } }}
           >
             <span className="w-8 shrink-0 text-center text-xs text-gray-400 dark:text-gray-500">
-              {offset + index + 1}
+              {seqMap?.[item.id] ?? (offset + index + 1)}
             </span>
             {onToggleMastery && (
-              <button
-                onClick={(e) => handleToggle(e, item.id)}
-                className="-m-1.5 shrink-0 p-1.5"
-                title={localMastered.has(item.id) ? '暗記済み' : '未暗記'}
-              >
-                {localMastered.has(item.id) ? (
-                  <svg className="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
-                  </svg>
-                ) : (
-                  <svg className="h-5 w-5 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
-                  </svg>
-                )}
-              </button>
+              <MasteryCheck done={localMastered.has(item.id)} title={localMastered.has(item.id) ? '暗記済み' : '未暗記（暗記カードで正解すると完了）'} />
             )}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">

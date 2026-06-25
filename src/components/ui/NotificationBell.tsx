@@ -189,6 +189,11 @@ export default function NotificationBell() {
               ))
             )}
           </div>
+          <div className="border-t border-gray-100 px-4 py-2 text-center dark:border-white/[0.06]">
+            <button onClick={() => { setIsOpen(false); router.push('/notifications') }} className="text-xs font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
+              すべて見る
+            </button>
+          </div>
         </div>
       )}
     </div>

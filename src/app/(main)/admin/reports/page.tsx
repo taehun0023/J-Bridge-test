@@ -36,6 +36,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
     users = (menteeAssignments ?? [])
       .map(a => a.mentee as unknown as { id: string; full_name: string | null; email: string })
       .filter(Boolean)
+      .sort((a, b) => (a.full_name ?? a.email).localeCompare(b.full_name ?? b.email, 'ja'))
   } else {
     const { data } = await supabase
       .from('profiles')
@@ -50,11 +51,6 @@ export default async function AdminReportsPage({ searchParams }: Props) {
     <div>
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">レポート</h1>
-        <p className="mt-1 text-gray-500 dark:text-gray-400">
-          {myRole === 'mentor'
-            ? '担当メンティーのレポートを確認できます。'
-            : 'ユーザーごとの成績レポートを確認できます。'}
-        </p>
       </div>
 
       <div className="mt-6">

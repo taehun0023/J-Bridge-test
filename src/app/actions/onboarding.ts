@@ -1,41 +1,30 @@
 'use server'
 
-import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { requireAuth } from '@/lib/auth-helpers'
 
-export async function completeOnboarding(formData: FormData) {
+/**
+ * 첫 로그인 온보딩 = 본인 비밀번호 변경. 관리자가 발급한 임시 비밀번호를 사용자가 직접 교체해야
+ * is_onboarded=true 가 되어 대시보드로 진입할 수 있다. (未オンボーディング 해제 기준)
+ */
+export async function completeOnboarding(newPassword: string): Promise<{ ok: true } | { error: string }> {
   const auth = await requireAuth()
-  if ('error' in auth) return { error: auth.error } as const
+  if ('error' in auth) return { error: auth.error ?? '認証が必要です' }
   const { supabase, user } = auth
 
-  const targetJlptLevel = formData.get('target_jlpt_level') as string
-  const targetCodingArea = formData.get('target_coding_area') as string
-
-  const validJlptLevels = ['N5', 'N4', 'N3', 'N2', 'N1']
-  const validCodingAreas = ['java', 'javascript']
-
-  if (!validJlptLevels.includes(targetJlptLevel)) {
-    return { error: '有効なJLPTレベルを選択してください' }
+  if (!newPassword || newPassword.length < 8) {
+    return { error: 'パスワードは8文字以上で入力してください' }
   }
-  if (!validCodingAreas.includes(targetCodingArea)) {
-    return { error: '有効なコーディング分野を選択してください' }
-  }
+
+  const { error: pwErr } = await supabase.auth.updateUser({ password: newPassword })
+  if (pwErr) return { error: pwErr.message }
 
   const { error } = await supabase
     .from('profiles')
-    .update({
-      target_jlpt_level: targetJlptLevel,
-      target_coding_area: targetCodingArea,
-      is_onboarded: true,
-      updated_at: new Date().toISOString(),
-    })
+    .update({ is_onboarded: true, updated_at: new Date().toISOString() })
     .eq('id', user.id)
-
-  if (error) {
-    return { error: '保存中にエラーが発生しました' }
-  }
+  if (error) return { error: '保存中にエラーが発生しました' }
 
   revalidatePath('/', 'layout')
-  redirect('/dashboard')
+  return { ok: true }
 }

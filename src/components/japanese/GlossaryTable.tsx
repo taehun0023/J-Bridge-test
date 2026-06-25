@@ -1,6 +1,7 @@
 'use client'
 
-import { Fragment, useState, useEffect, useTransition } from 'react'
+import { Fragment, useState, useEffect } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import { useRouter } from 'next/navigation'
 import TtsButton from './TtsButton'
 import { toggleMastery } from '@/app/actions/mastery'
@@ -39,7 +40,7 @@ export default function GlossaryTable({ items, offset = 0, masteredIds = [], ite
   const router = useRouter()
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [localMastered, setLocalMastered] = useState<Set<string>>(new Set(masteredIds))
-  const [isPending, startTransition] = useTransition()
+  const [isPending, startTransition] = useLoadingTransition()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<EditFormState>({ term_ja: '', reading: '', term_ko: '', term_en: '', description: '', example_sentence: '' })
   const [editMessage, setEditMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)

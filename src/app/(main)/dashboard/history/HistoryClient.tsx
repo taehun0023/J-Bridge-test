@@ -8,6 +8,7 @@ import { Eye } from 'lucide-react'
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
 
 const CATEGORY_LABELS: Record<string, string> = {
+  'jlpt-mock': 'JLPT模試',
   seikatsu: 'JLPT',
   'business-jp': 'ビジネス日本語',
   cs: 'CS知識',

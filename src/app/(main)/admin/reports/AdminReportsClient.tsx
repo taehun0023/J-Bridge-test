@@ -1,14 +1,19 @@
 'use client'
 
-import { useEffect, useRef, useState, useTransition } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import dynamic from 'next/dynamic'
 import Card from '@/components/ui/Card'
 import TabBar from '@/components/ui/TabBar'
-import { getWeaknessReport, getMenteeAssignments, getAssignmentDetail, generateAIPrompt } from '@/app/actions/admin/weakness-report'
-import type { ExamScorePoint, ExamErrorRate, MenteeAssignment, AssignmentDetailData } from '@/app/actions/admin/weakness-report'
+import { getWeaknessReport, getMenteeAssignments, getAssignmentDetail, generateAIPrompt, getMockExamReport, deleteMockExamAssignment } from '@/app/actions/admin/weakness-report'
+import type { ExamScorePoint, ExamErrorRate, MenteeAssignment, AssignmentDetailData, MockExamReport } from '@/app/actions/admin/weakness-report'
+import { updateLearningAssignment, deleteLearningAssignment } from '@/app/actions/learning-assignments'
+import MockPartChart from './MockPartChart'
+import MockWrongList from './MockWrongList'
+import { getJlptLevelColor, type JlptLevel } from '@/lib/assessment-config'
 
 const EXAM_CATEGORY_GROUPS = {
-  nihongo: ['seikatsu', 'business-jp'],
+  nihongo: ['jlpt-mock', 'seikatsu', 'business-jp'],
   kaihatsu: ['cs', 'dev'],
   'business-lit': ['business-lit'],
 } as const
@@ -57,17 +62,21 @@ export default function AdminReportsClient({
   const [examScores, setExamScores] = useState<ExamScorePoint[]>([])
   const [examErrorRates, setExamErrorRates] = useState<ExamErrorRate[]>([])
   const [assignments, setAssignments] = useState<MenteeAssignment[]>([])
+  const [mockReport, setMockReport] = useState<MockExamReport | null>(null)
   const [scoreTab, setScoreTab] = useState<TabKey>('nihongo')
   const [errorTab, setErrorTab] = useState<TabKey>('nihongo')
   const [nihongoScoreSub, setNihongoScoreSub] = useState<'all' | 'seikatsu' | 'business-jp'>('all')
   const [nihongoErrorSub, setNihongoErrorSub] = useState<'all' | 'seikatsu' | 'business-jp'>('all')
   const [mainTab, setMainTab] = useState<'kadai' | 'test'>('kadai')
-  const [pending, startTransition] = useTransition()
+  const [kadaiFilter, setKadaiFilter] = useState<'all' | 'completed' | 'overdue'>('all')
+  const [yearFilter, setYearFilter] = useState<number>(() => new Date().getFullYear())
+  const [pending, startTransition] = useLoadingTransition()
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [modalAssignment, setModalAssignment] = useState<MenteeAssignment | null>(null)
   const [detailData, setDetailData] = useState<AssignmentDetailData | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
+  const [editCount, setEditCount] = useState('')
   const initialLoaded = useRef(false)
 
   useEffect(() => {
@@ -86,10 +95,12 @@ export default function AdminReportsClient({
     setSelectedId(userId)
     setError(null)
     startTransition(async () => {
-      const [reportResult, assignResult] = await Promise.all([
+      const [reportResult, assignResult, mockResult] = await Promise.all([
         getWeaknessReport(userId),
         getMenteeAssignments(userId),
+        getMockExamReport(userId),
       ])
+      setMockReport(mockResult)
       if ('error' in reportResult) {
         setError(reportResult.error ?? 'エラーが発生しました')
         setExamScores([])
@@ -120,9 +131,38 @@ export default function AdminReportsClient({
     })
   }
 
+  function handleSaveAssignment() {
+    if (!modalAssignment) return
+    const n = parseInt(editCount, 10)
+    if (!Number.isFinite(n) || n < 1) { setError('付与個数は1以上で入力してください'); return }
+    startTransition(async () => {
+      const res = await updateLearningAssignment(modalAssignment.id, { target_count: n })
+      if ('error' in res && res.error) { setError(res.error); return }
+      setModalAssignment(null)
+      if (selectedId) handleSelect(selectedId) // 목록 갱신 (상태 재계산 반영)
+    })
+  }
+
+  function handleDeleteAssignment() {
+    if (!modalAssignment) return
+    if (!confirm('この課題を削除しますか？')) return
+    const isMock = modalAssignment.category === 'jlpt-mock'
+    startTransition(async () => {
+      const res = isMock
+        ? await deleteMockExamAssignment(modalAssignment.id)
+        : await deleteLearningAssignment(modalAssignment.id)
+      if ('error' in res && res.error) { setError(res.error); return }
+      setModalAssignment(null)
+      if (selectedId) handleSelect(selectedId)
+    })
+  }
+
   function handleCardClick(a: MenteeAssignment) {
     setModalAssignment(a)
+    setEditCount(a.target_count != null ? String(a.target_count) : '')
     setDetailData(null)
+    // 모의고사 과제는 항목 학습추세가 없음 → 상세 fetch 생략 (모달은 항목과제와 동일하게 열림)
+    if (a.category === 'jlpt-mock') { setDetailLoading(false); return }
     setDetailLoading(true)
     getAssignmentDetail(a.id).then(result => {
       if ('error' in result) {
@@ -136,9 +176,9 @@ export default function AdminReportsClient({
 
   function getFilterCategories(tab: TabKey, sub: string): string[] {
     if (tab === 'nihongo') {
-      if (sub === 'seikatsu') return ['seikatsu']
+      if (sub === 'seikatsu') return ['jlpt-mock', 'seikatsu']
       if (sub === 'business-jp') return ['business-jp']
-      return ['seikatsu', 'business-jp']
+      return ['jlpt-mock', 'seikatsu', 'business-jp']
     }
     return [...EXAM_CATEGORY_GROUPS[tab]]
   }
@@ -156,62 +196,104 @@ export default function AdminReportsClient({
   const itemAssignments = assignments.filter(a => !isTestCategory(a.category))
   const testAssignments = assignments.filter(a => isTestCategory(a.category))
 
-  const renderCards = (items: MenteeAssignment[]) => (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {items.map(a => {
-        const totalQuizzes = a.required_quiz_ids.length
-        const passedQuizzes = a.passed_quiz_ids.length
-        const isOverdue = a.due_date && new Date(a.due_date) < new Date() && a.status !== 'completed'
-        return (
-          <button key={a.id} onClick={() => handleCardClick(a)} className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800/50 text-left transition-colors hover:border-indigo-400 hover:ring-1 hover:ring-indigo-400/30 cursor-pointer w-full">
-            <div className="flex items-start justify-between gap-2">
-              <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 line-clamp-1">{a.title}</h4>
-              <span className={`shrink-0 inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${statusColors[a.status] ?? 'bg-gray-100 text-gray-600'}`}>
-                {statusLabels[a.status] ?? a.status}
-              </span>
+  const renderCards = (items: MenteeAssignment[]) => {
+    const now = new Date()
+    const isOverdueA = (a: MenteeAssignment) => a.status === 'overdue' || (!!a.due_date && new Date(a.due_date) < now && a.status !== 'completed')
+    const yearOf = (a: MenteeAssignment) => (a.due_date ?? a.created_at ?? '').slice(0, 4)
+    const years = [...new Set([String(now.getFullYear()), ...items.map(yearOf).filter(Boolean)])].sort((a, b) => b.localeCompare(a))
+    const filtered = items.filter(a => {
+      if (yearOf(a) !== String(yearFilter)) return false
+      return kadaiFilter === 'completed' ? a.status === 'completed'
+        : kadaiFilter === 'overdue' ? isOverdueA(a)
+          : true
+    })
+    const byMonth = new Map<string, MenteeAssignment[]>()
+    for (const a of filtered) {
+      const m = (a.due_date ?? a.created_at ?? '').slice(0, 7) || '0000-00'
+      const arr = byMonth.get(m) ?? []; arr.push(a); byMonth.set(m, arr)
+    }
+    const curYear = String(now.getFullYear())
+    const curKey = `${curYear}-${String(now.getMonth() + 1).padStart(2, '0')}`
+    // 정렬: 지연(과거 미완료) → 이번달 → 과거(완료)·미래
+    const monthPrio = (m: string) => {
+      if (m === curKey) return 1
+      if (m !== '0000-00' && m < curKey) return byMonth.get(m)!.some(a => a.status !== 'completed') ? 0 : 2
+      return 2
+    }
+    const months = [...byMonth.keys()].sort((a, b) => { const p = monthPrio(a) - monthPrio(b); return p !== 0 ? p : a.localeCompare(b) })
+    const monthLabel = (m: string) => {
+      if (m === '0000-00') return '期限なし'
+      const [y, mo] = m.split('-')
+      return y === curYear ? `${parseInt(mo, 10)}月` : `${y}年${parseInt(mo, 10)}月`
+    }
+    return (
+      <div>
+        {/* 좌: 년도 드롭다운 / 우: 전체·완료·지연 필터 */}
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <select value={yearFilter} onChange={e => setYearFilter(Number(e.target.value))}
+            className="rounded-lg border border-zinc-300 bg-white px-2 py-1 text-xs font-medium text-zinc-700 focus:border-indigo-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200">
+            {years.map(y => <option key={y} value={y}>{y}年</option>)}
+          </select>
+          <div className="flex gap-1">
+            {([['all', '全体'], ['completed', '完了'], ['overdue', '遅延']] as const).map(([k, lbl]) => (
+              <button key={k} onClick={() => setKadaiFilter(k)}
+                className={`rounded-lg px-3 py-1 text-xs font-medium transition-colors ${kadaiFilter === k ? 'bg-indigo-600 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300'}`}>
+                {lbl}
+              </button>
+            ))}
+          </div>
+        </div>
+        {filtered.length === 0 ? (
+          <div className="py-10 text-center text-sm text-zinc-500">該当する課題がありません</div>
+        ) : months.map(m => {
+          const past = m !== '0000-00' && m < curKey
+          return (
+            <div key={m} className="mb-5">
+              <div className="mb-2 flex items-center gap-2">
+                <span className={`shrink-0 text-sm font-bold ${past ? 'text-red-500' : 'text-zinc-700 dark:text-zinc-200'}`}>{monthLabel(m)}{past && '（未完了あり）'}</span>
+                <div className={`h-px flex-1 ${past ? 'bg-red-300 dark:bg-red-700/50' : 'bg-zinc-200 dark:bg-white/10'}`} />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {byMonth.get(m)!.map(a => {
+                  const isOverdue = isOverdueA(a)
+                  const done = a.status === 'completed'
+                  return (
+                    <button key={a.id} onClick={() => handleCardClick(a)} className={`rounded-xl border p-4 text-left transition-colors cursor-pointer w-full ${done ? 'border-emerald-300 bg-emerald-50 hover:ring-1 hover:ring-emerald-400/30 dark:border-emerald-700/50 dark:bg-emerald-900/15' : 'border-zinc-200 bg-zinc-50 hover:border-indigo-400 hover:ring-1 hover:ring-indigo-400/30 dark:border-zinc-700 dark:bg-zinc-800/50'}`}>
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 line-clamp-1">{a.title.replace(/\s*\d+\s*項目/g, '').trim()}</h4>
+                        <span className={`shrink-0 inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${statusColors[a.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                          {statusLabels[a.status] ?? a.status}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                        {a.category === 'jlpt-mock' ? (
+                          <>JLPT模試{a.content_level ? ` (${a.content_level})` : ''}</>
+                        ) : (
+                          <>
+                            {getCategoryLabel(a.category)} &gt; {getSubcategoryLabel(a.category, a.subcategory)}
+                            {a.content_level && ` (${getContentLevelLabel(a.category, a.content_level)})`}
+                          </>
+                        )}
+                      </p>
+                      {a.mastery.total > 0 && (
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400"><span>{a.category === 'jlpt-mock' ? '受験' : '学習'}</span><span className="tabular-nums">{a.mastery.mastered}/{a.mastery.total}</span></div>
+                          <div className="mt-1 h-1.5 w-full rounded-full bg-zinc-200 dark:bg-zinc-600"><div className="h-1.5 rounded-full bg-amber-500 transition-all" style={{ width: `${a.mastery.pct}%` }} /></div>
+                        </div>
+                      )}
+                      {a.due_date && (
+                        <p className={`mt-2 text-xs ${isOverdue ? 'font-medium text-red-500 dark:text-red-400' : 'text-zinc-400 dark:text-zinc-500'}`}>期限: {new Date(a.due_date).toLocaleDateString('ja-JP')}</p>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
-            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-              {getCategoryLabel(a.category)} &gt; {getSubcategoryLabel(a.category, a.subcategory)}
-              {a.content_level && ` (${getContentLevelLabel(a.category, a.content_level)})`}
-            </p>
-
-            {/* Mastery progress */}
-            {a.mastery.total > 0 && (
-              <div className="mt-3">
-                <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
-                  <span>学習</span>
-                  <span>{a.mastery.pct}%</span>
-                </div>
-                <div className="mt-1 h-1.5 w-full rounded-full bg-zinc-200 dark:bg-zinc-600">
-                  <div className="h-1.5 rounded-full bg-amber-500 transition-all" style={{ width: `${a.mastery.pct}%` }} />
-                </div>
-              </div>
-            )}
-
-            {/* Quiz progress */}
-            {totalQuizzes > 0 && (
-              <div className="mt-2">
-                <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
-                  <span>テスト</span>
-                  <span>{passedQuizzes}/{totalQuizzes}</span>
-                </div>
-                <div className="mt-1 h-1.5 w-full rounded-full bg-zinc-200 dark:bg-zinc-600">
-                  <div className="h-1.5 rounded-full bg-indigo-500 transition-all" style={{ width: `${totalQuizzes > 0 ? Math.round((passedQuizzes / totalQuizzes) * 100) : 0}%` }} />
-                </div>
-              </div>
-            )}
-
-            {/* Due date */}
-            {a.due_date && (
-              <p className={`mt-2 text-xs ${isOverdue ? 'font-medium text-red-500 dark:text-red-400' : 'text-zinc-400 dark:text-zinc-500'}`}>
-                期限: {new Date(a.due_date).toLocaleDateString('ja-JP')}
-              </p>
-            )}
-          </button>
-        )
-      })}
-    </div>
-  )
+          )
+        })}
+      </div>
+    )
+  }
 
   return (
     <div className="mt-6 space-y-6">
@@ -243,7 +325,7 @@ export default function AdminReportsClient({
           <TabBar
             tabs={[
               { key: 'kadai', label: '課題' },
-              { key: 'test', label: 'テスト' },
+              { key: 'test', label: '模擬試験' },
             ]}
             activeKey={mainTab}
             onChange={k => setMainTab(k as 'kadai' | 'test')}
@@ -263,89 +345,36 @@ export default function AdminReportsClient({
           {/* === テストタブ: 理解テスト課題 + スコア推移・誤答率（弱点分析）・AIプロンプト === */}
           {mainTab === 'test' && (
           <>
-          {testAssignments.length > 0 && (
-            <Card title="理解度テスト課題">{renderCards(testAssignments)}</Card>
+          {/* 모의고사 결과: 파트(유형)별 정답률 + 틀린 문제 */}
+          {mockReport?.hasData ? (
+            <>
+              {/* 회차 카드를 한 줄로 펴서 최신순(시각 desc). 각 카드 앞에 색깔 레벨 뱃지 + 模試N + 第N回 */}
+              {[...mockReport.attempts].sort((a, b) => (b.ts ?? '').localeCompare(a.ts ?? '')).map(at => {
+                const incomplete = !at.parts.some(p => p.label === '聴解') // 聴解(2교시) 미응시 = 진행중
+                const verdict = incomplete ? '（進行中）' : at.passed === true ? '（合格）' : at.passed === false ? '（不合格）' : ''
+                const attemptWrong = mockReport.wrong.filter(w => w.setLabel === at.setLabel && w.attemptNo === at.attemptNo)
+                return (
+                  <div key={`${at.setLabel}-${at.attemptNo}`} className="rounded-2xl border border-gray-200/60 bg-white/80 p-4 backdrop-blur-md dark:border-white/[0.08] dark:bg-white/[0.03]">
+                    <div className="mb-3 flex items-center gap-2">
+                      <span className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-bold ${getJlptLevelColor(at.level as JlptLevel)}`}>{at.level}</span>
+                      <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                        {at.setTitle} {at.attemptLabel}{verdict}{!incomplete && at.score != null ? ` · ${at.score}点` : ''}
+                      </span>
+                    </div>
+                    <MockPartChart parts={at.parts} />
+                    {attemptWrong.length > 0 && (
+                      <div className="mt-4 border-t border-zinc-200 pt-3 dark:border-zinc-700">
+                        <p className="mb-2 text-xs font-semibold text-zinc-600 dark:text-zinc-300">間違えた問題</p>
+                        <MockWrongList wrong={attemptWrong} />
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </>
+          ) : (
+            <Card><div className="py-10 text-center text-sm text-zinc-500">受験した模擬試験がありません</div></Card>
           )}
-          <Card title={
-            <span>
-              {selectedUser.full_name
-                ? <NameRuby name={selectedUser.full_name} />
-                : selectedUser.email}
-              {' - スコア推移'}
-            </span>
-          }>
-            <TabBar
-              tabs={[
-                { key: 'nihongo', label: '日本語' },
-                { key: 'kaihatsu', label: '開発' },
-                { key: 'business-lit', label: 'ビジネスリテラシー' },
-              ]}
-              activeKey={scoreTab}
-              onChange={k => { setScoreTab(k as TabKey); setNihongoScoreSub('all') }}
-            />
-            {scoreTab === 'nihongo' && (
-              <div className="mt-2 flex gap-1.5">
-                {nihongoSubButtons.map(sub => (
-                  <button
-                    key={sub.key}
-                    onClick={() => setNihongoScoreSub(sub.key)}
-                    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                      nihongoScoreSub === sub.key
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600'
-                    }`}
-                  >
-                    {sub.label}
-                  </button>
-                ))}
-              </div>
-            )}
-            <div className="mt-4">
-              <ScoreBarChart
-                data={examScores.filter(s =>
-                  getFilterCategories(scoreTab, nihongoScoreSub).includes(s.category)
-                )}
-              />
-            </div>
-          </Card>
-
-          <Card title="誤答率推移">
-            <TabBar
-              tabs={[
-                { key: 'nihongo', label: '日本語' },
-                { key: 'kaihatsu', label: '開発' },
-                { key: 'business-lit', label: 'ビジネスリテラシー' },
-              ]}
-              activeKey={errorTab}
-              onChange={k => { setErrorTab(k as TabKey); setNihongoErrorSub('all') }}
-            />
-            {errorTab === 'nihongo' && (
-              <div className="mt-2 flex gap-1.5">
-                {nihongoSubButtons.map(sub => (
-                  <button
-                    key={sub.key}
-                    onClick={() => setNihongoErrorSub(sub.key)}
-                    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                      nihongoErrorSub === sub.key
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600'
-                    }`}
-                  >
-                    {sub.label}
-                  </button>
-                ))}
-              </div>
-            )}
-            <div className="mt-4">
-              <ErrorRateTrendChart
-                data={examErrorRates.filter(e =>
-                  getFilterCategories(errorTab, nihongoErrorSub).includes(e.examCategory)
-                )}
-                aggregated={errorTab === 'nihongo' && nihongoErrorSub === 'all'}
-              />
-            </div>
-          </Card>
-
           <div className="flex justify-end">
             <button
               onClick={handleCopyPrompt}
@@ -382,13 +411,23 @@ export default function AdminReportsClient({
             </button>
 
             <div className="flex items-center gap-3">
-              <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{modalAssignment.title}</h3>
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{modalAssignment.title.replace(/\s*\d+\s*項目/g, '').trim()}</h3>
               <span className={`shrink-0 inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${statusColors[modalAssignment.status] ?? 'bg-gray-100 text-gray-600'}`}>
                 {statusLabels[modalAssignment.status] ?? modalAssignment.status}
               </span>
             </div>
 
-            {detailLoading ? (
+            {modalAssignment.category === 'jlpt-mock' ? (
+              <div className="mt-5 space-y-4">
+                <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                  JLPT模試の課題です。受験状況: <span className="font-medium">{statusLabels[modalAssignment.status] ?? modalAssignment.status}</span>
+                </p>
+                <button
+                  onClick={() => { setMainTab('test'); setModalAssignment(null) }}
+                  className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500"
+                >結果を見る（テスト）</button>
+              </div>
+            ) : detailLoading ? (
               <div className="py-12 text-center text-sm text-zinc-500">読み込み中...</div>
             ) : detailData ? (
               <div className="mt-5 space-y-6">
@@ -423,47 +462,28 @@ export default function AdminReportsClient({
                     7日間合計: +{detailData.masteryTrend.reduce((sum, d) => sum + d.count, 0)}件
                   </p>
                 </div>
-
-                {/* Quiz Results */}
-                {detailData.quizResults.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium text-zinc-700 dark:text-zinc-300">テスト結果</h4>
-                    <div className="mt-2 divide-y divide-zinc-100 dark:divide-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
-                      {detailData.quizResults.map(qr => (
-                        <div key={qr.quizId} className="flex items-center justify-between px-4 py-3">
-                          <span className="text-sm text-zinc-800 dark:text-zinc-200 line-clamp-1 mr-3">{qr.quizTitle}</span>
-                          <div className="flex items-center gap-2 shrink-0">
-                            {qr.completedAt ? (
-                              <>
-                                <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{qr.latestScore}点</span>
-                                <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${qr.passed ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
-                                  {qr.passed ? '合格' : '不合格'}
-                                </span>
-                                {qr.attemptId && (
-                                  <a
-                                    href={`/dashboard/history/${qr.attemptId}?role=mentor`}
-                                    className="text-xs text-indigo-500 hover:text-indigo-400 hover:underline"
-                                    onClick={e => e.stopPropagation()}
-                                  >
-                                    レビュー
-                                  </a>
-                                )}
-                              </>
-                            ) : (
-                              <span className="inline-flex rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
-                                未受験
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             ) : (
               <div className="py-12 text-center text-sm text-zinc-500">データの取得に失敗しました</div>
             )}
+
+            {/* 수정·삭제 (공통 액션 재사용 — 모든 페이지에 반영) */}
+            <div className="mt-6 flex items-center justify-between gap-3 border-t border-zinc-200 pt-4 dark:border-zinc-700">
+              {modalAssignment.target_count != null ? (
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-zinc-500 dark:text-zinc-400">付与個数</label>
+                  <input
+                    type="number" min={1} value={editCount}
+                    onChange={e => setEditCount(e.target.value)}
+                    className="w-20 rounded-lg border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                  />
+                  <button onClick={handleSaveAssignment} disabled={pending}
+                    className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 disabled:opacity-50">保存</button>
+                </div>
+              ) : <span />}
+              <button onClick={handleDeleteAssignment} disabled={pending}
+                className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500 disabled:opacity-50">削除</button>
+            </div>
           </div>
         </div>
       )}

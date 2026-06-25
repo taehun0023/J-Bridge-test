@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import Card from '@/components/ui/Card'
 import Pagination from '@/components/ui/Pagination'
 import { getAuditLog, restoreResource, exportAuditLogCsv } from '@/app/actions/audit'
@@ -26,16 +27,17 @@ const ACTION_COLORS: Record<string, string> = {
   restore: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
 }
 
-export default function AuditLogClient() {
+export default function AuditLogClient({ users = [] }: { users?: { id: string; name: string }[] }) {
   const [items, setItems] = useState<AuditLogEntry[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [action, setAction] = useState('all')
   const [resourceType, setResourceType] = useState('all')
+  const [actorId, setActorId] = useState('all')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
 
   function loadData(p?: number) {
     const targetPage = p ?? page
@@ -43,6 +45,7 @@ export default function AuditLogClient() {
       const result = await getAuditLog({
         action: action !== 'all' ? action : undefined,
         resourceType: resourceType !== 'all' ? resourceType : undefined,
+        actorId: actorId !== 'all' ? actorId : undefined,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
         page: targetPage,
@@ -81,6 +84,7 @@ export default function AuditLogClient() {
       const result = await exportAuditLogCsv({
         action: action !== 'all' ? action : undefined,
         resourceType: resourceType !== 'all' ? resourceType : undefined,
+        actorId: actorId !== 'all' ? actorId : undefined,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
       })
@@ -174,6 +178,17 @@ export default function AuditLogClient() {
               <option value="jlpt_kanji">JLPT漢字</option>
               <option value="it_glossary">IT語彙</option>
               <option value="cs_terms">CS用語</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">ユーザー</label>
+            <select
+              value={actorId}
+              onChange={e => setActorId(e.target.value)}
+              className="mt-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
+            >
+              <option value="all">全ユーザー</option>
+              {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
             </select>
           </div>
           <button

@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { startExam, submitExam, requestRetakeExam, loadExamQuestions } from '@/app/actions/comprehensive-exam'
+import { startExam, submitExam, requestRetakeExam, loadExamQuestions, saveExamProgress, loadMockReview } from '@/app/actions/comprehensive-exam'
 import { submitQuestionClaim } from '@/app/actions/claims'
 import { useRouter } from 'next/navigation'
 import Card from '@/components/ui/Card'
 import QuizQuestion from '@/components/quiz/QuizQuestion'
+import { LogOut, ChevronDown } from 'lucide-react'
 
 interface ExamData {
   id: string
@@ -15,12 +16,16 @@ interface ExamData {
   passing_score: number
   started_at: string | null
   exam_cycle_id?: string | null
+  content_level?: string | null
+  category?: string | null
 }
 
 interface Question {
   id: string
   question_text: string
   question_category?: string | null
+  section?: string | null
+  section_label?: string | null
   options: { id: string; option_text: string; sort_order: number }[]
 }
 
@@ -32,7 +37,8 @@ function parseListeningQuestion(text: string): { script: string; question: strin
   const normalized = text.replace(/\\n/g, '\n')
   // Split by double newline
   const parts = normalized.split('\n\n')
-  if (parts.length < 3) return null
+  if (parts.length < 2) return null
+  // 마지막 블록 = 질문, 그 앞 전부 = 스크립트(지시문+대화). 2단(스크립트\n\n질문)도 지원.
   // First part: instruction, middle parts: script, last part: question
   const question = parts[parts.length - 1]
   const script = parts.slice(0, parts.length - 1).join('\n\n')
@@ -138,9 +144,19 @@ interface ReviewResult {
   explanation?: string | null
 }
 
+interface SectionScore {
+  label: string
+  correct: number
+  total: number
+  scaled: number
+  max: number
+  passed: boolean
+  accuracy: number
+}
+
 interface Props {
   exam: ExamData
-  mode: 'start' | 'exam' | 'retake'
+  mode: 'start' | 'exam' | 'retake' | 'review'
   examLabel?: string
 }
 
@@ -160,7 +176,8 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   // Review mode state
   const [reviewMode, setReviewMode] = useState(false)
   const [reviewResults, setReviewResults] = useState<ReviewResult[] | null>(null)
-  const [reviewScore, setReviewScore] = useState<{ score: number; correctCount: number; totalCount: number } | null>(null)
+  const [reviewScore, setReviewScore] = useState<{ score: number; correctCount: number; totalCount: number; passed: boolean; wrongCount?: number; unansweredCount?: number; partial?: boolean } | null>(null)
+  const [sectionScores, setSectionScores] = useState<Record<string, SectionScore> | null>(null)
   const [claimedQuestions, setClaimedQuestions] = useState<Set<string>>(new Set())
   const [claimingId, setClaimingId] = useState<string | null>(null)
   const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set())
@@ -169,10 +186,15 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   const [claimError, setClaimError] = useState<string | null>(null)
   const [playedListeningIds, setPlayedListeningIds] = useState<Set<string>>(new Set())
   const [showListeningWarning, setShowListeningWarning] = useState(false)
+  const [showExitConfirm, setShowExitConfirm] = useState(false)
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
+  const [savedTick, setSavedTick] = useState(0) // 상대시간 갱신용
+  const [showNav, setShowNav] = useState(false)
 
   const totalQuestions = questions.length
   const currentQuestion = questions[currentIndex]
   const answeredCount = Object.keys(answers).length
+  const isMock = questions.some(q => !!q.section)
 
   useEffect(() => {
     answersRef.current = answers
@@ -190,12 +212,59 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
             const elapsed = Math.floor((Date.now() - new Date(res.startedAt).getTime()) / 1000)
             setRemainingSeconds(Math.max(0, (res.timeLimit ?? exam.time_limit_minutes) * 60 - elapsed))
           }
+          // 중단→재개: 저장된 임시 답안 복원
+          if ('draftAnswers' in res && res.draftAnswers && typeof res.draftAnswers === 'object') {
+            setAnswers(res.draftAnswers as Record<string, string>)
+          }
+          if ('progressSavedAt' in res && res.progressSavedAt) setLastSavedAt(res.progressSavedAt as string)
         }
       })
     }
   // exam.time_limit_minutes is captured at start; remount on mode/exam.id change is sufficient
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, exam.id])
+
+  // 완료 시험 리뷰(結果) 로드
+  useEffect(() => {
+    if (mode !== 'review' || reviewMode) return
+    loadMockReview(exam.id).then(res => {
+      if ('error' in res) { setError(res.error ?? '結果の読み込みに失敗しました'); return }
+      setQuestions(res.questions as Question[])
+      setReviewResults(res.results)
+      setReviewScore({ score: res.score, correctCount: res.correctCount, totalCount: res.totalCount, passed: res.passed, wrongCount: res.wrongCount, unansweredCount: res.unansweredCount, partial: false })
+      if (res.sectionScores) setSectionScores(res.sectionScores as Record<string, SectionScore>)
+      setReviewMode(true)
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, exam.id])
+
+  // 모의시험: 진행상황 자동 저장(20초마다)
+  useEffect(() => {
+    if (!isMock || !started || submitting || reviewMode || questions.length === 0) return
+    const save = () => {
+      const arr = questions.map(q => ({ questionId: q.id, selectedOptionId: answersRef.current[q.id] ?? '' })).filter(a => a.selectedOptionId !== '')
+      saveExamProgress(exam.id, arr).then(r => { if (r && 'savedAt' in r && r.savedAt) setLastSavedAt(r.savedAt as string) })
+    }
+    const iv = setInterval(save, 20000)
+    return () => clearInterval(iv)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMock, started, submitting, reviewMode, questions.length])
+
+  // 종료 확인창이 열려 있는 동안 "N초 전" 갱신
+  useEffect(() => {
+    if (!showExitConfirm) return
+    const iv = setInterval(() => setSavedTick(t => t + 1), 5000)
+    return () => clearInterval(iv)
+  }, [showExitConfirm])
+
+  // 저장 후 종료(제출 안 함, 나중에 재개 가능)
+  const handleExitSave = useCallback(async () => {
+    const arr = questions.map(q => ({ questionId: q.id, selectedOptionId: answersRef.current[q.id] ?? '' })).filter(a => a.selectedOptionId !== '')
+    await saveExamProgress(exam.id, arr)
+    hasSubmittedRef.current = true // 이탈 경고/자동제출 가드 우회(저장 완료)
+    // 바로 전화면(해당 레벨 모의시험 목록)으로
+    window.location.href = exam.content_level ? `/japanese/jlpt/quiz?level=${exam.content_level}` : '/japanese/jlpt'
+  }, [questions, exam.id, exam.content_level])
 
   // Fire-and-forget submit (for navigation away — submit answered questions only, or 0-score fail)
   const doSubmit = useCallback(async (currentAnswers: Record<string, string>) => {
@@ -232,7 +301,14 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
     // Enter review mode with results
     if ('results' in res && res.results) {
       setReviewResults(res.results)
-      setReviewScore({ score: res.score, correctCount: res.correctCount, totalCount: res.totalCount })
+      setReviewScore({
+        score: res.score, correctCount: res.correctCount, totalCount: res.totalCount,
+        passed: 'passed' in res ? res.passed : false,
+        wrongCount: 'wrongCount' in res ? (res.wrongCount as number) : undefined,
+        unansweredCount: 'unansweredCount' in res ? (res.unansweredCount as number) : undefined,
+        partial: 'partial' in res ? !!res.partial : false,
+      })
+      if ('sectionScores' in res && res.sectionScores) setSectionScores(res.sectionScores as Record<string, SectionScore>)
       setReviewMode(true)
       setSubmitting(false)
     } else {
@@ -510,21 +586,64 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
 
     return (
       <div className="mx-auto max-w-3xl">
+        <button
+          onClick={() => { window.location.href = isMock && exam.content_level ? `/japanese/jlpt/quiz?level=${exam.content_level}` : '/dashboard' }}
+          className="mb-4 inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+        >
+          ← {isMock ? '模擬試験一覧へ戻る' : 'ダッシュボードへ'}
+        </button>
         {/* Review Header */}
         <div className="mb-6">
           <p className="text-sm font-medium text-indigo-400">総合試験 — 結果レビュー</p>
           {examLabel && (
             <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">{examLabel}</h1>
           )}
-          <div className="mt-3 flex items-center gap-4">
+          <div className="mt-3 flex flex-wrap items-center gap-4">
             <div className="rounded-xl bg-zinc-100 border border-gray-200 px-4 py-2 dark:bg-white/[0.03] dark:border-white/[0.08]">
               <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{reviewScore.score}</span>
-              <span className="text-sm text-zinc-500 dark:text-zinc-400">点</span>
+              <span className="text-sm text-zinc-500 dark:text-zinc-400">{sectionScores ? ' / 180' : '点'}</span>
             </div>
-            <div className="text-sm text-zinc-500 dark:text-zinc-400">
-              {reviewScore.correctCount}/{reviewScore.totalCount} 正解
+            <div className="flex gap-3 text-sm text-zinc-500 dark:text-zinc-400">
+              {reviewScore.wrongCount != null || reviewScore.unansweredCount != null ? (
+                <>
+                  <span className="text-emerald-600 dark:text-emerald-400">正解 {reviewScore.correctCount}</span>
+                  <span className="text-red-600 dark:text-red-400">不正解 {reviewScore.wrongCount ?? 0}</span>
+                  <span>未回答 {reviewScore.unansweredCount ?? 0}</span>
+                </>
+              ) : (
+                <span>{reviewScore.correctCount}/{reviewScore.totalCount} 正解</span>
+              )}
             </div>
+            {reviewScore.partial ? (
+              <div className="rounded-full bg-amber-500/20 px-3 py-1 text-sm font-semibold text-amber-600 dark:text-amber-300">
+                進行中（聴解を受験すると最終判定）
+              </div>
+            ) : (
+              <div className={`rounded-full px-3 py-1 text-sm font-semibold ${reviewScore.passed ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300' : 'bg-red-500/20 text-red-600 dark:text-red-300'}`}>
+                {reviewScore.passed ? '合格' : '不合格'}
+              </div>
+            )}
           </div>
+
+          {/* 영역별 환산점수 (言語知識・読解・聴解, 실제 JLPT식 /60·/120) */}
+          {sectionScores && (() => {
+            const ss = sectionScores
+            const rows = (['gengo_chishiki', 'dokkai', 'gengo_dokkai', 'choukai']).filter(k => ss[k]).map(k => ss[k])
+            return (
+              <div className="mt-4 space-y-2">
+                {rows.map(s => (
+                  <div key={s.label} className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm ${s.passed ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5'}`}>
+                    <span className="font-medium text-zinc-800 dark:text-zinc-200">{s.label}</span>
+                    <span className="flex items-center gap-2">
+                      <span className="font-semibold text-zinc-700 dark:text-zinc-300">{s.scaled} / {s.max}点</span>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${s.passed ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300' : 'bg-red-500/20 text-red-600 dark:text-red-300'}`}>{s.passed ? '合格' : '不合格'}</span>
+                    </span>
+                  </div>
+                ))}
+                <p className="text-xs text-zinc-400">※ 各領域が基準点以上、かつ総合点が基準以上で合格です。</p>
+              </div>
+            )
+          })()}
         </div>
 
         {/* Question Review List */}
@@ -532,7 +651,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
           {questions.map((q, i) => {
             const r = resultMap.get(q.id)
             const isCorrect = r?.isCorrect ?? false
-            const wasAnswered = !!r
+            const wasAnswered = !!(r && r.selectedOptionId)
             const isExpanded = expandedQuestions.has(q.id)
             const isClaimed = claimedQuestions.has(q.id)
 
@@ -677,15 +796,6 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
           })}
         </div>
 
-        {/* Footer */}
-        <div className="mt-6 flex justify-center">
-          <button
-            onClick={() => { window.location.href = '/dashboard' }}
-            className="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors"
-          >
-            ダッシュボードに戻る
-          </button>
-        </div>
       </div>
     )
   }
@@ -727,6 +837,14 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   const minutes = Math.floor(remainingSeconds / 60)
   const seconds = remainingSeconds % 60
 
+  void savedTick
+  const savedAgo = !lastSavedAt
+    ? '保存されていません'
+    : (() => {
+        const s = Math.max(0, Math.floor((Date.now() - new Date(lastSavedAt).getTime()) / 1000))
+        return s < 60 ? `${s}秒前` : `${Math.floor(s / 60)}分前`
+      })()
+
   return (
     <div
       className="mx-auto max-w-3xl select-none"
@@ -742,16 +860,23 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
       <div className={`sticky top-0 z-10 mb-4 overflow-hidden rounded-xl border shadow-sm backdrop-blur ${timerBg}`}>
         <div className="flex items-center justify-between px-4 py-3">
           <div>
-            <p className="text-xs font-medium text-indigo-400">総合試験</p>
+            <p className="text-xs font-medium text-indigo-400">{currentQuestion?.section_label ?? '総合試験'}</p>
           </div>
           <div className={`flex items-center gap-2 ${isTimeCritical || isTimeLow ? 'animate-pulse' : ''}`}>
             <span className={`rounded-lg px-3 py-1 text-sm font-bold ${timerText}`}>
               残り {minutes}分{seconds > 0 ? ` ${seconds}秒` : ''}
             </span>
           </div>
-          <span className="text-sm text-zinc-600 dark:text-zinc-300">
-            回答: <span className="font-semibold">{answeredCount}/{totalQuestions}</span>
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-zinc-600 dark:text-zinc-300">
+              回答: <span className="font-semibold">{answeredCount}/{totalQuestions}</span>
+            </span>
+            {isMock && (
+              <button onClick={() => setShowExitConfirm(true)} title="中断して保存" className="rounded-md border border-red-300 p-1 text-red-500 hover:bg-red-50 dark:border-red-500/40 dark:hover:bg-red-500/10">
+                <LogOut className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
         {/* Time progress bar */}
         <div className="h-1.5 w-full bg-gray-200/50 dark:bg-white/10">
@@ -776,23 +901,34 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
         </div>
       </div>
 
-      {/* Question navigation dots */}
-      <div className="mb-6 flex flex-wrap gap-1.5">
-        {questions.map((q, i) => (
-          <button
-            key={q.id}
-            onClick={() => setCurrentIndex(i)}
-            className={`h-7 w-7 rounded text-xs font-medium transition-colors ${
-              i === currentIndex
-                ? 'bg-indigo-600 text-white'
-                : answers[q.id]
-                  ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20'
-                  : 'bg-zinc-100 text-zinc-500 dark:bg-white/5 dark:text-zinc-400'
-            }`}
-          >
-            {i + 1}
-          </button>
-        ))}
+      {/* Question navigation (클릭하면 드롭다운) */}
+      <div className="mb-6">
+        <button
+          onClick={() => setShowNav(v => !v)}
+          className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-zinc-200 dark:hover:bg-white/5"
+        >
+          <span>問題 {currentIndex + 1} / {totalQuestions}（回答 {answeredCount}）</span>
+          <ChevronDown className={`h-4 w-4 transition-transform ${showNav ? 'rotate-180' : ''}`} />
+        </button>
+        {showNav && (
+          <div className="mt-2 flex flex-wrap gap-1.5 rounded-lg border border-gray-200 bg-white p-3 dark:border-white/[0.08] dark:bg-white/[0.03]">
+            {questions.map((q, i) => (
+              <button
+                key={q.id}
+                onClick={() => { setCurrentIndex(i); setShowNav(false) }}
+                className={`h-7 w-7 rounded text-xs font-medium transition-colors ${
+                  i === currentIndex
+                    ? 'bg-indigo-600 text-white'
+                    : answers[q.id]
+                      ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20'
+                      : 'bg-zinc-100 text-zinc-500 dark:bg-white/5 dark:text-zinc-400'
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Current question */}
@@ -802,6 +938,11 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
 
         return (
           <div className="rounded-2xl border border-gray-200/60 bg-white/80 backdrop-blur-md p-6 dark:border-white/[0.08] dark:bg-white/[0.03]">
+            {currentQuestion.section_label && (
+              <div className="mb-3 inline-flex rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-300">
+                {currentQuestion.section_label}
+              </div>
+            )}
             {isListening && parsed && (
               <ListeningPlayer
                 key={currentQuestion.id}
@@ -818,6 +959,8 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
               options={currentQuestion.options}
               selectedOptionId={answers[currentQuestion.id] ?? null}
               onSelect={handleSelect}
+              boxPassages={!!currentQuestion.section && !isListening}
+              hideMeta={!!currentQuestion.section}
             />
           </div>
         )
@@ -855,6 +998,27 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
         <p className="mt-3 text-center text-xs text-amber-400">
           {totalQuestions - answeredCount}問がまだ未回答です
         </p>
+      )}
+
+      {/* 中断（保存して終了）確認 */}
+      {showExitConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowExitConfirm(false)}>
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
+              <span className="text-red-500 font-bold">✕</span>
+              <h3 className="text-lg font-bold">確認</h3>
+            </div>
+            <div className="mt-4 space-y-1 text-center text-sm text-zinc-600 dark:text-zinc-300">
+              <p>解答を提出せずにセッションを終了しますか？</p>
+              <p>進行状況は保存されたので、後で続行することができます。</p>
+              <p className="text-xs text-zinc-400">最後に保存された時間: <span className="text-red-500">{savedAgo}</span></p>
+            </div>
+            <div className="mt-5 space-y-2">
+              <button onClick={handleExitSave} className="block w-full rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-500 transition-colors">終了する</button>
+              <button onClick={() => setShowExitConfirm(false)} className="block w-full rounded-lg border border-red-300 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:border-red-500/40 dark:text-red-400 dark:hover:bg-red-500/10 transition-colors">戻る</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

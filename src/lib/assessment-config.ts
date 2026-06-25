@@ -172,6 +172,7 @@ export const ALL_PRACTICE_QUIZ_TYPES = [
 
 export const COMP_EXAM_CATEGORY_TO_STEP: Record<string, number> = {
   seikatsu: 1,
+  'jlpt-mock': 1,
   'business-jp': 2,
   cs: 3,
   dev: 4,
@@ -201,6 +202,119 @@ export function getJlptLevelColor(level: JlptLevel): string {
     case 'N5':
       return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
   }
+}
+
+// ─── JLPT 모의시험(Bunpro식 레벨별 실전 모의시험) 설정 ───
+export type JlptMockSectionKey = 'gengo_chishiki' | 'dokkai' | 'choukai' | 'gengo_dokkai'
+
+export interface JlptMockSectionDef {
+  section: JlptMockSectionKey
+  label: string           // 일본어 섹션명(실제 JLPT 표기)
+  quizTypes: string[]     // 이 섹션에 출제되는 quiz_type
+  maxScaled: number       // 영역 환산 만점 (60, 또는 N4/N5 言語知識・読解는 120)
+  minScaled: number       // 영역 합격 최저 환산점 (60점만점→19, 120점만점→38)
+}
+
+const SEC_GENGO: JlptMockSectionDef = { section: 'gengo_chishiki', label: '言語知識（文字・語彙・文法）', quizTypes: ['jlpt_vocab', 'jlpt_kanji', 'jlpt_grammar'], maxScaled: 60, minScaled: 19 }
+const SEC_DOKKAI: JlptMockSectionDef = { section: 'dokkai', label: '読解', quizTypes: ['jlpt_reading'], maxScaled: 60, minScaled: 19 }
+const SEC_CHOUKAI: JlptMockSectionDef = { section: 'choukai', label: '聴解', quizTypes: ['jlpt_listening'], maxScaled: 60, minScaled: 19 }
+const SEC_GENGO_DOKKAI: JlptMockSectionDef = { section: 'gengo_dokkai', label: '言語知識（文字・語彙・文法）・読解', quizTypes: ['jlpt_vocab', 'jlpt_kanji', 'jlpt_grammar', 'jlpt_reading'], maxScaled: 120, minScaled: 38 }
+
+/** 레벨별 섹션 구조 — 실제 JLPT 그대로 (N1~N3: 3섹션, N4~N5: 2섹션). */
+export const JLPT_MOCK_SECTIONS: Record<JlptLevel, JlptMockSectionDef[]> = {
+  N1: [SEC_GENGO, SEC_DOKKAI, SEC_CHOUKAI],
+  N2: [SEC_GENGO, SEC_DOKKAI, SEC_CHOUKAI],
+  N3: [SEC_GENGO, SEC_DOKKAI, SEC_CHOUKAI],
+  N4: [SEC_GENGO_DOKKAI, SEC_CHOUKAI],
+  N5: [SEC_GENGO_DOKKAI, SEC_CHOUKAI],
+}
+
+/** 합격한 모의시험 레벨 우열 (레이더 "합격 최고레벨" 산정). */
+export const JLPT_MOCK_LEVEL_RANK: Record<JlptLevel, number> = { N1: 5, N2: 4, N3: 3, N4: 2, N5: 1 }
+
+/** 합격 레벨 → 레이더 JLPT 축 정규화 점수. */
+export const JLPT_MOCK_LEVEL_NORMALIZED: Record<JlptLevel, number> = { N1: 100, N2: 85, N3: 70, N4: 55, N5: 40 }
+
+// ── 채점 모델(실제 JLPT식): 영역별 환산(maxScaled) + 영역 최저(minScaled) + 레벨별 총점 커트라인 ──
+// 합격 = 총점(/180) ≥ 레벨 커트라인 AND 모든 영역 환산 ≥ minScaled.
+export const JLPT_MOCK_LEVEL_TOTAL_PASS: Record<JlptLevel, number> = { N1: 100, N2: 90, N3: 95, N4: 90, N5: 80 }
+export function jlptMockTotalPass(level: string): number {
+  return JLPT_MOCK_LEVEL_TOTAL_PASS[level as JlptLevel] ?? 100
+}
+/** 영역 정답수 → 환산점수 (만점 max 기준). */
+export function jlptMockScaled(correct: number, total: number, max: number): number {
+  return total > 0 ? Math.round((correct / total) * max) : 0
+}
+
+// ── 問題유형 분류표 (실제 JLPT 구성) ──
+// section = 채점 도메인(gengo_chishiki=言語知識, dokkai=読解, choukai=聴解).
+export interface JlptProblemType {
+  no: number          // 問題 번호(영역 내)
+  code: string        // 유형 코드 (quiz_questions.question_subtype)
+  label: string       // 화면 표시명
+  section: JlptMockSectionKey
+  count: number       // 세트당 문항 수
+  choices: number     // 선택지 수
+}
+
+/** N1 問題 구성: 言語知識(45) + 読解(25) + 聴解(30) = 100문항. */
+export const JLPT_N1_PROBLEM_TYPES: JlptProblemType[] = [
+  // 文字・語彙 (25)
+  { no: 1, code: 'KANJI_READING', label: '漢字読み', section: 'gengo_chishiki', count: 6, choices: 4 },
+  { no: 2, code: 'CONTEXT_WORD', label: '文脈規定', section: 'gengo_chishiki', count: 7, choices: 4 },
+  { no: 3, code: 'PARAPHRASE', label: '言い換え類義', section: 'gengo_chishiki', count: 6, choices: 4 },
+  { no: 4, code: 'WORD_USAGE', label: '用法', section: 'gengo_chishiki', count: 6, choices: 4 },
+  // 文法 (20)
+  { no: 5, code: 'GRAMMAR_CHOICE', label: '文法形式の判断', section: 'gengo_chishiki', count: 10, choices: 4 },
+  { no: 6, code: 'SENTENCE_ORDER', label: '文の組み立て', section: 'gengo_chishiki', count: 5, choices: 4 },
+  { no: 7, code: 'TEXT_GRAMMAR', label: '文章の文法', section: 'gengo_chishiki', count: 5, choices: 4 },
+  // 読解 (25)
+  { no: 8, code: 'SHORT_READING', label: '内容理解・短文', section: 'dokkai', count: 4, choices: 4 },
+  { no: 9, code: 'MEDIUM_READING', label: '内容理解・中文', section: 'dokkai', count: 9, choices: 4 },
+  { no: 10, code: 'LONG_READING', label: '内容理解・長文', section: 'dokkai', count: 4, choices: 4 },
+  { no: 11, code: 'INTEGRATED_READING', label: '統合理解', section: 'dokkai', count: 2, choices: 4 },
+  { no: 12, code: 'OPINION_READING', label: '主張理解・長文', section: 'dokkai', count: 4, choices: 4 },
+  { no: 13, code: 'INFORMATION_SEARCH', label: '情報検索', section: 'dokkai', count: 2, choices: 4 },
+  // 聴解 (30)
+  { no: 1, code: 'LISTENING_TASK', label: '課題理解', section: 'choukai', count: 5, choices: 4 },
+  { no: 2, code: 'LISTENING_POINT', label: 'ポイント理解', section: 'choukai', count: 6, choices: 4 },
+  { no: 3, code: 'LISTENING_SUMMARY', label: '概要理解', section: 'choukai', count: 5, choices: 4 },
+  { no: 4, code: 'LISTENING_QUICK_RESPONSE', label: '即時応答', section: 'choukai', count: 11, choices: 3 },
+  { no: 5, code: 'LISTENING_INTEGRATED', label: '統合理解', section: 'choukai', count: 3, choices: 4 },
+]
+
+export function jlptMockSectionsFor(level: string): JlptMockSectionDef[] {
+  return JLPT_MOCK_SECTIONS[level as JlptLevel] ?? []
+}
+
+// ── 교시(시험 시간 분리) — 1교시 言語知識・読解, 2교시 聴解 ──
+export interface JlptMockSession {
+  session: number
+  label: string
+  sections: JlptMockSectionKey[]
+  timeMin: number
+}
+const SESS_CHOUKAI: JlptMockSession = { session: 2, label: '聴解', sections: ['choukai'], timeMin: 55 }
+export const JLPT_MOCK_SESSIONS: Record<JlptLevel, JlptMockSession[]> = {
+  N1: [{ session: 1, label: '言語知識（文字・語彙・文法・読解）', sections: ['gengo_chishiki', 'dokkai'], timeMin: 110 }, { ...SESS_CHOUKAI, timeMin: 55 }],
+  N2: [{ session: 1, label: '言語知識（文字・語彙・文法・読解）', sections: ['gengo_chishiki', 'dokkai'], timeMin: 105 }, { ...SESS_CHOUKAI, timeMin: 50 }],
+  N3: [{ session: 1, label: '言語知識（文字・語彙・文法・読解）', sections: ['gengo_chishiki', 'dokkai'], timeMin: 100 }, { ...SESS_CHOUKAI, timeMin: 40 }],
+  N4: [{ session: 1, label: '言語知識・読解', sections: ['gengo_dokkai'], timeMin: 70 }, { ...SESS_CHOUKAI, timeMin: 40 }],
+  N5: [{ session: 1, label: '言語知識・読解', sections: ['gengo_dokkai'], timeMin: 65 }, { ...SESS_CHOUKAI, timeMin: 35 }],
+}
+export function jlptMockSessionsFor(level: string): JlptMockSession[] {
+  return JLPT_MOCK_SESSIONS[level as JlptLevel] ?? []
+}
+export function jlptMockSessionDef(level: string, session: number): JlptMockSession | null {
+  return jlptMockSessionsFor(level).find(s => s.session === session) ?? null
+}
+
+/** 섹션 키 → quiz_type 목록 (특정 레벨 기준). */
+export function jlptMockSectionForQuizType(level: string, quizType: string): JlptMockSectionKey | null {
+  for (const sec of jlptMockSectionsFor(level)) {
+    if (sec.quizTypes.includes(quizType)) return sec.section
+  }
+  return null
 }
 
 export type SkillGrade = 'S' | 'A' | 'B' | 'C' | 'D'

@@ -18,7 +18,6 @@ export default async function AdminDashboardPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white">システム管理</h1>
-      <p className="mt-1 text-gray-500 dark:text-gray-400">システム全体の統計と管理ツール</p>
 
       <div className="mt-6">
         <AdminDashboardClient />

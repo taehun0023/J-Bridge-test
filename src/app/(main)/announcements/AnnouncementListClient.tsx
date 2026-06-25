@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Paperclip } from 'lucide-react'
@@ -26,7 +27,7 @@ interface Row {
 export default function AnnouncementListClient({ rows, isAdmin = false }: { rows: Row[]; isAdmin?: boolean }) {
   const router = useRouter()
   const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
 
   const allSelected = rows.length > 0 && selected.size === rows.length
 

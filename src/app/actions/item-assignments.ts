@@ -2,13 +2,13 @@
 
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { requireAdmin, requireAdminOrMentor, requireAuth } from '@/lib/auth-helpers'
+import { requireAdminOrMentor, requireAuth } from '@/lib/auth-helpers'
 import { createNotification } from './notifications'
 import { getUserDisplayName } from '@/lib/notification-helpers'
 import { logAuditEvent } from '@/app/actions/audit'
 import { ERR } from '@/lib/action-types'
 import {
-  ITEM_CATEGORIES, QUIZ_CATEGORIES, areaKeys, areaSpec, STALL_DAYS,
+  ITEM_CATEGORIES, QUIZ_CATEGORIES, areaKeys, areaSpec, areaLabel, STALL_DAYS,
   isItemCategory, isJlptLevel, type ItemCategory, type AreaSpec,
 } from '@/lib/item-assignments'
 
@@ -22,27 +22,43 @@ const STALL_MS = STALL_DAYS * 86_400_000
 
 /** 영역+레벨에 해당하는 콘텐츠 항목 id 집합 (= 풀) */
 async function getPoolIds(client: DbClient, spec: AreaSpec, level: string | null): Promise<Set<string>> {
-  if (spec.quizType) {
-    // 퀴즈형 풀 = is_pool quizzes of this quiz_type (生活은 제목 접두로 레벨 필터)
-    let q = client.from('quizzes').select('id').eq('quiz_type', spec.quizType).eq('is_pool', true)
-    if (spec.levelByTitle && level) q = q.ilike('title', `${level}%`)
-    const { data } = await q.limit(10000)
-    return new Set((data ?? []).map((r: { id: string }) => String(r.id)))
+  // Supabase는 요청당 최대 1,000행으로 강제 제한하므로 range로 페이지네이션해 전체 id를 수집한다
+  // (N1 어휘처럼 1,000개 초과 영역이 잘려 全体進捗 총합이 작게 나오는 버그 방지).
+  const all = new Set<string>()
+  for (let from = 0; ; from += 1000) {
+    let q = spec.quizType
+      ? client.from('quizzes').select('id').eq('quiz_type', spec.quizType).eq('is_pool', true)
+      : client.from(spec.table).select('id')
+    if (spec.quizType) {
+      if (spec.levelByTitle && level) q = q.ilike('title', `${level}%`)
+    } else {
+      if (spec.levelColumn && level) q = q.eq(spec.levelColumn, level)
+      if (spec.filter) q = q.in(spec.filter.column, spec.filter.values)
+    }
+    const { data } = await q.range(from, from + 999)
+    const rows = data ?? []
+    for (const r of rows as { id: string }[]) all.add(String(r.id))
+    if (rows.length < 1000) break
   }
-  let q = client.from(spec.table).select('id')
-  if (spec.levelColumn && level) q = q.eq(spec.levelColumn, level)
-  if (spec.filter) q = q.in(spec.filter.column, spec.filter.values)
-  const { data } = await q.limit(10000)
-  return new Set((data ?? []).map((r: { id: string }) => String(r.id)))
+  return all
 }
 
 async function getMasteredIds(client: DbClient, userId: string, itemType: string): Promise<Set<string>> {
-  const { data } = await client
-    .from('user_mastered_items')
-    .select('item_id')
-    .eq('user_id', userId)
-    .eq('item_type', itemType)
-  return new Set((data ?? []).map((r: { item_id: string }) => String(r.item_id)))
+  // 페이지네이션 — 1000행 기본 제한 회피
+  const out = new Set<string>()
+  const PAGE = 1000
+  for (let offset = 0; ; offset += PAGE) {
+    const { data } = await client
+      .from('user_mastered_items')
+      .select('item_id')
+      .eq('user_id', userId)
+      .eq('item_type', itemType)
+      .range(offset, offset + PAGE - 1)
+    if (!data || data.length === 0) break
+    for (const r of data as { item_id: string }[]) out.add(String(r.item_id))
+    if (data.length < PAGE) break
+  }
+  return out
 }
 
 /** 완료 집합: 퀴즈형이면 합격한 quiz_id, 아니면 마스터한 item_id */
@@ -69,7 +85,7 @@ function intersectCount(a: Set<string>, b: Set<string>): number {
 function ladderQuery(service: DbClient, menteeId: string, category: string, area: string, level: string | null) {
   let q = service
     .from('learning_assignments')
-    .select('cumulative_target')
+    .select('id, cumulative_target, target_count, created_at')
     .eq('assigned_to', menteeId)
     .eq('category', category)
     .eq('subcategory', area)
@@ -118,6 +134,8 @@ export async function createItemAssignments(formData: FormData) {
   type Row = Record<string, unknown>
   const rows: Row[] = []
   let skipped = 0
+  let merged = 0 // 같은 달 기존 rung에 합산한 건수
+  const currentMonth = nowIso.slice(0, 7) // YYYY-MM
 
   for (const menteeId of assignedToList) {
     for (const { area, count } of requested) {
@@ -127,7 +145,8 @@ export async function createItemAssignments(formData: FormData) {
       const pool = poolIds.size
 
       const { data: prevRows } = await ladderQuery(service, menteeId, category, area, level)
-      const prev: number = prevRows?.[0]?.cumulative_target ?? 0
+      const latest = prevRows?.[0] as { id: string; cumulative_target: number | null; target_count: number | null; created_at: string | null } | undefined
+      const prev: number = latest?.cumulative_target ?? 0
 
       const remaining = pool - prev
       if (remaining <= 0) { skipped++; continue }
@@ -137,6 +156,24 @@ export async function createItemAssignments(formData: FormData) {
       const mastIds = await getCompletedIds(service, menteeId, spec)
       const mastered = intersectCount(poolIds, mastIds)
       const status = mastered >= cumulative ? 'completed' : (mastered > prev ? 'in_progress' : 'pending')
+
+      // 같은 달의 최신 rung이 있으면 새 카드 대신 그 rung에 합산
+      const latestIsThisMonth = latest && String(latest.created_at ?? '').slice(0, 7) === currentMonth
+      if (latestIsThisMonth) {
+        const newTc = (latest!.target_count ?? 0) + capped
+        const title = level ? `${level} ${spec.label} ${newTc}項目` : `${spec.label} ${newTc}項目`
+        await service.from('learning_assignments').update({
+          target_count: newTc,
+          cumulative_target: cumulative,
+          mastered_snapshot: mastered,
+          last_progress_at: nowIso,
+          status,
+          completed_at: status === 'completed' ? nowIso : null,
+          title,
+        }).eq('id', latest!.id)
+        merged++
+        continue
+      }
 
       const title = level
         ? `${level} ${spec.label} ${capped}項目`
@@ -159,34 +196,39 @@ export async function createItemAssignments(formData: FormData) {
     }
   }
 
-  if (rows.length === 0) {
+  if (rows.length === 0 && merged === 0) {
     return { error: '対象全員がプール上限に達しており、配布できる項目がありません' }
   }
 
-  const { data, error } = await supabase
-    .from('learning_assignments')
-    .insert(rows)
-    .select('id, assigned_to, status, title')
-
-  if (error) return { error: error.message }
-
-  for (const row of data) {
-    if (row.status === 'completed') continue
-    await createNotification(
-      row.assigned_to, 'task_assigned',
-      `新しい学習課題: ${row.title}`, undefined, '/dashboard/assignments', row.id,
-    )
+  let insertedCount = 0
+  let firstId = ''
+  if (rows.length > 0) {
+    const { data, error } = await supabase
+      .from('learning_assignments')
+      .insert(rows)
+      .select('id, assigned_to, status, title')
+    if (error) return { error: error.message }
+    insertedCount = data.length
+    firstId = data[0]?.id ?? ''
+    for (const row of data) {
+      if (row.status === 'completed') continue
+      await createNotification(
+        row.assigned_to, 'task_assigned',
+        `新しい学習課題: ${row.title}`, undefined, '/dashboard/assignments', row.id,
+      )
+    }
   }
 
-  await logAuditEvent(user.id, 'create', 'learning_assignments', data[0]?.id ?? '', null, {
+  await logAuditEvent(user.id, 'create', 'learning_assignments', firstId, null, {
     kind: 'item_count', category, level, areas: requested,
-    assignee_count: assignedToList.length, created: data.length, skipped,
+    assignee_count: assignedToList.length, created: insertedCount, merged, skipped,
   })
 
   revalidatePath('/admin/tasks')
   revalidatePath('/dashboard')
   revalidatePath('/dashboard/assignments')
-  return { success: true, created: data.length, skipped }
+  revalidatePath('/admin/reports')
+  return { success: true, created: insertedCount + merged, skipped }
 }
 
 // ─── 완료/진전/지연 자동 판정 (페이지 로드 시 lazy 실행) ───
@@ -405,6 +447,7 @@ export interface MenteeItemProgress {
   seikatsuThisMonth: ItemProgressPair   // 이번 달 부여분(今月課題 컬럼용)
   businessJpThisMonth: ItemProgressPair
   overall: ItemProgressPair             // 목표레벨 전체 풀(全体進捗 컬럼용)
+  overdueItems: number                  // 遅延(항목 기준): 기한 지난(이전 달) 누적목표 − 습득항목
 }
 
 export interface QuizProgress { total: number; passed: number; attempted: number }
@@ -568,7 +611,7 @@ export async function aggregateItemProgress(menteeIds: string[]): Promise<Record
     result[id] = {
       seikatsu: { assigned: 0, completed: 0 }, businessJp: { assigned: 0, completed: 0 },
       seikatsuThisMonth: { assigned: 0, completed: 0 }, businessJpThisMonth: { assigned: 0, completed: 0 },
-      overall: { assigned: 0, completed: 0 },
+      overall: { assigned: 0, completed: 0 }, overdueItems: 0,
     }
   }
   const ids = menteeIds.map(String).filter(Boolean)
@@ -630,6 +673,9 @@ export async function aggregateItemProgress(menteeIds: string[]): Promise<Record
     const tmBucket = isSeikatsu ? result[L.menteeId].seikatsuThisMonth : result[L.menteeId].businessJpThisMonth
     tmBucket.assigned += L.thisMonthTarget
     tmBucket.completed += Math.max(0, Math.min(rawMastered - L.prevCum, L.thisMonthTarget))
+
+    // 遅延(항목 기준): 이전 달까지 누적목표 중 아직 습득 못한 수 (이번 달분은 기한 전이라 제외)
+    result[L.menteeId].overdueItems += Math.max(0, L.prevCum - rawMastered)
   }
 
   // ── 全体進捗 = 목표 레벨의 生活日本語 전 영역: 마스터(실제·상한없음) / 전체 풀 ──
@@ -648,11 +694,15 @@ export async function aggregateItemProgress(menteeIds: string[]): Promise<Record
   const seikatsuItemTypes = [...new Set(seikatsuAreas.map(a => areaSpec('seikatsu', a)!.itemType))]
   const masteredAll = new Map<string, Set<string>>()
   for (const itemType of seikatsuItemTypes) {
-    const { data } = await service.from('user_mastered_items').select('user_id, item_id').eq('item_type', itemType).in('user_id', ids)
-    for (const r of data ?? []) {
-      const k = `${r.user_id}::${itemType}`
-      if (!masteredAll.has(k)) masteredAll.set(k, new Set())
-      masteredAll.get(k)!.add(String(r.item_id))
+    for (let offset = 0; ; offset += 1000) {
+      const { data } = await service.from('user_mastered_items').select('user_id, item_id').eq('item_type', itemType).in('user_id', ids).range(offset, offset + 999)
+      if (!data || data.length === 0) break
+      for (const r of data) {
+        const k = `${r.user_id}::${itemType}`
+        if (!masteredAll.has(k)) masteredAll.set(k, new Set())
+        masteredAll.get(k)!.add(String(r.item_id))
+      }
+      if (data.length < 1000) break
     }
   }
   for (const id of ids) {
@@ -667,6 +717,101 @@ export async function aggregateItemProgress(menteeIds: string[]): Promise<Record
       completed += intersectCount(pool, masteredAll.get(`${id}::${spec.itemType}`) ?? new Set<string>())
     }
     result[id].overall = { assigned: total, completed }
+  }
+
+  return result
+}
+
+// ─── JLPT 파트별 습득 현황 (목표레벨 기준) — 대시보드 공지 하단, 개개인별 표시용 ───
+
+export interface JlptPartProgress {
+  level: string
+  parts: { area: string; areaLabel: string; done: number; total: number }[]
+  /** JLPT模試: total=공개된 전체 세트 수(레벨별), done=응시(완료/불합격)한 세트 수 */
+  mock: { done: number; total: number }
+}
+
+/**
+ * 멘티별 목표 JLPT 레벨의 영역(語彙/文法/読解/聴解)별 습득 수 / 전체 수.
+ * 과제 부여 여부와 무관하게 목표 레벨 풀 전체를 분모로 한다(예: 4/3200).
+ * 목표 레벨이 JLPT(N1~N5)가 아닌 멘티는 결과에서 제외.
+ */
+export async function aggregateJlptPartProgress(menteeIds: string[]): Promise<Record<string, JlptPartProgress>> {
+  const result: Record<string, JlptPartProgress> = {}
+  const ids = menteeIds.map(String).filter(Boolean)
+  if (!ids.length) return result
+
+  const service = createServiceRoleClient()
+  if (!service) return result
+
+  const { data: profs } = await service.from('profiles').select('id, target_certification').in('id', ids)
+  const targetById = new Map((profs ?? []).map(p => [p.id, p.target_certification as string | null]))
+  const seikatsuAreas = areaKeys('seikatsu')
+  const targetLevels = [...new Set([...targetById.values()].filter((v): v is string => !!v && isJlptLevel(v)))]
+  if (!targetLevels.length) return result
+
+  // 레벨·영역별 항목 풀 (레벨당 1회 조회, getPoolIds 는 1000행 페이지네이션 내장)
+  const lvlAreaPool = new Map<string, Set<string>>()
+  for (const lvl of targetLevels) {
+    for (const area of seikatsuAreas) {
+      const spec = areaSpec('seikatsu', area)!
+      lvlAreaPool.set(`${lvl}::${area}`, await getPoolIds(service, spec, lvl))
+    }
+  }
+
+  // 멘티별 마스터 항목 (item_type별)
+  const seikatsuItemTypes = [...new Set(seikatsuAreas.map(a => areaSpec('seikatsu', a)!.itemType))]
+  const masteredAll = new Map<string, Set<string>>()
+  for (const itemType of seikatsuItemTypes) {
+    for (let offset = 0; ; offset += 1000) {
+      const { data } = await service.from('user_mastered_items').select('user_id, item_id').eq('item_type', itemType).in('user_id', ids).range(offset, offset + 999)
+      if (!data || data.length === 0) break
+      for (const r of data) {
+        const k = `${r.user_id}::${itemType}`
+        if (!masteredAll.has(k)) masteredAll.set(k, new Set())
+        masteredAll.get(k)!.add(String(r.item_id))
+      }
+      if (data.length < 1000) break
+    }
+  }
+
+  // 이번달 JLPT模試: total=이번달 부여되면 1, done=가장 최근 부여 인스턴스를 풀었으면(완료/불합격) 1
+  // 模試는 다른 영역처럼 "전체 세트 수" 기준 — total=공개된 레벨별 세트 수, done=응시(완료/불합격)한 세트 수
+  const { data: mockSets } = await service
+    .from('jlpt_mock_sets')
+    .select('level, set_no')
+    .eq('is_published', true)
+  const setsCountByLevel = new Map<string, number>()
+  for (const s of mockSets ?? []) setsCountByLevel.set(s.level, (setsCountByLevel.get(s.level) ?? 0) + 1)
+
+  const { data: mocks } = await service
+    .from('comprehensive_exams')
+    .select('user_id, content_level, mock_set_no, mock_session, status')
+    .in('user_id', ids)
+    .eq('category', 'jlpt-mock')
+    .in('status', ['completed', 'failed'])
+  // user → 응시한 세트 집합 (level::set). 1교시 placeholder(session=1) 제외
+  const takenSetsByUser = new Map<string, Set<string>>()
+  for (const m of mocks ?? []) {
+    if (m.mock_session === 1) continue
+    let s = takenSetsByUser.get(m.user_id)
+    if (!s) { s = new Set(); takenSetsByUser.set(m.user_id, s) }
+    s.add(`${m.content_level}::${m.mock_set_no}`)
+  }
+
+  for (const id of ids) {
+    const tgt = targetById.get(id)
+    if (!tgt || !isJlptLevel(tgt)) continue
+    const parts = seikatsuAreas.map(area => {
+      const spec = areaSpec('seikatsu', area)!
+      const pool = lvlAreaPool.get(`${tgt}::${area}`) ?? new Set<string>()
+      const done = intersectCount(pool, masteredAll.get(`${id}::${spec.itemType}`) ?? new Set<string>())
+      return { area, areaLabel: areaLabel('seikatsu', area), done, total: pool.size }
+    })
+    const mockTotal = setsCountByLevel.get(tgt) ?? 0
+    const taken = takenSetsByUser.get(id)
+    const mockDone = taken ? [...taken].filter(k => k.startsWith(`${tgt}::`)).length : 0
+    result[id] = { level: tgt, parts, mock: { done: mockDone, total: mockTotal } }
   }
 
   return result
@@ -753,41 +898,67 @@ export async function getReportItemProgress(
 // ─── 월간 자동 부여 (매달 1회, lazy: 달 바뀐 뒤 첫 접근 시 실행) ───
 
 export interface MonthlyAssignConfig {
-  vocabulary: number; grammar: number; reading: number; listening: number; kanji: number
+  vocabulary: number; grammar: number; reading: number; listening: number
 }
-const DEFAULT_MONTHLY_COUNTS: MonthlyAssignConfig = { vocabulary: 100, grammar: 10, reading: 10, listening: 10, kanji: 170 }
+const DEFAULT_MONTHLY_COUNTS: MonthlyAssignConfig = { vocabulary: 100, grammar: 10, reading: 10, listening: 10 }
+const MONTHLY_CONFIG_LEVELS = ['N1', 'N2', 'N3', 'N4', 'N5'] as const
 
-/** 월별 자동부여 개수 설정 조회 (없으면 기본값) */
-export async function getMonthlyAssignmentConfig(): Promise<MonthlyAssignConfig> {
+function parseMonthlyCfg(raw: unknown): MonthlyAssignConfig {
+  const o = (raw ?? {}) as Partial<Record<keyof MonthlyAssignConfig, unknown>>
+  const num = (v: unknown, d: number) => { const n = Math.floor(Number(v)); return Number.isFinite(n) && n >= 0 ? n : d }
+  return {
+    vocabulary: num(o.vocabulary, DEFAULT_MONTHLY_COUNTS.vocabulary),
+    grammar: num(o.grammar, DEFAULT_MONTHLY_COUNTS.grammar),
+    reading: num(o.reading, DEFAULT_MONTHLY_COUNTS.reading),
+    listening: num(o.listening, DEFAULT_MONTHLY_COUNTS.listening),
+  }
+}
+
+/** 특정 레벨의 월별 자동부여 개수 (per_level 우선, 없으면 레거시 플랫 컬럼/기본값) */
+export async function getMonthlyAssignmentConfig(level: string = 'N1'): Promise<MonthlyAssignConfig> {
   const service = createServiceRoleClient()
   if (!service) return DEFAULT_MONTHLY_COUNTS
   const { data } = await service
     .from('monthly_assignment_config')
-    .select('vocabulary, grammar, reading, listening, kanji')
+    .select('vocabulary, grammar, reading, listening, per_level')
     .eq('id', true)
     .maybeSingle()
   if (!data) return DEFAULT_MONTHLY_COUNTS
-  return {
-    vocabulary: data.vocabulary ?? DEFAULT_MONTHLY_COUNTS.vocabulary,
-    grammar: data.grammar ?? DEFAULT_MONTHLY_COUNTS.grammar,
-    reading: data.reading ?? DEFAULT_MONTHLY_COUNTS.reading,
-    listening: data.listening ?? DEFAULT_MONTHLY_COUNTS.listening,
-    kanji: data.kanji ?? DEFAULT_MONTHLY_COUNTS.kanji,
-  }
+  const perLevel = (data.per_level ?? {}) as Record<string, unknown>
+  if (perLevel[level]) return parseMonthlyCfg(perLevel[level])
+  return parseMonthlyCfg({ vocabulary: data.vocabulary, grammar: data.grammar, reading: data.reading, listening: data.listening })
 }
 
-/** 월별 자동부여 개수 설정 수정 (관리자 전용) */
-export async function updateMonthlyAssignmentConfig(counts: MonthlyAssignConfig) {
-  const auth = await requireAdmin()
+/** N1~N5 전 레벨 설정 (관리 UI용) */
+export async function getAllMonthlyAssignmentConfigs(): Promise<Record<string, MonthlyAssignConfig>> {
+  const out: Record<string, MonthlyAssignConfig> = {}
+  const service = createServiceRoleClient()
+  if (!service) { for (const l of MONTHLY_CONFIG_LEVELS) out[l] = DEFAULT_MONTHLY_COUNTS; return out }
+  const { data } = await service
+    .from('monthly_assignment_config')
+    .select('vocabulary, grammar, reading, listening, per_level')
+    .eq('id', true)
+    .maybeSingle()
+  const perLevel = (data?.per_level ?? {}) as Record<string, unknown>
+  const legacy = data ? parseMonthlyCfg({ vocabulary: data.vocabulary, grammar: data.grammar, reading: data.reading, listening: data.listening }) : DEFAULT_MONTHLY_COUNTS
+  for (const l of MONTHLY_CONFIG_LEVELS) out[l] = perLevel[l] ? parseMonthlyCfg(perLevel[l]) : legacy
+  return out
+}
+
+/** 특정 레벨의 월별 자동부여 개수 수정 (관리자 전용) */
+export async function updateMonthlyAssignmentConfig(level: string, counts: MonthlyAssignConfig) {
+  const auth = await requireAdminOrMentor()
   if ('error' in auth) return { error: auth.error } as const
   const service = createServiceRoleClient()
   if (!service) return { error: 'サービスが利用できません' }
   const clean = (n: unknown) => Math.max(0, Math.floor(Number(n) || 0))
+  const cfg = { vocabulary: clean(counts.vocabulary), grammar: clean(counts.grammar), reading: clean(counts.reading), listening: clean(counts.listening) }
+  const { data: row } = await service.from('monthly_assignment_config').select('per_level').eq('id', true).maybeSingle()
+  const perLevel = { ...((row?.per_level ?? {}) as Record<string, unknown>), [level]: cfg }
   const { error } = await service
     .from('monthly_assignment_config')
     .update({
-      vocabulary: clean(counts.vocabulary), grammar: clean(counts.grammar), reading: clean(counts.reading),
-      listening: clean(counts.listening), kanji: clean(counts.kanji),
+      per_level: perLevel,
       updated_at: new Date().toISOString(), updated_by: auth.user.id,
     })
     .eq('id', true)
@@ -801,11 +972,21 @@ export async function updateMonthlyAssignmentConfig(counts: MonthlyAssignConfig)
  * 영역별 개수는 monthly_assignment_config(관리자 설정)에서 읽음, 각자 잔량까지만 캡·누적.
  * dedup: profiles.last_auto_assign_month. 크론 없이 대시보드 로드 시 호출.
  */
+/** 멘티의 월자동부여 옵트인 토글. 해제 시 월자동부여 제외(멘토가 課題 버튼으로 개별 부여). */
+export async function setMenteeAutoAssign(menteeId: string, enabled: boolean): Promise<{ ok: true } | { error: string }> {
+  const auth = await requireAdminOrMentor()
+  if ('error' in auth) return { error: auth.error ?? '権限がありません' }
+  const service = createServiceRoleClient() ?? auth.supabase
+  const { error } = await service.from('profiles').update({ monthly_auto_assign: enabled }).eq('id', menteeId).eq('role', 'mentee')
+  if (error) return { error: error.message }
+  return { ok: true }
+}
+
 export async function runMonthlyAutoAssignment(): Promise<void> {
   const service = createServiceRoleClient()
   if (!service) return
 
-  const monthlyCounts = await getMonthlyAssignmentConfig()
+  const cfgByLevel = new Map<string, MonthlyAssignConfig>()
   const now = new Date()
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
@@ -813,6 +994,7 @@ export async function runMonthlyAutoAssignment(): Promise<void> {
     .from('profiles')
     .select('id, target_certification, last_auto_assign_month')
     .eq('role', 'mentee')
+    .eq('monthly_auto_assign', true)
     .not('target_certification', 'is', null)
     .or(`last_auto_assign_month.is.null,last_auto_assign_month.neq.${currentMonth}`)
 
@@ -827,6 +1009,8 @@ export async function runMonthlyAutoAssignment(): Promise<void> {
     const level = m.target_certification as string
     if (!isJlptLevel(level)) continue
     const assignedBy = adminRow?.id ?? m.id
+    let monthlyCounts = cfgByLevel.get(level)
+    if (!monthlyCounts) { monthlyCounts = await getMonthlyAssignmentConfig(level); cfgByLevel.set(level, monthlyCounts) }
 
     // Atomically claim this month for this mentee BEFORE inserting, so concurrent
     // dashboard-triggered runs can't each pass the stale guard and insert duplicates.

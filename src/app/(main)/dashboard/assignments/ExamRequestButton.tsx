@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import { requestExam } from '@/app/actions/comprehensive-exam'
 import { GraduationCap } from 'lucide-react'
 
@@ -11,7 +12,7 @@ interface Props {
 }
 
 export default function ExamRequestButton({ category, subcategory, contentLevel }: Props) {
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
   const [message, setMessage] = useState<string | null>(null)
   const [requested, setRequested] = useState(false)
 

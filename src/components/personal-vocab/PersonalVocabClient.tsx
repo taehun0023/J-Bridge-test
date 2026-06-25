@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import Card from '@/components/ui/Card'
 import AddVocabModal from '@/components/personal-vocab/AddVocabModal'
 import { getPersonalVocab, updatePersonalVocab, deletePersonalVocab } from '@/app/actions/personal-vocab'
@@ -27,7 +28,7 @@ export default function PersonalVocabClient() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [showGuide, setShowGuide] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
 
   function loadItems(searchVal?: string) {
     startTransition(async () => {

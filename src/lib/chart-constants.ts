@@ -1,4 +1,5 @@
 export const EXAM_CATEGORY_COLORS: Record<string, string> = {
+  'jlpt-mock': '#f59e0b',
   seikatsu: '#f59e0b',
   'business-jp': '#8b5cf6',
   cs: '#06b6d4',
@@ -7,6 +8,7 @@ export const EXAM_CATEGORY_COLORS: Record<string, string> = {
 }
 
 export const EXAM_CATEGORY_LABELS: Record<string, string> = {
+  'jlpt-mock': 'JLPT模試',
   seikatsu: 'JLPT',
   'business-jp': 'ビジネス日本語',
   cs: 'CS知識',

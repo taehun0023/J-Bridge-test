@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState, useTransition, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import Badge from '@/components/ui/Badge'
 import { createQuestion, updateQuestion, deleteQuestion, toggleQuestionPublished, fetchQuestionsPage } from '@/app/actions/admin/questions'
 import { resolveQuestionClaims, resolveMultipleQuestionClaims } from '@/app/actions/claims'
@@ -218,7 +219,7 @@ export default function AdminCoursesClient({
   const router = useRouter()
   const [selectedStep, setSelectedStep] = useState(1)
   const [activeSection, setActiveSection] = useState<'assessment' | 'practice'>('assessment')
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
   const [message, setMessage] = useState<string | null>(null)
   const [messageType, setMessageType] = useState<'success' | 'error'>('success')
   const [filters, setFilters] = useState<FilterState>({

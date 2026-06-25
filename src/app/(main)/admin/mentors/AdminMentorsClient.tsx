@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import { assignMenteeToMentor, removeMenteeFromMentor } from '@/app/actions/mentor'
 import { UserPlus, X } from 'lucide-react'
 import NameRuby from '@/components/ui/NameRuby'
@@ -35,7 +36,7 @@ interface Props {
 
 export default function AdminMentorsClient({ mentors, mentorAssignments, allMentees }: Props) {
   const [selectedMentee, setSelectedMentee] = useState<Record<string, string>>({})
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
 
   function showMessage(text: string, type: 'success' | 'error' = 'success') {

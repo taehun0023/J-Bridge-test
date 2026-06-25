@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import { useRouter } from 'next/navigation'
 import { createLearningAssignment } from '@/app/actions/learning-assignments'
 import { ASSIGNMENT_CATEGORIES, JLPT_LEVELS, DEV_LEVELS } from '@/lib/assignment-categories'
@@ -54,7 +55,7 @@ export default function AssignTaskModal({ open, onClose, mentees, initialMenteeI
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [dueDate, setDueDate] = useState('')
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   // 모달이 열릴 때 초기 멘티 선택 반영

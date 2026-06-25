@@ -33,6 +33,7 @@ interface Props {
   offset: number
   masteredIds: string[]
   mastery: string
+  seqMap: Record<string, number>
 }
 
 const MASTERY_FILTERS = [
@@ -42,7 +43,7 @@ const MASTERY_FILTERS = [
 ]
 
 export default function JlptKanjiClient({
-  items, level, totalPages, currentPage, search, totalCount, offset, masteredIds, mastery
+  items, level, totalPages, currentPage, search, totalCount, offset, masteredIds, mastery, seqMap
 }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -123,7 +124,7 @@ export default function JlptKanjiClient({
         {items.length === 0 ? (
           <EmptyState title="漢字がありません" description="検索条件を変更してください" icon="漢" />
         ) : (
-          <KanjiList items={items} level={level} offset={offset} masteredIds={masteredIds} onToggleMastery={handleToggleMastery} />
+          <KanjiList items={items} level={level} offset={offset} masteredIds={masteredIds} onToggleMastery={handleToggleMastery} seqMap={seqMap} />
         )}
       </div>
 

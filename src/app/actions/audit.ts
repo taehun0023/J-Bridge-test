@@ -42,6 +42,7 @@ export interface AuditLogEntry {
 export async function getAuditLog(filters?: {
   action?: string
   resourceType?: string
+  actorId?: string
   search?: string
   dateFrom?: string
   dateTo?: string
@@ -66,6 +67,9 @@ export async function getAuditLog(filters?: {
   }
   if (filters?.resourceType && filters.resourceType !== 'all') {
     query = query.eq('resource_type', filters.resourceType)
+  }
+  if (filters?.actorId && filters.actorId !== 'all') {
+    query = query.eq('actor_id', filters.actorId)
   }
   if (filters?.dateFrom) {
     query = query.gte('created_at', filters.dateFrom)
@@ -117,6 +121,7 @@ export async function restoreResource(auditLogId: string) {
 export async function exportAuditLogCsv(filters?: {
   action?: string
   resourceType?: string
+  actorId?: string
   dateFrom?: string
   dateTo?: string
 }) {
@@ -135,6 +140,9 @@ export async function exportAuditLogCsv(filters?: {
   }
   if (filters?.resourceType && filters.resourceType !== 'all') {
     query = query.eq('resource_type', filters.resourceType)
+  }
+  if (filters?.actorId && filters.actorId !== 'all') {
+    query = query.eq('actor_id', filters.actorId)
   }
   if (filters?.dateFrom) {
     query = query.gte('created_at', filters.dateFrom)

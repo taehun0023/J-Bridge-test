@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useCallback, useTransition } from 'react'
+import { useState, useCallback } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Lock, Plus, X } from 'lucide-react'
@@ -58,9 +59,9 @@ export default function WritingListClient({
   const searchParams = useSearchParams()
   const [searchInput, setSearchInput] = useState(search)
   const [localMastered, setLocalMastered] = useState<Set<string>>(new Set(masteredIds))
-  const [isPending, startTransition] = useTransition()
+  const [isPending, startTransition] = useLoadingTransition()
   const [showAddForm, setShowAddForm] = useState(false)
-  const [addPending, startAddTransition] = useTransition()
+  const [addPending, startAddTransition] = useLoadingTransition()
   const [addMessage, setAddMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [addForm, setAddForm] = useState({
     example_sentence_ko: '',

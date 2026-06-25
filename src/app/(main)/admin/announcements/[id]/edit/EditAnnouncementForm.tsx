@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useTransition, useRef } from 'react'
+import { useState, useRef } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import { useRouter } from 'next/navigation'
 import { updateAnnouncement, deleteAttachment } from '@/app/actions/announcements'
 import Card from '@/components/ui/Card'
@@ -26,7 +27,7 @@ function formatBytes(bytes: number) {
 
 export default function EditAnnouncementForm({ announcement, existingAttachments }: Props) {
   const router = useRouter()
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
   const [error, setError] = useState<string | null>(null)
   const [newFiles, setNewFiles] = useState<File[]>([])
   const [removedAttachments, setRemovedAttachments] = useState<Set<string>>(new Set())

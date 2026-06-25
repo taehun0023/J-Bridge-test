@@ -5,7 +5,8 @@ import Card from '@/components/ui/Card'
 import Link from 'next/link'
 import type { JapaneseProgressStat } from '@/lib/japanese-progress'
 import ItemAssignModal from './ItemAssignModal'
-import { Plus, Languages } from 'lucide-react'
+import MockExamAssignModal from '../admin/tasks/MockExamAssignModal'
+import { GraduationCap, Languages } from 'lucide-react'
 import NameRuby from '@/components/ui/NameRuby'
 import { getJlptLevel, getJlptLevelColor, type JlptLevel } from '@/lib/assessment-config'
 
@@ -21,6 +22,10 @@ function LevelBadge({ level }: { level: string | null }) {
 interface ExamScore {
   score: number | null
   passing_score: number
+  /** JLPT模試: 합산 판정값(있으면 점수>=커트 재계산 대신 이 값으로 합/불 표시) */
+  passed?: boolean | null
+  /** JLPT模試: 응시 레벨(content_level). 試験レベル 컬럼에 사용 */
+  level?: string | null
 }
 
 interface EmployeeRow {
@@ -30,6 +35,7 @@ interface EmployeeRow {
   japanese_mentor_name: string | null
   tech_mentor_name: string | null
   target_certification: string | null
+  monthly_auto_assign?: boolean | null
   stat: JapaneseProgressStat
   exam_seikatsu: ExamScore | null
   exam_business_jp: ExamScore | null
@@ -47,12 +53,36 @@ function ExamCell({ exam }: { exam: ExamScore | null }) {
   if (!exam || exam.score === null) {
     return <span className="text-zinc-400">—</span>
   }
-  const passed = exam.score >= exam.passing_score
+  const passed = exam.passed ?? (exam.score >= exam.passing_score)
   return (
     <span className={passed ? 'font-medium text-emerald-500' : 'font-medium text-red-500'}>
       {exam.score}/{exam.passing_score}
     </span>
   )
+}
+
+/** JLPT模試 満点(合算) */
+const MOCK_MAX = 180
+
+/**
+ * 試験判定: 미달 / 합격권 / 안정권
+ *  - 不合格(passed=false) → 未達
+ *  - 合格だが커트라인 부근 → 合格圏(턱걸이)
+ *  - 커트라인 + (満点-커트라인)×0.5 이상 → 安定圏(여유 합격)
+ */
+function JudgmentCell({ exam }: { exam: ExamScore | null }) {
+  if (!exam || exam.score === null) {
+    return <span className="text-zinc-400">—</span>
+  }
+  const cutoff = exam.passing_score
+  const passed = exam.passed ?? (exam.score >= cutoff)
+  if (!passed) {
+    return <span className="inline-flex rounded-md bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-400">未達</span>
+  }
+  const safe = exam.score >= cutoff + (MOCK_MAX - cutoff) * 0.5
+  return safe
+    ? <span className="inline-flex rounded-md bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">安定圏</span>
+    : <span className="inline-flex rounded-md bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">合格圏</span>
 }
 
 function fmtPair(c: { completed: number; total: number }): string {
@@ -67,12 +97,10 @@ export default function AdminDashboard({ adminName, employees, variant = 'admin'
   const isMentor = variant === 'mentor'
   const [search, setSearch] = useState('')
   const [assignOpen, setAssignOpen] = useState(false)
-  const [assignTargetIds, setAssignTargetIds] = useState<string[]>([])
   const [jlptOpen, setJlptOpen] = useState(false)
   const [jlptTargetIds, setJlptTargetIds] = useState<string[]>([])
 
   function openAssignForAll() {
-    setAssignTargetIds([])
     setAssignOpen(true)
   }
   function openJlptForAll() {
@@ -95,26 +123,19 @@ export default function AdminDashboard({ adminName, employees, variant = 'admin'
 
   return (
     <div>
-      <div className="mb-6 flex items-center gap-3">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ダッシュボード</h1>
-        {isMentor ? (
-          <span className="rounded-full bg-sky-500/10 px-3 py-1 text-xs font-bold text-sky-500 ring-1 ring-sky-500/20">
-            メンター
-          </span>
-        ) : (
+      {!isMentor && (
+        <div className="mb-6 flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ダッシュボード</h1>
           <span className="rounded-full bg-red-500/10 px-3 py-1 text-xs font-bold text-red-500 ring-1 ring-red-500/20">
             管理者
           </span>
-        )}
-      </div>
+        </div>
+      )}
 
-      <ItemAssignModal
+      <MockExamAssignModal
         open={assignOpen}
         onClose={() => setAssignOpen(false)}
-        mentees={employees.map(e => ({ id: e.id, full_name: e.full_name, email: e.email, target: e.target_certification }))}
-        initialMenteeIds={assignTargetIds}
-        categories={['seikatsu-quiz', 'business-jp-quiz']}
-        heading="理解テストを割り当てる（増分）"
+        mentees={employees.map(e => ({ id: e.id, full_name: e.full_name, email: e.email }))}
       />
 
       <ItemAssignModal
@@ -122,6 +143,7 @@ export default function AdminDashboard({ adminName, employees, variant = 'admin'
         onClose={() => setJlptOpen(false)}
         mentees={employees.map(e => ({ id: e.id, full_name: e.full_name, email: e.email, target: e.target_certification }))}
         initialMenteeIds={jlptTargetIds}
+        autoAssignIds={employees.filter(e => e.monthly_auto_assign !== false).map(e => e.id)}
       />
 
       <Card
@@ -141,10 +163,10 @@ export default function AdminDashboard({ adminName, employees, variant = 'admin'
               type="button"
               onClick={openAssignForAll}
               disabled={employees.length === 0}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
             >
-              <Plus className="h-3.5 w-3.5" />
-              理解テスト
+              <GraduationCap className="h-3.5 w-3.5" />
+              JLPT模試
             </button>
           </div>
         }
@@ -165,9 +187,9 @@ export default function AdminDashboard({ adminName, employees, variant = 'admin'
                 <th className="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400">名前</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">日本語メンター</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">技術メンター</th>
-                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">目標レベル</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">試験レベル</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">試験</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">判定</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">今月課題</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">完了</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">遅延</th>
@@ -193,13 +215,13 @@ export default function AdminDashboard({ adminName, employees, variant = 'admin'
                     {e.tech_mentor_name ? <NameRuby name={e.tech_mentor_name} /> : '—'}
                   </td>
                   <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm dark:border-white/[0.06]">
-                    <LevelBadge level={e.target_certification} />
-                  </td>
-                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm dark:border-white/[0.06]">
-                    <LevelBadge level={e.exam_seikatsu && e.exam_seikatsu.score != null ? getJlptLevel(e.exam_seikatsu.score) : null} />
+                    <LevelBadge level={e.exam_seikatsu?.level ?? (e.exam_seikatsu && e.exam_seikatsu.score != null ? getJlptLevel(e.exam_seikatsu.score) : null)} />
                   </td>
                   <td className="whitespace-nowrap border-l border-gray-200/40 px-3 py-3 text-center text-sm dark:border-white/[0.06]">
                     <ExamCell exam={e.exam_seikatsu} />
+                  </td>
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-3 py-3 text-center text-sm dark:border-white/[0.06]">
+                    <JudgmentCell exam={e.exam_seikatsu} />
                   </td>
                   <td className="whitespace-nowrap border-l border-gray-200/40 px-3 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
                     {fmtPair(e.stat.seikatsu)}

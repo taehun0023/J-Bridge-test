@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import Card from '@/components/ui/Card'
 import { createFeedback, updateFeedback, deleteFeedback } from '@/app/actions/admin/feedback'
 import { createFeedbackReply, updateFeedbackReply, deleteFeedbackReply, bulkDeleteFeedbacks } from '@/app/actions/feedback'
@@ -59,7 +60,7 @@ export default function FeedbackClient({ feedbacks, currentUserId, userRole, fee
   const canBulkDelete = userRole === 'admin'
   const canCreate = userRole === 'admin' || userRole === 'mentor'
   const [message, setMessage] = useState<string | null>(null)
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [targetUserId, setTargetUserId] = useState('')
 

@@ -1,13 +1,11 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Pagination from '@/components/ui/Pagination'
 import EmptyState from '@/components/ui/EmptyState'
 import VocabularyList from '@/components/japanese/VocabularyList'
 import FlashcardMode from '@/components/japanese/FlashcardMode'
-import RangeQuizModal from '@/components/japanese/RangeQuizModal'
-import { generateVocabQuiz } from '@/app/actions/range-quiz'
 import { toggleMastery } from '@/app/actions/mastery'
 import type { JlptLevel } from '@/lib/supabase/types'
 
@@ -34,6 +32,7 @@ interface Props {
   offset: number
   masteredIds: string[]
   mastery: string
+  seqMap: Record<string, number>
 }
 
 const posLabels: Record<string, string> = {
@@ -58,14 +57,18 @@ const MASTERY_FILTERS = [
 ]
 
 export default function JlptVocabularyClient({
-  items, level, totalPages, currentPage, search, pos, partOfSpeechOptions, totalCount,
-  offset, masteredIds, mastery
+  items, level, totalPages, currentPage, search, pos, partOfSpeechOptions,
+  offset, masteredIds, mastery, seqMap
 }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [showFlashcard, setShowFlashcard] = useState(false)
-  const [showQuiz, setShowQuiz] = useState(false)
+  const [flashcardItems, setFlashcardItems] = useState<VocabItem[]>([])
   const [searchInput, setSearchInput] = useState(search)
+  // 습득 상태를 클라이언트에서 보관 → 카드에서 맞히면 리스트 체크가 실시간 반영
+  const [masteredSet, setMasteredSet] = useState<Set<string>>(() => new Set(masteredIds))
+  useEffect(() => { setMasteredSet(new Set(masteredIds)) }, [masteredIds])
+  const masteredArr = useMemo(() => [...masteredSet], [masteredSet])
 
   function updateParams(updates: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString())
@@ -84,18 +87,10 @@ export default function JlptVocabularyClient({
   }
 
   const handleToggleMastery = useCallback(async (itemId: string) => {
+    setMasteredSet(prev => { const n = new Set(prev); if (n.has(itemId)) n.delete(itemId); else n.add(itemId); return n })
     await toggleMastery('jlpt_vocabulary', itemId)
   }, [])
 
-  const fetchQuestions = useCallback(async (start: number, end: number, count: number) => {
-    return generateVocabQuiz({
-      level,
-      pos: pos || undefined,
-      rangeStart: start,
-      rangeEnd: end,
-      questionCount: count,
-    })
-  }, [level, pos])
 
   return (
     <div>
@@ -146,20 +141,12 @@ export default function JlptVocabularyClient({
         </div>
 
         <div className="ml-auto flex items-center gap-3">
-          <span className="text-sm text-gray-500 dark:text-gray-400">{totalCount}語</span>
           <button
-            onClick={() => setShowQuiz(true)}
-            disabled={totalCount === 0}
-            className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
-          >
-            範囲クイズ
-          </button>
-          <button
-            onClick={() => setShowFlashcard(true)}
+            onClick={() => { setFlashcardItems(items.filter(it => !masteredSet.has(it.id))); setShowFlashcard(true) }}
             disabled={items.length === 0}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            フラッシュカード
+            暗記
           </button>
         </div>
       </div>
@@ -169,7 +156,7 @@ export default function JlptVocabularyClient({
         {items.length === 0 ? (
           <EmptyState title="単語がありません" description="検索条件を変更してください" icon="📝" />
         ) : (
-          <VocabularyList items={items} level={level} offset={offset} masteredIds={masteredIds} onToggleMastery={handleToggleMastery} />
+          <VocabularyList items={items} level={level} offset={offset} masteredIds={masteredArr} onToggleMastery={handleToggleMastery} seqMap={seqMap} />
         )}
       </div>
 
@@ -182,17 +169,9 @@ export default function JlptVocabularyClient({
 
       {/* Flashcard mode */}
       {showFlashcard && (
-        <FlashcardMode items={items} onClose={() => setShowFlashcard(false)} masteredIds={masteredIds} onToggleMastery={handleToggleMastery} />
+        <FlashcardMode items={flashcardItems} onClose={() => setShowFlashcard(false)} masteredIds={masteredArr} onToggleMastery={handleToggleMastery} />
       )}
 
-      {/* Range quiz */}
-      {showQuiz && (
-        <RangeQuizModal
-          totalCount={totalCount}
-          onClose={() => setShowQuiz(false)}
-          fetchQuestions={fetchQuestions}
-        />
-      )}
     </div>
   )
 }

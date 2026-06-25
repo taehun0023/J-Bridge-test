@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import Card from '@/components/ui/Card'
 import Pagination from '@/components/ui/Pagination'
 import { getGlossaryLog, revertGlossaryChange } from '@/app/actions/admin/glossary'
@@ -78,7 +79,7 @@ export default function GlossaryLogClient() {
   const [dateTo, setDateTo] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
 
   function loadData(p?: number) {
     const targetPage = p ?? page

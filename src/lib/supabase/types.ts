@@ -80,6 +80,7 @@ export interface JlptReadingPassage {
   vocabulary_notes: { word: string; reading: string; meaning_ko: string }[]
   grammar_notes: string[] | null
   translation_ko: string | null
+  comprehension: { question: string; options: string[]; answer: number } | null
   sort_order: number
   created_at: string
 }
@@ -94,13 +95,14 @@ export interface JlptListeningScript {
   situation: string | null
   vocabulary_notes: { word: string; reading: string; meaning_ko: string }[]
   translation_ko: string | null
+  comprehension: { question: string; options: string[]; answer: number } | null
   sort_order: number
   created_at: string
 }
 
 export type AccessRequestStatus = 'pending' | 'approved' | 'denied'
 
-export type NotificationType = 'task_assigned' | 'exam_requested' | 'exam_approved' | 'exam_denied' | 'exam_completed' | 'retake_requested' | 'feedback_received' | 'feedback_reply' | 'assignment_completed' | 'assignment_confirmed' | 'assignment_overdue' | 'assignment_reassigned' | 'assignment_cancelled' | 'vocab_submitted' | 'vocab_approved' | 'vocab_rejected'
+export type NotificationType = 'task_assigned' | 'exam_requested' | 'exam_approved' | 'exam_denied' | 'exam_completed' | 'retake_requested' | 'feedback_received' | 'feedback_reply' | 'assignment_completed' | 'assignment_confirmed' | 'assignment_overdue' | 'assignment_reassigned' | 'assignment_cancelled' | 'vocab_submitted' | 'vocab_approved' | 'vocab_rejected' | 'study_pattern_alert' | 'monthly_overdue_alert' | 'progress_low_alert' | 'mock_not_taken_alert'
 export type LearningAssignmentStatus = 'pending' | 'in_progress' | 'awaiting_confirmation' | 'completed' | 'overdue'
 export type ComprehensiveExamStatus = 'requested' | 'approved' | 'denied' | 'in_progress' | 'completed' | 'failed'
 

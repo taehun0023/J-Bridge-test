@@ -7,7 +7,6 @@ import { requireAuth } from '@/lib/auth-helpers'
 import { fetchRandomAssessmentQuestions, fetchAssessmentQuiz } from '@/lib/supabase/queries/assessments'
 import { recalculateUserScores } from './scores'
 import { ASSESSMENT_QUIZ_IDS } from '@/lib/assessment-config'
-import { checkAndCreateExamCycle } from './exam-scheduling'
 
 /** Save onboarding preferences and mark as onboarded → dashboard */
 export async function savePreferences(formData: FormData) {
@@ -36,10 +35,7 @@ export async function savePreferences(formData: FormData) {
 
   if (error) return { error: '保存中にエラーが発生しました' }
 
-  // Create first exam cycle (cycle_number=1) on onboarding completion
-  // This triggers the exam gate on the dashboard
-  await checkAndCreateExamCycle(user.id, isJapanese)
-
+  // 온보딩 강제시험 제거: 첫 시험 사이클 자동 생성 안 함
   revalidatePath('/', 'layout')
   redirect('/dashboard')
 }

@@ -50,7 +50,6 @@ export const ITEM_CATEGORIES: Record<ItemCategory, CategorySpec> = {
       grammar:    { label: '文法', itemType: 'jlpt_grammar',    table: 'jlpt_grammar', levelColumn: 'jlpt_level', pageSize: 30 },
       reading:    { label: '読解', itemType: 'jlpt_reading',    table: 'jlpt_reading_passages', levelColumn: 'jlpt_level', pageSize: 10 },
       listening:  { label: '聴解', itemType: 'jlpt_listening',  table: 'jlpt_listening_scripts', levelColumn: 'jlpt_level', pageSize: 10 },
-      kanji:      { label: '漢字', itemType: 'jlpt_kanji',      table: 'jlpt_kanji', levelColumn: 'jlpt_level', pageSize: 30 },
     },
   },
   'business-jp': {
@@ -73,7 +72,6 @@ export const ITEM_CATEGORIES: Record<ItemCategory, CategorySpec> = {
       grammar:    { label: '文法', itemType: 'quiz', table: 'quizzes', quizType: 'jlpt_grammar', levelByTitle: true },
       reading:    { label: '読解', itemType: 'quiz', table: 'quizzes', quizType: 'jlpt_reading', levelByTitle: true },
       listening:  { label: '聴解', itemType: 'quiz', table: 'quizzes', quizType: 'jlpt_listening', levelByTitle: true },
-      kanji:      { label: '漢字', itemType: 'quiz', table: 'quizzes', quizType: 'jlpt_kanji', levelByTitle: true },
     },
   },
   'business-jp-quiz': {

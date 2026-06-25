@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import { useRouter } from 'next/navigation'
 import { createItemAssignments, getMenteeItemStatus, type ItemStatusRow } from '@/app/actions/item-assignments'
 import { ITEM_CATEGORIES, areaKeys, areaLabel, JLPT_LEVELS, type ItemCategory } from '@/lib/item-assignments'
@@ -21,6 +22,8 @@ interface Props {
   /** 표시할 카테고리 (課題=항목 / 理解テスト=퀴즈) */
   categories?: ItemCategory[]
   heading?: string
+  /** 월별 자동부여 ON 멘티 id — 선택 불가(그레이아웃) 처리 */
+  autoAssignIds?: string[]
 }
 
 function displayName(m: AssignableMentee): string {
@@ -30,15 +33,18 @@ function displayName(m: AssignableMentee): string {
 
 const fmtRange = (a: number, b: number) => (a === b ? `${a}` : `${a}〜${b}`)
 
-export default function ItemAssignModal({ open, onClose, mentees, initialMenteeIds, categories = ['seikatsu', 'business-jp'], heading = '項目課題を割り当てる（増分）' }: Props) {
+export default function ItemAssignModal({ open, onClose, mentees, initialMenteeIds, categories = ['seikatsu', 'business-jp'], heading = '項目課題を割り当てる（増分）', autoAssignIds }: Props) {
   const router = useRouter()
+  const autoSet = useMemo(() => new Set(autoAssignIds ?? []), [autoAssignIds])
+  const hasLocked = useMemo(() => mentees.some(m => autoSet.has(m.id)), [mentees, autoSet])
+  const selectableCount = useMemo(() => mentees.filter(m => !autoSet.has(m.id)).length, [mentees, autoSet])
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [category, setCategory] = useState<ItemCategory>(categories[0])
   const [level, setLevel] = useState<string>('N5')
   const [counts, setCounts] = useState<Record<string, string>>({})
   const [statusRows, setStatusRows] = useState<ItemStatusRow[]>([])
   const [loadingStatus, setLoadingStatus] = useState(false)
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const catSpec = ITEM_CATEGORIES[category]
@@ -46,10 +52,12 @@ export default function ItemAssignModal({ open, onClose, mentees, initialMenteeI
 
   useEffect(() => {
     if (open) {
-      setSelected(new Set(initialMenteeIds ?? []))
+      setSelected(new Set((initialMenteeIds ?? []).filter(id => !autoSet.has(id))))
       setCounts({})
       setMessage(null)
     }
+    // 모달 열릴 때만 초기화 (autoSet 변경으로는 리셋 안 함)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initialMenteeIds])
 
   const selectedIds = useMemo(() => [...selected], [selected])
@@ -65,6 +73,18 @@ export default function ItemAssignModal({ open, onClose, mentees, initialMenteeI
       .finally(() => { if (!cancelled) setLoadingStatus(false) })
     return () => { cancelled = true }
   }, [open, category, effectiveLevel, selectedIds])
+
+  // 선택 멘티들의 목표레벨이 동일하면 그 레벨로 자동 설정
+  // → 개별부여가 "목표레벨" 사다리에 누적되게 (실수로 기본 N5로 부여되는 것 방지)
+  useEffect(() => {
+    if (!catSpec.hasLevel) return
+    const targets = new Set(
+      [...selected]
+        .map(id => mentees.find(m => m.id === id)?.target)
+        .filter((t): t is string => !!t && (JLPT_LEVELS as readonly string[]).includes(t))
+    )
+    if (targets.size === 1) setLevel([...targets][0])
+  }, [selected, mentees, catSpec.hasLevel])
 
   // 목표 레벨 기반 선택용: 멘티들이 가진 목표 레벨 목록
   const targetLevelsPresent = useMemo(() => {
@@ -108,6 +128,7 @@ export default function ItemAssignModal({ open, onClose, mentees, initialMenteeI
   }, [areas, counts, selectedIds, statusRows, mentees, areaStats])
 
   function toggleMentee(id: string) {
+    if (autoSet.has(id)) return // 자동부여 대상은 선택 불가
     setSelected(prev => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id); else next.add(id)
@@ -115,11 +136,11 @@ export default function ItemAssignModal({ open, onClose, mentees, initialMenteeI
     })
   }
   function toggleAll() {
-    if (selected.size === mentees.length) setSelected(new Set())
-    else setSelected(new Set(mentees.map(m => m.id)))
+    if (selected.size === selectableCount) setSelected(new Set())
+    else setSelected(new Set(mentees.filter(m => !autoSet.has(m.id)).map(m => m.id)))
   }
   function selectByTarget(lvl: string) {
-    setSelected(new Set(mentees.filter(m => m.target === lvl).map(m => m.id)))
+    setSelected(new Set(mentees.filter(m => m.target === lvl && !autoSet.has(m.id)).map(m => m.id)))
     setLevel(lvl)
   }
 
@@ -131,6 +152,13 @@ export default function ItemAssignModal({ open, onClose, mentees, initialMenteeI
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (selected.size === 0) { setMessage({ type: 'error', text: 'メンティーを1名以上選択してください' }); return }
+    // 配布 시점 체크: 자동부여 대상이 선택돼 있으면 알림 후 차단 (해당 인원 제외하거나 화면 갱신)
+    const lockedSelected = [...selected].filter(id => autoSet.has(id))
+    if (lockedSelected.length > 0) {
+      const names = lockedSelected.map(id => { const m = mentees.find(x => x.id === id); return m ? displayName(m) : id }).join('、')
+      setMessage({ type: 'error', text: `${names} は月別自動付与の対象です。これらのメンティーの選択を外して配布してください（最新状態は画面更新で確認）。` })
+      return
+    }
     const hasCount = areas.some(a => parseInt(counts[a] || '0', 10) > 0)
     if (!hasCount) { setMessage({ type: 'error', text: '配布する項目数を1つ以上入力してください' }); return }
 
@@ -195,26 +223,38 @@ export default function ItemAssignModal({ open, onClose, mentees, initialMenteeI
                   </button>
                 ))}
                 <button type="button" onClick={toggleAll} className="text-xs text-indigo-500 hover:text-indigo-400">
-                  {selected.size === mentees.length ? '全解除' : '全選択'}
+                  {selected.size === selectableCount && selectableCount > 0 ? '全解除' : '全選択'}
                 </button>
               </div>
             </div>
-            <div className="mt-1 max-h-24 overflow-y-auto rounded-xl border border-gray-200 bg-white p-2 dark:border-white/[0.08] dark:bg-white/5">
+            <div className="mt-1 max-h-56 overflow-y-auto rounded-xl border border-gray-200 bg-white p-2 dark:border-white/[0.08] dark:bg-white/5">
               {mentees.length === 0 ? (
                 <p className="text-xs text-zinc-400">対象メンティーがいません</p>
               ) : (
                 <div className="grid grid-cols-2 gap-1 sm:grid-cols-3">
-                  {mentees.map(m => (
-                    <label key={m.id} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-sm text-zinc-800 hover:bg-indigo-50 dark:text-zinc-200 dark:hover:bg-white/5">
-                      <input type="checkbox" checked={selected.has(m.id)} onChange={() => toggleMentee(m.id)} className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
-                      <span className="truncate">{displayName(m)}</span>
-                      {m.target && <span className="ml-auto shrink-0 rounded bg-violet-100 px-1 text-[10px] font-semibold text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">{m.target}</span>}
-                    </label>
-                  ))}
+                  {mentees.map(m => {
+                    const locked = autoSet.has(m.id)
+                    return (
+                      <label
+                        key={m.id}
+                        title={locked ? '月別自動付与の対象です（選択不可）' : undefined}
+                        className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm ${locked ? 'cursor-not-allowed text-zinc-400 dark:text-zinc-500' : 'cursor-pointer text-zinc-800 hover:bg-indigo-50 dark:text-zinc-200 dark:hover:bg-white/5'}`}
+                      >
+                        <input type="checkbox" disabled={locked} checked={selected.has(m.id)} onChange={() => toggleMentee(m.id)} className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50" />
+                        <span className="truncate">{displayName(m)}</span>
+                        {m.target && <span className={`ml-auto shrink-0 rounded px-1 text-[10px] font-semibold ${locked ? 'bg-zinc-100 text-zinc-400 dark:bg-zinc-700 dark:text-zinc-500' : 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300'}`}>{m.target}</span>}
+                      </label>
+                    )
+                  })}
                 </div>
               )}
             </div>
-            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{selected.size}名 選択中</p>
+            <div className="mt-1 flex items-center justify-between gap-2">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">{selected.size}名 選択中</p>
+              {hasLocked && (
+                <p className="text-xs text-amber-600 dark:text-amber-400">※ グレーアウト＝月別自動付与の対象（選択不可）</p>
+              )}
+            </div>
           </div>
 
           {/* 레벨 (생활일본어만) */}

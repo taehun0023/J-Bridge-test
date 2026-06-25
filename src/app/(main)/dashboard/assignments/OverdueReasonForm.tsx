@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import { submitOverdueReason } from '@/app/actions/learning-assignments'
 
 interface Props {
@@ -10,7 +11,7 @@ interface Props {
 
 export default function OverdueReasonForm({ assignmentId, existingReason }: Props) {
   const [reason, setReason] = useState('')
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
   const [error, setError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
   const [submittedReason, setSubmittedReason] = useState<string | null>(null)

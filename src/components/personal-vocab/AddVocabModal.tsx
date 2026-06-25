@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import { X } from 'lucide-react'
 import { addPersonalVocab } from '@/app/actions/personal-vocab'
 
@@ -16,7 +17,7 @@ export default function AddVocabModal({ initialTerm = '', sourceUrl = '', onClos
   const [meaning, setMeaning] = useState('')
   const [memo, setMemo] = useState('')
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
 
   function handleSubmit() {
     if (!term.trim()) return

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import { ChevronDown } from 'lucide-react'
 import { updateUserByAdmin } from '@/app/actions/admin/users'
 import { IT_CERTIFICATIONS, parseCertifications, buildCertifications } from '@/lib/certifications'
@@ -80,16 +81,16 @@ export default function EditUserModal({
   const [role, setRole] = useState(user.role)
   const [japaneseMentorId, setJapaneseMentorId] = useState(user.assigned_japanese_mentor_id ?? '')
   const [techMentorId, setTechMentorId] = useState(user.assigned_tech_mentor_id ?? '')
-  const [specialty, setSpecialty] = useState(user.mentor_specialty ?? '')
-  const japaneseMentors = mentors.filter(m => m.mentor_specialty === 'japanese')
-  const techMentors = mentors.filter(m => m.mentor_specialty === 'technical')
+  // 전문(専門) 구분 폐지 — 모든 멘토를 일본어·기술 양쪽에 배정 가능
+  const japaneseMentors = mentors
+  const techMentors = mentors
   const [target, setTarget] = useState(user.target_certification ?? '')
   const [jlpt, setJlpt] = useState(user.jlpt_level ?? '')
   const [selectedCerts, setSelectedCerts] = useState<string[]>(parseCertifications(user.it_certifications))
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
   const [newPassword, setNewPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
 
   function handleSave() {
     setError(null)
@@ -101,7 +102,7 @@ export default function EditUserModal({
       const result = await updateUserByAdmin(user.id, {
         full_name: buildFullName({ lastName, firstName, katakanaLast, katakanaFirst }) || null,
         role,
-        mentor_specialty: role === 'mentor' ? (specialty || null) : null,
+        mentor_specialty: null,
         japanese_mentor_id: role === 'mentee' ? (japaneseMentorId || null) : null,
         tech_mentor_id: role === 'mentee' ? (techMentorId || null) : null,
         target_certification: target || null,
@@ -169,15 +170,6 @@ export default function EditUserModal({
                   {techMentors.map(m => (
                     <option key={m.id} value={m.id}>技術: {m.full_name ?? m.id}</option>
                   ))}
-                </select>
-              </div>
-            ) : role === 'mentor' ? (
-              <div>
-                <label className={labelCls}>専門分野</label>
-                <select value={specialty} onChange={e => setSpecialty(e.target.value)} className={selectCls}>
-                  <option value="">専門 未設定</option>
-                  <option value="japanese">日本語</option>
-                  <option value="technical">技術</option>
                 </select>
               </div>
             ) : (

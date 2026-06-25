@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useCallback, useTransition } from 'react'
+import { useState, useCallback } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import { useRouter, useSearchParams } from 'next/navigation'
 import TabBar from '@/components/ui/TabBar'
 import Pagination from '@/components/ui/Pagination'
@@ -94,7 +95,7 @@ export default function BusinessGlossaryClient({
   const [searchInput, setSearchInput] = useState(search)
   const [showQuiz, setShowQuiz] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
-  const [addPending, startAddTransition] = useTransition()
+  const [addPending, startAddTransition] = useLoadingTransition()
   const [addMessage, setAddMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const isGlossaryPage = basePath?.includes('glossary') && !basePath?.includes('expressions') && !basePath?.includes('sentence-patterns')

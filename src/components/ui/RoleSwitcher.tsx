@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import { switchMyRole } from '@/app/actions/dev-role-switch'
 import { UserCog, Check, ChevronDown } from 'lucide-react'
 import type { UserRole } from '@/lib/supabase/types'
@@ -22,7 +23,7 @@ const ROLES: UserRole[] = ['admin', 'mentor', 'mentee']
  */
 export default function RoleSwitcher({ currentRole }: { currentRole: UserRole }) {
   const [open, setOpen] = useState(false)
-  const [isPending, startTransition] = useTransition()
+  const [isPending, startTransition] = useLoadingTransition()
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
   const enabled = ENABLED_SUPABASE_REFS.some((ref) => url.includes(ref))

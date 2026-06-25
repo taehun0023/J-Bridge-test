@@ -373,6 +373,8 @@ export async function confirmAssignment(assignmentId: string) {
 
   revalidatePath('/admin/tasks')
   revalidatePath('/dashboard/assignments')
+  revalidatePath('/admin/reports')
+  revalidatePath('/dashboard')
   return { success: true }
 }
 
@@ -419,6 +421,8 @@ export async function deleteLearningAssignment(assignmentId: string) {
 
   revalidatePath('/admin/tasks')
   revalidatePath('/dashboard/assignments')
+  revalidatePath('/admin/reports')
+  revalidatePath('/dashboard')
   return { success: true }
 }
 
@@ -458,6 +462,10 @@ export async function updateLearningAssignment(
     const cumulative = prevAnchor + newCount
     update.target_count = newCount
     update.cumulative_target = cumulative
+    // 타이틀의 "N項目" 숫자도 새 개수로 갱신 (제목을 따로 안 넘긴 경우)
+    if (!update.title && a.title && /\d+\s*項目/.test(a.title)) {
+      update.title = a.title.replace(/\d+\s*項目/, `${newCount}項目`)
+    }
     if (a.status !== 'overdue') {
       const mastered = a.mastered_snapshot ?? 0
       update.status = mastered >= cumulative ? 'completed' : (mastered > prevAnchor ? 'in_progress' : 'pending')
@@ -481,6 +489,8 @@ export async function updateLearningAssignment(
 
   revalidatePath('/admin/tasks')
   revalidatePath('/dashboard/assignments')
+  revalidatePath('/admin/reports')
+  revalidatePath('/dashboard')
   return { success: true }
 }
 
@@ -615,6 +625,8 @@ export async function reassignAssignment(assignmentId: string, newDueDate: strin
 
   revalidatePath('/admin/tasks')
   revalidatePath('/dashboard/assignments')
+  revalidatePath('/admin/reports')
+  revalidatePath('/dashboard')
   return { success: true }
 }
 
@@ -650,6 +662,8 @@ export async function cancelAssignment(assignmentId: string) {
 
   revalidatePath('/admin/tasks')
   revalidatePath('/dashboard/assignments')
+  revalidatePath('/admin/reports')
+  revalidatePath('/dashboard')
   return { success: true }
 }
 

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
+import { useLoadingTransition } from '@/lib/loading-store'
 import { useRouter } from 'next/navigation'
 import { updateUserRole, createUserAccount, updateMentorSpecialty, deleteUser, assignMentor } from '@/app/actions/admin/users'
 import { Trash2 } from 'lucide-react'
@@ -38,7 +39,7 @@ export default function AdminUsersClient({ users, mentors }: Props) {
   const router = useRouter()
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [search, setSearch] = useState('')
-  const [pending, startTransition] = useTransition()
+  const [pending, startTransition] = useLoadingTransition()
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null)
   const [editTarget, setEditTarget] = useState<User | null>(null)
@@ -55,8 +56,9 @@ export default function AdminUsersClient({ users, mentors }: Props) {
       return (a.full_name ?? '').localeCompare(b.full_name ?? '', 'ja')
     })
 
-  const japaneseMentors = mentors.filter(m => m.mentor_specialty === 'japanese')
-  const techMentors = mentors.filter(m => m.mentor_specialty === 'technical')
+  // 전문(専門) 구분 폐지 — 모든 멘토를 일본어·기술 양쪽에 배정 가능
+  const japaneseMentors = mentors
+  const techMentors = mentors
 
   function handleRoleChange(userId: string, newRole: string) {
     startTransition(async () => {
@@ -261,18 +263,8 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                       </td>
                     </>
                   ) : user.role === 'mentor' ? (
-                    <td colSpan={2} className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
-                      <select
-                        value={user.mentor_specialty ?? ''}
-                        onChange={e => handleSpecialtyChange(user.id, e.target.value)}
-                        disabled={pending}
-                        className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-100"
-                        title="メンターの専門分野"
-                      >
-                        <option value="">専門 未設定</option>
-                        <option value="japanese">日本語</option>
-                        <option value="technical">技術</option>
-                      </select>
+                    <td colSpan={2} className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">
+                      日本語・技術
                     </td>
                   ) : (
                     <td colSpan={2} className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center dark:border-white/[0.06]">

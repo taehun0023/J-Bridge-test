@@ -76,6 +76,7 @@ export interface MenteeOverview {
   // 5-axis radar scores (0~100)
   radarScores: { jlpt: number; itJapanese: number; coreProgramming: number; framework: number; attitudeCulture: number }
   // Assignment stats
+  assignmentsTotal: number
   assignmentsInProgress: number
   assignmentsCompleted: number
   assignmentsOverdue: number
@@ -229,6 +230,7 @@ export async function getMentorDashboardData() {
         framework: cs?.framework_normalized ?? 0,
         attitudeCulture: att?.attitude_normalized ?? 0,
       },
+      assignmentsTotal: userAssignments.length,
       assignmentsInProgress: userAssignments.filter(a => a.status === 'in_progress').length,
       assignmentsCompleted: userAssignments.filter(a => a.status === 'completed').length,
       assignmentsOverdue: userAssignments.filter(a => a.status === 'overdue').length,

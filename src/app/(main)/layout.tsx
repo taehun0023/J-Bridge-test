@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import MainShell from '@/components/ui/MainShell'
+import GlobalLoadingOverlay from '@/components/ui/GlobalLoadingOverlay'
 import Providers from '@/app/providers'
 import type { UserRole, JlptLevel } from '@/lib/supabase/types'
 import { kanjiOnly } from '@/lib/name-format'
@@ -30,6 +31,7 @@ export default async function MainLayout({
 
   return (
     <Providers>
+      <GlobalLoadingOverlay />
       <MainShell userName={userName} avatarUrl={avatarUrl} userRole={userRole} jlptLevel={jlptLevel}>{children}</MainShell>
     </Providers>
   )

@@ -43,7 +43,6 @@ export default async function AdminUsersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ユーザー管理</h1>
-          <p className="mt-1 text-gray-500 dark:text-gray-400">アカウント作成及び役割管理</p>
         </div>
         <Link
           href="/admin/mentors"
