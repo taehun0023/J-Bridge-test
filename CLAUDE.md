@@ -120,6 +120,13 @@ src/
 
 **5. JLPT 콘텐츠 레벨(N1~N5)은 Claude 임의 판단 금지 — 권위있는 출처 기준으로 정확히.** 단어/문법/한자의 JLPT 레벨은 추측하지 말고 **사전의 JLPT 태그(jisho.org 등)·공식 단어 리스트** 등 출처로 확정한다. 나쁜 사례: 교차레벨 중복정리 때 "N2 우선" 같은 **임의 규칙**으로 N1 단어(`遂げる`·`覆す`·`免れる`·`怠る` 등)를 N2로 잘못 내림. 레벨 배정·이동은 반드시 출처 확인 후.
 
+**6. 콘텐츠 학습순서(`seq`)는 본방(honban/production) 출력 순서가 절대기준 — 임의 재정렬 금지.** 화면에 표시되는 순번은 콘텐츠별 `seq` 값이며, **본방 페이지에 출력되는 순서가 학습 우선순위**다. 규칙:
+- **기존 콘텐츠의 seq·상대순서를 절대 바꾸지 말 것.** 본방 순서와 어긋나면 다음 커밋/배포 때 **학습순서가 전부 꼬인다.**
+- **본방에 없는 새 콘텐츠를 추가할 땐 무조건 맨 뒤(현재 레벨 max(seq)+1, +2 …)에 append.** 중간 삽입·전체 재번호(`renumber_seq_gapless` 식 재정렬) 금지 — 이동/추가분이 중간에 끼어들어 기존 순서를 망친다.
+- 레벨 이동(예: N2→N1)으로 새 레벨에 들어오는 단어도 "그 레벨에 새로 추가"이므로 **해당 레벨 맨 뒤로** 보낸다(중간 삽입 X).
+- 본방 순서 동기화 시 **어휘인데 문법에 있거나 문법인데 어휘에 있는 오분류 항목은 제외**하고 비교한다.
+- (교훈) 2026-06-27 중복통합 후 `renumber_seq_gapless.sql`로 전체 재번호 → 이동단어가 옛 seq값 기준으로 레벨 중간에 끼어듦. 이는 위 규칙 위반. 관련: 메모리 [[jlpt-vocab-level-dedup]].
+
 **Mock exam (jlpt-mock) facts:** stored in `comprehensive_exams` with `category='jlpt-mock'`, `subcategory='mock'`, `mock_set_no`, optional `mock_session` (1=1教時 placeholder `passed=false`, 2=合算 final verdict; null=single-session admin-assigned final). JLPT radar axis = passed jlpt-mock level only (legacy `seikatsu` comp exams deprecated/deleted).
 
 ## Testing
