@@ -180,6 +180,158 @@ function ListeningPlayer({ script, questionId, alreadyPlayed, onPlayed, autoPlay
   )
 }
 
+// ─── 청해 연속 재생 플레이어 ──────────────────────────────────
+
+type ChoukaTrack = {
+  type: 'overall_intro' | 'section_intro' | 'question'
+  text: string
+  questionIdx: number  // -1 for intros
+  sectionGroup: number
+}
+
+function buildChookaiPlaylist(chookaiQuestions: Question[]): ChoukaTrack[] {
+  const tracks: ChoukaTrack[] = []
+  let currentGroup = 0
+  tracks.push({ type: 'overall_intro', text: CHOUKAI_OVERALL_INTRO, questionIdx: -1, sectionGroup: 0 })
+  chookaiQuestions.forEach((q, idx) => {
+    const group = getChookaiMondaiGroup(idx)
+    if (group !== currentGroup) {
+      currentGroup = group
+      tracks.push({ type: 'section_intro', text: MONDAI_INTROS[group], questionIdx: -1, sectionGroup: group })
+    }
+    const parsed = parseListeningQuestion(q.question_text)
+    tracks.push({ type: 'question', text: parsed?.script ?? q.question_text, questionIdx: idx, sectionGroup: group })
+  })
+  return tracks
+}
+
+function ChookaiAudioPlayer({
+  questions,
+  onAdvance,
+  skipNextRef,
+  skipPrevRef,
+}: {
+  questions: Question[]
+  onAdvance: (questionIdx: number) => void
+  skipNextRef: React.MutableRefObject<(() => void) | null>
+  skipPrevRef: React.MutableRefObject<(() => void) | null>
+}) {
+  const playlist = useMemo(() => buildChookaiPlaylist(questions), [questions])
+  const blobUrlsRef = useRef<(string | null)[]>([])
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const waitingForTrackRef = useRef(-1)
+  const currentTrackIdxRef = useRef(-1)
+  const onAdvanceRef = useRef(onAdvance)
+  onAdvanceRef.current = onAdvance
+  const playlistRef = useRef(playlist)
+  playlistRef.current = playlist
+
+  const [playingTrackIdx, setPlayingTrackIdx] = useState(-1)
+  const [fetchedCount, setFetchedCount] = useState(0)
+
+  const playTrack = useCallback((idx: number) => {
+    if (pauseTimerRef.current) { clearTimeout(pauseTimerRef.current); pauseTimerRef.current = null }
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current.onended = null; audioRef.current = null }
+
+    const pl = playlistRef.current
+    if (idx < 0 || idx >= pl.length) return
+
+    const url = blobUrlsRef.current[idx]
+    if (!url) { waitingForTrackRef.current = idx; return }
+
+    waitingForTrackRef.current = -1
+    currentTrackIdxRef.current = idx
+    setPlayingTrackIdx(idx)
+
+    const track = pl[idx]
+    if (track.type === 'question') onAdvanceRef.current(track.questionIdx)
+
+    const audio = new Audio(url)
+    audioRef.current = audio
+    audio.onended = () => {
+      const delay = track.type === 'question' ? 4000 : 0
+      pauseTimerRef.current = setTimeout(() => playTrack(idx + 1), delay)
+    }
+    audio.play().catch(() => {})
+  // playTrack は自己参照のため deps 空 — refs 経由でアクセス
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    blobUrlsRef.current = new Array(playlist.length).fill(null)
+    currentTrackIdxRef.current = -1
+    waitingForTrackRef.current = -1
+    setPlayingTrackIdx(-1)
+    setFetchedCount(0)
+
+    let mounted = true
+    const revokeOnUnmount: string[] = []
+
+    playlist.forEach((track, i) => {
+      fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: track.text, speed: 1.0 }),
+      }).then(async res => {
+        if (!mounted || !res.ok) return
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        revokeOnUnmount.push(url)
+        blobUrlsRef.current[i] = url
+        if (!mounted) return
+        setFetchedCount(c => c + 1)
+        if (i === 0 && currentTrackIdxRef.current === -1) playTrack(0)
+        if (waitingForTrackRef.current === i) playTrack(i)
+      }).catch(() => {})
+    })
+
+    return () => {
+      mounted = false
+      if (audioRef.current) { audioRef.current.pause(); audioRef.current = null }
+      if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current)
+      revokeOnUnmount.forEach(url => URL.revokeObjectURL(url))
+    }
+  }, [playlist, playTrack])
+
+  useEffect(() => {
+    skipNextRef.current = () => {
+      const pl = playlistRef.current
+      for (let i = currentTrackIdxRef.current + 1; i < pl.length; i++) {
+        if (pl[i].type === 'question') { playTrack(i); return }
+      }
+    }
+    skipPrevRef.current = () => {
+      const pl = playlistRef.current
+      for (let i = currentTrackIdxRef.current - 1; i >= 0; i--) {
+        if (pl[i].type === 'question') { playTrack(i); return }
+      }
+    }
+  }, [playTrack, skipNextRef, skipPrevRef])
+
+  const currentTrack = playingTrackIdx >= 0 ? playlist[playingTrackIdx] : null
+
+  return (
+    <div className="mb-4 flex items-center gap-3 rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-3">
+      <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${currentTrack ? 'bg-indigo-500 animate-pulse' : 'bg-zinc-300 dark:bg-zinc-600'}`} />
+      <div className="flex-1 min-w-0">
+        {currentTrack?.type === 'question' ? (
+          <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
+            問題{currentTrack.sectionGroup} — {currentTrack.questionIdx + 1}番
+          </p>
+        ) : currentTrack ? (
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">アナウンス再生中</p>
+        ) : (
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">音声準備中...</p>
+        )}
+      </div>
+      {fetchedCount < playlist.length && (
+        <span className="text-xs text-zinc-400">{fetchedCount}/{playlist.length}</span>
+      )}
+    </div>
+  )
+}
+
 interface ReviewResult {
   questionId: string
   selectedOptionId: string
@@ -228,19 +380,11 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   const [claimForms, setClaimForms] = useState<Set<string>>(new Set())
   const [claimReasons, setClaimReasons] = useState<Record<string, string>>({})
   const [claimError, setClaimError] = useState<string | null>(null)
-  const [playedListeningIds, setPlayedListeningIds] = useState<Set<string>>(new Set())
   const [showListeningWarning, setShowListeningWarning] = useState(false)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
-  // 청해 자동 진행 (오디오 종료 후 카운트다운 → 자동 다음 문제)
-  const [autoAdvanceCountdown, setAutoAdvanceCountdown] = useState<number | null>(null)
-  const autoAdvanceIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  // 청해 아나운스 상태
-  const [announcementActive, setAnnouncementActive] = useState(false)
-  const annAudioRef = useRef<HTMLAudioElement | null>(null)
-  const annBlobUrlRef = useRef<string | null>(null)
-  const annQueueRef = useRef<string[]>([])
-  const annDrainingRef = useRef(false)
-  const playedAnnouncementsRef = useRef(new Set<string>())
+  // 청해 연속 재생 — 次へ/前へ skip
+  const chookaiSkipNextRef = useRef<(() => void) | null>(null)
+  const chookaiSkipPrevRef = useRef<(() => void) | null>(null)
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
   const [savedTick, setSavedTick] = useState(0) // 상대시간 갱신용
   const [showNav, setShowNav] = useState(false)
@@ -249,7 +393,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   const currentQuestion = questions[currentIndex]
   const answeredCount = Object.keys(answers).length
   const isMock = questions.some(q => !!q.section)
-  const isCurrentChoukai = currentQuestion?.section === 'choukai' || currentQuestion?.question_category === 'listening'
+  const isChookaiExam = questions.length > 0 && questions.every(q => q.section === 'choukai' || q.question_category === 'listening')
 
   // 같은 지문을 공유하는 연속 문제에 問N: 번호를 부여
   const subQuestionNumberMap = useMemo(() => {
@@ -334,109 +478,6 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
     return () => clearInterval(iv)
   }, [showExitConfirm])
 
-  // 아나운스 TTS 단일 재생 (Promise 반환)
-  const playOneTTS = useCallback(async (text: string): Promise<void> => {
-    if (annAudioRef.current) { annAudioRef.current.pause(); annAudioRef.current = null }
-    if (annBlobUrlRef.current) { URL.revokeObjectURL(annBlobUrlRef.current); annBlobUrlRef.current = null }
-    try {
-      const res = await fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, speed: 1.0 }) })
-      if (!res.ok) return
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      annBlobUrlRef.current = url
-      await new Promise<void>(resolve => {
-        const audio = new Audio(url)
-        annAudioRef.current = audio
-        audio.onended = () => resolve()
-        audio.onerror = () => resolve()
-        audio.play().catch(() => resolve())
-      })
-    } catch { /* TTS 실패 시 그냥 진행 */ }
-  }, [])
-
-  // 큐에 쌓인 텍스트를 순서대로 재생
-  const drainAnnouncements = useCallback(async () => {
-    if (annDrainingRef.current) return
-    annDrainingRef.current = true
-    setAnnouncementActive(true)
-    while (annQueueRef.current.length > 0) {
-      const text = annQueueRef.current.shift()!
-      await playOneTTS(text)
-    }
-    annDrainingRef.current = false
-    setAnnouncementActive(false)
-  }, [playOneTTS])
-
-  const queueAnnouncements = useCallback((texts: string[]) => {
-    annQueueRef.current.push(...texts)
-    void drainAnnouncements()
-  }, [drainAnnouncements])
-
-  function startAutoAdvance(seconds: number) {
-    if (autoAdvanceIntervalRef.current) clearInterval(autoAdvanceIntervalRef.current)
-    let remaining = seconds
-    setAutoAdvanceCountdown(remaining)
-    autoAdvanceIntervalRef.current = setInterval(() => {
-      remaining -= 1
-      if (remaining <= 0) {
-        clearInterval(autoAdvanceIntervalRef.current!)
-        autoAdvanceIntervalRef.current = null
-        setAutoAdvanceCountdown(null)
-        setCurrentIndex(prev => Math.min(questions.length - 1, prev + 1))
-      } else {
-        setAutoAdvanceCountdown(remaining)
-      }
-    }, 1000)
-  }
-
-  function cancelAutoAdvance() {
-    if (autoAdvanceIntervalRef.current) {
-      clearInterval(autoAdvanceIntervalRef.current)
-      autoAdvanceIntervalRef.current = null
-    }
-    setAutoAdvanceCountdown(null)
-  }
-
-  // 문제 이동 시 카운트다운 초기화
-  useEffect(() => {
-    cancelAutoAdvance()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIndex])
-
-  // 컴포넌트 언마운트 시 정리
-  useEffect(() => {
-    return () => {
-      if (autoAdvanceIntervalRef.current) clearInterval(autoAdvanceIntervalRef.current)
-    }
-  }, [])
-
-  // 청해 구간 진입·섹션 전환 감지 → 아나운스 재생
-  useEffect(() => {
-    if (!started || reviewMode || !currentQuestion) return
-    const isChoukai = currentQuestion.section === 'choukai' || currentQuestion.question_category === 'listening'
-    if (!isChoukai) return
-
-    const choukaiQs = questions.filter(q => q.section === 'choukai' || q.question_category === 'listening')
-    const withinIdx = choukaiQs.findIndex(q => q.id === currentQuestion.id)
-    if (withinIdx < 0) return
-
-    const mondaiGroup = getChookaiMondaiGroup(withinIdx)
-    const texts: string[] = []
-
-    if (!playedAnnouncementsRef.current.has('intro')) {
-      playedAnnouncementsRef.current.add('intro')
-      texts.push(CHOUKAI_OVERALL_INTRO)
-    }
-
-    const mondaiKey = `mondai_${mondaiGroup}`
-    if (!playedAnnouncementsRef.current.has(mondaiKey)) {
-      playedAnnouncementsRef.current.add(mondaiKey)
-      texts.push(MONDAI_INTROS[mondaiGroup])
-    }
-
-    if (texts.length > 0) queueAnnouncements(texts)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIndex, started, reviewMode])
 
   // 저장 후 종료(제출 안 함, 나중에 재개 가능)
   const handleExitSave = useCallback(async () => {
@@ -1111,6 +1152,16 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
         )}
       </div>
 
+      {/* 청해 연속 오디오 플레이어 */}
+      {isChookaiExam && started && (
+        <ChookaiAudioPlayer
+          questions={questions}
+          onAdvance={idx => setCurrentIndex(idx)}
+          skipNextRef={chookaiSkipNextRef}
+          skipPrevRef={chookaiSkipPrevRef}
+        />
+      )}
+
       {/* Current question */}
       {currentQuestion && (() => {
         const isListening = currentQuestion.question_category === 'listening'
@@ -1122,20 +1173,6 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
               <div className="mb-3 inline-flex rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-300">
                 {currentQuestion.section_label}
               </div>
-            )}
-            {isListening && parsed && (
-              <ListeningPlayer
-                key={currentQuestion.id}
-                script={parsed.script}
-                questionId={currentQuestion.id}
-                alreadyPlayed={playedListeningIds.has(currentQuestion.id)}
-                onPlayed={id => {
-                  setPlayedListeningIds(prev => new Set(prev).add(id))
-                  // 오디오 종료 후 자동 다음 문제 (마지막 문제 제외)
-                  if (currentIndex < questions.length - 1) startAutoAdvance(10)
-                }}
-                autoPlay={!announcementActive}
-              />
             )}
             <QuizQuestion
               questionNumber={currentIndex + 1}
@@ -1155,7 +1192,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
       {/* Navigation */}
       <div className="mt-6 flex items-center justify-between">
         <button
-          onClick={() => { cancelAutoAdvance(); setCurrentIndex(prev => Math.max(0, prev - 1)) }}
+          onClick={() => isChookaiExam ? chookaiSkipPrevRef.current?.() : setCurrentIndex(prev => Math.max(0, prev - 1))}
           disabled={currentIndex === 0}
           className="rounded-xl border border-gray-200 dark:border-white/[0.08] px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
@@ -1164,10 +1201,10 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
 
         {currentIndex < totalQuestions - 1 ? (
           <button
-            onClick={() => { cancelAutoAdvance(); setCurrentIndex(prev => Math.min(totalQuestions - 1, prev + 1)) }}
+            onClick={() => isChookaiExam ? chookaiSkipNextRef.current?.() : setCurrentIndex(prev => Math.min(totalQuestions - 1, prev + 1))}
             className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
           >
-            {autoAdvanceCountdown !== null ? `次へ (${autoAdvanceCountdown}s)` : '次へ'}
+            次へ
           </button>
         ) : (
           <button
@@ -1186,21 +1223,6 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
         </p>
       )}
 
-
-      {/* 청해 아나운스 오버레이 */}
-      {announcementActive && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900 text-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-500/10 mx-auto">
-              <svg className="h-7 w-7 text-indigo-600 dark:text-indigo-400 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072M12 9.5v5M9 11l-.64-.64A2 2 0 017 8.858V7a5 5 0 0110 0v1.858a2 2 0 01-.36 1.502L15 11" />
-              </svg>
-            </div>
-            <p className="text-base font-bold text-zinc-900 dark:text-zinc-100">アナウンス再生中</p>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">音声が終わると問題が始まります</p>
-          </div>
-        </div>
-      )}
 
       {/* 中断（保存して終了）確認 */}
       {showExitConfirm && (
