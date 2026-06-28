@@ -275,6 +275,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   const chookaiBlobRef = useRef<string | null>(null)
   const prevGroupRef = useRef(-1)
   const prevIndexRef = useRef(-1)
+  const playedIndicesRef = useRef<Set<number>>(new Set())
 
   function toggleChookaiPlay() {
     const audio = chookaiAudioRef.current
@@ -295,6 +296,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
 
     const isGoingBack = prevIndexRef.current >= 0 && currentIndex < prevIndexRef.current
     prevIndexRef.current = currentIndex
+    const alreadyPlayed = playedIndicesRef.current.has(currentIndex)
 
     let mounted = true
 
@@ -312,8 +314,9 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
     }
 
     stopCurrent()
-    if (isGoingBack) return
+    if (isGoingBack || alreadyPlayed) return
 
+    playedIndicesRef.current.add(currentIndex)
     const group = getChookaiMondaiGroup(currentIndex)
     const introText = prevGroupRef.current !== group ? MONDAI_INTROS[group] : null
     prevGroupRef.current = group
