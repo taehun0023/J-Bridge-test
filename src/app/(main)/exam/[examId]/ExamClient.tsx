@@ -274,6 +274,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   const chookaiAudioRef = useRef<HTMLAudioElement | null>(null)
   const chookaiBlobRef = useRef<string | null>(null)
   const prevGroupRef = useRef(-1)
+  const prevIndexRef = useRef(-1)
 
   function toggleChookaiPlay() {
     const audio = chookaiAudioRef.current
@@ -292,6 +293,9 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
     if (!isChookaiExam || !started || reviewMode) return
     if (!currentQuestion) return
 
+    const isGoingBack = prevIndexRef.current >= 0 && currentIndex < prevIndexRef.current
+    prevIndexRef.current = currentIndex
+
     let mounted = true
 
     const stopCurrent = () => {
@@ -308,6 +312,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
     }
 
     stopCurrent()
+    if (isGoingBack) return
 
     const group = getChookaiMondaiGroup(currentIndex)
     const introText = prevGroupRef.current !== group ? MONDAI_INTROS[group] : null
