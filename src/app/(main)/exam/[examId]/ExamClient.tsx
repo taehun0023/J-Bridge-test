@@ -180,137 +180,6 @@ function ListeningPlayer({ script, questionId, alreadyPlayed, onPlayed, autoPlay
   )
 }
 
-// ─── 청해 연속 재생 플레이어 ──────────────────────────────────
-
-type ChoukaTrack = {
-  type: 'overall_intro' | 'section_intro' | 'question'
-  text: string
-  questionIdx: number  // -1 for intros
-  sectionGroup: number
-}
-
-function buildChookaiPlaylist(chookaiQuestions: Question[]): ChoukaTrack[] {
-  const tracks: ChoukaTrack[] = []
-  let currentGroup = 0
-  tracks.push({ type: 'overall_intro', text: CHOUKAI_OVERALL_INTRO, questionIdx: -1, sectionGroup: 0 })
-  chookaiQuestions.forEach((q, idx) => {
-    const group = getChookaiMondaiGroup(idx)
-    if (group !== currentGroup) {
-      currentGroup = group
-      tracks.push({ type: 'section_intro', text: MONDAI_INTROS[group], questionIdx: -1, sectionGroup: group })
-    }
-    const parsed = parseListeningQuestion(q.question_text)
-    tracks.push({ type: 'question', text: parsed?.script ?? q.question_text, questionIdx: idx, sectionGroup: group })
-  })
-  return tracks
-}
-
-function ChookaiAudioPlayer({
-  questions,
-  onAdvance,
-}: {
-  questions: Question[]
-  onAdvance: (questionIdx: number) => void
-}) {
-  const playlist = useMemo(() => buildChookaiPlaylist(questions), [questions])
-  const blobUrlsRef = useRef<(string | null)[]>([])
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const waitingForTrackRef = useRef(-1)
-  const currentTrackIdxRef = useRef(-1)
-  const onAdvanceRef = useRef(onAdvance)
-  onAdvanceRef.current = onAdvance
-  const playlistRef = useRef(playlist)
-  playlistRef.current = playlist
-
-  const [playingTrackIdx, setPlayingTrackIdx] = useState(-1)
-  const [fetchedCount, setFetchedCount] = useState(0)
-
-  const playTrack = useCallback((idx: number) => {
-    if (pauseTimerRef.current) { clearTimeout(pauseTimerRef.current); pauseTimerRef.current = null }
-    if (audioRef.current) { audioRef.current.pause(); audioRef.current.onended = null; audioRef.current = null }
-
-    const pl = playlistRef.current
-    if (idx < 0 || idx >= pl.length) return
-
-    const url = blobUrlsRef.current[idx]
-    if (!url) { waitingForTrackRef.current = idx; return }
-
-    waitingForTrackRef.current = -1
-    currentTrackIdxRef.current = idx
-    setPlayingTrackIdx(idx)
-
-    const track = pl[idx]
-    if (track.type === 'question') onAdvanceRef.current(track.questionIdx)
-
-    const audio = new Audio(url)
-    audioRef.current = audio
-    audio.onended = () => {
-      const delay = track.type === 'question' ? 4000 : 0
-      pauseTimerRef.current = setTimeout(() => playTrack(idx + 1), delay)
-    }
-    audio.play().catch(() => {})
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  useEffect(() => {
-    blobUrlsRef.current = new Array(playlist.length).fill(null)
-    currentTrackIdxRef.current = -1
-    waitingForTrackRef.current = -1
-    setPlayingTrackIdx(-1)
-    setFetchedCount(0)
-
-    let mounted = true
-    const revokeOnUnmount: string[] = []
-
-    playlist.forEach((track, i) => {
-      fetch('/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: track.text, speed: 1.0 }),
-      }).then(async res => {
-        if (!mounted || !res.ok) return
-        const blob = await res.blob()
-        const url = URL.createObjectURL(blob)
-        revokeOnUnmount.push(url)
-        blobUrlsRef.current[i] = url
-        if (!mounted) return
-        setFetchedCount(c => c + 1)
-        if (i === 0 && currentTrackIdxRef.current === -1) playTrack(0)
-        if (waitingForTrackRef.current === i) playTrack(i)
-      }).catch(() => {})
-    })
-
-    return () => {
-      mounted = false
-      if (audioRef.current) { audioRef.current.pause(); audioRef.current = null }
-      if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current)
-      revokeOnUnmount.forEach(url => URL.revokeObjectURL(url))
-    }
-  }, [playlist, playTrack])
-
-  const currentTrack = playingTrackIdx >= 0 ? playlist[playingTrackIdx] : null
-
-  return (
-    <div className="mb-4 flex items-center gap-3 rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-3">
-      <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${currentTrack ? 'bg-indigo-500 animate-pulse' : 'bg-zinc-300 dark:bg-zinc-600'}`} />
-      <div className="flex-1 min-w-0">
-        {currentTrack?.type === 'question' ? (
-          <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
-            問題{currentTrack.sectionGroup} — {currentTrack.questionIdx + 1}番
-          </p>
-        ) : currentTrack ? (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">アナウンス再生中</p>
-        ) : (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">音声準備中...</p>
-        )}
-      </div>
-      {fetchedCount < playlist.length && (
-        <span className="text-xs text-zinc-400">{fetchedCount}/{playlist.length}</span>
-      )}
-    </div>
-  )
-}
 
 interface ReviewResult {
   questionId: string
@@ -371,6 +240,58 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   const answeredCount = Object.keys(answers).length
   const isMock = questions.some(q => !!q.section)
   const isChookaiExam = questions.length > 0 && questions.every(q => q.section === 'choukai' || q.question_category === 'listening')
+
+  const [chookaiPlaying, setChookaiPlaying] = useState(false)
+  const chookaiAudioRef = useRef<HTMLAudioElement | null>(null)
+  const chookaiBlobRef = useRef<string | null>(null)
+  const prevGroupRef = useRef(-1)
+
+  useEffect(() => {
+    if (!isChookaiExam || !started || reviewMode) return
+    if (!currentQuestion) return
+
+    let mounted = true
+
+    const stopCurrent = () => {
+      if (chookaiAudioRef.current) { chookaiAudioRef.current.pause(); chookaiAudioRef.current = null }
+      if (chookaiBlobRef.current) { URL.revokeObjectURL(chookaiBlobRef.current); chookaiBlobRef.current = null }
+      setChookaiPlaying(false)
+    }
+
+    stopCurrent()
+
+    const parsed = parseListeningQuestion(currentQuestion.question_text)
+    const script = parsed?.script ?? currentQuestion.question_text
+    const group = getChookaiMondaiGroup(currentIndex)
+    const introText = prevGroupRef.current !== group ? MONDAI_INTROS[group] : null
+    prevGroupRef.current = group
+
+    const playTTS = (text: string, onEnd?: () => void) => {
+      fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, speed: 1.0 }) })
+        .then(async res => {
+          if (!mounted || !res.ok) return
+          const blob = await res.blob()
+          const url = URL.createObjectURL(blob)
+          if (!mounted) { URL.revokeObjectURL(url); return }
+          chookaiBlobRef.current = url
+          const audio = new Audio(url)
+          chookaiAudioRef.current = audio
+          setChookaiPlaying(true)
+          audio.onended = () => { setChookaiPlaying(false); onEnd?.() }
+          audio.play().catch(() => {})
+        }).catch(() => {})
+    }
+
+    if (introText) {
+      playTTS(introText, () => { if (mounted) playTTS(script) })
+    } else {
+      playTTS(script)
+    }
+
+    return () => { mounted = false; stopCurrent() }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIndex, started, reviewMode, isChookaiExam])
 
   // 같은 지문을 공유하는 연속 문제에 問N: 번호를 부여
   const subQuestionNumberMap = useMemo(() => {
@@ -1129,12 +1050,14 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
         )}
       </div>
 
-      {/* 청해 연속 오디오 플레이어 */}
+      {/* 청해 재생 상태 표시 */}
       {isChookaiExam && started && (
-        <ChookaiAudioPlayer
-          questions={questions}
-          onAdvance={idx => setCurrentIndex(idx)}
-        />
+        <div className="mb-4 flex items-center gap-3 rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-3">
+          <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${chookaiPlaying ? 'bg-indigo-500 animate-pulse' : 'bg-zinc-300 dark:bg-zinc-600'}`} />
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            {chookaiPlaying ? '音声再生中...' : '音声準備中...'}
+          </p>
+        </div>
       )}
 
       {/* Current question */}
