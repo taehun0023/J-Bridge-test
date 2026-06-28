@@ -1058,7 +1058,14 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
               <p className="text-xs text-zinc-400 dark:text-zinc-500">音量を確認してから「開始する」を押してください。</p>
             </div>
             <button
-              onClick={() => setShowChoukaiBanner(false)}
+              onClick={() => {
+                // ブラウザの autoplay ポリシーを解除（ユーザージェスチャー内で AudioContext を unlock）
+                try {
+                  const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+                  if (Ctx) { const ctx = new Ctx(); void ctx.resume(); void ctx.close() }
+                } catch (_) {}
+                setShowChoukaiBanner(false)
+              }}
               className="mt-6 rounded-xl bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-500 transition-colors"
             >
               開始する

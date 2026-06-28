@@ -135,7 +135,14 @@ export default function MockListClient({ level, sets }: { level: string; sets: S
                 キャンセル
               </button>
               <button
-                onClick={() => { const c = choukaConfirm; setChoukaConfirm(null); doStart(c.setNo, c.session, c.retake) }}
+                onClick={() => {
+                  // autoplay unlock — ユーザージェスチャー内で AudioContext を起動
+                  try {
+                    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+                    if (Ctx) { const ctx = new Ctx(); void ctx.resume(); void ctx.close() }
+                  } catch (_) {}
+                  const c = choukaConfirm; setChoukaConfirm(null); doStart(c!.setNo, c!.session, c!.retake)
+                }}
                 className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-semibold text-white hover:bg-red-500 transition-colors"
               >
                 開始する
