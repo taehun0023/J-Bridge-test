@@ -369,13 +369,6 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
     void drainAnnouncements()
   }, [drainAnnouncements])
 
-  function skipAnnouncement() {
-    annQueueRef.current = []
-    if (annAudioRef.current) annAudioRef.current.pause()
-    annDrainingRef.current = false
-    setAnnouncementActive(false)
-  }
-
   // 청해 구간 진입·섹션 전환 감지 → 아나운스 재생
   useEffect(() => {
     if (!started || reviewMode || !currentQuestion) return
@@ -1160,9 +1153,6 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
             </div>
             <p className="text-base font-bold text-zinc-900 dark:text-zinc-100">アナウンス再生中</p>
             <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">音声が終わると問題が始まります</p>
-            <button onClick={skipAnnouncement} className="mt-5 text-xs text-zinc-400 underline hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
-              スキップ
-            </button>
           </div>
         </div>
       )}
