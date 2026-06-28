@@ -57,7 +57,19 @@ export default function MockListClient({ level, sets }: { level: string; sets: S
   const [err, setErr] = useState<string | null>(null)
   const active = sets.find(s => s.id === activeId) ?? null
 
+  // 청해 2교시 시작 전 확인 알림
+  const [choukaConfirm, setChoukaConfirm] = useState<{ setNo: number; session: number; retake: boolean } | null>(null)
+
   function startSession(setNo: number, session: number, retake = false) {
+    // 2교시(청해)는 먼저 확인 알림 표시
+    if (session === 2 && !retake) {
+      setChoukaConfirm({ setNo, session, retake })
+      return
+    }
+    doStart(setNo, session, retake)
+  }
+
+  function doStart(setNo: number, session: number, retake = false) {
     setErr(null)
     startTransition(async () => {
       const r = await selfStartMockSession(level, setNo, session, retake)
@@ -99,6 +111,39 @@ export default function MockListClient({ level, sets }: { level: string; sets: S
           </div>
         </div>
       ))}
+
+      {/* 청해 2교시 시작 전 확인 알림 */}
+      {choukaConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl dark:bg-zinc-900 text-center p-6">
+            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-red-500/10 mx-auto">
+              <svg className="h-7 w-7 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072M12 9.5v5M9 11l-.64-.64A2 2 0 017 8.858V7a5 5 0 0110 0v1.858a2 2 0 01-.36 1.502L15 11" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">聴解試験を開始します</h3>
+            <div className="mt-3 space-y-1.5 text-sm text-zinc-600 dark:text-zinc-400">
+              <p>これより聴解（2時限）が始まります。</p>
+              <p>音声は各問 <span className="font-semibold text-zinc-800 dark:text-zinc-200">自動再生</span> されます。</p>
+              <p className="text-xs text-zinc-400 dark:text-zinc-500 pt-1">音量を確認してから開始してください。</p>
+            </div>
+            <div className="mt-5 flex gap-3">
+              <button
+                onClick={() => setChoukaConfirm(null)}
+                className="flex-1 rounded-xl border border-zinc-200 dark:border-white/10 py-2.5 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={() => { const c = choukaConfirm; setChoukaConfirm(null); doStart(c.setNo, c.session, c.retake) }}
+                className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-semibold text-white hover:bg-red-500 transition-colors"
+              >
+                開始する
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {active && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setActiveId(null)}>
