@@ -1,6 +1,26 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+
+// 청해 시험 아나운스 텍스트
+const CHOUKAI_OVERALL_INTRO = `これから聴解試験を始めます。問題用紙を開けてください。音声は一度だけ流れます。必要であれば、メモを取ってもかまいません。それでは、問題を始めます。`
+
+const MONDAI_INTROS: Record<number, string> = {
+  1: `問題1では、まず質問を聞いてください。それから話を聞いて、問題用紙の1から4の中から、最もよいものを一つ選んでください。`,
+  2: `問題2では、まず質問を聞いてください。それから話を聞いて、問題用紙の1から4の中から、最もよいものを一つ選んでください。`,
+  3: `問題3では、問題用紙に何も印刷されていません。この問題は、全体としてどんな内容かを聞く問題です。話を聞いて、質問に答えてください。`,
+  4: `問題4では、短い文を聞きます。その返事として最もよいものを、1から3の中から一つ選んでください。`,
+  5: `問題5では、長めの話を聞きます。この問題には練習はありません。話を聞いて、質問に答えてください。`,
+}
+
+// N1 聴解 문제 그룹 경계 (within-choukai 0-based index)
+function getChookaiMondaiGroup(withinIdx: number): number {
+  if (withinIdx < 6) return 1
+  if (withinIdx < 13) return 2
+  if (withinIdx < 18) return 3
+  if (withinIdx < 27) return 4
+  return 5
+}
 import { startExam, submitExam, requestRetakeExam, loadExamQuestions, saveExamProgress, loadMockReview } from '@/app/actions/comprehensive-exam'
 import { submitQuestionClaim } from '@/app/actions/claims'
 import { useRouter } from 'next/navigation'
@@ -210,9 +230,14 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   const [claimError, setClaimError] = useState<string | null>(null)
   const [playedListeningIds, setPlayedListeningIds] = useState<Set<string>>(new Set())
   const [showListeningWarning, setShowListeningWarning] = useState(false)
-  const [showChoukaiBanner, setShowChoukaiBanner] = useState(false)
-  const enteredChoukaiBannerRef = useRef(false)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
+  // 청해 아나운스 상태
+  const [announcementActive, setAnnouncementActive] = useState(false)
+  const annAudioRef = useRef<HTMLAudioElement | null>(null)
+  const annBlobUrlRef = useRef<string | null>(null)
+  const annQueueRef = useRef<string[]>([])
+  const annDrainingRef = useRef(false)
+  const playedAnnouncementsRef = useRef(new Set<string>())
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
   const [savedTick, setSavedTick] = useState(0) // 상대시간 갱신용
   const [showNav, setShowNav] = useState(false)
@@ -298,17 +323,6 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMock, started, submitting, reviewMode, questions.length])
 
-  // 聴解セクション突入を検知してバナー表示
-  useEffect(() => {
-    if (!started || reviewMode || !currentQuestion) return
-    const isChoukai = currentQuestion.section === 'choukai' || currentQuestion.question_category === 'listening'
-    if (isChoukai && !enteredChoukaiBannerRef.current) {
-      enteredChoukaiBannerRef.current = true
-      setShowChoukaiBanner(true)
-    }
-  // currentIndex 変化時に評価（currentQuestion は currentIndex に従属）
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIndex, started, reviewMode])
 
   // 종료 확인창이 열려 있는 동안 "N초 전" 갱신
   useEffect(() => {
@@ -316,6 +330,79 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
     const iv = setInterval(() => setSavedTick(t => t + 1), 5000)
     return () => clearInterval(iv)
   }, [showExitConfirm])
+
+  // 아나운스 TTS 단일 재생 (Promise 반환)
+  const playOneTTS = useCallback(async (text: string): Promise<void> => {
+    if (annAudioRef.current) { annAudioRef.current.pause(); annAudioRef.current = null }
+    if (annBlobUrlRef.current) { URL.revokeObjectURL(annBlobUrlRef.current); annBlobUrlRef.current = null }
+    try {
+      const res = await fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, speed: 1.0 }) })
+      if (!res.ok) return
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      annBlobUrlRef.current = url
+      await new Promise<void>(resolve => {
+        const audio = new Audio(url)
+        annAudioRef.current = audio
+        audio.onended = () => resolve()
+        audio.onerror = () => resolve()
+        audio.play().catch(() => resolve())
+      })
+    } catch { /* TTS 실패 시 그냥 진행 */ }
+  }, [])
+
+  // 큐에 쌓인 텍스트를 순서대로 재생
+  const drainAnnouncements = useCallback(async () => {
+    if (annDrainingRef.current) return
+    annDrainingRef.current = true
+    setAnnouncementActive(true)
+    while (annQueueRef.current.length > 0) {
+      const text = annQueueRef.current.shift()!
+      await playOneTTS(text)
+    }
+    annDrainingRef.current = false
+    setAnnouncementActive(false)
+  }, [playOneTTS])
+
+  const queueAnnouncements = useCallback((texts: string[]) => {
+    annQueueRef.current.push(...texts)
+    void drainAnnouncements()
+  }, [drainAnnouncements])
+
+  function skipAnnouncement() {
+    annQueueRef.current = []
+    if (annAudioRef.current) annAudioRef.current.pause()
+    annDrainingRef.current = false
+    setAnnouncementActive(false)
+  }
+
+  // 청해 구간 진입·섹션 전환 감지 → 아나운스 재생
+  useEffect(() => {
+    if (!started || reviewMode || !currentQuestion) return
+    const isChoukai = currentQuestion.section === 'choukai' || currentQuestion.question_category === 'listening'
+    if (!isChoukai) return
+
+    const choukaiQs = questions.filter(q => q.section === 'choukai' || q.question_category === 'listening')
+    const withinIdx = choukaiQs.findIndex(q => q.id === currentQuestion.id)
+    if (withinIdx < 0) return
+
+    const mondaiGroup = getChookaiMondaiGroup(withinIdx)
+    const texts: string[] = []
+
+    if (!playedAnnouncementsRef.current.has('intro')) {
+      playedAnnouncementsRef.current.add('intro')
+      texts.push(CHOUKAI_OVERALL_INTRO)
+    }
+
+    const mondaiKey = `mondai_${mondaiGroup}`
+    if (!playedAnnouncementsRef.current.has(mondaiKey)) {
+      playedAnnouncementsRef.current.add(mondaiKey)
+      texts.push(MONDAI_INTROS[mondaiGroup])
+    }
+
+    if (texts.length > 0) queueAnnouncements(texts)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIndex, started, reviewMode])
 
   // 저장 후 종료(제출 안 함, 나중에 재개 가능)
   const handleExitSave = useCallback(async () => {
@@ -1009,7 +1096,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
                 questionId={currentQuestion.id}
                 alreadyPlayed={playedListeningIds.has(currentQuestion.id)}
                 onPlayed={id => setPlayedListeningIds(prev => new Set(prev).add(id))}
-                autoPlay={!showChoukaiBanner}
+                autoPlay={!announcementActive}
               />
             )}
             <QuizQuestion
@@ -1061,33 +1148,20 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
         </p>
       )}
 
-      {/* 聴解セクション開始バナー */}
-      {showChoukaiBanner && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900 text-center">
-            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-500/10 mx-auto">
-              <svg className="h-7 w-7 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+      {/* 청해 아나운스 오버레이 */}
+      {announcementActive && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900 text-center">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-500/10 mx-auto">
+              <svg className="h-7 w-7 text-indigo-600 dark:text-indigo-400 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072M12 9.5v5M9 11l-.64-.64A2 2 0 017 8.858V7a5 5 0 0110 0v1.858a2 2 0 01-.36 1.502L15 11" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">聴解試験を開始します</h3>
-            <div className="mt-4 space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
-              <p>これより聴解問題が始まります。</p>
-              <p>音声は各問 <span className="font-semibold text-zinc-800 dark:text-zinc-200">1回のみ</span> 自動再生されます。</p>
-              <p className="text-xs text-zinc-400 dark:text-zinc-500">音量を確認してから「開始する」を押してください。</p>
-            </div>
-            <button
-              onClick={() => {
-                // ブラウザの autoplay ポリシーを解除（ユーザージェスチャー内で AudioContext を unlock）
-                try {
-                  const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-                  if (Ctx) { const ctx = new Ctx(); void ctx.resume(); void ctx.close() }
-                } catch (_) {}
-                setShowChoukaiBanner(false)
-              }}
-              className="mt-6 rounded-xl bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-500 transition-colors"
-            >
-              開始する
+            <p className="text-base font-bold text-zinc-900 dark:text-zinc-100">アナウンス再生中</p>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">音声が終わると問題が始まります</p>
+            <button onClick={skipAnnouncement} className="mt-5 text-xs text-zinc-400 underline hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
+              スキップ
             </button>
           </div>
         </div>

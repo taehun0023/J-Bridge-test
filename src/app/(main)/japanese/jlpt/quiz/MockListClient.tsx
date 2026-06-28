@@ -61,8 +61,8 @@ export default function MockListClient({ level, sets }: { level: string; sets: S
   const [choukaConfirm, setChoukaConfirm] = useState<{ setNo: number; session: number; retake: boolean } | null>(null)
 
   function startSession(setNo: number, session: number, retake = false) {
-    // 2교시(청해)는 먼저 확인 알림 표시
-    if (session === 2 && !retake) {
+    // 2교시(청해)는 재시험 포함 항상 확인 알림 표시
+    if (session === 2) {
       setChoukaConfirm({ setNo, session, retake })
       return
     }
@@ -125,6 +125,7 @@ export default function MockListClient({ level, sets }: { level: string; sets: S
             <div className="mt-3 space-y-1.5 text-sm text-zinc-600 dark:text-zinc-400">
               <p>これより聴解（2時限）が始まります。</p>
               <p>音声は各問 <span className="font-semibold text-zinc-800 dark:text-zinc-200">自動再生</span> されます。</p>
+              <p>「次へ」ボタンを押すと次の問題に進み、音声が自動再生されます。</p>
               <p className="text-xs text-zinc-400 dark:text-zinc-500 pt-1">音量を確認してから開始してください。</p>
             </div>
             <div className="mt-5 flex gap-3">
