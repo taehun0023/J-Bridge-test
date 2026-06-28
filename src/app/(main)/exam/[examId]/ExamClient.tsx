@@ -231,6 +231,9 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   const [playedListeningIds, setPlayedListeningIds] = useState<Set<string>>(new Set())
   const [showListeningWarning, setShowListeningWarning] = useState(false)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
+  // 청해 자동 진행 (오디오 종료 후 카운트다운 → 자동 다음 문제)
+  const [autoAdvanceCountdown, setAutoAdvanceCountdown] = useState<number | null>(null)
+  const autoAdvanceIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   // 청해 아나운스 상태
   const [announcementActive, setAnnouncementActive] = useState(false)
   const annAudioRef = useRef<HTMLAudioElement | null>(null)
@@ -368,6 +371,44 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
     annQueueRef.current.push(...texts)
     void drainAnnouncements()
   }, [drainAnnouncements])
+
+  function startAutoAdvance(seconds: number) {
+    if (autoAdvanceIntervalRef.current) clearInterval(autoAdvanceIntervalRef.current)
+    let remaining = seconds
+    setAutoAdvanceCountdown(remaining)
+    autoAdvanceIntervalRef.current = setInterval(() => {
+      remaining -= 1
+      if (remaining <= 0) {
+        clearInterval(autoAdvanceIntervalRef.current!)
+        autoAdvanceIntervalRef.current = null
+        setAutoAdvanceCountdown(null)
+        setCurrentIndex(prev => Math.min(questions.length - 1, prev + 1))
+      } else {
+        setAutoAdvanceCountdown(remaining)
+      }
+    }, 1000)
+  }
+
+  function cancelAutoAdvance() {
+    if (autoAdvanceIntervalRef.current) {
+      clearInterval(autoAdvanceIntervalRef.current)
+      autoAdvanceIntervalRef.current = null
+    }
+    setAutoAdvanceCountdown(null)
+  }
+
+  // 문제 이동 시 카운트다운 초기화
+  useEffect(() => {
+    cancelAutoAdvance()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIndex])
+
+  // 컴포넌트 언마운트 시 정리
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceIntervalRef.current) clearInterval(autoAdvanceIntervalRef.current)
+    }
+  }, [])
 
   // 청해 구간 진입·섹션 전환 감지 → 아나운스 재생
   useEffect(() => {
@@ -1088,7 +1129,11 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
                 script={parsed.script}
                 questionId={currentQuestion.id}
                 alreadyPlayed={playedListeningIds.has(currentQuestion.id)}
-                onPlayed={id => setPlayedListeningIds(prev => new Set(prev).add(id))}
+                onPlayed={id => {
+                  setPlayedListeningIds(prev => new Set(prev).add(id))
+                  // 오디오 종료 후 자동 다음 문제 (마지막 문제 제외)
+                  if (currentIndex < questions.length - 1) startAutoAdvance(10)
+                }}
                 autoPlay={!announcementActive}
               />
             )}
@@ -1110,7 +1155,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
       {/* Navigation */}
       <div className="mt-6 flex items-center justify-between">
         <button
-          onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
+          onClick={() => { cancelAutoAdvance(); setCurrentIndex(prev => Math.max(0, prev - 1)) }}
           disabled={currentIndex === 0}
           className="rounded-xl border border-gray-200 dark:border-white/[0.08] px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
@@ -1119,10 +1164,10 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
 
         {currentIndex < totalQuestions - 1 ? (
           <button
-            onClick={() => setCurrentIndex(prev => Math.min(totalQuestions - 1, prev + 1))}
+            onClick={() => { cancelAutoAdvance(); setCurrentIndex(prev => Math.min(totalQuestions - 1, prev + 1)) }}
             className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
           >
-            次へ
+            {autoAdvanceCountdown !== null ? `次へ (${autoAdvanceCountdown}s)` : '次へ'}
           </button>
         ) : (
           <button
