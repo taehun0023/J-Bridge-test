@@ -35,22 +35,36 @@ interface Question {
  */
 function parseListeningQuestion(text: string): { script: string; question: string } | null {
   const normalized = text.replace(/\\n/g, '\n')
-  // Split by double newline
+
+  // 1차: \n\n 블록 분리 (double newline format)
   const parts = normalized.split('\n\n')
-  if (parts.length < 2) return null
-  // 마지막 블록 = 질문, 그 앞 전부 = 스크립트(지시문+대화). 2단(스크립트\n\n질문)도 지원.
-  // First part: instruction, middle parts: script, last part: question
-  const question = parts[parts.length - 1]
-  const script = parts.slice(0, parts.length - 1).join('\n\n')
-  return { script, question }
+  if (parts.length >= 2) {
+    const question = parts[parts.length - 1]
+    const script = parts.slice(0, parts.length - 1).join('\n\n')
+    if (script.trim()) return { script, question }
+  }
+
+  // 2차 폴백: 단일 \n 형식 — 마지막 "質問" 줄을 경계로 분리
+  const lines = normalized.split('\n')
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const trimmed = lines[i].trim()
+    if (trimmed.startsWith('質問') || trimmed.startsWith('問い')) {
+      const script = lines.slice(0, i).join('\n')
+      const question = lines.slice(i).join('\n')
+      if (script.trim()) return { script, question }
+    }
+  }
+
+  return null
 }
 
 /** Inline TTS player for listening questions — play state lifted to parent */
-function ListeningPlayer({ script, questionId, alreadyPlayed, onPlayed }: {
+function ListeningPlayer({ script, questionId, alreadyPlayed, onPlayed, autoPlay = false }: {
   script: string
   questionId: string
   alreadyPlayed: boolean
   onPlayed: (questionId: string) => void
+  autoPlay?: boolean
 }) {
   const [playing, setPlaying] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -88,10 +102,20 @@ function ListeningPlayer({ script, questionId, alreadyPlayed, onPlayed }: {
       setPlaying(true)
     } catch {
       console.error('TTS playback failed')
+      busyRef.current = false
     } finally {
       setLoading(false)
     }
   }
+
+  // autoPlay が true になったタイミングで自動再生（バナー閉じた後）
+  useEffect(() => {
+    if (!autoPlay || alreadyPlayed) return
+    const timer = setTimeout(() => { void handlePlay() }, 400)
+    return () => clearTimeout(timer)
+  // handlePlay は毎回同一ロジック・busyRef でガード済み
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPlay])
 
   // Cleanup on unmount only: pause audio, mark as played if was playing
   useEffect(() => {
@@ -186,6 +210,8 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   const [claimError, setClaimError] = useState<string | null>(null)
   const [playedListeningIds, setPlayedListeningIds] = useState<Set<string>>(new Set())
   const [showListeningWarning, setShowListeningWarning] = useState(false)
+  const [showChoukaiBanner, setShowChoukaiBanner] = useState(false)
+  const enteredChoukaiBannerRef = useRef(false)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
   const [savedTick, setSavedTick] = useState(0) // 상대시간 갱신용
@@ -195,6 +221,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   const currentQuestion = questions[currentIndex]
   const answeredCount = Object.keys(answers).length
   const isMock = questions.some(q => !!q.section)
+  const isCurrentChoukai = currentQuestion?.section === 'choukai' || currentQuestion?.question_category === 'listening'
 
   useEffect(() => {
     answersRef.current = answers
@@ -249,6 +276,18 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
     return () => clearInterval(iv)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMock, started, submitting, reviewMode, questions.length])
+
+  // 聴解セクション突入を検知してバナー表示
+  useEffect(() => {
+    if (!started || reviewMode || !currentQuestion) return
+    const isChoukai = currentQuestion.section === 'choukai' || currentQuestion.question_category === 'listening'
+    if (isChoukai && !enteredChoukaiBannerRef.current) {
+      enteredChoukaiBannerRef.current = true
+      setShowChoukaiBanner(true)
+    }
+  // currentIndex 変化時に評価（currentQuestion は currentIndex に従属）
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIndex, started, reviewMode])
 
   // 종료 확인창이 열려 있는 동안 "N초 전" 갱신
   useEffect(() => {
@@ -431,7 +470,9 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
         setQuestions(loadedQuestions)
         setRemainingSeconds(res.timeLimit! * 60)
         const hasListening = loadedQuestions.some(q => q.question_category === 'listening')
-        if (hasListening) {
+        const isMockExam = loadedQuestions.some(q => !!q.section)
+        // モック試験は聴解バナーで通知するため pre-start 警告をスキップ
+        if (hasListening && !isMockExam) {
           setShowListeningWarning(true)
           setSubmitting(false)
         } else {
@@ -950,6 +991,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
                 questionId={currentQuestion.id}
                 alreadyPlayed={playedListeningIds.has(currentQuestion.id)}
                 onPlayed={id => setPlayedListeningIds(prev => new Set(prev).add(id))}
+                autoPlay={!showChoukaiBanner}
               />
             )}
             <QuizQuestion
@@ -998,6 +1040,31 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
         <p className="mt-3 text-center text-xs text-amber-400">
           {totalQuestions - answeredCount}問がまだ未回答です
         </p>
+      )}
+
+      {/* 聴解セクション開始バナー */}
+      {showChoukaiBanner && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900 text-center">
+            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-500/10 mx-auto">
+              <svg className="h-7 w-7 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072M12 9.5v5M9 11l-.64-.64A2 2 0 017 8.858V7a5 5 0 0110 0v1.858a2 2 0 01-.36 1.502L15 11" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">聴解試験を開始します</h3>
+            <div className="mt-4 space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
+              <p>これより聴解問題が始まります。</p>
+              <p>音声は各問 <span className="font-semibold text-zinc-800 dark:text-zinc-200">1回のみ</span> 自動再生されます。</p>
+              <p className="text-xs text-zinc-400 dark:text-zinc-500">音量を確認してから「開始する」を押してください。</p>
+            </div>
+            <button
+              onClick={() => setShowChoukaiBanner(false)}
+              className="mt-6 rounded-xl bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-500 transition-colors"
+            >
+              開始する
+            </button>
+          </div>
+        </div>
       )}
 
       {/* 中断（保存して終了）確認 */}
