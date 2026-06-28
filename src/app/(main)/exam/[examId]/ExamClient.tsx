@@ -1188,7 +1188,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
 
         return (
           <div className="rounded-2xl border border-gray-200/60 bg-white/80 backdrop-blur-md p-6 dark:border-white/[0.08] dark:bg-white/[0.03]">
-            {currentQuestion.section_label && (
+            {currentQuestion.section_label && !isChookaiExam && (
               <div className="mb-3 inline-flex rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-300">
                 {currentQuestion.section_label}
               </div>
