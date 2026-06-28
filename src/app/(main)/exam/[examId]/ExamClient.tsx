@@ -208,13 +208,9 @@ function buildChookaiPlaylist(chookaiQuestions: Question[]): ChoukaTrack[] {
 function ChookaiAudioPlayer({
   questions,
   onAdvance,
-  skipNextRef,
-  skipPrevRef,
 }: {
   questions: Question[]
   onAdvance: (questionIdx: number) => void
-  skipNextRef: React.MutableRefObject<(() => void) | null>
-  skipPrevRef: React.MutableRefObject<(() => void) | null>
 }) {
   const playlist = useMemo(() => buildChookaiPlaylist(questions), [questions])
   const blobUrlsRef = useRef<(string | null)[]>([])
@@ -254,7 +250,6 @@ function ChookaiAudioPlayer({
       pauseTimerRef.current = setTimeout(() => playTrack(idx + 1), delay)
     }
     audio.play().catch(() => {})
-  // playTrack は自己参照のため deps 空 — refs 経由でアクセス
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -293,21 +288,6 @@ function ChookaiAudioPlayer({
       revokeOnUnmount.forEach(url => URL.revokeObjectURL(url))
     }
   }, [playlist, playTrack])
-
-  useEffect(() => {
-    skipNextRef.current = () => {
-      const pl = playlistRef.current
-      for (let i = currentTrackIdxRef.current + 1; i < pl.length; i++) {
-        if (pl[i].type === 'question') { playTrack(i); return }
-      }
-    }
-    skipPrevRef.current = () => {
-      const pl = playlistRef.current
-      for (let i = currentTrackIdxRef.current - 1; i >= 0; i--) {
-        if (pl[i].type === 'question') { playTrack(i); return }
-      }
-    }
-  }, [playTrack, skipNextRef, skipPrevRef])
 
   const currentTrack = playingTrackIdx >= 0 ? playlist[playingTrackIdx] : null
 
@@ -382,9 +362,6 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   const [claimError, setClaimError] = useState<string | null>(null)
   const [showListeningWarning, setShowListeningWarning] = useState(false)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
-  // 청해 연속 재생 — 次へ/前へ skip
-  const chookaiSkipNextRef = useRef<(() => void) | null>(null)
-  const chookaiSkipPrevRef = useRef<(() => void) | null>(null)
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
   const [savedTick, setSavedTick] = useState(0) // 상대시간 갱신용
   const [showNav, setShowNav] = useState(false)
@@ -1157,8 +1134,6 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
         <ChookaiAudioPlayer
           questions={questions}
           onAdvance={idx => setCurrentIndex(idx)}
-          skipNextRef={chookaiSkipNextRef}
-          skipPrevRef={chookaiSkipPrevRef}
         />
       )}
 
@@ -1192,7 +1167,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
       {/* Navigation */}
       <div className="mt-6 flex items-center justify-between">
         <button
-          onClick={() => isChookaiExam ? chookaiSkipPrevRef.current?.() : setCurrentIndex(prev => Math.max(0, prev - 1))}
+          onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
           disabled={currentIndex === 0}
           className="rounded-xl border border-gray-200 dark:border-white/[0.08] px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
@@ -1201,7 +1176,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
 
         {currentIndex < totalQuestions - 1 ? (
           <button
-            onClick={() => isChookaiExam ? chookaiSkipNextRef.current?.() : setCurrentIndex(prev => Math.min(totalQuestions - 1, prev + 1))}
+            onClick={() => setCurrentIndex(prev => Math.min(totalQuestions - 1, prev + 1))}
             className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
           >
             次へ
