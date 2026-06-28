@@ -209,7 +209,8 @@ export async function POST(request: NextRequest) {
     .single()
   if (profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const apiKey = env.GOOGLE_CLOUD_TTS_API_KEY
+  const apiKey = env.AZURE_TTS_KEY
+  const ttsRegion = env.AZURE_TTS_REGION ?? 'japaneast'
   if (!apiKey) return NextResponse.json({ error: 'TTS API key not configured' }, { status: 500 })
 
   let body: { table?: string }
@@ -255,8 +256,8 @@ export async function POST(request: NextRequest) {
   for (const item of batch) {
     try {
       const audioBuffer = useDialogue
-        ? await synthesizeWithDialogue(apiKey, item.text, 1.0)
-        : await synthesize(apiKey, item.text, narratorVoice, 1.0)
+        ? await synthesizeWithDialogue(apiKey, ttsRegion, item.text, 1.0)
+        : await synthesize(apiKey, ttsRegion, item.text, narratorVoice, 1.0)
 
       await storageClient.storage
         .from(BUCKET)

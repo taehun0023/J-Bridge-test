@@ -4,13 +4,13 @@ import { createHash } from 'crypto'
  * TTS Cache Version — increment when TTS generation logic changes
  * to automatically invalidate old cached audio.
  */
-const CACHE_VERSION = 3
+const CACHE_VERSION = 4  // v4: Google → Azure Neural migration
 
 export const BUCKET = 'tts-cache'
 
 export interface TtsVoice {
   name: string
-  ssmlGender: string
+  gender: 'Female' | 'Male'
 }
 
 export interface Segment {
@@ -18,15 +18,15 @@ export interface Segment {
   text: string
 }
 
-// 話者ごとに異なる音声を割り当てるための音声プール
+// Azure Neural Japanese voices — 話者ごとに異なる音声を割り当て
 export const voicePool: TtsVoice[] = [
-  { name: 'ja-JP-Neural2-B', ssmlGender: 'FEMALE' },
-  { name: 'ja-JP-Neural2-C', ssmlGender: 'MALE' },
-  { name: 'ja-JP-Neural2-D', ssmlGender: 'MALE' },
-  { name: 'ja-JP-Standard-A', ssmlGender: 'FEMALE' },
+  { name: 'ja-JP-NanamiNeural', gender: 'Female' },
+  { name: 'ja-JP-KeitaNeural',  gender: 'Male'   },
+  { name: 'ja-JP-AoiNeural',    gender: 'Female' },
+  { name: 'ja-JP-DaichiNeural', gender: 'Male'   },
 ]
 
-export const narratorVoice: TtsVoice = { name: 'ja-JP-Neural2-B', ssmlGender: 'FEMALE' }
+export const narratorVoice: TtsVoice = { name: 'ja-JP-NanamiNeural', gender: 'Female' }
 
 /**
  * テキスト+速度からキャッシュ用ハッシュを生成（バージョン付き）
@@ -41,7 +41,6 @@ export function getCacheKey(text: string, speed: number): string {
  */
 export function parseDialogueScript(text: string): { isDialogue: boolean; segments: Segment[] } {
   const lines = text.split('\n')
-  // 全角コロン「：」で話者名と台詞を分離（話者名は1〜15文字）
   const dialoguePattern = /^(.{1,15})：(.+)$/
 
   let dialogueLineCount = 0
@@ -60,8 +59,6 @@ export function parseDialogueScript(text: string): { isDialogue: boolean; segmen
     }
   }
 
-  // 1行以上が対話形式の場合、話者マーカーを除去して話者別音声で合成する
-  // (独白型モノローグ「アナウンス：...」「研究者：...」も含む)
   if (dialogueLineCount >= 1) {
     return { isDialogue: true, segments }
   }
@@ -85,38 +82,53 @@ export function groupSegments(segments: Segment[]): Segment[] {
   return grouped
 }
 
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+}
+
+function buildSsml(text: string, voiceName: string, speed: number): string {
+  const ratePercent = Math.round((speed - 1) * 100)
+  const rateStr = ratePercent >= 0 ? `+${ratePercent}%` : `${ratePercent}%`
+  const inner = speed !== 1.0
+    ? `<prosody rate="${rateStr}">${escapeXml(text)}</prosody>`
+    : escapeXml(text)
+  return `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP"><voice name="${voiceName}">${inner}</voice></speak>`
+}
+
 /**
- * Google Cloud TTS APIを呼び出して音声を合成する
+ * Azure Cognitive Services TTS を呼び出して MP3 を返す
  */
 export async function synthesize(
   apiKey: string,
+  region: string,
   text: string,
   voice: TtsVoice,
   speakingRate: number
 ): Promise<Buffer> {
   const response = await fetch(
-    'https://texttospeech.googleapis.com/v1/text:synthesize',
+    `https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`,
     {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': apiKey,
+        'Ocp-Apim-Subscription-Key': apiKey,
+        'Content-Type': 'application/ssml+xml',
+        'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3',
       },
-      body: JSON.stringify({
-        input: { text },
-        voice: { languageCode: 'ja-JP', ...voice },
-        audioConfig: { audioEncoding: 'MP3', speakingRate },
-      }),
+      body: buildSsml(text, voice.name, speakingRate),
     }
   )
 
   if (!response.ok) {
     const error = await response.text()
-    throw new Error(`TTS API error: ${error}`)
+    throw new Error(`Azure TTS error ${response.status}: ${error}`)
   }
 
-  const data = await response.json()
-  return Buffer.from(data.audioContent, 'base64')
+  return Buffer.from(await response.arrayBuffer())
 }
 
 /**
@@ -124,25 +136,23 @@ export async function synthesize(
  */
 export async function synthesizeWithDialogue(
   apiKey: string,
+  region: string,
   text: string,
   speakingRate: number
 ): Promise<Buffer> {
   const { isDialogue, segments } = parseDialogueScript(text)
 
   if (!isDialogue) {
-    return synthesize(apiKey, text, narratorVoice, speakingRate)
+    return synthesize(apiKey, region, text, narratorVoice, speakingRate)
   }
 
-  // 対話モード：話者ごとに異なる音声を割り当て
   const grouped = groupSegments(segments)
   const speakerVoiceMap = new Map<string, TtsVoice>()
   let voiceIndex = 0
-
   const audioBuffers: Buffer[] = []
 
   for (const seg of grouped) {
     let voice = narratorVoice
-
     if (seg.speaker) {
       if (!speakerVoiceMap.has(seg.speaker)) {
         speakerVoiceMap.set(seg.speaker, voicePool[voiceIndex % voicePool.length])
@@ -150,8 +160,7 @@ export async function synthesizeWithDialogue(
       }
       voice = speakerVoiceMap.get(seg.speaker)!
     }
-
-    const buf = await synthesize(apiKey, seg.text, voice, speakingRate)
+    const buf = await synthesize(apiKey, region, seg.text, voice, speakingRate)
     audioBuffers.push(buf)
   }
 

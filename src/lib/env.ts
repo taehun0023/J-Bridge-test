@@ -16,8 +16,9 @@ const serverSchema = z.object({
   JUDGE0_API_URL: z.string().url().default('http://localhost:2358'),
   JUDGE0_API_KEY: z.string().default(''),
 
-  // Google Cloud TTS (optional — TTS features disabled without it)
-  GOOGLE_CLOUD_TTS_API_KEY: z.string().min(1).optional(),
+  // Azure Cognitive Services TTS (optional — TTS features disabled without it)
+  AZURE_TTS_KEY: z.string().min(1).optional(),
+  AZURE_TTS_REGION: z.string().min(1).optional(),
 })
 
 export type ServerEnv = z.infer<typeof serverSchema>
