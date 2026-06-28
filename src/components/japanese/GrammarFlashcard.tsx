@@ -88,7 +88,7 @@ export default function GrammarFlashcard({ items, onClose, masteredIds = [], onT
         </div>
       )}
       <div className="w-full max-w-lg">
-        <div className="flex min-h-[360px] w-full flex-col rounded-2xl bg-white p-6 shadow-2xl">
+        <div className="flex min-h-[360px] w-full select-none flex-col rounded-2xl bg-white p-6 shadow-2xl" onCopy={(e) => e.preventDefault()}>
           {/* Header */}
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-bold text-gray-700">{safeIndex + 1} / {items.length}</span>

@@ -524,7 +524,8 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
 
   return (
     <div
-      className=""
+      className="select-none"
+      style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' } as React.CSSProperties}
     >
       {/* Header + Timer */}
       <div className={`sticky top-0 z-10 mb-4 overflow-hidden rounded-xl border shadow-sm backdrop-blur ${timerBg}`}>

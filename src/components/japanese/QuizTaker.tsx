@@ -369,7 +369,8 @@ export default function QuizTaker({ quiz, questions, backUrl, quizType, hideRetr
 
   return (
     <div
-      className="mx-auto max-w-2xl"
+      className={`mx-auto max-w-2xl ${started && !result ? 'select-none' : ''}`}
+      style={started && !result ? { userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' } as React.CSSProperties : undefined}
     >
       {/* Sticky timer bar (timed quizzes only) */}
       {quiz.time_limit_minutes ? (

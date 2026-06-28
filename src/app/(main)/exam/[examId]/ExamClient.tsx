@@ -888,7 +888,8 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
 
   return (
     <div
-      className="mx-auto max-w-3xl"
+      className="mx-auto max-w-3xl select-none"
+      style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' } as React.CSSProperties}
     >
       {error && (
         <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600 dark:bg-red-900/30 dark:text-red-400">
