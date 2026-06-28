@@ -188,18 +188,19 @@ export async function generateVocabQuiz({
   if ('error' in auth) return { error: auth.error } as const
   const { supabase } = auth
 
-  // Build query matching page sort order
+  // 화면 출력과 동일한 통일 순번(display_seq) 기준으로 범위 추출
+  // 과제 "rangeStart~rangeEnd번" = display_seq 값 범위와 정확히 일치
   let query = supabase
     .from('jlpt_vocabulary')
     .select('id, word, reading, meaning_ko')
     .eq('jlpt_level', level)
-    .order('created_at', { ascending: true })
+    .gte('display_seq', rangeStart)
+    .lte('display_seq', rangeEnd)
+    .order('display_seq', { ascending: true })
 
   if (pos) {
     query = query.eq('part_of_speech', pos)
   }
-
-  query = query.range(rangeStart - 1, rangeEnd - 1)
 
   const { data: rangeItems, error } = await query
   if (error || !rangeItems || rangeItems.length === 0) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { startExam, submitExam, requestRetakeExam, loadExamQuestions, saveExamProgress, loadMockReview } from '@/app/actions/comprehensive-exam'
 import { submitQuestionClaim } from '@/app/actions/claims'
 import { useRouter } from 'next/navigation'
@@ -223,6 +223,27 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   const isMock = questions.some(q => !!q.section)
   const isCurrentChoukai = currentQuestion?.section === 'choukai' || currentQuestion?.question_category === 'listening'
 
+  // 같은 지문을 공유하는 연속 문제에 問N: 번호를 부여
+  const subQuestionNumberMap = useMemo(() => {
+    const map = new Map<string, number>()
+    if (!isMock) return map
+    // 지문 키: question_text 앞 100자 (trim) — 같은 지문이면 동일
+    const key = (text: string) => text.replace(/\\n/g, '\n').trim().substring(0, 100)
+    // 섹션별로 순서대로 그루핑
+    const grouped = new Map<string, string[]>()
+    for (const q of questions) {
+      if (!q.section || q.section === 'choukai') continue
+      const k = key(q.question_text)
+      const existing = grouped.get(k)
+      if (existing) existing.push(q.id)
+      else grouped.set(k, [q.id])
+    }
+    for (const ids of grouped.values()) {
+      if (ids.length > 1) ids.forEach((id, i) => map.set(id, i + 1))
+    }
+    return map
+  }, [questions, isMock])
+
   useEffect(() => {
     answersRef.current = answers
   }, [answers])
@@ -373,27 +394,25 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
     return () => clearInterval(interval)
   }, [started, submitting, reviewMode, questions.length, handleSubmit])
 
-  // Anti-cheat: prevent drag, copy, select, right-click during exam (not in review)
-  useEffect(() => {
-    if (!started || submitting || reviewMode) return
-
-    const prevent = (e: Event) => e.preventDefault()
-    document.addEventListener('dragstart', prevent)
-    document.addEventListener('drop', prevent)
-    document.addEventListener('copy', prevent)
-    document.addEventListener('cut', prevent)
-    document.addEventListener('selectstart', prevent)
-    document.addEventListener('contextmenu', prevent)
-
-    return () => {
-      document.removeEventListener('dragstart', prevent)
-      document.removeEventListener('drop', prevent)
-      document.removeEventListener('copy', prevent)
-      document.removeEventListener('cut', prevent)
-      document.removeEventListener('selectstart', prevent)
-      document.removeEventListener('contextmenu', prevent)
-    }
-  }, [started, submitting, reviewMode])
+  // Anti-cheat disabled
+  // useEffect(() => {
+  //   if (!started || submitting || reviewMode) return
+  //   const prevent = (e: Event) => e.preventDefault()
+  //   document.addEventListener('dragstart', prevent)
+  //   document.addEventListener('drop', prevent)
+  //   document.addEventListener('copy', prevent)
+  //   document.addEventListener('cut', prevent)
+  //   document.addEventListener('selectstart', prevent)
+  //   document.addEventListener('contextmenu', prevent)
+  //   return () => {
+  //     document.removeEventListener('dragstart', prevent)
+  //     document.removeEventListener('drop', prevent)
+  //     document.removeEventListener('copy', prevent)
+  //     document.removeEventListener('cut', prevent)
+  //     document.removeEventListener('selectstart', prevent)
+  //     document.removeEventListener('contextmenu', prevent)
+  //   }
+  // }, [started, submitting, reviewMode])
 
   // Intercept link clicks during exam — warn and submit partial answers
   useEffect(() => {
@@ -888,8 +907,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
 
   return (
     <div
-      className="mx-auto max-w-3xl select-none"
-      style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' } as React.CSSProperties}
+      className="mx-auto max-w-3xl"
     >
       {error && (
         <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600 dark:bg-red-900/30 dark:text-red-400">
@@ -1003,6 +1021,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
               onSelect={handleSelect}
               boxPassages={!!currentQuestion.section && !isListening}
               hideMeta={!!currentQuestion.section}
+              subQuestionNumber={subQuestionNumberMap.get(currentQuestion.id)}
             />
           </div>
         )

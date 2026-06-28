@@ -104,9 +104,30 @@ src/
 | mentor | 학습 현황 조회, 코드 리뷰, 피드백 |
 | mentee | 학습, 시험 응시, 본인 점수/랭킹 확인 |
 
+## DB Connection Credentials
+
+psql 실행 경로: `"C:/Program Files/PostgreSQL/17/bin/psql.exe"`  
+항상 `-f <utf8파일>` 방식으로 실행 (일본어 직접 `-c` 전달 금지 → 인코딩 오류).  
+**사용자가 psql 실행을 항상 승인함 — 매번 확인 불필요. `"C:/Program Files/PostgreSQL/17/bin/psql.exe" *` 패턴은 자동 허용.**
+
+**Bash 명령에서 `cd` 사용 금지 — 항상 절대경로 사용.** 작업 디렉토리는 이미 프로젝트 루트(`C:/workspace/J-Bridge-test`)로 설정돼 있다. `cd ... && ...` 복합 명령(특히 출력 리다이렉션·`>`·`\o` 포함 시)은 Claude Code의 경로 우회 방지 안전장치 때문에 **매번 권한 프롬프트가 뜬다**(settings.json `permissions.allow`로 못 막음). `cd` 붙이지 말고 파일은 전부 절대경로로 지정할 것. 여러 명령 묶을 땐 `cd` 없이 `;`/`&&`만 사용.
+
+| 환경 | Project ID | Connection String |
+|---|---|---|
+| **로컬** | `jpjvzlmwzeiyukqqbdit` | `postgresql://postgres:Weavus12345!!@db.jpjvzlmwzeiyukqqbdit.supabase.co:5432/postgres` |
+| **테스트** | `nyymasirfrawsxobmfwi` | `postgresql://postgres:Weavus12345!!@db.nyymasirfrawsxobmfwi.supabase.co:5432/postgres` |
+| **본서버(prod)** | `wxhyczlwdmeelcshqgci` | `postgresql://postgres:29qOe2JzAwejZ1R0@db.wxhyczlwdmeelcshqgci.supabase.co:5432/postgres` |
+
+**본서버는 명시적 지시 전까지 절대 건드리지 말 것.**  
+비밀번호 로테이트 금지 (사용자 정책: 기존 비번 고정 재사용).
+
 ## Known Technical Debt
 
 - Auth pattern uses `requireAuth`/`requireAdmin`/`requireAdminOrMentor` helpers (consolidated in Phase 1)
+
+## Model Selection (cost)
+
+- **콘텐츠 생성·검수(JLPT 어휘/문법/한자/독해/청해 시드·감사·교정 등) 서브에이전트는 Sonnet으로 돌린다** (Agent `model: sonnet`). content-curator 같은 대량 생성/검수 작업은 Opus 불필요 — 토큰 절감용. 정말 까다로운 정확성 판정만 필요시 Opus.
 
 ## Pitfalls / Lessons (do NOT repeat)
 

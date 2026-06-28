@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Badge from '@/components/ui/Badge'
 import TtsButton from './TtsButton'
 import MasteryCheck from './MasteryCheck'
@@ -44,15 +45,28 @@ interface VocabularyListProps {
 export default function VocabularyList({ items, level, offset = 0, masteredIds = [], onToggleMastery, seqMap }: VocabularyListProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [localMastered, setLocalMastered] = useState<Set<string>>(new Set(masteredIds))
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     setLocalMastered(new Set(masteredIds))
   }, [masteredIds])
 
+  // 과제 카드 점프(?start=N): 해당 순번 항목으로 스크롤 + 잠깐 강조
+  useEffect(() => {
+    const start = searchParams.get('start')
+    if (!start) return
+    const el = document.getElementById(`vocab-item-${start}`)
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    el.classList.add('ring-2', 'ring-indigo-400', 'rounded-lg')
+    const t = setTimeout(() => el.classList.remove('ring-2', 'ring-indigo-400', 'rounded-lg'), 2500)
+    return () => clearTimeout(t)
+  }, [searchParams, items])
+
   return (
     <div className="divide-y divide-gray-100 dark:divide-gray-700">
       {items.map((item, index) => (
-        <div key={item.id} className="py-3">
+        <div key={item.id} id={`vocab-item-${seqMap?.[item.id] ?? (offset + index + 1)}`} className="py-3">
           <div
             onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
             className="flex w-full cursor-pointer items-center gap-4 text-left"

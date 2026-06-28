@@ -277,7 +277,7 @@ export default function ItemAssignModal({ open, onClose, mentees, initialMenteeI
           )}
 
           {/* 통일 패널: 영역별 현황 + 증분 입력 */}
-          <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.08]">
+          <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-white/[0.08]">
             <table className="min-w-full text-sm">
               <thead className="bg-gray-50 dark:bg-white/5">
                 <tr className="text-xs text-zinc-500 dark:text-zinc-400">

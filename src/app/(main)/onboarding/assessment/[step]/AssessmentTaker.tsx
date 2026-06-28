@@ -217,27 +217,7 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [reviewMode, started])
 
-  // Anti-cheat: prevent drag, copy, select, right-click during exam
-  useEffect(() => {
-    if (!started || reviewMode) return
-
-    const prevent = (e: Event) => e.preventDefault()
-    document.addEventListener('dragstart', prevent)
-    document.addEventListener('drop', prevent)
-    document.addEventListener('copy', prevent)
-    document.addEventListener('cut', prevent)
-    document.addEventListener('selectstart', prevent)
-    document.addEventListener('contextmenu', prevent)
-
-    return () => {
-      document.removeEventListener('dragstart', prevent)
-      document.removeEventListener('drop', prevent)
-      document.removeEventListener('copy', prevent)
-      document.removeEventListener('cut', prevent)
-      document.removeEventListener('selectstart', prevent)
-      document.removeEventListener('contextmenu', prevent)
-    }
-  }, [started, reviewMode])
+  // Anti-cheat disabled
 
   const handleSelect = (optionId: string) => {
     if (optionId === '') {
@@ -524,8 +504,7 @@ export default function AssessmentTaker({ step, label, timeLimit, questions, tot
 
   return (
     <div
-      className="select-none"
-      style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' } as React.CSSProperties}
+      className=""
     >
       {/* Header + Timer */}
       <div className={`sticky top-0 z-10 mb-4 overflow-hidden rounded-xl border shadow-sm backdrop-blur ${timerBg}`}>

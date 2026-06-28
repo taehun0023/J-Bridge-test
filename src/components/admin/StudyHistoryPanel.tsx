@@ -51,8 +51,8 @@ export default function StudyHistoryPanel({ mentees }: { mentees: { id: string; 
       ) : !loaded || rows.length === 0 ? (
         <div className="py-10 text-center text-sm text-gray-400">学習履歴がありません</div>
       ) : (
-        <div className="mt-3 max-h-[32rem] overflow-y-auto">
-          <table className="w-full text-sm">
+        <div className="mt-3 max-h-[32rem] overflow-auto">
+          <table className="w-full min-w-[640px] text-sm">
             <thead className="sticky top-0 bg-gray-50 text-xs text-gray-500 dark:bg-gray-900 dark:text-gray-400">
               <tr>
                 <th className="px-2 py-2 text-left">日時</th>
