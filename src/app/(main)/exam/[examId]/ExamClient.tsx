@@ -1114,64 +1114,12 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
         )}
       </div>
 
-      {/* 청해 오디오 플레이어 */}
+      {/* 청해 섹션 안내 */}
       {isChookaiExam && started && (
-        <div className="mb-4 space-y-3">
-          {/* 섹션 안내문 */}
+        <div className="mb-4 space-y-2">
           <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
             <span className="font-bold text-zinc-900 dark:text-zinc-100">問題{mondaiGroup}</span>　{MONDAI_INTROS[mondaiGroup]}
           </p>
-
-          {/* 오디오 플레이어 */}
-          <div className="flex items-center gap-3 rounded-xl border border-zinc-700 bg-zinc-800/90 px-4 py-2.5">
-            {/* 재생/일시정지 버튼 */}
-            <button
-              onClick={toggleChookaiPlay}
-              disabled={chookaiIsIntro}
-              className="shrink-0 flex h-8 w-8 items-center justify-center rounded-full text-white hover:text-zinc-200 disabled:opacity-40 transition-opacity"
-            >
-              {chookaiPlaying && !chookaiIsIntro ? (
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                  <rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>
-                </svg>
-              ) : (
-                <svg className="h-5 w-5 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-              )}
-            </button>
-
-            {/* 프로그레스 바 */}
-            <div className="flex-1 relative flex items-center">
-              {chookaiIsIntro ? (
-                <div className="w-full flex items-center gap-2">
-                  <div className="h-1.5 flex-1 rounded-full bg-zinc-600">
-                    <div className="h-full w-1/3 rounded-full bg-indigo-500 animate-pulse" />
-                  </div>
-                  <span className="text-xs text-zinc-400 shrink-0">アナウンス...</span>
-                </div>
-              ) : (
-                <input
-                  type="range"
-                  min={0}
-                  max={1000}
-                  value={chookaiDuration > 0 ? Math.round((chookaiCurrentTime / chookaiDuration) * 1000) : 0}
-                  onChange={e => seekChoukai(Number(e.target.value) / 1000)}
-                  className="w-full h-1.5 cursor-pointer accent-red-500"
-                  style={{ accentColor: '#ef4444' }}
-                />
-              )}
-            </div>
-
-            {/* 시간 표시 */}
-            {!chookaiIsIntro && (
-              <span className="text-xs text-zinc-400 shrink-0 w-12 text-right tabular-nums">
-                {formatChookaiTime(chookaiDuration)}
-              </span>
-            )}
-          </div>
-
-          {/* 문제 번호 */}
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center justify-center min-w-[2rem] rounded bg-zinc-700 px-1.5 py-0.5 text-xs font-bold text-white">
               {String(currentIndex + 1).padStart(2, '0')}

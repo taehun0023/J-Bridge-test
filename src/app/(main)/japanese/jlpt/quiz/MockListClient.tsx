@@ -123,7 +123,7 @@ export default function MockListClient({ level, sets }: { level: string; sets: S
             </div>
             <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">聴解試験を開始します</h3>
             <div className="mt-3 space-y-1.5 text-sm text-zinc-600 dark:text-zinc-400">
-              <p>これより聴解（2時限）が始まります。</p>
+              <p>これより聴解試験が始まります。</p>
               <p>音声は各問 <span className="font-semibold text-zinc-800 dark:text-zinc-200">自動再生</span> されます。</p>
               <p>「次へ」ボタンを押すと次の問題に進み、音声が自動再生されます。</p>
               <p className="text-xs text-zinc-400 dark:text-zinc-500 pt-1">音量を確認してから開始してください。</p>
