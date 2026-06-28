@@ -14,12 +14,37 @@ const MONDAI_INTROS: Record<number, string> = {
 }
 
 // N1 聴解 문제 그룹 경계 (within-choukai 0-based index)
+// 問題1:6問(0~5) 問題2:7問(6~12) 問題3:3問(13~15) 問題4:11問(16~26) 問題5:3問(27~29)
 function getChookaiMondaiGroup(withinIdx: number): number {
   if (withinIdx < 6) return 1
   if (withinIdx < 13) return 2
-  if (withinIdx < 18) return 3
+  if (withinIdx < 16) return 3
   if (withinIdx < 27) return 4
   return 5
+}
+
+// 섹션별 오디오 순서 재조합
+// 問題1/2: 状況説明 → 質問 → 会話  問題3/5: 独白/会話 → 質問  問題4: 短い発話そのまま
+function buildChookaiAudioScript(rawText: string, mondaiGroup: number): string {
+  const normalized = rawText.replace(/\\n/g, '\n')
+  const blocks = normalized.split('\n\n').map(b => b.trim()).filter(Boolean)
+  if (blocks.length < 2) return normalized
+  const lastBlock = blocks[blocks.length - 1]
+  if (!lastBlock.startsWith('質問') && !lastBlock.startsWith('問い')) return normalized
+  const questionSentence = lastBlock.replace(/^質問[：:]\s*/, '')
+  const contentBlocks = blocks.slice(0, -1)
+  if (mondaiGroup === 1 || mondaiGroup === 2) {
+    const [situation, ...dialogue] = contentBlocks
+    return [situation, questionSentence, ...dialogue].join('\n\n')
+  }
+  return [...contentBlocks, questionSentence].join('\n\n')
+}
+
+function formatChookaiTime(s: number): string {
+  if (!isFinite(s) || s < 0) return '0:00'
+  const m = Math.floor(s / 60)
+  const sec = Math.floor(s % 60)
+  return `${m}:${sec.toString().padStart(2, '0')}`
 }
 import { startExam, submitExam, requestRetakeExam, loadExamQuestions, saveExamProgress, loadMockReview } from '@/app/actions/comprehensive-exam'
 import { submitQuestionClaim } from '@/app/actions/claims'
@@ -240,11 +265,28 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   const answeredCount = Object.keys(answers).length
   const isMock = questions.some(q => !!q.section)
   const isChookaiExam = questions.length > 0 && questions.every(q => q.section === 'choukai' || q.question_category === 'listening')
+  const mondaiGroup = isChookaiExam ? getChookaiMondaiGroup(currentIndex) : 0
 
+  const [chookaiIsIntro, setChookaiIsIntro] = useState(false)
   const [chookaiPlaying, setChookaiPlaying] = useState(false)
+  const [chookaiDuration, setChookaiDuration] = useState(0)
+  const [chookaiCurrentTime, setChookaiCurrentTime] = useState(0)
   const chookaiAudioRef = useRef<HTMLAudioElement | null>(null)
   const chookaiBlobRef = useRef<string | null>(null)
   const prevGroupRef = useRef(-1)
+
+  function toggleChookaiPlay() {
+    const audio = chookaiAudioRef.current
+    if (!audio || chookaiIsIntro) return
+    if (audio.paused) audio.play().catch(() => {})
+    else audio.pause()
+  }
+
+  function seekChoukai(pct: number) {
+    const audio = chookaiAudioRef.current
+    if (!audio || chookaiIsIntro || !chookaiDuration) return
+    audio.currentTime = pct * chookaiDuration
+  }
 
   useEffect(() => {
     if (!isChookaiExam || !started || reviewMode) return
@@ -253,22 +295,28 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
     let mounted = true
 
     const stopCurrent = () => {
-      if (chookaiAudioRef.current) { chookaiAudioRef.current.pause(); chookaiAudioRef.current = null }
+      if (chookaiAudioRef.current) {
+        chookaiAudioRef.current.pause()
+        chookaiAudioRef.current.ontimeupdate = null
+        chookaiAudioRef.current = null
+      }
       if (chookaiBlobRef.current) { URL.revokeObjectURL(chookaiBlobRef.current); chookaiBlobRef.current = null }
       setChookaiPlaying(false)
+      setChookaiIsIntro(false)
+      setChookaiDuration(0)
+      setChookaiCurrentTime(0)
     }
 
     stopCurrent()
 
-    const parsed = parseListeningQuestion(currentQuestion.question_text)
-    const script = parsed?.script ?? currentQuestion.question_text
     const group = getChookaiMondaiGroup(currentIndex)
     const introText = prevGroupRef.current !== group ? MONDAI_INTROS[group] : null
     prevGroupRef.current = group
+    const audioScript = buildChookaiAudioScript(currentQuestion.question_text, group)
 
-    const playTTS = (text: string, onEnd?: () => void) => {
+    const playMain = () => {
       fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, speed: 1.0 }) })
+        body: JSON.stringify({ text: audioScript, speed: 1.0 }) })
         .then(async res => {
           if (!mounted || !res.ok) return
           const blob = await res.blob()
@@ -277,16 +325,32 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
           chookaiBlobRef.current = url
           const audio = new Audio(url)
           chookaiAudioRef.current = audio
-          setChookaiPlaying(true)
-          audio.onended = () => { setChookaiPlaying(false); onEnd?.() }
+          audio.onloadedmetadata = () => { if (mounted) setChookaiDuration(audio.duration) }
+          audio.ontimeupdate = () => { if (mounted) setChookaiCurrentTime(audio.currentTime) }
+          audio.onplay = () => { if (mounted) { setChookaiPlaying(true); setChookaiIsIntro(false) } }
+          audio.onpause = () => { if (mounted) setChookaiPlaying(false) }
+          audio.onended = () => { if (mounted) { setChookaiPlaying(false); setChookaiCurrentTime(audio.duration) } }
           audio.play().catch(() => {})
         }).catch(() => {})
     }
 
     if (introText) {
-      playTTS(introText, () => { if (mounted) playTTS(script) })
+      setChookaiIsIntro(true)
+      setChookaiPlaying(true)
+      fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: introText, speed: 1.0 }) })
+        .then(async res => {
+          if (!mounted || !res.ok) { if (mounted) { setChookaiIsIntro(false); setChookaiPlaying(false); playMain() }; return }
+          const blob = await res.blob()
+          const url = URL.createObjectURL(blob)
+          if (!mounted) { URL.revokeObjectURL(url); return }
+          const introAudio = new Audio(url)
+          chookaiAudioRef.current = introAudio
+          introAudio.onended = () => { URL.revokeObjectURL(url); if (mounted) { setChookaiIsIntro(false); setChookaiPlaying(false); playMain() } }
+          introAudio.play().catch(() => { if (mounted) { setChookaiIsIntro(false); setChookaiPlaying(false); playMain() } })
+        }).catch(() => { if (mounted) { setChookaiIsIntro(false); setChookaiPlaying(false); playMain() } })
     } else {
-      playTTS(script)
+      playMain()
     }
 
     return () => { mounted = false; stopCurrent() }
@@ -1050,13 +1114,70 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
         )}
       </div>
 
-      {/* 청해 재생 상태 표시 */}
+      {/* 청해 오디오 플레이어 */}
       {isChookaiExam && started && (
-        <div className="mb-4 flex items-center gap-3 rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-3">
-          <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${chookaiPlaying ? 'bg-indigo-500 animate-pulse' : 'bg-zinc-300 dark:bg-zinc-600'}`} />
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            {chookaiPlaying ? '音声再生中...' : '音声準備中...'}
+        <div className="mb-4 space-y-3">
+          {/* 섹션 안내문 */}
+          <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
+            <span className="font-bold text-zinc-900 dark:text-zinc-100">問題{mondaiGroup}</span>　{MONDAI_INTROS[mondaiGroup]}
           </p>
+
+          {/* 오디오 플레이어 */}
+          <div className="flex items-center gap-3 rounded-xl border border-zinc-700 bg-zinc-800/90 px-4 py-2.5">
+            {/* 재생/일시정지 버튼 */}
+            <button
+              onClick={toggleChookaiPlay}
+              disabled={chookaiIsIntro}
+              className="shrink-0 flex h-8 w-8 items-center justify-center rounded-full text-white hover:text-zinc-200 disabled:opacity-40 transition-opacity"
+            >
+              {chookaiPlaying && !chookaiIsIntro ? (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>
+                </svg>
+              ) : (
+                <svg className="h-5 w-5 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              )}
+            </button>
+
+            {/* 프로그레스 바 */}
+            <div className="flex-1 relative flex items-center">
+              {chookaiIsIntro ? (
+                <div className="w-full flex items-center gap-2">
+                  <div className="h-1.5 flex-1 rounded-full bg-zinc-600">
+                    <div className="h-full w-1/3 rounded-full bg-indigo-500 animate-pulse" />
+                  </div>
+                  <span className="text-xs text-zinc-400 shrink-0">アナウンス...</span>
+                </div>
+              ) : (
+                <input
+                  type="range"
+                  min={0}
+                  max={1000}
+                  value={chookaiDuration > 0 ? Math.round((chookaiCurrentTime / chookaiDuration) * 1000) : 0}
+                  onChange={e => seekChoukai(Number(e.target.value) / 1000)}
+                  className="w-full h-1.5 cursor-pointer accent-red-500"
+                  style={{ accentColor: '#ef4444' }}
+                />
+              )}
+            </div>
+
+            {/* 시간 표시 */}
+            {!chookaiIsIntro && (
+              <span className="text-xs text-zinc-400 shrink-0 w-12 text-right tabular-nums">
+                {formatChookaiTime(chookaiDuration)}
+              </span>
+            )}
+          </div>
+
+          {/* 문제 번호 */}
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center justify-center min-w-[2rem] rounded bg-zinc-700 px-1.5 py-0.5 text-xs font-bold text-white">
+              {String(currentIndex + 1).padStart(2, '0')}
+            </span>
+            <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{currentIndex + 1}番</span>
+          </div>
         </div>
       )}
 
@@ -1075,7 +1196,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
             <QuizQuestion
               questionNumber={currentIndex + 1}
               totalQuestions={totalQuestions}
-              questionText={isListening && parsed ? parsed.question : currentQuestion.question_text}
+              questionText={isChookaiExam ? '' : (isListening && parsed ? parsed.question : currentQuestion.question_text)}
               options={currentQuestion.options}
               selectedOptionId={answers[currentQuestion.id] ?? null}
               onSelect={handleSelect}
