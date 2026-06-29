@@ -1141,26 +1141,52 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
       {currentQuestion && (() => {
         const isListening = currentQuestion.question_category === 'listening'
         const parsed = isListening ? parseListeningQuestion(currentQuestion.question_text) : null
+        const isDokkai = currentQuestion.section === 'dokkai'
+        const subQNum = subQuestionNumberMap.get(currentQuestion.id)
+
+        // 読解: 지문과 질문을 분리해 별도 패널로 표시
+        let passageText: string | null = null
+        let displayQuestionText: string
+        if (isDokkai && !isListening) {
+          const normalized = currentQuestion.question_text.replace(/\\n/g, '\n')
+          const blocks = normalized.split('\n\n').filter(b => b.trim())
+          if (blocks.length >= 2) {
+            passageText = blocks.slice(0, -1).join('\n\n')
+            displayQuestionText = blocks[blocks.length - 1]
+          } else {
+            displayQuestionText = normalized
+          }
+        } else {
+          displayQuestionText = isChookaiExam ? '' : (isListening && parsed ? parsed.question : currentQuestion.question_text)
+        }
 
         return (
-          <div className="rounded-2xl border border-gray-200/60 bg-white/80 backdrop-blur-md p-6 dark:border-white/[0.08] dark:bg-white/[0.03]">
-            {currentQuestion.section_label && !isChookaiExam && (
-              <div className="mb-3 inline-flex rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-300">
-                {currentQuestion.section_label}
+          <>
+            {/* 読解 지문 패널 (스크롤 가능) */}
+            {passageText && (
+              <div className="mb-3 rounded-2xl border border-gray-200/60 bg-zinc-50/80 p-5 max-h-[42vh] overflow-y-auto dark:border-white/[0.08] dark:bg-white/[0.03]">
+                <p className="text-sm leading-7 text-zinc-800 whitespace-pre-line dark:text-zinc-200">{passageText}</p>
               </div>
             )}
-            <QuizQuestion
-              questionNumber={currentIndex + 1}
-              totalQuestions={totalQuestions}
-              questionText={isChookaiExam ? '' : (isListening && parsed ? parsed.question : currentQuestion.question_text)}
-              options={currentQuestion.options}
-              selectedOptionId={answers[currentQuestion.id] ?? null}
-              onSelect={handleSelect}
-              boxPassages={!!currentQuestion.section && !isListening}
-              hideMeta={!!currentQuestion.section}
-              subQuestionNumber={subQuestionNumberMap.get(currentQuestion.id)}
-            />
-          </div>
+            <div className="rounded-2xl border border-gray-200/60 bg-white/80 backdrop-blur-md p-6 dark:border-white/[0.08] dark:bg-white/[0.03]">
+              {currentQuestion.section_label && !isChookaiExam && (
+                <div className="mb-3 inline-flex rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-300">
+                  {currentQuestion.section_label}
+                </div>
+              )}
+              <QuizQuestion
+                questionNumber={currentIndex + 1}
+                totalQuestions={totalQuestions}
+                questionText={displayQuestionText}
+                options={currentQuestion.options}
+                selectedOptionId={answers[currentQuestion.id] ?? null}
+                onSelect={handleSelect}
+                boxPassages={!isDokkai && !!currentQuestion.section && !isListening}
+                hideMeta={!!currentQuestion.section}
+                subQuestionNumber={subQNum}
+              />
+            </div>
+          </>
         )
       })()}
 

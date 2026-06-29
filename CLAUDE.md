@@ -150,6 +150,15 @@ psql 실행 경로: `"C:/Program Files/PostgreSQL/17/bin/psql.exe"`
 
 **Mock exam (jlpt-mock) facts:** stored in `comprehensive_exams` with `category='jlpt-mock'`, `subcategory='mock'`, `mock_set_no`, optional `mock_session` (1=1教時 placeholder `passed=false`, 2=合算 final verdict; null=single-session admin-assigned final). JLPT radar axis = passed jlpt-mock level only (legacy `seikatsu` comp exams deprecated/deleted).
 
+**N1 모의고사 구성 (고정 규격):**
+- 총 100문항: 言語知識 45문항 + 読解 25문항 + 聴解 30문항
+- 문항 번호: Q1~Q45 言語知識, Q46~Q70 読解, Q71~Q100 聴解 (고정)
+- 聴解 내부 구성: 問題1 6문항 / 問題2 7문항 / 問題3 3문항 / 問題4 11문항 / 問題5 3문항
+- 言語知識 내부 구성 (총 45문항):
+  - 語彙 Q1~Q25 (25문항): 問題1 漢字読み Q1~Q6(6문) / 問題2 文脈規定 Q7~Q13(7문) / 問題3 言い換え類義 Q14~Q19(6문) / 問題4 用法 Q20~Q25(6문)
+  - 文法 Q26~Q45 (20문항): 問題5 文法形式の判断 Q26~Q35(10문) / 問題6 文の組み立て Q36~Q40(5문) / 問題7 文章の文法 Q41~Q45(5문)
+- 読解 내부 구성: 問題8 内容理解(短文) 4문 / 問題9 内容理解(中文) 9문(3지문×3문) / 問題10 内容理解(長文) 4문 / 問題11 統合理解 2문 / 問題12 主張理解(長文) 4문 / 問題13 情報検索 2문
+
 ## Testing
 
 ```bash
@@ -168,6 +177,16 @@ Implementation phase — core features functional. Refactoring Phases 1-4 comple
 - Phase 2 (Module Extraction): admin/ split, notification-helpers, scoring/ module, comprehensive-exam/ split — done
 - Phase 3 (Architecture): ActionResult types, DB indexes, tests, DB_Schema.md update — done
 - Phase 4 (Production Readiness): TypeScript strict build (0 errors), Zod env validation, auth type leak fix — done
+
+## Commit & Push Rules
+
+**"커밋해줘" = 커밋 + 해당 환경 remote push까지 한 번에 수행.**  
+환경별 push 대상:
+- 로컬환경 커밋 → `git push local main`
+- 테스트환경 커밋 → `git push testkankyou main`
+- 본서버 커밋 → `git push honban main` (명시적 지시 시에만)
+
+커밋만 하고 push를 생략하면 Vercel 배포가 안 되므로 반드시 push까지 완료할 것.
 
 ## Behavioral Guidelines
 
