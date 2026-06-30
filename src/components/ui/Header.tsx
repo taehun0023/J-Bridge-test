@@ -79,7 +79,7 @@ export default function Header({
         <form action={signOut}>
           <button
             type="submit"
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-zinc-500 dark:text-zinc-400"
+            className="flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-zinc-500 dark:text-zinc-400"
           >
             <LogOut className="h-4 w-4" />
             ログアウト
