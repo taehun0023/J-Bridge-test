@@ -13,6 +13,7 @@ interface SearchParams {
   passage_type?: string
   page?: string
   start?: string
+  mastery?: string
 }
 
 const ITEMS_PER_PAGE = 10
@@ -41,6 +42,10 @@ export default async function JlptReadingPage({ searchParams }: { searchParams: 
   }
   const level = (['N5', 'N4', 'N3', 'N2', 'N1'].includes(params.level ?? '') ? params.level : defaultLevel) as JlptLevel
 
+  const mastery = params.mastery ?? ''
+  const masteredIds = await getMasteredIds('jlpt_reading')
+  const masteredLevelIds = await getMasteredLevelIds(supabase, 'jlpt_reading_passages', level, masteredIds)
+
   let query = supabase
     .from('jlpt_reading_passages')
     .select('*', { count: 'exact' })
@@ -53,13 +58,18 @@ export default async function JlptReadingPage({ searchParams }: { searchParams: 
   if (passageType) {
     query = query.eq('passage_type', passageType)
   }
+  if (mastery === 'mastered' && masteredLevelIds.length > 0) {
+    query = query.in('id', masteredLevelIds)
+  } else if (mastery === 'mastered') {
+    query = query.in('id', ['00000000-0000-0000-0000-000000000000'])
+  } else if (mastery === 'unmastered' && masteredLevelIds.length > 0) {
+    query = query.not('id', 'in', `(${masteredLevelIds.join(',')})`)
+  }
 
   query = query.range(offset, offset + ITEMS_PER_PAGE - 1)
 
-  // All queries in parallel
-  const [{ data: items, count }, masteredIds, { data: typeData }, { count: totalInLevel }] = await Promise.all([
+  const [{ data: items, count }, { data: typeData }, { count: totalInLevel }] = await Promise.all([
     query,
-    getMasteredIds('jlpt_reading'),
     supabase.from('jlpt_reading_passages').select('passage_type').eq('jlpt_level', level),
     supabase.from('jlpt_reading_passages').select('id', { count: 'exact', head: true }).eq('jlpt_level', level),
   ])
@@ -67,7 +77,7 @@ export default async function JlptReadingPage({ searchParams }: { searchParams: 
   const typeOptions = [...new Set(typeData?.map(t => t.passage_type).filter(Boolean) ?? [])]
 
   const totalItems = totalInLevel ?? 0
-  const masteredInLevel = (await getMasteredLevelIds(supabase, 'jlpt_reading_passages', level, masteredIds)).length
+  const masteredInLevel = masteredLevelIds.length
   return (
     <div>
       <JlptBackLink href={`/japanese/jlpt/${level.toLowerCase()}`} label={`${level} 学習メニューへ戻る`} />
@@ -88,6 +98,7 @@ export default async function JlptReadingPage({ searchParams }: { searchParams: 
         typeOptions={typeOptions as string[]}
         totalCount={count ?? 0}
         masteredIds={masteredIds}
+        mastery={mastery}
       />
     </div>
   )

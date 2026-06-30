@@ -1,6 +1,51 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+
+// 청해 시험 아나운스 텍스트
+const CHOUKAI_OVERALL_INTRO = `これから聴解試験を始めます。問題用紙を開けてください。音声は一度だけ流れます。必要であれば、メモを取ってもかまいません。それでは、問題を始めます。`
+
+const MONDAI_INTROS: Record<number, string> = {
+  1: `問題1では、まず質問を聞いてください。それから話を聞いて、問題用紙の1から4の中から、最もよいものを一つ選んでください。`,
+  2: `問題2では、まず質問を聞いてください。それから話を聞いて、問題用紙の1から4の中から、最もよいものを一つ選んでください。`,
+  3: `問題3では、問題用紙に何も印刷されていません。この問題は、全体としてどんな内容かを聞く問題です。話を聞いて、質問に答えてください。`,
+  4: `問題4では、短い文を聞きます。その返事として最もよいものを、1から3の中から一つ選んでください。`,
+  5: `問題5では、長めの話を聞きます。この問題には練習はありません。話を聞いて、質問に答えてください。`,
+}
+
+// N1 聴解 문제 그룹 경계 (within-choukai 0-based index)
+// 問題1:6問(0~5) 問題2:7問(6~12) 問題3:3問(13~15) 問題4:11問(16~26) 問題5:3問(27~29)
+function getChookaiMondaiGroup(withinIdx: number): number {
+  if (withinIdx < 6) return 1
+  if (withinIdx < 13) return 2
+  if (withinIdx < 16) return 3
+  if (withinIdx < 27) return 4
+  return 5
+}
+
+// 섹션별 오디오 순서 재조합
+// 問題1/2: 状況説明 → 質問 → 会話  問題3/5: 独白/会話 → 質問  問題4: 短い発話そのまま
+function buildChookaiAudioScript(rawText: string, mondaiGroup: number): string {
+  const normalized = rawText.replace(/\\n/g, '\n')
+  const blocks = normalized.split('\n\n').map(b => b.trim()).filter(Boolean)
+  if (blocks.length < 2) return normalized
+  const lastBlock = blocks[blocks.length - 1]
+  if (!lastBlock.startsWith('質問') && !lastBlock.startsWith('問い')) return normalized
+  const questionSentence = lastBlock.replace(/^質問[：:]\s*/, '')
+  const contentBlocks = blocks.slice(0, -1)
+  if (mondaiGroup === 1 || mondaiGroup === 2) {
+    const [situation, ...dialogue] = contentBlocks
+    return [situation, questionSentence, ...dialogue].join('\n\n')
+  }
+  return [...contentBlocks, questionSentence].join('\n\n')
+}
+
+function formatChookaiTime(s: number): string {
+  if (!isFinite(s) || s < 0) return '0:00'
+  const m = Math.floor(s / 60)
+  const sec = Math.floor(s % 60)
+  return `${m}:${sec.toString().padStart(2, '0')}`
+}
 import { startExam, submitExam, requestRetakeExam, loadExamQuestions, saveExamProgress, loadMockReview } from '@/app/actions/comprehensive-exam'
 import { submitQuestionClaim } from '@/app/actions/claims'
 import { useRouter } from 'next/navigation'
@@ -26,8 +71,12 @@ interface Question {
   question_category?: string | null
   section?: string | null
   section_label?: string | null
+  daimon?: number | null
   options: { id: string; option_text: string; sort_order: number }[]
 }
+
+// 言語知識 問題4 用法: question_text가 단어 하나뿐이라 안내문이 없으면 무엇을 고를지 알 수 없음
+const YOUHOU_INSTRUCTION = '次の言葉の使い方として最もよいものを、１・２・３・４から一つ選びなさい。'
 
 /**
  * Parse listening question: split into script (for TTS) and question (for display).
@@ -35,22 +84,36 @@ interface Question {
  */
 function parseListeningQuestion(text: string): { script: string; question: string } | null {
   const normalized = text.replace(/\\n/g, '\n')
-  // Split by double newline
+
+  // 1차: \n\n 블록 분리 (double newline format)
   const parts = normalized.split('\n\n')
-  if (parts.length < 2) return null
-  // 마지막 블록 = 질문, 그 앞 전부 = 스크립트(지시문+대화). 2단(스크립트\n\n질문)도 지원.
-  // First part: instruction, middle parts: script, last part: question
-  const question = parts[parts.length - 1]
-  const script = parts.slice(0, parts.length - 1).join('\n\n')
-  return { script, question }
+  if (parts.length >= 2) {
+    const question = parts[parts.length - 1]
+    const script = parts.slice(0, parts.length - 1).join('\n\n')
+    if (script.trim()) return { script, question }
+  }
+
+  // 2차 폴백: 단일 \n 형식 — 마지막 "質問" 줄을 경계로 분리
+  const lines = normalized.split('\n')
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const trimmed = lines[i].trim()
+    if (trimmed.startsWith('質問') || trimmed.startsWith('問い')) {
+      const script = lines.slice(0, i).join('\n')
+      const question = lines.slice(i).join('\n')
+      if (script.trim()) return { script, question }
+    }
+  }
+
+  return null
 }
 
 /** Inline TTS player for listening questions — play state lifted to parent */
-function ListeningPlayer({ script, questionId, alreadyPlayed, onPlayed }: {
+function ListeningPlayer({ script, questionId, alreadyPlayed, onPlayed, autoPlay = false }: {
   script: string
   questionId: string
   alreadyPlayed: boolean
   onPlayed: (questionId: string) => void
+  autoPlay?: boolean
 }) {
   const [playing, setPlaying] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -88,10 +151,20 @@ function ListeningPlayer({ script, questionId, alreadyPlayed, onPlayed }: {
       setPlaying(true)
     } catch {
       console.error('TTS playback failed')
+      busyRef.current = false
     } finally {
       setLoading(false)
     }
   }
+
+  // autoPlay が true になったタイミングで自動再生（バナー閉じた後）
+  useEffect(() => {
+    if (!autoPlay || alreadyPlayed) return
+    const timer = setTimeout(() => { void handlePlay() }, 400)
+    return () => clearTimeout(timer)
+  // handlePlay は毎回同一ロジック・busyRef でガード済み
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPlay])
 
   // Cleanup on unmount only: pause audio, mark as played if was playing
   useEffect(() => {
@@ -135,6 +208,7 @@ function ListeningPlayer({ script, questionId, alreadyPlayed, onPlayed }: {
     </div>
   )
 }
+
 
 interface ReviewResult {
   questionId: string
@@ -184,7 +258,6 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   const [claimForms, setClaimForms] = useState<Set<string>>(new Set())
   const [claimReasons, setClaimReasons] = useState<Record<string, string>>({})
   const [claimError, setClaimError] = useState<string | null>(null)
-  const [playedListeningIds, setPlayedListeningIds] = useState<Set<string>>(new Set())
   const [showListeningWarning, setShowListeningWarning] = useState(false)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
@@ -195,6 +268,127 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   const currentQuestion = questions[currentIndex]
   const answeredCount = Object.keys(answers).length
   const isMock = questions.some(q => !!q.section)
+  const isChookaiExam = questions.length > 0 && questions.every(q => q.section === 'choukai' || q.question_category === 'listening')
+  const mondaiGroup = isChookaiExam ? getChookaiMondaiGroup(currentIndex) : 0
+
+  const [chookaiIsIntro, setChookaiIsIntro] = useState(false)
+  const [chookaiPlaying, setChookaiPlaying] = useState(false)
+  const [chookaiDuration, setChookaiDuration] = useState(0)
+  const [chookaiCurrentTime, setChookaiCurrentTime] = useState(0)
+  const chookaiAudioRef = useRef<HTMLAudioElement | null>(null)
+  const chookaiBlobRef = useRef<string | null>(null)
+  const prevGroupRef = useRef(-1)
+  const prevIndexRef = useRef(-1)
+  const playedIndicesRef = useRef<Set<number>>(new Set())
+
+  function toggleChookaiPlay() {
+    const audio = chookaiAudioRef.current
+    if (!audio || chookaiIsIntro) return
+    if (audio.paused) audio.play().catch(() => {})
+    else audio.pause()
+  }
+
+  function seekChoukai(pct: number) {
+    const audio = chookaiAudioRef.current
+    if (!audio || chookaiIsIntro || !chookaiDuration) return
+    audio.currentTime = pct * chookaiDuration
+  }
+
+  useEffect(() => {
+    if (!isChookaiExam || !started || reviewMode) return
+    if (!currentQuestion) return
+
+    const isGoingBack = prevIndexRef.current >= 0 && currentIndex < prevIndexRef.current
+    prevIndexRef.current = currentIndex
+    const alreadyPlayed = playedIndicesRef.current.has(currentIndex)
+
+    let mounted = true
+
+    const stopCurrent = () => {
+      if (chookaiAudioRef.current) {
+        chookaiAudioRef.current.pause()
+        chookaiAudioRef.current.ontimeupdate = null
+        chookaiAudioRef.current = null
+      }
+      if (chookaiBlobRef.current) { URL.revokeObjectURL(chookaiBlobRef.current); chookaiBlobRef.current = null }
+      setChookaiPlaying(false)
+      setChookaiIsIntro(false)
+      setChookaiDuration(0)
+      setChookaiCurrentTime(0)
+    }
+
+    stopCurrent()
+    if (isGoingBack || alreadyPlayed) return
+
+    playedIndicesRef.current.add(currentIndex)
+    const group = getChookaiMondaiGroup(currentIndex)
+    const introText = prevGroupRef.current !== group ? MONDAI_INTROS[group] : null
+    prevGroupRef.current = group
+    const audioScript = buildChookaiAudioScript(currentQuestion.question_text, group)
+
+    const playMain = () => {
+      fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: audioScript, speed: 1.0 }) })
+        .then(async res => {
+          if (!mounted || !res.ok) return
+          const blob = await res.blob()
+          const url = URL.createObjectURL(blob)
+          if (!mounted) { URL.revokeObjectURL(url); return }
+          chookaiBlobRef.current = url
+          const audio = new Audio(url)
+          chookaiAudioRef.current = audio
+          audio.onloadedmetadata = () => { if (mounted) setChookaiDuration(audio.duration) }
+          audio.ontimeupdate = () => { if (mounted) setChookaiCurrentTime(audio.currentTime) }
+          audio.onplay = () => { if (mounted) { setChookaiPlaying(true); setChookaiIsIntro(false) } }
+          audio.onpause = () => { if (mounted) setChookaiPlaying(false) }
+          audio.onended = () => { if (mounted) { setChookaiPlaying(false); setChookaiCurrentTime(audio.duration) } }
+          audio.play().catch(() => {})
+        }).catch(() => {})
+    }
+
+    if (introText) {
+      setChookaiIsIntro(true)
+      setChookaiPlaying(true)
+      fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: introText, speed: 1.0 }) })
+        .then(async res => {
+          if (!mounted || !res.ok) { if (mounted) { setChookaiIsIntro(false); setChookaiPlaying(false); playMain() }; return }
+          const blob = await res.blob()
+          const url = URL.createObjectURL(blob)
+          if (!mounted) { URL.revokeObjectURL(url); return }
+          const introAudio = new Audio(url)
+          chookaiAudioRef.current = introAudio
+          introAudio.onended = () => { URL.revokeObjectURL(url); if (mounted) { setChookaiIsIntro(false); setChookaiPlaying(false); playMain() } }
+          introAudio.play().catch(() => { if (mounted) { setChookaiIsIntro(false); setChookaiPlaying(false); playMain() } })
+        }).catch(() => { if (mounted) { setChookaiIsIntro(false); setChookaiPlaying(false); playMain() } })
+    } else {
+      playMain()
+    }
+
+    return () => { mounted = false; stopCurrent() }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIndex, started, reviewMode, isChookaiExam])
+
+  // 같은 지문을 공유하는 연속 문제에 問N: 번호를 부여
+  const subQuestionNumberMap = useMemo(() => {
+    const map = new Map<string, number>()
+    if (!isMock) return map
+    // 지문 키: question_text 앞 100자 (trim) — 같은 지문이면 동일
+    const key = (text: string) => text.replace(/\\n/g, '\n').trim().substring(0, 100)
+    // 섹션별로 순서대로 그루핑
+    const grouped = new Map<string, string[]>()
+    for (const q of questions) {
+      if (!q.section || q.section === 'choukai') continue
+      const k = key(q.question_text)
+      const existing = grouped.get(k)
+      if (existing) existing.push(q.id)
+      else grouped.set(k, [q.id])
+    }
+    for (const ids of grouped.values()) {
+      if (ids.length > 1) ids.forEach((id, i) => map.set(id, i + 1))
+    }
+    return map
+  }, [questions, isMock])
 
   useEffect(() => {
     answersRef.current = answers
@@ -250,12 +444,14 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMock, started, submitting, reviewMode, questions.length])
 
+
   // 종료 확인창이 열려 있는 동안 "N초 전" 갱신
   useEffect(() => {
     if (!showExitConfirm) return
     const iv = setInterval(() => setSavedTick(t => t + 1), 5000)
     return () => clearInterval(iv)
   }, [showExitConfirm])
+
 
   // 저장 후 종료(제출 안 함, 나중에 재개 가능)
   const handleExitSave = useCallback(async () => {
@@ -334,27 +530,25 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
     return () => clearInterval(interval)
   }, [started, submitting, reviewMode, questions.length, handleSubmit])
 
-  // Anti-cheat: prevent drag, copy, select, right-click during exam (not in review)
-  useEffect(() => {
-    if (!started || submitting || reviewMode) return
-
-    const prevent = (e: Event) => e.preventDefault()
-    document.addEventListener('dragstart', prevent)
-    document.addEventListener('drop', prevent)
-    document.addEventListener('copy', prevent)
-    document.addEventListener('cut', prevent)
-    document.addEventListener('selectstart', prevent)
-    document.addEventListener('contextmenu', prevent)
-
-    return () => {
-      document.removeEventListener('dragstart', prevent)
-      document.removeEventListener('drop', prevent)
-      document.removeEventListener('copy', prevent)
-      document.removeEventListener('cut', prevent)
-      document.removeEventListener('selectstart', prevent)
-      document.removeEventListener('contextmenu', prevent)
-    }
-  }, [started, submitting, reviewMode])
+  // Anti-cheat disabled
+  // useEffect(() => {
+  //   if (!started || submitting || reviewMode) return
+  //   const prevent = (e: Event) => e.preventDefault()
+  //   document.addEventListener('dragstart', prevent)
+  //   document.addEventListener('drop', prevent)
+  //   document.addEventListener('copy', prevent)
+  //   document.addEventListener('cut', prevent)
+  //   document.addEventListener('selectstart', prevent)
+  //   document.addEventListener('contextmenu', prevent)
+  //   return () => {
+  //     document.removeEventListener('dragstart', prevent)
+  //     document.removeEventListener('drop', prevent)
+  //     document.removeEventListener('copy', prevent)
+  //     document.removeEventListener('cut', prevent)
+  //     document.removeEventListener('selectstart', prevent)
+  //     document.removeEventListener('contextmenu', prevent)
+  //   }
+  // }, [started, submitting, reviewMode])
 
   // Intercept link clicks during exam — warn and submit partial answers
   useEffect(() => {
@@ -431,7 +625,9 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
         setQuestions(loadedQuestions)
         setRemainingSeconds(res.timeLimit! * 60)
         const hasListening = loadedQuestions.some(q => q.question_category === 'listening')
-        if (hasListening) {
+        const isMockExam = loadedQuestions.some(q => !!q.section)
+        // モック試験は聴解バナーで通知するため pre-start 警告をスキップ
+        if (hasListening && !isMockExam) {
           setShowListeningWarning(true)
           setSubmitting(false)
         } else {
@@ -847,8 +1043,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
 
   return (
     <div
-      className="mx-auto max-w-3xl select-none"
-      style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' } as React.CSSProperties}
+      className="mx-auto max-w-3xl"
     >
       {error && (
         <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600 dark:bg-red-900/30 dark:text-red-400">
@@ -931,38 +1126,68 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
         )}
       </div>
 
+      {/* 청해 섹션 안내 */}
+      {isChookaiExam && started && (
+        <div className="mb-4 space-y-2">
+          <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
+            <span className="font-bold text-zinc-900 dark:text-zinc-100">問題{mondaiGroup}</span>　{MONDAI_INTROS[mondaiGroup]}
+          </p>
+        </div>
+      )}
+
       {/* Current question */}
       {currentQuestion && (() => {
         const isListening = currentQuestion.question_category === 'listening'
         const parsed = isListening ? parseListeningQuestion(currentQuestion.question_text) : null
+        const isDokkai = currentQuestion.section === 'dokkai'
+        const subQNum = subQuestionNumberMap.get(currentQuestion.id)
+
+        // 読解: 지문과 질문을 분리해 별도 패널로 표시
+        let passageText: string | null = null
+        let displayQuestionText: string
+        if (isDokkai && !isListening) {
+          const normalized = currentQuestion.question_text.replace(/\\n/g, '\n')
+          const blocks = normalized.split('\n\n').filter(b => b.trim())
+          if (blocks.length >= 2) {
+            passageText = blocks.slice(0, -1).join('\n\n')
+            displayQuestionText = blocks[blocks.length - 1]
+          } else {
+            displayQuestionText = normalized
+          }
+        } else {
+          displayQuestionText = isChookaiExam ? '' : (isListening && parsed ? parsed.question : currentQuestion.question_text)
+        }
 
         return (
-          <div className="rounded-2xl border border-gray-200/60 bg-white/80 backdrop-blur-md p-6 dark:border-white/[0.08] dark:bg-white/[0.03]">
-            {currentQuestion.section_label && (
-              <div className="mb-3 inline-flex rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-300">
-                {currentQuestion.section_label}
+          <>
+            {/* 読解 지문 패널 (스크롤 가능) */}
+            {passageText && (
+              <div className="mb-3 rounded-2xl border border-gray-200/60 bg-zinc-50/80 p-5 max-h-[42vh] overflow-y-auto dark:border-white/[0.08] dark:bg-white/[0.03]">
+                <p className="text-sm leading-7 text-zinc-800 whitespace-pre-line dark:text-zinc-200">{passageText}</p>
               </div>
             )}
-            {isListening && parsed && (
-              <ListeningPlayer
-                key={currentQuestion.id}
-                script={parsed.script}
-                questionId={currentQuestion.id}
-                alreadyPlayed={playedListeningIds.has(currentQuestion.id)}
-                onPlayed={id => setPlayedListeningIds(prev => new Set(prev).add(id))}
+            <div className="rounded-2xl border border-gray-200/60 bg-white/80 backdrop-blur-md p-6 dark:border-white/[0.08] dark:bg-white/[0.03]">
+              {currentQuestion.section_label && !isChookaiExam && (
+                <div className="mb-3 inline-flex rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-300">
+                  {currentQuestion.section_label}
+                </div>
+              )}
+              {currentQuestion.section === 'gengo_chishiki' && currentQuestion.daimon === 4 && (
+                <p className="mb-3 text-base font-semibold text-zinc-900 whitespace-pre-line dark:text-zinc-100">{YOUHOU_INSTRUCTION}</p>
+              )}
+              <QuizQuestion
+                questionNumber={currentIndex + 1}
+                totalQuestions={totalQuestions}
+                questionText={displayQuestionText}
+                options={currentQuestion.options}
+                selectedOptionId={answers[currentQuestion.id] ?? null}
+                onSelect={handleSelect}
+                boxPassages={!isDokkai && !!currentQuestion.section && !isListening}
+                hideMeta={!!currentQuestion.section}
+                subQuestionNumber={subQNum}
               />
-            )}
-            <QuizQuestion
-              questionNumber={currentIndex + 1}
-              totalQuestions={totalQuestions}
-              questionText={isListening && parsed ? parsed.question : currentQuestion.question_text}
-              options={currentQuestion.options}
-              selectedOptionId={answers[currentQuestion.id] ?? null}
-              onSelect={handleSelect}
-              boxPassages={!!currentQuestion.section && !isListening}
-              hideMeta={!!currentQuestion.section}
-            />
-          </div>
+            </div>
+          </>
         )
       })()}
 
@@ -999,6 +1224,7 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
           {totalQuestions - answeredCount}問がまだ未回答です
         </p>
       )}
+
 
       {/* 中断（保存して終了）確認 */}
       {showExitConfirm && (

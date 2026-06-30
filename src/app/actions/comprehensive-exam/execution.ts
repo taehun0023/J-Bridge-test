@@ -108,7 +108,22 @@ async function loadPersistedExamQuestions(
 }
 
 // ─── JLPT 모의시험(jlpt-mock) 헬퍼 ───
-type MockRuntimeQuestion = RuntimeQuestion & { section: string; section_label: string }
+type MockRuntimeQuestion = RuntimeQuestion & { section: string; section_label: string; daimon: number | null }
+
+// 세트의 question_id → daimon 맵 (resume/결과 경로에서 daimon 재조회용; 마이그레이션 회피)
+async function fetchMockDaimonMap(
+  serviceClient: NonNullable<ReturnType<typeof createServiceRoleClient>>,
+  level: string | null,
+  setNo: number | null,
+): Promise<Map<string, number | null>> {
+  if (!level || setNo == null) return new Map()
+  const { data: set } = await serviceClient
+    .from('jlpt_mock_sets').select('id').eq('level', level).eq('set_no', setNo).maybeSingle()
+  if (!set) return new Map()
+  const { data: j } = await serviceClient
+    .from('jlpt_mock_set_questions').select('question_id, daimon').eq('set_id', set.id)
+  return new Map((j ?? []).map(r => [r.question_id as string, (r.daimon as number | null) ?? null]))
+}
 
 function mockSectionRank(level: string | null, section: string): number {
   const secs = jlptMockSectionsFor(level ?? '')
@@ -128,6 +143,7 @@ function formatMockQuestions(questions: MockRuntimeQuestion[]) {
     question_category: q.question_category,
     section: q.section,
     section_label: q.section_label,
+    daimon: q.daimon,
     options: shuffleOptions(q.quiz_question_options_safe),
   }))
 }
@@ -150,7 +166,7 @@ async function loadMockSetQuestions(
 
   const { data: junctionAll } = await serviceClient
     .from('jlpt_mock_set_questions')
-    .select('question_id, section, sort_order')
+    .select('question_id, section, sort_order, daimon')
     .eq('set_id', set.id)
   // 교시(session)별 섹션 필터
   const junction = sessionSections
@@ -172,7 +188,7 @@ async function loadMockSetQuestions(
   for (const j of sortedJ) {
     const q = qMap.get(j.question_id as string)
     if (!q) continue
-    rows.push({ ...q, section: j.section as string, section_label: mockSectionLabel(level, j.section as string) })
+    rows.push({ ...q, section: j.section as string, section_label: mockSectionLabel(level, j.section as string), daimon: (j.daimon as number | null) ?? null })
   }
   return { set, questions: rows }
 }
@@ -456,12 +472,13 @@ export async function loadExamQuestions(examId: string) {
       .select('id, question_text, question_category, quiz_question_options_safe(id, option_text, sort_order)')
       .in('id', persisted.map(p => p.question_id))
     const qMap = new Map((qRows ?? []).map(q => [q.id as string, q as unknown as RuntimeQuestion]))
+    const daimonMap = await fetchMockDaimonMap(serviceClient, exam.content_level, exam.mock_set_no)
 
     const ordered: MockRuntimeQuestion[] = []
     for (const p of persisted) {
       const q = qMap.get(p.question_id as string)
       if (!q) continue
-      ordered.push({ ...q, section: p.section as string, section_label: mockSectionLabel(exam.content_level, p.section as string) })
+      ordered.push({ ...q, section: p.section as string, section_label: mockSectionLabel(exam.content_level, p.section as string), daimon: daimonMap.get(p.question_id as string) ?? null })
     }
     return { questions: formatMockQuestions(ordered), timeLimit: exam.time_limit_minutes, startedAt: exam.started_at, draftAnswers: exam.draft_answers ?? null, progressSavedAt: exam.progress_saved_at ?? null }
   }

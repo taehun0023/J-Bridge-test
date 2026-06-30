@@ -199,25 +199,7 @@ export default function QuizTaker({ quiz, questions, backUrl, quizType, hideRetr
     setSubmitting(false)
   }, [quiz.id, answers, storageKey, stableQuestions.length])
 
-  // Anti-cheat: prevent copy, drag, right-click, text selection during quiz
-  useEffect(() => {
-    if (!started || submitting || result) return
-    const prevent = (e: Event) => e.preventDefault()
-    document.addEventListener('dragstart', prevent)
-    document.addEventListener('drop', prevent)
-    document.addEventListener('copy', prevent)
-    document.addEventListener('cut', prevent)
-    document.addEventListener('selectstart', prevent)
-    document.addEventListener('contextmenu', prevent)
-    return () => {
-      document.removeEventListener('dragstart', prevent)
-      document.removeEventListener('drop', prevent)
-      document.removeEventListener('copy', prevent)
-      document.removeEventListener('cut', prevent)
-      document.removeEventListener('selectstart', prevent)
-      document.removeEventListener('contextmenu', prevent)
-    }
-  }, [started, submitting, result])
+  // Anti-cheat disabled
 
   // Navigation guard: warn and submit partial answers when leaving during active quiz
   const exitSubmitRef = useRef<(() => Promise<void>) | null>(null)
@@ -369,8 +351,7 @@ export default function QuizTaker({ quiz, questions, backUrl, quizType, hideRetr
 
   return (
     <div
-      className={`mx-auto max-w-2xl ${started && !result ? 'select-none' : ''}`}
-      style={started && !result ? { userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' } as React.CSSProperties : undefined}
+      className="mx-auto max-w-2xl"
     >
       {/* Sticky timer bar (timed quizzes only) */}
       {quiz.time_limit_minutes ? (

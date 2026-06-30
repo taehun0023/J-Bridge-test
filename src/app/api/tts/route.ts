@@ -39,7 +39,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const apiKey = env.GOOGLE_CLOUD_TTS_API_KEY
+  const apiKey = env.AZURE_TTS_KEY
+  const region = env.AZURE_TTS_REGION ?? 'japaneast'
   if (!apiKey) {
     return NextResponse.json({ error: 'TTS API key not configured' }, { status: 500 })
   }
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const audioBuffer = await synthesizeWithDialogue(apiKey, cleanedText, speakingRate)
+    const audioBuffer = await synthesizeWithDialogue(apiKey, region, cleanedText, speakingRate)
 
     // キャッシュに保存（失敗しても音声は返す）
     saveToCache(storageClient, cacheKey, audioBuffer).catch((err) =>

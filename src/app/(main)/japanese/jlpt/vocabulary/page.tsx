@@ -58,14 +58,14 @@ export default async function JlptVocabularyPage({ searchParams }: { searchParam
   const totalItems = totalInLevel ?? 0
   const masteredLevelIds = await getMasteredLevelIds(supabase, 'jlpt_vocabulary', level, masteredIds)
   const masteredInLevel = masteredLevelIds.length
-  const seqMap = await getLevelSeqMap(supabase, 'jlpt_vocabulary', level)
+  const seqMap = await getLevelSeqMap(supabase, 'jlpt_vocabulary', level, { orderByPriority: true })
 
   // Main query
   let query = supabase
     .from('jlpt_vocabulary')
     .select('*', { count: 'exact' })
     .eq('jlpt_level', level)
-    .order('seq', { ascending: true })
+    .order('display_seq', { ascending: true })
 
   if (search) {
     query = query.or(`word.ilike.%${search}%,reading.ilike.%${search}%,meaning_ko.ilike.%${search}%`)

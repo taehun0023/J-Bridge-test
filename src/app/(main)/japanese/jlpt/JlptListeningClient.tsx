@@ -6,7 +6,7 @@ import Pagination from '@/components/ui/Pagination'
 import EmptyState from '@/components/ui/EmptyState'
 import ListeningScriptList from '@/components/japanese/ListeningScriptList'
 import { toggleMastery } from '@/app/actions/mastery'
-import type { JlptLevel, JlptListeningScript, ListeningScriptType } from '@/lib/supabase/types'
+import type { JlptLevel, JlptListeningScript } from '@/lib/supabase/types'
 
 interface Props {
   items: JlptListeningScript[]
@@ -18,19 +18,17 @@ interface Props {
   typeOptions: string[]
   totalCount: number
   masteredIds: string[]
+  mastery: string
 }
 
-const typeLabels: Record<ListeningScriptType, string> = {
-  dialogue: '会話',
-  monologue: '独話',
-  announcement: 'アナウンス',
-  instruction: '説明',
-  meeting: '会議',
-  phone_call: '電話',
-}
+const MASTERY_FILTERS = [
+  { key: '', label: '全て' },
+  { key: 'mastered', label: '暗記済み' },
+  { key: 'unmastered', label: '未暗記' },
+]
 
 export default function JlptListeningClient({
-  items, level, totalPages, currentPage, search, scriptType, typeOptions, totalCount, masteredIds
+  items, level, totalPages, currentPage, search, totalCount, masteredIds, mastery
 }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -75,16 +73,22 @@ export default function JlptListeningClient({
           </button>
         </form>
 
-        <select
-          value={scriptType}
-          onChange={(e) => updateParams({ script_type: e.target.value })}
-          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:outline-none"
-        >
-          <option value="">全タイプ</option>
-          {typeOptions.map((t) => (
-            <option key={t} value={t}>{typeLabels[t as ListeningScriptType] ?? t}</option>
+        {/* Mastery filter */}
+        <div className="flex rounded-lg border border-gray-200 dark:border-gray-600">
+          {MASTERY_FILTERS.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => updateParams({ mastery: f.key })}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors first:rounded-l-lg last:rounded-r-lg ${
+                mastery === f.key
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
+              }`}
+            >
+              {f.label}
+            </button>
           ))}
-        </select>
+        </div>
 
         <div className="ml-auto flex items-center gap-3">
           <span className="text-sm text-gray-500 dark:text-gray-400">{totalCount}項目</span>

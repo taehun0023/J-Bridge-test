@@ -56,6 +56,10 @@ export default function ListeningScriptList({ items, level, masteredIds = [], on
     if (ok && !localMastered.has(item.id)) {
       setLocalMastered(prev => { const n = new Set(prev); n.add(item.id); return n })
       onToggleMastery?.(item.id); emitMastery(1)
+    } else if (!ok && localMastered.has(item.id)) {
+      // 暗記済みを再テストして不正解 → リアルタイムでチェック解除
+      setLocalMastered(prev => { const n = new Set(prev); n.delete(item.id); return n })
+      onToggleMastery?.(item.id); emitMastery(-1)
     }
   }
 
@@ -177,7 +181,7 @@ export default function ListeningScriptList({ items, level, masteredIds = [], on
           </div>
 
           {expandedId === item.id && (
-            <div className="mt-3 space-y-3 select-none rounded-lg bg-gray-50 p-4 dark:bg-gray-700" onCopy={(e) => e.preventDefault()}>
+            <div className="mt-3 space-y-3 rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
               {/* TTS Playback Controls */}
               <div className="flex items-center gap-3">
                 {playingId === item.id && playState === 'loading' ? (

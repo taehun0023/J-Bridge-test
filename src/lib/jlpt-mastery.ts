@@ -33,9 +33,26 @@ export async function getLevelSeqMap(
   client: DbClient,
   table: string,
   level: string,
+  opts?: { orderByPriority?: boolean },
 ): Promise<Record<string, number>> {
   const map: Record<string, number> = {}
-  // 고정 seq 컬럼(본방 항목 먼저, 로컬 추가분 뒤)을 그대로 사용 → 화면 번호 = 영구 고정
+
+  if (opts?.orderByPriority) {
+    // 통일 순번: DB의 display_seq(우선순위 비율 인터리빙 기준 1,2,3…)를 그대로 사용
+    // 화면 출력·화면 번호·과제 범위·범위 퀴즈·대시보드 점프가 모두 이 번호로 일치
+    for (let from = 0; ; from += 1000) {
+      const { data } = await client.from(table).select('id, display_seq')
+        .eq('jlpt_level', level)
+        .order('display_seq', { ascending: true })
+        .range(from, from + 999)
+      const rows = (data ?? []) as { id: string; display_seq: number | null }[]
+      for (const r of rows) map[String(r.id)] = r.display_seq ?? 0
+      if (rows.length < 1000) break
+    }
+    return map
+  }
+
+  // 기본: 고정 seq 컬럼(본방 항목 먼저, 로컬 추가분 뒤)을 그대로 사용 → 화면 번호 = 영구 고정
   for (let from = 0; ; from += 1000) {
     const { data } = await client.from(table).select('id, seq')
       .eq('jlpt_level', level).order('seq', { ascending: true }).range(from, from + 999)
