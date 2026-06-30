@@ -62,7 +62,6 @@ export default function GrammarList({ items, level, offset = 0, masteredIds = []
               <div className="flex items-center gap-2">
                 <span className="text-lg font-semibold text-gray-900 dark:text-white">{item.pattern}</span>
                 <TtsButton text={item.pattern} />
-                <span className="text-sm text-gray-700 dark:text-gray-300">{item.meaning_ko}</span>
               </div>
               {item.category && (
                 <span className="text-xs text-gray-400 dark:text-gray-500">{categoryLabels[item.category]}</span>
@@ -79,6 +78,12 @@ export default function GrammarList({ items, level, offset = 0, masteredIds = []
 
           {expandedId === item.id && (
             <div className="mt-3 space-y-3 rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
+              {/* Korean meaning */}
+              <div>
+                <p className="text-xs font-medium uppercase text-gray-500 dark:text-gray-400">意味（韓）</p>
+                <p className="mt-0.5 text-sm font-medium text-gray-900 dark:text-white">{item.meaning_ko}</p>
+              </div>
+
               {/* Formation */}
               <div>
                 <p className="text-xs font-medium uppercase text-gray-500 dark:text-gray-400">接続</p>

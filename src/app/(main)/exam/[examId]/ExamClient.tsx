@@ -71,8 +71,12 @@ interface Question {
   question_category?: string | null
   section?: string | null
   section_label?: string | null
+  daimon?: number | null
   options: { id: string; option_text: string; sort_order: number }[]
 }
+
+// 言語知識 問題4 用法: question_text가 단어 하나뿐이라 안내문이 없으면 무엇을 고를지 알 수 없음
+const YOUHOU_INSTRUCTION = '次の言葉の使い方として最もよいものを、１・２・３・４から一つ選びなさい。'
 
 /**
  * Parse listening question: split into script (for TTS) and question (for display).
@@ -1128,12 +1132,6 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
           <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
             <span className="font-bold text-zinc-900 dark:text-zinc-100">問題{mondaiGroup}</span>　{MONDAI_INTROS[mondaiGroup]}
           </p>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center justify-center min-w-[2rem] rounded bg-zinc-700 px-1.5 py-0.5 text-xs font-bold text-white">
-              {String(currentIndex + 1).padStart(2, '0')}
-            </span>
-            <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{currentIndex + 1}番</span>
-          </div>
         </div>
       )}
 
@@ -1173,6 +1171,9 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
                 <div className="mb-3 inline-flex rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-300">
                   {currentQuestion.section_label}
                 </div>
+              )}
+              {currentQuestion.section === 'gengo_chishiki' && currentQuestion.daimon === 4 && (
+                <p className="mb-3 text-base font-semibold text-zinc-900 whitespace-pre-line dark:text-zinc-100">{YOUHOU_INSTRUCTION}</p>
               )}
               <QuizQuestion
                 questionNumber={currentIndex + 1}
