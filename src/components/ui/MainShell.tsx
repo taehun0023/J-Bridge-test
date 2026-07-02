@@ -13,12 +13,14 @@ export default function MainShell({
   avatarUrl,
   userRole = 'mentee',
   jlptLevel = null,
+  hiddenNav = [],
 }: {
   children: React.ReactNode
   userName: string | null
   avatarUrl: string | null
   userRole?: UserRole
   jlptLevel?: JlptLevel | null
+  hiddenNav?: string[]
 }) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -26,11 +28,11 @@ export default function MainShell({
     <div className="flex h-screen bg-zinc-50 dark:bg-zinc-950">
       {/* Desktop sidebar */}
       <div className="hidden w-64 shrink-0 lg:block">
-        <Sidebar />
+        <Sidebar hiddenNav={hiddenNav} />
       </div>
 
       {/* Mobile nav */}
-      <MobileNav isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <MobileNav isOpen={mobileOpen} onClose={() => setMobileOpen(false)} hiddenNav={hiddenNav} />
 
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">

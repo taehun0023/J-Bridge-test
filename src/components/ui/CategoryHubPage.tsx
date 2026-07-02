@@ -1,10 +1,25 @@
 import Link from 'next/link'
 import Card from '@/components/ui/Card'
 import { categoryChildren } from '@/lib/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { getSubcategorySettings } from '@/app/actions/admin/categories'
 
 export default async function CategoryHubPage({ categoryKey }: { categoryKey: string }) {
   const config = categoryChildren[categoryKey]
   if (!config) return null
+
+  // 비활성 서브카테고리는 멘티에게 숨김 (관리자·멘토는 전부 표시)
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  let role = 'mentee'
+  if (user) {
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    role = profile?.role ?? 'mentee'
+  }
+  const settings = await getSubcategorySettings()
+  const children = role === 'mentee'
+    ? config.children.filter(c => settings[c.href] !== false)
+    : config.children
 
   return (
     <div>
@@ -14,7 +29,7 @@ export default async function CategoryHubPage({ categoryKey }: { categoryKey: st
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {config.children.map((child) => (
+        {children.map((child) => (
           <Link key={child.href} href={child.href}>
             <Card className="h-full transition-shadow hover:shadow-md">
               <h3 className="font-semibold text-gray-900 dark:text-white">{child.label}</h3>

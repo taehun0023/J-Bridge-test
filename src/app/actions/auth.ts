@@ -8,8 +8,12 @@ import { revalidatePath } from 'next/cache'
 export async function signIn(formData: FormData) {
   const supabase = await createClient()
 
+  let email = String(formData.get('email') ?? '').trim()
+  // 'admin' 단독 입력은 관리자 계정 이메일로 매핑 (이메일 형식 예외 허용)
+  if (email.toLowerCase() === 'admin') email = 'admin@admin.com'
+
   const parsed = loginSchema.safeParse({
-    email: formData.get('email'),
+    email,
     password: formData.get('password'),
   })
 

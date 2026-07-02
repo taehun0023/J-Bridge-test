@@ -2,7 +2,7 @@ import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import Card from '@/components/ui/Card'
 import AdminTasksClient from './AdminTasksClient'
 import { detectAndMarkOverdue, updateLearningStatuses, resolveQuizIdsForAssignment } from '@/app/actions/learning-assignments'
-import { getAllMonthlyAssignmentConfigs } from '@/app/actions/item-assignments'
+import { getAllMonthlyAssignmentConfigs, updateItemAssignmentStatuses } from '@/app/actions/item-assignments'
 import { getMenteeMentorsMap } from '@/lib/mentor-helpers'
 import { getReadingTotalCount } from '@/lib/assignment-categories'
 
@@ -53,6 +53,11 @@ export default async function AdminTasksPage() {
       japanese_mentor_name: mentorsMap[m.id]?.japanese?.name ?? null,
       tech_mentor_name: mentorsMap[m.id]?.technical?.name ?? null,
     }))
+  }
+
+  // 카운트형(항목) 과제 진도 스냅샷을 최신화 — 멘티 본인 방문 없이도 /admin/tasks 진행률이 정확
+  if (serviceClient && menteeIds.length > 0) {
+    await Promise.all(menteeIds.map(id => updateItemAssignmentStatuses(id)))
   }
 
   // ─── 해당 멘티들의 모든 학습과제 ───

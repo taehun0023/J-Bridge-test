@@ -86,6 +86,36 @@ export async function deleteUser(userId: string) {
   return { success: true }
 }
 
+/** 선택한 계정 일괄 삭제. 본인 계정은 자동 제외. */
+export async function bulkDeleteUsers(userIds: string[]) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error } as const
+
+  const ids = [...new Set(userIds)].filter(id => id && id !== auth.user.id)
+  if (ids.length === 0) return { error: '削除対象がありません' }
+
+  let deleted = 0
+  const errors: string[] = []
+  for (const id of ids) {
+    const { data: oldData } = await auth.serviceClient
+      .from('profiles')
+      .select('email, full_name, role')
+      .eq('id', id)
+      .single()
+
+    const { error } = await auth.serviceClient.auth.admin.deleteUser(id)
+    if (error) {
+      errors.push(`${oldData?.email ?? id}: ${error.message}`)
+      continue
+    }
+    await logAuditEvent(auth.user.id, 'delete', 'profiles', id, oldData, null)
+    deleted++
+  }
+
+  revalidatePath('/admin/users')
+  return { success: true, deleted, errors }
+}
+
 export async function assignMentor(
   menteeId: string,
   mentorId: string | null,

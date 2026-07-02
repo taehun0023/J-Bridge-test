@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import Card from '@/components/ui/Card'
 import { categoryChildren } from '@/lib/navigation'
+import { getMenteeHiddenSubcats } from '@/app/actions/admin/categories'
 import { getAllDevCourses } from '@/lib/dev-course'
 import { createClient } from '@/lib/supabase/server'
 import GuideCard from '@/components/japanese/JlptGuideCard'
@@ -17,6 +18,7 @@ export default async function DevHubPage() {
   if (!user) redirect('/login')
 
   const courses = await getAllDevCourses(supabase, user.id)
+  const hidden = await getMenteeHiddenSubcats()
   const totalLessons = courses.reduce((sum, c) => sum + c.totalLessons, 0)
 
   return (
@@ -54,6 +56,7 @@ export default async function DevHubPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {courses.map((course) => {
+          if (hidden.has(`/dev/${slugToUrl(course.slug)}`)) return null
           const progress =
             course.totalLessons > 0
               ? Math.round((course.completedLessons / course.totalLessons) * 100)

@@ -114,10 +114,12 @@ export default function FlashcardMode({ items, onClose, masteredIds = [], onTogg
             {result === null ? (
               <div className="mt-6 w-full max-w-xs">
                 <input
+                  key={current.id}
                   autoFocus
+                  autoComplete="off"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') check() }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) check() }}
                   placeholder="ふりがなを入力"
                   className="w-full select-text rounded-lg border border-gray-300 px-3 py-2 text-center text-lg text-gray-900 focus:border-indigo-500 focus:outline-none"
                 />

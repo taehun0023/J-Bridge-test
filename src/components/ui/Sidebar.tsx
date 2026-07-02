@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { X } from 'lucide-react'
 import { mainNavItems } from '@/lib/navigation'
 
-export default function Sidebar({ onClose }: { onClose?: () => void }) {
+export default function Sidebar({ onClose, hiddenNav = [] }: { onClose?: () => void; hiddenNav?: string[] }) {
   const pathname = usePathname()
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
@@ -30,7 +30,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
       </div>
 
       <ul className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
-        {mainNavItems.map((item) => {
+        {mainNavItems.filter((item) => !hiddenNav.includes(item.href)).map((item) => {
           const Icon = item.icon
           return (
             <li key={item.key}>

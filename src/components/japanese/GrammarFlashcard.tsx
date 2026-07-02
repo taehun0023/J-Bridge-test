@@ -58,6 +58,10 @@ export default function GrammarFlashcard({ items, onClose, masteredIds = [], onT
       setTimeout(() => { setToast(false); next() }, 700)
     } else {
       setResult('wrong')
+      // 暗記済みを再テストして不正解 → リアルタイムでチェック解除 (어휘·독해·청해와 통일)
+      if (onToggleMastery && localMastered.has(current.id)) {
+        const n = new Set(localMastered); n.delete(current.id); setLocalMastered(n); onToggleMastery(current.id); emitMastery(-1)
+      }
     }
   }
 
@@ -120,10 +124,12 @@ export default function GrammarFlashcard({ items, onClose, masteredIds = [], onT
             {result === null ? (
               <div className="mt-5 w-full max-w-sm">
                 <input
+                  key={current.id}
                   autoFocus
+                  autoComplete="off"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') check() }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) check() }}
                   placeholder="文法を入力"
                   className="w-full select-text rounded-lg border border-gray-300 px-3 py-2 text-center text-lg text-gray-900 focus:border-indigo-500 focus:outline-none"
                 />

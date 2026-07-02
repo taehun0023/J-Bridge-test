@@ -373,13 +373,22 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
   const subQuestionNumberMap = useMemo(() => {
     const map = new Map<string, number>()
     if (!isMock) return map
-    // 지문 키: question_text 앞 100자 (trim) — 같은 지문이면 동일
-    const key = (text: string) => text.replace(/\\n/g, '\n').trim().substring(0, 100)
+    // 지문 키: 読解는 가장 긴 블록(지문) 기준 — 지문이 앞(中文·統合·長文)이든 뒤(情報検索)든
+    // 같은 지문이면 묶임. gengo는 오그룹핑 방지 위해 앞 100자 유지.
+    const key = (q: { question_text: string; section?: string | null }) => {
+      const text = q.question_text.replace(/\\n/g, '\n').trim()
+      if (q.section === 'dokkai') {
+        const blocks = text.split('\n\n').map(b => b.trim()).filter(Boolean)
+        const longest = blocks.reduce((a, b) => (b.length > a.length ? b : a), '')
+        return 'd:' + longest.substring(0, 100)
+      }
+      return 'g:' + text.substring(0, 100)
+    }
     // 섹션별로 순서대로 그루핑
     const grouped = new Map<string, string[]>()
     for (const q of questions) {
       if (!q.section || q.section === 'choukai') continue
-      const k = key(q.question_text)
+      const k = key(q)
       const existing = grouped.get(k)
       if (existing) existing.push(q.id)
       else grouped.set(k, [q.id])
@@ -530,25 +539,25 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
     return () => clearInterval(interval)
   }, [started, submitting, reviewMode, questions.length, handleSubmit])
 
-  // Anti-cheat disabled
-  // useEffect(() => {
-  //   if (!started || submitting || reviewMode) return
-  //   const prevent = (e: Event) => e.preventDefault()
-  //   document.addEventListener('dragstart', prevent)
-  //   document.addEventListener('drop', prevent)
-  //   document.addEventListener('copy', prevent)
-  //   document.addEventListener('cut', prevent)
-  //   document.addEventListener('selectstart', prevent)
-  //   document.addEventListener('contextmenu', prevent)
-  //   return () => {
-  //     document.removeEventListener('dragstart', prevent)
-  //     document.removeEventListener('drop', prevent)
-  //     document.removeEventListener('copy', prevent)
-  //     document.removeEventListener('cut', prevent)
-  //     document.removeEventListener('selectstart', prevent)
-  //     document.removeEventListener('contextmenu', prevent)
-  //   }
-  // }, [started, submitting, reviewMode])
+  // Anti-cheat: 시험 중 복사·잘라내기·선택·드래그·우클릭 방지
+  useEffect(() => {
+    if (!started || submitting || reviewMode) return
+    const prevent = (e: Event) => e.preventDefault()
+    document.addEventListener('dragstart', prevent)
+    document.addEventListener('drop', prevent)
+    document.addEventListener('copy', prevent)
+    document.addEventListener('cut', prevent)
+    document.addEventListener('selectstart', prevent)
+    document.addEventListener('contextmenu', prevent)
+    return () => {
+      document.removeEventListener('dragstart', prevent)
+      document.removeEventListener('drop', prevent)
+      document.removeEventListener('copy', prevent)
+      document.removeEventListener('cut', prevent)
+      document.removeEventListener('selectstart', prevent)
+      document.removeEventListener('contextmenu', prevent)
+    }
+  }, [started, submitting, reviewMode])
 
   // Intercept link clicks during exam — warn and submit partial answers
   useEffect(() => {
@@ -1172,7 +1181,8 @@ export default function ExamClient({ exam, mode, examLabel }: Props) {
                   {currentQuestion.section_label}
                 </div>
               )}
-              {currentQuestion.section === 'gengo_chishiki' && currentQuestion.daimon === 4 && (
+              {currentQuestion.section === 'gengo_chishiki' && currentQuestion.daimon === 4
+                && !displayQuestionText.replace(/\\n/g, '\n').includes('選びなさい') && (
                 <p className="mb-3 text-base font-semibold text-zinc-900 whitespace-pre-line dark:text-zinc-100">{YOUHOU_INSTRUCTION}</p>
               )}
               <QuizQuestion

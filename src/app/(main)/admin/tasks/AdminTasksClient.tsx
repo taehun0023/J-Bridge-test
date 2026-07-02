@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useLoadingTransition } from '@/lib/loading-store'
 import { useRouter } from 'next/navigation'
 import {
   deleteLearningAssignment,
+  deleteLearningAssignmentsBulk,
   updateLearningAssignment,
   confirmAssignment,
   reassignAssignment,
@@ -132,6 +133,10 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
   // 課題(JLPT項目) / 理解テスト 배분 모달 (대시보드와 동일한 ItemAssignModal)
   const [jlptOpen, setJlptOpen] = useState(false)
   const [mockOpen, setMockOpen] = useState(false)
+  // 배치 일괄취소 패널
+  const [batchOpen, setBatchOpen] = useState(false)
+  const [batchSearch, setBatchSearch] = useState('')
+  const [selectedBatches, setSelectedBatches] = useState<Set<string>>(new Set())
 
   // 월별 자동부여 개수 설정
   const [configs, setConfigs] = useState<Record<string, MonthlyAssignConfig>>(monthlyConfigs)
@@ -209,6 +214,55 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
         ok++
       }
       showMsg(`${ok}件を削除しました`)
+    })
+  }
+
+  function handleCancelBatch(title: string, ids: string[], menteeCount: number) {
+    if (!confirm(`「${title}」を ${menteeCount}名（${ids.length}件）からまとめて取消しますか？`)) return
+    startTransition(async () => {
+      const res = await deleteLearningAssignmentsBulk(ids)
+      if (res.error) showMsg(res.error, 'error')
+      else { showMsg(`${res.deleted ?? ids.length}件を取消しました`); setBatchOpen(false) }
+    })
+  }
+
+  // 배치 목록(제목+부여시각 기준) 및 체크박스 다중선택 삭제
+  const batches = useMemo(() => {
+    const all = Object.values(assignmentsByMentee).flat()
+    const map = new Map<string, { key: string; title: string; createdAt: string; ids: string[]; mentees: Set<string> }>()
+    for (const a of all) {
+      const minute = (a.created_at ?? '').slice(0, 16)
+      const key = `${a.title}|${a.category}|${a.content_level ?? ''}|${a.subcategory}|${minute}`
+      let b = map.get(key)
+      if (!b) { b = { key, title: a.title, createdAt: a.created_at, ids: [], mentees: new Set() }; map.set(key, b) }
+      b.ids.push(a.id)
+      b.mentees.add(a.assigned_to)
+    }
+    return [...map.values()].sort((x, y) => (y.createdAt ?? '').localeCompare(x.createdAt ?? ''))
+  }, [assignmentsByMentee])
+  const shownBatches = batches.filter(b => !batchSearch || b.title.toLowerCase().includes(batchSearch.toLowerCase()))
+  const allShownSelected = shownBatches.length > 0 && shownBatches.every(b => selectedBatches.has(b.key))
+  function toggleBatch(key: string) {
+    setSelectedBatches(prev => { const n = new Set(prev); if (n.has(key)) n.delete(key); else n.add(key); return n })
+  }
+  function toggleAllShown() {
+    setSelectedBatches(prev => {
+      const n = new Set(prev)
+      if (allShownSelected) shownBatches.forEach(b => n.delete(b.key))
+      else shownBatches.forEach(b => n.add(b.key))
+      return n
+    })
+  }
+  function handleDeleteSelected() {
+    const chosen = batches.filter(b => selectedBatches.has(b.key))
+    const ids = chosen.flatMap(b => b.ids)
+    const menteeCount = new Set(chosen.flatMap(b => [...b.mentees])).size
+    if (ids.length === 0) { showMsg('選択された課題がありません', 'error'); return }
+    if (!confirm(`選択した ${chosen.length}件の課題（${menteeCount}名・${ids.length}件）をまとめて取消しますか？`)) return
+    startTransition(async () => {
+      const res = await deleteLearningAssignmentsBulk(ids)
+      if (res.error) showMsg(res.error, 'error')
+      else { showMsg(`${res.deleted ?? ids.length}件を取消しました`); setBatchOpen(false); setSelectedBatches(new Set()) }
     })
   }
 
@@ -473,6 +527,13 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
         >
           <GraduationCap className="h-4 w-4" /> JLPT模試
         </button>
+        <button
+          type="button"
+          onClick={() => { setBatchOpen(true); setSelectedBatches(new Set()) }}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-rose-300 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-900/20 dark:text-rose-300 dark:hover:bg-rose-900/40"
+        >
+          一括取消
+        </button>
       </div>
 
       <ItemAssignModal
@@ -486,6 +547,49 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
         onClose={() => setMockOpen(false)}
         mentees={modalMentees}
       />
+
+      {/* 배치 일괄취소: 같은 과제를 여러 멘티에게 부여한 단위별로 전원 취소 */}
+      {batchOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={e => { if (e.target === e.currentTarget) setBatchOpen(false) }}>
+          <div className="flex max-h-[80vh] w-full max-w-2xl flex-col rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-800">
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">課題の一括取消</h3>
+              <button onClick={() => setBatchOpen(false)} className="rounded-lg border border-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">閉じる</button>
+            </div>
+            <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">課題（課題名＋付与日時）ごとに、チェックして下部の「選択を取消」でまとめて削除できます。個別の「全員取消」も可能です。</p>
+            <input type="text" placeholder="課題名で検索..." value={batchSearch} onChange={e => setBatchSearch(e.target.value)}
+              className="mb-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
+            <label className="mb-2 flex items-center gap-2 px-1 text-xs font-medium text-gray-600 dark:text-gray-300">
+              <input type="checkbox" checked={allShownSelected} onChange={toggleAllShown} className="h-4 w-4 rounded border-gray-300 text-rose-600 focus:ring-rose-500" />
+              全選択（表示中 {shownBatches.length}件）· 選択 {selectedBatches.size}件
+            </label>
+            <div className="flex-1 divide-y divide-gray-100 overflow-y-auto rounded-xl border border-gray-200 dark:divide-gray-700 dark:border-gray-700">
+              {shownBatches.length === 0 ? (
+                <div className="py-10 text-center text-sm text-gray-400">該当する課題がありません</div>
+              ) : shownBatches.map(b => (
+                <div key={b.key} onClick={() => toggleBatch(b.key)} className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/40">
+                  <input type="checkbox" checked={selectedBatches.has(b.key)} readOnly className="pointer-events-none h-4 w-4 shrink-0 rounded border-gray-300 text-rose-600 focus:ring-rose-500" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-gray-900 dark:text-white">{b.title}</p>
+                    <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                      {b.createdAt ? new Date(b.createdAt).toLocaleString('ja-JP') : '-'}
+                      {' · '}<span className="font-semibold text-rose-600 dark:text-rose-400">{b.mentees.size}名</span>（{b.ids.length}件）
+                    </p>
+                  </div>
+                  <button onClick={e => { e.stopPropagation(); handleCancelBatch(b.title, b.ids, b.mentees.size) }} disabled={pending}
+                    className="shrink-0 rounded-md border border-rose-300 bg-white px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-800 dark:bg-transparent dark:text-rose-300 dark:hover:bg-rose-900/30">全員取消</button>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 flex items-center justify-end">
+              <button onClick={handleDeleteSelected} disabled={pending || selectedBatches.size === 0}
+                className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-50">
+                選択した課題を取消（{selectedBatches.size}）
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 월별 자동부여 개수 설정 (생활일본어) */}
       <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">

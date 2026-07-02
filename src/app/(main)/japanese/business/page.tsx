@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Card from '@/components/ui/Card'
 import { categoryChildren } from '@/lib/navigation'
+import { getMenteeHiddenSubcats } from '@/app/actions/admin/categories'
 import { FileClock } from 'lucide-react'
 import GuideCard from '@/components/japanese/JlptGuideCard'
 
@@ -52,6 +53,8 @@ export default async function BusinessJapaneseHubPage() {
       return { ...sub, mastered, total }
     })
   )
+  const hidden = await getMenteeHiddenSubcats()
+  const visibleSubcats = subcategoryProgress.filter(s => !hidden.has(s.href))
 
   return (
     <div>
@@ -84,7 +87,7 @@ export default async function BusinessJapaneseHubPage() {
 
       {/* Category cards with inline progress + test button */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {subcategoryProgress.map((sub) => {
+        {visibleSubcats.map((sub) => {
           const navChild = config.children.find(c => c.href === sub.href)
           const pct = sub.total > 0 ? Math.round((sub.mastered / sub.total) * 100) : 0
 

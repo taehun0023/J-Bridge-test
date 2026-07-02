@@ -8,6 +8,10 @@
     {
       "path": "/api/cron/monthly-alerts",
       "schedule": "5 22 * * *"
+    },
+    {
+      "path": "/api/cron/daily-study-summary",
+      "schedule": "0 23 * * *"
     }
   ]
 }

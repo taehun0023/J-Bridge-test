@@ -427,6 +427,41 @@ export async function deleteLearningAssignment(assignmentId: string) {
 }
 
 /**
+ * 여러 과제를 한 번에 삭제 (배치 일괄취소용). 멘토는 담당 멘티 과제만 삭제된다(나머지는 스킵).
+ */
+export async function deleteLearningAssignmentsBulk(ids: string[]) {
+  const auth = await requireAdminOrMentor()
+  if ('error' in auth) return { error: auth.error } as const
+  const { supabase, user, profile } = auth
+  const service = createServiceRoleClient() ?? supabase
+
+  const uniq = [...new Set(ids)].filter(Boolean)
+  if (uniq.length === 0) return { error: '対象がありません' }
+
+  // 소유권 확인: 멘토는 담당 멘티 과제만
+  const { data: rows } = await service
+    .from('learning_assignments')
+    .select('id, assigned_to')
+    .in('id', uniq)
+  const allowed: string[] = []
+  for (const r of rows ?? []) {
+    if (await canManageAssignee(profile.role, user.id, r.assigned_to)) allowed.push(r.id)
+  }
+  if (allowed.length === 0) return { error: ERR.FORBIDDEN }
+
+  const { error } = await service.from('learning_assignments').delete().in('id', allowed)
+  if (error) return { error: error.message }
+
+  await logAuditEvent(user.id, 'delete', 'learning_assignments', allowed[0], { bulk: allowed.length }, null)
+
+  revalidatePath('/admin/tasks')
+  revalidatePath('/dashboard/assignments')
+  revalidatePath('/admin/reports')
+  revalidatePath('/dashboard')
+  return { success: true, deleted: allowed.length }
+}
+
+/**
  * 과제 수정 — 제목·기한·설명, 그리고 카운트형(항목/이해테스트) 과제는 부여개수(target_count)도.
  * target_count 수정 시 누적 래더(cumulative_target)를 이전 앵커 유지하며 보정하고 상태를 재계산한다.
  * 멘토는 담당 멘티의 과제만 수정 가능.

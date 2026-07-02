@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Ranking System (3-month seasons, overall + per-category)
 - Admin Dashboard (account management, content CRUD, task assignment, feedback)
 - AI Code Review (Japan coding convention feedback)
-- TTS Audio (Google Cloud TTS, Supabase Storage caching)
+- TTS Audio (Azure Cognitive Services Neural TTS, Supabase Storage caching)
 - Admin creates accounts for employees (invite-only, no self-signup)
 
 **등급 결과 활용:** 사내 인사 평가 + 파견처 매칭 참고용 (외부 취업 연계 없음)
@@ -33,7 +33,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Code Editor:** @monaco-editor/react
 - **Code Execution:** Judge0 (self-hosted API)
 - **Data Fetching:** @tanstack/react-query
-- **TTS:** Google Cloud Text-to-Speech API
+- **TTS:** Azure Cognitive Services Neural TTS (`AZURE_TTS_KEY`/`AZURE_TTS_REGION`; 2026-06-29 Google Cloud TTS에서 교체 — 청해 회화의 화자별 음성(NanamiNeural·KeitaNeural·AoiNeural·DaichiNeural) 지원 목적)
 
 ## Build & Dev Commands
 
@@ -158,6 +158,17 @@ psql 실행 경로: `"C:/Program Files/PostgreSQL/17/bin/psql.exe"`
   - 語彙 Q1~Q25 (25문항): 問題1 漢字読み Q1~Q6(6문) / 問題2 文脈規定 Q7~Q13(7문) / 問題3 言い換え類義 Q14~Q19(6문) / 問題4 用法 Q20~Q25(6문)
   - 文法 Q26~Q45 (20문항): 問題5 文法形式の判断 Q26~Q35(10문) / 問題6 文の組み立て Q36~Q40(5문) / 問題7 文章の文法 Q41~Q45(5문)
 - 読解 내부 구성: 問題8 内容理解(短文) 4문 / 問題9 内容理解(中文) 9문(3지문×3문) / 問題10 内容理解(長文) 4문 / 問題11 統合理解 2문 / 問題12 主張理解(長文) 4문 / 問題13 情報検索 2문
+
+**N2 모의고사 구성 (2026-07-01 공식 PDF `jlpt.jp/guideline/pdf/n2.pdf` "N2 大問のねらい" 기준 조사):**
+- **시험시간(공식):** 言語知識(文字·語彙·文법)·読解 **105분** + 聴解 **50분** = 155분 (N1과 동일한 2교시 방식; N1은 165분).
+- **합격(공식):** 총 180점, 종합 90점↑ AND 각 구분(言語知識/読解/聴解) 19점↑.
+- **大問 유형(공식):** N1과 거의 동일하나 文字·語彙에 **問題2 表記·問題3 語形成 추가**(N1엔 없음), 読解 大問번호 問題10~14.
+- **문항수(공식 小問数 목安 — 출처: 공식 가이드북 `jlpt.jp/reference/pdf/guidebook1e.pdf` 「N2 大問のねらい」 표. 가이드북 명기: "毎回の試験で出題する小問数の目安で、実際の出題数は多少異なる場合がある"):**
+  - 文字·語彙 Q1~32 (32문): 問題1 漢字読み 5 / 問題2 表記 5 / 問題3 語形成 5 / 問題4 文脈規定 7 / 問題5 言い換え類義 5 / 問題6 用法 5
+  - 文法 (22문): 問題7 文法形式の判断 12 / 問題8 文の組み立て 5 / 問題9 文章の文法 5
+  - 読解 (21문): 問題10 内容理解(短文,200字) 5 / 問題11 内容理解(中文,500字) 9 / 問題12 統合理解(計600字) 2 / 問題13 主張理解(長文,900字) 3 / 問題14 情報検索(700字) 2
+  - 聴解 (32문): 問題1 課題理解 5 / 問題2 ポイント理解 6 / 問題3 概要理解 5 / 問題4 即時応答 12 / 問題5 統合理解 4
+  - 대략 합계 ~107문 (회차별 변동). 무료 問題例集(샘플)은 유형별 예시만 있고 전체 문항수는 미기재 → 정확 문항수는 公式問題集(유료) 기준. 출처: [[jlpt-n1-exam-format]] 와 동일 방식.
 
 ## Testing
 

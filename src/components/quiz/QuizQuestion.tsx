@@ -202,7 +202,13 @@ export default function QuizQuestion({
           })}
         </div>
       ) : (
-        <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 whitespace-pre-line">{renderUnderline(promptText)}</h3>
+        <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 whitespace-pre-line">
+          {renderUnderline(
+            subQuestionNumber
+              ? `問${subQuestionNumber}：${promptText.trim().replace(/^問([0-9０-９]+|い)?[：　 ]\s*/, '')}`
+              : promptText,
+          )}
+        </h3>
       )}
 
       {codeBlock && (

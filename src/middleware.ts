@@ -103,6 +103,23 @@ export async function middleware(request: NextRequest) {
         }
       }
     }
+
+    // カテゴリ管理: 無効化されたサブカテゴリのページはメンティーのアクセスを遮断
+    const uRole = profile?.role ?? 'mentee'
+    const LEARNING_PREFIXES = ['/japanese', '/cs', '/dev', '/business-literacy', '/coding', '/announcements']
+    if (uRole === 'mentee' && LEARNING_PREFIXES.some(p => pathname.startsWith(p))) {
+      const { data: disabled } = await supabase
+        .from('subcategory_settings')
+        .select('subcat_key')
+        .eq('is_active', false)
+      const blocked = (disabled ?? []).some((d: { subcat_key: string }) =>
+        pathname === d.subcat_key || pathname.startsWith(d.subcat_key + '/'))
+      if (blocked) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/dashboard'
+        return NextResponse.redirect(url)
+      }
+    }
   }
 
   return supabaseResponse

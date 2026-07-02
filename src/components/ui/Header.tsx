@@ -38,7 +38,7 @@ export default function Header({
           className="ml-2 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-500/10 transition-colors"
         >
           <Shield className="h-4 w-4" />
-          管理
+          <span className="hidden lg:inline">管理</span>
         </Link>
       )}
 
@@ -47,7 +47,7 @@ export default function Header({
         className="ml-2 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-500/10 transition-colors"
       >
         <BookOpen className="h-4 w-4" />
-        単語帳
+        <span className="hidden lg:inline">単語帳</span>
       </Link>
 
       <div className="flex-1" />
@@ -67,7 +67,7 @@ export default function Header({
 
         <Link
           href="/profile"
-          className="rounded-lg px-1 text-sm text-zinc-600 hover:text-indigo-600 dark:text-zinc-300 dark:hover:text-indigo-400 transition-colors"
+          className="hidden rounded-lg px-1 text-sm text-zinc-600 hover:text-indigo-600 dark:text-zinc-300 dark:hover:text-indigo-400 transition-colors lg:inline"
         >
           {userName ?? 'ユーザー'}
         </Link>
@@ -82,7 +82,7 @@ export default function Header({
             className="flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-zinc-500 dark:text-zinc-400"
           >
             <LogOut className="h-4 w-4" />
-            ログアウト
+            <span className="hidden lg:inline">ログアウト</span>
           </button>
         </form>
       </div>

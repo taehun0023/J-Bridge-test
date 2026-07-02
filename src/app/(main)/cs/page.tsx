@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import Card from '@/components/ui/Card'
 import { categoryChildren } from '@/lib/navigation'
+import { getMenteeHiddenSubcats } from '@/app/actions/admin/categories'
 import { getAllCsCoursesWithProgress } from '@/lib/cs-course'
 import { createClient } from '@/lib/supabase/server'
 import GuideCard from '@/components/japanese/JlptGuideCard'
@@ -23,7 +24,9 @@ export default async function CSHubPage() {
     .single()
 
   const bypassLock = profile?.role === 'admin' || profile?.role === 'mentor'
-  const subjects = await getAllCsCoursesWithProgress(supabase, user.id, bypassLock)
+  const allSubjects = await getAllCsCoursesWithProgress(supabase, user.id, bypassLock)
+  const hidden = await getMenteeHiddenSubcats()
+  const subjects = allSubjects.filter(s => !hidden.has(`/cs/${s.slug}`))
   const lessonCount = subjects.reduce((sum, subject) => sum + subject.lessons.length, 0)
 
   return (

@@ -32,11 +32,11 @@ export default function VocabContextMenu() {
   }, [])
 
   useEffect(() => {
-    // document.addEventListener('contextmenu', handleContextMenu)
+    document.addEventListener('contextmenu', handleContextMenu)
     document.addEventListener('click', handleClick)
     document.addEventListener('keydown', handleKeyDown)
     return () => {
-      // document.removeEventListener('contextmenu', handleContextMenu)
+      document.removeEventListener('contextmenu', handleContextMenu)
       document.removeEventListener('click', handleClick)
       document.removeEventListener('keydown', handleKeyDown)
     }

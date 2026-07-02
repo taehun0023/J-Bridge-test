@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useLoadingTransition } from '@/lib/loading-store'
 import { useRouter } from 'next/navigation'
-import { updateUserRole, createUserAccount, updateMentorSpecialty, deleteUser, assignMentor } from '@/app/actions/admin/users'
+import { updateUserRole, createUserAccount, updateMentorSpecialty, deleteUser, bulkDeleteUsers, assignMentor } from '@/app/actions/admin/users'
 import { Trash2 } from 'lucide-react'
 import NameRuby from '@/components/ui/NameRuby'
 import EditUserModal from './EditUserModal'
@@ -43,6 +43,8 @@ export default function AdminUsersClient({ users, mentors }: Props) {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null)
   const [editTarget, setEditTarget] = useState<User | null>(null)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [showBulkConfirm, setShowBulkConfirm] = useState(false)
 
   const roleOrder: Record<string, number> = { admin: 0, mentor: 1, mentee: 2 }
   const filtered = users
@@ -132,6 +134,33 @@ export default function AdminUsersClient({ users, mentors }: Props) {
     })
   }
 
+  function toggleSelect(id: string) {
+    setSelected(prev => {
+      const n = new Set(prev)
+      if (n.has(id)) n.delete(id); else n.add(id)
+      return n
+    })
+  }
+  const allSelected = filtered.length > 0 && filtered.every(u => selected.has(u.id))
+  function toggleSelectAll() {
+    setSelected(allSelected ? new Set() : new Set(filtered.map(u => u.id)))
+  }
+  function handleBulkDelete() {
+    startTransition(async () => {
+      const result = await bulkDeleteUsers([...selected])
+      if ('error' in result) {
+        setMessage({ type: 'error', text: result.error ?? 'エラーが発生しました' })
+      } else {
+        const errCount = result.errors.length
+        setMessage({ type: errCount ? 'error' : 'success', text: `${result.deleted}件削除しました${errCount ? `（${errCount}件失敗）` : ''}` })
+      }
+      setSelected(new Set())
+      setShowBulkConfirm(false)
+      setTimeout(() => setMessage(null), 4000)
+      router.refresh()
+    })
+  }
+
   return (
     <div className="mt-6">
       {message && (
@@ -152,12 +181,24 @@ export default function AdminUsersClient({ users, mentors }: Props) {
           onChange={e => setSearch(e.target.value)}
           className="w-full max-w-xs rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none dark:border-white/[0.08] dark:bg-white/5 dark:text-zinc-100 dark:placeholder-zinc-500"
         />
-        <button
-          onClick={() => setShowCreateForm(!showCreateForm)}
-          className="shrink-0 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
-        >
-          {showCreateForm ? 'キャンセル' : '+ アカウント作成'}
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          {selected.size > 0 && (
+            <button
+              onClick={() => setShowBulkConfirm(true)}
+              disabled={pending}
+              className="flex items-center gap-1.5 rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50 transition-colors"
+            >
+              <Trash2 className="h-4 w-4" />
+              選択削除 ({selected.size})
+            </button>
+          )}
+          <button
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+          >
+            {showCreateForm ? 'キャンセル' : '+ アカウント作成'}
+          </button>
+        </div>
       </div>
 
       {showCreateForm && (
@@ -201,6 +242,10 @@ export default function AdminUsersClient({ users, mentors }: Props) {
           <table className="min-w-full divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-200">
             <thead>
               <tr className="bg-white/[0.02] dark:bg-white/[0.02]">
+                <th className="px-3 py-3 text-center">
+                  <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} aria-label="全選択"
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                </th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400">名前</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">メール</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">日本語メンター</th>
@@ -213,7 +258,11 @@ export default function AdminUsersClient({ users, mentors }: Props) {
             <tbody className="divide-y divide-white/[0.06] dark:divide-white/[0.06] divide-gray-100">
               {filtered.map(user => {
                 return (
-                <tr key={user.id}>
+                <tr key={user.id} className={`transition-colors has-[.row-trash:hover]:bg-red-50 dark:has-[.row-trash:hover]:bg-red-500/10 ${selected.has(user.id) ? 'bg-indigo-50/60 dark:bg-indigo-500/10' : ''}`}>
+                  <td className="px-3 py-3 text-center">
+                    <input type="checkbox" checked={selected.has(user.id)} onChange={() => toggleSelect(user.id)} aria-label="選択"
+                      className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                  </td>
                   <td className="whitespace-nowrap px-4 py-3 text-left">
                     <button
                       type="button"
@@ -291,7 +340,7 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                       <button
                         onClick={() => setDeleteTarget(user)}
                         disabled={pending}
-                        className="rounded-lg p-1.5 text-zinc-400 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50 transition-colors"
+                        className="row-trash rounded-lg p-1.5 text-zinc-400 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50 transition-colors"
                         title="削除"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -350,6 +399,30 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                 className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50 transition-colors"
               >
                 {pending ? '削除中...' : '削除する'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showBulkConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowBulkConfirm(false)}>
+          <div className="mx-4 w-full max-w-md rounded-2xl border border-gray-200/60 bg-white p-6 shadow-xl dark:border-white/[0.08] dark:bg-zinc-900" onClick={e => e.stopPropagation()}>
+            <h3 className="flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+              <span className="text-amber-500">⚠</span> 選択したアカウントを一括削除
+            </h3>
+            <div className="mt-4 space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
+              <p><span className="font-semibold text-red-500">{selected.size}件</span> のアカウントを削除します。</p>
+              <p className="font-medium text-red-500">この操作は取り消せません。</p>
+              <p>関連する全てのデータ（試験結果、学習記録等）も削除されます。（自分のアカウントは除外）</p>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button onClick={() => setShowBulkConfirm(false)} disabled={pending}
+                className="rounded-xl px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/5 transition-colors">
+                キャンセル
+              </button>
+              <button onClick={handleBulkDelete} disabled={pending}
+                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50 transition-colors">
+                {pending ? '削除中...' : `${selected.size}件を削除`}
               </button>
             </div>
           </div>

@@ -2,11 +2,14 @@ import Link from 'next/link'
 import Card from '@/components/ui/Card'
 import GuideCard from '@/components/japanese/JlptGuideCard'
 import { categoryChildren } from '@/lib/navigation'
+import { getMenteeHiddenSubcats } from '@/app/actions/admin/categories'
 import { BookOpen, FileText, CheckCircle2 } from 'lucide-react'
 
-export default function BusinessLiteracyHubPage() {
+export default async function BusinessLiteracyHubPage() {
   const config = categoryChildren['business-lit']
   if (!config) return null
+  const hidden = await getMenteeHiddenSubcats()
+  const children = config.children.filter(c => !hidden.has(c.href))
 
   return (
     <div>
@@ -33,7 +36,7 @@ export default function BusinessLiteracyHubPage() {
       </GuideCard>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {config.children.map((child) => (
+        {children.map((child) => (
           <Link key={child.href} href={child.href}>
             <Card className="h-full transition-shadow hover:shadow-md">
               <h3 className="font-semibold text-gray-900 dark:text-white">{child.label}</h3>

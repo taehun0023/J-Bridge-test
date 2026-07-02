@@ -15,6 +15,7 @@ import {
   HardDrive,
   Terminal,
   Megaphone,
+  LayoutGrid,
   type LucideIcon,
 } from 'lucide-react'
 import type { UserRole } from '@/lib/supabase/types'
@@ -124,6 +125,8 @@ export const adminNavItems: AdminNavItem[] = [
   { href: '/admin/users', label: 'ユーザー管理', icon: Users, allowedRoles: ['admin'] },
   { href: '/admin/mentors', label: 'メンター一覧', icon: UserCog, allowedRoles: ['admin'] },
   { href: '/admin/courses', label: 'コース管理', icon: FileEdit, allowedRoles: ['admin'] },
+  { href: '/admin/categories', label: 'カテゴリ管理', icon: LayoutGrid, allowedRoles: ['admin'] },
+  { href: '/admin/announcements', label: 'お知らせ管理', icon: Megaphone, allowedRoles: ['admin'] },
   { href: '/admin/tasks', label: '課題管理', icon: ClipboardList, allowedRoles: ['admin', 'mentor'] },
   { href: '/admin/reports', label: 'レポート', icon: BarChart3, allowedRoles: ['admin', 'mentor'] },
   { href: '/admin/tts-cache', label: 'TTSキャッシュ', icon: Volume2, allowedRoles: ['admin'] },

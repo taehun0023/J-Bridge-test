@@ -4,6 +4,7 @@ import GlobalLoadingOverlay from '@/components/ui/GlobalLoadingOverlay'
 import Providers from '@/app/providers'
 import type { UserRole, JlptLevel } from '@/lib/supabase/types'
 import { kanjiOnly } from '@/lib/name-format'
+import { getSubcategorySettings } from '@/app/actions/admin/categories'
 
 export default async function MainLayout({
   children,
@@ -29,10 +30,17 @@ export default async function MainLayout({
     jlptLevel = (profile?.jlpt_level as JlptLevel) ?? null
   }
 
+  // 카테고리 관리에서 비활성화한 항목은 멘티 메뉴에서 숨김 (관리자·멘토는 전부 노출)
+  let hiddenNav: string[] = []
+  if (userRole === 'mentee') {
+    const settings = await getSubcategorySettings()
+    hiddenNav = Object.entries(settings).filter(([, active]) => !active).map(([href]) => href)
+  }
+
   return (
     <Providers>
       <GlobalLoadingOverlay />
-      <MainShell userName={userName} avatarUrl={avatarUrl} userRole={userRole} jlptLevel={jlptLevel}>{children}</MainShell>
+      <MainShell userName={userName} avatarUrl={avatarUrl} userRole={userRole} jlptLevel={jlptLevel} hiddenNav={hiddenNav}>{children}</MainShell>
     </Providers>
   )
 }

@@ -283,6 +283,33 @@ export const JLPT_N1_PROBLEM_TYPES: JlptProblemType[] = [
   { no: 5, code: 'LISTENING_INTEGRATED', label: '統合理解', section: 'choukai', count: 3, choices: 4 },
 ]
 
+/** N2 問題 구성(공식 小問数 목安): 言語知識(54) + 読解(21) + 聴解(32) = 107문항. */
+export const JLPT_N2_PROBLEM_TYPES: JlptProblemType[] = [
+  // 文字・語彙 (32) — N2는 表記·語形成 추가
+  { no: 1, code: 'KANJI_READING', label: '漢字読み', section: 'gengo_chishiki', count: 5, choices: 4 },
+  { no: 2, code: 'NOTATION', label: '表記', section: 'gengo_chishiki', count: 5, choices: 4 },
+  { no: 3, code: 'WORD_FORMATION', label: '語形成', section: 'gengo_chishiki', count: 5, choices: 4 },
+  { no: 4, code: 'CONTEXT_WORD', label: '文脈規定', section: 'gengo_chishiki', count: 7, choices: 4 },
+  { no: 5, code: 'PARAPHRASE', label: '言い換え類義', section: 'gengo_chishiki', count: 5, choices: 4 },
+  { no: 6, code: 'WORD_USAGE', label: '用法', section: 'gengo_chishiki', count: 5, choices: 4 },
+  // 文法 (22)
+  { no: 7, code: 'GRAMMAR_CHOICE', label: '文法形式の判断', section: 'gengo_chishiki', count: 12, choices: 4 },
+  { no: 8, code: 'SENTENCE_ORDER', label: '文の組み立て', section: 'gengo_chishiki', count: 5, choices: 4 },
+  { no: 9, code: 'TEXT_GRAMMAR', label: '文章の文法', section: 'gengo_chishiki', count: 5, choices: 4 },
+  // 読解 (21) — N2는 問題10~14
+  { no: 10, code: 'SHORT_READING', label: '内容理解・短文', section: 'dokkai', count: 5, choices: 4 },
+  { no: 11, code: 'MEDIUM_READING', label: '内容理解・中文', section: 'dokkai', count: 9, choices: 4 },
+  { no: 12, code: 'INTEGRATED_READING', label: '統合理解', section: 'dokkai', count: 2, choices: 4 },
+  { no: 13, code: 'OPINION_READING', label: '主張理解・長文', section: 'dokkai', count: 3, choices: 4 },
+  { no: 14, code: 'INFORMATION_SEARCH', label: '情報検索', section: 'dokkai', count: 2, choices: 4 },
+  // 聴解 (32)
+  { no: 1, code: 'LISTENING_TASK', label: '課題理解', section: 'choukai', count: 5, choices: 4 },
+  { no: 2, code: 'LISTENING_POINT', label: 'ポイント理解', section: 'choukai', count: 6, choices: 4 },
+  { no: 3, code: 'LISTENING_SUMMARY', label: '概要理解', section: 'choukai', count: 5, choices: 4 },
+  { no: 4, code: 'LISTENING_QUICK_RESPONSE', label: '即時応答', section: 'choukai', count: 12, choices: 3 },
+  { no: 5, code: 'LISTENING_INTEGRATED', label: '統合理解', section: 'choukai', count: 4, choices: 4 },
+]
+
 export function jlptMockSectionsFor(level: string): JlptMockSectionDef[] {
   return JLPT_MOCK_SECTIONS[level as JlptLevel] ?? []
 }

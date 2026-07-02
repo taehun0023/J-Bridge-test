@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Card from '@/components/ui/Card'
 import { categoryChildren } from '@/lib/navigation'
+import { getMenteeHiddenSubcats } from '@/app/actions/admin/categories'
 
 const JLPT_LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'] as const
 
@@ -78,6 +79,8 @@ export default async function JlptHubPage() {
 
     return { level, mastered, total, pct }
   })
+  const hidden = await getMenteeHiddenSubcats()
+  const visibleLevels = levelData.filter(l => !hidden.has(`/japanese/jlpt/${l.level.toLowerCase()}`))
 
   return (
     <div>
@@ -87,7 +90,7 @@ export default async function JlptHubPage() {
 
       {/* Level cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {levelData.map(({ level, mastered, total, pct }) => {
+        {visibleLevels.map(({ level, mastered, total, pct }) => {
           const navChild = config.children.find(c => c.label === level)
 
           return (
