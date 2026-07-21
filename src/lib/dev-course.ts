@@ -21,12 +21,6 @@ export interface DevVirtualLesson extends DevLessonSummary {
 const SUBJECT_ORDER: DevSubjectSlug[] = [
   'common-workplace-fundamentals',
   'java',
-  'javascript',
-  'python',
-  'sql',
-  'spring-boot',
-  'react',
-  'nextjs',
 ]
 
 const SUBJECT_TITLES: Record<DevSubjectSlug, string> = {

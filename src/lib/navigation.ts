@@ -90,12 +90,6 @@ export const categoryChildren: Record<
     children: [
       { href: '/dev/cwf', label: '共通業務基礎', description: '開発現場で共通して必要な基礎スキル' },
       { href: '/dev/java', label: 'Java', description: 'Java の実務基礎' },
-      { href: '/dev/javascript', label: 'JavaScript', description: 'Web 開発の基本言語' },
-      { href: '/dev/spring-boot', label: 'Spring Boot', description: 'Java バックエンド開発の基本' },
-      { href: '/dev/react', label: 'React', description: 'React を使った UI 開発' },
-      { href: '/dev/nextjs', label: 'Next.js', description: 'Next.js を使った実践開発' },
-      { href: '/dev/python', label: 'Python', description: 'Python の基本と実務活用' },
-      { href: '/dev/sql', label: 'SQL', description: 'データベース操作の基礎' },
     ],
   },
   'business-lit': {
