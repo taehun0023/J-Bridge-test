@@ -1037,6 +1037,7 @@ export async function runMonthlyAutoAssignment(): Promise<void> {
     .select('id, target_certification, last_auto_assign_month')
     .eq('role', 'mentee')
     .eq('monthly_auto_assign', true)
+    .eq('is_active', true)
     .not('target_certification', 'is', null)
     .or(`last_auto_assign_month.is.null,last_auto_assign_month.neq.${currentMonth}`)
 

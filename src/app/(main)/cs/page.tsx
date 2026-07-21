@@ -5,7 +5,6 @@ import { categoryChildren } from '@/lib/navigation'
 import { getMenteeHiddenSubcats } from '@/app/actions/admin/categories'
 import { getAllCsCoursesWithProgress } from '@/lib/cs-course'
 import { createClient } from '@/lib/supabase/server'
-import GuideCard from '@/components/japanese/JlptGuideCard'
 
 export default async function CSHubPage() {
   const config = categoryChildren['cs']
@@ -27,16 +26,12 @@ export default async function CSHubPage() {
   const allSubjects = await getAllCsCoursesWithProgress(supabase, user.id, bypassLock)
   const hidden = await getMenteeHiddenSubcats()
   const subjects = allSubjects.filter(s => !hidden.has(`/cs/${s.slug}`))
-  const lessonCount = subjects.reduce((sum, subject) => sum + subject.lessons.length, 0)
 
   return (
     <div>
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{config.title}</h1>
-          <p className="mt-1 text-gray-500 dark:text-gray-400">
-            科目カードから学習を始め、レッスンを進めながら CS 用語を確認し、進行率に応じて理解度テストを解放します。
-          </p>
         </div>
         <Link
           href="/cs/quiz"
@@ -45,25 +40,6 @@ export default async function CSHubPage() {
           理解度テスト
         </Link>
       </div>
-
-      <GuideCard storageKey="cs-guide-dismissed">
-        <ol className="mt-2 list-inside list-decimal space-y-1 text-sm text-blue-800 dark:text-blue-300">
-          <li>科目ページでレッスンを順番に進めます。</li>
-          <li>必要に応じて CS用語 タブで重要用語を確認します。</li>
-          <li>各科目の進行率が 75% 以上になると理解度テストが解放されます。</li>
-        </ol>
-        <div className="mt-3 flex flex-wrap gap-2 text-xs text-blue-800 dark:text-blue-300">
-          <span className="rounded-full border border-blue-200 px-2.5 py-1 dark:border-blue-800">
-            {subjects.length} 科目
-          </span>
-          <span className="rounded-full border border-blue-200 px-2.5 py-1 dark:border-blue-800">
-            {lessonCount} レッスン
-          </span>
-          <span className="rounded-full border border-blue-200 px-2.5 py-1 dark:border-blue-800">
-            学習 + 用語
-          </span>
-        </div>
-      </GuideCard>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {subjects.map((subject) => (

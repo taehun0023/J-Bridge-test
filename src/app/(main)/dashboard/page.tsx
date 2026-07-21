@@ -62,7 +62,7 @@ function buildLatestExamMap(
 
 const JP_CATEGORIES = ['seikatsu', 'business-jp', 'business_jp', '生活日本語', 'ビジネス日本語'] as const
 
-type MenteeProfile = { id: string; full_name: string | null; email: string; target_certification: string | null; monthly_auto_assign?: boolean | null }
+type MenteeProfile = { id: string; full_name: string | null; email: string; target_certification: string | null; monthly_auto_assign?: boolean | null; is_active?: boolean | null }
 
 /** 멘티 목록 → JLPT 영역별 습득 현황(목표레벨 기준) 리스트. 목표가 JLPT가 아닌 멘티는 제외. */
 async function buildJlptProgressRows(menteeProfiles: MenteeProfile[]): Promise<MenteeJlptProgress[]> {
@@ -238,9 +238,13 @@ async function buildEmployeeRows(
   for (const ps of pubSets ?? []) setsCountByLevel.set(ps.level, (setsCountByLevel.get(ps.level) ?? 0) + 1)
   const takenSetsByUser = new Map<string, Set<string>>()  // 응시(완료·불합격)한 세트
   const monthSetsByUser = new Map<string, Set<string>>()  // 이번달 배정된 세트
+  const assignedSetsByUser = new Map<string, Set<string>>()  // 전체 배정된 세트 (完了 분모용)
   for (const m of allMockRows ?? []) {
     if (m.mock_session === 1) continue
     const key = `${m.content_level}::${m.mock_set_no}`
+    let aset = assignedSetsByUser.get(m.user_id)
+    if (!aset) { aset = new Set(); assignedSetsByUser.set(m.user_id, aset) }
+    aset.add(key)
     if (m.status === 'completed' || m.status === 'failed') {
       let set = takenSetsByUser.get(m.user_id)
       if (!set) { set = new Set(); takenSetsByUser.set(m.user_id, set) }
@@ -265,7 +269,11 @@ async function buildEmployeeRows(
     }
     const cumTotal = tgt ? (setsCountByLevel.get(tgt) ?? 0) : 0
     const cumDone = tgt ? [...taken].filter(k => k.startsWith(`${tgt}::`)).length : 0
-    s.seikatsuCumulative = { completed: s.seikatsuCumulative.completed + cumDone, total: s.seikatsuCumulative.total + cumTotal }
+    // 完了(누적 課題): 실제로 부여된 모의세트만 분모에 포함 (부여 안 하면 +0, 하나 부여 시 +1)
+    const assignedSets = assignedSetsByUser.get(id) ?? new Set<string>()
+    const assignedDone = [...assignedSets].filter(k => taken.has(k)).length
+    s.seikatsuCumulative = { completed: s.seikatsuCumulative.completed + assignedDone, total: s.seikatsuCumulative.total + assignedSets.size }
+    // 全体進捗: 목표레벨 전체 공개세트 기준 (유지)
     s.all = { completed: s.all.completed + cumDone, total: s.all.total + cumTotal }
   }
 
@@ -373,16 +381,19 @@ export default async function DashboardPage() {
   // ──────────────────────────────────────────────
   if (profile?.role === 'admin') {
     const [{ data: allMentees }, { count: adminTotalAnn }, { count: adminReadAnn }] = await Promise.all([
-      supabase.from('profiles').select('id, full_name, email, target_certification, monthly_auto_assign').eq('role', 'mentee'),
+      supabase.from('profiles').select('id, full_name, email, target_certification, monthly_auto_assign, is_active').eq('role', 'mentee'),
       supabase.from('announcements').select('id', { count: 'exact', head: true }),
       supabase.from('announcement_reads').select('announcement_id', { count: 'exact', head: true }).eq('user_id', user.id),
     ])
     const adminUnread = (adminTotalAnn ?? 0) - (adminReadAnn ?? 0)
 
+    // 비활성 멘티는 대시보드에서 제외
+    const visibleMentees = ((allMentees ?? []) as MenteeProfile[]).filter(m => m.is_active !== false)
+
     // 全社員(메ンティー) — メンターダッシュボードと同一の集計・レイアウトを共有 (독립 집계 → 병렬)
     const [employees, jlptRows] = await Promise.all([
-      buildEmployeeRows(supabase, (allMentees ?? []) as MenteeProfile[]),
-      buildJlptProgressRows((allMentees ?? []) as MenteeProfile[]),
+      buildEmployeeRows(supabase, visibleMentees),
+      buildJlptProgressRows(visibleMentees),
     ])
 
     return (

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useLoadingTransition } from '@/lib/loading-store'
 import { useRouter } from 'next/navigation'
-import { updateUserRole, createUserAccount, updateMentorSpecialty, deleteUser, bulkDeleteUsers, assignMentor } from '@/app/actions/admin/users'
+import { updateUserRole, createUserAccount, updateMentorSpecialty, deleteUser, bulkDeleteUsers, assignMentor, setUserActive } from '@/app/actions/admin/users'
 import { Trash2 } from 'lucide-react'
 import NameRuby from '@/components/ui/NameRuby'
 import EditUserModal from './EditUserModal'
@@ -22,6 +22,7 @@ interface User {
   target_certification: string | null
   jlpt_level: string | null
   it_certifications: string | null
+  is_active: boolean
 }
 
 interface Mentor {
@@ -98,6 +99,20 @@ export default function AdminUsersClient({ users, mentors }: Props) {
         setTimeout(() => setMessage(null), 3000)
       } else {
         setMessage({ type: 'success', text: '担当メンターが変更されました' })
+        setTimeout(() => setMessage(null), 3000)
+        router.refresh()
+      }
+    })
+  }
+
+  function handleToggleActive(user: User) {
+    startTransition(async () => {
+      const result = await setUserActive(user.id, user.is_active === false)
+      if (result.error) {
+        setMessage({ type: 'error', text: result.error })
+        setTimeout(() => setMessage(null), 3000)
+      } else {
+        setMessage({ type: 'success', text: user.is_active === false ? '有効化しました' : '無効化しました' })
         setTimeout(() => setMessage(null), 3000)
         router.refresh()
       }
@@ -252,6 +267,7 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">技術メンター</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">役割</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">登録日</th>
+                <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">状態</th>
                 <th className="border-l border-gray-200/40 px-4 py-3 text-center text-xs font-medium text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">操作</th>
               </tr>
             </thead>
@@ -334,6 +350,20 @@ export default function AdminUsersClient({ users, mentors }: Props) {
                   </td>
                   <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center text-sm text-zinc-700 dark:border-white/[0.06] dark:text-zinc-300">
                     {new Date(user.created_at).toLocaleDateString('ja-JP')}
+                  </td>
+                  <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center dark:border-white/[0.06]">
+                    {user.role === 'mentee' ? (
+                      <button
+                        onClick={() => handleToggleActive(user)}
+                        disabled={pending}
+                        className={`rounded-full px-2.5 py-1 text-xs font-medium disabled:opacity-50 transition-colors ${user.is_active !== false ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-200 text-gray-500 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-400'}`}
+                        title={user.is_active !== false ? 'クリックで無効化' : 'クリックで有効化'}
+                      >
+                        {user.is_active !== false ? '有効' : '無効'}
+                      </button>
+                    ) : (
+                      <span className="text-xs text-zinc-400">-</span>
+                    )}
                   </td>
                   <td className="whitespace-nowrap border-l border-gray-200/40 px-4 py-3 text-center dark:border-white/[0.06]">
                     <div className="flex items-center justify-center gap-1">

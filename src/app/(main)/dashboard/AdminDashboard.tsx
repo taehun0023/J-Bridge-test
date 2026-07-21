@@ -149,12 +149,12 @@ export default function AdminDashboard({ adminName, employees, variant = 'admin'
       <Card
         title={isMentor ? '担当メンティーの日本語進捗' : '全社員の日本語進捗'}
         headerAction={
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <button
               type="button"
               onClick={openJlptForAll}
               disabled={employees.length === 0}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+              className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
             >
               <Languages className="h-3.5 w-3.5" />
               課題
@@ -163,10 +163,10 @@ export default function AdminDashboard({ adminName, employees, variant = 'admin'
               type="button"
               onClick={openAssignForAll}
               disabled={employees.length === 0}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+              className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
             >
               <GraduationCap className="h-3.5 w-3.5" />
-              JLPT模試
+              JLPT<span className="hidden sm:inline">模試</span>
             </button>
           </div>
         }

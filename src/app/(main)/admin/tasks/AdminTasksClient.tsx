@@ -137,6 +137,8 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
   const [batchOpen, setBatchOpen] = useState(false)
   const [batchSearch, setBatchSearch] = useState('')
   const [selectedBatches, setSelectedBatches] = useState<Set<string>>(new Set())
+  // 멘티 상세뷰: 개별 과제 체크박스 선택 삭제
+  const [selectedAssign, setSelectedAssign] = useState<Set<string>>(new Set())
 
   // 월별 자동부여 개수 설정
   const [configs, setConfigs] = useState<Record<string, MonthlyAssignConfig>>(monthlyConfigs)
@@ -159,6 +161,20 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
     setSelectedMentee(id)
     setPage(1)
     setOpenDates({})
+    setSelectedAssign(new Set())
+  }
+  function toggleAssign(id: string) {
+    setSelectedAssign(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n })
+  }
+  function handleDeleteSelectedAssign() {
+    const ids = [...selectedAssign]
+    if (ids.length === 0) return
+    if (!confirm(`選択した ${ids.length}件の課題を削除しますか？`)) return
+    startTransition(async () => {
+      const res = await deleteLearningAssignmentsBulk(ids)
+      if (res.error) showMsg(res.error, 'error')
+      else { showMsg(`${res.deleted ?? ids.length}件を削除しました`); setSelectedAssign(new Set()) }
+    })
   }
 
   // 첫 진입 시 첫 멘티 자동 선택 → 상세(월별 과제)가 바로 표시됨
@@ -361,6 +377,7 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
         ) : (
           /* ── Display row ── */
           <div className="flex items-start gap-3">
+            <input type="checkbox" checked={selectedAssign.has(la.id)} onChange={() => toggleAssign(la.id)} className="mt-1 h-4 w-4 shrink-0 rounded border-gray-300 text-rose-600 focus:ring-rose-500" />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-sm font-medium text-gray-900 dark:text-white">{la.title}</span>
@@ -451,7 +468,13 @@ export default function AdminTasksClient({ mentees, allMentees, assignmentsByMen
 
     return (
       <div>
-        <div className="flex items-center justify-end border-b border-gray-100 px-4 py-2 dark:border-gray-700">
+        <div className="flex items-center justify-end gap-2 border-b border-gray-100 px-4 py-2 dark:border-gray-700">
+          {selectedAssign.size > 0 && (
+            <button type="button" onClick={handleDeleteSelectedAssign} disabled={pending}
+              className="rounded-lg bg-rose-600 px-3 py-1 text-xs font-medium text-white hover:bg-rose-700 disabled:opacity-50">
+              選択項目を削除（{selectedAssign.size}）
+            </button>
+          )}
           <select value={year} onChange={e => setAssignYear(e.target.value)}
             className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 focus:border-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white">
             {years.map(y => <option key={y} value={y}>{y}年</option>)}

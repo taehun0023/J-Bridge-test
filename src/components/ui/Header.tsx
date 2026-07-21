@@ -5,7 +5,7 @@ import { signOut } from '@/app/actions/auth'
 import NotificationBell from './NotificationBell'
 import ProfileAvatar from './ProfileAvatar'
 import { useTheme } from '@/components/theme/ThemeProvider'
-import { Menu, Sun, Moon, Shield, BookOpen, LogOut } from 'lucide-react'
+import { Menu, PanelLeft, Sun, Moon, Shield, BookOpen, LogOut } from 'lucide-react'
 import type { UserRole, JlptLevel } from '@/lib/supabase/types'
 
 export default function Header({
@@ -14,12 +14,16 @@ export default function Header({
   userRole,
   jlptLevel,
   onMenuToggle,
+  onSidebarToggle,
+  sidebarOpen = true,
 }: {
   userName: string | null
   avatarUrl: string | null
   userRole: UserRole
   jlptLevel: JlptLevel | null
   onMenuToggle: () => void
+  onSidebarToggle?: () => void
+  sidebarOpen?: boolean
 }) {
   const { theme, toggleTheme } = useTheme()
 
@@ -31,6 +35,16 @@ export default function Header({
       >
         <Menu className="h-5 w-5" />
       </button>
+
+      {onSidebarToggle && !sidebarOpen && (
+        <button
+          onClick={onSidebarToggle}
+          className="hidden rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/5 lg:block"
+          aria-label="サイドバーを開く"
+        >
+          <PanelLeft className="h-5 w-5" />
+        </button>
+      )}
 
       {(userRole === 'admin' || userRole === 'mentor') && (
         <Link

@@ -13,7 +13,7 @@ export default async function AdminUsersPage() {
   ] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id, email, full_name, role, mentor_specialty, is_onboarded, is_japanese, created_at, target_certification, jlpt_level, it_certifications')
+      .select('id, email, full_name, role, mentor_specialty, is_onboarded, is_japanese, created_at, target_certification, jlpt_level, it_certifications, is_active')
       .neq('email', 'admin@admin.com') // 편의용 관리자 계정은 목록에서 숨김
       .order('created_at', { ascending: false }),
     supabase

@@ -116,6 +116,22 @@ export async function bulkDeleteUsers(userIds: string[]) {
   return { success: true, deleted, errors }
 }
 
+/** 멘티 활성/비활성 토글. 비활성 시 대시보드·과제배분(팝업/월자동)에서 제외된다. */
+export async function setUserActive(userId: string, active: boolean) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return { error: auth.error } as const
+  const { error } = await auth.serviceClient
+    .from('profiles')
+    .update({ is_active: active, updated_at: new Date().toISOString() })
+    .eq('id', userId)
+  if (error) return { error: error.message }
+  await logAuditEvent(auth.user.id, 'update', 'profiles', userId, null, { is_active: active })
+  revalidatePath('/admin/users')
+  revalidatePath('/dashboard')
+  revalidatePath('/admin/tasks')
+  return { success: true }
+}
+
 export async function assignMentor(
   menteeId: string,
   mentorId: string | null,

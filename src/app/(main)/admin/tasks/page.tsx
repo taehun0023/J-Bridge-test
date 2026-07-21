@@ -28,11 +28,11 @@ export default async function AdminTasksPage() {
   if (currentRole === 'mentor') {
     const { data: menteeAssignments } = await supabase
       .from('mentor_mentee_assignments')
-      .select('mentee:profiles!mentor_mentee_assignments_mentee_id_fkey(id, full_name, email, role, target_certification, monthly_auto_assign)')
+      .select('mentee:profiles!mentor_mentee_assignments_mentee_id_fkey(id, full_name, email, role, target_certification, monthly_auto_assign, is_active)')
       .eq('mentor_id', user!.id)
     mentees = (menteeAssignments ?? [])
-      .map(a => a.mentee as unknown as { id: string; full_name: string | null; email: string; role: string; target_certification: string | null; monthly_auto_assign: boolean })
-      .filter(m => m && m.role === 'mentee')
+      .map(a => a.mentee as unknown as { id: string; full_name: string | null; email: string; role: string; target_certification: string | null; monthly_auto_assign: boolean; is_active: boolean })
+      .filter(m => m && m.role === 'mentee' && m.is_active !== false)
       .map(m => ({ id: m.id, full_name: m.full_name, email: m.email, target_certification: m.target_certification, monthly_auto_assign: m.monthly_auto_assign }))
       .sort((a, b) => (a.full_name ?? a.email).localeCompare(b.full_name ?? b.email, 'ja'))
   } else {
@@ -40,6 +40,7 @@ export default async function AdminTasksPage() {
       .from('profiles')
       .select('id, full_name, email, target_certification, monthly_auto_assign')
       .eq('role', 'mentee')
+      .eq('is_active', true)
       .order('full_name')
     mentees = data ?? []
   }
