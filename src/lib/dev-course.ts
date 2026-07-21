@@ -113,6 +113,20 @@ function buildVirtualCourse(
   }
 }
 
+export interface DevResumeTarget {
+  course: DevVirtualCourse
+  lesson: DevVirtualLesson
+}
+
+/** SUBJECT_ORDER · 모듈 난이도 순으로 정렬된 courses에서 첫 미완료 레슨을 찾는다. 전부 완료면 null. */
+export function findResumeLesson(courses: DevVirtualCourse[]): DevResumeTarget | null {
+  for (const course of courses) {
+    const lesson = course.lessons.find((l) => !l.isCompleted)
+    if (lesson) return { course, lesson }
+  }
+  return null
+}
+
 export async function getAllDevCourses(
   supabase: SupabaseClient,
   userId: string | null

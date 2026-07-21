@@ -1,10 +1,8 @@
 import { notFound, redirect } from 'next/navigation'
 import DevStaticLessonPage from '@/components/dev/DevStaticLessonPage'
-import DevLessonCompleteButton from '@/components/dev/DevLessonCompleteButton'
 import { getDevLessonDetail, getDevSubjectContent } from '@/lib/dev-content'
 import { createClient } from '@/lib/supabase/server'
 import { toDevCourseId } from '@/lib/dev-course'
-import { DEV_QUIZ_SET_DEFINITIONS } from '@/lib/dev-quiz'
 
 export default async function DevLessonDetailPage({
   params,
@@ -26,7 +24,7 @@ export default async function DevLessonDetailPage({
 
   const courseId = toDevCourseId(lesson.subjectSlug)
 
-  const [{ data: progress }, subjectContent] = await Promise.all([
+  const [{ data: progress }, subjectContent, { data: profile }] = await Promise.all([
     supabase
       .from('dev_lesson_progress')
       .select('status')
@@ -34,9 +32,12 @@ export default async function DevLessonDetailPage({
       .eq('lesson_id', lessonId)
       .single(),
     getDevSubjectContent(lesson.subjectSlug),
+    supabase.from('profiles').select('role').eq('id', user.id).single(),
   ])
 
   const isCompleted = progress?.status === 'completed'
+  // 관리자는 문제를 풀지 않아도 다음으로 넘어갈 수 있게 한다.
+  const isAdmin = profile?.role === 'admin'
 
   // Compute prev/next lesson navigation
   const allLessons = subjectContent?.modules.flatMap((m) => m.lessons) ?? []
@@ -48,23 +49,16 @@ export default async function DevLessonDetailPage({
       ? `/dev/lessons/${allLessons[currentIndex + 1].lessonId}`
       : null
 
-  const quizDef = DEV_QUIZ_SET_DEFINITIONS.find((d) => d.courseId === courseId)
-  const quizHref = quizDef ? `/dev/quiz/${quizDef.quizId}` : null
-
   return (
     <DevStaticLessonPage
       lesson={lesson}
       initialLang={initialLang}
+      lessonId={lessonId}
+      courseId={courseId}
+      isCompleted={isCompleted}
+      isAdmin={isAdmin}
       previousLessonHref={previousLessonHref}
       nextLessonHref={nextLessonHref}
-      quizHref={quizHref}
-      completionControl={
-        <DevLessonCompleteButton
-          lessonId={lessonId}
-          courseId={courseId}
-          isCompleted={isCompleted}
-        />
-      }
     />
   )
 }

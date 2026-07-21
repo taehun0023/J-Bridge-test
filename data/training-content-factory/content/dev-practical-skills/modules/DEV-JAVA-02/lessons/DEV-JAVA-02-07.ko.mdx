@@ -1,0 +1,446 @@
+---
+lesson_id: DEV-JAVA-02-07
+title: "Java중급07 캡슐화·getter·setter"
+module: DEV-JAVA-01
+language: ko
+level: foundation
+est_minutes: 22
+tags: [java, intermediate, oop, encapsulation, getter, setter, static-content]
+---
+
+## 학습 목표
+
+이 파트를 학습한 후 다음 작업을 할 수 있어야 합니다.
+
+- 필드를 외부에서 직접 변경하지 못하게 해야 하는 이유를 이해한다.
+- private 필드와 public 메서드로 객체의 데이터를 보호한다.
+- getter와 setter를 작성하고 사용한다.
+- setter에서 잘못된 값이 저장되지 않도록 검사한다.
+- 모든 필드에 getter와 setter를 만들 필요가 없다는 것을 이해한다.
+
+## 수업 내용
+
+### Part 1. 필드를 직접 공개하면 생기는 문제
+
+다음 클래스는 잔액을 public 필드로 공개하고 있다.
+
+```java
+class BankAccount {
+    public int balance;
+}
+```
+
+외부에서 필드에 직접 접근할 수 있다.
+
+```java
+BankAccount account = new BankAccount();
+
+account.balance = 10000;
+account.balance = -50000;
+```
+
+잔액에 음수가 들어가면 안 되는 상황이어도 아무런 제한 없이 저장된다.
+
+필드를 공개하면 객체가 지켜야 할 규칙을 외부 코드가 쉽게 깨뜨릴 수 있다.
+
+### Part 2. 캡슐화가 필요한 이유
+
+캡슐화는 객체의 데이터를 외부에서 직접 다루지 못하게 하고, 객체가 제공하는 메서드를 통해서만 사용하도록 만드는 것이다.
+
+```java
+class BankAccount {
+    private int balance;
+}
+```
+
+balance가 private이므로 다음 코드는 작성할 수 없다.
+
+```java
+BankAccount account = new BankAccount();
+account.balance = -50000;   // 컴파일 오류
+```
+
+대신 객체가 잔액을 확인하거나 변경하는 메서드를 제공한다.
+
+```java
+class BankAccount {
+    private int balance;
+
+    public void deposit(int amount) {
+        if (amount > 0) {
+            balance += amount;
+        }
+    }
+
+    public int getBalance() {
+        return balance;
+    }
+}
+```
+
+```java
+BankAccount account = new BankAccount();
+
+account.deposit(10000);
+System.out.println(account.getBalance());
+```
+
+**실행 결과**
+
+```text
+10000
+```
+
+이제 잔액을 변경하는 규칙을 BankAccount가 직접 관리한다.
+
+### Part 3. getter로 값 읽기
+
+getter는 private 필드의 값을 외부에 반환하는 메서드다.
+
+```java
+class Student {
+    private String name;
+
+    public Student(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+}
+```
+
+```java
+Student student = new Student("민수");
+
+System.out.println(student.getName());
+```
+
+**실행 결과**
+
+```text
+민수
+```
+
+getter의 일반적인 이름은 get필드명이다.
+
+```java
+getName()
+getAge()
+getScore()
+```
+
+논리값을 반환하는 getter는 is로 시작하기도 한다.
+
+```java
+class Member {
+    private boolean active;
+
+    public boolean isActive() {
+        return active;
+    }
+}
+```
+
+### Part 4. setter로 값 변경하기
+
+setter는 외부에서 받은 값을 private 필드에 저장하는 메서드다.
+
+```java
+class Student {
+    private int score;
+
+    public void setScore(int score) {
+        this.score = score;
+    }
+
+    public int getScore() {
+        return score;
+    }
+}
+```
+
+```java
+Student student = new Student();
+
+student.setScore(85);
+System.out.println(student.getScore());
+```
+
+**실행 결과**
+
+```text
+85
+```
+
+setter의 일반적인 이름은 set필드명이다.
+
+```java
+setName(...)
+setAge(...)
+setScore(...)
+```
+
+### Part 5. setter에서 값 검사하기
+
+setter는 값을 저장하기 전에 올바른 값인지 검사할 수 있다.
+
+```java
+class Student {
+    private int score;
+
+    public void setScore(int score) {
+        if (score >= 0 && score <= 100) {
+            this.score = score;
+        }
+    }
+
+    public int getScore() {
+        return score;
+    }
+}
+```
+
+```java
+Student student = new Student();
+
+student.setScore(80);
+student.setScore(150);
+
+System.out.println(student.getScore());
+```
+
+**실행 결과**
+
+```text
+80
+```
+
+150은 허용 범위를 벗어나므로 저장되지 않는다.
+
+필드를 직접 공개했다면 외부 코드마다 점수 범위를 검사해야 한다. setter에서 검사하면 점수 변경 규칙을 한곳에서 관리할 수 있다.
+
+### Part 6. 모든 필드에 setter를 만들 필요는 없다
+
+다음 상품 번호는 객체가 생성된 뒤 바뀌면 안 된다고 가정한다.
+
+```java
+class Product {
+    private String productCode;
+    private int price;
+
+    public Product(String productCode, int price) {
+        this.productCode = productCode;
+        this.price = price;
+    }
+
+    public String getProductCode() {
+        return productCode;
+    }
+
+    public int getPrice() {
+        return price;
+    }
+
+    public void setPrice(int price) {
+        if (price >= 0) {
+            this.price = price;
+        }
+    }
+}
+```
+
+productCode에는 getter만 있고 setter는 없다. 외부에서는 상품 번호를 확인할 수 있지만 변경할 수는 없다.
+
+```java
+Product product = new Product("P100", 3000);
+
+System.out.println(product.getProductCode());
+product.setPrice(3500);
+System.out.println(product.getPrice());
+```
+
+**실행 결과**
+
+```text
+P100
+3500
+```
+
+모든 필드에 getter와 setter를 자동으로 만드는 것은 올바른 캡슐화가 아니다. 외부에 읽기나 변경을 허용해야 하는 필드에만 필요한 메서드를 제공해야 한다.
+
+### Part 7. 단순 setter보다 행동을 나타내는 메서드 사용하기
+
+잔액을 변경하기 위해 다음과 같은 setter를 제공할 수 있다.
+
+```java
+public void setBalance(int balance) {
+    this.balance = balance;
+}
+```
+
+하지만 이 메서드는 잔액이 왜 변경되는지 나타내지 못한다.
+
+```java
+account.setBalance(50000);
+```
+
+입금인지, 출금인지, 잔액 수정인지 알기 어렵다.
+
+객체가 실제로 수행하는 행동을 메서드 이름으로 표현하는 편이 좋다.
+
+```java
+class BankAccount {
+    private int balance;
+
+    public void deposit(int amount) {
+        if (amount > 0) {
+            balance += amount;
+        }
+    }
+
+    public boolean withdraw(int amount) {
+        if (amount <= 0 || amount > balance) {
+            return false;
+        }
+
+        balance -= amount;
+        return true;
+    }
+
+    public int getBalance() {
+        return balance;
+    }
+}
+```
+
+```java
+BankAccount account = new BankAccount();
+
+account.deposit(30000);
+account.withdraw(12000);
+
+System.out.println(account.getBalance());
+```
+
+**실행 결과**
+
+```text
+18000
+```
+
+deposit()과 withdraw()는 잔액 변경 이유를 분명하게 나타내며, 각각의 규칙도 객체 내부에서 검사한다.
+
+### Part 8. 캡슐화는 단순히 필드를 숨기는 것이 아니다
+
+다음 클래스는 필드를 private으로 선언했지만 아무 값이나 저장할 수 있는 setter를 제공한다.
+
+```java
+class Member {
+    private int age;
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+}
+```
+
+이 경우 다음과 같은 잘못된 값이 저장될 수 있다.
+
+```java
+member.setAge(-20);
+```
+
+필드를 private으로 선언하는 것만으로는 충분하지 않다. 객체가 지켜야 하는 규칙을 메서드 안에서 관리해야 한다.
+
+```java
+class Member {
+    private int age;
+
+    public void setAge(int age) {
+        if (age >= 0) {
+            this.age = age;
+        }
+    }
+
+    public int getAge() {
+        return age;
+    }
+}
+```
+
+캡슐화의 목적은 다음과 같다.
+
+- 외부에서 필드를 직접 변경하지 못하게 한다.
+- 잘못된 값이 저장되는 것을 막는다.
+- 데이터 변경 규칙을 객체 내부에서 관리한다.
+- 외부에는 필요한 기능만 공개한다.
+
+### 종합 예제
+
+```java
+class BankAccount {
+    private String owner;
+    private int balance;
+
+    public BankAccount(String owner, int balance) {
+        this.owner = owner;
+
+        if (balance >= 0) {
+            this.balance = balance;
+        }
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public int getBalance() {
+        return balance;
+    }
+
+    public void deposit(int amount) {
+        if (amount > 0) {
+            balance += amount;
+        }
+    }
+
+    public boolean withdraw(int amount) {
+        if (amount <= 0 || amount > balance) {
+            return false;
+        }
+
+        balance -= amount;
+        return true;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        BankAccount account = new BankAccount("지수", 20000);
+
+        account.deposit(10000);
+
+        boolean success = account.withdraw(8000);
+
+        System.out.println("예금주: " + account.getOwner());
+        System.out.println("출금 성공: " + success);
+        System.out.println("잔액: " + account.getBalance());
+    }
+}
+```
+
+**실행 결과**
+
+```text
+예금주: 지수
+출금 성공: true
+잔액: 22000
+```
+
+owner와 balance는 외부에서 직접 변경할 수 없다. 잔액은 deposit()과 withdraw()를 통해서만 변경되므로 계좌가 지켜야 할 규칙을 BankAccount 내부에서 관리할 수 있다.
+
+## 다음으로
+
+다음 학습 내용은 [Part 8「static·final·클래스 상수」](/dev/lessons/DEV-JAVA-02-08)이다.

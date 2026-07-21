@@ -1,0 +1,365 @@
+---
+lesson_id: DEV-JAVA-02-02
+title: "Java중급02 필드와 인스턴스 메서드"
+module: DEV-JAVA-01
+language: ko
+level: foundation
+est_minutes: 22
+tags: [java, intermediate, oop, method, static-content]
+---
+
+## 학습 목표
+
+이 파트를 학습한 후 다음 작업을 할 수 있어야 합니다.
+
+- 인스턴스 필드에 객체의 상태를 저장한다.
+- 객체마다 서로 다른 필드값을 관리한다.
+- 인스턴스 메서드를 선언하고 호출한다.
+- 인스턴스 메서드에서 필드를 읽거나 변경한다.
+- 매개변수와 반환값이 있는 인스턴스 메서드를 작성한다.
+
+## 수업 내용
+
+### Part 1. 인스턴스 필드
+
+메서드 안의 지역변수는 메서드 실행이 끝나면 사라져 해당 객체의 상태로 남지 않는다. 게임 캐릭터의 이름과 레벨처럼 객체가 계속 기억해야 하는 데이터는 객체에 속한 필드로 저장해야 한다. 인스턴스 필드는 여러 객체가 같은 구조를 사용하면서도 각자의 상태를 따로 유지하기 위해 사용한다.
+
+클래스 내부에서 메서드 바깥에 선언한 변수를 필드라고 한다.
+
+```java
+class Player {
+    String nickname;
+    int level;
+}
+```
+
+nickname과 level은 Player 객체가 가지는 인스턴스 필드다.
+
+```java
+Player player1 = new Player();
+Player player2 = new Player();
+
+player1.nickname = "전사";
+player1.level = 5;
+
+player2.nickname = "마법사";
+player2.level = 8;
+```
+
+같은 클래스로 만든 객체라도 각각 별도의 필드값을 가진다.
+
+```java
+System.out.println(player1.nickname);
+System.out.println(player2.nickname);
+```
+
+**실행 결과**
+
+```text
+전사
+마법사
+```
+
+player1의 필드를 변경해도 player2의 필드는 변경되지 않는다.
+
+```java
+player1.level = 10;
+
+System.out.println(player1.level);
+System.out.println(player2.level);
+```
+
+**실행 결과**
+
+```text
+10
+8
+```
+
+필드는 객체의 상태를 저장한다. 메서드 안에서 선언하는 지역변수와 달리 특정 객체에 속한다.
+
+### Part 2. 인스턴스 메서드
+
+객체의 데이터를 처리하는 코드를 객체 밖에서 직접 작성하면 같은 계산이 여러 곳에 반복된다.
+
+```java
+counter1.count = counter1.count + 3;
+counter2.count = counter2.count + 3;
+```
+
+이렇게 객체 밖에서 계산을 반복하면 같은 동작이 여러 곳에 흩어진다.
+
+인스턴스 메서드를 사용하면 객체가 수행할 동작을 객체 안에 정의하고 호출만 하면 된다.
+
+```java
+counter1.increase(3);
+counter2.increase(3);
+```
+
+인스턴스 메서드를 사용하면 객체의 데이터를 처리하는 코드를 객체 안에 모을 수 있다. 호출하는 쪽에서는 계산 과정을 반복하지 않고 객체가 수행할 동작만 요청한다. 객체마다 자신의 필드를 사용하여 같은 동작을 수행해야 할 때 인스턴스 메서드를 사용한다.
+
+클래스 안에는 객체가 수행할 기능을 메서드로 선언할 수 있다.
+
+```java
+class Bell {
+    void ring() {
+        System.out.println("종이 울립니다.");
+    }
+}
+```
+
+객체에 속하는 메서드를 인스턴스 메서드라고 한다. 인스턴스 메서드는 객체를 생성한 뒤 점 연산자로 호출한다.
+
+```java
+Bell bell = new Bell();
+
+bell.ring();
+```
+
+**실행 결과**
+
+```text
+종이 울립니다.
+```
+
+기본 형식은 다음과 같다.
+
+```java
+class 클래스명 {
+    반환형 메서드명() {
+        실행할 코드;
+    }
+}
+```
+
+호출할 때는 객체 변수를 사용한다.
+
+```java
+객체변수.메서드명();
+```
+
+**자주 하는 실수**
+
+인스턴스 메서드는 클래스 이름으로 직접 호출하지 않는다.
+
+```java
+Bell bell = new Bell();
+
+Bell.ring(); // 컴파일 오류
+```
+
+생성한 객체를 통해 호출해야 한다.
+
+```java
+bell.ring();
+```
+
+### Part 3. 메서드에서 필드 사용
+
+인스턴스 메서드는 자신을 호출한 객체의 필드를 사용할 수 있다.
+
+```java
+class Member {
+    String name;
+    int points;
+
+    void showInfo() {
+        System.out.println(name + ": " + points + "점");
+    }
+}
+```
+
+```java
+Member member1 = new Member();
+Member member2 = new Member();
+
+member1.name = "민수";
+member1.points = 80;
+
+member2.name = "지수";
+member2.points = 95;
+
+member1.showInfo();
+member2.showInfo();
+```
+
+**실행 결과**
+
+```text
+민수: 80점
+지수: 95점
+```
+
+member1.showInfo()를 호출하면 member1의 필드를 사용하고, member2.showInfo()를 호출하면 member2의 필드를 사용한다. 메서드 코드는 하나지만 호출한 객체에 따라 사용하는 데이터가 달라진다.
+
+### Part 4. 필드를 변경하는 메서드
+
+인스턴스 메서드에서 필드값을 변경할 수 있다.
+
+```java
+class Counter {
+    int count;
+
+    void increase(int amount) {
+        count = count + amount;
+    }
+}
+```
+
+```java
+Counter counter = new Counter();
+
+counter.count = 5;
+counter.increase(3);
+counter.increase(2);
+
+System.out.println(counter.count);
+```
+
+**실행 결과**
+
+```text
+10
+```
+
+counter.increase(3)을 호출하면 amount에 3이 전달되고 해당 counter 객체의 count가 증가한다.
+
+객체마다 메서드를 따로 호출할 수도 있다.
+
+```java
+Counter counter1 = new Counter();
+Counter counter2 = new Counter();
+
+counter1.count = 10;
+counter2.count = 20;
+
+counter1.increase(5);
+counter2.increase(2);
+
+System.out.println(counter1.count);
+System.out.println(counter2.count);
+```
+
+**실행 결과**
+
+```text
+15
+22
+```
+
+동일한 increase()를 호출해도 각 객체의 count가 따로 변경된다.
+
+### Part 5. 값을 반환하는 인스턴스 메서드
+
+인스턴스 메서드는 객체의 필드를 이용하여 계산한 값을 반환할 수 있다.
+
+```java
+class Rectangle {
+    int width;
+    int height;
+
+    int getArea() {
+        return width * height;
+    }
+}
+```
+
+```java
+Rectangle rectangle = new Rectangle();
+
+rectangle.width = 6;
+rectangle.height = 4;
+
+int area = rectangle.getArea();
+
+System.out.println(area);
+```
+
+**실행 결과**
+
+```text
+24
+```
+
+rectangle.getArea()는 rectangle 객체의 width와 height를 사용하여 넓이를 반환한다.
+
+매개변수와 필드를 함께 사용할 수도 있다.
+
+```java
+class Price {
+    int amount;
+
+    int calculateTotal(int quantity) {
+        return amount * quantity;
+    }
+}
+```
+
+```java
+Price price = new Price();
+
+price.amount = 3000;
+
+System.out.println(price.calculateTotal(4));
+```
+
+**실행 결과**
+
+```text
+12000
+```
+
+amount는 객체에 속하는 필드이고 quantity는 메서드를 호출할 때 전달되는 매개변수다.
+
+### 종합 예제
+
+```java
+class Wallet {
+    String owner;
+    int money;
+
+    void addMoney(int amount) {
+        money = money + amount;
+    }
+
+    void spendMoney(int amount) {
+        money = money - amount;
+    }
+
+    void showInfo() {
+        System.out.println(owner + ": " + money + "원");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Wallet wallet1 = new Wallet();
+        Wallet wallet2 = new Wallet();
+
+        wallet1.owner = "민수";
+        wallet1.money = 10000;
+
+        wallet2.owner = "지수";
+        wallet2.money = 20000;
+
+        wallet1.addMoney(5000);
+        wallet2.spendMoney(3000);
+
+        wallet1.showInfo();
+        wallet2.showInfo();
+    }
+}
+```
+
+**실행 결과**
+
+```text
+민수: 15000원
+지수: 17000원
+```
+
+wallet1과 wallet2는 서로 다른 필드값을 가진다. 같은 메서드를 호출하더라도 메서드를 호출한 객체의 money가 변경된다.
+
+## 다음으로
+
+다음 학습 내용은 [Part 3「생성자와 this」](/dev/lessons/DEV-JAVA-02-03)이다.

@@ -1,0 +1,522 @@
+---
+lesson_id: DEV-JAVA-01-14
+title: "Java초급14 문자열② 메서드·분할·포맷"
+module: DEV-JAVA-01
+language: ko
+level: foundation
+est_minutes: 18
+tags: [java, basics, string, methods, format, static-content]
+---
+
+## 학습 목표
+
+이 파트를 학습한 후 다음 작업을 할 수 있어야 합니다.
+
+- 문자열 길이와 특정 위치의 문자를 확인한다.
+- 문자열의 일부를 잘라 새로운 문자열을 만든다.
+- 문자열 안에서 원하는 내용을 검색하거나 변경한다.
+- split()으로 문자열을 여러 요소로 분리한다.
+- printf()와 String.format()으로 출력 형식을 지정한다.
+- 문자열 메서드의 실행 결과를 새로 저장해야 하는 이유를 이해한다.
+
+## 수업 내용
+
+### Part 1. 길이·문자·부분 문자열
+
+**개념 설명**
+
+- String은 문자열을 처리하는 여러 메서드를 제공한다.
+- `length()`는 문자열의 문자 개수를 반환한다.
+- `charAt(index)`는 지정한 인덱스의 문자 하나를 반환한다.
+- `substring()`은 문자열의 일부를 잘라 새로운 문자열로 반환한다.
+- 문자열의 첫 번째 인덱스는 배열과 마찬가지로 0이다.
+
+**주요 메서드**
+
+| 메서드 | 기능 | 예시 |
+|---|---|---|
+| `length()` | 문자열 길이 | `text.length()` |
+| `charAt(index)` | 지정한 위치의 문자 | `text.charAt(0)` |
+| `substring(begin)` | begin부터 끝까지 자르기 | `text.substring(2)` |
+| `substring(begin, end)` | begin부터 end 직전까지 자르기 | `text.substring(1, 4)` |
+
+**length()**
+
+```java
+String text = "Java";
+
+System.out.println(text.length());
+```
+
+```
+4
+```
+
+**charAt()**
+
+```java
+String text = "Java";
+
+System.out.println(text.charAt(0));
+System.out.println(text.charAt(3));
+```
+
+```
+J
+a
+```
+
+사용 가능한 인덱스는 0부터 `text.length() - 1`까지다.
+
+**substring()**
+
+```java
+String text = "JavaBasic";
+
+System.out.println(text.substring(4));
+System.out.println(text.substring(0, 4));
+```
+
+```
+Basic
+Java
+```
+
+`substring(0, 4)`는 인덱스 0부터 3까지만 포함한다. 마지막 인덱스 4는 결과에 포함되지 않는다.
+
+**문제와 다른 예제**
+
+```java
+String code = "DEV-2026";
+
+String category = code.substring(0, 3);
+String year = code.substring(4);
+
+System.out.println(category);
+System.out.println(year);
+```
+
+```
+DEV
+2026
+```
+
+**자주 하는 실수**
+
+문자열의 길이가 4라고 해서 인덱스 4에 접근할 수 있는 것은 아니다.
+
+```java
+String text = "Java";
+
+System.out.println(text.charAt(4)); // 실행 중 오류
+```
+
+마지막 인덱스는 3이다.
+
+```java
+text.charAt(text.length() - 1)
+```
+
+### Part 2. 검색·변환·치환
+
+**개념 설명**
+
+- 문자열 메서드로 특정 내용의 포함 여부나 위치를 확인할 수 있다.
+- `contains()`는 문자열이 포함되어 있는지 확인한다.
+- `indexOf()`는 문자열이 처음 나타나는 인덱스를 반환한다.
+- 찾지 못하면 -1을 반환한다.
+- `replace()`는 문자열의 일부를 다른 내용으로 바꾼 새 문자열을 만든다.
+- `trim()`은 문자열 앞뒤의 공백을 제거한 새 문자열을 만든다.
+
+**주요 메서드**
+
+| 메서드 | 기능 | 반환 예시 |
+|---|---|---|
+| `contains("문자열")` | 포함 여부 확인 | true, false |
+| `indexOf("문자열")` | 처음 나타난 위치 | 인덱스 또는 -1 |
+| `startsWith("문자열")` | 해당 내용으로 시작하는지 확인 | true, false |
+| `endsWith("문자열")` | 해당 내용으로 끝나는지 확인 | true, false |
+| `replace("기존", "변경")` | 문자열 내용 치환 | 새로운 문자열 |
+| `trim()` | 앞뒤 공백 제거 | 새로운 문자열 |
+| `toUpperCase()` | 영문 대문자로 변환 | 새로운 문자열 |
+| `toLowerCase()` | 영문 소문자로 변환 | 새로운 문자열 |
+
+**검색 예제**
+
+```java
+String text = "Java Beginner";
+
+System.out.println(text.contains("Java"));
+System.out.println(text.indexOf("Beginner"));
+System.out.println(text.indexOf("Python"));
+```
+
+```
+true
+5
+-1
+```
+
+**변환 예제**
+
+```java
+String text = "  java basic  ";
+
+String result = text.trim().toUpperCase();
+
+System.out.println(result);
+```
+
+```
+JAVA BASIC
+```
+
+**치환 예제**
+
+```java
+String date = "2026/07/18";
+
+String result = date.replace("/", "-");
+
+System.out.println(result);
+```
+
+```
+2026-07-18
+```
+
+**문자열은 직접 변경되지 않음**
+
+```java
+String text = "java";
+
+text.toUpperCase();
+
+System.out.println(text);
+```
+
+```
+java
+```
+
+메서드가 반환한 결과를 저장해야 한다.
+
+```java
+text = text.toUpperCase();
+
+System.out.println(text);
+```
+
+```
+JAVA
+```
+
+**자주 하는 실수**
+
+`indexOf()`가 값을 찾지 못했을 때 0을 반환한다고 생각하면 안 된다.
+
+```java
+String text = "Java";
+
+System.out.println(text.indexOf("Python"));
+```
+
+```
+-1
+```
+
+인덱스 0은 문자열의 첫 번째 위치이므로 검색 실패를 나타낼 수 없다.
+
+### Part 3. split()으로 문자열 분할
+
+**개념 설명**
+
+- `split()`은 문자열을 기준 문자로 나누어 String[] 배열로 반환한다.
+- 분할 기준으로 사용한 문자는 결과 배열에 포함되지 않는다.
+- 반환된 배열은 인덱스나 반복문으로 처리할 수 있다.
+- 쉼표로 구분된 데이터나 날짜처럼 일정한 구분자가 있는 문자열에 사용한다.
+
+**기본 문법**
+
+```java
+String[] 결과배열 = 문자열.split("구분자");
+```
+
+**쉼표로 분할**
+
+```java
+String data = "Java,Python,JavaScript";
+
+String[] languages = data.split(",");
+
+System.out.println(languages[0]);
+System.out.println(languages[1]);
+System.out.println(languages[2]);
+```
+
+```
+Java
+Python
+JavaScript
+```
+
+**코드 문법 분해**
+
+```java
+String[] languages = data.split(",");
+```
+
+| 부분 | 의미 |
+|---|---|
+| `data` | 분할할 원본 문자열 |
+| `split(",")` | 쉼표를 기준으로 분할 |
+| `String[]` | 분할 결과의 자료형 |
+| `languages` | 결과 배열 이름 |
+
+**분할 결과 순회**
+
+```java
+String data = "Kim,Lee,Park";
+String[] names = data.split(",");
+
+for (String name : names) {
+    System.out.println(name);
+}
+```
+
+```
+Kim
+Lee
+Park
+```
+
+**날짜 분할**
+
+```java
+String date = "2026-07-18";
+String[] parts = date.split("-");
+
+System.out.println(parts[0]);
+System.out.println(parts[1]);
+System.out.println(parts[2]);
+```
+
+```
+2026
+07
+18
+```
+
+**점을 기준으로 분할**
+
+`split()`의 구분자는 정규 표현식으로 처리된다. 점 `.`은 특별한 의미를 가지므로 역슬래시를 사용해야 한다.
+
+```java
+String address = "www.example.com";
+
+String[] parts = address.split("\\.");
+```
+
+결과:
+
+```
+www
+example
+com
+```
+
+**자주 하는 실수**
+
+다음 코드는 점을 일반 문자로 처리하지 않는다.
+
+```java
+String[] parts = address.split(".");
+```
+
+점을 기준으로 나누려면 다음과 같이 작성한다.
+
+```java
+String[] parts = address.split("\\.");
+```
+
+### Part 4. printf()로 형식 출력
+
+**개념 설명**
+
+- `System.out.printf()`는 값을 지정한 형식에 맞춰 출력한다.
+- 문자열 안에 형식 지정자를 작성하고 뒤에 출력할 값을 전달한다.
+- `%s`는 문자열, `%d`는 정수, `%f`는 실수를 나타낸다.
+- `%.2f`는 실수를 소수점 둘째 자리까지 출력한다.
+- `%n`은 줄바꿈을 의미한다.
+
+**주요 형식 지정자**
+
+| 지정자 | 값의 종류 | 예시 |
+|---|---|---|
+| `%s` | 문자열 | "Java" |
+| `%d` | 정수 | 100 |
+| `%f` | 실수 | 3.14 |
+| `%.1f` | 소수점 첫째 자리 | 3.1 |
+| `%.2f` | 소수점 둘째 자리 | 3.14 |
+| `%n` | 줄바꿈 | 다음 줄로 이동 |
+
+**기본 문법**
+
+```java
+System.out.printf("형식 문자열", 값1, 값2);
+```
+
+**예제**
+
+```java
+String name = "Lee";
+int score = 95;
+double average = 92.345;
+
+System.out.printf("이름: %s%n", name);
+System.out.printf("점수: %d%n", score);
+System.out.printf("평균: %.2f%n", average);
+```
+
+**실행 결과**
+
+```
+이름: Lee
+점수: 95
+평균: 92.35
+```
+
+92.345는 소수점 둘째 자리까지 출력되면서 반올림된다.
+
+**여러 값 출력**
+
+```java
+String product = "Keyboard";
+int quantity = 3;
+double price = 2500.5;
+
+System.out.printf("%s %d개 %.1f원%n", product, quantity, price);
+```
+
+```
+Keyboard 3개 2500.5원
+```
+
+**자주 하는 실수**
+
+`printf()`는 자동으로 줄을 바꾸지 않는다.
+
+```java
+System.out.printf("%d", 10);
+System.out.printf("%d", 20);
+```
+
+```
+1020
+```
+
+줄바꿈이 필요하면 `%n`을 사용한다.
+
+```java
+System.out.printf("%d%n", 10);
+System.out.printf("%d%n", 20);
+```
+
+### Part 5. String.format()으로 형식 문자열 생성
+
+**개념 설명**
+
+- `String.format()`은 지정한 형식에 맞는 문자열을 만들어 반환한다.
+- `printf()`는 즉시 화면에 출력하지만 `String.format()`은 출력하지 않는다.
+- 반환된 문자열을 변수에 저장한 후 필요한 곳에서 사용할 수 있다.
+- 형식 지정자는 `printf()`와 동일하게 사용한다.
+
+**기본 문법**
+
+```java
+String 결과 = String.format("형식 문자열", 값1, 값2);
+```
+
+**예제**
+
+```java
+String name = "Lee";
+int score = 95;
+
+String result = String.format("%s님의 점수는 %d점입니다.", name, score);
+
+System.out.println(result);
+```
+
+```
+Lee님의 점수는 95점입니다.
+```
+
+**printf()와 비교**
+
+```java
+System.out.printf("점수: %d%n", score);
+```
+
+화면에 바로 출력한다.
+
+```java
+String result = String.format("점수: %d", score);
+```
+
+문자열을 만들어 result에 저장한다.
+
+**문제와 다른 예제**
+
+```java
+String item = "Monitor";
+double price = 19999.5;
+
+String message = String.format("%s: %.1f원", item, price);
+
+System.out.println(message);
+```
+
+```
+Monitor: 19999.5원
+```
+
+**자주 하는 실수**
+
+`String.format()`이 자동으로 출력한다고 생각하면 안 된다.
+
+```java
+String.format("점수: %d", 100);
+```
+
+반환값을 저장하거나 출력해야 한다.
+
+```java
+String result = String.format("점수: %d", 100);
+System.out.println(result);
+```
+
+또는 다음과 같이 바로 출력한다.
+
+```java
+System.out.println(String.format("점수: %d", 100));
+```
+
+## 메서드 선택 기준
+
+| 필요한 작업 | 사용할 기능 |
+|---|---|
+| 문자열 길이 | `length()` |
+| 특정 위치의 문자 | `charAt()` |
+| 문자열 일부 추출 | `substring()` |
+| 포함 여부 확인 | `contains()` |
+| 위치 검색 | `indexOf()` |
+| 내용 치환 | `replace()` |
+| 앞뒤 공백 제거 | `trim()` |
+| 문자열 분할 | `split()` |
+| 형식에 맞춰 바로 출력 | `printf()` |
+| 형식 문자열 생성 | `String.format()` |
+
+## 다음으로
+
+다음 학습 내용은 [Part 15「메서드① 정의·호출·매개변수」](/dev/lessons/DEV-JAVA-01-15)이다.

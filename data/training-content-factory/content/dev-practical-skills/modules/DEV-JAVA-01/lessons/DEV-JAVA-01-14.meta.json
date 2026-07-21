@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-01-14",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-basics-string-methods",
+  "summary": "length・charAt・substring・indexOf・contains、replace・trim・分割、String.format と printf の書式化を学ぶ。",
+  "key_points": [
+    "length()・charAt()・substring() で取り出す。",
+    "String メソッドは新しい文字列を返す（不変）。",
+    "split は正規表現。点は \"\\\\.\" とエスケープ。"
+  ],
+  "misconceptions": [
+    "toUpperCase の戻り値を保存しない。",
+    "substring の終端が含まれると思う。",
+    "split(\".\") で全て分かれてしまう。"
+  ],
+  "check_questions": [
+    "indexOf が見つからないと？",
+    "String メソッドは元を変える？",
+    "split の引数は何か？"
+  ]
+}

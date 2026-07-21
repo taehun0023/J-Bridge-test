@@ -1,0 +1,434 @@
+---
+lesson_id: DEV-JAVA-01-11
+title: "Java初級11 配列② 巡回・合計・検索"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 18
+tags: [java, basics, array, traverse, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次の作業ができるようになる必要がある。
+
+- 通常の for 文で配列のすべての要素を順に処理する。
+- 拡張 for 文の文法と制限を理解する。
+- 配列要素の合計と平均を計算する。
+- 配列に求める値が存在するか確認する。
+- 検索した要素のインデックスを求める。
+
+## 授業内容
+
+### Part 1. 通常の for 文で配列を巡回
+
+**概念説明**
+
+- 配列の巡回とは、配列の最初の要素から最後の要素まで順に処理することである。
+- 配列の最初のインデックスは0である。
+- 繰り返し条件には配列の長さである`length`を使う。
+- インデックスは0から`length - 1`まで移動する。
+- 通常の for 文は現在のインデックスが必要な場合や配列要素を変更する場合に適している。
+
+**コード文法の分解**
+
+```java
+int[] scores = {80, 90, 100};
+
+for (int i = 0; i < scores.length; i++) {
+    System.out.println(scores[i]);
+}
+```
+
+| コード | 意味 |
+|---|---|
+| `int i = 0` | 最初のインデックスから開始 |
+| `i < scores.length` | 配列の長さより小さい間くり返す |
+| `i++` | 次のインデックスへ移動 |
+| `scores[i]` | 現在のインデックスの要素 |
+
+**実行の流れ**
+
+| i | scores[i] | 実行 |
+|---|---|---|
+| 0 | 80 | 80 を出力 |
+| 1 | 90 | 90 を出力 |
+| 2 | 100 | 100 を出力 |
+| 3 | アクセスしない | 条件が偽なので終了 |
+
+**実行結果**
+
+```
+80
+90
+100
+```
+
+**配列要素の変更**
+
+```java
+int[] numbers = {10, 20, 30};
+
+for (int i = 0; i < numbers.length; i++) {
+    numbers[i] += 5;
+}
+
+System.out.println(numbers[0]);
+System.out.println(numbers[1]);
+System.out.println(numbers[2]);
+```
+
+```
+15
+25
+35
+```
+
+**よくあるミス**
+
+繰り返し条件に`<=`を使うと配列の範囲を超える。
+
+```java
+for (int i = 0; i <= scores.length; i++) {
+    System.out.println(scores[i]);
+}
+```
+
+正しい条件は`i < scores.length`である。
+
+### Part 2. 拡張 for 文
+
+**概念説明**
+
+- 拡張 for 文は配列要素を最初から最後まで順に取り出す。
+- インデックス変数を直接作る必要がない。
+- コードが簡潔なので、すべての要素を読み取るだけの場合に適している。
+- 現在のインデックスが必要な場合や配列要素を直接変更する必要がある場合は通常の for 文を使う。
+
+**コード文法の分解**
+
+```java
+for (要素の型 変数 : 配列) {
+    繰り返すコード
+}
+```
+
+```java
+int[] scores = {80, 90, 100};
+
+for (int score : scores) {
+    System.out.println(score);
+}
+```
+
+| 部分 | 意味 |
+|---|---|
+| `int score` | 配列から取り出した要素を保存する変数 |
+| `:` | 配列の各要素を順に取り出す |
+| `scores` | 巡回する配列 |
+
+**実行の流れと結果**
+
+- `score = 80` → 80 を出力
+- `score = 90` → 90 を出力
+- `score = 100` → 100 を出力
+
+```
+80
+90
+100
+```
+
+**問題とは別の例**
+
+```java
+String[] names = {"Kim", "Lee", "Park"};
+
+for (String name : names) {
+    System.out.println(name);
+}
+```
+
+```
+Kim
+Lee
+Park
+```
+
+**配列要素の変更時の注意**
+
+```java
+int[] numbers = {10, 20, 30};
+
+for (int number : numbers) {
+    number += 5;
+}
+
+System.out.println(numbers[0]);
+```
+
+```
+10
+```
+
+`number`は現在の要素の値をコピーして受け取った変数である。numberを変更しても配列の実際の要素は変更されない。配列を変更するには通常の for 文を使う。
+
+```java
+for (int i = 0; i < numbers.length; i++) {
+    numbers[i] += 5;
+}
+```
+
+### Part 3. 配列要素の合計と平均
+
+**概念説明**
+
+- 配列の合計を計算するには、合計変数を0で初期化する。
+- 繰り返し文で各要素を取り出して合計変数に足す。
+- すべての要素を使うので通常の for 文・拡張 for 文のどちらも使える。
+- 平均は合計を配列の長さで割って計算する。
+- 実数の平均が必要なら、割る前にdoubleに型変換しなければならない。
+
+**合計の計算**
+
+```java
+int[] scores = {80, 90, 100};
+int sum = 0;
+
+for (int score : scores) {
+    sum += score;
+}
+
+System.out.println(sum);
+```
+
+**実行の流れ**
+
+- `sum = 0`
+- `sum = 0 + 80` → 80
+- `sum = 80 + 90` → 170
+- `sum = 170 + 100` → 270
+
+**実行結果**
+
+```
+270
+```
+
+**平均の計算**
+
+```java
+int[] scores = {80, 90, 100};
+int sum = 0;
+
+for (int score : scores) {
+    sum += score;
+}
+
+double average = (double) sum / scores.length;
+
+System.out.println(average);
+```
+
+```
+90.0
+```
+
+**よくあるミス**
+
+合計変数を繰り返し文の中で初期化すると値が累積されない。
+
+```java
+for (int score : scores) {
+    int sum = 0;
+    sum += score;
+}
+```
+
+sumは繰り返し文の前に宣言しなければならない。
+
+```java
+int sum = 0;
+
+for (int score : scores) {
+    sum += score;
+}
+```
+
+平均を整数同士で計算すると小数点以下が切り捨てられることがある。
+
+```java
+double average = sum / scores.length;
+```
+
+実数の平均が必要なら次のように書く。
+
+```java
+double average = (double) sum / scores.length;
+```
+
+### Part 4. 配列から値を検索
+
+**概念説明**
+
+- 配列の最初の要素から値を1つずつ比較する方法を線形探索という。
+- 探している値と現在の要素が同じなら検索成功である。
+- 検索成功の有無はboolean変数に保存できる。
+- 値が見つかればこれ以上確認する必要がないので、breakで繰り返しを終了できる。
+
+**値の存在確認**
+
+```java
+int[] numbers = {10, 20, 30, 40};
+int target = 30;
+boolean found = false;
+
+for (int number : numbers) {
+    if (number == target) {
+        found = true;
+        break;
+    }
+}
+
+System.out.println(found);
+```
+
+**実行の流れと結果**
+
+- `10 == 30` → false
+- `20 == 30` → false
+- `30 == 30` → true
+- foundをtrueに変更
+- breakで繰り返し終了
+
+```
+true
+```
+
+**見つからない場合**
+
+```java
+int target = 50;
+```
+
+配列のすべての要素を確認しても同じ値がないので、foundはずっとfalseのままである。
+
+```
+false
+```
+
+**よくあるミス**
+
+foundを最初からtrueで初期化すると検索結果が常に真になる。
+
+```java
+boolean found = true; // 誤った初期値
+```
+
+検索前はまだ値を見つけていない状態なのでfalseから始める。
+
+```java
+boolean found = false;
+```
+
+### Part 5. 検索した要素のインデックス
+
+**概念説明**
+
+- 見つかった値の位置が必要な場合は通常の for 文を使う。
+- 検索結果のインデックスは最初に-1で初期化する。
+- 配列のインデックスは0以上なので、-1は見つからなかったという意味で使える。
+- 値が見つかれば現在のインデックスを保存して繰り返しを終了する。
+
+**コード文法**
+
+```java
+int[] numbers = {10, 20, 30, 40};
+int target = 30;
+int foundIndex = -1;
+
+for (int i = 0; i < numbers.length; i++) {
+    if (numbers[i] == target) {
+        foundIndex = i;
+        break;
+    }
+}
+
+System.out.println(foundIndex);
+```
+
+**実行の流れと結果**
+
+- `numbers[0] = 10` → 一致しない
+- `numbers[1] = 20` → 一致しない
+- `numbers[2] = 30` → 一致
+- foundIndex = 2
+- 繰り返し終了
+
+```
+2
+```
+
+**見つからない場合**
+
+```java
+int target = 50;
+```
+
+同じ値がないので、foundIndexは初期値の-1のままである。
+
+```
+-1
+```
+
+**問題とは別の例**
+
+```java
+int[] numbers = {5, 8, 12, 8};
+int target = 8;
+int foundIndex = -1;
+
+for (int i = 0; i < numbers.length; i++) {
+    if (numbers[i] == target) {
+        foundIndex = i;
+        break;
+    }
+}
+
+System.out.println(foundIndex);
+```
+
+```
+1
+```
+
+同じ値が複数あれば、breakのおかげで最初の位置を返す。
+
+**よくあるミス**
+
+見つけた値を保存することとインデックスを保存することを混同してはいけない。
+
+```java
+foundIndex = numbers[i]; // 要素の値を保存
+```
+
+インデックスが必要ならiを保存する。
+
+```java
+foundIndex = i;
+```
+
+## 通常の for 文と拡張 for 文の選択
+
+| 必要な作業 | 適切なくり返し文 |
+|---|---|
+| すべての要素を出力 | どちらも可 |
+| すべての要素の合計 | どちらも可 |
+| 現在のインデックスの確認 | 通常の for |
+| 配列要素を直接変更 | 通常の for |
+| 値の存在確認 | どちらも可 |
+| 検索した位置の確認 | 通常の for |
+
+## 次へ
+
+次は [Part 12「配列③ 2次元配列」](/dev/lessons/DEV-JAVA-01-12)を学ぶ。

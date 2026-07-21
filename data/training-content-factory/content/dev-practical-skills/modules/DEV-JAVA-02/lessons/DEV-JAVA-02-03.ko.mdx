@@ -1,0 +1,362 @@
+---
+lesson_id: DEV-JAVA-02-03
+title: "Java중급03 생성자와 this"
+module: DEV-JAVA-01
+language: ko
+level: foundation
+est_minutes: 22
+tags: [java, intermediate, oop, constructor, this, static-content]
+---
+
+## 학습 목표
+
+이 파트를 학습한 후 다음 작업을 할 수 있어야 합니다.
+
+- 생성자의 역할과 호출 시점을 설명한다.
+- 클래스에 생성자를 선언한다.
+- 생성자 매개변수로 필드의 초깃값을 전달한다.
+- this가 현재 객체를 뜻한다는 것을 이해한다.
+- this.field로 필드와 매개변수를 구분한다.
+
+## 수업 내용
+
+### Part 1. 생성자가 필요한 이유
+
+생성자를 사용하지 않으면 객체를 생성한 뒤 필드에 값을 따로 저장해야 한다.
+
+```java
+class Student {
+    String name;
+    int score;
+}
+```
+
+```java
+Student student = new Student();
+
+student.name = "민수";
+student.score = 85;
+```
+
+필드 저장을 빠뜨리면 필요한 값이 없는 상태로 객체를 사용할 수 있다.
+
+생성자를 사용하면 객체를 만들 때 필요한 값을 함께 전달할 수 있다.
+
+```java
+Student student = new Student("민수", 85);
+```
+
+생성자는 객체가 생성될 때 필드의 초깃값을 설정하는 역할을 한다.
+
+### Part 2. 생성자 선언과 호출
+
+생성자는 클래스 이름과 같은 이름으로 선언한다.
+
+```java
+class Robot {
+    String model;
+
+    Robot() {
+        model = "기본 모델";
+    }
+}
+```
+
+생성자는 반환형을 작성하지 않는다.
+
+```java
+Robot() {
+    model = "기본 모델";
+}
+```
+
+new Robot()으로 객체를 생성하면 Robot() 생성자가 자동으로 실행된다.
+
+```java
+Robot robot = new Robot();
+
+System.out.println(robot.model);
+```
+
+**실행 결과**
+
+```text
+기본 모델
+```
+
+생성자는 일반 메서드처럼 객체를 만든 뒤 따로 호출하지 않는다.
+
+```java
+Robot robot = new Robot();
+
+robot.Robot(); // 생성자를 다시 호출하는 형태로 사용할 수 없음
+```
+
+**자주 하는 실수**
+
+생성자에 void를 작성하면 생성자가 아니라 일반 메서드가 된다.
+
+```java
+class Robot {
+    String model;
+
+    // 생성자가 아니라 이름이 Robot인 메서드
+    void Robot() {
+        model = "기본 모델";
+    }
+}
+```
+
+생성자는 반환형 없이 작성해야 한다.
+
+```java
+Robot() {
+    model = "기본 모델";
+}
+```
+
+### Part 3. 매개변수가 있는 생성자
+
+생성자도 매개변수를 받을 수 있다.
+
+```java
+class Product {
+    String name;
+    int price;
+
+    Product(String productName, int productPrice) {
+        name = productName;
+        price = productPrice;
+    }
+}
+```
+
+객체를 생성할 때 생성자의 매개변수에 맞는 값을 전달한다.
+
+```java
+Product product = new Product("키보드", 35000);
+
+System.out.println(product.name);
+System.out.println(product.price);
+```
+
+**실행 결과**
+
+```text
+키보드
+35000
+```
+
+다음 호출에서 전달한 값은 선언된 순서대로 매개변수에 들어간다.
+
+```java
+new Product("키보드", 35000);
+```
+
+- `"키보드"` → productName
+- `35000` → productPrice
+
+생성자가 실행되면서 전달받은 값이 객체의 필드에 저장된다.
+
+**자주 하는 실수**
+
+생성자에 매개변수가 있으면 객체를 생성할 때 필요한 값을 전달해야 한다.
+
+```java
+class Product {
+    String name;
+
+    Product(String productName) {
+        name = productName;
+    }
+}
+```
+
+```java
+Product product = new Product(); // 컴파일 오류
+```
+
+올바른 호출은 다음과 같다.
+
+```java
+Product product = new Product("마우스");
+```
+
+### Part 4. this와 this.field
+
+필드와 매개변수의 이름을 같게 작성하면 이름이 겹친다.
+
+```java
+class Member {
+    String name;
+
+    Member(String name) {
+        name = name;
+    }
+}
+```
+
+생성자 안의 name은 가까운 위치에 선언된 매개변수를 뜻한다. 따라서 name = name은 매개변수에 매개변수 값을 다시 대입할 뿐 필드를 변경하지 않는다.
+
+필드를 분명하게 가리킬 때 this.field를 사용한다.
+
+```java
+class Member {
+    String name;
+
+    Member(String name) {
+        this.name = name;
+    }
+}
+```
+
+this는 현재 생성 중인 객체를 뜻한다.
+
+```java
+this.name = name;
+```
+
+- `this.name`: 현재 객체의 name 필드
+- `name`: 생성자로 전달받은 매개변수
+
+여러 필드도 같은 방식으로 초기화할 수 있다.
+
+```java
+class Member {
+    String name;
+    int level;
+
+    Member(String name, int level) {
+        this.name = name;
+        this.level = level;
+    }
+}
+```
+
+```java
+Member member = new Member("지수", 7);
+
+System.out.println(member.name);
+System.out.println(member.level);
+```
+
+**실행 결과**
+
+```text
+지수
+7
+```
+
+### Part 5. 객체마다 실행되는 생성자
+
+객체를 생성할 때마다 해당 객체를 위한 생성자가 실행된다.
+
+```java
+class Book {
+    String title;
+    int price;
+
+    Book(String title, int price) {
+        this.title = title;
+        this.price = price;
+    }
+}
+```
+
+```java
+Book book1 = new Book("자바 기초", 18000);
+Book book2 = new Book("자료구조", 22000);
+
+System.out.println(book1.title + ": " + book1.price);
+System.out.println(book2.title + ": " + book2.price);
+```
+
+**실행 결과**
+
+```text
+자바 기초: 18000
+자료구조: 22000
+```
+
+book1을 생성할 때 전달한 값은 book1의 필드에 저장되고, book2를 생성할 때 전달한 값은 book2의 필드에 저장된다.
+
+### Part 6. 기본 생성자
+
+클래스에 생성자를 하나도 선언하지 않으면 컴파일러가 매개변수 없는 기본 생성자를 자동으로 제공한다.
+
+```java
+class Item {
+    String name;
+}
+```
+
+따라서 다음과 같이 객체를 생성할 수 있다.
+
+```java
+Item item = new Item();
+```
+
+하지만 생성자를 하나라도 직접 선언하면 컴파일러는 기본 생성자를 자동으로 제공하지 않는다.
+
+```java
+class Item {
+    String name;
+
+    Item(String name) {
+        this.name = name;
+    }
+}
+```
+
+```java
+Item item = new Item(); // 컴파일 오류
+```
+
+선언된 생성자에 맞게 값을 전달해야 한다.
+
+```java
+Item item = new Item("연필");
+```
+
+매개변수 없는 생성자와 매개변수가 있는 생성자를 함께 사용하는 방법은 다음 파트의 생성자 오버로딩에서 학습한다.
+
+### 종합 예제
+
+```java
+class Laptop {
+    String model;
+    int memory;
+
+    Laptop(String model, int memory) {
+        this.model = model;
+        this.memory = memory;
+    }
+
+    void showInfo() {
+        System.out.println(model + ": " + memory + "GB");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Laptop laptop1 = new Laptop("CodeBook", 16);
+        Laptop laptop2 = new Laptop("DevNote", 32);
+
+        laptop1.showInfo();
+        laptop2.showInfo();
+    }
+}
+```
+
+**실행 결과**
+
+```text
+CodeBook: 16GB
+DevNote: 32GB
+```
+
+new Laptop()이 실행될 때마다 생성자가 호출된다. this.model과 this.memory는 현재 생성 중인 객체의 필드를 뜻한다.
+
+## 다음으로
+
+다음 학습 내용은 [Part 4「생성자 오버로딩」](/dev/lessons/DEV-JAVA-02-04)이다.

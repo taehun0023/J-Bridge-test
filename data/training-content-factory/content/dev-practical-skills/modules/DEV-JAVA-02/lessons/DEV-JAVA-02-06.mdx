@@ -1,0 +1,448 @@
+---
+lesson_id: DEV-JAVA-02-06
+title: "Java中級06 アクセス修飾子・アクセス範囲"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 22
+tags: [java, intermediate, oop, access-modifier, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次の作業ができるようになります。
+
+- アクセス範囲を制限すべき理由を説明する。
+- public、protected、アクセス修飾子なし、privateを区別する。
+- 同じクラス・同じパッケージ・別のパッケージでのアクセスの違いを理解する。
+- クラスとコンストラクタのアクセス範囲を指定する。
+- 外部に公開する機能と内部だけで使う機能を区別する。
+
+## 授業内容
+
+### Part 1. アクセス修飾子が必要な理由
+
+クラスのすべての機能を外部で使う必要はない。
+
+```java
+class OrderService {
+    void placeOrder() {
+        checkStock();
+        calculatePrice();
+    }
+
+    void checkStock() {
+        System.out.println("在庫確認");
+    }
+
+    void calculatePrice() {
+        System.out.println("価格計算");
+    }
+}
+```
+
+外部からは注文機能であるplaceOrder()だけを呼び出せばよい。在庫確認と価格計算は注文処理の過程で内部的に使う機能である。
+
+すべてのメソッドが公開されると、外部のコードが内部処理メソッドを直接呼び出せてしまう。
+
+```java
+service.checkStock();
+service.calculatePrice();
+```
+
+アクセス修飾子を使うと、次を区別できる。
+
+- 別のパッケージでも使う公開機能
+- 同じパッケージだけで共有する機能
+- 現在のクラス内部だけで使う機能
+- 継承したクラスで使う機能
+
+アクセス修飾子は、クラスのすべてのコードを公開せず、必要な部分だけを使えるようにするために使う。
+
+### Part 2. 4つのアクセス範囲
+
+Javaのアクセス範囲は4つである。
+
+| アクセス形態 | 同じクラス | 同じパッケージ | 別パッケージの子クラス | 別のパッケージ |
+|---|---|---|---|---|
+| public | 可能 | 可能 | 可能 | 可能 |
+| protected | 可能 | 可能 | 可能 | 不可能 |
+| アクセス修飾子なし | 可能 | 可能 | 不可能 | 不可能 |
+| private | 可能 | 不可能 | 不可能 | 不可能 |
+
+アクセス範囲は次の順序で狭くなる。
+
+```text
+public → protected → アクセス修飾子なし → private
+```
+
+**public**
+
+どこからでも使える。
+
+```java
+public void placeOrder() {
+}
+```
+
+別のパッケージにあるクラスにも提供すべき機能に使う。
+
+**private**
+
+宣言されたクラスの内部だけで使える。
+
+```java
+private void calculatePrice() {
+}
+```
+
+クラスの内部処理のように、外部から直接呼び出す必要がない機能に使う。
+
+**アクセス修飾子なし**
+
+アクセス修飾子を書かないと、同じパッケージだけで使える。
+
+```java
+void checkStock() {
+}
+```
+
+これをpackage-privateまたはデフォルトのアクセス範囲という。
+
+defaultというアクセス修飾子を書くわけではない。
+
+```java
+// 誤ったコード
+default void checkStock() {
+}
+```
+
+アクセス修飾子を省略しなければならない。
+
+```java
+void checkStock() {
+}
+```
+
+**protected**
+
+同じパッケージと継承したクラスで使える。
+
+```java
+protected void updateStatus() {
+}
+```
+
+別のパッケージにある一般クラスには公開されない。継承したクラスでの正確な使用ルールは継承のパートで学習する。
+
+### Part 3. 同じパッケージと別のパッケージ
+
+ProductServiceがshopパッケージにあると仮定する。
+
+ProductService.java:
+
+```java
+package shop;
+
+public class ProductService {
+    public void sell() {
+        checkStock();
+        calculatePrice();
+    }
+
+    void checkStock() {
+        System.out.println("在庫確認");
+    }
+
+    private void calculatePrice() {
+        System.out.println("価格計算");
+    }
+}
+```
+
+同じshopパッケージのクラスからは、publicとアクセス修飾子なしのメソッドを使える。
+
+ShopMain.java:
+
+```java
+package shop;
+
+public class ShopMain {
+    public static void main(String[] args) {
+        ProductService service =
+                new ProductService();
+
+        service.sell();
+        service.checkStock();
+
+        // private なのでコンパイルエラー
+        // service.calculatePrice();
+    }
+}
+```
+
+別のappパッケージからはpublicメソッドだけを使える。
+
+Main.java:
+
+```java
+package app;
+
+import shop.ProductService;
+
+public class Main {
+    public static void main(String[] args) {
+        ProductService service =
+                new ProductService();
+
+        service.sell();
+
+        // 同じパッケージではないのでコンパイルエラー
+        // service.checkStock();
+
+        // private なのでコンパイルエラー
+        // service.calculatePrice();
+    }
+}
+```
+
+パッケージが変わると、アクセスできる範囲も変わる。
+
+### Part 4. private メソッド
+
+privateメソッドは、そのクラスの内部だけで呼び出せる。
+
+```java
+class MessageService {
+    public void send() {
+        prepareMessage();
+        System.out.println("メッセージ送信");
+    }
+
+    private void prepareMessage() {
+        System.out.println("メッセージ準備");
+    }
+}
+```
+
+外部からは公開されたsend()だけを呼び出す。
+
+```java
+MessageService service =
+        new MessageService();
+
+service.send();
+```
+
+**実行結果**
+
+```text
+メッセージ準備
+メッセージ送信
+```
+
+次の呼び出しは許可されない。
+
+```java
+// コンパイルエラー
+service.prepareMessage();
+```
+
+prepareMessage()は外部から独立して使う機能ではなく、send()の内部処理である。このように、クラス内部だけで必要な補助メソッドにはprivateを使う。
+
+### Part 5. クラスのアクセス範囲
+
+別のパッケージでトップレベルクラスを使うには、クラスをpublicで宣言する。
+
+```java
+package shop;
+
+public class Product {
+}
+```
+
+publicクラスの名前はファイル名と同じでなければならない。
+
+```text
+Product.java
+```
+
+アクセス修飾子を書かないクラスは、同じパッケージだけで使える。
+
+```java
+package shop;
+
+class ProductHelper {
+}
+```
+
+ProductHelperはshopパッケージの内部だけで使える。
+
+トップレベルクラスには次の2つのアクセス形態だけが使える。
+
+```java
+public class Product {
+}
+```
+
+```java
+class ProductHelper {
+}
+```
+
+トップレベルクラスに private や protected は使えない。
+
+```java
+// コンパイルエラー
+private class Product {
+}
+```
+
+```java
+// コンパイルエラー
+protected class Product {
+}
+```
+
+### Part 6. コンストラクタのアクセス範囲
+
+コンストラクタにもアクセス修飾子を書ける。
+
+```java
+public class Product {
+    public Product() {
+    }
+}
+```
+
+publicコンストラクタは別のパッケージからも呼び出せる。
+
+```java
+Product product = new Product();
+```
+
+アクセス修飾子のないコンストラクタは、同じパッケージからだけ呼び出せる。
+
+```java
+public class Product {
+    Product() {
+    }
+}
+```
+
+Productクラスがpublicであっても、コンストラクタが公開されていないため、別のパッケージではオブジェクトを作れない。
+
+```java
+// 別のパッケージではコンパイルエラー
+Product product = new Product();
+```
+
+privateコンストラクタは、同じクラスの内部だけで呼び出せる。
+
+```java
+public class Product {
+    private Product() {
+    }
+}
+```
+
+この場合、クラスの外ではnew Product()を使えない。privateコンストラクタを実際に活用する方法は、この後staticを学んだ後で扱える。
+
+### Part 7. アクセス範囲の選択基準
+
+アクセス範囲は、機能をどこまで公開すべきかによって決める。
+
+| 使用状況 | アクセス形態 |
+|---|---|
+| すべてのパッケージに公開する機能 | public |
+| 同じパッケージだけで共有する機能 | アクセス修飾子なし |
+| 同じパッケージと子クラスで使う機能 | protected |
+| 現在のクラス内部だけで使う機能 | private |
+
+一般的に、外部に提供すべき機能はpublicで宣言する。
+
+```java
+public void start() {
+}
+```
+
+内部処理はprivateで制限する。
+
+```java
+private void prepare() {
+}
+```
+
+パッケージ内部の複数のクラスが一緒に使う機能は、アクセス修飾子を省略できる。
+
+```java
+void check() {
+}
+```
+
+最初からすべての機能をpublicにするのではなく、実際に外部で使う必要がある機能かどうかを確認してから公開するのがよい。
+
+### 総合例
+
+プロジェクト構造:
+
+```text
+src/
+├─ service/
+│  └─ DeliveryService.java
+└─ app/
+   └─ Main.java
+```
+
+DeliveryService.java:
+
+```java
+package service;
+
+public class DeliveryService {
+    public void deliver() {
+        checkAddress();
+        preparePackage();
+        System.out.println("配送開始");
+    }
+
+    void checkAddress() {
+        System.out.println("住所確認");
+    }
+
+    private void preparePackage() {
+        System.out.println("梱包準備");
+    }
+}
+```
+
+Main.java:
+
+```java
+package app;
+
+import service.DeliveryService;
+
+public class Main {
+    public static void main(String[] args) {
+        DeliveryService service =
+                new DeliveryService();
+
+        service.deliver();
+    }
+}
+```
+
+**実行結果**
+
+```text
+住所確認
+梱包準備
+配送開始
+```
+
+appパッケージからはpublicであるdeliver()だけを呼び出せる。checkAddress()は同じserviceパッケージだけで使え、preparePackage()はDeliveryServiceの内部だけで使える。
+
+## 次へ
+
+次は [Part 7「カプセル化・getter・setter」](/dev/lessons/DEV-JAVA-02-07)を学ぶ。

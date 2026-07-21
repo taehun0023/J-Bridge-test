@@ -1,159 +1,231 @@
 ---
 lesson_id: DEV-JAVA-02-01
-title: "継承とインターフェースが実務コードで使われる方法を読む"
-module: DEV-JAVA-02
-level: intermediate
+title: "Java中級01 クラスとオブジェクト"
+module: DEV-JAVA-01
 language: ja
-est_minutes: 18
-tags: [java, oop, inheritance, interface, polymorphism, static-content]
+level: foundation
+est_minutes: 20
+tags: [java, intermediate, oop, class, object, static-content]
 ---
 
-## 1) 学習目標
+## 学習目標
 
-- クラスの継承関係を見て、メソッド呼び出しがどのクラスで実行されるかを追跡できる。
-- インターフェースと抽象クラスの違いを説明し、それぞれの使い分け基準を判断できる。
-- ポリモーフィズム（多態性）が実務コードでどのように活用されるかを読み取れる。
-- `@Override`アノテーションの意味と、オーバーライドされたメソッドの実行順序を説明できる。
+このパートを学習した後、次の作業ができるようにする。
 
-## 2) 業務コンテキスト
+- クラスとオブジェクトの関係を説明する。
+- オブジェクトを表現するクラスを宣言する。
+- new を使ってオブジェクトを生成する。
+- ドット演算子でオブジェクトのデータにアクセスする。
+- 1つのクラスで複数のオブジェクトを作る。
 
-実務のJavaプロジェクトでは、共通ロジックを親クラスにまとめ、個別ロジックをサブクラスで実装する設計が頻繁に登場する。例えば、通知サービスで共通のバリデーションを親クラスに定義し、メール・SMS・プッシュ通知をそれぞれサブクラスで実装するパターンである。この構造を読めなければ、処理がどこで実行されているかを把握できず、バグの原因追跡に時間がかかる。
+## 授業内容
 
-## 3) 要点解説
+### Part 1. クラスとオブジェクト
 
-### 継承の基本構造
-
-Javaの`extends`キーワードでクラスを継承する。サブクラスは親クラスのフィールドとメソッドを引き継ぐ。
+学生1人の情報を複数の変数で表現できる。
 
 ```java
-public class Animal {
-    protected String name;
+String name = "Minsu";
+int score = 85;
+```
 
-    public String speak() {
-        return "...";
-    }
+学生が複数人になると、学生ごとに変数を別々に作らなければならない。
+
+```java
+String name1 = "Minsu";
+int score1 = 85;
+
+String name2 = "Jisu";
+int score2 = 92;
+```
+
+クラスを使うと、名前や点数のように互いに関連するデータを1つのオブジェクトにまとめられる。
+
+```java
+class Student {
+    String name;
+    int score;
+}
+```
+
+クラスはオブジェクトがどんなデータを持つかを定義した設計図である。上の Student クラスは、学生オブジェクトが名前と点数を持てるように定義している。
+
+クラスを宣言しただけでは、学生オブジェクトは作られない。
+
+### Part 2. オブジェクトの生成
+
+クラスから実際のオブジェクトを作るときは new を使う。
+
+```java
+Student student = new Student();
+```
+
+- `Student`: オブジェクトを作るときに使うクラス
+- `student`: 生成したオブジェクトを使う変数
+- `new Student()`: 新しい Student オブジェクトの生成
+
+オブジェクトを生成する基本形式は次の通りである。
+
+```java
+クラス名 オブジェクト変数 = new クラス名();
+```
+
+クラスから生成されたオブジェクトを、そのクラスのインスタンスという。
+
+```java
+Student student = new Student();
+```
+
+上で生成したオブジェクトは Student クラスのインスタンスである。`Student()` が動作する詳しい過程はコンストラクタのパートで学習する。
+
+**よくあるミス**
+
+オブジェクトを生成するとき new を忘れてはいけない。
+
+```java
+Student student = Student(); // コンパイルエラー
+```
+
+正しいコードは次の通りである。
+
+```java
+Student student = new Student();
+```
+
+Java は大文字小文字を区別するので、クラス名も正確に書く必要がある。
+
+```java
+Student student = new student(); // コンパイルエラー
+```
+
+### Part 3. オブジェクトのデータの使用
+
+オブジェクトが持つデータには、ドット演算子 `.` でアクセスする。
+
+```java
+Student student = new Student();
+
+student.name = "Minsu";
+student.score = 85;
+```
+
+オブジェクトのデータを読み取るときも、ドット演算子を使う。
+
+```java
+System.out.println(student.name);
+System.out.println(student.score);
+```
+
+**実行結果**
+
+```text
+Minsu
+85
+```
+
+基本形式は次の通りである。
+
+```java
+オブジェクト変数.データ名 = 値;
+System.out.println(オブジェクト変数.データ名);
+```
+
+オブジェクト内部に宣言された変数の正確な名称と特徴は、次のパートで学習する。
+
+**よくあるミス**
+
+ドット演算子を忘れると、オブジェクトのデータを使うことができない。
+
+```java
+student name = "Minsu"; // コンパイルエラー
+student.name = "Minsu";
+```
+
+クラスに宣言されていないデータも使うことができない。
+
+```java
+class Student {
+    String name;
+    int score;
 }
 
-public class Dog extends Animal {
-    @Override
-    public String speak() {
-        return name + "がワンと鳴く";
+Student student = new Student();
+
+student.age = 20; // age が宣言されていないのでコンパイルエラー
+```
+
+### Part 4. 1つのクラスで複数のオブジェクトを作る
+
+1つのクラスで複数のオブジェクトを作ることができる。
+
+```java
+Student student1 = new Student();
+Student student2 = new Student();
+```
+
+2つのオブジェクトに互いに異なる値を保存できる。
+
+```java
+student1.name = "Minsu";
+student1.score = 85;
+
+student2.name = "Jisu";
+student2.score = 92;
+```
+
+```java
+System.out.println(student1.name);
+System.out.println(student1.score);
+
+System.out.println(student2.name);
+System.out.println(student2.score);
+```
+
+**実行結果**
+
+```text
+Minsu
+85
+Jisu
+92
+```
+
+student1 と student2 は同じ Student クラスで作ったが、別々のオブジェクトである。クラスは一度宣言し、そのクラスを利用して必要な数だけオブジェクトを作ることができる。
+
+### 総合例
+
+```java
+class Product {
+    String name;
+    int price;
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Product product1 = new Product();
+        Product product2 = new Product();
+
+        product1.name = "キーボード";
+        product1.price = 35000;
+
+        product2.name = "マウス";
+        product2.price = 20000;
+
+        System.out.println(product1.name + ": " + product1.price + "円");
+        System.out.println(product2.name + ": " + product2.price + "円");
     }
 }
 ```
 
-`Dog`のインスタンスで`speak()`を呼ぶと、`Dog`のメソッドが実行される。これがメソッドオーバーライドである。`@Override`アノテーションは「親クラスのメソッドを上書きしている」ことをコンパイラに伝え、シグネチャのミスを防止する。
+**実行結果**
 
-### インターフェースと抽象クラス
-
-**インターフェース**は「何ができるか」を定義する契約である。実装の詳細は持たない。
-
-```java
-public interface Notifiable {
-    void send(String message, String recipient);
-}
+```text
+キーボード: 35000円
+マウス: 20000円
 ```
 
-**抽象クラス**は「共通ロジック＋未実装部分」を持つ。
+Product クラスは商品オブジェクトが名前と価格を持てるように定義している。product1 と product2 は同じクラスで生成された別々のオブジェクトである。
 
-```java
-public abstract class BaseNotifier {
-    protected boolean validate(String recipient) {
-        return recipient != null && !recipient.isEmpty();
-    }
+## 次へ
 
-    public abstract void send(String message, String recipient);
-}
-```
-
-使い分けの基準は明確である。共通の実装コードを共有したい場合は抽象クラス、複数の型に共通の能力を持たせたい場合はインターフェースを選ぶ。Javaではクラスの多重継承はできないが、インターフェースは複数実装できる。
-
-### ポリモーフィズムの活用
-
-親クラスやインターフェース型の変数でサブクラスのインスタンスを扱うのが多態性である。
-
-```java
-List<Notifiable> notifiers = List.of(
-    new EmailNotifier(),
-    new SmsNotifier(),
-    new PushNotifier()
-);
-
-for (Notifiable n : notifiers) {
-    n.send("サーバー復旧完了", recipient);
-}
-```
-
-`notifiers`リストの各要素は異なるクラスだが、共通の`send`メソッドで統一的に扱える。新しい通知手段を追加する場合も、`Notifiable`を実装するクラスを1つ追加するだけで済む。
-
-## 4) 実務解釈シナリオ
-
-### シナリオ A
-```java
-public interface PaymentProcessor {
-    PaymentResult process(Order order);
-}
-
-public class CreditCardProcessor implements PaymentProcessor {
-    @Override
-    public PaymentResult process(Order order) {
-        // クレジットカード決済ロジック
-        return new PaymentResult(true, "CREDIT");
-    }
-}
-
-public class PaymentService {
-    private final PaymentProcessor processor;
-
-    public PaymentService(PaymentProcessor processor) {
-        this.processor = processor;
-    }
-
-    public PaymentResult pay(Order order) {
-        return processor.process(order);
-    }
-}
-```
-- 読み取りポイント:
-  - `PaymentService`はインターフェース型のフィールドを持つため、具体的な決済方法に依存しない。
-  - コンストラクタで注入されるため、テスト時にモックを渡せる。
-  - 新しい決済方法（コンビニ決済等）は`PaymentProcessor`を実装するだけで追加できる。
-
-### シナリオ B
-```java
-Animal animal = new Dog();
-animal.speak(); // → "nullがワンと鳴く"（nameが未設定の場合）
-```
-- 解釈:
-  - 変数の型は`Animal`だが、実行されるのは`Dog`の`speak()`である。
-  - コンパイル時の型ではなく、実行時のインスタンスの型でメソッドが決まる。
-  - `name`が初期化されていないため`null`になっている点もバグの原因になる。
-
-## 5) よくあるミス
-
-1. 親クラスの型で宣言した変数でサブクラス固有のメソッドを呼ぼうとする。
-`Animal animal = new Dog();`の場合、`animal`で呼べるのは`Animal`に定義されたメソッドのみである。`Dog`固有メソッドはキャストが必要。
-
-2. `@Override`を付けずにオーバーライドしようとし、シグネチャを間違える。
-戻り値の型やパラメータが微妙に異なると、新しいメソッドの定義になり、親のメソッドが実行されてしまう。
-
-3. インターフェースと抽象クラスの使い分けを理解せず、常に抽象クラスを選ぶ。
-多重実装が必要な場面でインターフェースを使わないと、設計の柔軟性が失われる。
-
-4. `super`キーワードを忘れて親クラスの処理をスキップする。
-コンストラクタやオーバーライドメソッドで`super()`や`super.method()`を呼ばないと、親の初期化や共通処理が実行されない。
-
-## 6) 確認質問
-
-1. `extends`と`implements`の違いは何か？
-2. `@Override`アノテーションを付ける理由は何か？
-3. インターフェースと抽象クラスはそれぞれどのような場面で使い分けるか？
-4. ポリモーフィズムにより、コードの拡張性はどのように向上するか？
-5. 親クラス型の変数でサブクラスのインスタンスを参照する場合、どのクラスのメソッドが実行されるか？
-
-## 7) 出題抽出メモ
-
-- 事実型候補: インターフェースと抽象クラスの定義上の違い、多重継承の制約
-- 判断型候補: インターフェースと抽象クラスの使い分け判断
-- シナリオ型候補: 継承関係のコードからメソッド呼び出し先の追跡、DI（依存性注入）パターンの読み取り
-- 誤答誘導ポイント: コンパイル時の型と実行時の型の混同、@Overrideなしのシグネチャミス
+次は [Part 2「フィールドとインスタンスメソッド」](/dev/lessons/DEV-JAVA-02-02)を学ぶ。

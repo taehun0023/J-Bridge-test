@@ -1,97 +1,303 @@
 ---
 lesson_id: DEV-JAVA-01-01
-title: "Javaソースを読む際にまず確認すべきこと"
+title: "Java初級01 はじめ・出力・コメント"
 module: DEV-JAVA-01
 language: ja
 level: foundation
-est_minutes: 18
-tags: [java, code-reading, class-structure, types, static-content]
+est_minutes: 15
+tags: [java, basics, output, comment, static-content]
 ---
 
-## 1) 学習目標
+## 学習目標
 
-- Javaソースファイルの基本構成（パッケージ宣言、インポート、クラス定義）を説明できる。
-- 基本型（primitive）と参照型（reference）の違いを説明できる。
-- メソッドシグネチャを読んで入力と出力を把握できる。
-- アクセス修飾子（public, private, protected）の役割を説明できる。
+このパートを学習した後、次のことができるようになります。
 
-## 2) 業務コンテキスト
+- Java プログラムの基本の形を書ける。
+- main メソッドがプログラムの開始点であることがわかる。
+- 画面に文字を出力できる。
+- print と println の違いを区別できる。
+- 1行コメントと複数行コメントを書ける。
+- 大文字小文字・二重引用符・セミコロンに関するエラーを見つけられる。
 
-実務で新しいプロジェクトに配属されると、まず行うのが既存コードを読むことである。Javaプロジェクトではファイル1つがクラス1つに対応し、パッケージ構造がディレクトリ構造と一致する。このルールを知っていればプロジェクト内で目的のコードを素早く見つけられる。逆にこの構造を知らなければ、数百のファイルの中で迷うことになる。
+## 授業内容
 
-## 3) 要点解説
+### Part 1. Java プログラムの基本構造
 
-Javaソースファイルは3つの部分で構成される。
+**概念説明**
 
-第一に、**パッケージ宣言**である。`package com.example.service;`は、このファイルがプロジェクト内のどこに位置するかを示す。パッケージはディレクトリパスと1:1で対応する。
+- Java のコードはクラスの内部に書く。
+- 今はクラスを「プログラムを入れる外側の領域」と理解すればよい。
+- Java プログラムを実行すると、main メソッド内部のコードが上から下へ実行される。
+- ファイル名が `Main.java` ならクラス名も `Main` にする。
+- 中括弧 `{ }` はクラスとメソッドの範囲を表す。
+- 実行文の終わりにはセミコロン `;` を付ける。
 
-第二に、**インポート文**である。他のパッケージのクラスを使用するには`import`文で宣言する。インポートを見れば、このクラスがどのような外部依存性を持つか素早く把握できる。
+**コード文法の分解**
 
-第三に、**クラス定義**である。クラスの中にはフィールド（データ）とメソッド（動作）がある。メソッドシグネチャ`public String getUserName(int userId)`を読めば、アクセス範囲（public）、戻り値の型（String）、メソッド名（getUserName）、パラメータ（int userId）を一目で把握できる。
-
-基本型（`int`, `boolean`, `double`など）は値そのものを格納し、参照型（`String`, `List`, ユーザー定義クラス）はオブジェクトのアドレスを格納する。この違いは比較演算（`==` vs `equals`）で重要になる。基本型は`==`で値を比較できるが、参照型は`equals`メソッドを使用しなければ内容を比較できない。
-
-## 4) 実務解釈シナリオ
-
-### シナリオ A
 ```java
-package com.example.user;
-
-import com.example.util.StringHelper;
-
-public class UserService {
-    private String defaultRole = "viewer";
-
-    public String assignRole(String userId, String role) {
-        if (role == null) {
-            return defaultRole;
-        }
-        return StringHelper.normalize(role);
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Java 開始");
     }
 }
 ```
-- 読み取りポイント:
-  - パッケージ`com.example.user`からユーザー関連サービスであることが分かる。
-  - `StringHelper`をインポートしているため、文字列処理ユーティリティに依存している。
-  - `assignRole`は`role`がnullの場合デフォルト値を返し、それ以外は正規化して返す。
 
-### シナリオ B
+| コード | 意味 |
+|---|---|
+| `public class Main` | Main というプログラム領域を作る。 |
+| `public static void main(String[] args)` | プログラムが開始される位置である。 |
+| `{ }` | コードが含まれる範囲を表す。 |
+| `System.out.println(...)` | 括弧内の内容を画面に出力する。 |
+| `;` | 一つの実行文が終わったことを表す。 |
+
+`public`・`static`・`String[]` の詳しい意味は後のパートで学習する。
+このパートでは main 宣言全体を「Java プログラムの開始の形」として覚える。
+
+**問題とは別の例**
+
 ```java
-String a = new String("hello");
-String b = new String("hello");
-System.out.println(a == b);      // false
-System.out.println(a.equals(b)); // true
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("最初のJavaプログラム");
+    }
+}
 ```
-- 解釈:
-  - `==`は参照（アドレス）を比較するためfalseである。
-  - `equals`は内容を比較するためtrueである。
-  - この違いを知らなければ、文字列比較のバグが頻繁に発生する。
 
-## 5) よくあるミス
+**実行の流れと結果**
 
-1. 参照型を`==`で比較する。
-`String`や`Integer`のような参照型は`equals`で比較しなければならない。`==`は同じオブジェクトかどうかのみを確認する。
+1. Java が main メソッドを探す。
+2. main 内部の最初の実行文を実行する。
+3. 画面に文を出力する。
+4. これ以上実行するコードがないのでプログラムが終わる。
 
-2. パッケージ構造を無視してファイルを探す。
-パッケージとディレクトリが対応するというルールを知っていれば、目的のクラスを素早く見つけられる。
+```
+最初のJavaプログラム
+```
 
-3. インポート文を飛ばしてコードを読む。
-インポートを見れば、このクラスがどの外部モジュールに依存しているかすぐに分かる。
+**よくあるミス**
 
-4. アクセス修飾子を無視する。
-`private`メソッドはクラス内部からのみ呼び出し可能であり、外部からは使用できない。
+```java
+public class main {                            // クラス名の大文字小文字が間違っている
+    public static void Main(String[] args) {   // main の大文字小文字が間違っている
+        system.out.println("Hello")            // System とセミコロンのエラー
+    }
+}
+```
 
-## 6) 確認質問
+- クラス名とファイル名を違うものにする。
+- `main` を `Main` と書き間違える。
+- 閉じ中括弧 `}` を書き忘れる。
+- 実行文の終わりにセミコロンを付けない。
+- `System` の最初の文字を小文字で書く。
 
-1. Javaソースファイルの3つの基本構成要素は何か？
-2. `package`宣言はプロジェクト構造でどのような役割を果たすか？
-3. `==`と`equals`の違いは何か、いつそれぞれを使用すべきか？
-4. メソッドシグネチャから読み取れる4つの情報は何か？
-5. インポート文を先に確認するとどのような情報が得られるか？
+### Part 2. System.out.println() での出力
 
-## 7) 出題抽出メモ
+**概念説明**
 
-- 事実型候補: Javaソースファイルの構成要素、基本型と参照型の違い
-- 判断型候補: == vs equals の使用適切性の判断
-- シナリオ型候補: コードからパッケージとインポートを見て依存関係を把握
-- 誤答誘導ポイント: 参照型の==比較を値比較と誤認、privateメソッドを外部から呼び出し可能と誤認
+- `System.out.println()` は括弧内の内容を画面に出力する。
+- 出力する文字は二重引用符 `" "` で囲まなければならない。
+- `println` は内容を出力した後、改行する。
+- したがって `println` を2回使うと、結果も2行で表示される。
+- Java は大文字小文字を区別するので、正確なつづりで書く必要がある。
+
+**コード文法の分解**
+
+```java
+System.out.println("Hello");
+```
+
+| 部分 | 意味 |
+|---|---|
+| `System.out` | 画面へ出力するときに使う基本の形式 |
+| `println` | 内容を出力した後、改行する。 |
+| `"Hello"` | 画面に出力する文字 |
+| `( )` | 出力する内容を書く位置 |
+| `;` | 出力文の終わり |
+
+**問題とは別の例**
+
+```java
+System.out.println("Java");
+System.out.println("Beginner");
+System.out.println("Lesson 01");
+```
+
+**実行の流れと結果**
+
+- 1つ目の println が `Java` を出力して改行する。
+- 2つ目の println が `Beginner` を出力して改行する。
+- 3つ目の println が `Lesson 01` を出力する。
+
+```
+Java
+Beginner
+Lesson 01
+```
+
+**よくあるミス**
+
+```java
+System.out.println(Hello);     // 二重引用符がない
+system.out.println("Hello");   // System の S が小文字
+System.out.Println("Hello");   // println の p が大文字
+System.out.println("Hello")    // セミコロンがない
+```
+
+文字を出力するときは、次の形を正確に守らなければならない。
+
+```java
+System.out.println("出力する文字");
+```
+
+### Part 3. print() と println() の違い
+
+**概念説明**
+
+- `System.out.print()` も括弧内の内容を画面に出力する。
+- しかし `print` は出力した後に改行しない。
+- 次の出力内容は同じ行に続けて表示される。
+- 逆に `println` は出力後に次の行へ移動する。
+- 2つの出力文を組み合わせると、同じ行への出力と改行を調整できる。
+
+**コード文法の分解**
+
+```java
+System.out.print("Java");
+System.out.println(" Start");
+System.out.print("Done");
+```
+
+- 1つ目の print は `Java` を出力して同じ行にとどまる。
+- 2つ目の println は ` Start` を続けて出力する。
+- println が実行されたので、次の出力位置が下の行へ移動する。
+- 3つ目の print は次の行に `Done` を出力する。
+
+**実行結果**
+
+```
+Java Start
+Done
+```
+
+**問題とは別の例**
+
+```java
+System.out.print("A");
+System.out.print("B");
+System.out.println("C");
+System.out.println("D");
+```
+
+**実行の流れと結果**
+
+- `A` を出力して同じ行にとどまる。
+- `B` を同じ行に続けて出力する。
+- `C` を続けて出力して改行する。
+- 次の行に `D` を出力する。
+
+```
+ABC
+D
+```
+
+**よくあるミス**
+
+- `print` も自動で改行すると思ってしまう。
+- 各出力文の間に自動で空白が入ると思ってしまう。
+- コードで行を変えると出力結果も改行されると思ってしまう。
+- `print` と `println` のつづりを混同する。
+
+次の2つのコードは結果が違う。
+
+```java
+System.out.print("A");
+System.out.print("B");
+```
+
+```
+AB
+```
+
+```java
+System.out.println("A");
+System.out.println("B");
+```
+
+```
+A
+B
+```
+
+### Part 4. コメント
+
+**概念説明**
+
+- コメントはコードに説明を残すときに使う。
+- コメントとして書かれた内容はプログラムが実行しない。
+- `//` の後ろの内容は、その行の終わりまでコメントになる。
+- `/*` と `*/` の間の内容は、複数行にわたってコメントになる。
+- コメントはコードの目的や注意事項を説明するときに使う。
+- 実行すべきコードをコメントにしてしまわないよう注意する。
+
+**コード文法の分解**
+
+```java
+// 1行コメント
+```
+
+`//` の後ろから、現在の行が終わる部分までコメントとして扱われる。
+
+```java
+/*
+複数行を
+書けるコメント
+*/
+```
+
+`/*` から `*/` までのすべての内容がコメントとして扱われる。
+
+**問題とは別の例**
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        // 学習開始メッセージを出力する。
+        System.out.println("学習開始");
+
+        /*
+        次の出力文はコメントの中にあるので
+        実行されない。
+        System.out.println("出力されない");
+        */
+    }
+}
+```
+
+**実行の流れと結果**
+
+- 1行コメントは実行しない。
+- `学習開始` を出力する。
+- 複数行コメントの中の出力文は実行しない。
+- プログラムが終了する。
+
+```
+学習開始
+```
+
+**よくあるミス**
+
+```java
+/ 1行コメント          // スラッシュが1つだけ
+
+/*
+複数行コメント          // 閉じる */ がない
+```
+
+- 1行コメントをスラッシュ `/` 1つだけで書く。
+- 複数行コメントの最後の `*/` を書き忘れる。
+- 実行すべきコードの前に、うっかり `//` を付ける。
+- コメントの中の出力文も実行されると思ってしまう。
+
+## 次へ
+
+次は [Part 2「変数・基本型・リテラル・定数」](/dev/lessons/DEV-JAVA-01-02) を学ぶ。

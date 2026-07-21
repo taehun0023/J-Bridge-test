@@ -1,0 +1,437 @@
+---
+lesson_id: DEV-JAVA-02-04
+title: "Java中級04 コンストラクタのオーバーロード"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 20
+tags: [java, intermediate, oop, constructor, overloading, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次の作業ができるようにする。
+
+- オブジェクトを複数の方法で生成しなければならない理由を説明する。
+- 必要な情報の量に応じて異なるコンストラクタを提供する。
+- コンストラクタごとに繰り返される初期化コードを見つける。
+- this() で他のコンストラクタに初期化を任せる。
+- コンストラクタのオーバーロードが必要な場合と不要な場合を区別する。
+
+## 授業内容
+
+### Part 1. コンストラクタを複数使う理由
+
+前のパートでは、1つのコンストラクタでオブジェクトを作った。
+
+```java
+class Member {
+    String name;
+    int level;
+
+    Member(String name, int level) {
+        this.name = name;
+        this.level = level;
+    }
+}
+```
+
+このクラスのオブジェクトを作るには、名前とレベルを両方とも渡さなければならない。
+
+```java
+Member member = new Member("Minsu", 5);
+```
+
+しかし、プログラムでは、オブジェクトを作るときに持っている情報が互いに異なる場合がある。
+
+- 訪問者には名前がない場合がある。
+- 新規会員は名前だけがあり、レベルはデフォルト値を使うことがある。
+- 既存の会員には名前とレベルが両方ともある場合がある。
+
+このとき、コンストラクタを複数の形で提供すれば、状況に合わせてオブジェクトを作ることができる。
+
+```java
+class Member {
+    String name;
+    int level;
+
+    Member() {
+        name = "ゲスト";
+        level = 1;
+    }
+
+    Member(String name) {
+        this.name = name;
+        level = 1;
+    }
+
+    Member(String name, int level) {
+        this.name = name;
+        this.level = level;
+    }
+}
+```
+
+```java
+Member guest = new Member();
+Member newMember = new Member("Minsu");
+Member existingMember = new Member("Jisu", 7);
+```
+
+各オブジェクトはそれぞれ異なる方法で生成される。
+
+```java
+System.out.println(guest.name + ": " + guest.level);
+System.out.println(newMember.name + ": " + newMember.level);
+System.out.println(existingMember.name + ": " + existingMember.level);
+```
+
+**実行結果**
+
+```text
+ゲスト: 1
+Minsu: 1
+Jisu: 7
+```
+
+このように、同じ種類のオブジェクトを、入力可能な情報に応じて複数の方式で作らなければならないとき、コンストラクタのオーバーロードを使う。
+
+### Part 2. コンストラクタのオーバーロード
+
+コンストラクタのオーバーロードは、同じクラスに引数の構成が異なるコンストラクタを複数宣言することである。
+
+```java
+Member()
+Member(String name)
+Member(String name, int level)
+```
+
+オブジェクトを生成するとき、渡した実引数に合ったコンストラクタが自動的に選択される。
+
+- `new Member();` → 実引数がないので `Member()` が実行される。
+- `new Member("Minsu");` → String を1つ渡したので `Member(String name)` が実行される。
+- `new Member("Jisu", 7);` → String と int を渡したので `Member(String name, int level)` が実行される。
+
+コンストラクタは次の違いで区別する。
+
+- 引数の個数
+- 引数の型
+- 引数の順序
+
+引数の名前だけを変えるのはオーバーロードではない。
+
+```java
+class Member {
+    Member(String name) {
+    }
+
+    // コンパイルエラー
+    Member(String nickname) {
+    }
+}
+```
+
+2つのコンストラクタはどちらも String を1つ受け取るため、呼び出すときに区別できない。
+
+### Part 3. コンストラクタのコードが繰り返される問題
+
+コンストラクタを複数作ると、同じ初期化コードが繰り返されることがある。
+
+```java
+class Member {
+    String name;
+    int level;
+
+    Member() {
+        name = "ゲスト";
+        level = 1;
+    }
+
+    Member(String name) {
+        this.name = name;
+        level = 1;
+    }
+
+    Member(String name, int level) {
+        this.name = name;
+        this.level = level;
+    }
+}
+```
+
+現在デフォルトレベルである1が、2つのコンストラクタに繰り返されている。デフォルトレベルを10に変更するには、複数のコンストラクタを見つけて修正しなければならない。
+
+```java
+Member() {
+    name = "ゲスト";
+    level = 10;
+}
+
+Member(String name) {
+    this.name = name;
+    level = 10;
+}
+```
+
+1か所でも漏らすと、コンストラクタごとに異なるデフォルト値を使うことになりかねない。初期化のルールが複数のコンストラクタに繰り返されるとき、this() を使う。
+
+### Part 4. this() で初期化をまとめる
+
+this() は同じクラスにある別のコンストラクタを呼び出す。
+
+```java
+class Member {
+    String name;
+    int level;
+
+    Member() {
+        this("ゲスト", 1);
+    }
+
+    Member(String name) {
+        this(name, 1);
+    }
+
+    Member(String name, int level) {
+        this.name = name;
+        this.level = level;
+    }
+}
+```
+
+実際のフィールド初期化は、最後のコンストラクタでのみ処理される。
+
+```text
+Member()
+    → Member("ゲスト", 1)
+    → フィールド初期化
+Member(String name)
+    → Member(name, 1)
+    → フィールド初期化
+```
+
+デフォルトレベルを変更しなければならないときも、this() に渡す値だけを確認すればよい。
+
+```java
+Member() {
+    this("ゲスト", 10);
+}
+
+Member(String name) {
+    this(name, 10);
+}
+```
+
+複数のコンストラクタがそれぞれ同じフィールドを初期化する代わりに、最も多くの情報を受け取るコンストラクタに初期化をまとめることができる。
+
+### Part 5. this() と this.field の違い
+
+2つの表現には、それぞれ異なる役割がある。
+
+```java
+class Product {
+    String name;
+    int price;
+
+    Product() {
+        this("商品未定", 0);
+    }
+
+    Product(String name) {
+        this(name, 0);
+    }
+
+    Product(String name, int price) {
+        this.name = name;
+        this.price = price;
+    }
+}
+```
+
+`this(...)` は他のコンストラクタを呼び出す。
+
+```java
+this("商品未定", 0);
+this(name, 0);
+```
+
+`this.field` は現在のオブジェクトのフィールドを指す。
+
+```java
+this.name = name;
+this.price = price;
+```
+
+したがって、次のように区別する。
+
+- `this(...)`: 初期化を他のコンストラクタに任せるときに使う
+- `this.name`: 現在のオブジェクトの name フィールドを使うときに書く
+- `this.price`: 現在のオブジェクトの price フィールドを使うときに書く
+
+### Part 6. this() の使用ルール
+
+this() はコンストラクタの最初の実行文でなければならない。
+
+```java
+Product() {
+    this("商品未定", 0);
+}
+```
+
+次のように、this() より先に他のコードを実行することはできない。
+
+```java
+Product() {
+    System.out.println("オブジェクト生成");
+
+    // コンパイルエラー
+    this("商品未定", 0);
+}
+```
+
+コンストラクタが自分自身を再び呼び出してもいけない。
+
+```java
+class Product {
+    Product() {
+        // 自分自身を再び呼び出すのでエラー
+        this();
+    }
+}
+```
+
+コンストラクタ同士が互いに繰り返し呼び出し合うことも許されない。
+
+```java
+class Product {
+    Product() {
+        this("商品");
+    }
+
+    Product(String name) {
+        this();
+    }
+}
+```
+
+このコードはコンストラクタの呼び出しが終わらないのでコンパイルエラーになる。
+
+### Part 7. いつ使うべきか
+
+コンストラクタのオーバーロードは、次のような場合に使う。
+
+**一部の情報にデフォルト値を使える場合**
+
+```java
+Course course1 = new Course("Java");
+Course course2 = new Course("Java", 30);
+```
+
+1つ目のオブジェクトはデフォルトの定員を使い、2つ目のオブジェクトは定員を直接指定できる。
+
+**オブジェクトを作る状況が複数ある場合**
+
+```java
+Member guest = new Member();
+Member member = new Member("Minsu");
+Member manager = new Member("Jisu", 10);
+```
+
+訪問者、一般会員、既存会員をそれぞれ異なる情報で生成できる。
+
+**複数のコンストラクタで同じ初期化が繰り返される場合**
+
+```java
+Member() {
+    this("ゲスト", 1);
+}
+
+Member(String name) {
+    this(name, 1);
+}
+```
+
+this() で共通の初期化を1つのコンストラクタにまとめることができる。
+
+逆に、オブジェクト生成に必ず必要な情報が決まっているなら、無駄にコンストラクタを複数作る必要はない。
+
+```java
+class Account {
+    String id;
+
+    Account(String id) {
+        this.id = id;
+    }
+}
+```
+
+アカウントには id が必ず必要なら、Account() を追加しない方が安全である。
+
+```java
+new Account();        // 許可しない
+new Account("user01"); // id を必ず渡す
+```
+
+コンストラクタのオーバーロードはオブジェクト生成を無条件に楽にする機能ではない。省略してもよい値にはデフォルト値を提供し、必ず必要な値はコンストラクタで要求するために使う。
+
+### 総合例
+
+講座は次の3つの状況で生成できると仮定する。
+
+- 講座の情報がまだ決まっていない
+- 講座名だけが決まっている
+- 講座名と定員が両方とも決まっている
+
+```java
+class Course {
+    String title;
+    int capacity;
+
+    Course() {
+        this("未定", 0);
+    }
+
+    Course(String title) {
+        this(title, 20);
+    }
+
+    Course(String title, int capacity) {
+        this.title = title;
+        this.capacity = capacity;
+    }
+
+    void showInfo() {
+        System.out.println(title + ": " + capacity + "名");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Course undecided = new Course();
+        Course regular = new Course("Java");
+        Course special = new Course("Python", 30);
+
+        undecided.showInfo();
+        regular.showInfo();
+        special.showInfo();
+    }
+}
+```
+
+**実行結果**
+
+```text
+未定: 0名
+Java: 20名
+Python: 30名
+```
+
+- `new Course()`: 情報がまだないのでデフォルト値を使う
+- `new Course("Java")`: タイトルだけを渡し、定員はデフォルト値の20を使う
+- `new Course("Python", 30)`: タイトルと定員を両方とも直接指定
+
+3つのコンストラクタが個別にフィールドを初期化するのではなく、最後のコンストラクタに初期化処理をまとめる。
+
+## 次へ
+
+次は [Part 5「パッケージ・import・プロジェクト構造」](/dev/lessons/DEV-JAVA-02-05)を学ぶ。

@@ -1,0 +1,309 @@
+---
+lesson_id: DEV-JAVA-01-06
+title: "Java初級06 条件分岐② else if・switch・三項演算子"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 18
+tags: [java, basics, elseif, switch, ternary, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次の作業ができるようになる。
+
+- else if で複数の条件を順番に検査する。
+- switch で1つの値を複数の場合と比較する。
+- case、break、default の役割を区別する。
+- アロー switch 文法を使うことができる。
+- 三項演算子で簡単な2つの結果のうち一方を選ぶ。
+
+## 授業内容
+
+### Part 1. else if
+
+**概念説明**
+
+- else if は3つ以上の実行フローが必要なときに使う。
+- 条件は上から下へ順番に検査する。
+- 最初に true になったブロックだけを実行し、残りは検査しない。
+- すべての条件が false であれば、最後の else が実行される。
+- 最後の else は必要なければ省略できる。
+
+**コード文法**
+
+```java
+if (条件式1) {
+    条件式1 が true のとき実行
+} else if (条件式2) {
+    条件式2 が true のとき実行
+} else {
+    すべての条件が false のとき実行
+}
+```
+
+**例**
+
+```java
+int score = 85;
+
+if (score >= 90) {
+    System.out.println("A");
+} else if (score >= 80) {
+    System.out.println("B");
+} else if (score >= 70) {
+    System.out.println("C");
+} else {
+    System.out.println("D");
+}
+```
+
+**実行の流れと結果**
+
+1. `85 >= 90` は false である。
+2. `85 >= 80` は true である。
+3. "B" を出力する。
+4. これ以降の条件はもう検査しない。
+
+```
+B
+```
+
+**条件の順序**
+
+範囲が狭い条件を先に書く必要がある。
+
+```java
+if (score >= 60) {
+    System.out.println("合格");
+} else if (score >= 90) {
+    System.out.println("優秀");
+}
+```
+
+95を入力しても最初の条件が先に true になるため、"優秀" は実行されない。正しい順序は次の通りである。
+
+```java
+if (score >= 90) {
+    System.out.println("優秀");
+} else if (score >= 60) {
+    System.out.println("合格");
+} else {
+    System.out.println("不合格");
+}
+```
+
+**よくあるミス**
+
+```java
+elseif (score >= 80) { } // エラー
+else (score >= 80) { }   // エラー
+```
+
+Java では必ず次のように書く。
+
+```java
+else if (score >= 80) { }
+```
+
+### Part 2. switch
+
+**概念説明**
+
+- switch は1つの値を複数の case と比較するときに使う。
+- 一致する case が見つかると、その位置からコードを実行する。
+- 従来の文法では break で switch を終了する必要がある。
+- break がないと、次の case まで続けて実行されることがある。
+- どの case とも一致しなければ default が実行される。
+- 今回のパートでは int 値を使う基本の形を学習する。
+
+**基本の文法**
+
+```java
+switch (値) {
+    case 値1:
+        実行するコード
+        break;
+    case 値2:
+        実行するコード
+        break;
+    default:
+        一致する値がないとき実行
+}
+```
+
+**例**
+
+```java
+int menu = 2;
+
+switch (menu) {
+    case 1:
+        System.out.println("照会");
+        break;
+    case 2:
+        System.out.println("登録");
+        break;
+    case 3:
+        System.out.println("削除");
+        break;
+    default:
+        System.out.println("無効なメニュー");
+}
+```
+
+**実行の流れと結果**
+
+1. `menu` に保存された値は2である。
+2. `case 1` とは一致しない。
+3. `case 2` と一致するので "登録" を出力する。
+4. `break` に達して switch を終了する。
+
+```
+登録
+```
+
+**break を書き忘れた場合**
+
+```java
+int menu = 1;
+
+switch (menu) {
+    case 1:
+        System.out.println("照会");
+    case 2:
+        System.out.println("登録");
+        break;
+    default:
+        System.out.println("無効なメニュー");
+}
+```
+
+実行結果:
+
+```
+照会
+登録
+```
+
+`case 1` に break がないため、case 2 まで続けて実行される。
+
+**アロー switch**
+
+Java 17では矢印 `->` を使う形も使うことができる。
+
+```java
+int menu = 2;
+
+switch (menu) {
+    case 1 -> System.out.println("照会");
+    case 2 -> System.out.println("登録");
+    case 3 -> System.out.println("削除");
+    default -> System.out.println("無効なメニュー");
+}
+```
+
+アロー形式は次の case につながらないため、break が必要ない。
+
+**よくあるミス**
+
+コロン文法とアロー文法を混ぜないこと。
+
+```java
+case 1:
+    System.out.println("照会");
+    break;
+case 1 -> System.out.println("照会");
+```
+
+また、case の値は重複して書くことができない。
+
+### Part 3. 三項演算子
+
+**概念説明**
+
+- 三項演算子は条件によって2つの値のうち一方を選ぶ。
+- `?` の前には結果が true または false になる条件式を書く。
+- 条件が true であれば `?` の後ろの値を選ぶ。
+- 条件が false であれば `:` の後ろの値を選ぶ。
+- 簡単な if-else を1行で表すときに使う。
+
+**コード文法**
+
+```java
+条件式 ? 真のときの値 : 偽のときの値
+```
+
+結果を変数に保存できる。
+
+```java
+String result = score >= 60 ? "合格" : "不合格";
+```
+
+**例**
+
+```java
+int age = 16;
+
+String result = age >= 18 ? "成人" : "未成年者";
+
+System.out.println(result);
+```
+
+**実行の流れと結果**
+
+1. `age >= 18` を計算する。
+2. `16 >= 18` は false である。
+3. `:` の後ろの "未成年者" を選ぶ。
+4. 選ばれた値を result に保存する。
+
+```
+未成年者
+```
+
+**if-else との比較**
+
+次の2つのコードは同じ結果を作る。
+
+```java
+String result;
+
+if (score >= 60) {
+    result = "合格";
+} else {
+    result = "不合格";
+}
+```
+
+```java
+String result = score >= 60 ? "合格" : "不合格";
+```
+
+**よくあるミス**
+
+`?` と `:` の位置を入れ替えてはいけない。
+
+```java
+String result = score >= 60 : "合格" ? "不合格"; // エラー
+```
+
+正しい形:
+
+```java
+String result = score >= 60 ? "合格" : "不合格";
+```
+
+三項演算子を何度も入れ子にすると読みにくくなる。
+
+```java
+String result = score >= 90 ? "A"
+        : score >= 80 ? "B"
+        : score >= 70 ? "C"
+        : "D";
+```
+
+このような場合は else if を使う方がより明確である。
+
+## 次へ
+
+次は [Part 7「繰り返し① for」](/dev/lessons/DEV-JAVA-01-07)を学ぶ。

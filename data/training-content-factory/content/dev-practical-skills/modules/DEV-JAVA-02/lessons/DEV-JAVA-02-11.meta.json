@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-02-11",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-oop-inheritance",
+  "summary": "共通のフィールド・メソッドを親クラスに分離し extends で継承すること、private と protected の継承アクセス差、is-a 関係と has-a 関係の区別を学ぶ。",
+  "key_points": [
+    "extends で親のアクセス可能なメンバーを継承する。",
+    "親の private は子から直接使えず、getter などを使う。protected は子から使える。",
+    "継承は is-a 関係、フィールドで持つのは has-a 関係。"
+  ],
+  "misconceptions": [
+    "継承は単なるコードのコピーだと思う。",
+    "親の private フィールドに子から直接アクセスできると思う。",
+    "has-a 関係でも継承を使ってしまう。"
+  ],
+  "check_questions": [
+    "継承のキーワードは？",
+    "親の private フィールドに子はどうアクセスするか？",
+    "Car と Engine の関係は is-a か has-a か？"
+  ]
+}

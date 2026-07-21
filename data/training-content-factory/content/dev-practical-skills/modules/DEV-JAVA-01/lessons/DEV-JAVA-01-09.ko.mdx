@@ -1,0 +1,437 @@
+---
+lesson_id: DEV-JAVA-01-09
+title: "Java초급09 반복문③ break·continue·중첩"
+module: DEV-JAVA-01
+language: ko
+level: foundation
+est_minutes: 18
+tags: [java, basics, loop, break, continue, nested, static-content]
+---
+
+## 학습 목표
+
+이 파트를 학습한 후 다음 작업을 할 수 있어야 합니다.
+
+- break로 반복문을 즉시 종료한다.
+- continue로 현재 반복만 건너뛴다.
+- 중첩 반복문의 바깥쪽·안쪽 실행 순서를 이해한다.
+- 중첩 반복문으로 표와 간단한 모양을 출력한다.
+- 중첩 반복문에서 break와 continue가 적용되는 범위를 구분한다.
+
+## 수업 내용
+
+### Part 1. break
+
+**개념 설명**
+
+- break는 실행 중인 반복문을 즉시 종료한다.
+- break 아래에 남은 코드는 실행하지 않는다.
+- 반복 조건이 아직 true여도 반복문 밖으로 이동한다.
+- 특정 값을 찾았거나 종료값이 입력되었을 때 사용할 수 있다.
+- 이전 파트에서는 switch를 종료할 때 사용했지만 이번에는 반복문 종료에 사용한다.
+
+**코드 문법 분해**
+
+```java
+for (int i = 1; i <= 10; i++) {
+    if (i == 4) {
+        break;
+    }
+
+    System.out.println(i);
+}
+```
+
+| 코드 | 의미 |
+|---|---|
+| `i <= 10` | 원래는 10까지 반복 |
+| `i == 4` | i가 4인지 확인 |
+| `break` | 현재 반복문을 즉시 종료 |
+| `println` | break되지 않은 값만 출력 |
+
+**실행 흐름과 결과**
+
+- `i = 1` → 1 출력
+- `i = 2` → 2 출력
+- `i = 3` → 3 출력
+- `i = 4` → break 실행
+
+```
+1
+2
+3
+```
+
+i가 4일 때는 출력문보다 break가 먼저 실행되므로 4는 출력되지 않는다.
+
+**입력 종료 예제**
+
+```java
+Scanner scanner = new Scanner(System.in);
+
+while (true) {
+    int number = scanner.nextInt();
+
+    if (number == 0) {
+        break;
+    }
+
+    System.out.println(number);
+}
+
+scanner.close();
+```
+
+입력:
+
+```
+5
+3
+0
+```
+
+출력:
+
+```
+5
+3
+```
+
+`while (true)`는 조건이 항상 참이지만 0이 입력되면 break로 종료한다.
+
+**자주 하는 실수**
+
+break 뒤의 코드는 같은 반복에서 실행되지 않는다.
+
+```java
+if (number == 0) {
+    break;
+    System.out.println("종료"); // 실행할 수 없는 코드
+}
+```
+
+종료 메시지가 필요하다면 break 전에 작성한다.
+
+```java
+if (number == 0) {
+    System.out.println("종료");
+    break;
+}
+```
+
+### Part 2. continue
+
+**개념 설명**
+
+- continue는 현재 반복에서 남은 코드만 건너뛴다.
+- 반복문 전체를 종료하지는 않는다.
+- for문에서는 증감식으로 이동한 후 다음 조건을 검사한다.
+- while문에서는 조건식 검사 위치로 이동한다.
+- 특정 값만 출력이나 계산에서 제외할 때 사용할 수 있다.
+
+**코드 문법 분해**
+
+```java
+for (int i = 1; i <= 5; i++) {
+    if (i == 3) {
+        continue;
+    }
+
+    System.out.println(i);
+}
+```
+
+| 코드 | 의미 |
+|---|---|
+| `i == 3` | 건너뛸 값을 확인 |
+| `continue` | 현재 반복의 남은 코드 생략 |
+| `println` | 3을 제외한 값만 출력 |
+
+**실행 흐름과 결과**
+
+- `i = 1` → 1 출력
+- `i = 2` → 2 출력
+- `i = 3` → continue
+- `i = 4` → 4 출력
+- `i = 5` → 5 출력
+
+```
+1
+2
+4
+5
+```
+
+**조건에 맞는 값 제외**
+
+```java
+for (int i = 1; i <= 6; i++) {
+    if (i % 2 == 0) {
+        continue;
+    }
+
+    System.out.println(i);
+}
+```
+
+짝수일 때 출력문을 건너뛴다.
+
+```
+1
+3
+5
+```
+
+**while에서의 주의점**
+
+```java
+int i = 0;
+
+while (i < 5) {
+    i++;
+
+    if (i == 3) {
+        continue;
+    }
+
+    System.out.println(i);
+}
+```
+
+i를 먼저 증가시킨 후 continue를 검사한다.
+
+```
+1
+2
+4
+5
+```
+
+**자주 하는 실수**
+
+다음 코드는 i가 3일 때 계속 같은 반복을 실행할 수 있다.
+
+```java
+int i = 1;
+
+while (i <= 5) {
+    if (i == 3) {
+        continue;
+    }
+
+    System.out.println(i);
+    i++;
+}
+```
+
+`i == 3`일 때 i++를 건너뛰기 때문이다. while에서 continue를 사용할 때는 변수 변경 위치를 확인해야 한다.
+
+### Part 3. break와 continue 비교
+
+| 구분 | break | continue |
+|---|---|---|
+| 역할 | 반복문 전체 종료 | 현재 반복만 건너뜀 |
+| 다음 실행 위치 | 반복문 다음 코드 | 다음 반복 |
+| 반복 계속 여부 | 종료 | 계속 |
+| 주요 사용 상황 | 값 발견, 종료 입력 | 특정 값 제외 |
+
+**비교 예제**
+
+```java
+for (int i = 1; i <= 5; i++) {
+    if (i == 3) {
+        break;
+    }
+
+    System.out.println(i);
+}
+```
+
+```
+1
+2
+```
+
+```java
+for (int i = 1; i <= 5; i++) {
+    if (i == 3) {
+        continue;
+    }
+
+    System.out.println(i);
+}
+```
+
+```
+1
+2
+4
+5
+```
+
+break는 반복을 끝내지만 continue는 다음 반복을 계속한다.
+
+### Part 4. 중첩 반복문
+
+**개념 설명**
+
+- 반복문 안에 다른 반복문을 작성할 수 있다.
+- 이를 중첩 반복문이라고 한다.
+- 바깥쪽 반복문이 한 번 실행될 때 안쪽 반복문은 전체 반복을 수행한다.
+- 바깥쪽과 안쪽 반복 변수는 서로 다른 이름을 사용한다.
+- 일반적으로 바깥쪽은 행, 안쪽은 열을 표현할 때 사용한다.
+
+**코드 문법 분해**
+
+```java
+for (int row = 1; row <= 2; row++) {
+    for (int column = 1; column <= 3; column++) {
+        System.out.print(row);
+        System.out.print(" ");
+        System.out.println(column);
+    }
+}
+```
+
+| 변수 | 역할 |
+|---|---|
+| `row` | 바깥쪽 반복 위치 |
+| `column` | 안쪽 반복 위치 |
+| 바깥쪽 반복 횟수 | 2번 |
+| 안쪽 반복 횟수 | 바깥쪽 한 번마다 3번 |
+| 전체 실행 횟수 | 2 × 3으로 6번 |
+
+**실행 흐름과 결과**
+
+- `row = 1` → column = 1, 2, 3
+- `row = 2` → column = 1, 2, 3
+
+```
+1 1
+1 2
+1 3
+2 1
+2 2
+2 3
+```
+
+**별 모양 출력**
+
+```java
+for (int row = 1; row <= 3; row++) {
+    for (int column = 1; column <= row; column++) {
+        System.out.print("*");
+    }
+
+    System.out.println();
+}
+```
+
+**실행 흐름**
+
+- row가 1일 때 별을 1개 출력한다.
+- row가 2일 때 별을 2개 출력한다.
+- row가 3일 때 별을 3개 출력한다.
+
+```
+*
+**
+***
+```
+
+**자주 하는 실수**
+
+안쪽 반복문의 조건에서 잘못된 변수를 사용하면 정상적으로 종료되지 않을 수 있다.
+
+```java
+for (int row = 1; row <= 3; row++) {
+    for (int column = 1; row <= 3; column++) {
+        System.out.println(column);
+    }
+}
+```
+
+안쪽 반복문의 조건에는 column을 사용해야 한다.
+
+```java
+for (int column = 1; column <= 3; column++) {
+```
+
+### Part 5. 중첩 반복문의 break
+
+**개념 설명**
+
+- 중첩 반복문에서 일반적인 break는 가장 가까운 반복문 하나만 종료한다.
+- 안쪽 반복문에서 break를 실행해도 바깥쪽 반복문은 계속 실행된다.
+- 따라서 바깥쪽 반복이 다시 실행되면 안쪽 반복도 처음부터 다시 시작한다.
+
+**예제**
+
+```java
+for (int row = 1; row <= 2; row++) {
+    for (int column = 1; column <= 3; column++) {
+        if (column == 2) {
+            break;
+        }
+
+        System.out.print(row);
+        System.out.print(" ");
+        System.out.println(column);
+    }
+}
+```
+
+**실행 흐름과 결과**
+
+- `row = 1`
+  - column = 1 → 출력
+  - column = 2 → 안쪽 반복문 종료
+- `row = 2`
+  - column = 1 → 출력
+  - column = 2 → 안쪽 반복문 종료
+
+```
+1 1
+2 1
+```
+
+바깥쪽 반복문은 종료되지 않는다.
+
+**중첩 반복문의 continue**
+
+안쪽 반복문에서 continue를 실행하면 안쪽 반복의 현재 차례만 건너뛴다.
+
+```java
+for (int row = 1; row <= 2; row++) {
+    for (int column = 1; column <= 3; column++) {
+        if (column == 2) {
+            continue;
+        }
+
+        System.out.print(row);
+        System.out.print(" ");
+        System.out.println(column);
+    }
+}
+```
+
+```
+1 1
+1 3
+2 1
+2 3
+```
+
+**자주 하는 실수**
+
+안쪽의 break가 모든 반복문을 종료한다고 생각하면 안 된다.
+
+```java
+break;
+```
+
+일반적인 break는 가장 가까운 반복문 하나만 종료한다. 라벨을 사용해 바깥쪽 반복문을 종료하는 문법도 있지만 초급 과정에서는 제외한다.
+
+## 다음으로
+
+다음 학습 내용은 [Part 10「배열① 선언·생성·요소 접근」](/dev/lessons/DEV-JAVA-01-10)이다.

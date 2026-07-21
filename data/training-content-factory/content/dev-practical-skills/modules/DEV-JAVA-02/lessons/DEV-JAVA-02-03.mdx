@@ -1,0 +1,362 @@
+---
+lesson_id: DEV-JAVA-02-03
+title: "Java中級03 コンストラクタと this"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 22
+tags: [java, intermediate, oop, constructor, this, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次の作業ができるようになる。
+
+- コンストラクタの役割と呼び出されるタイミングを説明する。
+- クラスにコンストラクタを宣言する。
+- コンストラクタの引数でフィールドの初期値を渡す。
+- this が現在のオブジェクトを指すことを理解する。
+- this.field でフィールドと引数を区別する。
+
+## 授業内容
+
+### Part 1. コンストラクタが必要な理由
+
+コンストラクタを使わないと、オブジェクトを生成した後にフィールドへ値を別途保存しなければならない。
+
+```java
+class Student {
+    String name;
+    int score;
+}
+```
+
+```java
+Student student = new Student();
+
+student.name = "Minsu";
+student.score = 85;
+```
+
+フィールドへの保存を忘れると、必要な値が無い状態でオブジェクトを使うことになる。
+
+コンストラクタを使うと、オブジェクトを作るときに必要な値を一緒に渡せる。
+
+```java
+Student student = new Student("Minsu", 85);
+```
+
+コンストラクタは、オブジェクトが生成されるときにフィールドの初期値を設定する役割を持つ。
+
+### Part 2. コンストラクタの宣言と呼び出し
+
+コンストラクタはクラス名と同じ名前で宣言する。
+
+```java
+class Robot {
+    String model;
+
+    Robot() {
+        model = "基本モデル";
+    }
+}
+```
+
+コンストラクタは戻り値の型を書かない。
+
+```java
+Robot() {
+    model = "基本モデル";
+}
+```
+
+new Robot() でオブジェクトを生成すると、Robot() コンストラクタが自動的に実行される。
+
+```java
+Robot robot = new Robot();
+
+System.out.println(robot.model);
+```
+
+**実行結果**
+
+```text
+基本モデル
+```
+
+コンストラクタは、一般的なメソッドのようにオブジェクトを作った後で別途呼び出すものではない。
+
+```java
+Robot robot = new Robot();
+
+robot.Robot(); // コンストラクタを再び呼び出す形では使えない
+```
+
+**よくあるミス**
+
+コンストラクタに void を書くと、コンストラクタではなく一般的なメソッドになる。
+
+```java
+class Robot {
+    String model;
+
+    // コンストラクタではなく名前が Robot のメソッド
+    void Robot() {
+        model = "基本モデル";
+    }
+}
+```
+
+コンストラクタは戻り値の型なしで書く必要がある。
+
+```java
+Robot() {
+    model = "基本モデル";
+}
+```
+
+### Part 3. 引数のあるコンストラクタ
+
+コンストラクタも引数を受け取れる。
+
+```java
+class Product {
+    String name;
+    int price;
+
+    Product(String productName, int productPrice) {
+        name = productName;
+        price = productPrice;
+    }
+}
+```
+
+オブジェクトを生成するとき、コンストラクタの引数に合う値を渡す。
+
+```java
+Product product = new Product("キーボード", 35000);
+
+System.out.println(product.name);
+System.out.println(product.price);
+```
+
+**実行結果**
+
+```text
+キーボード
+35000
+```
+
+次の呼び出しで渡した値は、宣言された順番どおりに引数へ入る。
+
+```java
+new Product("キーボード", 35000);
+```
+
+- `"キーボード"` → productName
+- `35000` → productPrice
+
+コンストラクタが実行されることで、受け取った値がオブジェクトのフィールドに保存される。
+
+**よくあるミス**
+
+コンストラクタに引数があると、オブジェクトを生成するときに必要な値を渡さなければならない。
+
+```java
+class Product {
+    String name;
+
+    Product(String productName) {
+        name = productName;
+    }
+}
+```
+
+```java
+Product product = new Product(); // コンパイルエラー
+```
+
+正しい呼び出しは次の通りである。
+
+```java
+Product product = new Product("マウス");
+```
+
+### Part 4. this と this.field
+
+フィールドと引数の名前を同じにすると、名前が重なる。
+
+```java
+class Member {
+    String name;
+
+    Member(String name) {
+        name = name;
+    }
+}
+```
+
+コンストラクタ内の name は、近い位置に宣言された引数を指す。したがって name = name は、引数に引数の値を再び代入するだけでフィールドを変更しない。
+
+フィールドを明確に指すときは this.field を使う。
+
+```java
+class Member {
+    String name;
+
+    Member(String name) {
+        this.name = name;
+    }
+}
+```
+
+this は現在生成中のオブジェクトを指す。
+
+```java
+this.name = name;
+```
+
+- `this.name`: 現在のオブジェクトの name フィールド
+- `name`: コンストラクタで受け取った引数
+
+複数のフィールドも同じ方式で初期化できる。
+
+```java
+class Member {
+    String name;
+    int level;
+
+    Member(String name, int level) {
+        this.name = name;
+        this.level = level;
+    }
+}
+```
+
+```java
+Member member = new Member("Jisu", 7);
+
+System.out.println(member.name);
+System.out.println(member.level);
+```
+
+**実行結果**
+
+```text
+Jisu
+7
+```
+
+### Part 5. オブジェクトごとに実行されるコンストラクタ
+
+オブジェクトを生成するたびに、そのオブジェクトのためのコンストラクタが実行される。
+
+```java
+class Book {
+    String title;
+    int price;
+
+    Book(String title, int price) {
+        this.title = title;
+        this.price = price;
+    }
+}
+```
+
+```java
+Book book1 = new Book("Java基礎", 18000);
+Book book2 = new Book("データ構造", 22000);
+
+System.out.println(book1.title + ": " + book1.price);
+System.out.println(book2.title + ": " + book2.price);
+```
+
+**実行結果**
+
+```text
+Java基礎: 18000
+データ構造: 22000
+```
+
+book1 を生成するときに渡した値は book1 のフィールドに保存され、book2 を生成するときに渡した値は book2 のフィールドに保存される。
+
+### Part 6. デフォルトコンストラクタ
+
+クラスにコンストラクタを1つも宣言しないと、コンパイラが引数なしのデフォルトコンストラクタを自動的に提供する。
+
+```java
+class Item {
+    String name;
+}
+```
+
+したがって、次のようにオブジェクトを生成できる。
+
+```java
+Item item = new Item();
+```
+
+ただしコンストラクタを1つでも直接宣言すると、コンパイラはデフォルトコンストラクタを自動提供しない。
+
+```java
+class Item {
+    String name;
+
+    Item(String name) {
+        this.name = name;
+    }
+}
+```
+
+```java
+Item item = new Item(); // コンパイルエラー
+```
+
+宣言されたコンストラクタに合わせて値を渡す必要がある。
+
+```java
+Item item = new Item("鉛筆");
+```
+
+引数なしのコンストラクタと引数のあるコンストラクタを一緒に使う方法は、次のパートのコンストラクタのオーバーロードで学習する。
+
+### 総合例
+
+```java
+class Laptop {
+    String model;
+    int memory;
+
+    Laptop(String model, int memory) {
+        this.model = model;
+        this.memory = memory;
+    }
+
+    void showInfo() {
+        System.out.println(model + ": " + memory + "GB");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Laptop laptop1 = new Laptop("CodeBook", 16);
+        Laptop laptop2 = new Laptop("DevNote", 32);
+
+        laptop1.showInfo();
+        laptop2.showInfo();
+    }
+}
+```
+
+**実行結果**
+
+```text
+CodeBook: 16GB
+DevNote: 32GB
+```
+
+new Laptop() が実行されるたびにコンストラクタが呼び出される。this.model と this.memory は現在生成中のオブジェクトのフィールドを指す。
+
+## 次へ
+
+次は [Part 4「コンストラクタのオーバーロード」](/dev/lessons/DEV-JAVA-02-04)を学ぶ。

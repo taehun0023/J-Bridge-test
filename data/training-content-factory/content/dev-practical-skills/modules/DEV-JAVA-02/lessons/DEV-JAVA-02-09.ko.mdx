@@ -1,0 +1,274 @@
+---
+lesson_id: DEV-JAVA-02-09
+title: "Java중급09 객체 참조·null·매개변수 전달"
+module: DEV-JAVA-01
+language: ko
+level: foundation
+est_minutes: 22
+tags: [java, intermediate, oop, reference, null, parameter, static-content]
+---
+
+## 학습 목표
+
+이 파트를 학습한 후 다음 작업을 할 수 있어야 합니다.
+
+- 객체 변수에 객체 자체가 아니라 참조값이 저장된다는 것을 이해한다.
+- 두 변수가 같은 객체를 참조하는 상황을 설명한다.
+- null을 검사하여 NullPointerException을 방지한다.
+- 객체를 매개변수로 전달하고 객체의 상태를 변경한다.
+- 매개변수에 새 객체를 대입해도 호출한 변수는 바뀌지 않는 이유를 설명한다.
+
+## 수업 내용
+
+### Part 1. 객체 변수에는 참조값이 저장된다
+
+```java
+Member member = new Member("민수");
+```
+
+new Member("민수")는 객체를 생성하고, member에는 그 객체를 찾아갈 수 있는 참조값이 저장된다.
+
+```java
+class Member {
+    private String name;
+
+    public Member(String name) {
+        this.name = name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+}
+```
+
+```java
+Member member = new Member("민수");
+System.out.println(member.getName());
+```
+
+**실행 결과**
+
+```text
+민수
+```
+
+### Part 2. 참조값을 복사하면 같은 객체를 가리킨다
+
+```java
+Member member1 = new Member("민수");
+Member member2 = member1;
+```
+
+새로운 객체를 만든 것이 아니라 member1의 참조값을 member2에 복사한 것이다.
+
+```java
+member2.setName("지수");
+
+System.out.println(member1.getName());
+System.out.println(member2.getName());
+```
+
+**실행 결과**
+
+```text
+지수
+지수
+```
+
+두 변수가 같은 객체를 가리키므로 어느 변수를 통해 변경해도 같은 객체가 변경된다.
+
+### Part 3. 참조형 변수의 == 비교
+
+객체 변수에 ==를 사용하면 두 변수가 같은 객체를 가리키는지 검사한다.
+
+```java
+Member member1 = new Member("민수");
+Member member2 = member1;
+Member member3 = new Member("민수");
+
+System.out.println(member1 == member2);
+System.out.println(member1 == member3);
+```
+
+**실행 결과**
+
+```text
+true
+false
+```
+
+member1과 member3의 이름은 같지만 서로 다른 객체다.
+
+### Part 4. null
+
+null은 참조형 변수가 현재 아무 객체도 가리키지 않는다는 뜻이다.
+
+```java
+Member member = null;
+```
+
+null인 변수로 필드나 메서드에 접근하면 NullPointerException이 발생한다.
+
+```java
+Member member = null;
+System.out.println(member.getName()); // 실행 중 오류
+```
+
+사용하기 전에 검사할 수 있다.
+
+```java
+if (member != null) {
+    System.out.println(member.getName());
+}
+```
+
+지역 변수는 값을 직접 넣기 전까지 사용할 수 없으므로 필요하면 null로 초기화한다.
+
+### Part 5. 참조 변수에 다른 객체 대입하기
+
+```java
+Member member1 = new Member("민수");
+Member member2 = member1;
+
+member2 = new Member("지수");
+```
+
+member2가 새로운 객체를 가리키도록 변경되었지만 member1은 기존 객체를 계속 가리킨다.
+
+```java
+System.out.println(member1.getName());
+System.out.println(member2.getName());
+```
+
+**실행 결과**
+
+```text
+민수
+지수
+```
+
+참조 변수를 바꾸는 것과 객체 내부의 값을 바꾸는 것은 서로 다르다.
+
+### Part 6. 객체를 매개변수로 전달하기
+
+Java는 메서드를 호출할 때 변수의 값을 복사하여 전달한다. 객체 변수에는 참조값이 들어 있으므로 참조값이 복사된다.
+
+```java
+class Counter {
+    private int value;
+
+    public void increase() {
+        value++;
+    }
+
+    public int getValue() {
+        return value;
+    }
+}
+```
+
+```java
+public static void increaseCounter(Counter counter) {
+    counter.increase();
+}
+```
+
+```java
+Counter counter = new Counter();
+
+increaseCounter(counter);
+
+System.out.println(counter.getValue());
+```
+
+**실행 결과**
+
+```text
+1
+```
+
+호출한 쪽과 매개변수가 같은 객체를 가리키므로 객체 내부의 값이 변경된다.
+
+### Part 7. 매개변수에 새 객체를 대입하는 경우
+
+```java
+public static void replace(Member member) {
+    member = new Member("교체된 회원");
+}
+```
+
+```java
+Member member = new Member("기존 회원");
+
+replace(member);
+
+System.out.println(member.getName());
+```
+
+**실행 결과**
+
+```text
+기존 회원
+```
+
+메서드에는 참조값의 복사본이 전달된다. 매개변수 member에 새 객체를 대입해도 호출한 쪽의 member는 바뀌지 않는다.
+
+### 종합 예제
+
+```java
+class Profile {
+    private String nickname;
+
+    public Profile(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void setNickname(String nickname) {
+        if (!nickname.isEmpty()) {
+            this.nickname = nickname;
+        }
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+}
+
+public class Main {
+    public static void rename(Profile profile) {
+        profile.setNickname("코딩왕");
+    }
+
+    public static void replace(Profile profile) {
+        profile = new Profile("새 프로필");
+    }
+
+    public static void main(String[] args) {
+        Profile profile = new Profile("손님");
+
+        rename(profile);
+        System.out.println(profile.getNickname());
+
+        replace(profile);
+        System.out.println(profile.getNickname());
+    }
+}
+```
+
+**실행 결과**
+
+```text
+코딩왕
+코딩왕
+```
+
+rename()은 같은 객체의 내부 값을 변경한다. replace()는 복사된 참조값만 변경하므로 호출한 쪽의 변수에는 영향을 주지 않는다.
+
+## 다음으로
+
+다음 학습 내용은 [Part 10「객체 배열·객체 간 협력」](/dev/lessons/DEV-JAVA-02-10)이다.

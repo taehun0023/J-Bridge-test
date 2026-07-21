@@ -6,10 +6,12 @@ export default function MobileNav({
   isOpen,
   onClose,
   hiddenNav = [],
+  navOverrides = {},
 }: {
   isOpen: boolean
   onClose: () => void
   hiddenNav?: string[]
+  navOverrides?: Record<string, string>
 }) {
   if (!isOpen) return null
 
@@ -20,7 +22,7 @@ export default function MobileNav({
         onClick={onClose}
       />
       <div className="fixed inset-y-0 left-0 z-50 w-64 lg:hidden">
-        <Sidebar onClose={onClose} hiddenNav={hiddenNav} />
+        <Sidebar onClose={onClose} closeOnNavigate hiddenNav={hiddenNav} navOverrides={navOverrides} />
       </div>
     </>
   )

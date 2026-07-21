@@ -1,0 +1,365 @@
+---
+lesson_id: DEV-JAVA-02-02
+title: "Java中級02 フィールドとインスタンスメソッド"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 22
+tags: [java, intermediate, oop, method, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次の作業ができるようにならなければならない。
+
+- インスタンスフィールドにオブジェクトの状態を保存する。
+- オブジェクトごとに異なるフィールドの値を管理する。
+- インスタンスメソッドを宣言して呼び出す。
+- インスタンスメソッドでフィールドを読んだり変更したりする。
+- 引数と戻り値があるインスタンスメソッドを作成する。
+
+## 授業内容
+
+### Part 1. インスタンスフィールド
+
+メソッド内のローカル変数は、メソッドの実行が終わると消えてしまい、そのオブジェクトの状態として残らない。ゲームキャラクターの名前やレベルのように、オブジェクトが持ち続けて覚えておくべきデータは、オブジェクトに属するフィールドとして保存しなければならない。インスタンスフィールドは、複数のオブジェクトが同じ構造を使いながらも、それぞれの状態を別々に保つために使う。
+
+クラス内部でメソッドの外に宣言した変数をフィールドという。
+
+```java
+class Player {
+    String nickname;
+    int level;
+}
+```
+
+nickname と level は Player オブジェクトが持つインスタンスフィールドである。
+
+```java
+Player player1 = new Player();
+Player player2 = new Player();
+
+player1.nickname = "戦士";
+player1.level = 5;
+
+player2.nickname = "魔法使い";
+player2.level = 8;
+```
+
+同じクラスで作ったオブジェクトでも、それぞれ別々のフィールドの値を持つ。
+
+```java
+System.out.println(player1.nickname);
+System.out.println(player2.nickname);
+```
+
+**実行結果**
+
+```text
+戦士
+魔法使い
+```
+
+player1 のフィールドを変更しても player2 のフィールドは変更されない。
+
+```java
+player1.level = 10;
+
+System.out.println(player1.level);
+System.out.println(player2.level);
+```
+
+**実行結果**
+
+```text
+10
+8
+```
+
+フィールドはオブジェクトの状態を保存する。メソッドの中で宣言するローカル変数とは異なり、特定のオブジェクトに属する。
+
+### Part 2. インスタンスメソッド
+
+オブジェクトのデータを処理するコードをオブジェクトの外で直接書くと、同じ計算が複数の場所で繰り返される。
+
+```java
+counter1.count = counter1.count + 3;
+counter2.count = counter2.count + 3;
+```
+
+このようにオブジェクトの外で計算を繰り返すと、同じ動作が複数の場所に散らばる。
+
+インスタンスメソッドを使えば、オブジェクトが行う動作をオブジェクトの中に定義し、呼び出すだけで済む。
+
+```java
+counter1.increase(3);
+counter2.increase(3);
+```
+
+インスタンスメソッドを使うと、オブジェクトのデータを処理するコードをオブジェクトの中にまとめられる。呼び出す側は計算の過程を繰り返さず、オブジェクトが行う動作だけを要求する。オブジェクトごとに自分のフィールドを使って同じ動作を行う必要があるときに、インスタンスメソッドを使う。
+
+クラスの中には、オブジェクトが行う機能をメソッドとして宣言できる。
+
+```java
+class Bell {
+    void ring() {
+        System.out.println("ベルが鳴ります。");
+    }
+}
+```
+
+オブジェクトに属するメソッドをインスタンスメソッドという。インスタンスメソッドはオブジェクトを生成した後、ドット演算子で呼び出す。
+
+```java
+Bell bell = new Bell();
+
+bell.ring();
+```
+
+**実行結果**
+
+```text
+ベルが鳴ります。
+```
+
+基本形式は次のとおりである。
+
+```java
+class クラス名 {
+    戻り値型 メソッド名() {
+        実行するコード;
+    }
+}
+```
+
+呼び出すときはオブジェクト変数を使う。
+
+```java
+オブジェクト変数.メソッド名();
+```
+
+**よくあるミス**
+
+インスタンスメソッドはクラス名で直接呼び出さない。
+
+```java
+Bell bell = new Bell();
+
+Bell.ring(); // コンパイルエラー
+```
+
+生成したオブジェクトを通して呼び出さなければならない。
+
+```java
+bell.ring();
+```
+
+### Part 3. メソッドでのフィールドの使用
+
+インスタンスメソッドは、自分を呼び出したオブジェクトのフィールドを使うことができる。
+
+```java
+class Member {
+    String name;
+    int points;
+
+    void showInfo() {
+        System.out.println(name + ": " + points + "点");
+    }
+}
+```
+
+```java
+Member member1 = new Member();
+Member member2 = new Member();
+
+member1.name = "Minsu";
+member1.points = 80;
+
+member2.name = "Jisu";
+member2.points = 95;
+
+member1.showInfo();
+member2.showInfo();
+```
+
+**実行結果**
+
+```text
+Minsu: 80点
+Jisu: 95点
+```
+
+member1.showInfo() を呼び出すと member1 のフィールドを使い、member2.showInfo() を呼び出すと member2 のフィールドを使う。メソッドのコードは1つだが、呼び出したオブジェクトによって使うデータが変わる。
+
+### Part 4. フィールドを変更するメソッド
+
+インスタンスメソッドでフィールドの値を変更できる。
+
+```java
+class Counter {
+    int count;
+
+    void increase(int amount) {
+        count = count + amount;
+    }
+}
+```
+
+```java
+Counter counter = new Counter();
+
+counter.count = 5;
+counter.increase(3);
+counter.increase(2);
+
+System.out.println(counter.count);
+```
+
+**実行結果**
+
+```text
+10
+```
+
+counter.increase(3) を呼び出すと amount に 3 が渡され、その counter オブジェクトの count が増加する。
+
+オブジェクトごとにメソッドを別々に呼び出すこともできる。
+
+```java
+Counter counter1 = new Counter();
+Counter counter2 = new Counter();
+
+counter1.count = 10;
+counter2.count = 20;
+
+counter1.increase(5);
+counter2.increase(2);
+
+System.out.println(counter1.count);
+System.out.println(counter2.count);
+```
+
+**実行結果**
+
+```text
+15
+22
+```
+
+同じ increase() を呼び出しても、各オブジェクトの count が別々に変更される。
+
+### Part 5. 値を返すインスタンスメソッド
+
+インスタンスメソッドは、オブジェクトのフィールドを利用して計算した値を返すことができる。
+
+```java
+class Rectangle {
+    int width;
+    int height;
+
+    int getArea() {
+        return width * height;
+    }
+}
+```
+
+```java
+Rectangle rectangle = new Rectangle();
+
+rectangle.width = 6;
+rectangle.height = 4;
+
+int area = rectangle.getArea();
+
+System.out.println(area);
+```
+
+**実行結果**
+
+```text
+24
+```
+
+rectangle.getArea() は rectangle オブジェクトの width と height を使って面積を返す。
+
+引数とフィールドを一緒に使うこともできる。
+
+```java
+class Price {
+    int amount;
+
+    int calculateTotal(int quantity) {
+        return amount * quantity;
+    }
+}
+```
+
+```java
+Price price = new Price();
+
+price.amount = 3000;
+
+System.out.println(price.calculateTotal(4));
+```
+
+**実行結果**
+
+```text
+12000
+```
+
+amount はオブジェクトに属するフィールドで、quantity はメソッドを呼び出すときに渡される引数である。
+
+### 総合例
+
+```java
+class Wallet {
+    String owner;
+    int money;
+
+    void addMoney(int amount) {
+        money = money + amount;
+    }
+
+    void spendMoney(int amount) {
+        money = money - amount;
+    }
+
+    void showInfo() {
+        System.out.println(owner + ": " + money + "円");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Wallet wallet1 = new Wallet();
+        Wallet wallet2 = new Wallet();
+
+        wallet1.owner = "Minsu";
+        wallet1.money = 10000;
+
+        wallet2.owner = "Jisu";
+        wallet2.money = 20000;
+
+        wallet1.addMoney(5000);
+        wallet2.spendMoney(3000);
+
+        wallet1.showInfo();
+        wallet2.showInfo();
+    }
+}
+```
+
+**実行結果**
+
+```text
+Minsu: 15000円
+Jisu: 17000円
+```
+
+wallet1 と wallet2 はそれぞれ異なるフィールドの値を持つ。同じメソッドを呼び出しても、そのメソッドを呼び出したオブジェクトの money が変更される。
+
+## 次へ
+
+次は [Part 3「コンストラクタと this」](/dev/lessons/DEV-JAVA-02-03)を学ぶ。

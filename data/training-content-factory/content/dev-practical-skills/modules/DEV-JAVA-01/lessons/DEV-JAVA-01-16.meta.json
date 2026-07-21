@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-01-16",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-basics-method-return",
+  "summary": "return による値返し、void の早期終了、配列引数と参照渡しを学ぶ。",
+  "key_points": [
+    "非 void は return が必要。return で即終了。",
+    "void でも return; で早期終了。",
+    "配列は参照が渡り、要素変更は呼び出し側にも見える。"
+  ],
+  "misconceptions": [
+    "非 void で return を書き忘れる。",
+    "戻り値を保存し忘れる。",
+    "配列変更が呼び出し側に反映されないと思う。"
+  ],
+  "check_questions": [
+    "return 実行後は？",
+    "戻り値型と戻り値の型の関係は？",
+    "配列要素変更が見える理由は？"
+  ]
+}

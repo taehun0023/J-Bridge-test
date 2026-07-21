@@ -1,0 +1,553 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "オーバーロードとスコープ",
+   "prompt": "同名メソッドのオーバーロードと変数のスコープを覚えよう。",
+   "takeaway": "オーバーロードとスコープを10ステップで確認します。"
+  },
+  "steps": [
+   {
+    "id": "java17-q1",
+    "type": "code_exercise",
+    "title": "型が異なるオーバーロード",
+    "prompt": "文字列を受け取るメソッドと整数を受け取るメソッドがオーバーロードされるように、空欄に型を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    static void notifyUser([[0]] text) {\n        System.out.println(\"通知: \" + text);\n    }\n\n    static void notifyUser([[1]] code) {\n        System.out.println(\"コード: \" + code);\n    }\n\n    public static void main(String[] args) {\n        notifyUser(\"点検開始\");\n        notifyUser(404);\n    }\n}",
+    "tokens": [
+     "String",
+     "int",
+     "double",
+     "boolean",
+     "char",
+     "void"
+    ],
+    "answers": [
+     "String",
+     "int"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "通知: 点検開始\nコード: 404"
+    },
+    "explanation": "引数の型が String と int で異なるのでオーバーロードが成立する。\"点検開始\" は String、404 は int なので別々のメソッドが呼び出される。両方に同じ型を書くと引数が同じで重複定義となりコンパイルエラーになり、double を使うと 404 が 404.0 と出力され結果が変わる。"
+   },
+   {
+    "id": "java17-q2",
+    "type": "mini_check",
+    "title": "引数の個数が異なるオーバーロード",
+    "prompt": "2番目の book() メソッドの宣言部として正しいものはどれか？",
+    "code": "public class Main {\n    static void book(String room) {\n        System.out.println(room + \" 予約\");\n    }\n\n    [①] {\n        System.out.println(room + \" \" + nights + \"泊 予約\");\n    }\n\n    public static void main(String[] args) {\n        book(\"Aルーム\");\n        book(\"Bルーム\", 3);\n    }\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`static void book(String room, int nights)`"
+     },
+     {
+      "id": "B",
+      "text": "`static void book(String room)`"
+     },
+     {
+      "id": "C",
+      "text": "`static int book(String room)`"
+     },
+     {
+      "id": "D",
+      "text": "`static void book(int nights)`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "部屋と泊数の2つの値を受け取るには引数が String room, int nights の2つでなければならない。1番目のメソッドと個数が違うのでオーバーロードが成立する。引数が room 1つだけだと1番目と重複し、room を受け取らないと本文で room が見つからずコンパイルエラーになる。"
+   },
+   {
+    "id": "java17-q3",
+    "type": "code_exercise",
+    "title": "引数の順序が異なるオーバーロード",
+    "prompt": "引数の順序に合わせて、2つの呼び出し文を各空欄で選びなさい。",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    static void deliver(String product, boolean urgent) {\n        System.out.println(\"商品が先\");\n    }\n\n    static void deliver(boolean urgent, String product) {\n        System.out.println(\"緊急かどうかが先\");\n    }\n\n    public static void main(String[] args) {\n        [[0]]\n        [[1]]\n    }\n}",
+    "tokens": [
+     "deliver(\"本\", false);",
+     "deliver(true, \"ノートPC\");",
+     "deliver(false, \"本\");",
+     "deliver(\"ノートPC\", true);",
+     "deliver(false);",
+     "deliver(\"本\", \"false\");"
+    ],
+    "answers": [
+     "deliver(\"本\", false);",
+     "deliver(true, \"ノートPC\");"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "商品が先\n緊急かどうかが先"
+    },
+    "explanation": "最初の呼び出しは (String, boolean) の順なので deliver(\"本\", false) で「商品が先」のメソッドを、2番目は (boolean, String) の順なので deliver(true, \"ノートPC\") で「緊急かどうかが先」のメソッドを呼ぶ。deliver(false, \"本\") は boolean が先なので「緊急かどうかが先」のメソッドを呼び、deliver(\"ノートPC\", true) は String が先なので「商品が先」のメソッドを呼ぶ。どちらもコンパイルできるが、問題が求める呼び出し順とは逆である。引数の個数や型が合わない残りはコンパイルエラーになる。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "java17-q4",
+    "type": "mini_check",
+    "title": "正しいオーバーロードの宣言",
+    "prompt": "次のメソッドと正しくオーバーロードされるメソッドはどれか？",
+    "code": "static int encode(int value) {\n    return value + 1;\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`static String encode(int value) { return \"\" + value; }`"
+     },
+     {
+      "id": "B",
+      "text": "`static String decode(String value) { return value; }`"
+     },
+     {
+      "id": "C",
+      "text": "`static String encode(String value) { return \"[\" + value + \"]\"; }`"
+     },
+     {
+      "id": "D",
+      "text": "`static String encode(String) { return \"値\"; }`"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "引数の型が int から String に変わるので encode を正しくオーバーロードする。引数はそのままで戻り値の型だけ変えたものはオーバーロードではなく重複定義であり、名前を decode に変えるとオーバーロードではなく、引数名の無い宣言は文法エラーである。"
+   },
+   {
+    "id": "java17-q5",
+    "type": "mini_check",
+    "title": "呼び出されるメソッドの予測",
+    "prompt": "次のコードの実行結果として正しいものはどれか？（1行目 / 2行目）",
+    "code": "public class Main {\n    static void mark(char token) {\n        System.out.println(\"文字\");\n    }\n\n    static void mark(String token) {\n        System.out.println(\"文字列\");\n    }\n\n    public static void main(String[] args) {\n        mark('A');\n        mark(\"A\");\n    }\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`文字列` / `文字`"
+     },
+     {
+      "id": "B",
+      "text": "`文字` / `文字列`"
+     },
+     {
+      "id": "C",
+      "text": "`文字` / `文字`"
+     },
+     {
+      "id": "D",
+      "text": "`文字列` / `文字列`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "'A' はシングルクォートなので char、\"A\" はダブルクォートなので String である。したがって最初の呼び出しは char メソッドで「文字」、2番目は String メソッドで「文字列」が出力される。"
+   },
+   {
+    "id": "java17-q6",
+    "type": "order",
+    "title": "仮引数とローカル変数の範囲",
+    "prompt": "クラス宣言 → calculateFare() の定義 → main の定義 → calculateFare(3) の呼び出し の順に並べなさい。この問題では calculateFare() を main より先に書く。",
+    "items": [
+     {
+      "id": "i1",
+      "text": "public class Main {"
+     },
+     {
+      "id": "i2",
+      "text": "    static void calculateFare(int distance) {"
+     },
+     {
+      "id": "i3",
+      "text": "        int fare = distance * 100;"
+     },
+     {
+      "id": "i4",
+      "text": "        System.out.println(fare);"
+     },
+     {
+      "id": "i5",
+      "text": "    }"
+     },
+     {
+      "id": "i6",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "i7",
+      "text": "        calculateFare(3);"
+     },
+     {
+      "id": "i8",
+      "text": "    }"
+     },
+     {
+      "id": "i9",
+      "text": "}"
+     }
+    ],
+    "explanation": "distance は仮引数、fare はローカル変数で calculateFare() 内で使う。distance * 100 で計算するので calculateFare(3) は 300 を出力する。distance + 100 は 103 になり、calculateFare() は必要な int 引数が無いのでコンパイルエラーになる。",
+    "distractors": [
+     {
+      "id": "java17-q6_w01",
+      "text": "int fare = distance + 100;"
+     },
+     {
+      "id": "java17-q6_w02",
+      "text": "calculateFare();"
+     }
+    ]
+   },
+   {
+    "id": "java17-q7",
+    "type": "order",
+    "title": "if と for のブロックスコープ",
+    "prompt": "raining の宣言 → if ブロックの実行 → for ブロックの実行 の順に並べて「傘」、1、2 を順に出力しなさい。item と step はそれぞれ宣言されたブロック内でのみ使う。",
+    "items": [
+     {
+      "id": "i1",
+      "text": "boolean raining = true;"
+     },
+     {
+      "id": "i2",
+      "text": "if (raining) {"
+     },
+     {
+      "id": "i3",
+      "text": "    String item = \"傘\";"
+     },
+     {
+      "id": "i4",
+      "text": "    System.out.println(item);"
+     },
+     {
+      "id": "i5",
+      "text": "}"
+     },
+     {
+      "id": "i6",
+      "text": "for (int step = 1; step <= 2; step++) {"
+     },
+     {
+      "id": "i7",
+      "text": "    System.out.println(step);"
+     },
+     {
+      "id": "i8",
+      "text": "}"
+     }
+    ],
+    "explanation": "raining が true なので if (raining) で「傘」が出力され、続く for 文が 1 と 2 を出力する。if (!raining) は実行されず、step = 0; step < 2 は 0 と 1 を出力するので目標の結果とは異なる。",
+    "distractors": [
+     {
+      "id": "java17-q7_w01",
+      "text": "if (!raining) {"
+     },
+     {
+      "id": "java17-q7_w02",
+      "text": "for (int step = 0; step < 2; step++) {"
+     }
+    ]
+   },
+   {
+    "id": "java17-q8",
+    "type": "mini_check",
+    "title": "再宣言と再代入の区別",
+    "prompt": "すでに宣言された level の値を 2 に変更するように、空欄に入るコード1行として正しいものはどれか？",
+    "code": "public class Main {\n    public static void main(String[] args) {\n        int level = 1;\n\n        ____\n\n        System.out.println(level);\n    }\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`int level = 2;`"
+     },
+     {
+      "id": "B",
+      "text": "`level == 2;`"
+     },
+     {
+      "id": "C",
+      "text": "`int level;`"
+     },
+     {
+      "id": "D",
+      "text": "`level = 2;`"
+     }
+    ],
+    "correctOptionId": "D",
+    "explanation": "level はすでに宣言されているので、値だけを変える再代入 level = 2; を使う。int level = 2; や int level; は同じ範囲で再宣言することになりコンパイルエラーで、level == 2; は比較式なので単独の文として書けず、やはりコンパイルエラーになる。"
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "오버로딩과 스코프",
+   "prompt": "같은 이름 메서드의 오버로딩과 변수의 스코프를 익히자.",
+   "takeaway": "오버로딩과 스코프를 10스텝으로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "java17-q1",
+    "type": "code_exercise",
+    "title": "타입이 다른 오버로딩",
+    "prompt": "문자열을 받는 메서드와 정수를 받는 메서드가 오버로딩되도록 빈칸에 타입을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    static void notifyUser([[0]] text) {\n        System.out.println(\"알림: \" + text);\n    }\n\n    static void notifyUser([[1]] code) {\n        System.out.println(\"코드: \" + code);\n    }\n\n    public static void main(String[] args) {\n        notifyUser(\"점검 시작\");\n        notifyUser(404);\n    }\n}",
+    "tokens": [
+     "String",
+     "int",
+     "double",
+     "boolean",
+     "char",
+     "void"
+    ],
+    "answers": [
+     "String",
+     "int"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "알림: 점검 시작\n코드: 404"
+    },
+    "explanation": "매개변수 타입이 String과 int로 다르므로 오버로딩이 성립한다. \"점검 시작\"은 String, 404는 int라 각각 다른 메서드가 호출된다. 두 자리에 같은 타입을 쓰면 매개변수가 같아 중복 정의가 되어 컴파일 오류이고, double을 쓰면 404가 404.0으로 출력되어 결과가 달라진다."
+   },
+   {
+    "id": "java17-q2",
+    "type": "mini_check",
+    "title": "매개변수 개수가 다른 오버로딩",
+    "prompt": "두 번째 book() 메서드의 선언부로 올바른 것은?",
+    "code": "public class Main {\n    static void book(String room) {\n        System.out.println(room + \" 예약\");\n    }\n\n    [①] {\n        System.out.println(room + \" \" + nights + \"박 예약\");\n    }\n\n    public static void main(String[] args) {\n        book(\"A룸\");\n        book(\"B룸\", 3);\n    }\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`static void book(String room, int nights)`"
+     },
+     {
+      "id": "B",
+      "text": "`static void book(String room)`"
+     },
+     {
+      "id": "C",
+      "text": "`static int book(String room)`"
+     },
+     {
+      "id": "D",
+      "text": "`static void book(int nights)`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "방과 박 수 두 값을 받으려면 매개변수가 String room, int nights 두 개여야 한다. 첫 번째 메서드와 개수가 달라 오버로딩이 성립한다. 매개변수가 room 하나뿐이면 첫 번째 메서드와 중복되고, room을 받지 않으면 본문에서 room을 찾지 못해 컴파일 오류가 난다."
+   },
+   {
+    "id": "java17-q3",
+    "type": "code_exercise",
+    "title": "매개변수 순서가 다른 오버로딩",
+    "prompt": "매개변수 순서에 맞게 두 호출문을 각 빈칸에서 고르시오.",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    static void deliver(String product, boolean urgent) {\n        System.out.println(\"상품 먼저\");\n    }\n\n    static void deliver(boolean urgent, String product) {\n        System.out.println(\"긴급 여부 먼저\");\n    }\n\n    public static void main(String[] args) {\n        [[0]]\n        [[1]]\n    }\n}",
+    "tokens": [
+     "deliver(\"책\", false);",
+     "deliver(true, \"노트북\");",
+     "deliver(false, \"책\");",
+     "deliver(\"노트북\", true);",
+     "deliver(false);",
+     "deliver(\"책\", \"false\");"
+    ],
+    "answers": [
+     "deliver(\"책\", false);",
+     "deliver(true, \"노트북\");"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "상품 먼저\n긴급 여부 먼저"
+    },
+    "explanation": "첫 호출은 (String, boolean) 순서라 deliver(\"책\", false)로 「상품 먼저」 메서드를, 둘째 호출은 (boolean, String) 순서라 deliver(true, \"노트북\")로 「긴급 여부 먼저」 메서드를 부른다. deliver(false, \"책\")은 boolean이 먼저라 「긴급 여부 먼저」 메서드를 호출하고, deliver(\"노트북\", true)는 String이 먼저라 「상품 먼저」 메서드를 호출한다. 두 코드 모두 컴파일되지만 문제에서 요구한 호출 순서와 반대다. 인수 개수나 타입이 맞지 않는 나머지는 컴파일 오류가 난다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "java17-q4",
+    "type": "mini_check",
+    "title": "올바른 오버로딩 선언",
+    "prompt": "다음 메서드와 올바르게 오버로딩되는 메서드는?",
+    "code": "static int encode(int value) {\n    return value + 1;\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`static String encode(int value) { return \"\" + value; }`"
+     },
+     {
+      "id": "B",
+      "text": "`static String decode(String value) { return value; }`"
+     },
+     {
+      "id": "C",
+      "text": "`static String encode(String value) { return \"[\" + value + \"]\"; }`"
+     },
+     {
+      "id": "D",
+      "text": "`static String encode(String) { return \"값\"; }`"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "매개변수 타입이 int에서 String으로 달라 encode를 올바르게 오버로딩한다. 매개변수는 그대로 두고 반환형만 바꾼 것은 오버로딩이 아니라 중복 정의이고, 이름을 decode로 바꾸면 오버로딩이 아니며, 매개변수 이름이 없는 선언은 문법 오류다."
+   },
+   {
+    "id": "java17-q5",
+    "type": "mini_check",
+    "title": "호출되는 메서드 예측",
+    "prompt": "다음 코드의 실행 결과로 옳은 것은? (첫 줄 / 둘째 줄)",
+    "code": "public class Main {\n    static void mark(char token) {\n        System.out.println(\"문자\");\n    }\n\n    static void mark(String token) {\n        System.out.println(\"문자열\");\n    }\n\n    public static void main(String[] args) {\n        mark('A');\n        mark(\"A\");\n    }\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`문자열` / `문자`"
+     },
+     {
+      "id": "B",
+      "text": "`문자` / `문자열`"
+     },
+     {
+      "id": "C",
+      "text": "`문자` / `문자`"
+     },
+     {
+      "id": "D",
+      "text": "`문자열` / `문자열`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "'A'는 작은따옴표라 char, \"A\"는 큰따옴표라 String이다. 따라서 첫 호출은 char 메서드로 「문자」, 둘째 호출은 String 메서드로 「문자열」이 출력된다."
+   },
+   {
+    "id": "java17-q6",
+    "type": "order",
+    "title": "매개변수와 지역변수의 범위",
+    "prompt": "클래스 선언 → calculateFare() 정의 → main 정의 → calculateFare(3) 호출 순서로 배열하시오. 이 문제에서는 calculateFare()를 main보다 먼저 작성한다.",
+    "items": [
+     {
+      "id": "i1",
+      "text": "public class Main {"
+     },
+     {
+      "id": "i2",
+      "text": "    static void calculateFare(int distance) {"
+     },
+     {
+      "id": "i3",
+      "text": "        int fare = distance * 100;"
+     },
+     {
+      "id": "i4",
+      "text": "        System.out.println(fare);"
+     },
+     {
+      "id": "i5",
+      "text": "    }"
+     },
+     {
+      "id": "i6",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "i7",
+      "text": "        calculateFare(3);"
+     },
+     {
+      "id": "i8",
+      "text": "    }"
+     },
+     {
+      "id": "i9",
+      "text": "}"
+     }
+    ],
+    "explanation": "distance는 매개변수, fare는 지역변수로 calculateFare() 안에서 사용한다. distance * 100으로 계산하므로 calculateFare(3)은 300을 출력한다. distance + 100은 103을 만들며, calculateFare()는 필요한 int 인수가 없어 컴파일 오류가 난다.",
+    "distractors": [
+     {
+      "id": "java17-q6_w01",
+      "text": "int fare = distance + 100;"
+     },
+     {
+      "id": "java17-q6_w02",
+      "text": "calculateFare();"
+     }
+    ]
+   },
+   {
+    "id": "java17-q7",
+    "type": "order",
+    "title": "if와 for의 블록 스코프",
+    "prompt": "raining 선언 → if 블록 실행 → for 블록 실행 순서로 배열하여 「우산」, 1, 2를 차례로 출력하시오. item과 step은 각각 선언된 블록 안에서만 사용한다.",
+    "items": [
+     {
+      "id": "i1",
+      "text": "boolean raining = true;"
+     },
+     {
+      "id": "i2",
+      "text": "if (raining) {"
+     },
+     {
+      "id": "i3",
+      "text": "    String item = \"우산\";"
+     },
+     {
+      "id": "i4",
+      "text": "    System.out.println(item);"
+     },
+     {
+      "id": "i5",
+      "text": "}"
+     },
+     {
+      "id": "i6",
+      "text": "for (int step = 1; step <= 2; step++) {"
+     },
+     {
+      "id": "i7",
+      "text": "    System.out.println(step);"
+     },
+     {
+      "id": "i8",
+      "text": "}"
+     }
+    ],
+    "explanation": "raining이 true이므로 if (raining)에서 「우산」이 출력되고, 이어지는 for문이 1과 2를 출력한다. if (!raining)은 실행되지 않으며, step = 0; step < 2는 0과 1을 출력하므로 목표 결과와 다르다.",
+    "distractors": [
+     {
+      "id": "java17-q7_w01",
+      "text": "if (!raining) {"
+     },
+     {
+      "id": "java17-q7_w02",
+      "text": "for (int step = 0; step < 2; step++) {"
+     }
+    ]
+   },
+   {
+    "id": "java17-q8",
+    "type": "mini_check",
+    "title": "재선언과 재대입 구분",
+    "prompt": "이미 선언된 level의 값을 2로 변경하도록 빈칸에 들어갈 코드 한 줄로 옳은 것은?",
+    "code": "public class Main {\n    public static void main(String[] args) {\n        int level = 1;\n\n        ____\n\n        System.out.println(level);\n    }\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`int level = 2;`"
+     },
+     {
+      "id": "B",
+      "text": "`level == 2;`"
+     },
+     {
+      "id": "C",
+      "text": "`int level;`"
+     },
+     {
+      "id": "D",
+      "text": "`level = 2;`"
+     }
+    ],
+    "correctOptionId": "D",
+    "explanation": "level은 이미 선언되었으므로 값만 바꾸는 재대입 level = 2;를 쓴다. int level = 2;나 int level;은 같은 범위에서 다시 선언하는 것이라 컴파일 오류이고, level == 2;는 비교식이라 단독 문장으로 쓸 수 없어 역시 컴파일 오류다."
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}

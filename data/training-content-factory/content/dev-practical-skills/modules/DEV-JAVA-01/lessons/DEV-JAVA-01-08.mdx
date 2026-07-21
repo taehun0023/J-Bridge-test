@@ -1,0 +1,366 @@
+---
+lesson_id: DEV-JAVA-01-08
+title: "Java初級08 繰り返し② while・do-while"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 18
+tags: [java, basics, loop, while, dowhile, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次のことができるようにする。
+
+- while 文の条件検査と実行順序を理解する。
+- 繰り返し変数を直接初期化し、変更する。
+- 入力値に応じて繰り返しを続けるか終了する。
+- do-while が最低1回実行される理由を理解する。
+- while と do-while の違いを区別する。
+
+## 授業内容
+
+### Part 1. while文の基本構造
+
+**概念説明**
+
+- while 文は条件式が true の間コードを繰り返す。
+- 繰り返す前に条件を先に検査する。
+- 最初から条件が false であれば、繰り返し領域を一度も実行しない。
+- for 文と異なり、初期化式と増減式を丸括弧の中に一緒に書かない。
+- 繰り返しに使う変数は while 文の前に作り、繰り返し文の中で変更しなければならない。
+
+**コード文法の分解**
+
+```java
+int i = 1;
+
+while (i <= 3) {
+    System.out.println(i);
+    i++;
+}
+```
+
+| コード | 意味 |
+|---|---|
+| `int i = 1` | 繰り返し変数の初期値 |
+| `i <= 3` | 繰り返しを続ける条件 |
+| `System.out.println(i)` | 繰り返し実行するコード |
+| `i++` | 繰り返し変数の変更 |
+
+**実行の流れ**
+
+| 順序 | i | 条件の結果 | 実行 |
+|---|---|---|---|
+| 1 | 1 | true | 1 を出力後 i を 2 に変更 |
+| 2 | 2 | true | 2 を出力後 i を 3 に変更 |
+| 3 | 3 | true | 3 を出力後 i を 4 に変更 |
+| 4 | 4 | false | 繰り返し終了 |
+
+**実行結果**
+
+```
+1
+2
+3
+```
+
+**問題とは別の例**
+
+```java
+int count = 0;
+
+while (count < 3) {
+    System.out.println("Java");
+    count++;
+}
+```
+
+```
+Java
+Java
+Java
+```
+
+**よくあるミス**
+
+繰り返し変数を変更しないと、条件がずっと true のままになることがある。
+
+```java
+int i = 1;
+
+while (i <= 3) {
+    System.out.println(i);
+}
+```
+
+i がずっと 1 のままなので、繰り返しが終わらない。
+
+```java
+while (i <= 3) {
+    System.out.println(i);
+    i++;
+}
+```
+
+### Part 2. whileを使った計算
+
+**概念説明**
+
+- while 文でも合計と個数を計算できる。
+- 合計変数と繰り返し変数は繰り返し文の前に初期化する。
+- 繰り返し文の中では合計を計算した後、繰り返し変数を変更する。
+- 変数変更の位置が抜けたり間違っていたりすると、繰り返し回数と結果が変わってしまう。
+- 繰り返し回数が明確なら for、条件によって繰り返すなら while が自然である。
+
+**合計の計算の例**
+
+```java
+int i = 1;
+int sum = 0;
+
+while (i <= 5) {
+    sum += i;
+    i++;
+}
+
+System.out.println(sum);
+```
+
+**実行の流れ**
+
+- `i = 1, sum = 0`
+- `i = 2, sum = 1`
+- `i = 3, sum = 3`
+- `i = 4, sum = 6`
+- `i = 5, sum = 10`
+- `i = 6, sum = 15`
+
+条件を再び検査すると `6 <= 5` が false になるため、繰り返しが終了する。
+
+**実行結果**
+
+```
+15
+```
+
+**減少の繰り返し**
+
+```java
+int number = 3;
+
+while (number >= 1) {
+    System.out.println(number);
+    number--;
+}
+```
+
+```
+3
+2
+1
+```
+
+**よくあるミス**
+
+増加する条件で変数を減少させると、繰り返しが終了しないことがある。
+
+```java
+int i = 1;
+
+while (i <= 5) {
+    System.out.println(i);
+    i--;
+}
+```
+
+初期値、条件式、変数の変更方向を一緒に確認しなければならない。
+
+### Part 3. 入力値による繰り返し
+
+**概念説明**
+
+- 繰り返し回数が事前にわからず、入力値によって終了しなければならない場合に while 文を使うことができる。
+- 繰り返しの前に最初の値を入力してもらい、条件を検査する。
+- 繰り返し文の中で現在の値を処理した後、次の値を再び入力してもらう。
+- 終了を表す特定の値を終了値またはセンチネル値という。
+
+**例**
+
+ユーザーが 0 を入力するまで、入力された数字を出力する。
+
+```java
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        int number = scanner.nextInt();
+
+        while (number != 0) {
+            System.out.println(number);
+            number = scanner.nextInt();
+        }
+
+        scanner.close();
+    }
+}
+```
+
+**実行の流れと結果**
+
+入力:
+
+```
+5
+3
+0
+```
+
+実行の過程:
+
+- `5 != 0` なので 5 を出力する。
+- 次の値 3 を入力してもらう。
+- `3 != 0` なので 3 を出力する。
+- 次の値 0 を入力してもらう。
+- `0 != 0` は false なので終了する。
+
+出力:
+
+```
+5
+3
+```
+
+終了値 0 は出力されない。
+
+**よくあるミス**
+
+繰り返し文の中で次の値を入力してもらわないと、同じ値をずっと検査し続ける。
+
+```java
+int number = scanner.nextInt();
+
+while (number != 0) {
+    System.out.println(number);
+}
+```
+
+次の入力を繰り返し文の中で受け取らなければならない。
+
+```java
+while (number != 0) {
+    System.out.println(number);
+    number = scanner.nextInt();
+}
+```
+
+### Part 4. do-while
+
+**概念説明**
+
+- do-while はコードを先に実行した後、条件を検査する。
+- したがって条件が最初から false であっても、繰り返し領域を最低1回実行する。
+- do の後ろの中括弧の中に繰り返すコードを書く。
+- 最後の `while (条件式)` の後ろにはセミコロンを付けなければならない。
+- メニューを最低1回見せたり、先に入力を受け取ったりしなければならないときに使うことができる。
+
+**コード文法の分解**
+
+```java
+int i = 1;
+
+do {
+    System.out.println(i);
+    i++;
+} while (i <= 3);
+```
+
+| コード | 意味 |
+|---|---|
+| `do` | 条件検査の前にコード実行 |
+| `{ }` | 繰り返すコード |
+| `while (i <= 3)` | 次の繰り返しの可否を検査 |
+| `;` | do-while 文の終わり |
+
+**実行結果**
+
+```
+1
+2
+3
+```
+
+**最初から条件が偽の場合**
+
+```java
+int number = 10;
+
+while (number < 5) {
+    System.out.println("while 実行");
+}
+```
+
+何も出力されない。
+
+```java
+int number = 10;
+
+do {
+    System.out.println("do-while 実行");
+} while (number < 5);
+```
+
+条件は false だが先に実行するため、次のように出力される。
+
+```
+do-while 実行
+```
+
+**問題とは別の例**
+
+```java
+int count = 3;
+
+do {
+    System.out.println(count);
+    count--;
+} while (count >= 1);
+```
+
+```
+3
+2
+1
+```
+
+**よくあるミス**
+
+最後のセミコロンを忘れてはいけない。
+
+```java
+do {
+    System.out.println("実行");
+} while (false) // エラー
+```
+
+正しいコードは次のとおりである。
+
+```java
+do {
+    System.out.println("実行");
+} while (false);
+```
+
+## for, while, do-while の比較
+
+| 繰り返し文 | 条件検査 | 適した状況 |
+|---|---|---|
+| `for` | 実行前 | 繰り返し回数が明確な場合 |
+| `while` | 実行前 | 条件によって繰り返し回数が変わる場合 |
+| `do-while` | 実行後 | コードを最低1回実行する必要がある場合 |
+
+## 次へ
+
+次は [Part 9「繰り返し③ break・continue・ネスト」](/dev/lessons/DEV-JAVA-01-09)を学ぶ。

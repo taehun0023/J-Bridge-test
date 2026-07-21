@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-02-09",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-oop-reference-null",
+  "summary": "オブジェクト変数に参照値が保存されること、参照のコピーで同じオブジェクトを指すこと、null チェックによる NullPointerException 防止、オブジェクトの引数渡しを学ぶ。",
+  "key_points": [
+    "オブジェクト変数には参照値が保存され、コピーすると同じオブジェクトを指す。",
+    "null の変数でメンバーにアクセスすると NullPointerException が起きる。",
+    "引数には参照値のコピーが渡されるので、引数に新しいオブジェクトを代入しても呼び出し元は変わらない。"
+  ],
+  "misconceptions": [
+    "オブジェクト変数にオブジェクトそのものが保存されると思う。",
+    "== がオブジェクトの内容を比較すると思う。",
+    "引数に新しいオブジェクトを代入すると呼び出し元も変わると思う。"
+  ],
+  "check_questions": [
+    "member2 = member1 のあと member2 を変更すると member1 は？",
+    "null の変数でメソッドを呼ぶとどうなる？",
+    "引数に新オブジェクトを代入すると呼び出し元の変数は変わるか？"
+  ]
+}

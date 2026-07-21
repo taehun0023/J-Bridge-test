@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-02-06",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-oop-access-modifier",
+  "summary": "public・protected・アクセス修飾子なし・private の4つのアクセス範囲、同じクラス/同じパッケージ/別パッケージでのアクセス差、クラスとコンストラクタのアクセス範囲を学ぶ。",
+  "key_points": [
+    "アクセス範囲は public → protected → 修飾子なし → private の順に狭くなる。",
+    "修飾子なし(package-private)は同じパッケージだけ、private は同じクラス内だけで使える。",
+    "トップレベルクラスには public と修飾子なしだけ使え、private・protected は使えない。"
+  ],
+  "misconceptions": [
+    "default という修飾子を書くと package-private になると思う。",
+    "public クラスなら別パッケージから必ずインスタンス化できると思う（コンストラクタの範囲は別）。",
+    "トップレベルクラスに private を付けられると思う。"
+  ],
+  "check_questions": [
+    "修飾子を書かないメソッドはどこから使えるか？",
+    "private メソッドはどこから呼べるか？",
+    "トップレベルクラスに使えるアクセス形態は？"
+  ]
+}

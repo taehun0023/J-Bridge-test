@@ -1,0 +1,775 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "変数と型を身につけよう",
+   "prompt": "変数の宣言・基本型・リテラル・定数を、手を動かして覚えよう。",
+   "takeaway": "変数と型の基本を10ステップで確認します。"
+  },
+  "steps": [
+   {
+    "id": "java2-q1",
+    "type": "mini_check",
+    "title": "変数の宣言と初期化",
+    "prompt": "score という整数型の変数を宣言しながら 100 で初期化したコードはどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "`int score = 100;`"
+     },
+     {
+      "id": "B",
+      "text": "`score int = 100;`"
+     },
+     {
+      "id": "C",
+      "text": "`int = score 100;`"
+     },
+     {
+      "id": "D",
+      "text": "`score = int 100;`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "宣言は「型 変数名 = 値;」の順である。int は型、score は変数名、100 は整数リテラル。順番を変えるとコンパイルエラーになる。"
+   },
+   {
+    "id": "java2-q2",
+    "type": "mini_check",
+    "title": "変数の値の変更",
+    "prompt": "次のコードの実行結果は？",
+    "options": [
+     {
+      "id": "A",
+      "text": "1 と 2 が順に各行に出力される。"
+     },
+     {
+      "id": "B",
+      "text": "1 が2回出力される。"
+     },
+     {
+      "id": "C",
+      "text": "2 が2回出力される。"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "まず 1 を出力し、level = 2 で値が変わった後 2 を出力する。元の値 1 は新しい値 2 に置き換わる。",
+    "code": "int level = 1;\nSystem.out.println(level);\nlevel = 2;\nSystem.out.println(level);"
+   },
+   {
+    "id": "java2-q3",
+    "type": "mini_check",
+    "title": "変数名のルール",
+    "prompt": "次のうち、変数名として使えないものだけを集めたものはどれか？\n(studentCount, 2score, class, score2, user level, _level)",
+    "options": [
+     {
+      "id": "A",
+      "text": "2score, class, user level"
+     },
+     {
+      "id": "B",
+      "text": "studentCount, score2, _level"
+     },
+     {
+      "id": "C",
+      "text": "2score, score2, _level"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "変数名は数字で始められず(2score)、予約語は使えず(class)、空白を含められない(user level)。studentCount・score2・_level はルールに合うので使える。"
+   },
+   {
+    "id": "java2-q4",
+    "type": "mini_check",
+    "title": "初期化されていない変数",
+    "prompt": "次のコードを実行するとどうなるか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "コンパイルエラーが発生する。"
+     },
+     {
+      "id": "B",
+      "text": "0 が出力される。"
+     },
+     {
+      "id": "C",
+      "text": "null が出力される。"
+     },
+     {
+      "id": "D",
+      "text": "何も出力されない。"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "main の中で宣言したローカル変数は、値を保存(初期化)した後でなければ使えない。初期化せずに使うと「variable count might not have been initialized」というコンパイルエラーになる。(フィールドと違い、ローカル変数は 0 に自動初期化されない。)",
+    "code": "int count;\nSystem.out.println(count);"
+   },
+   {
+    "id": "java2-q5",
+    "type": "mini_check",
+    "title": "基本型の分類",
+    "prompt": "次のうち、整数型(整数を保存する基本型)4つだけを正しく集めたものはどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "byte, short, int, long"
+     },
+     {
+      "id": "B",
+      "text": "byte, short, int, float"
+     },
+     {
+      "id": "C",
+      "text": "short, int, long, double"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "整数型は byte・short・int・long の4つ。float・double は実数型、char は文字型、boolean は論理型である。Java の基本型は全部で8つ。"
+   },
+   {
+    "id": "java2-q6",
+    "type": "code_exercise",
+    "title": "適切な型を埋める",
+    "prompt": "各値を保存するのに適切な基本型を空欄に埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "[[0]] age = 20;\n[[1]] height = 175.5;\n[[2]] grade = 'A';\n[[3]] completed = false;\nSystem.out.println(age);\nSystem.out.println(height);\nSystem.out.println(grade);\nSystem.out.println(completed);",
+    "tokens": [
+     "int",
+     "double",
+     "char",
+     "boolean",
+     "String"
+    ],
+    "answers": [
+     "int",
+     "double",
+     "char",
+     "boolean"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "20\n175.5\nA\nfalse"
+    },
+    "explanation": "整数 20 は int、実数 175.5 は double、文字 'A' は char、真偽値 false は boolean に保存する。String を使うと基本型の値を入れられずコンパイルエラー(incompatible types)になる。"
+   },
+   {
+    "id": "java2-q7",
+    "type": "mini_check",
+    "title": "基本型でないもの",
+    "prompt": "次のうち、Java の基本型でないものはどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "String"
+     },
+     {
+      "id": "B",
+      "text": "int"
+     },
+     {
+      "id": "C",
+      "text": "double"
+     },
+     {
+      "id": "D",
+      "text": "boolean"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "String は基本型ではなく参照型(クラス)である。Java の基本型は byte・short・int・long・float・double・char・boolean の8つだけ。"
+   },
+   {
+    "id": "java2-q8",
+    "type": "mini_check",
+    "title": "リテラルの既定の型",
+    "prompt": "リテラルとその既定の型の組み合わせがすべて正しいものはどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "100 → int, 3.14 → double, 'A' → char, true → boolean"
+     },
+     {
+      "id": "B",
+      "text": "100 → long, 3.14 → float, 'A' → String, true → boolean"
+     },
+     {
+      "id": "C",
+      "text": "100 → int, 3.14 → float, 'A' → char, true → int"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "小数点のない整数リテラルは既定で int、小数点のある実数リテラルは既定で double。シングルクォートの文字は char、true/false は boolean である。"
+   },
+   {
+    "id": "java2-q9",
+    "type": "code_exercise",
+    "title": "リテラルの完成",
+    "prompt": "各リテラルが型に合って保存されるように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "long population = 8000000000[[0]];\nfloat temperature = 24.5[[1]];\nchar grade = [[2]];\nboolean passed = [[3]];\nSystem.out.println(population);\nSystem.out.println(temperature);\nSystem.out.println(grade);\nSystem.out.println(passed);",
+    "tokens": [
+     "L",
+     "F",
+     "'A'",
+     "true",
+     "false"
+    ],
+    "answers": [
+     "L",
+     "F",
+     "'A'",
+     "true"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "8000000000\n24.5\nA\ntrue"
+    },
+    "explanation": "int の範囲を超える整数リテラルには L または l を付けて long にし、実数リテラルを float に保存するときは F または f を付ける。小文字も文法上は使えるが、小文字 l は数字 1 と混同しやすいので通常は大文字 L が推奨される。文字はシングルクォートを使った 'A'、論理値は小文字の true で書く。",
+    "acceptedAnswers": [
+     [
+      "l"
+     ],
+     [
+      "f"
+     ],
+     [],
+     []
+    ]
+   },
+   {
+    "id": "java2-q10",
+    "type": "code_exercise",
+    "title": "byte の保存範囲",
+    "prompt": "byte に保存できる値を選んで空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "byte level = [[0]];\n\nSystem.out.println(level);",
+    "tokens": [
+     "127",
+     "128",
+     "-129",
+     "3.5"
+    ],
+    "answers": [
+     "127"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "127"
+    },
+    "explanation": "byte の保存範囲は -128 から 127 までである。127 は保存できるが 128 と -129 は範囲を超え、3.5 は整数ではない実数なので byte にそのまま保存できない。"
+   },
+   {
+    "id": "java2-q11",
+    "type": "code_exercise",
+    "title": "定数の宣言",
+    "prompt": "値を変更できない整数の定数を宣言するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "[[0]] int MAX_SCORE = 100;\nSystem.out.println(MAX_SCORE);",
+    "tokens": [
+     "final",
+     "const",
+     "fixed",
+     "readonly"
+    ],
+    "answers": [
+     "final"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "100"
+    },
+    "explanation": "final を付けた変数には値を再代入できない。Java では const, fixed, readonly を定数宣言のキーワードとして使わない。定数名は MAX_SCORE のように大文字とアンダースコアで書くのが慣例である。"
+   },
+   {
+    "id": "java2-q12",
+    "type": "mini_check",
+    "title": "定数の値の変更",
+    "prompt": "次のコードでは何が起こるか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "コンパイルエラーが発生する。"
+     },
+     {
+      "id": "B",
+      "text": "値が 50 に変更される。"
+     },
+     {
+      "id": "C",
+      "text": "値が 30 のまま正常に実行される。"
+     },
+     {
+      "id": "D",
+      "text": "DAILY_GOAL が普通の変数に変わる。"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "final 変数は一度値が保存されると再代入できない。DAILY_GOAL = 50; で「cannot assign a value to final variable」というコンパイルエラーになる。",
+    "code": "final int DAILY_GOAL = 30;\nDAILY_GOAL = 50;"
+   },
+   {
+    "id": "java2-q13",
+    "type": "mini_check",
+    "title": "実行結果の予測",
+    "prompt": "次のコードの実行結果として正しいものはどれか？ (各変数を順に println)",
+    "options": [
+     {
+      "id": "A",
+      "text": "2, 1.5, A, false, 30 が順に各行に出力される。"
+     },
+     {
+      "id": "B",
+      "text": "partNumber, studyHours, grade, completed, DAILY_GOAL (変数名が出力される)。"
+     },
+     {
+      "id": "C",
+      "text": "2, 1.5, A, true, 30 が出力される。"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "println は変数名ではなく、変数に保存された値を出力する。保存された値が順に 2, 1.5, A, false, 30 と出力される。completed は false なので true ではない。",
+    "code": "int partNumber = 2;\ndouble studyHours = 1.5;\nchar grade = 'A';\nboolean completed = false;\nfinal int DAILY_GOAL = 30;"
+   },
+   {
+    "id": "java2-q14",
+    "type": "mini_check",
+    "title": "エラー修正",
+    "prompt": "次のコードには複数のエラーがある。すべて正しく直したものはどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "`int level2 = 2; / char grade = 'A'; / boolean passed = true; / float rate = 1.5F; / long population = 8000000000L;`"
+     },
+     {
+      "id": "B",
+      "text": "`int 2level = 2; / char grade = 'A'; / boolean passed = true; / float rate = 1.5; / long population = 8000000000;`"
+     },
+     {
+      "id": "C",
+      "text": "`int level2 = 2; / char grade = \"A\"; / boolean passed = True; / float rate = 1.5F; / long population = 8000000000L;`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "名前は数字で始められないので level2 に、char はシングルクォート 'A' に、論理値は小文字 true に、float リテラルには F を、int の範囲を超える大きな整数には L を付ける。5つすべてを直したのは A のみ。",
+    "code": "int 2level = 2;\nchar grade = \"A\";\nboolean passed = True;\nfloat rate = 1.5;\nlong population = 8000000000;"
+   },
+   {
+    "id": "java2-q15",
+    "type": "code_exercise",
+    "title": "総合 — 変数と定数のプログラム",
+    "prompt": "次の条件を満たすように空欄を埋めなさい。courseName=\"Java\", partNumber=2, level='B', completed=false, 定数 MAX_SCORE=100 を保存して順に出力する。",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    public static void main(String[] args) {\n        String courseName = \"[[0]]\";\n        int partNumber = [[1]];\n        char level = [[2]];\n        boolean completed = [[3]];\n        final int MAX_SCORE = [[4]];\n        System.out.println(courseName);\n        System.out.println(partNumber);\n        System.out.println(level);\n        System.out.println(completed);\n        System.out.println(MAX_SCORE);\n    }\n}",
+    "tokens": [
+     "Java",
+     "2",
+     "'B'",
+     "false",
+     "100",
+     "true",
+     "'A'"
+    ],
+    "answers": [
+     "Java",
+     "2",
+     "'B'",
+     "false",
+     "100"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Java\n2\nB\nfalse\n100"
+    },
+    "explanation": "文字列は二重引用符の中に Java、整数は 2、文字はシングルクォート 'B'、論理値は false、定数の値は 100 を入れる。char に 'A' を入れると B ではなく A が、boolean に true を入れると false ではなく true が出力され、結果が変わる。"
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "변수와 타입을 익히자",
+   "prompt": "변수 선언·기본형·리터럴·상수를 손으로 익히자.",
+   "takeaway": "변수와 타입의 기본을 10스텝으로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "java2-q1",
+    "type": "mini_check",
+    "title": "변수 선언과 초기화",
+    "prompt": "score라는 정수형 변수를 선언하면서 100으로 초기화한 코드는 무엇인가?",
+    "options": [
+     {
+      "id": "A",
+      "text": "`int score = 100;`"
+     },
+     {
+      "id": "B",
+      "text": "`score int = 100;`"
+     },
+     {
+      "id": "C",
+      "text": "`int = score 100;`"
+     },
+     {
+      "id": "D",
+      "text": "`score = int 100;`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "선언은 「자료형 변수이름 = 값;」 순서다. int는 자료형, score는 변수 이름, 100은 정수 리터럴이다. 순서를 바꾸면 컴파일 오류가 난다."
+   },
+   {
+    "id": "java2-q2",
+    "type": "mini_check",
+    "title": "변수 값 변경",
+    "prompt": "다음 코드의 실행 결과는?",
+    "options": [
+     {
+      "id": "A",
+      "text": "1과 2가 순서대로 각 줄에 출력된다."
+     },
+     {
+      "id": "B",
+      "text": "1이 두 번 출력된다."
+     },
+     {
+      "id": "C",
+      "text": "2가 두 번 출력된다."
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "먼저 1을 출력하고, level = 2로 값이 바뀐 뒤 2를 출력한다. 기존 값 1은 새로운 값 2로 대체된다.",
+    "code": "int level = 1;\nSystem.out.println(level);\nlevel = 2;\nSystem.out.println(level);"
+   },
+   {
+    "id": "java2-q3",
+    "type": "mini_check",
+    "title": "변수 이름 규칙",
+    "prompt": "다음 중 변수 이름으로 사용할 수 없는 것끼리만 묶은 것은?\n(studentCount, 2score, class, score2, user level, _level)",
+    "options": [
+     {
+      "id": "A",
+      "text": "2score, class, user level"
+     },
+     {
+      "id": "B",
+      "text": "studentCount, score2, _level"
+     },
+     {
+      "id": "C",
+      "text": "2score, score2, _level"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "변수 이름은 숫자로 시작할 수 없고(2score), 예약어를 쓸 수 없으며(class), 공백을 포함할 수 없다(user level). studentCount·score2·_level은 규칙에 맞아 사용할 수 있다."
+   },
+   {
+    "id": "java2-q4",
+    "type": "mini_check",
+    "title": "초기화되지 않은 변수",
+    "prompt": "다음 코드를 실행하면 어떻게 되는가?",
+    "options": [
+     {
+      "id": "A",
+      "text": "컴파일 오류가 발생한다."
+     },
+     {
+      "id": "B",
+      "text": "0이 출력된다."
+     },
+     {
+      "id": "C",
+      "text": "null이 출력된다."
+     },
+     {
+      "id": "D",
+      "text": "아무것도 출력되지 않는다."
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "main 안에서 선언한 지역 변수는 값을 저장(초기화)한 후에만 사용할 수 있다. 초기화하지 않고 사용하면 「variable count might not have been initialized」 컴파일 오류가 난다. (필드와 달리 지역 변수는 0으로 자동 초기화되지 않는다.)",
+    "code": "int count;\nSystem.out.println(count);"
+   },
+   {
+    "id": "java2-q5",
+    "type": "mini_check",
+    "title": "기본형 분류",
+    "prompt": "다음 중 정수형(정수를 저장하는 기본형) 4가지만 올바르게 묶은 것은?",
+    "options": [
+     {
+      "id": "A",
+      "text": "byte, short, int, long"
+     },
+     {
+      "id": "B",
+      "text": "byte, short, int, float"
+     },
+     {
+      "id": "C",
+      "text": "short, int, long, double"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "정수형은 byte·short·int·long 4가지다. float·double은 실수형, char는 문자형, boolean은 논리형이다. Java 기본형은 총 8개다."
+   },
+   {
+    "id": "java2-q6",
+    "type": "code_exercise",
+    "title": "알맞은 자료형 채우기",
+    "prompt": "각 값을 저장하기에 알맞은 기본형을 빈칸에 채우시오.",
+    "lang": "java",
+    "codeTemplate": "[[0]] age = 20;\n[[1]] height = 175.5;\n[[2]] grade = 'A';\n[[3]] completed = false;\nSystem.out.println(age);\nSystem.out.println(height);\nSystem.out.println(grade);\nSystem.out.println(completed);",
+    "tokens": [
+     "int",
+     "double",
+     "char",
+     "boolean",
+     "String"
+    ],
+    "answers": [
+     "int",
+     "double",
+     "char",
+     "boolean"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "20\n175.5\nA\nfalse"
+    },
+    "explanation": "정수 20은 int, 실수 175.5는 double, 문자 'A'는 char, 참/거짓 false는 boolean에 저장한다. String을 쓰면 기본형 값을 담을 수 없어 컴파일 오류(incompatible types)가 난다."
+   },
+   {
+    "id": "java2-q7",
+    "type": "mini_check",
+    "title": "기본형이 아닌 것",
+    "prompt": "다음 중 Java의 기본형이 아닌 것은 무엇인가?",
+    "options": [
+     {
+      "id": "A",
+      "text": "String"
+     },
+     {
+      "id": "B",
+      "text": "int"
+     },
+     {
+      "id": "C",
+      "text": "double"
+     },
+     {
+      "id": "D",
+      "text": "boolean"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "String은 기본형이 아니라 참조형(클래스)이다. Java의 기본형은 byte·short·int·long·float·double·char·boolean 8가지뿐이다."
+   },
+   {
+    "id": "java2-q8",
+    "type": "mini_check",
+    "title": "리터럴의 기본 자료형",
+    "prompt": "리터럴과 그 기본 자료형의 짝으로 모두 옳은 것은?",
+    "options": [
+     {
+      "id": "A",
+      "text": "100 → int, 3.14 → double, 'A' → char, true → boolean"
+     },
+     {
+      "id": "B",
+      "text": "100 → long, 3.14 → float, 'A' → String, true → boolean"
+     },
+     {
+      "id": "C",
+      "text": "100 → int, 3.14 → float, 'A' → char, true → int"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "소수점 없는 정수 리터럴은 기본적으로 int, 소수점 있는 실수 리터럴은 기본적으로 double이다. 작은따옴표 문자는 char, true/false는 boolean이다."
+   },
+   {
+    "id": "java2-q9",
+    "type": "code_exercise",
+    "title": "리터럴 완성",
+    "prompt": "각 리터럴이 자료형에 맞게 저장되도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "long population = 8000000000[[0]];\nfloat temperature = 24.5[[1]];\nchar grade = [[2]];\nboolean passed = [[3]];\nSystem.out.println(population);\nSystem.out.println(temperature);\nSystem.out.println(grade);\nSystem.out.println(passed);",
+    "tokens": [
+     "L",
+     "F",
+     "'A'",
+     "true",
+     "false"
+    ],
+    "answers": [
+     "L",
+     "F",
+     "'A'",
+     "true"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "8000000000\n24.5\nA\ntrue"
+    },
+    "explanation": "int 범위를 넘는 정수 리터럴에는 L 또는 l을 붙여 long으로 만들고, 실수 리터럴을 float에 저장할 때는 F 또는 f를 붙인다. 소문자도 문법상 사용할 수 있지만, 소문자 l은 숫자 1과 혼동하기 쉬워 보통 대문자 L을 권장한다. 문자는 작은따옴표를 사용한 'A', 논리값은 소문자 true로 작성한다.",
+    "acceptedAnswers": [
+     [
+      "l"
+     ],
+     [
+      "f"
+     ],
+     [],
+     []
+    ]
+   },
+   {
+    "id": "java2-q10",
+    "type": "code_exercise",
+    "title": "byte 저장 범위",
+    "prompt": "byte에 저장할 수 있는 값을 골라 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "byte level = [[0]];\n\nSystem.out.println(level);",
+    "tokens": [
+     "127",
+     "128",
+     "-129",
+     "3.5"
+    ],
+    "answers": [
+     "127"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "127"
+    },
+    "explanation": "byte의 저장 범위는 -128부터 127까지다. 127은 저장할 수 있지만 128과 -129는 범위를 벗어나며, 3.5는 정수가 아닌 실수라 byte에 바로 저장할 수 없다."
+   },
+   {
+    "id": "java2-q11",
+    "type": "code_exercise",
+    "title": "상수 선언",
+    "prompt": "값을 변경할 수 없는 정수 상수를 선언하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "[[0]] int MAX_SCORE = 100;\nSystem.out.println(MAX_SCORE);",
+    "tokens": [
+     "final",
+     "const",
+     "fixed",
+     "readonly"
+    ],
+    "answers": [
+     "final"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "100"
+    },
+    "explanation": "final을 붙인 변수에는 값을 다시 대입할 수 없다. Java에서는 const, fixed, readonly를 상수 선언 키워드로 사용하지 않는다. 상수 이름은 MAX_SCORE처럼 대문자와 밑줄로 쓰는 것이 관례다."
+   },
+   {
+    "id": "java2-q12",
+    "type": "mini_check",
+    "title": "상수 값 변경",
+    "prompt": "다음 코드에서 어떤 일이 일어나는가?",
+    "options": [
+     {
+      "id": "A",
+      "text": "컴파일 오류가 발생한다."
+     },
+     {
+      "id": "B",
+      "text": "값이 50으로 변경된다."
+     },
+     {
+      "id": "C",
+      "text": "값이 30으로 유지된 채 정상 실행된다."
+     },
+     {
+      "id": "D",
+      "text": "DAILY_GOAL이 일반 변수로 바뀐다."
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "final 변수는 한 번 값이 저장되면 다시 대입할 수 없다. DAILY_GOAL = 50;에서 「cannot assign a value to final variable」 컴파일 오류가 난다.",
+    "code": "final int DAILY_GOAL = 30;\nDAILY_GOAL = 50;"
+   },
+   {
+    "id": "java2-q13",
+    "type": "mini_check",
+    "title": "실행 결과 예측",
+    "prompt": "다음 코드의 실행 결과로 옳은 것은? (각 변수를 순서대로 println)",
+    "options": [
+     {
+      "id": "A",
+      "text": "2, 1.5, A, false, 30 이 순서대로 각 줄에 출력된다."
+     },
+     {
+      "id": "B",
+      "text": "partNumber, studyHours, grade, completed, DAILY_GOAL (변수 이름이 출력된다)."
+     },
+     {
+      "id": "C",
+      "text": "2, 1.5, A, true, 30 이 출력된다."
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "println은 변수 이름이 아니라 변수에 저장된 값을 출력한다. 저장된 값이 순서대로 2, 1.5, A, false, 30으로 출력된다. completed는 false이므로 true가 아니다.",
+    "code": "int partNumber = 2;\ndouble studyHours = 1.5;\nchar grade = 'A';\nboolean completed = false;\nfinal int DAILY_GOAL = 30;"
+   },
+   {
+    "id": "java2-q14",
+    "type": "mini_check",
+    "title": "오류 수정",
+    "prompt": "다음 코드에는 여러 오류가 있다. 모두 올바르게 고친 것은?",
+    "options": [
+     {
+      "id": "A",
+      "text": "`int level2 = 2; / char grade = 'A'; / boolean passed = true; / float rate = 1.5F; / long population = 8000000000L;`"
+     },
+     {
+      "id": "B",
+      "text": "`int 2level = 2; / char grade = 'A'; / boolean passed = true; / float rate = 1.5; / long population = 8000000000;`"
+     },
+     {
+      "id": "C",
+      "text": "`int level2 = 2; / char grade = \"A\"; / boolean passed = True; / float rate = 1.5F; / long population = 8000000000L;`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "이름은 숫자로 시작할 수 없어 level2로, char는 작은따옴표 'A'로, 논리값은 소문자 true로, float 리터럴에는 F를, int 범위를 넘는 큰 정수에는 L을 붙여야 한다. 다섯 가지를 모두 고친 것은 A뿐이다.",
+    "code": "int 2level = 2;\nchar grade = \"A\";\nboolean passed = True;\nfloat rate = 1.5;\nlong population = 8000000000;"
+   },
+   {
+    "id": "java2-q15",
+    "type": "code_exercise",
+    "title": "종합 — 변수와 상수 프로그램",
+    "prompt": "다음 조건을 만족하도록 빈칸을 채우시오. courseName=\"Java\", partNumber=2, level='B', completed=false, 상수 MAX_SCORE=100 을 저장하고 순서대로 출력한다.",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    public static void main(String[] args) {\n        String courseName = \"[[0]]\";\n        int partNumber = [[1]];\n        char level = [[2]];\n        boolean completed = [[3]];\n        final int MAX_SCORE = [[4]];\n        System.out.println(courseName);\n        System.out.println(partNumber);\n        System.out.println(level);\n        System.out.println(completed);\n        System.out.println(MAX_SCORE);\n    }\n}",
+    "tokens": [
+     "Java",
+     "2",
+     "'B'",
+     "false",
+     "100",
+     "true",
+     "'A'"
+    ],
+    "answers": [
+     "Java",
+     "2",
+     "'B'",
+     "false",
+     "100"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Java\n2\nB\nfalse\n100"
+    },
+    "explanation": "문자열은 큰따옴표 안에 Java, 정수는 2, 문자는 작은따옴표 'B', 논리값은 false, 상수 값은 100을 넣는다. char에 'A'를 넣으면 B 대신 A가 출력되고, boolean에 true를 넣으면 false 대신 true가 출력되어 결과가 달라진다."
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}

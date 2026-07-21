@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-01-05",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-basics-if-else",
+  "summary": "if の条件（boolean）、if-else の二分岐、比較・論理演算子による範囲・複合条件、= と == の違いを学ぶ。",
+  "key_points": [
+    "if の条件は boolean。true なら if、false なら else。",
+    "&& は両方、|| はどちらか true。",
+    "= は代入、== は比較。境界値は >= が含む。"
+  ],
+  "misconceptions": [
+    "if の条件に int をそのまま書く。",
+    "== の代わりに = を書く。",
+    "範囲判定を || で書いてしまう。"
+  ],
+  "check_questions": [
+    "if の条件の型は？",
+    "= と == の違いは？",
+    "score >= 60 で score が60なら？"
+  ]
+}

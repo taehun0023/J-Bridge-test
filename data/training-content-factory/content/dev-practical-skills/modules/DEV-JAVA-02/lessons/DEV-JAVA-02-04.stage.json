@@ -1,0 +1,989 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "コンストラクタのオーバーロードと this() を活用しよう",
+   "prompt": "情報量に応じて複数のコンストラクタを提供し、this() で初期化を1つにまとめよう。",
+   "takeaway": "コンストラクタのオーバーロード・this() の連結・必須/任意値の区別を9問で確認します。"
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "必要な情報に合ったコンストラクタ呼び出し",
+    "prompt": "名前だけの新規会員と、名前・レベルが両方ある管理者を生成するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "class Member {\n    String name;\n    int level;\n\n    Member() {\n        this(\"ゲスト\", 1);\n    }\n\n    Member(String name) {\n        this(name, 1);\n    }\n\n    Member(String name, int level) {\n        this.name = name;\n        this.level = level;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Member guest = new Member();\n        Member newMember = new Member([[0]]);\n        Member manager = new Member([[1]], [[2]]);\n\n        System.out.println(guest.name + \": \" + guest.level);\n        System.out.println(newMember.name + \": \" + newMember.level);\n        System.out.println(manager.name + \": \" + manager.level);\n    }\n}",
+    "tokens": [
+     "\"Minsu\"",
+     "\"Jisu\"",
+     "10",
+     "Minsu",
+     "Jisu",
+     "\"10\"",
+     "1",
+     "name"
+    ],
+    "answers": [
+     "\"Minsu\"",
+     "\"Jisu\"",
+     "10"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "ゲスト: 1\nMinsu: 1\nJisu: 10"
+    },
+    "explanation": "情報がなければ Member()、名前だけなら Member(String)、名前とレベルが両方あれば Member(String, int) を使う。必要な情報の量に応じて適切なコンストラクタを選ぶ。"
+   },
+   {
+    "id": "q2",
+    "type": "code_exercise",
+    "title": "デフォルト値を別のコンストラクタに渡す",
+    "prompt": "座席数を省略するとデフォルト値 15 を使い、実際のフィールド初期化は2つの値を受け取るコンストラクタで処理するように完成させなさい。",
+    "lang": "java",
+    "codeTemplate": "class Workshop {\n    String topic;\n    int seats;\n\n    Workshop(String topic) {\n        [[0]](topic, 15);\n    }\n\n    Workshop(String topic, int seats) {\n        [[1]].topic = [[2]];\n        [[3]].seats = [[4]];\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Workshop workshop = new Workshop(\"Web開発\");\n\n        System.out.println(workshop.topic);\n        System.out.println(workshop.seats);\n    }\n}",
+    "tokens": [
+     "this",
+     "this",
+     "this",
+     "topic",
+     "seats",
+     "Workshop",
+     "workshop",
+     "String",
+     "int"
+    ],
+    "answers": [
+     "this",
+     "this",
+     "topic",
+     "this",
+     "seats"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Web開発\n15"
+    },
+    "explanation": "Workshop(String) は座席数がない場合に使う。this(topic, 15) でデフォルトの座席数を渡し、実際のフィールド初期化は Workshop(String, int) で処理する。"
+   },
+   {
+    "id": "q3",
+    "type": "order",
+    "title": "必須値と任意値のあるコンストラクタの組み立て",
+    "prompt": "配送先住所は必ず受け取り、配送方法を省略すると \"通常\" を使うように1行ずつ並べて ソウル, 通常 を出力しなさい。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Shipping {"
+     },
+     {
+      "id": "c2",
+      "text": "    String address;"
+     },
+     {
+      "id": "c3",
+      "text": "    String method;"
+     },
+     {
+      "id": "c4",
+      "text": "    Shipping(String address) {"
+     },
+     {
+      "id": "c5",
+      "text": "        this(address, \"通常\");"
+     },
+     {
+      "id": "c6",
+      "text": "    }"
+     },
+     {
+      "id": "c7",
+      "text": "    Shipping(String address, String method) {"
+     },
+     {
+      "id": "c8",
+      "text": "        this.address = address;"
+     },
+     {
+      "id": "c9",
+      "text": "        this.method = method;"
+     },
+     {
+      "id": "c10",
+      "text": "    }"
+     },
+     {
+      "id": "c11",
+      "text": "}"
+     },
+     {
+      "id": "c12",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c13",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c14",
+      "text": "        Shipping shipping ="
+     },
+     {
+      "id": "c15",
+      "text": "            new Shipping(\"ソウル\");"
+     },
+     {
+      "id": "c16",
+      "text": "        System.out.println(shipping.address);"
+     },
+     {
+      "id": "c17",
+      "text": "        System.out.println(shipping.method);"
+     },
+     {
+      "id": "c18",
+      "text": "    }"
+     },
+     {
+      "id": "c19",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        this(\"通常\", address);"
+     },
+     {
+      "id": "w2",
+      "text": "        this.method = address;"
+     }
+    ],
+    "explanation": "住所は必ず必要なので引数なしコンストラクタは提供しない。配送方法を省略すると Shipping(String) が \"通常\" を代わりに渡す。誤答コードは住所と配送方法の位置が入れ替わっており、求める結果にならない。"
+   },
+   {
+    "id": "q4",
+    "type": "mini_check",
+    "title": "コンストラクタ構成の選択",
+    "prompt": "ユーザー名は必ず入力し、役割を省略すると \"USER\" を使う。要件に最も適したコンストラクタ構成はどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "`User()`(空値)と `User(String, String)`"
+     },
+     {
+      "id": "B",
+      "text": "`User(String)` が `this(username, \"USER\")` を呼び + `User(String, String)` で初期化"
+     },
+     {
+      "id": "C",
+      "text": "`User(String)` が `this(username)` で自分自身を呼ぶ"
+     },
+     {
+      "id": "D",
+      "text": "`User(String username)` と `User(String name)` (引数構成が同じ)"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "ユーザー名は必須なので引数なしコンストラクタを提供しない。役割だけが任意値なので User(String) が \"USER\" を渡し、User(String, String) が実際のフィールドを初期化する構成が適切である。C は自分自身を呼び、D は引数構成が同じでオーバーロードされない。"
+   },
+   {
+    "id": "q5",
+    "type": "code_exercise",
+    "title": "引数の型でコンストラクタを選択",
+    "prompt": "整数の識別子と文字列の識別子が別々のコンストラクタを呼ぶように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "class Identifier {\n    String value;\n\n    Identifier(int number) {\n        value = \"N-\" + number;\n    }\n\n    Identifier(String text) {\n        value = \"T-\" + text;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Identifier numberId = new Identifier([[0]]);\n        Identifier textId = new Identifier([[1]]);\n\n        System.out.println(numberId.value);\n        System.out.println(textId.value);\n    }\n}",
+    "tokens": [
+     "7",
+     "\"7\"",
+     "'7'",
+     "7.0",
+     "number",
+     "text"
+    ],
+    "answers": [
+     "7",
+     "\"7\""
+    ],
+    "result": {
+     "kind": "console",
+     "output": "N-7\nT-7"
+    },
+    "explanation": "整数 7 は Identifier(int) を呼び、文字列 \"7\" は Identifier(String) を呼ぶ。実引数の個数は同じだが型が異なるので別々のコンストラクタが選ばれる。"
+   },
+   {
+    "id": "q6",
+    "type": "order",
+    "title": "3つのコンストラクタの初期化の連結",
+    "prompt": "タイトルだけ渡したレポートにデフォルトのページ数 1 を保存するように1行ずつ並べて 月次レポート, 1 を出力しなさい。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Report {"
+     },
+     {
+      "id": "c2",
+      "text": "    String title;"
+     },
+     {
+      "id": "c3",
+      "text": "    int pages;"
+     },
+     {
+      "id": "c4",
+      "text": "    Report() {"
+     },
+     {
+      "id": "c5",
+      "text": "        this(\"タイトルなし\");"
+     },
+     {
+      "id": "c6",
+      "text": "    }"
+     },
+     {
+      "id": "c7",
+      "text": "    Report(String title) {"
+     },
+     {
+      "id": "c8",
+      "text": "        this(title, 1);"
+     },
+     {
+      "id": "c9",
+      "text": "    }"
+     },
+     {
+      "id": "c10",
+      "text": "    Report(String title, int pages) {"
+     },
+     {
+      "id": "c11",
+      "text": "        this.title = title;"
+     },
+     {
+      "id": "c12",
+      "text": "        this.pages = pages;"
+     },
+     {
+      "id": "c13",
+      "text": "    }"
+     },
+     {
+      "id": "c14",
+      "text": "}"
+     },
+     {
+      "id": "c15",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c16",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c17",
+      "text": "        Report report ="
+     },
+     {
+      "id": "c18",
+      "text": "            new Report(\"月次レポート\");"
+     },
+     {
+      "id": "c19",
+      "text": "        System.out.println(report.title);"
+     },
+     {
+      "id": "c20",
+      "text": "        System.out.println(report.pages);"
+     },
+     {
+      "id": "c21",
+      "text": "    }"
+     },
+     {
+      "id": "c22",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        this(1, title);"
+     },
+     {
+      "id": "w2",
+      "text": "        this(title);"
+     }
+    ],
+    "explanation": "Report(String) はページ数が省略された場合デフォルト値 1 を渡す。this(title) を書くと現在実行中の Report(String) を再び呼ぶのでエラーになる。this(1, title) は引数の型と順序が合わない。"
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "必須 ID と任意レベル",
+    "prompt": "アカウント ID は必ず渡し、レベルを省略したアカウントにはデフォルト値 1 を使うようにオブジェクトを生成しなさい。",
+    "lang": "java",
+    "codeTemplate": "class Account {\n    String id;\n    int level;\n\n    Account(String id) {\n        this(id, 1);\n    }\n\n    Account(String id, int level) {\n        this.id = id;\n        this.level = level;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Account basic = new Account([[0]]);\n        Account advanced = new Account([[1]], [[2]]);\n\n        System.out.println(basic.id + \": \" + basic.level);\n        System.out.println(advanced.id + \": \" + advanced.level);\n    }\n}",
+    "tokens": [
+     "\"user01\"",
+     "\"admin01\"",
+     "8",
+     "user01",
+     "admin01",
+     "\"8\"",
+     "1",
+     "level"
+    ],
+    "answers": [
+     "\"user01\"",
+     "\"admin01\"",
+     "8"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "user01: 1\nadmin01: 8"
+    },
+    "explanation": "ID は必須なので両方のコンストラクタが String id を受け取る。一般アカウントは ID だけ渡してデフォルトレベル 1 を使い、既存レベルのあるアカウントは ID とレベルを両方渡す。"
+   },
+   {
+    "id": "q8",
+    "type": "code_exercise",
+    "title": "実引数の個数によるオブジェクト初期化",
+    "prompt": "正方形と長方形に適切な値を渡して面積 25 と 24 を順に出力しなさい。",
+    "lang": "java",
+    "codeTemplate": "class Box {\n    int width;\n    int height;\n\n    Box(int size) {\n        this(size, size);\n    }\n\n    Box(int width, int height) {\n        this.width = width;\n        this.height = height;\n    }\n\n    int getArea() {\n        return width * height;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Box square = new Box([[0]]);\n        Box rectangle = new Box([[1]], [[2]]);\n\n        System.out.println(square.getArea());\n        System.out.println(rectangle.getArea());\n    }\n}",
+    "tokens": [
+     "5",
+     "4",
+     "6",
+     "\"5\"",
+     "24",
+     "25",
+     "width",
+     "height"
+    ],
+    "answers": [
+     "5",
+     "4",
+     "6"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "25\n24"
+    },
+    "explanation": "正方形は一辺の長さだけ受け取ればよいので Box(int) を使う。長方形は幅と高さが両方必要なので Box(int, int) を使う。Box(int) は同じ値を2回渡して最後のコンストラクタでフィールドを初期化する。"
+   },
+   {
+    "id": "q9",
+    "type": "order",
+    "title": "総合 — デフォルト送料と指定送料",
+    "prompt": "住所だけ受け取るとデフォルト送料 3000 を使い、送料が決まっていれば指定するように1行ずつ並べて 釜山配送と ソウル配送 の順で出力しなさい。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Delivery {"
+     },
+     {
+      "id": "c2",
+      "text": "    String address;"
+     },
+     {
+      "id": "c3",
+      "text": "    int fee;"
+     },
+     {
+      "id": "c4",
+      "text": "    Delivery(String address) {"
+     },
+     {
+      "id": "c5",
+      "text": "        this(address, 3000);"
+     },
+     {
+      "id": "c6",
+      "text": "    }"
+     },
+     {
+      "id": "c7",
+      "text": "    Delivery(String address, int fee) {"
+     },
+     {
+      "id": "c8",
+      "text": "        this.address = address;"
+     },
+     {
+      "id": "c9",
+      "text": "        this.fee = fee;"
+     },
+     {
+      "id": "c10",
+      "text": "    }"
+     },
+     {
+      "id": "c11",
+      "text": "    void showInfo() {"
+     },
+     {
+      "id": "c12",
+      "text": "        System.out.println(address + \": \" + fee);"
+     },
+     {
+      "id": "c13",
+      "text": "    }"
+     },
+     {
+      "id": "c14",
+      "text": "}"
+     },
+     {
+      "id": "c15",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c16",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c17",
+      "text": "        Delivery normal ="
+     },
+     {
+      "id": "c18",
+      "text": "            new Delivery(\"ソウル\");"
+     },
+     {
+      "id": "c19",
+      "text": "        Delivery custom ="
+     },
+     {
+      "id": "c20",
+      "text": "            new Delivery(\"釜山\", 5000);"
+     },
+     {
+      "id": "c21",
+      "text": "        custom.showInfo();"
+     },
+     {
+      "id": "c22",
+      "text": "        normal.showInfo();"
+     },
+     {
+      "id": "c23",
+      "text": "    }"
+     },
+     {
+      "id": "c24",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        this(3000, address);"
+     },
+     {
+      "id": "w2",
+      "text": "        Delivery normal = new Delivery();"
+     }
+    ],
+    "explanation": "住所は必須なので全てのコンストラクタが String address を受け取る。送料を省略すると Delivery(String) がデフォルト値 3000 を渡し、送料が別途決まっていれば Delivery(String, int) を使う。引数なしコンストラクタは宣言されていないので new Delivery() は使えない。"
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "생성자 오버로딩과 this()를 활용하자",
+   "prompt": "정보량에 따라 여러 생성자를 제공하고, this()로 초기화를 한 생성자에 모으자.",
+   "takeaway": "생성자 오버로딩·this() 연결·필수/선택값 구분을 9문제로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "필요한 정보에 맞는 생성자 호출",
+    "prompt": "이름만 있는 신규 회원과 이름·레벨이 모두 있는 관리자를 생성하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "class Member {\n    String name;\n    int level;\n\n    Member() {\n        this(\"게스트\", 1);\n    }\n\n    Member(String name) {\n        this(name, 1);\n    }\n\n    Member(String name, int level) {\n        this.name = name;\n        this.level = level;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Member guest = new Member();\n        Member newMember = new Member([[0]]);\n        Member manager = new Member([[1]], [[2]]);\n\n        System.out.println(guest.name + \": \" + guest.level);\n        System.out.println(newMember.name + \": \" + newMember.level);\n        System.out.println(manager.name + \": \" + manager.level);\n    }\n}",
+    "tokens": [
+     "\"민수\"",
+     "\"지수\"",
+     "10",
+     "민수",
+     "지수",
+     "\"10\"",
+     "1",
+     "name"
+    ],
+    "answers": [
+     "\"민수\"",
+     "\"지수\"",
+     "10"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "게스트: 1\n민수: 1\n지수: 10"
+    },
+    "explanation": "정보가 없으면 Member(), 이름만 있으면 Member(String), 이름과 레벨이 모두 있으면 Member(String, int)를 사용한다. 필요한 정보의 양에 따라 알맞은 생성자를 선택한다."
+   },
+   {
+    "id": "q2",
+    "type": "code_exercise",
+    "title": "기본값을 다른 생성자에 전달",
+    "prompt": "좌석 수를 생략하면 기본값 15를 사용하고, 실제 필드 초기화는 두 값을 받는 생성자에서 처리하도록 완성하시오.",
+    "lang": "java",
+    "codeTemplate": "class Workshop {\n    String topic;\n    int seats;\n\n    Workshop(String topic) {\n        [[0]](topic, 15);\n    }\n\n    Workshop(String topic, int seats) {\n        [[1]].topic = [[2]];\n        [[3]].seats = [[4]];\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Workshop workshop = new Workshop(\"웹 개발\");\n\n        System.out.println(workshop.topic);\n        System.out.println(workshop.seats);\n    }\n}",
+    "tokens": [
+     "this",
+     "this",
+     "this",
+     "topic",
+     "seats",
+     "Workshop",
+     "workshop",
+     "String",
+     "int"
+    ],
+    "answers": [
+     "this",
+     "this",
+     "topic",
+     "this",
+     "seats"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "웹 개발\n15"
+    },
+    "explanation": "Workshop(String)은 좌석 수가 없는 경우에 사용한다. this(topic, 15)로 기본 좌석 수를 전달하고, 실제 필드 초기화는 Workshop(String, int)에서 처리한다."
+   },
+   {
+    "id": "q3",
+    "type": "order",
+    "title": "필수값과 선택값이 있는 생성자 조립",
+    "prompt": "배송 주소는 반드시 받고, 배송 방법을 생략하면 \"일반\"을 사용하도록 한 줄씩 배열하여 서울, 일반을 출력하시오.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Shipping {"
+     },
+     {
+      "id": "c2",
+      "text": "    String address;"
+     },
+     {
+      "id": "c3",
+      "text": "    String method;"
+     },
+     {
+      "id": "c4",
+      "text": "    Shipping(String address) {"
+     },
+     {
+      "id": "c5",
+      "text": "        this(address, \"일반\");"
+     },
+     {
+      "id": "c6",
+      "text": "    }"
+     },
+     {
+      "id": "c7",
+      "text": "    Shipping(String address, String method) {"
+     },
+     {
+      "id": "c8",
+      "text": "        this.address = address;"
+     },
+     {
+      "id": "c9",
+      "text": "        this.method = method;"
+     },
+     {
+      "id": "c10",
+      "text": "    }"
+     },
+     {
+      "id": "c11",
+      "text": "}"
+     },
+     {
+      "id": "c12",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c13",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c14",
+      "text": "        Shipping shipping ="
+     },
+     {
+      "id": "c15",
+      "text": "            new Shipping(\"서울\");"
+     },
+     {
+      "id": "c16",
+      "text": "        System.out.println(shipping.address);"
+     },
+     {
+      "id": "c17",
+      "text": "        System.out.println(shipping.method);"
+     },
+     {
+      "id": "c18",
+      "text": "    }"
+     },
+     {
+      "id": "c19",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        this(\"일반\", address);"
+     },
+     {
+      "id": "w2",
+      "text": "        this.method = address;"
+     }
+    ],
+    "explanation": "주소는 반드시 필요하므로 매개변수 없는 생성자는 제공하지 않는다. 배송 방법을 생략하면 Shipping(String)이 \"일반\"을 대신 전달한다. 오답 코드는 주소와 배송 방법의 위치가 뒤바뀌어 요구한 결과가 나오지 않는다."
+   },
+   {
+    "id": "q4",
+    "type": "mini_check",
+    "title": "생성자 구성 선택",
+    "prompt": "사용자 이름은 반드시 입력하고, 역할을 생략하면 \"USER\"를 사용해야 한다. 요구사항에 가장 알맞은 생성자 구성은?",
+    "options": [
+     {
+      "id": "A",
+      "text": "`User()`(빈 값)와 `User(String, String)`"
+     },
+     {
+      "id": "B",
+      "text": "`User(String)`이 `this(username, \"USER\")` 호출 + `User(String, String)` 초기화"
+     },
+     {
+      "id": "C",
+      "text": "`User(String)`이 `this(username)`으로 자기 자신 호출"
+     },
+     {
+      "id": "D",
+      "text": "`User(String username)`과 `User(String name)` (매개변수 구성 동일)"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "사용자 이름은 필수이므로 매개변수 없는 생성자를 제공하지 않는다. 역할만 선택값이므로 User(String)이 \"USER\"를 전달하고, User(String, String)이 실제 필드를 초기화하는 구성이 적절하다. C는 자기 자신을 호출하고 D는 매개변수 구성이 같아 오버로딩되지 않는다."
+   },
+   {
+    "id": "q5",
+    "type": "code_exercise",
+    "title": "매개변수 타입으로 생성자 선택",
+    "prompt": "정수 식별자와 문자열 식별자가 서로 다른 생성자를 호출하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "class Identifier {\n    String value;\n\n    Identifier(int number) {\n        value = \"N-\" + number;\n    }\n\n    Identifier(String text) {\n        value = \"T-\" + text;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Identifier numberId = new Identifier([[0]]);\n        Identifier textId = new Identifier([[1]]);\n\n        System.out.println(numberId.value);\n        System.out.println(textId.value);\n    }\n}",
+    "tokens": [
+     "7",
+     "\"7\"",
+     "'7'",
+     "7.0",
+     "number",
+     "text"
+    ],
+    "answers": [
+     "7",
+     "\"7\""
+    ],
+    "result": {
+     "kind": "console",
+     "output": "N-7\nT-7"
+    },
+    "explanation": "정수 7은 Identifier(int)를 호출하고 문자열 \"7\"은 Identifier(String)을 호출한다. 인수의 개수는 같지만 타입이 달라 서로 다른 생성자가 선택된다."
+   },
+   {
+    "id": "q6",
+    "type": "order",
+    "title": "세 생성자의 초기화 연결",
+    "prompt": "제목만 전달한 보고서에 기본 페이지 수 1을 저장하도록 한 줄씩 배열하여 월간 보고서, 1을 출력하시오.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Report {"
+     },
+     {
+      "id": "c2",
+      "text": "    String title;"
+     },
+     {
+      "id": "c3",
+      "text": "    int pages;"
+     },
+     {
+      "id": "c4",
+      "text": "    Report() {"
+     },
+     {
+      "id": "c5",
+      "text": "        this(\"제목 없음\");"
+     },
+     {
+      "id": "c6",
+      "text": "    }"
+     },
+     {
+      "id": "c7",
+      "text": "    Report(String title) {"
+     },
+     {
+      "id": "c8",
+      "text": "        this(title, 1);"
+     },
+     {
+      "id": "c9",
+      "text": "    }"
+     },
+     {
+      "id": "c10",
+      "text": "    Report(String title, int pages) {"
+     },
+     {
+      "id": "c11",
+      "text": "        this.title = title;"
+     },
+     {
+      "id": "c12",
+      "text": "        this.pages = pages;"
+     },
+     {
+      "id": "c13",
+      "text": "    }"
+     },
+     {
+      "id": "c14",
+      "text": "}"
+     },
+     {
+      "id": "c15",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c16",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c17",
+      "text": "        Report report ="
+     },
+     {
+      "id": "c18",
+      "text": "            new Report(\"월간 보고서\");"
+     },
+     {
+      "id": "c19",
+      "text": "        System.out.println(report.title);"
+     },
+     {
+      "id": "c20",
+      "text": "        System.out.println(report.pages);"
+     },
+     {
+      "id": "c21",
+      "text": "    }"
+     },
+     {
+      "id": "c22",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        this(1, title);"
+     },
+     {
+      "id": "w2",
+      "text": "        this(title);"
+     }
+    ],
+    "explanation": "Report(String)은 페이지 수가 생략된 경우 기본값 1을 전달한다. this(title)을 작성하면 현재 실행 중인 Report(String)을 다시 호출하므로 오류가 발생한다. this(1, title)은 매개변수 타입과 순서가 맞지 않는다."
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "필수 ID와 선택 레벨",
+    "prompt": "계정 ID는 반드시 전달하고, 레벨을 생략한 계정에는 기본값 1을 사용하도록 객체를 생성하시오.",
+    "lang": "java",
+    "codeTemplate": "class Account {\n    String id;\n    int level;\n\n    Account(String id) {\n        this(id, 1);\n    }\n\n    Account(String id, int level) {\n        this.id = id;\n        this.level = level;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Account basic = new Account([[0]]);\n        Account advanced = new Account([[1]], [[2]]);\n\n        System.out.println(basic.id + \": \" + basic.level);\n        System.out.println(advanced.id + \": \" + advanced.level);\n    }\n}",
+    "tokens": [
+     "\"user01\"",
+     "\"admin01\"",
+     "8",
+     "user01",
+     "admin01",
+     "\"8\"",
+     "1",
+     "level"
+    ],
+    "answers": [
+     "\"user01\"",
+     "\"admin01\"",
+     "8"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "user01: 1\nadmin01: 8"
+    },
+    "explanation": "ID는 필수이므로 두 생성자 모두 String id를 받는다. 일반 계정은 ID만 전달하여 기본 레벨 1을 사용하고, 기존 레벨이 있는 계정은 ID와 레벨을 모두 전달한다."
+   },
+   {
+    "id": "q8",
+    "type": "code_exercise",
+    "title": "인수 개수에 따른 객체 초기화",
+    "prompt": "정사각형과 직사각형에 알맞은 값을 전달하여 넓이 25와 24를 차례로 출력하시오.",
+    "lang": "java",
+    "codeTemplate": "class Box {\n    int width;\n    int height;\n\n    Box(int size) {\n        this(size, size);\n    }\n\n    Box(int width, int height) {\n        this.width = width;\n        this.height = height;\n    }\n\n    int getArea() {\n        return width * height;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Box square = new Box([[0]]);\n        Box rectangle = new Box([[1]], [[2]]);\n\n        System.out.println(square.getArea());\n        System.out.println(rectangle.getArea());\n    }\n}",
+    "tokens": [
+     "5",
+     "4",
+     "6",
+     "\"5\"",
+     "24",
+     "25",
+     "width",
+     "height"
+    ],
+    "answers": [
+     "5",
+     "4",
+     "6"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "25\n24"
+    },
+    "explanation": "정사각형은 한 변의 길이만 받으면 되므로 Box(int)를 사용한다. 직사각형은 너비와 높이가 모두 필요하므로 Box(int, int)를 사용한다. Box(int)는 같은 값을 두 번 전달하여 마지막 생성자에서 필드를 초기화한다."
+   },
+   {
+    "id": "q9",
+    "type": "order",
+    "title": "종합 — 기본 배송비와 지정 배송비",
+    "prompt": "주소만 받으면 기본 배송비 3000을 사용하고, 배송비가 정해졌다면 지정하도록 한 줄씩 배열하여 부산 배송과 서울 배송 순서로 출력하시오.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Delivery {"
+     },
+     {
+      "id": "c2",
+      "text": "    String address;"
+     },
+     {
+      "id": "c3",
+      "text": "    int fee;"
+     },
+     {
+      "id": "c4",
+      "text": "    Delivery(String address) {"
+     },
+     {
+      "id": "c5",
+      "text": "        this(address, 3000);"
+     },
+     {
+      "id": "c6",
+      "text": "    }"
+     },
+     {
+      "id": "c7",
+      "text": "    Delivery(String address, int fee) {"
+     },
+     {
+      "id": "c8",
+      "text": "        this.address = address;"
+     },
+     {
+      "id": "c9",
+      "text": "        this.fee = fee;"
+     },
+     {
+      "id": "c10",
+      "text": "    }"
+     },
+     {
+      "id": "c11",
+      "text": "    void showInfo() {"
+     },
+     {
+      "id": "c12",
+      "text": "        System.out.println(address + \": \" + fee);"
+     },
+     {
+      "id": "c13",
+      "text": "    }"
+     },
+     {
+      "id": "c14",
+      "text": "}"
+     },
+     {
+      "id": "c15",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c16",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c17",
+      "text": "        Delivery normal ="
+     },
+     {
+      "id": "c18",
+      "text": "            new Delivery(\"서울\");"
+     },
+     {
+      "id": "c19",
+      "text": "        Delivery custom ="
+     },
+     {
+      "id": "c20",
+      "text": "            new Delivery(\"부산\", 5000);"
+     },
+     {
+      "id": "c21",
+      "text": "        custom.showInfo();"
+     },
+     {
+      "id": "c22",
+      "text": "        normal.showInfo();"
+     },
+     {
+      "id": "c23",
+      "text": "    }"
+     },
+     {
+      "id": "c24",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        this(3000, address);"
+     },
+     {
+      "id": "w2",
+      "text": "        Delivery normal = new Delivery();"
+     }
+    ],
+    "explanation": "주소는 필수이므로 모든 생성자가 String address를 받는다. 배송비를 생략하면 Delivery(String)이 기본값 3000을 전달하고, 배송비가 별도로 정해졌다면 Delivery(String, int)를 사용한다. 인수가 없는 생성자는 선언되지 않았으므로 new Delivery()는 사용할 수 없다."
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}

@@ -1,0 +1,843 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "フィールドとインスタンスメソッドを扱おう",
+   "prompt": "インスタンスフィールドでオブジェクトの状態を保存し、インスタンスメソッドで読み・変え・返そう。",
+   "takeaway": "インスタンスフィールド・メソッド定義・フィールドの使用・変更・戻り値を9問で確認します。"
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "インスタンスメソッドの定義と呼び出し",
+    "prompt": "アラームオブジェクトに保存されたメッセージを出力するインスタンスメソッドを定義し呼び出すように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "class Alarm {\n    String message;\n\n    [[0]] [[1]]() {\n        System.out.println(message);\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Alarm alarm = new Alarm();\n\n        alarm.message = \"起床時間です。\";\n\n        [[2]].[[3]]();\n    }\n}",
+    "tokens": [
+     "void",
+     "showMessage",
+     "showMessage",
+     "alarm",
+     "Alarm",
+     "message",
+     "String",
+     "println"
+    ],
+    "answers": [
+     "void",
+     "showMessage",
+     "alarm",
+     "showMessage"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "起床時間です。"
+    },
+    "explanation": "出力するだけで値を返さないので戻り値の型は void である。インスタンスメソッドはクラス名 Alarm ではなく、生成されたオブジェクトを使う変数 alarm で呼び出す。"
+   },
+   {
+    "id": "q2",
+    "type": "order",
+    "title": "フィールドを変更するメソッドの組み立て",
+    "prompt": "Meter・value 宣言 → increase() 定義 → Main・main 宣言 → オブジェクト生成後 10 を保存 → increase(4) 呼び出し → value 出力 の順に並べて 14 を出力しなさい。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Meter {"
+     },
+     {
+      "id": "c2",
+      "text": "    int value;"
+     },
+     {
+      "id": "c3",
+      "text": "    void increase(int amount) {"
+     },
+     {
+      "id": "c4",
+      "text": "        value = value + amount;"
+     },
+     {
+      "id": "c5",
+      "text": "    }"
+     },
+     {
+      "id": "c6",
+      "text": "}"
+     },
+     {
+      "id": "c7",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c8",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c9",
+      "text": "        Meter meter = new Meter();"
+     },
+     {
+      "id": "c10",
+      "text": "        meter.value = 10;"
+     },
+     {
+      "id": "c11",
+      "text": "        meter.increase(4);"
+     },
+     {
+      "id": "c12",
+      "text": "        System.out.println(meter.value);"
+     },
+     {
+      "id": "c13",
+      "text": "    }"
+     },
+     {
+      "id": "c14",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        value = amount + amount;"
+     },
+     {
+      "id": "w2",
+      "text": "        Meter.increase(4);"
+     }
+    ],
+    "explanation": "increase() は自身を呼び出した meter オブジェクトの value に amount を足す。meter.increase(4) を呼び出すと 10 に 4 が足される。クラス名 Meter でインスタンスメソッドを直接呼び出すことはできない。"
+   },
+   {
+    "id": "q3",
+    "type": "code_exercise",
+    "title": "メソッドでのフィールドの使用",
+    "prompt": "printLabel() が自身を呼び出したオブジェクトの名前とコードを出力するように完成させなさい。",
+    "lang": "java",
+    "codeTemplate": "class Label {\n    String name;\n    int code;\n\n    void printLabel() {\n        System.out.println([[0]] + \"-\" + [[1]]);\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Label label1 = new Label();\n        Label label2 = new Label();\n\n        label1.name = \"入場\";\n        label1.code = 101;\n\n        label2.name = \"退場\";\n        label2.code = 202;\n\n        [[2]].printLabel();\n        [[3]].printLabel();\n    }\n}",
+    "tokens": [
+     "name",
+     "code",
+     "label1",
+     "label2",
+     "Label",
+     "printLabel",
+     "\"name\"",
+     "\"code\""
+    ],
+    "answers": [
+     "name",
+     "code",
+     "label1",
+     "label2"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "入場-101\n退場-202"
+    },
+    "explanation": "printLabel() 内の name と code はメソッドを呼び出したオブジェクトのフィールドである。label1 が呼ぶと label1 の値が、label2 が呼ぶと label2 の値が出力される。\"name\" と \"code\" はフィールドの値ではなく文字通りの文字列である。"
+   },
+   {
+    "id": "q4",
+    "type": "mini_check",
+    "title": "オブジェクトごとのメソッド実行結果",
+    "prompt": "次のコードの実行結果として正しいものはどれか？（1行目 / 2行目）",
+    "code": "class Gauge {\n    int value;\n\n    void add(int amount) {\n        value = value + amount;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Gauge gauge1 = new Gauge();\n        Gauge gauge2 = new Gauge();\n\n        gauge1.value = 10;\n        gauge2.value = 5;\n\n        gauge1.add(3);\n        gauge2.add(gauge1.value);\n\n        System.out.println(gauge1.value);\n        System.out.println(gauge2.value);\n    }\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`13` / `15`"
+     },
+     {
+      "id": "B",
+      "text": "`10` / `18`"
+     },
+     {
+      "id": "C",
+      "text": "`13` / `18`"
+     },
+     {
+      "id": "D",
+      "text": "`18` / `18`"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "gauge1.add(3) で gauge1.value は 13 になる。その後 gauge2.add(gauge1.value) は gauge2 の元の値 5 に 13 を足すので gauge2.value は 18 になる。"
+   },
+   {
+    "id": "q5",
+    "type": "order",
+    "title": "値を返すメソッドの組み立て",
+    "prompt": "Fare・price 宣言 → total() 定義 → Main・main 宣言 → オブジェクト生成後 2500 を保存 → total(3) の戻り値を保存 → 結果の出力 の順に並べて 7500 を出力しなさい。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Fare {"
+     },
+     {
+      "id": "c2",
+      "text": "    int price;"
+     },
+     {
+      "id": "c3",
+      "text": "    int total(int count) {"
+     },
+     {
+      "id": "c4",
+      "text": "        return price * count;"
+     },
+     {
+      "id": "c5",
+      "text": "    }"
+     },
+     {
+      "id": "c6",
+      "text": "}"
+     },
+     {
+      "id": "c7",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c8",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c9",
+      "text": "        Fare fare = new Fare();"
+     },
+     {
+      "id": "c10",
+      "text": "        fare.price = 2500;"
+     },
+     {
+      "id": "c11",
+      "text": "        int result = fare.total(3);"
+     },
+     {
+      "id": "c12",
+      "text": "        System.out.println(result);"
+     },
+     {
+      "id": "c13",
+      "text": "    }"
+     },
+     {
+      "id": "c14",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        return count * count;"
+     },
+     {
+      "id": "w2",
+      "text": "        int result = fare.total();"
+     }
+    ],
+    "explanation": "total() は fare オブジェクトの price と受け取った count を掛けて返す。total() には int の引数があるので、呼び出すときに数量を渡す必要がある。count * count は 9 を返すので要件に合わない。"
+   },
+   {
+    "id": "q6",
+    "type": "code_exercise",
+    "title": "フィールドを変更する2つのメソッド",
+    "prompt": "在庫を7個追加してから5個削除し、22 を出力するようにメソッドを完成させなさい。",
+    "lang": "java",
+    "codeTemplate": "class Inventory {\n    int stock;\n\n    void add(int amount) {\n        stock [[0]] amount;\n    }\n\n    void remove(int amount) {\n        stock [[1]] amount;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Inventory inventory = new Inventory();\n\n        inventory.stock = 20;\n\n        inventory.[[2]](7);\n        inventory.[[3]](5);\n\n        System.out.println(inventory.stock);\n    }\n}",
+    "tokens": [
+     "+=",
+     "-=",
+     "add",
+     "remove",
+     "+",
+     "-",
+     "stock",
+     "amount"
+    ],
+    "answers": [
+     "+=",
+     "-=",
+     "add",
+     "remove"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "22"
+    },
+    "explanation": "add() は stock に amount を足し、remove() は amount を引く。最初の在庫 20 に 7 を足してから 5 を引くので最終在庫は 22 である。stock + amount; のように計算式だけ書いたものは正しい代入文ではない。"
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "フィールドで計算した値を返す",
+    "prompt": "移動距離と速さを使って移動時間を返すように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "class Travel {\n    int distance;\n    int speed;\n\n    [[0]] getTime() {\n        [[1]] [[2]] / [[3]];\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Travel travel = new Travel();\n\n        travel.distance = 120;\n        travel.speed = 60;\n\n        System.out.println(travel.[[4]]());\n    }\n}",
+    "tokens": [
+     "int",
+     "return",
+     "distance",
+     "speed",
+     "getTime",
+     "void",
+     "double",
+     "*",
+     "calculate"
+    ],
+    "answers": [
+     "int",
+     "return",
+     "distance",
+     "speed",
+     "getTime"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "2"
+    },
+    "explanation": "整数の移動時間を返すので戻り値の型は int である。getTime() は自身を呼び出した travel オブジェクトの distance を speed で割った値を返す。void メソッドは整数値を返せない。"
+   },
+   {
+    "id": "q8",
+    "type": "order",
+    "title": "同じメソッドを呼ぶ2つのオブジェクト",
+    "prompt": "Light・color 宣言 → showColor() 定義 → Main・main 宣言 → first, second の順でオブジェクト生成 → first に 赤・second に 青 を保存 → second, first の順で showColor() 呼び出し の順に並べて 青, 赤 を出力しなさい。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Light {"
+     },
+     {
+      "id": "c2",
+      "text": "    String color;"
+     },
+     {
+      "id": "c3",
+      "text": "    void showColor() {"
+     },
+     {
+      "id": "c4",
+      "text": "        System.out.println(color);"
+     },
+     {
+      "id": "c5",
+      "text": "    }"
+     },
+     {
+      "id": "c6",
+      "text": "}"
+     },
+     {
+      "id": "c7",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c8",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c9",
+      "text": "        Light first = new Light();"
+     },
+     {
+      "id": "c10",
+      "text": "        Light second = new Light();"
+     },
+     {
+      "id": "c11",
+      "text": "        first.color = \"赤\";"
+     },
+     {
+      "id": "c12",
+      "text": "        second.color = \"青\";"
+     },
+     {
+      "id": "c13",
+      "text": "        second.showColor();"
+     },
+     {
+      "id": "c14",
+      "text": "        first.showColor();"
+     },
+     {
+      "id": "c15",
+      "text": "    }"
+     },
+     {
+      "id": "c16",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        Light.showColor();"
+     },
+     {
+      "id": "w2",
+      "text": "        first.color = second.color;"
+     }
+    ],
+    "explanation": "second.showColor() は second の color である \"青\" を出力し、first.showColor() は first の color である \"赤\" を出力する。Light.showColor() のようにクラス名でインスタンスメソッドを呼び出すことはできない。"
+   },
+   {
+    "id": "q9",
+    "type": "code_exercise",
+    "title": "総合 — フィールド変更と戻り値の使用",
+    "prompt": "2つの貯金オブジェクトにそれぞれお金を追加し、21000, 15000 を順に出力するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "class Savings {\n    int balance;\n\n    void deposit(int amount) {\n        balance = balance + amount;\n    }\n\n    int getBalance() {\n        return balance;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Savings savings1 = new Savings();\n        Savings savings2 = new Savings();\n\n        savings1.balance = 10000;\n        savings2.balance = 20000;\n\n        [[0]].deposit(5000);\n        [[1]].deposit(1000);\n\n        System.out.println([[2]].[[3]]());\n        System.out.println([[4]].[[5]]());\n    }\n}",
+    "tokens": [
+     "savings1",
+     "savings1",
+     "savings2",
+     "savings2",
+     "getBalance",
+     "getBalance",
+     "Savings",
+     "deposit",
+     "balance"
+    ],
+    "answers": [
+     "savings1",
+     "savings2",
+     "savings2",
+     "getBalance",
+     "savings1",
+     "getBalance"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "21000\n15000"
+    },
+    "explanation": "savings1 には 5000 が追加されて 15000 になり、savings2 には 1000 が追加されて 21000 になる。1番目の出力は savings2、2番目の出力は savings1 の getBalance() を呼び出す。"
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "필드와 인스턴스 메서드를 다뤄보자",
+   "prompt": "인스턴스 필드로 객체 상태를 저장하고, 인스턴스 메서드로 읽고·바꾸고·반환하자.",
+   "takeaway": "인스턴스 필드·메서드 정의·필드 사용·변경·반환값을 9문제로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "인스턴스 메서드 정의와 호출",
+    "prompt": "알람 객체에 저장된 메시지를 출력하는 인스턴스 메서드를 정의하고 호출하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "class Alarm {\n    String message;\n\n    [[0]] [[1]]() {\n        System.out.println(message);\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Alarm alarm = new Alarm();\n\n        alarm.message = \"기상 시간입니다.\";\n\n        [[2]].[[3]]();\n    }\n}",
+    "tokens": [
+     "void",
+     "showMessage",
+     "showMessage",
+     "alarm",
+     "Alarm",
+     "message",
+     "String",
+     "println"
+    ],
+    "answers": [
+     "void",
+     "showMessage",
+     "alarm",
+     "showMessage"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "기상 시간입니다."
+    },
+    "explanation": "출력만 하고 값을 반환하지 않으므로 반환형은 void다. 인스턴스 메서드는 클래스 이름 Alarm이 아니라 생성된 객체를 사용하는 변수 alarm으로 호출한다."
+   },
+   {
+    "id": "q2",
+    "type": "order",
+    "title": "필드를 변경하는 메서드 조립",
+    "prompt": "Meter·value 선언 → increase() 정의 → Main·main 선언 → 객체 생성 후 10 저장 → increase(4) 호출 → value 출력 순서로 배열하여 14를 출력하시오.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Meter {"
+     },
+     {
+      "id": "c2",
+      "text": "    int value;"
+     },
+     {
+      "id": "c3",
+      "text": "    void increase(int amount) {"
+     },
+     {
+      "id": "c4",
+      "text": "        value = value + amount;"
+     },
+     {
+      "id": "c5",
+      "text": "    }"
+     },
+     {
+      "id": "c6",
+      "text": "}"
+     },
+     {
+      "id": "c7",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c8",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c9",
+      "text": "        Meter meter = new Meter();"
+     },
+     {
+      "id": "c10",
+      "text": "        meter.value = 10;"
+     },
+     {
+      "id": "c11",
+      "text": "        meter.increase(4);"
+     },
+     {
+      "id": "c12",
+      "text": "        System.out.println(meter.value);"
+     },
+     {
+      "id": "c13",
+      "text": "    }"
+     },
+     {
+      "id": "c14",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        value = amount + amount;"
+     },
+     {
+      "id": "w2",
+      "text": "        Meter.increase(4);"
+     }
+    ],
+    "explanation": "increase()는 자신을 호출한 meter 객체의 value에 amount를 더한다. meter.increase(4)를 호출하면 10에 4가 더해진다. 클래스 이름 Meter로 인스턴스 메서드를 직접 호출할 수 없다."
+   },
+   {
+    "id": "q3",
+    "type": "code_exercise",
+    "title": "메서드에서 필드 사용",
+    "prompt": "printLabel()이 자신을 호출한 객체의 이름과 코드를 출력하도록 완성하시오.",
+    "lang": "java",
+    "codeTemplate": "class Label {\n    String name;\n    int code;\n\n    void printLabel() {\n        System.out.println([[0]] + \"-\" + [[1]]);\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Label label1 = new Label();\n        Label label2 = new Label();\n\n        label1.name = \"입장\";\n        label1.code = 101;\n\n        label2.name = \"퇴장\";\n        label2.code = 202;\n\n        [[2]].printLabel();\n        [[3]].printLabel();\n    }\n}",
+    "tokens": [
+     "name",
+     "code",
+     "label1",
+     "label2",
+     "Label",
+     "printLabel",
+     "\"name\"",
+     "\"code\""
+    ],
+    "answers": [
+     "name",
+     "code",
+     "label1",
+     "label2"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "입장-101\n퇴장-202"
+    },
+    "explanation": "printLabel() 안의 name과 code는 메서드를 호출한 객체의 필드다. label1이 호출하면 label1의 값이, label2가 호출하면 label2의 값이 출력된다. \"name\"과 \"code\"는 필드값이 아니라 글자 그대로의 문자열이다."
+   },
+   {
+    "id": "q4",
+    "type": "mini_check",
+    "title": "객체별 메서드 실행 결과",
+    "prompt": "다음 코드의 실행 결과로 옳은 것은? (첫째 줄 / 둘째 줄)",
+    "code": "class Gauge {\n    int value;\n\n    void add(int amount) {\n        value = value + amount;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Gauge gauge1 = new Gauge();\n        Gauge gauge2 = new Gauge();\n\n        gauge1.value = 10;\n        gauge2.value = 5;\n\n        gauge1.add(3);\n        gauge2.add(gauge1.value);\n\n        System.out.println(gauge1.value);\n        System.out.println(gauge2.value);\n    }\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`13` / `15`"
+     },
+     {
+      "id": "B",
+      "text": "`10` / `18`"
+     },
+     {
+      "id": "C",
+      "text": "`13` / `18`"
+     },
+     {
+      "id": "D",
+      "text": "`18` / `18`"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "gauge1.add(3)으로 gauge1.value는 13이 된다. 이후 gauge2.add(gauge1.value)는 gauge2의 기존 값 5에 13을 더하므로 gauge2.value는 18이 된다."
+   },
+   {
+    "id": "q5",
+    "type": "order",
+    "title": "값을 반환하는 메서드 조립",
+    "prompt": "Fare·price 선언 → total() 정의 → Main·main 선언 → 객체 생성 후 2500 저장 → total(3) 반환값 저장 → 결과 출력 순서로 배열하여 7500을 출력하시오.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Fare {"
+     },
+     {
+      "id": "c2",
+      "text": "    int price;"
+     },
+     {
+      "id": "c3",
+      "text": "    int total(int count) {"
+     },
+     {
+      "id": "c4",
+      "text": "        return price * count;"
+     },
+     {
+      "id": "c5",
+      "text": "    }"
+     },
+     {
+      "id": "c6",
+      "text": "}"
+     },
+     {
+      "id": "c7",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c8",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c9",
+      "text": "        Fare fare = new Fare();"
+     },
+     {
+      "id": "c10",
+      "text": "        fare.price = 2500;"
+     },
+     {
+      "id": "c11",
+      "text": "        int result = fare.total(3);"
+     },
+     {
+      "id": "c12",
+      "text": "        System.out.println(result);"
+     },
+     {
+      "id": "c13",
+      "text": "    }"
+     },
+     {
+      "id": "c14",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        return count * count;"
+     },
+     {
+      "id": "w2",
+      "text": "        int result = fare.total();"
+     }
+    ],
+    "explanation": "total()은 fare 객체의 price와 전달받은 count를 곱해 반환한다. total()에는 int 매개변수가 있으므로 호출할 때 수량을 전달해야 한다. count * count는 9를 반환하므로 요구사항에 맞지 않는다."
+   },
+   {
+    "id": "q6",
+    "type": "code_exercise",
+    "title": "필드를 변경하는 두 메서드",
+    "prompt": "재고를 7개 추가한 뒤 5개 제거하여 22를 출력하도록 메서드를 완성하시오.",
+    "lang": "java",
+    "codeTemplate": "class Inventory {\n    int stock;\n\n    void add(int amount) {\n        stock [[0]] amount;\n    }\n\n    void remove(int amount) {\n        stock [[1]] amount;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Inventory inventory = new Inventory();\n\n        inventory.stock = 20;\n\n        inventory.[[2]](7);\n        inventory.[[3]](5);\n\n        System.out.println(inventory.stock);\n    }\n}",
+    "tokens": [
+     "+=",
+     "-=",
+     "add",
+     "remove",
+     "+",
+     "-",
+     "stock",
+     "amount"
+    ],
+    "answers": [
+     "+=",
+     "-=",
+     "add",
+     "remove"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "22"
+    },
+    "explanation": "add()는 stock에 amount를 더하고 remove()는 amount를 뺀다. 처음 재고 20에 7을 더한 뒤 5를 빼므로 최종 재고는 22다. stock + amount;처럼 계산식만 작성한 것은 올바른 대입문이 아니다."
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "필드로 계산한 값 반환",
+    "prompt": "이동 거리와 속력을 이용하여 이동 시간을 반환하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "class Travel {\n    int distance;\n    int speed;\n\n    [[0]] getTime() {\n        [[1]] [[2]] / [[3]];\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Travel travel = new Travel();\n\n        travel.distance = 120;\n        travel.speed = 60;\n\n        System.out.println(travel.[[4]]());\n    }\n}",
+    "tokens": [
+     "int",
+     "return",
+     "distance",
+     "speed",
+     "getTime",
+     "void",
+     "double",
+     "*",
+     "calculate"
+    ],
+    "answers": [
+     "int",
+     "return",
+     "distance",
+     "speed",
+     "getTime"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "2"
+    },
+    "explanation": "정수 이동 시간을 반환하므로 반환형은 int다. getTime()은 자신을 호출한 travel 객체의 distance를 speed로 나눈 값을 반환한다. void 메서드는 정숫값을 반환할 수 없다."
+   },
+   {
+    "id": "q8",
+    "type": "order",
+    "title": "같은 메서드를 호출하는 두 객체",
+    "prompt": "Light·color 선언 → showColor() 정의 → Main·main 선언 → first, second 순서로 객체 생성 → first에 빨강·second에 파랑 저장 → second, first 순서로 showColor() 호출 순서로 배열하여 파랑, 빨강을 출력하시오.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Light {"
+     },
+     {
+      "id": "c2",
+      "text": "    String color;"
+     },
+     {
+      "id": "c3",
+      "text": "    void showColor() {"
+     },
+     {
+      "id": "c4",
+      "text": "        System.out.println(color);"
+     },
+     {
+      "id": "c5",
+      "text": "    }"
+     },
+     {
+      "id": "c6",
+      "text": "}"
+     },
+     {
+      "id": "c7",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c8",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c9",
+      "text": "        Light first = new Light();"
+     },
+     {
+      "id": "c10",
+      "text": "        Light second = new Light();"
+     },
+     {
+      "id": "c11",
+      "text": "        first.color = \"빨강\";"
+     },
+     {
+      "id": "c12",
+      "text": "        second.color = \"파랑\";"
+     },
+     {
+      "id": "c13",
+      "text": "        second.showColor();"
+     },
+     {
+      "id": "c14",
+      "text": "        first.showColor();"
+     },
+     {
+      "id": "c15",
+      "text": "    }"
+     },
+     {
+      "id": "c16",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        Light.showColor();"
+     },
+     {
+      "id": "w2",
+      "text": "        first.color = second.color;"
+     }
+    ],
+    "explanation": "second.showColor()는 second의 color인 \"파랑\"을 출력하고, first.showColor()는 first의 color인 \"빨강\"을 출력한다. Light.showColor()처럼 클래스 이름으로 인스턴스 메서드를 호출할 수 없다."
+   },
+   {
+    "id": "q9",
+    "type": "code_exercise",
+    "title": "종합 — 필드 변경과 반환값 사용",
+    "prompt": "두 저축 객체에 각각 돈을 추가하고 21000, 15000을 차례로 출력하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "class Savings {\n    int balance;\n\n    void deposit(int amount) {\n        balance = balance + amount;\n    }\n\n    int getBalance() {\n        return balance;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Savings savings1 = new Savings();\n        Savings savings2 = new Savings();\n\n        savings1.balance = 10000;\n        savings2.balance = 20000;\n\n        [[0]].deposit(5000);\n        [[1]].deposit(1000);\n\n        System.out.println([[2]].[[3]]());\n        System.out.println([[4]].[[5]]());\n    }\n}",
+    "tokens": [
+     "savings1",
+     "savings1",
+     "savings2",
+     "savings2",
+     "getBalance",
+     "getBalance",
+     "Savings",
+     "deposit",
+     "balance"
+    ],
+    "answers": [
+     "savings1",
+     "savings2",
+     "savings2",
+     "getBalance",
+     "savings1",
+     "getBalance"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "21000\n15000"
+    },
+    "explanation": "savings1에는 5000원이 추가되어 15000원이 되고 savings2에는 1000원이 추가되어 21000원이 된다. 첫 번째 출력은 savings2, 두 번째 출력은 savings1의 getBalance()를 호출해야 한다."
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}

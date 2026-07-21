@@ -1,0 +1,492 @@
+---
+lesson_id: DEV-JAVA-01-02
+title: "Java초급02 변수·기본형·리터럴·상수"
+module: DEV-JAVA-01
+language: ko
+level: foundation
+est_minutes: 18
+tags: [java, basics, variables, types, literal, static-content]
+---
+
+## 학습 목표
+
+이 파트를 학습한 후 다음 작업을 할 수 있어야 합니다.
+
+- 변수를 선언하고 초기화할 수 있다.
+- 변수에 저장된 값을 출력할 수 있다.
+- Java의 8가지 기본형을 구분할 수 있다.
+- 정수·실수·문자·논리 리터럴을 작성할 수 있다.
+- long, float 리터럴의 접미사를 사용할 수 있다.
+- final을 사용하여 상수를 선언할 수 있다.
+
+## 수업 내용
+
+### Part 1. 변수의 선언과 초기화
+
+**개념 설명**
+
+- 변수는 프로그램에서 값을 저장하는 이름 있는 공간이다.
+- 변수를 사용하려면 먼저 저장할 값의 종류와 변수 이름을 선언해야 한다.
+- 변수에 처음으로 값을 저장하는 것을 초기화라고 한다.
+- 선언과 초기화는 한 문장으로 함께 작성할 수 있다.
+- 이미 값이 저장된 변수에 새로운 값을 대입하면 기존 값은 새로운 값으로 바뀐다.
+- main 메서드 안에서 선언한 변수는 값을 저장한 후 사용해야 한다.
+
+**코드 문법 분해**
+
+```java
+int age = 20;
+```
+
+| 부분 | 의미 |
+|---|---|
+| `int` | 변수에 저장할 값의 자료형 |
+| `age` | 변수 이름 |
+| `=` | 오른쪽 값을 왼쪽 변수에 저장 |
+| `20` | 변수에 저장할 값 |
+| `;` | 변수 선언문의 끝 |
+
+**선언과 초기화**
+
+변수만 먼저 선언할 수 있다.
+
+```java
+int age;
+```
+
+선언한 변수에 나중에 값을 저장할 수 있다.
+
+```java
+age = 20;
+```
+
+선언과 동시에 값을 저장할 수도 있다.
+
+```java
+int age = 20;
+```
+
+**문제와 다른 예제**
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        int level = 1;
+        System.out.println(level);
+
+        level = 2;
+        System.out.println(level);
+    }
+}
+```
+
+**실행 흐름과 결과**
+
+1. `level`이라는 int 변수를 만든다.
+2. `level`에 1을 저장한다.
+3. 현재 저장된 1을 출력한다.
+4. `level`에 새로운 값 2를 저장한다.
+5. 기존 값 1이 사라지고 2가 출력된다.
+
+```
+1
+2
+```
+
+**변수 이름 규칙**
+
+```java
+int age;
+int studentCount;
+int score2;
+```
+
+- 영문자, 숫자, `_`, `$`를 사용할 수 있다.
+- 숫자로 시작할 수 없다.
+- `int`, `class`, `public`과 같은 Java 예약어는 사용할 수 없다.
+- 대소문자를 구분한다.
+- 일반적으로 소문자로 시작하는 카멜 표기법을 사용한다.
+
+```java
+int studentCount;
+int totalScore;
+int userLevel;
+```
+
+**자주 하는 실수**
+
+```java
+int 1score = 100;       // 숫자로 시작할 수 없음
+int class = 1;          // class는 예약어
+int user age = 20;      // 이름에 공백을 사용할 수 없음
+int score;
+System.out.println(score); // 값을 저장하지 않고 사용
+```
+
+다음 두 변수는 서로 다른 변수다.
+
+```java
+int score = 80;
+int Score = 90;
+```
+
+Java는 대소문자를 구분하므로 `score`와 `Score`를 다르게 처리한다.
+
+### Part 2. Java의 8가지 기본형
+
+**개념 설명**
+
+- 자료형은 변수에 어떤 종류의 값을 저장할지 결정한다.
+- Java의 기본형은 정수형, 실수형, 문자형, 논리형으로 구분된다.
+- 기본형은 총 8개다.
+- 같은 종류의 값이라도 저장 범위와 정밀도에 따라 여러 자료형으로 나뉜다.
+- 초급 단계에서는 정수에 `int`, 실수에 `double`을 가장 많이 사용한다.
+
+**기본형 종류**
+
+| 분류 | 자료형 | 크기 | 저장하는 값 | 예시 |
+|---|---|---|---|---|
+| 정수형 | `byte` | 1바이트 | 작은 범위의 정수 | `byte level = 10;` |
+| 정수형 | `short` | 2바이트 | 비교적 작은 정수 | `short year = 2026;` |
+| 정수형 | `int` | 4바이트 | 일반적인 정수 | `int score = 100;` |
+| 정수형 | `long` | 8바이트 | 매우 큰 정수 | `long distance = 3000000000L;` |
+| 실수형 | `float` | 4바이트 | 단정밀도 실수 | `float rate = 3.5F;` |
+| 실수형 | `double` | 8바이트 | 일반적인 실수 | `double height = 175.5;` |
+| 문자형 | `char` | 2바이트 | 문자 한 개 | `char grade = 'A';` |
+| 논리형 | `boolean` | JVM 표현 | 참 또는 거짓 | `boolean passed = true;` |
+
+**정수형의 저장 범위**
+
+| 자료형 | 저장 범위 |
+|---|---|
+| `byte` | -128 ∼ 127 |
+| `short` | -32,768 ∼ 32,767 |
+| `int` | -2,147,483,648 ∼ 2,147,483,647 |
+| `long` | 약 -922경 ∼ 922경 |
+
+**문제와 다른 예제**
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        byte level = 5;
+        short year = 2026;
+        int score = 95;
+        long population = 8000000000L;
+
+        float temperature = 24.5F;
+        double height = 175.8;
+
+        char grade = 'A';
+        boolean passed = true;
+
+        System.out.println(level);
+        System.out.println(year);
+        System.out.println(score);
+        System.out.println(population);
+        System.out.println(temperature);
+        System.out.println(height);
+        System.out.println(grade);
+        System.out.println(passed);
+    }
+}
+```
+
+**실행 결과**
+
+```
+5
+2026
+95
+8000000000
+24.5
+175.8
+A
+true
+```
+
+**자주 하는 실수**
+
+```java
+byte number = 200;       // byte의 저장 범위를 초과함
+int count = 3000000000;  // int의 저장 범위를 초과함
+char grade = "A";        // char는 작은따옴표를 사용해야 함
+boolean result = "true"; // boolean 값에는 큰따옴표를 사용하지 않음
+```
+
+자료형이 저장할 수 있는 값의 범위를 초과하면 컴파일 오류가 발생할 수 있다.
+
+### Part 3. 리터럴
+
+**개념 설명**
+
+- 리터럴은 코드에 직접 작성한 값 그 자체를 의미한다.
+- `100`, `3.14`, `'A'`, `true` 등이 리터럴이다.
+- 변수는 값을 저장하는 이름이고, 리터럴은 변수에 실제로 저장되는 값이다.
+- 리터럴의 작성 방법은 값의 종류에 따라 다르다.
+- 정수 리터럴은 기본적으로 int, 실수 리터럴은 기본적으로 double로 처리된다.
+
+**코드 문법 분해**
+
+```java
+int score = 100;
+```
+
+- `int`: 변수의 자료형
+- `score`: 변수 이름
+- `100`: 정수 리터럴
+
+```java
+double height = 175.5;
+```
+
+- `double`: 변수의 자료형
+- `height`: 변수 이름
+- `175.5`: 실수 리터럴
+
+**리터럴 종류**
+
+| 종류 | 작성 예시 | 설명 |
+|---|---|---|
+| 정수 리터럴 | `10`, `-20`, `2026` | 소수점이 없는 수 |
+| long 리터럴 | `3000000000L` | 큰 정수 뒤에 L 사용 |
+| 실수 리터럴 | `3.14`, `175.5` | 기본적으로 double |
+| float 리터럴 | `3.14F` | 실수 뒤에 F 사용 |
+| 문자 리터럴 | `'A'`, `'가'` | 작은따옴표로 문자 하나 표현 |
+| 문자열 리터럴 | `"Java"` | 큰따옴표로 여러 문자 표현 |
+| 논리 리터럴 | `true`, `false` | 참과 거짓을 표현 |
+
+**long 리터럴**
+
+큰 정수를 long 변수에 저장할 때는 값 뒤에 `L`을 붙인다.
+
+```java
+long population = 8000000000L;
+```
+
+소문자 `l`도 사용할 수 있지만 숫자 1과 혼동될 수 있으므로 대문자 `L`을 사용하는 것이 좋다.
+
+**float 리터럴**
+
+소수점이 있는 값은 기본적으로 double이다. float 변수에 저장하려면 값 뒤에 `F`를 붙인다.
+
+```java
+float temperature = 24.5F;
+double height = 175.8;
+```
+
+**문자와 문자열**
+
+문자 한 개는 작은따옴표를 사용한다.
+
+```java
+char grade = 'A';
+```
+
+문자열은 큰따옴표를 사용한다.
+
+```java
+String language = "Java";
+```
+
+`String`은 기본형이 아니지만 문자와 문자열의 표기 차이를 구분하기 위해 여기서는 작성 방법만 확인한다. 자세한 사용법은 문자열 파트에서 학습한다.
+
+**문제와 다른 예제**
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        int count = 30;
+        long worldPopulation = 8000000000L;
+        double price = 12.5;
+        float temperature = 23.5F;
+        char rank = 'S';
+        boolean available = true;
+        String message = "학습 시작";
+
+        System.out.println(count);
+        System.out.println(worldPopulation);
+        System.out.println(price);
+        System.out.println(temperature);
+        System.out.println(rank);
+        System.out.println(available);
+        System.out.println(message);
+    }
+}
+```
+
+**실행 결과**
+
+```
+30
+8000000000
+12.5
+23.5
+S
+true
+학습 시작
+```
+
+**자주 하는 실수**
+
+```java
+long number = 3000000000; // 큰 정수에 L이 없음
+float rate = 3.5;         // float 값에 F가 없음
+char grade = "A";         // char에 큰따옴표 사용
+String name = 'Java';     // 문자열에 작은따옴표 사용
+boolean passed = True;    // true는 소문자로 작성
+```
+
+올바른 코드는 다음과 같다.
+
+```java
+long number = 3000000000L;
+float rate = 3.5F;
+char grade = 'A';
+String name = "Java";
+boolean passed = true;
+```
+
+### Part 4. 상수와 final
+
+**개념 설명**
+
+- 일반 변수는 새로운 값을 다시 저장할 수 있다.
+- 반면 상수는 한 번 값을 저장한 후 변경하지 않는 값이다.
+- Java에서는 변수 앞에 `final`을 붙여 값을 다시 대입하지 못하게 할 수 있다.
+- 프로그램 전체에서 변경되면 안 되는 기준값을 나타낼 때 사용한다.
+- 상수 이름은 일반적으로 모든 글자를 대문자로 작성한다.
+- 여러 단어로 이루어진 이름은 밑줄 `_`로 연결한다.
+
+**코드 문법 분해**
+
+```java
+final int MAX_SCORE = 100;
+```
+
+| 부분 | 의미 |
+|---|---|
+| `final` | 값을 한 번만 저장할 수 있게 함 |
+| `int` | 상수에 저장할 값의 자료형 |
+| `MAX_SCORE` | 상수 이름 |
+| `100` | 저장할 정수 리터럴 |
+| `;` | 선언문의 끝 |
+
+**문제와 다른 예제**
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        final int DAILY_GOAL = 30;
+        final double TAX_RATE = 0.1;
+        final char TOP_GRADE = 'A';
+
+        System.out.println(DAILY_GOAL);
+        System.out.println(TAX_RATE);
+        System.out.println(TOP_GRADE);
+    }
+}
+```
+
+**실행 결과**
+
+```
+30
+0.1
+A
+```
+
+**값 변경 제한**
+
+일반 변수는 값을 변경할 수 있다.
+
+```java
+int score = 80;
+score = 90;
+```
+
+final 변수는 한 번 값이 저장되면 변경할 수 없다.
+
+```java
+final int MAX_SCORE = 100;
+MAX_SCORE = 200; // 컴파일 오류
+```
+
+**상수 이름 작성 방식**
+
+```java
+final int MAX_COUNT = 100;
+final int DAILY_GOAL = 30;
+final double TAX_RATE = 0.1;
+```
+
+다음과 같이 작성해도 문법 오류는 아니지만 상수임을 알아보기 어렵다.
+
+```java
+final int maxCount = 100;
+```
+
+일반적으로 상수는 `대문자_대문자` 형식을 권장한다.
+
+**자주 하는 실수**
+
+```java
+final int MAX_SCORE = 100;
+MAX_SCORE = 200; // final 값은 변경할 수 없음
+
+final int MAX_SCORE;
+System.out.println(MAX_SCORE); // 값을 저장하기 전에 사용할 수 없음
+```
+
+- final 값을 다시 변경하려고 한다.
+- 상수를 선언하고 값을 저장하지 않은 상태에서 사용한다.
+- 상수 이름을 일반 변수처럼 작성한다.
+- final을 붙이면 자동으로 값이 저장된다고 생각한다.
+
+## 종합 예제
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        String courseName = "Java 초급";
+        int partNumber = 2;
+        char level = 'A';
+        double studyHours = 1.5;
+        boolean completed = false;
+
+        final int DAILY_GOAL = 30;
+
+        System.out.println(courseName);
+        System.out.println(partNumber);
+        System.out.println(level);
+        System.out.println(studyHours);
+        System.out.println(completed);
+        System.out.println(DAILY_GOAL);
+    }
+}
+```
+
+**실행 흐름**
+
+1. `courseName`에 문자열을 저장한다.
+2. `partNumber`에 정수를 저장한다.
+3. `level`에 문자 하나를 저장한다.
+4. `studyHours`에 실수를 저장한다.
+5. `completed`에 논리값을 저장한다.
+6. `DAILY_GOAL`에 변경할 수 없는 값을 저장한다.
+7. 각 변수와 상수의 값을 차례대로 출력한다.
+
+**실행 결과**
+
+```
+Java 초급
+2
+A
+1.5
+false
+30
+```
+
+## 다음으로
+
+다음 학습 내용은 [Part 3「연산자·형변환」](/dev/lessons/DEV-JAVA-01-03)이다.

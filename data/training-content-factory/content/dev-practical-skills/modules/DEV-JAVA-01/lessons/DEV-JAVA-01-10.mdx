@@ -1,0 +1,393 @@
+---
+lesson_id: DEV-JAVA-01-10
+title: "Java初級10 配列① 宣言・生成・要素アクセス"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 18
+tags: [java, basics, array, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次のことができるようにする。
+
+- 配列が必要な理由を理解する。
+- 配列変数を宣言し、配列を生成する。
+- 初期値を使って配列を一度に作る。
+- インデックスで配列要素を読み取り、変更する。
+- lengthで配列の長さを確認する。
+- 配列の既定値とインデックス範囲エラーを理解する。
+
+## 授業内容
+
+### Part 1. 配列の概念と宣言
+
+**概念説明**
+
+- 配列は同じ型の値を複数格納する領域である。
+- 変数を1つずつ作らずに、1つの配列名で複数の値を管理できる。
+- 配列の各格納領域を要素と呼ぶ。
+- 配列を使うには、まず配列変数を宣言する必要がある。
+- 宣言だけでは、実際に値を格納する配列の領域はまだ作られない。
+
+**通常の変数を使った場合**
+
+```java
+int score1 = 80;
+int score2 = 90;
+int score3 = 100;
+```
+
+値が増えるたびに変数を追加し続けなければならない。
+
+**配列の宣言**
+
+```java
+int[] scores;
+```
+
+**コード文法の分解**
+
+| コード | 意味 |
+|---|---|
+| `int` | 配列要素の型 |
+| `[]` | 配列であることを示す |
+| `scores` | 配列変数の名前 |
+
+次の文法も使用できる。
+
+```java
+int scores[];
+```
+
+しかし、型と配列表示が結びついた次の形を推奨する。
+
+```java
+int[] scores;
+```
+
+**別の型の配列**
+
+```java
+double[] prices;
+char[] grades;
+boolean[] results;
+String[] names;
+```
+
+1つの配列には、宣言した型に合う値だけを格納できる。
+
+**よくあるミス**
+
+```java
+int scores;   // 通常の int 変数
+int[] scores; // int 配列変数
+```
+
+`[]`がなければ配列ではなく、値を1つだけ格納する通常の変数である。
+
+### Part 2. 配列の生成
+
+**概念説明**
+
+- 配列を宣言した後は、実際に要素を格納する領域を生成する必要がある。
+- 配列は`new 型[長さ]`の形式で生成する。
+- 長さは配列に格納できる要素の数である。
+- 配列の長さは生成時に決まり、その後変更できない。
+- 宣言と生成を1つの文で書くこともできる。
+
+**宣言と生成を分ける**
+
+```java
+int[] scores;
+scores = new int[3];
+```
+
+**宣言と生成を同時に書く**
+
+```java
+int[] scores = new int[3];
+```
+
+**コード文法の分解**
+
+```java
+int[] scores = new int[3];
+```
+
+| 部分 | 意味 |
+|---|---|
+| `int[]` | int 配列の型 |
+| `scores` | 配列変数の名前 |
+| `new` | 新しい配列の生成 |
+| `int[3]` | int 要素3個を格納する領域 |
+
+**生成された配列の構造**
+
+| インデックス | 0 | 1 | 2 |
+|---|---|---|---|
+| 要素値 | 0 | 0 | 0 |
+
+int 配列を生成すると、各要素はまず0で初期化される。
+
+**問題とは別の例**
+
+```java
+double[] temperatures = new double[4];
+
+System.out.println(temperatures.length);
+```
+
+実行結果:
+
+```
+4
+```
+
+**よくあるミス**
+
+配列の宣言と生成で型が異なってはいけない。
+
+```java
+int[] scores = new double[3]; // エラー
+```
+
+正しいコードは次のとおりである。
+
+```java
+int[] scores = new int[3];
+```
+
+### Part 3. 初期値で配列を生成
+
+**概念説明**
+
+- 格納する値がわかっていれば、配列の生成と同時に値を書くことができる。
+- 中括弧の中に値をカンマで区切って書く。
+- 配列の長さは、書いた値の個数によって自動的に決まる。
+- すべての値は配列の型に合っていなければならない。
+
+**基本の文法**
+
+```java
+int[] scores = {80, 90, 100};
+```
+
+生成された配列の構造は次のとおりである。
+
+| インデックス | 0 | 1 | 2 |
+|---|---|---|---|
+| 要素値 | 80 | 90 | 100 |
+
+**別の書き方**
+
+```java
+int[] scores = new int[]{80, 90, 100};
+```
+
+2つのコードは同じ値が入った配列を作る。
+
+```java
+int[] scores = {80, 90, 100};
+int[] points = new int[]{80, 90, 100};
+```
+
+**問題とは別の例**
+
+```java
+char[] grades = {'A', 'B', 'C'};
+boolean[] results = {true, false, true};
+
+System.out.println(grades.length);
+System.out.println(results.length);
+```
+
+実行結果:
+
+```
+3
+3
+```
+
+**よくあるミス**
+
+宣言が終わった配列変数には、中括弧だけを使って値を代入することはできない。
+
+```java
+int[] scores;
+scores = {80, 90, 100}; // エラー
+```
+
+次のように`new int[]`を使う必要がある。
+
+```java
+int[] scores;
+scores = new int[]{80, 90, 100};
+```
+
+### Part 4. インデックスで要素にアクセス
+
+**概念説明**
+
+- 配列の各要素にはインデックスという位置番号がある。
+- Java 配列の最初のインデックスは0である。
+- 長さが3の配列のインデックスは0, 1, 2である。
+- `配列名[インデックス]`で要素を読み取ったり変更したりできる。
+- 配列の最後のインデックスは常に`配列の長さ - 1`である。
+
+**要素の読み取り**
+
+```java
+int[] scores = {80, 90, 100};
+
+System.out.println(scores[0]);
+System.out.println(scores[1]);
+System.out.println(scores[2]);
+```
+
+実行結果:
+
+```
+80
+90
+100
+```
+
+**要素の変更**
+
+```java
+int[] scores = {80, 90, 100};
+
+scores[1] = 95;
+
+System.out.println(scores[1]);
+```
+
+**実行の流れと結果**
+
+- `scores[1]`には90が保存されている。
+- `scores[1] = 95`で2番目の要素を変更する。
+- 変更された値95を出力する。
+
+```
+95
+```
+
+**値を使った計算**
+
+```java
+int[] numbers = {10, 20, 30};
+
+int result = numbers[0] + numbers[2];
+
+System.out.println(result);
+```
+
+```
+40
+```
+
+**よくあるミス**
+
+最初の要素を1番のインデックスだと考えてはいけない。
+
+```java
+int[] scores = {80, 90, 100};
+
+System.out.println(scores[1]);
+```
+
+出力される値は最初の値80ではなく、2番目の値90である。
+
+### Part 5. 配列の長さと既定値
+
+**配列の長さ**
+
+配列の長さは`length`で確認する。
+
+```java
+int[] scores = new int[3];
+
+System.out.println(scores.length);
+```
+
+```
+3
+```
+
+`length`はメソッドではないので、小括弧を付けない。
+
+```java
+scores.length;   // 正しい
+scores.length(); // エラー
+```
+
+**最後のインデックス**
+
+長さが3の配列の最後のインデックスは2である。
+
+```java
+int[] scores = {80, 90, 100};
+
+System.out.println(scores[scores.length - 1]);
+```
+
+```
+100
+```
+
+**配列要素の既定値**
+
+配列を長さだけ指定して生成すると、各要素に既定値が格納される。
+
+| 配列の型 | 既定値 |
+|---|---|
+| `byte`, `short`, `int`, `long` | 0 |
+| `float`, `double` | 0.0 |
+| `boolean` | false |
+| `char` | 値のない文字 `\u0000` |
+| `String` などの参照型 | null |
+
+**既定値の例**
+
+```java
+int[] numbers = new int[2];
+boolean[] results = new boolean[2];
+String[] names = new String[2];
+
+System.out.println(numbers[0]);
+System.out.println(results[0]);
+System.out.println(names[0]);
+```
+
+```
+0
+false
+null
+```
+
+**インデックス範囲エラー**
+
+```java
+int[] scores = new int[3];
+
+System.out.println(scores[3]);
+```
+
+長さが3の配列のインデックスは0, 1, 2である。`scores[3]`にアクセスすると、実行中エラーが発生する。
+
+**よくあるミス**
+
+```java
+int[] scores = new int[3];
+
+scores[-1] = 10; // 範囲外
+scores[3] = 10;  // 範囲外
+```
+
+使用できる範囲は`0以上、scores.length未満`である。
+
+## 次へ
+
+次は [Part 11「配列② 巡回・合計・検索」](/dev/lessons/DEV-JAVA-01-11)を学ぶ。

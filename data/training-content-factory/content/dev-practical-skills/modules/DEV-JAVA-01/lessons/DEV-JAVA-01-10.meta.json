@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-01-10",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-basics-array-declare-access",
+  "summary": "1次元配列の宣言・生成、インデックスと length、初期値0、範囲外の例外を学ぶ。",
+  "key_points": [
+    "new int[3] または {1,2,3} で作る。",
+    "インデックスは0から、最後は length-1。",
+    "int 配列の初期値は0。範囲外は例外。"
+  ],
+  "misconceptions": [
+    "インデックスを1から数える。",
+    "length に () を付ける。",
+    "範囲外アクセスで例外が出ると知らない。"
+  ],
+  "check_questions": [
+    "配列の最初のインデックスは？",
+    "new int[3] の初期値は？",
+    "範囲外にアクセスすると？"
+  ]
+}

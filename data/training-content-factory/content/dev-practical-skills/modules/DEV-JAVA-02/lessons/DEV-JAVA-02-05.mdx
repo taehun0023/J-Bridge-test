@@ -1,0 +1,543 @@
+---
+lesson_id: DEV-JAVA-02-05
+title: "Java中級05 パッケージ・import・プロジェクト構造"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 20
+tags: [java, intermediate, oop, package, import, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次の作業ができるようになる。
+
+- クラスが多くなったときにパッケージが必要な理由を説明する。
+- クラスが属するパッケージを宣言する。
+- パッケージ名とフォルダ構造を一致させる。
+- 別のパッケージのクラスを import して使用する。
+- 同じパッケージでは import が必要ないことを理解する。
+- 複数のファイルで構成される Java プロジェクトの基本構造を組み立てる。
+
+## 授業内容
+
+### Part 1. パッケージが必要な理由
+
+これまではクラスの数が少なく、一つの場所で管理できた。
+
+```text
+Main.java
+Student.java
+Teacher.java
+Product.java
+Order.java
+```
+
+プロジェクトが大きくなるとクラスファイルが増え続ける。
+
+```text
+Main.java
+Student.java
+Teacher.java
+Product.java
+Order.java
+User.java
+Admin.java
+Payment.java
+Delivery.java
+Review.java
+```
+
+すべてのクラスを一箇所に置くと次の問題が生じる。
+
+- 目的のクラスを見つけにくい。
+- どの機能に属するクラスなのか区別しにくい。
+- 同じ名前のクラスを作れない。
+- プロジェクトの機能別構造を把握しにくい。
+
+パッケージは関連するクラスを一つのグループにまとめる。
+
+```text
+school
+ ├─ Student.java
+ └─ Teacher.java
+
+shop
+ ├─ Product.java
+ └─ Order.java
+```
+
+学校に関連するクラスは school、ショッピングに関連するクラスは shop パッケージに分けることができる。
+
+パッケージが異なれば同じ名前のクラスも区別できる。
+
+```text
+shop.User
+admin.User
+```
+
+二つのクラスの名前はどちらも User だが、完全な名前は異なる。
+
+- shop.User: ショップの利用者
+- admin.User: 管理者
+
+クラスが多くなったときに機能別に整理し、名前の衝突を防ぐためにパッケージを使用する。
+
+### Part 2. package 宣言
+
+クラスが属するパッケージはファイルの先頭部分で宣言する。
+
+```java
+package school;
+
+public class Student {
+}
+```
+
+基本形式は次のとおりである。
+
+```java
+package パッケージ名;
+```
+
+`package school;` は Student クラスが school パッケージに属することを意味する。
+
+一般的にパッケージ名は英小文字で記述する。
+
+```java
+package school;
+package shop;
+package account;
+```
+
+複数階層のパッケージはドットで区切る。
+
+```java
+package school.student;
+package shop.order;
+```
+
+package 宣言はコメントを除き、ファイルの最初の実行可能な宣言でなければならない。
+
+```java
+package school;
+
+public class Student {
+}
+```
+
+次の位置には記述できない。
+
+```java
+public class Student {
+    package school; // コンパイルエラー
+}
+```
+
+**よくあるミス**
+
+パッケージ名の後にはセミコロンが必要である。
+
+```java
+package school // コンパイルエラー
+package school;
+```
+
+一つのソースファイルには一つの package 宣言だけを記述する。
+
+```java
+package school;
+package shop; // コンパイルエラー
+```
+
+### Part 3. パッケージとフォルダ構造
+
+パッケージ名は一般的にソースファイルが入っているフォルダ構造と一致させる。
+
+```text
+src/
+└─ school/
+   └─ Student.java
+```
+
+Student.java:
+
+```java
+package school;
+
+public class Student {
+}
+```
+
+複数階層のパッケージはフォルダも複数階層で構成する。
+
+```text
+src/
+└─ school/
+   └─ student/
+      └─ Student.java
+```
+
+Student.java:
+
+```java
+package school.student;
+
+public class Student {
+}
+```
+
+次のパッケージ名は:
+
+```java
+package school.student;
+```
+
+次のフォルダ構造に対応する。
+
+```text
+school/student/
+```
+
+パッケージ名とフォルダ構造が異なると、IDE やビルドツールがクラスを見つけられなかったり、誤ったパッケージのエラーが発生することがある。
+
+public クラスの名前とファイル名も一致させる。
+
+```java
+// Student.java
+public class Student {
+}
+```
+
+次の構成は誤りである。
+
+```java
+// Member.java
+public class Student {
+}
+```
+
+public クラス名が Student であれば、ファイル名も Student.java でなければならない。
+
+### Part 4. 同じパッケージのクラスの使用
+
+同じパッケージにあるクラスは import なしで使える。
+
+プロジェクト構造:
+
+```text
+src/
+└─ school/
+   ├─ Student.java
+   └─ SchoolMain.java
+```
+
+Student.java:
+
+```java
+package school;
+
+public class Student {
+    public void introduce() {
+        System.out.println("学生です。");
+    }
+}
+```
+
+SchoolMain.java:
+
+```java
+package school;
+
+public class SchoolMain {
+    public static void main(String[] args) {
+        Student student = new Student();
+
+        student.introduce();
+    }
+}
+```
+
+二つのクラスはどちらも school パッケージに属するため、次の import は必要ない。
+
+```java
+import school.Student;
+```
+
+同じパッケージのクラスはクラス名だけで互いを見つけられる。
+
+例で使用した public の詳しいアクセスルールは次のパートで学習する。ここでは別のファイルからクラスを使用するための形として使う。
+
+### Part 5. 別のパッケージと import
+
+別のパッケージにあるクラスを短い名前で使用するには import を記述する。
+
+プロジェクト構造:
+
+```text
+src/
+├─ school/
+│  └─ Student.java
+└─ app/
+   └─ Main.java
+```
+
+Student.java:
+
+```java
+package school;
+
+public class Student {
+    public void introduce() {
+        System.out.println("学生です。");
+    }
+}
+```
+
+Main.java:
+
+```java
+package app;
+
+import school.Student;
+
+public class Main {
+    public static void main(String[] args) {
+        Student student = new Student();
+
+        student.introduce();
+    }
+}
+```
+
+`import school.Student;` は school パッケージの Student クラスを、現在のファイルで Student という短い名前で使えるようにする。
+
+import は package 宣言の後、クラス宣言の前に記述する。
+
+```java
+package app;
+
+import school.Student;
+
+public class Main {
+}
+```
+
+次の順序で記述してはいけない。
+
+```java
+import school.Student;
+package app; // コンパイルエラー
+```
+
+正しい記述順序は次のとおりである。
+
+- package 宣言
+- import 宣言
+- class 宣言
+
+### Part 6. import を使う理由
+
+import がなくても、クラスの完全な名前を書けば別のパッケージのクラスを使用できる。
+
+```java
+school.Student student = new school.Student();
+```
+
+これを完全なパッケージ名を含むクラス名と呼ぶ。
+
+同じクラスを何度も使用すると完全な名前を繰り返さなければならない。
+
+```java
+school.Student first = new school.Student();
+school.Student second = new school.Student();
+```
+
+import を使うとコードが短くなる。
+
+```java
+import school.Student;
+
+Student first = new Student();
+Student second = new Student();
+```
+
+別のパッケージのクラスを何度も使用しながら完全な名前を繰り返さないために import を使う。
+
+import はクラスをインストールしたりファイルをコピーしたりする機能ではない。コンパイラに、短いクラス名がどのパッケージのクラスを意味するかを伝える。
+
+### Part 7. import が必要ない場合
+
+次の場合には import を記述しなくてもよい。
+
+**現在のクラスと同じパッケージにある場合**
+
+```java
+package school;
+```
+
+同じ school パッケージにあるクラスはそのまま使用できる。
+
+**java.lang パッケージにある場合**
+
+String や System などのクラスは java.lang パッケージに属する。
+
+```java
+String message = "Java";
+System.out.println(message);
+```
+
+次の import は自動的に適用されるため、直接記述しない。
+
+```java
+import java.lang.String;
+import java.lang.System;
+```
+
+**クラスの完全な名前を直接書く場合**
+
+```java
+java.util.Scanner scanner =
+        new java.util.Scanner(System.in);
+```
+
+完全な名前を記述したため、次の import は必要ない。
+
+```java
+import java.util.Scanner;
+```
+
+完全な名前は、別々のパッケージに同じ名前のクラスがあるときに区別するために使うことができる。
+
+### Part 8. 複数のクラスを import する
+
+必要なクラスをそれぞれ import できる。
+
+```java
+import java.util.Scanner;
+import java.util.ArrayList;
+```
+
+アスタリスク `*` を使うと、一つのパッケージに直接含まれる複数のクラスをまとめて読み込むこともできる。
+
+```java
+import java.util.*;
+```
+
+しかし `*` は下位パッケージまでは含まない。
+
+```java
+import java.util.*;
+```
+
+上のコードは次のパッケージのクラスを自動的には含まない。
+
+```text
+java.util.concurrent
+java.util.function
+```
+
+どのクラスを使用しているかを簡単に確認するには、必要なクラスを直接記述する方式が明確である。
+
+```java
+import java.util.Scanner;
+import java.util.ArrayList;
+```
+
+### Part 9. プロジェクトの基本構造
+
+複数のファイルを使用する Java プロジェクトは、一般的にソースコードを src フォルダの下に配置する。
+
+```text
+project/
+└─ src/
+   ├─ app/
+   │  └─ Main.java
+   ├─ school/
+   │  ├─ Student.java
+   │  └─ Teacher.java
+   └─ shop/
+      ├─ Product.java
+      └─ Order.java
+```
+
+各ファイルの package 宣言は src の下のフォルダ構造に合わせる。
+
+Main.java:
+
+```java
+package app;
+```
+
+Student.java:
+
+```java
+package school;
+```
+
+Product.java:
+
+```java
+package shop;
+```
+
+プロジェクトを機能別パッケージに分けると次の利点がある。
+
+- 関連するクラスをまとめて見つけられる。
+- クラスの役割と所属を把握しやすい。
+- 同じ名前のクラスを別々のパッケージで使用できる。
+- 機能が追加されてもファイルを体系的に管理できる。
+
+最初からクラスが一つか二つしかない短い練習プログラムであれば、パッケージがなくても実行できる。しかし複数の機能とファイルを持つプロジェクトではパッケージを使用するのがよい。
+
+### 総合例
+
+プロジェクト構造:
+
+```text
+src/
+├─ app/
+│  └─ Main.java
+└─ library/
+   └─ Book.java
+```
+
+Book.java:
+
+```java
+package library;
+
+public class Book {
+    public void showTitle() {
+        System.out.println("Java Guide");
+    }
+}
+```
+
+Main.java:
+
+```java
+package app;
+
+import library.Book;
+
+public class Main {
+    public static void main(String[] args) {
+        Book book = new Book();
+
+        book.showTitle();
+    }
+}
+```
+
+**実行結果**
+
+```text
+Java Guide
+```
+
+Book クラスは library パッケージにあり、Main クラスは app パッケージにある。Main から別のパッケージの Book を短い名前で使用するために `import library.Book;` を記述する。
+
+## 次へ
+
+次は [Part 6「アクセス修飾子・アクセス範囲」](/dev/lessons/DEV-JAVA-02-06)を学ぶ。

@@ -1,0 +1,649 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "オーバーライドと super で親機能を拡張しよう",
+   "prompt": "親メソッドを子に合わせて再定義し、super で親メソッド・コンストラクタを呼び出そう。",
+   "takeaway": "オーバーライド・@Override・super・super()・コンストラクタ順序を12問で確認します。"
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "メソッドのオーバーライド",
+    "prompt": "Cat が親 Animal の sound() を再定義することを示しなさい。（空欄1つ）",
+    "lang": "java",
+    "codeTemplate": "class Animal {\n    public void sound() {\n        System.out.println(\"動物の音\");\n    }\n}\n\nclass Cat extends Animal {\n    [[0]]\n    public void sound() {\n        System.out.println(\"ニャー\");\n    }\n}",
+    "tokens": [
+     "@Override",
+     "@Overload",
+     "@Super"
+    ],
+    "answers": [
+     "@Override"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "@Override は親メソッドを再定義することをコンパイラに知らせる。@Overload と @Super は存在しないアノテーションなのでコンパイルエラーになる。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q2",
+    "type": "mini_check",
+    "title": "再定義されたメソッドの結果",
+    "prompt": "Bird が sound() をオーバーライドした。bird.sound() の出力は？\n```java\nBird bird = new Bird();\nbird.sound();\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "チュンチュン"
+     },
+     {
+      "id": "B",
+      "text": "動物の音"
+     },
+     {
+      "id": "C",
+      "text": "コンパイルエラー"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "Bird が親の sound() をオーバーライドしたので、子オブジェクトで呼ぶと再定義した チュンチュン が出力される。"
+   },
+   {
+    "id": "q3",
+    "type": "code_exercise",
+    "title": "誤ったメソッド名の修正",
+    "prompt": "親 Animal の sound() をオーバーライドするようにメソッド名を埋めなさい。（空欄1つ）",
+    "lang": "java",
+    "codeTemplate": "class Animal {\n    public void sound() {\n        System.out.println(\"動物の音\");\n    }\n}\n\nclass Dog extends Animal {\n    @Override\n    public void [[0]]() {\n        System.out.println(\"ワンワン\");\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Dog dog = new Dog();\n        dog.sound();\n    }\n}",
+    "tokens": [
+     "sound",
+     "sounds",
+     "Sound"
+    ],
+    "answers": [
+     "sound"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "ワンワン"
+    },
+    "explanation": "オーバーライドは親とメソッド名が正確に同じでなければならない。sounds や Sound は親にない名前なので @Override でコンパイルエラーになる。名前が sound であってこそ dog.sound() が再定義された ワンワン を出力する。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q4",
+    "type": "mini_check",
+    "title": "アクセス範囲のエラー修正",
+    "prompt": "親の public run() を正しくオーバーライドするには [空欄] に入るアクセス修飾子は？\n```java\n@Override\n[空欄] void run() { ... }\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "public"
+     },
+     {
+      "id": "B",
+      "text": "private"
+     },
+     {
+      "id": "C",
+      "text": "省略(何も書かない)"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "オーバーライドメソッドは親よりアクセス範囲を狭められない。親が public なので子も public でなければならない。private や省略(package-private)は範囲を狭めるのでコンパイルエラーになる。"
+   },
+   {
+    "id": "q5",
+    "type": "mini_check",
+    "title": "final メソッドのエラーを探す",
+    "prompt": "final メソッド stop() を子 Robot がオーバーライドするとき、コンパイルエラーになる理由は？",
+    "options": [
+     {
+      "id": "A",
+      "text": "Machine を継承できないから"
+     },
+     {
+      "id": "B",
+      "text": "stop() の戻り値の型がないから"
+     },
+     {
+      "id": "C",
+      "text": "final メソッドをオーバーライドしたから"
+     },
+     {
+      "id": "D",
+      "text": "@Override を使えないから"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "final メソッドは子でオーバーライドできない。Machine は継承可能で、stop() は void の戻り値の型があり、@Override も正常に使えるので、エラーの原因は final のオーバーライドである。"
+   },
+   {
+    "id": "q6",
+    "type": "code_exercise",
+    "title": "親メソッドに機能を追加",
+    "prompt": "親の work() を先に実行してから子の機能を追加するように完成させなさい。（空欄1つ）",
+    "lang": "java",
+    "codeTemplate": "class Employee {\n    public void work() {\n        System.out.println(\"業務を開始します。\");\n    }\n}\n\nclass Developer extends Employee {\n    @Override\n    public void work() {\n        [[0]].work();\n        System.out.println(\"コードを作成します。\");\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Developer developer = new Developer();\n        developer.work();\n    }\n}",
+    "tokens": [
+     "super",
+     "this",
+     "Employee"
+    ],
+    "answers": [
+     "super"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "業務を開始します。\nコードを作成します。"
+    },
+    "explanation": "super.work() は親クラスの work() を呼ぶ。this.work() は自分自身を再び呼んで無限再帰(実行時エラー)になり、Employee.work() はインスタンスメソッドをクラス名で呼んでコンパイルエラーになる。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "親コンストラクタの呼び出し",
+    "prompt": "子 Student のコンストラクタで親 Person のコンストラクタに名前を渡しなさい。（空欄2つ）",
+    "lang": "java",
+    "codeTemplate": "class Person {\n    private String name;\n    public Person(String name) { this.name = name; }\n    public String getName() { return name; }\n}\n\nclass Student extends Person {\n    private int grade;\n    public Student(String name, int grade) {\n        [[0]]([[1]]);\n        this.grade = grade;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Student student = new Student(\"Minsu\", 1);\n        System.out.println(student.getName());\n    }\n}",
+    "tokens": [
+     "super",
+     "this",
+     "new",
+     "name",
+     "grade",
+     "this.name"
+    ],
+    "answers": [
+     "super",
+     "name"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Minsu"
+    },
+    "explanation": "super(name) は親 Person(String name) コンストラクタを呼ぶ。this(...) は同じクラスの別コンストラクタを呼ぼうとするが存在せずエラーになり、grade を渡すと名前ではなく整数を渡すことになる。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q8",
+    "type": "mini_check",
+    "title": "コンストラクタの実行順序",
+    "prompt": "new Child() を実行すると出力の順序は？(Parent コンストラクタは \"親\"、Child コンストラクタは \"子\" を出力)",
+    "options": [
+     {
+      "id": "A",
+      "text": "親 / 子"
+     },
+     {
+      "id": "B",
+      "text": "子 / 親"
+     },
+     {
+      "id": "C",
+      "text": "子だけ"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "子オブジェクトを作ると親の部分が先に初期化されるので、親コンストラクタが先に実行され、子コンストラクタが後で実行される。"
+   },
+   {
+    "id": "q9",
+    "type": "order",
+    "title": "super() の位置の修正",
+    "prompt": "super() が最初の実行文になるようにコンストラクタを1行ずつ並べなさい。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "    public Developer(String name, String language) {"
+     },
+     {
+      "id": "c2",
+      "text": "        super(name);"
+     },
+     {
+      "id": "c3",
+      "text": "        this.language = language;"
+     },
+     {
+      "id": "c4",
+      "text": "    }"
+     }
+    ],
+    "distractors": [],
+    "explanation": "super() はコンストラクタの最初の実行文でなければならない。親の部分を先に初期化してから子のフィールドを初期化するので、super(name) が this.language の代入より前に来なければコンパイルできない。"
+   },
+   {
+    "id": "q10",
+    "type": "mini_check",
+    "title": "オーバーライドとオーバーロードの区別",
+    "prompt": "親メソッド `public void print(int value)` をオーバーライドしたコードは？",
+    "options": [
+     {
+      "id": "A",
+      "text": "`public void print(String value) {}`"
+     },
+     {
+      "id": "B",
+      "text": "`public void print(int value) { System.out.println(value); }`"
+     },
+     {
+      "id": "C",
+      "text": "`public int print(int value) { return value; }`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "オーバーライドはメソッド名と引数構成が親と同じでなければならない。A は引数の型が違うのでオーバーロード、C は戻り値の型が互換でないのでオーバーライドではない。"
+   },
+   {
+    "id": "q11",
+    "type": "order",
+    "title": "親機能を含むオーバーライド",
+    "prompt": "Developer が Employee の work() をオーバーライドしつつ、親の work() を先に実行するように並べなさい。(Employee.work() は \"業務を開始します。\" を出力)",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Developer extends Employee {"
+     },
+     {
+      "id": "c2",
+      "text": "    @Override"
+     },
+     {
+      "id": "c3",
+      "text": "    public void work() {"
+     },
+     {
+      "id": "c4",
+      "text": "        super.work();"
+     },
+     {
+      "id": "c5",
+      "text": "        System.out.println(\"Java開発\");"
+     },
+     {
+      "id": "c6",
+      "text": "    }"
+     },
+     {
+      "id": "c7",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        this.work();"
+     },
+     {
+      "id": "w2",
+      "text": "class Developer implements Employee {"
+     },
+     {
+      "id": "w3",
+      "text": "    public void work(String language) {"
+     }
+    ],
+    "explanation": "@Override で work() を再定義し、super.work() で親機能を先に実行してから子の出力を加える。this.work() は無限再帰になり、implements はクラス継承に使えず、引数を変えるとオーバーライドではなくオーバーロードになる。"
+   },
+   {
+    "id": "q12",
+    "type": "code_exercise",
+    "title": "コンストラクタとオーバーライドの総合",
+    "prompt": "Manager が親コンストラクタを呼び、work() をオーバーライドするように完成させなさい。（空欄3つ）",
+    "lang": "java",
+    "codeTemplate": "class Employee {\n    private String name;\n    public Employee(String name) { this.name = name; }\n    public void work() {\n        System.out.println(\"基本業務\");\n    }\n}\n\nclass Manager extends Employee {\n    private String department;\n    public Manager(String name, String department) {\n        [[0]](name);\n        this.department = department;\n    }\n\n    [[1]]\n    public void work() {\n        [[2]].work();\n        System.out.println(department + \" 管理\");\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Manager manager = new Manager(\"Minsu\", \"開発チーム\");\n        manager.work();\n    }\n}",
+    "tokens": [
+     "super",
+     "this",
+     "new Employee",
+     "@Override",
+     "@Overload",
+     "static",
+     "super",
+     "this",
+     "Employee"
+    ],
+    "answers": [
+     "super",
+     "@Override",
+     "super"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "基本業務\n開発チーム 管理"
+    },
+    "explanation": "super(name) で親コンストラクタを呼び、@Override で work() の再定義を示し、super.work() で親の基本業務を先に実行する。その後 department とともに管理内容を出力する。",
+    "inputMode": "tokens"
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "오버라이딩과 super로 부모 기능을 확장하자",
+   "prompt": "부모 메서드를 자식에 맞게 재정의하고, super로 부모 메서드·생성자를 호출하자.",
+   "takeaway": "오버라이딩·@Override·super·super()·생성자 순서를 12문제로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "메서드 오버라이딩",
+    "prompt": "Cat이 부모 Animal의 sound()를 재정의함을 표시하시오. (빈칸 1곳)",
+    "lang": "java",
+    "codeTemplate": "class Animal {\n    public void sound() {\n        System.out.println(\"동물 소리\");\n    }\n}\n\nclass Cat extends Animal {\n    [[0]]\n    public void sound() {\n        System.out.println(\"야옹\");\n    }\n}",
+    "tokens": [
+     "@Override",
+     "@Overload",
+     "@Super"
+    ],
+    "answers": [
+     "@Override"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "@Override는 부모 메서드를 재정의한다는 것을 컴파일러에 알린다. @Overload와 @Super는 존재하지 않는 애너테이션이라 컴파일 오류가 난다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q2",
+    "type": "mini_check",
+    "title": "재정의된 메서드 결과",
+    "prompt": "Bird가 sound()를 오버라이딩했다. bird.sound()의 출력은?\n```java\nBird bird = new Bird();\nbird.sound();\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "짹짹"
+     },
+     {
+      "id": "B",
+      "text": "동물 소리"
+     },
+     {
+      "id": "C",
+      "text": "컴파일 오류"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "Bird가 부모의 sound()를 오버라이딩했으므로 자식 객체로 호출하면 재정의한 짹짹이 출력된다."
+   },
+   {
+    "id": "q3",
+    "type": "code_exercise",
+    "title": "잘못된 메서드 이름 수정",
+    "prompt": "부모 Animal의 sound()를 오버라이딩하도록 메서드 이름을 채우시오. (빈칸 1곳)",
+    "lang": "java",
+    "codeTemplate": "class Animal {\n    public void sound() {\n        System.out.println(\"동물 소리\");\n    }\n}\n\nclass Dog extends Animal {\n    @Override\n    public void [[0]]() {\n        System.out.println(\"멍멍\");\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Dog dog = new Dog();\n        dog.sound();\n    }\n}",
+    "tokens": [
+     "sound",
+     "sounds",
+     "Sound"
+    ],
+    "answers": [
+     "sound"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "멍멍"
+    },
+    "explanation": "오버라이딩은 부모와 메서드 이름이 정확히 같아야 한다. sounds나 Sound는 부모에 없는 이름이라 @Override에서 컴파일 오류가 난다. 이름이 sound여야 dog.sound()가 재정의된 멍멍을 출력한다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q4",
+    "type": "mini_check",
+    "title": "접근 범위 오류 수정",
+    "prompt": "부모의 public run()을 올바르게 오버라이딩하려면 [빈칸]에 들어갈 접근 제어자는?\n```java\n@Override\n[빈칸] void run() { ... }\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "public"
+     },
+     {
+      "id": "B",
+      "text": "private"
+     },
+     {
+      "id": "C",
+      "text": "생략(아무것도 쓰지 않음)"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "오버라이딩 메서드는 부모보다 접근 범위를 좁힐 수 없다. 부모가 public이므로 자식도 public이어야 한다. private이나 생략(package-private)은 범위를 좁혀 컴파일 오류가 난다."
+   },
+   {
+    "id": "q5",
+    "type": "mini_check",
+    "title": "final 메서드 오류 찾기",
+    "prompt": "final 메서드 stop()을 자식 Robot이 오버라이딩할 때 컴파일 오류가 나는 이유는?",
+    "options": [
+     {
+      "id": "A",
+      "text": "Machine을 상속할 수 없어서"
+     },
+     {
+      "id": "B",
+      "text": "stop()의 반환형이 없어서"
+     },
+     {
+      "id": "C",
+      "text": "final 메서드를 오버라이딩해서"
+     },
+     {
+      "id": "D",
+      "text": "@Override를 사용할 수 없어서"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "final 메서드는 자식에서 오버라이딩할 수 없다. Machine은 상속 가능하고, stop()은 void 반환형이 있으며, @Override도 정상 사용할 수 있으므로 오류 원인은 final 오버라이딩이다."
+   },
+   {
+    "id": "q6",
+    "type": "code_exercise",
+    "title": "부모 메서드에 기능 추가",
+    "prompt": "부모의 work()를 먼저 실행한 뒤 자식 기능을 추가하도록 완성하시오. (빈칸 1곳)",
+    "lang": "java",
+    "codeTemplate": "class Employee {\n    public void work() {\n        System.out.println(\"업무를 시작합니다.\");\n    }\n}\n\nclass Developer extends Employee {\n    @Override\n    public void work() {\n        [[0]].work();\n        System.out.println(\"코드를 작성합니다.\");\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Developer developer = new Developer();\n        developer.work();\n    }\n}",
+    "tokens": [
+     "super",
+     "this",
+     "Employee"
+    ],
+    "answers": [
+     "super"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "업무를 시작합니다.\n코드를 작성합니다."
+    },
+    "explanation": "super.work()는 부모 클래스의 work()를 호출한다. this.work()는 자기 자신을 다시 호출해 무한 재귀(실행 중 오류)가 되고, Employee.work()는 인스턴스 메서드를 클래스 이름으로 호출해 컴파일 오류가 난다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "부모 생성자 호출하기",
+    "prompt": "자식 Student 생성자에서 부모 Person의 생성자에 이름을 전달하시오. (빈칸 2곳)",
+    "lang": "java",
+    "codeTemplate": "class Person {\n    private String name;\n    public Person(String name) { this.name = name; }\n    public String getName() { return name; }\n}\n\nclass Student extends Person {\n    private int grade;\n    public Student(String name, int grade) {\n        [[0]]([[1]]);\n        this.grade = grade;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Student student = new Student(\"민수\", 1);\n        System.out.println(student.getName());\n    }\n}",
+    "tokens": [
+     "super",
+     "this",
+     "new",
+     "name",
+     "grade",
+     "this.name"
+    ],
+    "answers": [
+     "super",
+     "name"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "민수"
+    },
+    "explanation": "super(name)은 부모 Person(String name) 생성자를 호출한다. this(...)는 같은 클래스의 다른 생성자를 호출하려 하지만 없어서 오류가 나고, grade를 넘기면 이름이 아니라 정수를 전달하게 된다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q8",
+    "type": "mini_check",
+    "title": "생성자 실행 순서",
+    "prompt": "new Child()를 실행하면 출력 순서는? (Parent 생성자는 \"부모\", Child 생성자는 \"자식\"을 출력)",
+    "options": [
+     {
+      "id": "A",
+      "text": "부모 / 자식"
+     },
+     {
+      "id": "B",
+      "text": "자식 / 부모"
+     },
+     {
+      "id": "C",
+      "text": "자식만"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "자식 객체를 만들면 부모 부분이 먼저 초기화되므로 부모 생성자가 먼저 실행되고 자식 생성자가 나중에 실행된다."
+   },
+   {
+    "id": "q9",
+    "type": "order",
+    "title": "super() 위치 수정",
+    "prompt": "super()가 첫 번째 실행문이 되도록 생성자를 한 줄씩 배열하시오.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "    public Developer(String name, String language) {"
+     },
+     {
+      "id": "c2",
+      "text": "        super(name);"
+     },
+     {
+      "id": "c3",
+      "text": "        this.language = language;"
+     },
+     {
+      "id": "c4",
+      "text": "    }"
+     }
+    ],
+    "distractors": [],
+    "explanation": "super()는 생성자의 첫 번째 실행문이어야 한다. 부모 부분을 먼저 초기화한 뒤 자식 필드를 초기화하므로 super(name)이 this.language 대입보다 앞에 와야 컴파일된다."
+   },
+   {
+    "id": "q10",
+    "type": "mini_check",
+    "title": "오버라이딩과 오버로딩 구분",
+    "prompt": "부모 메서드 `public void print(int value)`를 오버라이딩한 코드는?",
+    "options": [
+     {
+      "id": "A",
+      "text": "`public void print(String value) {}`"
+     },
+     {
+      "id": "B",
+      "text": "`public void print(int value) { System.out.println(value); }`"
+     },
+     {
+      "id": "C",
+      "text": "`public int print(int value) { return value; }`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "오버라이딩은 메서드 이름과 매개변수 구성이 부모와 같아야 한다. A는 매개변수 타입이 달라 오버로딩이고, C는 반환형이 호환되지 않아 오버라이딩이 아니다."
+   },
+   {
+    "id": "q11",
+    "type": "order",
+    "title": "부모 기능을 포함한 오버라이딩",
+    "prompt": "Developer가 Employee의 work()를 오버라이딩하면서 부모의 work()를 먼저 실행하도록 배열하시오. (Employee.work()는 \"업무를 시작합니다.\" 출력)",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Developer extends Employee {"
+     },
+     {
+      "id": "c2",
+      "text": "    @Override"
+     },
+     {
+      "id": "c3",
+      "text": "    public void work() {"
+     },
+     {
+      "id": "c4",
+      "text": "        super.work();"
+     },
+     {
+      "id": "c5",
+      "text": "        System.out.println(\"Java 개발\");"
+     },
+     {
+      "id": "c6",
+      "text": "    }"
+     },
+     {
+      "id": "c7",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        this.work();"
+     },
+     {
+      "id": "w2",
+      "text": "class Developer implements Employee {"
+     },
+     {
+      "id": "w3",
+      "text": "    public void work(String language) {"
+     }
+    ],
+    "explanation": "@Override로 work()를 재정의하고 super.work()로 부모 기능을 먼저 실행한 뒤 자식 출력을 더한다. this.work()는 무한 재귀가 되고, implements는 클래스 상속에 쓸 수 없으며, 매개변수를 바꾸면 오버라이딩이 아니라 오버로딩이 된다."
+   },
+   {
+    "id": "q12",
+    "type": "code_exercise",
+    "title": "생성자와 오버라이딩 종합",
+    "prompt": "Manager가 부모 생성자를 호출하고 work()를 오버라이딩하도록 완성하시오. (빈칸 3곳)",
+    "lang": "java",
+    "codeTemplate": "class Employee {\n    private String name;\n    public Employee(String name) { this.name = name; }\n    public void work() {\n        System.out.println(\"기본 업무\");\n    }\n}\n\nclass Manager extends Employee {\n    private String department;\n    public Manager(String name, String department) {\n        [[0]](name);\n        this.department = department;\n    }\n\n    [[1]]\n    public void work() {\n        [[2]].work();\n        System.out.println(department + \" 관리\");\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Manager manager = new Manager(\"민수\", \"개발팀\");\n        manager.work();\n    }\n}",
+    "tokens": [
+     "super",
+     "this",
+     "new Employee",
+     "@Override",
+     "@Overload",
+     "static",
+     "super",
+     "this",
+     "Employee"
+    ],
+    "answers": [
+     "super",
+     "@Override",
+     "super"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "기본 업무\n개발팀 관리"
+    },
+    "explanation": "super(name)으로 부모 생성자를 호출하고, @Override로 work() 재정의를 표시하며, super.work()로 부모의 기본 업무를 먼저 실행한다. 이후 department와 함께 관리 내용을 출력한다.",
+    "inputMode": "tokens"
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}

@@ -1,0 +1,238 @@
+---
+lesson_id: DEV-JAVA-02-10
+title: "Java중급10 객체 배열·객체 간 협력"
+module: DEV-JAVA-01
+language: ko
+level: foundation
+est_minutes: 22
+tags: [java, intermediate, oop, array, collaboration, static-content]
+---
+
+## 학습 목표
+
+이 파트를 학습한 후 다음 작업을 할 수 있어야 합니다.
+
+- 객체를 저장하는 배열을 선언하고 생성한다.
+- 객체 배열의 각 요소가 참조값을 저장한다는 것을 이해한다.
+- 반복문으로 객체 배열을 순회한다.
+- 객체 배열에서 합계와 검색을 수행한다.
+- 한 객체가 다른 객체를 사용하여 작업하는 협력 관계를 구현한다.
+
+## 수업 내용
+
+### Part 1. 객체 배열이 필요한 이유
+
+학생 여러 명을 각각의 변수에 저장하면 관리하기 어렵다.
+
+```java
+Student student1 = new Student("민수", 80);
+Student student2 = new Student("지수", 90);
+Student student3 = new Student("서준", 70);
+```
+
+객체 배열을 사용하면 같은 종류의 객체를 하나의 배열로 관리할 수 있다.
+
+```java
+Student[] students = new Student[3];
+```
+
+이 코드는 Student 객체 세 개를 만든 것이 아니다. Student 객체의 참조값을 저장할 공간 세 개를 만든다.
+
+처음에는 모든 요소가 null이다.
+
+### Part 2. 객체 배열에 객체 저장하기
+
+```java
+students[0] = new Student("민수", 80);
+students[1] = new Student("지수", 90);
+students[2] = new Student("서준", 70);
+```
+
+각 요소를 통해 객체의 메서드를 호출할 수 있다.
+
+```java
+System.out.println(students[1].getName());
+```
+
+**실행 결과**
+
+```text
+지수
+```
+
+### Part 3. 선언과 동시에 객체 저장하기
+
+```java
+Student[] students = {
+    new Student("민수", 80),
+    new Student("지수", 90),
+    new Student("서준", 70)
+};
+```
+
+배열에는 객체 자체가 아니라 각 객체를 가리키는 참조값이 저장된다.
+
+### Part 4. 객체 배열 순회하기
+
+```java
+for (int i = 0; i < students.length; i++) {
+    System.out.println(students[i].getName());
+}
+```
+
+향상된 for문을 사용해도 된다.
+
+```java
+for (Student student : students) {
+    System.out.println(student.getName());
+}
+```
+
+요소가 null일 가능성이 있다면 먼저 검사한다.
+
+```java
+for (Student student : students) {
+    if (student != null) {
+        System.out.println(student.getName());
+    }
+}
+```
+
+### Part 5. 객체 배열의 합계 구하기
+
+```java
+int total = 0;
+
+for (Student student : students) {
+    total += student.getScore();
+}
+
+System.out.println(total);
+```
+
+**실행 결과**
+
+```text
+240
+```
+
+객체 배열에서도 일반 배열처럼 합계, 평균, 최댓값, 검색 작업을 수행할 수 있다. 차이점은 요소의 메서드를 통해 값을 사용한다는 것이다.
+
+### Part 6. 객체 간 협력이 필요한 이유
+
+주문 금액을 계산하려면 주문 객체가 상품의 가격을 알아야 한다.
+
+```java
+class Product {
+    private String name;
+    private int price;
+
+    public Product(String name, int price) {
+        this.name = name;
+        this.price = price;
+    }
+
+    public int getPrice() {
+        return price;
+    }
+}
+```
+
+Order 객체가 Product 객체를 필드로 가질 수 있다.
+
+```java
+class Order {
+    private Product product;
+    private int quantity;
+
+    public Order(Product product, int quantity) {
+        this.product = product;
+        this.quantity = quantity;
+    }
+
+    public int getTotalPrice() {
+        return product.getPrice() * quantity;
+    }
+}
+```
+
+```java
+Product product = new Product("키보드", 30000);
+Order order = new Order(product, 2);
+
+System.out.println(order.getTotalPrice());
+```
+
+**실행 결과**
+
+```text
+60000
+```
+
+Order가 모든 상품 정보를 직접 복사하지 않고 Product 객체에 가격을 요청한다. 이렇게 객체가 다른 객체의 기능을 사용하여 작업하는 것을 객체 간 협력이라고 한다.
+
+### 종합 예제
+
+```java
+class Student {
+    private String name;
+    private int score;
+
+    public Student(String name, int score) {
+        this.name = name;
+        this.score = score;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getScore() {
+        return score;
+    }
+}
+
+class Classroom {
+    private Student[] students;
+
+    public Classroom(Student[] students) {
+        this.students = students;
+    }
+
+    public int getTotalScore() {
+        int total = 0;
+
+        for (Student student : students) {
+            if (student != null) {
+                total += student.getScore();
+            }
+        }
+
+        return total;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Student[] students = {
+            new Student("민수", 80),
+            new Student("지수", 90),
+            new Student("서준", 70)
+        };
+
+        Classroom classroom = new Classroom(students);
+
+        System.out.println(classroom.getTotalScore());
+    }
+}
+```
+
+**실행 결과**
+
+```text
+240
+```
+
+## 다음으로
+
+다음 학습 내용은 [Part 11「상속 기본」](/dev/lessons/DEV-JAVA-02-11)이다.

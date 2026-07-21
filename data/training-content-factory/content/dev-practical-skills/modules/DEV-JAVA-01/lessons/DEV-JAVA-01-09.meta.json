@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-01-09",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-basics-loop-control-nested",
+  "summary": "break と continue の違い、ネストした繰り返し、繰り返しの組み合わせによる表・パターン出力を学ぶ。",
+  "key_points": [
+    "break は繰り返しを終了、continue は現在の回を飛ばす。",
+    "ネストは外側1回ごとに内側が全実行。",
+    "外2回×内3回で内側本文は6回。"
+  ],
+  "misconceptions": [
+    "break と continue を混同する。",
+    "ネストの実行回数を掛け算で数えられない。",
+    "内側と外側の変数名を同じにする。"
+  ],
+  "check_questions": [
+    "break の役割は？",
+    "continue の役割は？",
+    "外2回×内3回で内側は何回実行されるか？"
+  ]
+}

@@ -1,0 +1,603 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "break・continue とネスト",
+   "prompt": "繰り返しの流れを制御する break・continue とネストを覚えよう。",
+   "takeaway": "繰り返し制御の基本を10ステップで確認します。"
+  },
+  "steps": [
+   {
+    "id": "java9-q1",
+    "type": "code_exercise",
+    "title": "最初の 7 の倍数で終了",
+    "prompt": "10 から 30 まで見て、最初に出会う 7 の倍数を出力して繰り返しを止めるように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "for (int number = 10; number <= 30; number++) {\n    if (number % 7 == 0) {\n        System.out.println(number);\n        [[0]];\n    }\n}\nSystem.out.println(\"完了\");",
+    "tokens": [
+     "break",
+     "continue",
+     "case",
+     "default"
+    ],
+    "answers": [
+     "break"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "14\n完了"
+    },
+    "explanation": "break はループを即座に終えるので、最初に出会う 7 の倍数 14 を出力した後にループが終了し「完了」が出力される。continue を使うとループを終えず次の数を検査し続ける。case と default は switch で使う文法なのでこの位置には使えない。"
+   },
+   {
+    "id": "java9-q2",
+    "type": "mini_check",
+    "title": "入力終了コードの選択",
+    "prompt": "0 が入力されたら while 文を終了するように、空欄に入るコード1行を選びなさい。",
+    "code": "while (true) {\n    int number = scanner.nextInt();\n    if (number == 0) {\n        ____\n    }\n    System.out.println(number);\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`continue;`"
+     },
+     {
+      "id": "B",
+      "text": "`break;`"
+     },
+     {
+      "id": "C",
+      "text": "`number++;`"
+     },
+     {
+      "id": "D",
+      "text": "`scanner.close();`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "while (true) は条件が常に真なので、0 が入力されたら break で繰り返しを終了する必要がある。continue だと繰り返しを終わらせず次の入力を受け取り続ける。"
+   },
+   {
+    "id": "java9-q3",
+    "type": "code_exercise",
+    "title": "3の倍数を飛ばす",
+    "prompt": "1 から 8 まで出力し、3 の倍数は飛ばすように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "for (int number = 1; number <= 8; number++) {\n    if (number % 3 == 0) {\n        [[0]];\n    }\n    System.out.println(number);\n}",
+    "tokens": [
+     "continue",
+     "break",
+     "case",
+     "default"
+    ],
+    "answers": [
+     "continue"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "1\n2\n4\n5\n7\n8"
+    },
+    "explanation": "continue は現在の繰り返しの残りのコードを飛ばすので 3 と 6 が出力されない。break を使うと 3 で繰り返し自体が終わり 1 と 2 だけが出力される。case と default は switch で使う文法なのでこの位置には使えない。"
+   },
+   {
+    "id": "java9-q4",
+    "type": "order",
+    "title": "減少中に特定の値を飛ばす",
+    "prompt": "6 から 1 まで減らしながら出力し、4 は飛ばすように 初期化 → 条件 → 4 の処理 → 出力 → 減少 の順に並べなさい。",
+    "items": [
+     {
+      "id": "p09q04_c1",
+      "text": "int number = 6;"
+     },
+     {
+      "id": "p09q04_c2",
+      "text": "while (number >= 1) {"
+     },
+     {
+      "id": "p09q04_c3",
+      "text": "    if (number == 4) {"
+     },
+     {
+      "id": "p09q04_c4",
+      "text": "        number--;"
+     },
+     {
+      "id": "p09q04_c5",
+      "text": "        continue;"
+     },
+     {
+      "id": "p09q04_c6",
+      "text": "    }"
+     },
+     {
+      "id": "p09q04_c7",
+      "text": "    System.out.println(number);"
+     },
+     {
+      "id": "p09q04_c8",
+      "text": "    number--;"
+     },
+     {
+      "id": "p09q04_c9",
+      "text": "}"
+     }
+    ],
+    "explanation": "number が 4 のときは number-- で値を減らしてから continue で出力を飛ばす。4 を飛ばす continue の前で number を減らさないと無限ループになるので注意する。結果は 6, 5, 3, 2, 1 である。",
+    "distractors": [
+     {
+      "id": "java9-q4_w01",
+      "text": "number++;"
+     },
+     {
+      "id": "java9-q4_w02",
+      "text": "break;"
+     }
+    ]
+   },
+   {
+    "id": "java9-q5",
+    "type": "code_exercise",
+    "title": "グループ別の人数の累積",
+    "prompt": "1番グループ 2人、2番グループ 4人、3番グループ 6人のとき、全体の人数を計算するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "int total = [[0]];\n\nfor (int group = 1; group [[1]] 3; group[[2]]) {\n    for (int member = 1; member [[3]] group * 2; member[[4]]) {\n        total[[5]];\n    }\n}\n\nSystem.out.println(total);",
+    "tokens": [
+     "0",
+     "<=",
+     "<=",
+     "++",
+     "++",
+     "++",
+     "1",
+     "<",
+     "--",
+     "+= 2"
+    ],
+    "answers": [
+     "0",
+     "<=",
+     "++",
+     "<=",
+     "++",
+     "++"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "12"
+    },
+    "explanation": "合計は 0 から始め、グループは 1 から 3 まで(<=) ++ で回す。各グループの人数は group * 2 人なので内側の繰り返しも <= と ++ を使い、人ごとに total++ で数える。2 + 4 + 6 = 12 である。1 から始めたり < を使うと個数が変わる。"
+   },
+   {
+    "id": "java9-q6",
+    "type": "order",
+    "title": "ネストしたループの break の範囲",
+    "prompt": "row を外側のループ、col を内側のループに配置しなさい。col が 2 になると内側のループだけを終了して次の結果になるようにしなさい。\n\n```text\n1-1\n2-1\n```",
+    "items": [
+     {
+      "id": "i1",
+      "text": "for (int row = 1; row <= 2; row++) {"
+     },
+     {
+      "id": "i2",
+      "text": "    for (int col = 1; col <= 3; col++) {"
+     },
+     {
+      "id": "i3",
+      "text": "        if (col == 2) {"
+     },
+     {
+      "id": "i4",
+      "text": "            break;"
+     },
+     {
+      "id": "i5",
+      "text": "        }"
+     },
+     {
+      "id": "i6",
+      "text": "        System.out.println(row + \"-\" + col);"
+     },
+     {
+      "id": "i7",
+      "text": "    }"
+     },
+     {
+      "id": "i8",
+      "text": "}"
+     }
+    ],
+    "explanation": "break は自分を囲む最も内側のループだけを終了する。col が 2 になると内側のループは終わるが、外側の row ループは続く。col が 1 のときだけ出力されるので row ごとに1行ずつ 1-1, 2-1 が出力される。",
+    "distractors": [
+     {
+      "id": "java9-q6_w01",
+      "text": "if (row == 2) {"
+     },
+     {
+      "id": "java9-q6_w02",
+      "text": "continue;"
+     }
+    ]
+   },
+   {
+    "id": "java9-q7",
+    "type": "code_exercise",
+    "title": "終了値と除外値の処理",
+    "prompt": "-1 なら終了、0 なら数えず飛ばし、それ以外は個数を数えるように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "import java.util.Scanner;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        int count = 0;\n\n        while (true) {\n            int number = scanner.nextInt();\n\n            if (number == -1) {\n                [[0]];\n            }\n\n            if (number == 0) {\n                [[1]];\n            }\n\n            count[[2]];\n        }\n\n        System.out.println(count);\n    }\n}",
+    "tokens": [
+     "break",
+     "continue",
+     "++",
+     "stop",
+     "skip",
+     "--",
+     "+= 2",
+     "+"
+    ],
+    "answers": [
+     "break",
+     "continue",
+     "++"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "2",
+     "stdin": "3 0 8 -1"
+    },
+    "explanation": "-1 なら break でループを終え、0 なら continue で count++ を飛ばす。それ以外の値は count++ で数える。入力 3, 0, 8, -1 では 3 と 8 だけ数えて 2 になる。break が無いと while(true) の後の出力文に到達できずコンパイルエラーになり、continue の位置に break を書くと 0 でループが終わって 1 になる。"
+   },
+   {
+    "id": "java9-q8",
+    "type": "order",
+    "title": "対角線の位置を飛ばす",
+    "prompt": "row を外側のループ、column を内側のループに配置しなさい。行と列が同じ位置は飛ばして次の順に出力しなさい。\n\n```text\n1,2\n1,3\n2,1\n2,3\n3,1\n3,2\n```",
+    "items": [
+     {
+      "id": "p09q08_c1",
+      "text": "for (int row = 1; row <= 3; row++) {"
+     },
+     {
+      "id": "p09q08_c2",
+      "text": "    for (int column = 1; column <= 3; column++) {"
+     },
+     {
+      "id": "p09q08_c3",
+      "text": "        if (row == column) {"
+     },
+     {
+      "id": "p09q08_c4",
+      "text": "            continue;"
+     },
+     {
+      "id": "p09q08_c5",
+      "text": "        }"
+     },
+     {
+      "id": "p09q08_c6",
+      "text": "        System.out.println(row + \",\" + column);"
+     },
+     {
+      "id": "p09q08_c7",
+      "text": "    }"
+     },
+     {
+      "id": "p09q08_c8",
+      "text": "}"
+     }
+    ],
+    "explanation": "内側の繰り返しで row と column が同じなら continue で出力を飛ばす。対角線(1,1 / 2,2 / 3,3)を除いた位置が出力される。",
+    "distractors": [
+     {
+      "id": "java9-q8_w01",
+      "text": "if (row != column) {"
+     },
+     {
+      "id": "java9-q8_w02",
+      "text": "break;"
+     }
+    ]
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "break·continue와 중첩",
+   "prompt": "반복 흐름을 제어하는 break·continue와 중첩을 익히자.",
+   "takeaway": "반복 제어의 기본을 10스텝으로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "java9-q1",
+    "type": "code_exercise",
+    "title": "첫 번째 7의 배수에서 종료",
+    "prompt": "10부터 30까지 보면서 처음 만나는 7의 배수를 출력하고 반복을 멈추도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "for (int number = 10; number <= 30; number++) {\n    if (number % 7 == 0) {\n        System.out.println(number);\n        [[0]];\n    }\n}\nSystem.out.println(\"완료\");",
+    "tokens": [
+     "break",
+     "continue",
+     "case",
+     "default"
+    ],
+    "answers": [
+     "break"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "14\n완료"
+    },
+    "explanation": "break는 반복문을 즉시 끝내므로 처음 만난 7의 배수 14를 출력한 뒤 반복이 종료되고 「완료」가 출력된다. continue를 사용하면 반복을 끝내지 않고 다음 숫자를 계속 검사한다. case와 default는 switch에서 사용하는 문법이므로 이 위치에 사용할 수 없다."
+   },
+   {
+    "id": "java9-q2",
+    "type": "mini_check",
+    "title": "입력 종료 코드 선택",
+    "prompt": "0이 입력되면 while문을 종료하도록 빈칸에 들어갈 코드 한 줄을 고르시오.",
+    "code": "while (true) {\n    int number = scanner.nextInt();\n    if (number == 0) {\n        ____\n    }\n    System.out.println(number);\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`continue;`"
+     },
+     {
+      "id": "B",
+      "text": "`break;`"
+     },
+     {
+      "id": "C",
+      "text": "`number++;`"
+     },
+     {
+      "id": "D",
+      "text": "`scanner.close();`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "while (true)는 조건이 항상 참이므로 0이 입력되면 break로 반복문을 종료해야 한다. continue를 쓰면 반복을 끝내지 않고 다음 입력을 계속 받는다."
+   },
+   {
+    "id": "java9-q3",
+    "type": "code_exercise",
+    "title": "3의 배수 건너뛰기",
+    "prompt": "1부터 8까지 출력하되 3의 배수는 건너뛰도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "for (int number = 1; number <= 8; number++) {\n    if (number % 3 == 0) {\n        [[0]];\n    }\n    System.out.println(number);\n}",
+    "tokens": [
+     "continue",
+     "break",
+     "case",
+     "default"
+    ],
+    "answers": [
+     "continue"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "1\n2\n4\n5\n7\n8"
+    },
+    "explanation": "continue는 현재 반복의 남은 코드를 건너뛰므로 3과 6이 출력되지 않는다. break를 사용하면 3에서 반복문 자체가 끝나 1과 2만 출력된다. case와 default는 switch에서 사용하는 문법이라 이 위치에 사용할 수 없다."
+   },
+   {
+    "id": "java9-q4",
+    "type": "order",
+    "title": "감소 중 특정 값 건너뛰기",
+    "prompt": "6부터 1까지 감소하며 출력하되 4는 건너뛰도록 초기화 → 조건 → 4 처리 → 출력 → 감소 순서로 배열하시오.",
+    "items": [
+     {
+      "id": "p09q04_c1",
+      "text": "int number = 6;"
+     },
+     {
+      "id": "p09q04_c2",
+      "text": "while (number >= 1) {"
+     },
+     {
+      "id": "p09q04_c3",
+      "text": "    if (number == 4) {"
+     },
+     {
+      "id": "p09q04_c4",
+      "text": "        number--;"
+     },
+     {
+      "id": "p09q04_c5",
+      "text": "        continue;"
+     },
+     {
+      "id": "p09q04_c6",
+      "text": "    }"
+     },
+     {
+      "id": "p09q04_c7",
+      "text": "    System.out.println(number);"
+     },
+     {
+      "id": "p09q04_c8",
+      "text": "    number--;"
+     },
+     {
+      "id": "p09q04_c9",
+      "text": "}"
+     }
+    ],
+    "explanation": "number가 4일 때는 number--로 값을 줄인 뒤 continue로 출력을 건너뛴다. 4를 건너뛴 continue 앞에서 number를 줄이지 않으면 무한 반복이 되므로 주의한다. 결과는 6, 5, 3, 2, 1이다.",
+    "distractors": [
+     {
+      "id": "java9-q4_w01",
+      "text": "number++;"
+     },
+     {
+      "id": "java9-q4_w02",
+      "text": "break;"
+     }
+    ]
+   },
+   {
+    "id": "java9-q5",
+    "type": "code_exercise",
+    "title": "그룹별 인원 수 누적",
+    "prompt": "1번 그룹 2명, 2번 그룹 4명, 3번 그룹 6명일 때 전체 인원 수를 계산하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "int total = [[0]];\n\nfor (int group = 1; group [[1]] 3; group[[2]]) {\n    for (int member = 1; member [[3]] group * 2; member[[4]]) {\n        total[[5]];\n    }\n}\n\nSystem.out.println(total);",
+    "tokens": [
+     "0",
+     "<=",
+     "<=",
+     "++",
+     "++",
+     "++",
+     "1",
+     "<",
+     "--",
+     "+= 2"
+    ],
+    "answers": [
+     "0",
+     "<=",
+     "++",
+     "<=",
+     "++",
+     "++"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "12"
+    },
+    "explanation": "합계는 0에서 시작하고, 그룹은 1부터 3까지(<=) ++로 돈다. 각 그룹의 인원은 group * 2명이므로 안쪽 반복도 <=와 ++를 쓰고, 사람마다 total++로 센다. 2 + 4 + 6 = 12다. 1부터 시작하거나 <를 쓰면 개수가 달라진다."
+   },
+   {
+    "id": "java9-q6",
+    "type": "order",
+    "title": "중첩 반복문의 break 범위",
+    "prompt": "row를 바깥 반복문, col을 안쪽 반복문으로 배치하시오. col이 2가 되면 안쪽 반복문만 종료하여 다음 결과가 나오게 하시오.\n\n```text\n1-1\n2-1\n```",
+    "items": [
+     {
+      "id": "i1",
+      "text": "for (int row = 1; row <= 2; row++) {"
+     },
+     {
+      "id": "i2",
+      "text": "    for (int col = 1; col <= 3; col++) {"
+     },
+     {
+      "id": "i3",
+      "text": "        if (col == 2) {"
+     },
+     {
+      "id": "i4",
+      "text": "            break;"
+     },
+     {
+      "id": "i5",
+      "text": "        }"
+     },
+     {
+      "id": "i6",
+      "text": "        System.out.println(row + \"-\" + col);"
+     },
+     {
+      "id": "i7",
+      "text": "    }"
+     },
+     {
+      "id": "i8",
+      "text": "}"
+     }
+    ],
+    "explanation": "break는 자신을 감싼 가장 안쪽 반복문만 종료한다. col이 2가 되면 안쪽 반복문이 끝나지만 바깥쪽 row 반복문은 계속된다. col이 1일 때만 출력되므로 row마다 한 줄씩 1-1, 2-1이 출력된다.",
+    "distractors": [
+     {
+      "id": "java9-q6_w01",
+      "text": "if (row == 2) {"
+     },
+     {
+      "id": "java9-q6_w02",
+      "text": "continue;"
+     }
+    ]
+   },
+   {
+    "id": "java9-q7",
+    "type": "code_exercise",
+    "title": "종료값과 제외값 처리",
+    "prompt": "-1이면 종료, 0이면 세지 않고 건너뛰고, 나머지는 개수를 세도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "import java.util.Scanner;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        int count = 0;\n\n        while (true) {\n            int number = scanner.nextInt();\n\n            if (number == -1) {\n                [[0]];\n            }\n\n            if (number == 0) {\n                [[1]];\n            }\n\n            count[[2]];\n        }\n\n        System.out.println(count);\n    }\n}",
+    "tokens": [
+     "break",
+     "continue",
+     "++",
+     "stop",
+     "skip",
+     "--",
+     "+= 2",
+     "+"
+    ],
+    "answers": [
+     "break",
+     "continue",
+     "++"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "2",
+     "stdin": "3 0 8 -1"
+    },
+    "explanation": "-1이면 break로 반복을 끝내고, 0이면 continue로 count++를 건너뛴다. 나머지 값은 count++로 센다. 입력 3, 0, 8, -1에서 3과 8만 세어 2가 된다. break가 없으면 while(true) 뒤 출력문에 도달할 수 없어 컴파일 오류이고, continue 자리에 break를 쓰면 0에서 반복이 끝나 1이 된다."
+   },
+   {
+    "id": "java9-q8",
+    "type": "order",
+    "title": "대각선 위치 건너뛰기",
+    "prompt": "row를 바깥 반복문, column을 안쪽 반복문으로 배치하시오. 행과 열이 같은 위치는 건너뛰어 다음 순서로 출력하시오.\n\n```text\n1,2\n1,3\n2,1\n2,3\n3,1\n3,2\n```",
+    "items": [
+     {
+      "id": "p09q08_c1",
+      "text": "for (int row = 1; row <= 3; row++) {"
+     },
+     {
+      "id": "p09q08_c2",
+      "text": "    for (int column = 1; column <= 3; column++) {"
+     },
+     {
+      "id": "p09q08_c3",
+      "text": "        if (row == column) {"
+     },
+     {
+      "id": "p09q08_c4",
+      "text": "            continue;"
+     },
+     {
+      "id": "p09q08_c5",
+      "text": "        }"
+     },
+     {
+      "id": "p09q08_c6",
+      "text": "        System.out.println(row + \",\" + column);"
+     },
+     {
+      "id": "p09q08_c7",
+      "text": "    }"
+     },
+     {
+      "id": "p09q08_c8",
+      "text": "}"
+     }
+    ],
+    "explanation": "안쪽 반복에서 row와 column이 같으면 continue로 출력을 건너뛴다. 대각선(1,1 / 2,2 / 3,3)을 제외한 나머지 위치가 출력된다.",
+    "distractors": [
+     {
+      "id": "java9-q8_w01",
+      "text": "if (row != column) {"
+     },
+     {
+      "id": "java9-q8_w02",
+      "text": "break;"
+     }
+    ]
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}

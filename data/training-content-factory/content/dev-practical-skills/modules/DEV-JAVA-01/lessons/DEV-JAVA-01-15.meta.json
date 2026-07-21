@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-01-15",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-basics-method-define",
+  "summary": "static メソッドの定義と呼び出し、仮引数と実引数、void メソッド、static 呼び出しを学ぶ。",
+  "key_points": [
+    "static 戻り値型 名前(引数) { }。",
+    "仮引数は宣言側、実引数は呼び出し側。",
+    "void は戻り値無し。static main からは static を直接呼ぶ。"
+  ],
+  "misconceptions": [
+    "各引数に型を書き忘れる。",
+    "呼び出しの括弧を二重に書く。",
+    "非 static を static main から直接呼ぶ。"
+  ],
+  "check_questions": [
+    "仮引数と実引数の違いは？",
+    "void の意味は？",
+    "static main から直接呼ぶ条件は？"
+  ]
+}

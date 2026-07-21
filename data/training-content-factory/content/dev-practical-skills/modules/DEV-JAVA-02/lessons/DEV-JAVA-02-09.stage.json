@@ -1,0 +1,537 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "オブジェクト参照と引数渡しを理解しよう",
+   "prompt": "オブジェクト変数には参照値が保存される。null チェックと引数の渡し方を一緒に身につけよう。",
+   "takeaway": "参照コピー・== 比較・null 安全・オブジェクト引数渡しを10問で確認します。"
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "オブジェクト生成と参照の保存",
+    "prompt": "オブジェクトを生成して member に参照値を保存するように完成させなさい。（空欄1つ）",
+    "lang": "java",
+    "codeTemplate": "class Member {\n    private String name;\n\n    public Member(String name) {\n        this.name = name;\n    }\n\n    public String getName() {\n        return name;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Member member = [[0]] Member(\"Yuna\");\n        System.out.println(member.getName());\n    }\n}",
+    "tokens": [
+     "new",
+     "this",
+     "static"
+    ],
+    "answers": [
+     "new"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Yuna"
+    },
+    "explanation": "new はオブジェクトを生成してその参照値を返す。member には生成されたオブジェクトを指す参照値が保存される。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q2",
+    "type": "mini_check",
+    "title": "同じオブジェクトを参照する変数",
+    "prompt": "score2 = score1 の後 score2.setValue(90) をすると score1.getValue() の結果は？\n```java\nScore score2 = score1;\nscore2.setValue(90);\nSystem.out.println(score1.getValue());\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "0"
+     },
+     {
+      "id": "B",
+      "text": "コンパイルエラー"
+     },
+     {
+      "id": "C",
+      "text": "90"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "score2 = score1 は参照値をコピーするので、2つの変数が同じ Score オブジェクトを指す。score2 で変えた値が score1 にも反映され 90 が出力される。"
+   },
+   {
+    "id": "q3",
+    "type": "mini_check",
+    "title": "オブジェクト参照の比較",
+    "prompt": "book2 = book1、book3 = new Book() のとき、次の2行の出力は？\n```java\nSystem.out.println(book1 == book2);\nSystem.out.println(book1 == book3);\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "true / false"
+     },
+     {
+      "id": "B",
+      "text": "true / true"
+     },
+     {
+      "id": "C",
+      "text": "false / false"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "book2 は book1 の参照値をコピーして同じオブジェクトを指すので true、book3 は new で作った別のオブジェクトなので false。== は同じオブジェクトかを比較する。"
+   },
+   {
+    "id": "q4",
+    "type": "code_exercise",
+    "title": "null の安全チェック",
+    "prompt": "member がオブジェクトを指すときだけ名前を出力するように空欄を埋めなさい。（空欄1つ）",
+    "lang": "java",
+    "codeTemplate": "class Member {\n    private String name;\n\n    public Member(String name) {\n        this.name = name;\n    }\n\n    public String getName() {\n        return name;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Member member = null;\n\n        if ([[0]]) {\n            System.out.println(member.getName());\n        }\n    }\n}",
+    "tokens": [
+     "member != null",
+     "member == null",
+     "member.getName()"
+    ],
+    "answers": [
+     "member != null"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "member != null なら member がオブジェクトを指すときだけ中に入る。今は null なので何も出力されない。member == null や member.getName() を入れると null の状態でメソッドを呼び、NullPointerException(実行時エラー)が起きる。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q5",
+    "type": "mini_check",
+    "title": "NullPointerException の防止",
+    "prompt": "book は null の可能性がある。`System.out.println(book.getTitle());` が安全に実行されるよう囲む条件として適切なものは？",
+    "options": [
+     {
+      "id": "A",
+      "text": "`if (book != null)`"
+     },
+     {
+      "id": "B",
+      "text": "`if (book == null)`"
+     },
+     {
+      "id": "C",
+      "text": "`if (book.getTitle() != null)`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "book がオブジェクトを指すとき(book != null)だけメソッドを呼べば安全。book == null だと null のときにアクセスし、book.getTitle() != null は条件を調べる時点で既に null オブジェクトのメソッドを呼んでエラーになる。"
+   },
+   {
+    "id": "q6",
+    "type": "mini_check",
+    "title": "参照変数の再代入",
+    "prompt": "member2 = member1 の後 member2 = new Member(\"Jisu\") をすると member1・member2 の名前は？\n```java\nMember member2 = member1;\nmember2 = new Member(\"Jisu\");\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "Minsu / Jisu"
+     },
+     {
+      "id": "B",
+      "text": "Jisu / Jisu"
+     },
+     {
+      "id": "C",
+      "text": "Minsu / Minsu"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "member2 に new で作った新しいオブジェクトを代入すると member2 だけが新オブジェクトを指し、member1 は既存のオブジェクトを指し続ける。参照変数を変えることはオブジェクト内部の値を変えることとは違う。"
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "オブジェクトの状態変更",
+    "prompt": "渡された Product オブジェクトの価格を 1000 下げるように空欄を埋めなさい。（空欄1つ）",
+    "lang": "java",
+    "codeTemplate": "class Product {\n    private int price;\n\n    public Product(int price) {\n        this.price = price;\n    }\n\n    public void setPrice(int price) {\n        this.price = price;\n    }\n\n    public int getPrice() {\n        return price;\n    }\n}\n\npublic class Main {\n    public static void discount(Product product) {\n        product.[[0]](product.getPrice() - 1000);\n    }\n\n    public static void main(String[] args) {\n        Product product = new Product(5000);\n        discount(product);\n        System.out.println(product.getPrice());\n    }\n}",
+    "tokens": [
+     "setPrice",
+     "getPrice",
+     "new"
+    ],
+    "answers": [
+     "setPrice"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "4000"
+    },
+    "explanation": "渡された参照値を通して元の Product オブジェクトの価格を変えるには setPrice() を呼ぶ。getPrice は値を読むだけで変更できず、引数を受け取らないのでエラーになる。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q8",
+    "type": "mini_check",
+    "title": "引数の再代入の結果",
+    "prompt": "replace() が引数に新しい Box(100) を代入した後、box.getValue() の結果は？\n```java\npublic static void replace(Box box) {\n    box = new Box(100);\n}\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "10"
+     },
+     {
+      "id": "B",
+      "text": "100"
+     },
+     {
+      "id": "C",
+      "text": "null"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "メソッドには参照値のコピーが渡される。引数 box に新オブジェクトを代入しても、呼び出し元の box は既存のオブジェクトを指し続けるので 10 が出力される。"
+   },
+   {
+    "id": "q9",
+    "type": "mini_check",
+    "title": "オブジェクト引数の渡し方",
+    "prompt": "オブジェクトを引数として渡す方式についての説明で正しいものは？",
+    "options": [
+     {
+      "id": "A",
+      "text": "オブジェクト全体がメソッドにコピーされる。"
+     },
+     {
+      "id": "B",
+      "text": "呼び出した側のオブジェクト変数が引数に移動する。"
+     },
+     {
+      "id": "C",
+      "text": "オブジェクトを指す参照値がコピーされて渡される。"
+     },
+     {
+      "id": "D",
+      "text": "引数に新しいオブジェクトを入れると呼び出した変数も変わる。"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "Java は参照値のコピーを渡す。したがって同じオブジェクトを指すので内部の値は変えられるが、引数に新オブジェクトを代入しても呼び出し元の変数は変わらない。"
+   },
+   {
+    "id": "q10",
+    "type": "order",
+    "title": "オブジェクト変更の過程を完成させる",
+    "prompt": "change() を定義し main() で呼び出して 20 を出力するように1行ずつ並べなさい。（Box クラスは既にある）",
+    "items": [
+     {
+      "id": "c1",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c2",
+      "text": "    public static void change(Box box) {"
+     },
+     {
+      "id": "c3",
+      "text": "        box.setValue(20);"
+     },
+     {
+      "id": "c4",
+      "text": "    }"
+     },
+     {
+      "id": "c5",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c6",
+      "text": "        Box box = new Box(10);"
+     },
+     {
+      "id": "c7",
+      "text": "        change(box);"
+     },
+     {
+      "id": "c8",
+      "text": "        System.out.println(box.getValue());"
+     },
+     {
+      "id": "c9",
+      "text": "    }"
+     },
+     {
+      "id": "c10",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        box = new Box(20);"
+     }
+    ],
+    "explanation": "change() は渡された参照値で同じ Box オブジェクトの値を setValue(20) で変更する。box = new Box(20) は引数だけを新オブジェクトに変えるので呼び出し元には影響しない。"
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "객체 참조와 매개변수 전달을 이해하자",
+   "prompt": "객체 변수에는 참조값이 저장된다. null 검사와 매개변수 전달 방식을 함께 익히자.",
+   "takeaway": "참조 복사·== 비교·null 안전·객체 매개변수 전달을 10문제로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "객체 생성과 참조 저장",
+    "prompt": "객체를 생성하여 member에 참조값을 저장하도록 완성하시오. (빈칸 1곳)",
+    "lang": "java",
+    "codeTemplate": "class Member {\n    private String name;\n\n    public Member(String name) {\n        this.name = name;\n    }\n\n    public String getName() {\n        return name;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Member member = [[0]] Member(\"유나\");\n        System.out.println(member.getName());\n    }\n}",
+    "tokens": [
+     "new",
+     "this",
+     "static"
+    ],
+    "answers": [
+     "new"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "유나"
+    },
+    "explanation": "new는 객체를 생성하고 그 참조값을 반환한다. member에는 생성된 객체를 가리키는 참조값이 저장된다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q2",
+    "type": "mini_check",
+    "title": "같은 객체를 참조하는 변수",
+    "prompt": "score2 = score1 후 score2.setValue(90)을 하면 score1.getValue()의 결과는?\n```java\nScore score2 = score1;\nscore2.setValue(90);\nSystem.out.println(score1.getValue());\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "0"
+     },
+     {
+      "id": "B",
+      "text": "컴파일 오류"
+     },
+     {
+      "id": "C",
+      "text": "90"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "score2 = score1은 참조값을 복사하므로 두 변수가 같은 Score 객체를 가리킨다. score2로 변경한 값이 score1에도 반영되어 90이 출력된다."
+   },
+   {
+    "id": "q3",
+    "type": "mini_check",
+    "title": "객체 참조 비교",
+    "prompt": "book2 = book1, book3 = new Book()일 때 다음 두 줄의 출력은?\n```java\nSystem.out.println(book1 == book2);\nSystem.out.println(book1 == book3);\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "true / false"
+     },
+     {
+      "id": "B",
+      "text": "true / true"
+     },
+     {
+      "id": "C",
+      "text": "false / false"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "book2는 book1의 참조값을 복사해 같은 객체를 가리키므로 true, book3은 new로 만든 다른 객체이므로 false다. ==는 같은 객체인지 비교한다."
+   },
+   {
+    "id": "q4",
+    "type": "code_exercise",
+    "title": "null 안전 검사",
+    "prompt": "member가 객체를 가리킬 때만 이름을 출력하도록 빈칸을 채우시오. (빈칸 1곳)",
+    "lang": "java",
+    "codeTemplate": "class Member {\n    private String name;\n\n    public Member(String name) {\n        this.name = name;\n    }\n\n    public String getName() {\n        return name;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Member member = null;\n\n        if ([[0]]) {\n            System.out.println(member.getName());\n        }\n    }\n}",
+    "tokens": [
+     "member != null",
+     "member == null",
+     "member.getName()"
+    ],
+    "answers": [
+     "member != null"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "member != null이면 member가 객체를 가리킬 때만 안으로 들어간다. 지금은 null이므로 아무것도 출력되지 않는다. member == null이나 member.getName()을 넣으면 null 상태에서 메서드를 호출해 NullPointerException(실행 중 오류)이 발생한다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q5",
+    "type": "mini_check",
+    "title": "NullPointerException 방지",
+    "prompt": "book이 null일 수 있다. `System.out.println(book.getTitle());`이 안전하게 실행되도록 감쌀 조건으로 알맞은 것은?",
+    "options": [
+     {
+      "id": "A",
+      "text": "`if (book != null)`"
+     },
+     {
+      "id": "B",
+      "text": "`if (book == null)`"
+     },
+     {
+      "id": "C",
+      "text": "`if (book.getTitle() != null)`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "book이 객체를 가리킬 때(book != null)만 메서드를 호출해야 안전하다. book == null이면 null일 때 접근하게 되고, book.getTitle() != null은 조건을 검사하는 동안 이미 null 객체의 메서드를 호출해 오류가 난다."
+   },
+   {
+    "id": "q6",
+    "type": "mini_check",
+    "title": "참조 변수 다시 대입하기",
+    "prompt": "member2 = member1 후 member2 = new Member(\"지수\")를 하면 member1·member2의 이름은?\n```java\nMember member2 = member1;\nmember2 = new Member(\"지수\");\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "민수 / 지수"
+     },
+     {
+      "id": "B",
+      "text": "지수 / 지수"
+     },
+     {
+      "id": "C",
+      "text": "민수 / 민수"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "member2에 new로 만든 새 객체를 대입하면 member2만 새 객체를 가리키고 member1은 기존 객체를 계속 가리킨다. 참조 변수를 바꾸는 것은 객체 내부 값을 바꾸는 것과 다르다."
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "객체 상태 변경하기",
+    "prompt": "전달된 Product 객체의 가격을 1000 낮추도록 빈칸을 채우시오. (빈칸 1곳)",
+    "lang": "java",
+    "codeTemplate": "class Product {\n    private int price;\n\n    public Product(int price) {\n        this.price = price;\n    }\n\n    public void setPrice(int price) {\n        this.price = price;\n    }\n\n    public int getPrice() {\n        return price;\n    }\n}\n\npublic class Main {\n    public static void discount(Product product) {\n        product.[[0]](product.getPrice() - 1000);\n    }\n\n    public static void main(String[] args) {\n        Product product = new Product(5000);\n        discount(product);\n        System.out.println(product.getPrice());\n    }\n}",
+    "tokens": [
+     "setPrice",
+     "getPrice",
+     "new"
+    ],
+    "answers": [
+     "setPrice"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "4000"
+    },
+    "explanation": "전달된 참조값을 통해 원래 Product 객체의 가격을 변경하려면 setPrice()를 호출한다. getPrice는 값을 읽을 뿐 변경하지 못하고 인수를 받지 않아 오류가 난다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q8",
+    "type": "mini_check",
+    "title": "매개변수 재대입 결과",
+    "prompt": "replace()가 매개변수에 새 Box(100)을 대입한 뒤 box.getValue()의 결과는?\n```java\npublic static void replace(Box box) {\n    box = new Box(100);\n}\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "10"
+     },
+     {
+      "id": "B",
+      "text": "100"
+     },
+     {
+      "id": "C",
+      "text": "null"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "메서드에는 참조값의 복사본이 전달된다. 매개변수 box에 새 객체를 대입해도 호출한 쪽의 box는 기존 객체를 계속 가리키므로 10이 출력된다."
+   },
+   {
+    "id": "q9",
+    "type": "mini_check",
+    "title": "객체 매개변수 전달 방식",
+    "prompt": "객체를 매개변수로 전달하는 방식에 대한 설명 중 맞는 것은?",
+    "options": [
+     {
+      "id": "A",
+      "text": "객체 전체가 메서드로 복사된다."
+     },
+     {
+      "id": "B",
+      "text": "호출한 객체 변수가 매개변수로 이동한다."
+     },
+     {
+      "id": "C",
+      "text": "객체를 가리키는 참조값이 복사되어 전달된다."
+     },
+     {
+      "id": "D",
+      "text": "매개변수에 새 객체를 넣으면 호출한 변수도 바뀐다."
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "Java는 참조값의 복사본을 전달한다. 따라서 같은 객체를 가리켜 내부 값은 바꿀 수 있지만, 매개변수에 새 객체를 대입해도 호출한 쪽 변수는 바뀌지 않는다."
+   },
+   {
+    "id": "q10",
+    "type": "order",
+    "title": "객체 변경 과정 완성하기",
+    "prompt": "change()를 정의하고 main()에서 호출하여 20을 출력하도록 한 줄씩 배열하시오. (Box 클래스는 이미 있다)",
+    "items": [
+     {
+      "id": "c1",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c2",
+      "text": "    public static void change(Box box) {"
+     },
+     {
+      "id": "c3",
+      "text": "        box.setValue(20);"
+     },
+     {
+      "id": "c4",
+      "text": "    }"
+     },
+     {
+      "id": "c5",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c6",
+      "text": "        Box box = new Box(10);"
+     },
+     {
+      "id": "c7",
+      "text": "        change(box);"
+     },
+     {
+      "id": "c8",
+      "text": "        System.out.println(box.getValue());"
+     },
+     {
+      "id": "c9",
+      "text": "    }"
+     },
+     {
+      "id": "c10",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        box = new Box(20);"
+     }
+    ],
+    "explanation": "change()는 전달받은 참조값으로 같은 Box 객체의 값을 setValue(20)로 변경한다. box = new Box(20)은 매개변수만 새 객체로 바꾸므로 호출한 쪽에는 영향을 주지 않는다."
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}

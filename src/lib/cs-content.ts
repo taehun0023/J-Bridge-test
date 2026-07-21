@@ -54,8 +54,31 @@ export type CsLessonStep =
       type: 'mini_check' | 'apply_check'
       title: string
       prompt: string
+      /** 문제에서 다루는 코드 스니펫(있으면 코드블록으로 표시) */
+      code?: string
       options: CsLessonChoiceOption[]
       correctOptionId: string
+      explanation: string
+    }
+  | {
+      id: string
+      type: 'fill_blank'
+      title: string
+      prompt: string
+      codeBefore: string
+      codeAfter: string
+      options: CsLessonChoiceOption[]
+      correctOptionId: string
+      explanation: string
+    }
+  | {
+      id: string
+      type: 'order'
+      title: string
+      prompt: string
+      items: CsLessonChoiceOption[]
+      /** 오답 카드(선택). 있으면 풀에 섞여 표시되며 정답 순서에는 포함되면 안 됨. '확인' 제출로 채점 */
+      distractors?: CsLessonChoiceOption[]
       explanation: string
     }
   | {
@@ -71,6 +94,30 @@ export type CsLessonStep =
       type: 'summary'
       title: string
       bullets: string[]
+    }
+  | {
+      id: string
+      type: 'code_exercise'
+      title: string
+      prompt: string
+      /** 'html' | 'css' | 'js' | 'java' | 'python' | 'sql' 등 */
+      lang: string
+      /** 빈칸은 [[0]] [[1]] … 로 표기 */
+      codeTemplate: string
+      /** 공유 토큰 뱅크(정답+오답 섞음, 값은 고유하게) */
+      tokens: string[]
+      /** 빈칸별 정답 토큰(순서대로). 개수 = 빈칸 수 */
+      answers: string[]
+      /** 웹 직접 입력용 빈칸별 추가 허용 답안(예: `"a"`↔`'a'`, trim↔strip). 인덱스=빈칸. 토큰 선택엔 영향 없음 */
+      acceptedAnswers?: string[][]
+      /** 'tokens'면 웹에서도 타이핑 대신 카드(토큰) 선택으로 채운다(긴 코드 한 줄 토큰용) */
+      inputMode?: 'tokens'
+      /** 정답 시 보여줄 결과 — 브라우저(iframe 라이브) / 콘솔(사전출력) / 테이블 */
+      result:
+        | { kind: 'browser' }
+        | { kind: 'console'; output: string }
+        | { kind: 'table'; columns: string[]; rows: string[][] }
+      explanation: string
     }
 
 export interface CsLessonStageLocale {
@@ -239,6 +286,57 @@ function isValidStep(step: unknown): step is CsLessonStep {
     )
   }
 
+  if (candidate.type === 'fill_blank') {
+    return (
+      typeof candidate.prompt === 'string' &&
+      typeof candidate.codeBefore === 'string' &&
+      typeof candidate.codeAfter === 'string' &&
+      Array.isArray(candidate.options) &&
+      candidate.options.length >= 2 &&
+      candidate.options.every(
+        (option) =>
+          option &&
+          typeof option === 'object' &&
+          'id' in option &&
+          'text' in option &&
+          typeof option.id === 'string' &&
+          typeof option.text === 'string'
+      ) &&
+      typeof candidate.correctOptionId === 'string' &&
+      candidate.options.some((option) => option.id === candidate.correctOptionId) &&
+      typeof candidate.explanation === 'string'
+    )
+  }
+
+  if (candidate.type === 'order') {
+    return (
+      typeof candidate.prompt === 'string' &&
+      Array.isArray(candidate.items) &&
+      candidate.items.length >= 2 &&
+      candidate.items.every(
+        (item) =>
+          item &&
+          typeof item === 'object' &&
+          'id' in item &&
+          'text' in item &&
+          typeof item.id === 'string' &&
+          typeof item.text === 'string'
+      ) &&
+      (candidate.distractors === undefined ||
+        (Array.isArray(candidate.distractors) &&
+          candidate.distractors.every(
+            (item) =>
+              item &&
+              typeof item === 'object' &&
+              'id' in item &&
+              'text' in item &&
+              typeof item.id === 'string' &&
+              typeof item.text === 'string'
+          ))) &&
+      typeof candidate.explanation === 'string'
+    )
+  }
+
   if (candidate.type === 'worked_example') {
     return (
       typeof candidate.situation === 'string' &&
@@ -250,6 +348,31 @@ function isValidStep(step: unknown): step is CsLessonStep {
 
   if (candidate.type === 'summary') {
     return Array.isArray(candidate.bullets) && candidate.bullets.every((item) => typeof item === 'string')
+  }
+
+  if (candidate.type === 'code_exercise') {
+    const tokens = candidate.tokens
+    const answers = candidate.answers
+    const result = candidate.result as
+      | { kind?: string; output?: unknown; columns?: unknown; rows?: unknown }
+      | undefined
+    const resultOk =
+      !!result &&
+      (result.kind === 'browser' ||
+        (result.kind === 'console' && typeof result.output === 'string') ||
+        (result.kind === 'table' && Array.isArray(result.columns) && Array.isArray(result.rows)))
+    return (
+      typeof candidate.prompt === 'string' &&
+      typeof candidate.lang === 'string' &&
+      typeof candidate.codeTemplate === 'string' &&
+      Array.isArray(tokens) &&
+      tokens.every((t) => typeof t === 'string') &&
+      Array.isArray(answers) &&
+      answers.length >= 1 &&
+      answers.every((t) => typeof t === 'string' && tokens.includes(t)) &&
+      resultOk &&
+      typeof candidate.explanation === 'string'
+    )
   }
 
   return false

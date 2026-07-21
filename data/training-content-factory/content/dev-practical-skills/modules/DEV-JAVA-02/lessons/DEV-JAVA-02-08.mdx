@@ -1,0 +1,459 @@
+---
+lesson_id: DEV-JAVA-02-08
+title: "Java中級08 static・final・クラス定数"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 22
+tags: [java, intermediate, oop, static, final, constant, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次のことができるようにならなければならない。
+
+- インスタンスフィールドとstaticフィールドの違いを説明する。
+- staticフィールドとメソッドをクラス名で使用する。
+- 複数のオブジェクトが1つのstaticフィールドを共有する過程を説明する。
+- staticメソッドからアクセスできるメンバーを区別する。
+- finalフィールドを宣言し、コンストラクタで初期化する。
+- static finalでクラス定数を宣言して使用する。
+
+## 授業内容
+
+### Part 1. オブジェクトごとに必要な値と共有すべき値
+
+一般フィールドはオブジェクトごとに別々に作られる。
+
+```java
+class Student {
+    private String name;
+    private int score;
+
+    public Student(String name, int score) {
+        this.name = name;
+        this.score = score;
+    }
+
+    public int getScore() {
+        return score;
+    }
+}
+```
+
+```java
+Student student1 = new Student("Minsu", 85);
+Student student2 = new Student("Jisu", 92);
+
+System.out.println(student1.getScore());
+System.out.println(student2.getScore());
+```
+
+**実行結果**
+
+```text
+85
+92
+```
+
+student1とstudent2は互いに異なるscoreを持つ。このようにオブジェクトごとに別々に存在するフィールドをインスタンスフィールドと呼ぶ。
+
+しかし、全体の学生数のようにすべてのオブジェクトが一緒に使う必要がある値もある。一般フィールドで学生数を宣言すると、オブジェクトごとに別々の値ができるため、全体の数を1か所で管理できない。
+
+### Part 2. static フィールド
+
+staticフィールドはオブジェクトごとに作られず、クラスに1つだけ存在する。
+
+```java
+class Student {
+    private String name;
+    private static int count;
+}
+```
+
+- name: 学生オブジェクトごとに別々に存在
+- count: Studentクラスに1つだけ存在
+
+基本形式は次の通りである。
+
+```java
+class クラス名 {
+    static データ型 フィールド名;
+}
+```
+
+オブジェクトを作るとき、全体の学生数を増やすには、コンストラクタでcountを増やすことができる。
+
+```java
+class Student {
+    private String name;
+    private static int count;
+
+    public Student(String name) {
+        this.name = name;
+        count++;
+    }
+}
+```
+
+```java
+Student student1 = new Student("Minsu");
+Student student2 = new Student("Jisu");
+```
+
+2つのオブジェクトを作ったが、countはオブジェクトごとに作られるわけではない。2つのコンストラクタが同じcount1つを順番に増やす。
+
+### Part 3. static メソッド
+
+countはprivateなので、外部から直接アクセスできない。クラス全体の学生数を返すstaticメソッドを提供できる。
+
+```java
+class Student {
+    private String name;
+    private static int count;
+
+    public Student(String name) {
+        this.name = name;
+        count++;
+    }
+
+    public static int getCount() {
+        return count;
+    }
+}
+```
+
+staticメソッドはオブジェクトではなくクラス名で呼び出す。
+
+```java
+new Student("Minsu");
+new Student("Jisu");
+
+System.out.println(Student.getCount());
+```
+
+**実行結果**
+
+```text
+2
+```
+
+基本形式は次の通りである。
+
+```java
+class クラス名 {
+    public static 戻り値の型 メソッド名() {
+        // 実行するコード
+    }
+}
+```
+
+```java
+クラス名.メソッド名();
+```
+
+全体の学生数は特定の学生1人の値ではないため、次のようにオブジェクトで呼び出さない。
+
+```java
+Student student = new Student("Minsu");
+
+student.getCount();  // 動くが推奨しない
+Student.getCount();  // 推奨
+```
+
+### Part 4. static メソッドのアクセス範囲
+
+staticメソッドはオブジェクトなしで呼び出せる。したがって、特定のオブジェクトに属するインスタンスフィールドを直接使用できない。
+
+```java
+class Student {
+    private String name;
+    private static int count;
+
+    public static int getCount() {
+        return count;
+    }
+
+    public static void printName() {
+        System.out.println(name); // コンパイルエラー
+    }
+}
+```
+
+countはクラスに1つだけ存在するのでアクセスできる。しかし、nameは学生オブジェクトごとに異なるため、どの学生の名前なのかわからない。
+
+staticメソッドでインスタンスフィールドが必要な場合は、オブジェクトを受け取って使用する必要がある。
+
+```java
+class Student {
+    private String name;
+
+    public Student(String name) {
+        this.name = name;
+    }
+
+    public static void printName(Student student) {
+        System.out.println(student.name);
+    }
+}
+```
+
+```java
+Student student = new Student("Minsu");
+Student.printName(student);
+```
+
+**実行結果**
+
+```text
+Minsu
+```
+
+staticメソッドには現在のオブジェクトがないため、thisも使用できない。
+
+```java
+public static void show() {
+    System.out.println(this.name); // コンパイルエラー
+}
+```
+
+### Part 5. final フィールド
+
+finalフィールドは値を一度だけ決められる。一度決めた後は別の値を再代入できない。
+
+会員番号のようにオブジェクトごとに値は異なるが、オブジェクト生成後に変わってはいけない値に使用できる。
+
+```java
+class Member {
+    private final String memberId;
+
+    public Member(String memberId) {
+        this.memberId = memberId;
+    }
+
+    public String getMemberId() {
+        return memberId;
+    }
+}
+```
+
+```java
+Member member = new Member("M100");
+System.out.println(member.getMemberId());
+```
+
+**実行結果**
+
+```text
+M100
+```
+
+次のように値を再代入できない。
+
+```java
+class Member {
+    private final String memberId;
+
+    public Member(String memberId) {
+        this.memberId = memberId;
+    }
+
+    public void changeMemberId(String memberId) {
+        this.memberId = memberId; // コンパイルエラー
+    }
+}
+```
+
+finalフィールドを宣言する際に値を入れなかった場合、コンストラクタで必ず値を決める必要がある。
+
+```java
+class Product {
+    private final String productCode;
+
+    public Product(String productCode) {
+        this.productCode = productCode;
+    }
+}
+```
+
+finalは値を変更できないようにするだけで、クラスに1つだけ存在させるわけではない。staticのないfinalフィールドはオブジェクトごとに別々に存在する。
+
+### Part 6. static final クラス定数
+
+すべてのオブジェクトが一緒に使い、値も変わってはいけない場合はstatic finalを使用する。
+
+```java
+class Circle {
+    public static final double PI = 3.14;
+}
+```
+
+- static: クラスに1つだけ存在
+- final: 値を再変更できない
+
+クラス定数はクラス名でアクセスする。
+
+```java
+double area = Circle.PI * 5 * 5;
+
+System.out.println(Circle.PI);
+System.out.println(area);
+```
+
+**実行結果**
+
+```text
+3.14
+78.5
+```
+
+次のようにクラス定数に別の値を再代入できない。
+
+```java
+Circle.PI = 3.14159; // コンパイルエラー
+```
+
+### Part 7. クラス定数の名前の付け方
+
+クラス定数はすべての文字を大文字で書くのが慣習である。複数の単語からなる名前はアンダースコアで区切る。
+
+```java
+class Config {
+    public static final int MAX_USERS = 100;
+    public static final String COUNTRY_CODE = "KR";
+    public static final int DEFAULT_TIMEOUT = 30;
+}
+```
+
+使用する際は、数字や文字列をコードに繰り返し直接書かず、定数名を使用する。
+
+```java
+if (userCount < Config.MAX_USERS) {
+    System.out.println("加入可能");
+}
+```
+
+100という数字だけを使うと、その数字の意味をすぐに理解しにくい。MAX_USERSという名前を使うと、最大ユーザー数という意味が明確になる。
+
+### Part 8. static, final, static final の区別
+
+| 宣言 | 存在する数 | 変更可否 | 使用例 |
+|---|---|---|---|
+| インスタンスフィールド | オブジェクトごとに1つ | 変更可能 | 名前, 残高, 点数 |
+| static フィールド | クラスに1つ | 変更可能 | 生成されたオブジェクト数 |
+| final フィールド | オブジェクトごとに1つ | 変更不可 | 会員番号, 製品番号 |
+| static final フィールド | クラスに1つ | 変更不可 | 最大人数, 円周率 |
+
+### Part 9. いつ使うか
+
+staticフィールドは、クラス全体で1つの値を共有する必要があるときに使用する。
+
+```java
+private static int totalAccounts;
+```
+
+finalフィールドは、オブジェクトごとに値は異なるが、生成された後は変わってはいけないときに使用する。
+
+```java
+private final String accountNumber;
+```
+
+static finalは、すべてのオブジェクトが一緒に使い、プログラム実行中に変更されてはいけない値に使用する。
+
+```java
+public static final String BANK_NAME = "ハンビット銀行";
+```
+
+変更可能なstaticフィールドはプログラムの複数の場所で一緒に変わるため、管理しにくくなることがある。必要な場合はprivateで保護し、staticメソッドで使用するようにする。
+
+### 総合例
+
+```java
+class Account {
+    public static final String BANK_NAME = "ハンビット銀行";
+
+    private static int totalAccounts;
+
+    private final String accountNumber;
+    private String owner;
+    private int balance;
+
+    public Account(String accountNumber, String owner, int balance) {
+        this.accountNumber = accountNumber;
+        this.owner = owner;
+
+        if (balance >= 0) {
+            this.balance = balance;
+        }
+
+        totalAccounts++;
+    }
+
+    public static int getTotalAccounts() {
+        return totalAccounts;
+    }
+
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public int getBalance() {
+        return balance;
+    }
+
+    public void deposit(int amount) {
+        if (amount > 0) {
+            balance += amount;
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Account account1 =
+                new Account("A100", "Jimin", 10000);
+
+        Account account2 =
+                new Account("A200", "Seojun", 20000);
+
+        account1.deposit(5000);
+
+        System.out.println(Account.BANK_NAME);
+        System.out.println(
+                account1.getAccountNumber() + " / "
+                + account1.getOwner() + " / "
+                + account1.getBalance()
+        );
+        System.out.println(
+                account2.getAccountNumber() + " / "
+                + account2.getOwner() + " / "
+                + account2.getBalance()
+        );
+        System.out.println(
+                "総口座数: " + Account.getTotalAccounts()
+        );
+    }
+}
+```
+
+**実行結果**
+
+```text
+ハンビット銀行
+A100 / Jimin / 15000
+A200 / Seojun / 20000
+総口座数: 2
+```
+
+- BANK_NAMEはクラスに1つだけあり、変更できない。
+- totalAccountsはすべての口座が共有し、口座が生成されるたびに増える。
+- accountNumberは口座ごとに異なるが、生成後は変更できない。
+- ownerとbalanceは各口座オブジェクトが別々に持つ。
+
+## 次へ
+
+次は [Part 9「オブジェクト参照・null・引数渡し」](/dev/lessons/DEV-JAVA-02-09)を学ぶ。

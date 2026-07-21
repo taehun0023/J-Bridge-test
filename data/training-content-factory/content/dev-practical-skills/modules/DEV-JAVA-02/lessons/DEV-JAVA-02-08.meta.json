@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-02-08",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-oop-static-final",
+  "summary": "インスタンスフィールドと static フィールドの違い、static メソッドのアクセス範囲、final フィールドの一度きりの初期化、static final によるクラス定数を学ぶ。",
+  "key_points": [
+    "static フィールド・メソッドはクラスに1つで、クラス名で使う。",
+    "static メソッドはインスタンスフィールドや this を直接使えない。",
+    "final は再代入不可、static final はクラスに1つの定数（大文字命名）。"
+  ],
+  "misconceptions": [
+    "static メソッドからインスタンスフィールドや this を使えると思う。",
+    "final を付ければクラスに1つだけ存在すると思う。",
+    "static フィールドがオブジェクトごとに作られると思う。"
+  ],
+  "check_questions": [
+    "static フィールドはオブジェクトごとに作られるか？",
+    "static メソッドで this は使えるか？",
+    "static final 定数の命名慣習は？"
+  ]
+}

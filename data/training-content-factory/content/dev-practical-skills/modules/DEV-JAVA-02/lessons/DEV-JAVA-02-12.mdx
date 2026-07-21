@@ -1,0 +1,312 @@
+---
+lesson_id: DEV-JAVA-02-12
+title: "Java中級12 オーバーライド・super"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 24
+tags: [java, intermediate, oop, override, super, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次の作業ができるようにする。
+
+- 親から継承したメソッドを子に合わせて再定義する。
+- @Override でオーバーライドかどうかを検査する。
+- オーバーライドとメソッドオーバーロードを区別する。
+- super で親メソッドを呼び出す。
+- super() で親コンストラクタを呼び出す。
+- 親コンストラクタと子コンストラクタの実行順序を説明する。
+
+## 授業内容
+
+### Part 1. オーバーライドが必要な理由
+
+子クラスは親メソッドをそのまま使うことができる。しかし同じ動作でも子ごとに実行内容が異なる必要がある場合がある。
+
+```java
+class Animal {
+    public void sound() {
+        System.out.println("動物が音を出します。");
+    }
+}
+
+class Dog extends Animal {
+}
+```
+
+Dog に合う音を出力するには、親の sound() を再定義する。
+
+```java
+class Dog extends Animal {
+    @Override
+    public void sound() {
+        System.out.println("ワンワン");
+    }
+}
+```
+
+```java
+Dog dog = new Dog();
+dog.sound();
+```
+
+**実行結果**
+
+```text
+ワンワン
+```
+
+### Part 2. オーバーライドの条件
+
+オーバーライドするには、親メソッドと次の内容が一致していなければならない。
+
+- メソッド名
+- パラメータの個数
+- パラメータの型
+- パラメータの順序
+- 互換性のある戻り値の型
+
+```java
+class Parent {
+    public void print(int value) {
+        System.out.println(value);
+    }
+}
+
+class Child extends Parent {
+    @Override
+    public void print(int value) {
+        System.out.println("子: " + value);
+    }
+}
+```
+
+パラメータが変わると、オーバーライドではなくオーバーロードになる。
+
+```java
+public void print(String value) {
+}
+```
+
+### Part 3. @Override
+
+@Override は、下のメソッドが親メソッドを再定義することをコンパイラに知らせる。
+
+```java
+@Override
+public void sound() {
+    System.out.println("ワンワン");
+}
+```
+
+メソッド名を間違えると、コンパイラがエラーを知らせる。
+
+```java
+@Override
+public void sounds() { // コンパイルエラー
+    System.out.println("ワンワン");
+}
+```
+
+オーバーライドするときは @Override を記述するのが安全である。
+
+### Part 4. アクセス範囲のルール
+
+子のオーバーライドメソッドは親メソッドよりアクセス範囲を狭められない。
+
+```java
+class Parent {
+    public void run() {
+    }
+}
+
+class Child extends Parent {
+    @Override
+    private void run() { // コンパイルエラー
+    }
+}
+```
+
+親が public であれば、子も public で記述しなければならない。
+
+また、final メソッドは子でオーバーライドできない。
+
+```java
+class Parent {
+    public final void stop() {
+    }
+}
+```
+
+### Part 5. super で親メソッドを呼び出す
+
+子がメソッドを完全に置き換えるのではなく、親の機能に内容を追加したい場合がある。
+
+```java
+class Employee {
+    public void work() {
+        System.out.println("業務を開始します。");
+    }
+}
+
+class Developer extends Employee {
+    @Override
+    public void work() {
+        super.work();
+        System.out.println("コードを作成します。");
+    }
+}
+```
+
+```java
+Developer developer = new Developer();
+developer.work();
+```
+
+**実行結果**
+
+```text
+業務を開始します。
+コードを作成します。
+```
+
+super.work() は現在のオブジェクトの親クラスに定義された work() を呼び出す。
+
+### Part 6. super() で親コンストラクタを呼び出す
+
+親クラスにパラメータのあるコンストラクタしかない場合、子コンストラクタで super(...) を使って親コンストラクタを呼び出さなければならない。
+
+```java
+class Employee {
+    private String name;
+
+    public Employee(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+}
+```
+
+```java
+class Developer extends Employee {
+    private String language;
+
+    public Developer(String name, String language) {
+        super(name);
+        this.language = language;
+    }
+}
+```
+
+super(name) は親クラスの Employee(String name) コンストラクタを呼び出す。
+
+### Part 7. super() は最初の実行文でなければならない
+
+```java
+public Developer(String name, String language) {
+    super(name);
+    this.language = language;
+}
+```
+
+次のコードはコンパイルできない。
+
+```java
+public Developer(String name, String language) {
+    this.language = language;
+    super(name); // コンパイルエラー
+}
+```
+
+親の部分を先に初期化してから子の部分を初期化する必要があるため、super() はコンストラクタの最初の実行文でなければならない。
+
+this() と super() はどちらも最初の実行文でなければならないため、同じコンストラクタで両方を直接呼び出すことはできない。
+
+### Part 8. 親コンストラクタと子コンストラクタの実行順序
+
+```java
+class Parent {
+    public Parent() {
+        System.out.println("親コンストラクタ");
+    }
+}
+
+class Child extends Parent {
+    public Child() {
+        System.out.println("子コンストラクタ");
+    }
+}
+```
+
+```java
+new Child();
+```
+
+**実行結果**
+
+```text
+親コンストラクタ
+子コンストラクタ
+```
+
+子オブジェクトを作るとき、親の部分が先に初期化され、子の部分が後で初期化される。
+
+### 総合例
+
+```java
+class Employee {
+    private String name;
+
+    public Employee(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void work() {
+        System.out.println(name + "が業務を開始します。");
+    }
+}
+
+class Developer extends Employee {
+    private String language;
+
+    public Developer(String name, String language) {
+        super(name);
+        this.language = language;
+    }
+
+    @Override
+    public void work() {
+        super.work();
+        System.out.println(language + "で開発します。");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Developer developer =
+                new Developer("Minsu", "Java");
+
+        developer.work();
+    }
+}
+```
+
+**実行結果**
+
+```text
+Minsuが業務を開始します。
+Javaで開発します。
+```
+
+## 次へ
+
+次は [Part 13「多態性」](/dev/lessons/DEV-JAVA-02-13)を学ぶ。

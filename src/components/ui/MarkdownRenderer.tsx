@@ -4,6 +4,7 @@ import type { Components } from 'react-markdown'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
+import Link from 'next/link'
 
 interface MarkdownRendererProps {
   content: string
@@ -29,8 +30,8 @@ const mdComponents: Components = {
     <p className="my-3 leading-7 text-gray-700 dark:text-gray-300">{children}</p>
   ),
   table: ({ children }) => (
-    <div className="my-4 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+    <div className="my-4 w-fit max-w-full overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+      <table className="w-auto divide-y divide-gray-200 dark:divide-gray-700 text-sm">
         {children}
       </table>
     </div>
@@ -49,18 +50,18 @@ const mdComponents: Components = {
     </td>
   ),
   pre: ({ children }) => (
-    <pre className="my-4 overflow-x-auto rounded-xl bg-gray-900 p-4 text-sm leading-6">
+    <pre className="my-4 overflow-x-auto rounded-xl border border-gray-800 bg-[#0d1117] p-4 font-mono text-[13px] leading-relaxed shadow-sm">
       {children}
     </pre>
   ),
   code: ({ children, className }) => {
     // className is set by rehype-highlight for code blocks (e.g. "language-java hljs")
     if (className) {
-      return <code className={className}>{children}</code>
+      return <code className={`${className} font-mono`}>{children}</code>
     }
     // Inline code
     return (
-      <code className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-sm text-pink-600 dark:text-pink-400">
+      <code className="rounded-md border border-gray-200 bg-gray-100 px-1.5 py-0.5 font-mono text-[0.85em] font-medium text-rose-600 dark:border-gray-700 dark:bg-gray-800 dark:text-rose-300">
         {children}
       </code>
     )
@@ -83,11 +84,17 @@ const mdComponents: Components = {
       {children}
     </blockquote>
   ),
-  a: ({ children, href }) => (
-    <a href={href} className="text-indigo-600 dark:text-indigo-400 underline hover:text-indigo-500" target="_blank" rel="noopener noreferrer">
-      {children}
-    </a>
-  ),
+  a: ({ children, href }) =>
+    // 내부 링크(/로 시작)는 앱 내 이동(같은 탭), 외부 링크는 새 탭
+    typeof href === 'string' && href.startsWith('/') ? (
+      <Link href={href} className="text-indigo-600 dark:text-indigo-400 underline hover:text-indigo-500">
+        {children}
+      </Link>
+    ) : (
+      <a href={href} className="text-indigo-600 dark:text-indigo-400 underline hover:text-indigo-500" target="_blank" rel="noopener noreferrer">
+        {children}
+      </a>
+    ),
   hr: () => <hr className="my-8 border-gray-200 dark:border-gray-700" />,
   img: ({ src, alt }) => (
     // markdown allows arbitrary external image URLs that next/image cannot pre-validate
@@ -108,7 +115,7 @@ const mdComponents: Components = {
     return <input type={type} checked={checked} {...rest} />
   },
   strong: ({ children }) => (
-    <strong className="font-semibold text-gray-900 dark:text-gray-100">{children}</strong>
+    <strong className="font-semibold text-sky-700 dark:text-sky-300">{children}</strong>
   ),
 }
 

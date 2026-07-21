@@ -2,43 +2,31 @@
   "lesson_id": "DEV-JAVA-02-01",
   "category": "dev-practical-skills",
   "subject": "java",
-  "topic": "oop-reasoning",
-  "summary": "継承・インタフェース・ポリモーフィズムの実務コードでの使い方、メソッドディスパッチの追跡、抽象クラスとインタフェースの設計判断を解説する。",
+  "topic": "java-oop-class-object",
+  "summary": "クラス宣言、new によるオブジェクト生成と参照変数の役割、object.field でのフィールド読み書き、インスタンスフィールドの初期値、要件からのクラスとフィールド設計、フィールドの型安全性、複数オブジェクトのフィールドを組み合わせた計算、1ファイル内の public クラス規則を学ぶ。",
   "key_points": [
-    "オーバーライドされたメソッドの呼び出しは、宣言型ではなく実行時のインスタンス型に解決される。",
-    "インタフェースは実装なしの機能契約を定義し、抽象クラスはサブクラスと共通ロジックを共有する。",
-    "ポリモーフィズムにより、共通の型を通じて異なる実装を統一的に扱える。"
+    "クラスは設計図、オブジェクトは new で生成される実体で、1クラスから複数の独立したオブジェクトを生成できる。",
+    "Type v = new Type(); の型・変数名・new は役割が異なり、変数には生成されたオブジェクトを指す参照値が保存される。",
+    "インスタンスフィールドはオブジェクトごとに独立し、int=0・boolean=false・参照型=null で自動初期化される（ローカル変数には適用されない）。",
+    "要件文から管理対象をクラス名、対象が持つデータをフィールドとして見つけ出す。",
+    "フィールドの型と代入値の型が一致しないとコンパイルエラーになり、異なるオブジェクトのフィールドを組み合わせて計算する際は所属オブジェクトを混同しない。",
+    "1ファイルに複数のトップレベルクラスを置けるが、public は最大1つでファイル名と一致させる。"
   ],
   "misconceptions": [
-    "The declared variable type determines which overridden method runs at runtime.",
-    "Abstract classes and interfaces are interchangeable with no practical difference.",
-    "Omitting @Override has no consequences when overriding a parent method."
+    "new を書かずにオブジェクトを使おうとする。",
+    "フィールドを object.field() のように () で呼ぶ。",
+    "設計図（クラス）と実体（オブジェクト）を混同する。",
+    "参照変数にオブジェクトそのものが直接格納されると誤解する。",
+    "インスタンスフィールドの自動初期化がローカル変数にも適用されると誤解する。",
+    "String フィールドに整数リテラルをそのまま代入できると誤解する。",
+    "異なるオブジェクトのフィールドを計算するときに、どちらのオブジェクトの値かを取り違える。"
   ],
   "check_questions": [
-    "What is the difference between extends and implements in Java?",
-    "When should you choose an interface over an abstract class?",
-    "If a variable is declared as a parent type but holds a subclass instance, which class's method executes?"
-  ],
-  "exam_extractables": {
-    "fact_candidates": [
-      "Java does not support multiple class inheritance but allows multiple interface implementation.",
-      "@Override annotation triggers a compile-time check for correct method signature."
-    ],
-    "practical_judgment_candidates": [
-      "Choosing between interface and abstract class for a notification system design.",
-      "Deciding when to use super() in an overridden method."
-    ],
-    "error_interpretation_candidates": [
-      "A method override silently becomes a new method due to a parameter type mismatch.",
-      "NullPointerException caused by uninitialized inherited field."
-    ],
-    "scenario_candidates": [
-      "Tracing which send() implementation executes in a polymorphic list iteration.",
-      "Reading a DI-based service class to identify its concrete dependency."
-    ],
-    "common_wrong_answer_patterns": [
-      "Confusing compile-time type with runtime type for method dispatch.",
-      "Believing a subclass-specific method can be called through a parent-type variable without casting."
-    ]
-  }
+    "クラスとオブジェクトの関係は？",
+    "Type v = new Type(); の各部分の役割は？",
+    "フィールドへのアクセス方法は？",
+    "インスタンスフィールドの初期値は型ごとにどうなる？",
+    "要件文から管理対象とフィールドをどう見つける？",
+    "1ファイルに置ける public クラスの数は？"
+  ]
 }

@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-01-07",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-basics-loop-for",
+  "summary": "for の初期式・条件式・増減式、決まった回数や範囲の繰り返し、累積計算を学ぶ。",
+  "key_points": [
+    "for(初期式; 条件式; 増減式) は回数が明確なとき。",
+    "累積は外で初期化、中で更新する。",
+    "i<=5 は5を含み、i<5 は含まない。"
+  ],
+  "misconceptions": [
+    "条件式の <= と < を混同する。",
+    "増減式を書き忘れて無限ループにする。",
+    "合計変数を毎回0に初期化してしまう。"
+  ],
+  "check_questions": [
+    "for の実行順序は？",
+    "for(int i=0; i<5; i++) の実行回数は？",
+    "for が適する場面は？"
+  ]
+}

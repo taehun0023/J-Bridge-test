@@ -1,0 +1,498 @@
+---
+lesson_id: DEV-JAVA-01-15
+title: "Java初級15 メソッド① 定義・呼び出し・引数"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 18
+tags: [java, basics, method, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次の作業ができるようにする。
+
+- メソッドを使う理由を理解する。
+- 仮引数のない void メソッドを定義して呼び出す。
+- 仮引数と実引数の違いを区別する。
+- 複数の仮引数を宣言して値を渡す。
+- メソッドの呼び出しから終了までの実行の流れを理解する。
+- メソッドの定義位置と呼び出しの文法を正しく書く。
+
+## 授業内容
+
+### Part 1. メソッドの概念
+
+**概念説明**
+
+- メソッドは特定の作業を実行するためにまとめたコードである。
+- 繰り返し使うコードをメソッドにすると重複を減らせる。
+- メソッドは名前を使って必要な時点で呼び出す。
+- 呼び出されたメソッドの実行が終わると、呼び出した位置に戻る。
+- このパートでは値を返さない void メソッドを使う。
+
+**メソッドを使わないコード**
+
+```java
+System.out.println("学習開始");
+System.out.println("Java");
+
+System.out.println("学習開始");
+System.out.println("Java");
+```
+
+同じコードが繰り返されている。
+
+**メソッドを使ったコード**
+
+```java
+static void printLesson() {
+    System.out.println("学習開始");
+    System.out.println("Java");
+}
+```
+
+必要な位置でメソッドを呼び出す。
+
+```java
+printLesson();
+printLesson();
+```
+
+**実行結果**
+
+```
+学習開始
+Java
+学習開始
+Java
+```
+
+**メソッド名**
+
+メソッド名は一般的に小文字で始まるキャメルケースを使う。
+
+```java
+printMessage
+showResult
+printUserInfo
+```
+
+メソッドが行う作業がわかるように、動作を表す名前を使うのがよい。
+
+### Part 2. メソッドの定義と呼び出し
+
+**概念説明**
+
+- メソッドの定義は、メソッドが実行するコードを書くことである。
+- メソッドの呼び出しは、定義されたメソッドを実際に実行することである。
+- メソッドはクラスの内部かつ他のメソッドの外部に定義する。
+- main から直接呼び出すこの段階のメソッドには static を付ける。
+- static の詳しい意味は中級の課程で学ぶ。
+
+**基本の文法**
+
+```java
+static void メソッド名() {
+    実行するコード
+}
+```
+
+**コード文法の分解**
+
+```java
+static void greet() {
+    System.out.println("こんにちは");
+}
+```
+
+| 部分 | 意味 |
+|---|---|
+| `static` | main から直接呼び出せるようにする |
+| `void` | 戻り値がない |
+| `greet` | メソッド名 |
+| `( )` | 仮引数を書く位置 |
+| `{ }` | メソッドが実行するコード |
+
+**メソッドの呼び出し**
+
+```java
+greet();
+```
+
+メソッド名の後に丸括弧とセミコロンを書く。
+
+**全体の例**
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("開始");
+
+        greet();
+
+        System.out.println("終了");
+    }
+
+    static void greet() {
+        System.out.println("こんにちは");
+    }
+}
+```
+
+**実行の流れ**
+
+- main メソッドが開始される。
+- "開始"を出力する。
+- greet()を呼び出す。
+- greet 内部で"こんにちは"を出力する。
+- greet が終了して main に戻る。
+- "終了"を出力する。
+
+**実行結果**
+
+```
+開始
+こんにちは
+終了
+```
+
+**よくあるミス**
+
+メソッドを main の内部に定義することはできない。
+
+```java
+public static void main(String[] args) {
+    static void greet() { // エラー
+        System.out.println("こんにちは");
+    }
+}
+```
+
+メソッドは main の中括弧が終わった後、クラスの内部に書く。
+
+```java
+public static void main(String[] args) {
+    greet();
+}
+
+static void greet() {
+    System.out.println("こんにちは");
+}
+```
+
+### Part 3. 引数と実引数
+
+**概念説明**
+
+- 仮引数は、メソッドが外部から値を受け取るために宣言する変数である。
+- メソッドを呼び出すときに渡す実際の値を実引数という。
+- 仮引数はメソッド名の後の丸括弧の中に宣言する。
+- 呼び出すときは仮引数の型に合った値を渡す必要がある。
+- 受け取った値はメソッドの内部で使うことができる。
+
+**基本の文法**
+
+```java
+static void メソッド名(型 仮引数) {
+    実行するコード
+}
+```
+
+**例**
+
+```java
+static void greet(String name) {
+    System.out.println(name);
+    System.out.println("こんにちは");
+}
+```
+
+メソッドの呼び出し:
+
+```java
+greet("Lee");
+```
+
+**用語の区別**
+
+```java
+static void greet(String name)
+```
+
+name は仮引数である。
+
+```java
+greet("Lee");
+```
+
+"Lee" は呼び出すときに渡す実引数である。
+
+**全体の例**
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        greet("Lee");
+        greet("Kim");
+    }
+
+    static void greet(String name) {
+        System.out.println(name);
+        System.out.println("こんにちは");
+    }
+}
+```
+
+**実行の流れと結果**
+
+1番目の呼び出し:
+
+- "Lee" 渡す → name に "Lee" 保存 → Lee 出力 → こんにちは 出力
+
+2番目の呼び出し:
+
+- "Kim" 渡す → name に "Kim" 保存 → Kim 出力 → こんにちは 出力
+
+実行結果:
+
+```
+Lee
+こんにちは
+Kim
+こんにちは
+```
+
+**よくあるミス**
+
+仮引数のあるメソッドを呼び出すときに値を渡さないとエラーが発生する。
+
+```java
+static void greet(String name) {
+    System.out.println(name);
+}
+
+greet(); // エラー
+```
+
+文字列の値を渡す必要がある。
+
+```java
+greet("Lee");
+```
+
+型が異なる値を渡してもエラーが発生することがある。
+
+```java
+greet(100); // エラー
+```
+
+greet の仮引数は String なので文字列を渡す必要がある。
+
+### Part 4. 複数の引数
+
+**概念説明**
+
+- メソッドは複数の値を受け取ることができる。
+- 仮引数はカンマで区切る。
+- 各仮引数ごとに型と名前をすべて書く必要がある。
+- 呼び出すときは仮引数の個数、順序、型を合わせる必要がある。
+- 渡された実引数は書かれた順序どおりに仮引数に保存される。
+
+**基本の文法**
+
+```java
+static void メソッド名(
+        型 仮引数1,
+        型 仮引数2) {
+
+    実行するコード
+}
+```
+
+1行でも書ける。
+
+```java
+static void printUser(String name, int age) {
+    System.out.println(name);
+    System.out.println(age);
+}
+```
+
+**呼び出し**
+
+```java
+printUser("Lee", 25);
+```
+
+**実行の流れ**
+
+- "Lee" → name
+- 25 → age
+
+**全体の例**
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        printUser("Lee", 25);
+        printUser("Kim", 30);
+    }
+
+    static void printUser(String name, int age) {
+        System.out.println(name);
+        System.out.println(age);
+    }
+}
+```
+
+**実行結果**
+
+```
+Lee
+25
+Kim
+30
+```
+
+**数値の仮引数の例**
+
+```java
+static void printTotal(int first, int second) {
+    int total = first + second;
+
+    System.out.println(total);
+}
+```
+
+呼び出し:
+
+```java
+printTotal(10, 20);
+```
+
+実行結果:
+
+```
+30
+```
+
+**よくあるミス**
+
+仮引数ごとに型を書く必要がある。
+
+```java
+static void printTotal(int first, second) { // エラー
+}
+```
+
+正しいコードは次のとおりである。
+
+```java
+static void printTotal(int first, int second) {
+}
+```
+
+呼び出すときに順序を変えると、別の仮引数に値が渡される。
+
+```java
+static void printUser(String name, int age) {
+}
+```
+
+正しい呼び出し:
+
+```java
+printUser("Lee", 25);
+```
+
+次の呼び出しは型の順序が合わずエラーが発生する。
+
+```java
+printUser(25, "Lee"); // エラー
+```
+
+### Part 5. メソッドの再利用と実行順序
+
+**概念説明**
+
+- 一度定義したメソッドは何度でも呼び出すことができる。
+- 呼び出すたびに渡す実引数を変えて指定できる。
+- メソッドは呼び出された順序で実行される。
+- 1つのメソッドの実行が終わって初めて次のコードが実行される。
+
+**例**
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        printMessage("1番目");
+        printMessage("2番目");
+        printMessage("3番目");
+    }
+
+    static void printMessage(String message) {
+        System.out.println(message);
+    }
+}
+```
+
+**実行の流れと結果**
+
+- printMessage("1番目") 呼び出し → 1番目 出力
+- printMessage("2番目") 呼び出し → 2番目 出力
+- printMessage("3番目") 呼び出し → 3番目 出力
+
+```
+1番目
+2番目
+3番目
+```
+
+**メソッドから別のメソッドを呼び出す**
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        startLesson();
+    }
+
+    static void startLesson() {
+        System.out.println("授業開始");
+        printTopic("メソッド");
+    }
+
+    static void printTopic(String topic) {
+        System.out.println(topic);
+    }
+}
+```
+
+**実行結果**
+
+```
+授業開始
+メソッド
+```
+
+main が startLesson() を呼び出し、startLesson() がさらに printTopic() を呼び出す。
+
+**よくあるミス**
+
+メソッドを定義しただけで自動的に実行されると考えてはいけない。
+
+```java
+static void greet() {
+    System.out.println("こんにちは");
+}
+```
+
+呼び出さなければ実行されない。
+
+```java
+greet();
+```
+
+## 次へ
+
+次は [Part 16「メソッド② 戻り値・早期終了・配列」](/dev/lessons/DEV-JAVA-01-16)を学ぶ。

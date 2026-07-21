@@ -1,0 +1,499 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "演算子と型変換を身につけよう",
+   "prompt": "算術・比較・論理演算子と型変換を、手を動かして覚えよう。",
+   "takeaway": "演算子と型変換の基本を10ステップで確認します。"
+  },
+  "steps": [
+   {
+    "id": "java3-q1",
+    "type": "code_exercise",
+    "title": "計算式の完成",
+    "prompt": "品物7個の合計金額を求めるように空欄に演算子を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "int items = 7;\nint price = 1200;\nint total = items [[0]] price;\nSystem.out.println(total);",
+    "tokens": [
+     "*",
+     "+",
+     "/",
+     "%"
+    ],
+    "answers": [
+     "*"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "8400"
+    },
+    "explanation": "合計は個数 × 単価なので掛け算 * を使う。7 * 1200 = 8400 である。+ は 1207、/ は 0、% は 7 になるので答えではない。"
+   },
+   {
+    "id": "java3-q2",
+    "type": "mini_check",
+    "title": "整数の割り算の結果",
+    "prompt": "次のコードの実行結果として正しいものはどれか？（1行目 / 2行目）",
+    "options": [
+     {
+      "id": "A",
+      "text": "`4` / `1`"
+     },
+     {
+      "id": "B",
+      "text": "`4.25` / `1`"
+     },
+     {
+      "id": "C",
+      "text": "`4` / `4`"
+     },
+     {
+      "id": "D",
+      "text": "`5` / `1`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "整数同士の割り算は小数点以下を切り捨てるので 17 / 4 = 4、% は余りなので 17 % 4 = 1 である。整数の割り算は 4.25 ではなく 4 になる。",
+    "code": "int boxes = 17;\nint trucks = 4;\nSystem.out.println(boxes / trucks);\nSystem.out.println(boxes % trucks);"
+   },
+   {
+    "id": "java3-q3",
+    "type": "code_exercise",
+    "title": "複合代入",
+    "prompt": "energy が 15 減り、さらに2倍になるように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "int energy = 50;\nenergy [[0]] 15;\nenergy [[1]] 2;\nSystem.out.println(energy);",
+    "tokens": [
+     "-=",
+     "*=",
+     "+=",
+     "/="
+    ],
+    "answers": [
+     "-=",
+     "*="
+    ],
+    "result": {
+     "kind": "console",
+     "output": "70"
+    },
+    "explanation": "15 を引くので -=、2倍にするので *= を使う。50 - 15 = 35、35 * 2 = 70 である。+=・/= や順序が違うと結果が変わる。"
+   },
+   {
+    "id": "java3-q4",
+    "type": "code_exercise",
+    "title": "前置インクリメント",
+    "prompt": "turn を1増やした値を next に保存するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "int turn = 8;\nint next = [[0]]turn;\nSystem.out.println(next);",
+    "tokens": [
+     "++",
+     "--",
+     "+",
+     "+="
+    ],
+    "answers": [
+     "++"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "9"
+    },
+    "explanation": "前置インクリメント ++turn は turn を先に 9 にしてからその値を next に保存する。-- は 7、単項 + は 8 のまま、+= はこの位置で文法エラーになる。"
+   },
+   {
+    "id": "java3-q5",
+    "type": "code_exercise",
+    "title": "比較演算子",
+    "prompt": "remaining が 0 と等しいか比較して empty に保存するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "int remaining = 0;\nboolean empty = remaining [[0]] 0;\nSystem.out.println(empty);",
+    "tokens": [
+     "==",
+     "=",
+     "!=",
+     ">"
+    ],
+    "answers": [
+     "=="
+    ],
+    "result": {
+     "kind": "console",
+     "output": "true"
+    },
+    "explanation": "値が等しいかは == で比較する。0 == 0 は true である。= は代入なので boolean に int を入れてコンパイルエラー、!= と > は false になるので答えではない。"
+   },
+   {
+    "id": "java3-q6",
+    "type": "code_exercise",
+    "title": "論理演算子",
+    "prompt": "month が 6 以上かつ 8 以下か、両方の条件を満たすか確認するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "int month = 10;\nboolean summer = month >= 6 [[0]] month <= 8;\nSystem.out.println(summer);",
+    "tokens": [
+     "&&",
+     "||",
+     "!=",
+     "!"
+    ],
+    "answers": [
+     "&&"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "false"
+    },
+    "explanation": "両方の条件を満たす必要があるので、かつ を意味する && を使う。month が 10 なら 6 以上は真だが 8 以下が偽なので && は false である。|| は片方だけ真でも true になり結果が変わり、!・!= はこの位置に合わない。"
+   },
+   {
+    "id": "java3-q8",
+    "type": "mini_check",
+    "title": "代入と比較の区別",
+    "prompt": "mode に 3 を保存するコード1行として正しいものはどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "`mode == 3;`"
+     },
+     {
+      "id": "B",
+      "text": "`mode = 3;`"
+     },
+     {
+      "id": "C",
+      "text": "`mode != 3;`"
+     },
+     {
+      "id": "D",
+      "text": "`int = mode 3;`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "値を保存するのは代入演算子 = なので mode = 3; が正しい。mode == 3;・mode != 3; は比較式なので単独の文として書けずコンパイルエラーになり、int = mode 3; も文法に合わない。"
+   },
+   {
+    "id": "java3-q9",
+    "type": "mini_check",
+    "title": "優先順位の指定",
+    "prompt": "2 と 5 を先に足してから 3 を掛けるコード1行として正しいものはどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "`int result = 2 + 5 * 3;`"
+     },
+     {
+      "id": "B",
+      "text": "`int result = 2 + (5 * 3);`"
+     },
+     {
+      "id": "C",
+      "text": "`int result = (2 + 5) * 3;`"
+     },
+     {
+      "id": "D",
+      "text": "`int result = 2 * 5 + 3;`"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "括弧で (2 + 5) を先に計算して 7 にしてから 3 を掛けると 21 になる。括弧がないと掛け算が先で 2 + 15 = 17、2 * 5 + 3 = 13 になる。"
+   },
+   {
+    "id": "java3-q10",
+    "type": "mini_check",
+    "title": "自動型変換",
+    "prompt": "コンパイルが通るコード1行として正しいものはどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "`int distance = 25.8;`"
+     },
+     {
+      "id": "B",
+      "text": "`byte distance = 200;`"
+     },
+     {
+      "id": "C",
+      "text": "`boolean distance = 1;`"
+     },
+     {
+      "id": "D",
+      "text": "`double distance = 25;`"
+     }
+    ],
+    "correctOptionId": "D",
+    "explanation": "整数 25 は double に自動変換されて保存されるので double distance = 25; はコンパイルできる。実数 25.8 を int に入れたり、200 を byte(最大127)に入れたり、1 を boolean に入れるとエラーになる。"
+   },
+   {
+    "id": "java3-q11",
+    "type": "code_exercise",
+    "title": "強制型変換",
+    "prompt": "実数 temperature の小数点以下を切り捨てて整数に保存するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "double temperature = 18.9;\nint whole = [[0]] temperature;\nSystem.out.println(whole);",
+    "tokens": [
+     "(int)",
+     "(double)",
+     "int",
+     "parseInt"
+    ],
+    "answers": [
+     "(int)"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "18"
+    },
+    "explanation": "実数を整数に変えるには (int) で強制型変換する。(int)18.9 は小数点以下を切り捨てて 18 になる。(double) は int に入れられずエラー、int・parseInt はこの位置で文法エラーになる。"
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "연산자와 형변환을 익히자",
+   "prompt": "산술·비교·논리 연산자와 형변환을 손으로 익히자.",
+   "takeaway": "연산자와 형변환의 기본을 10스텝으로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "java3-q1",
+    "type": "code_exercise",
+    "title": "계산식 완성",
+    "prompt": "물건 7개의 총액을 구하도록 빈칸에 연산자를 채우시오.",
+    "lang": "java",
+    "codeTemplate": "int items = 7;\nint price = 1200;\nint total = items [[0]] price;\nSystem.out.println(total);",
+    "tokens": [
+     "*",
+     "+",
+     "/",
+     "%"
+    ],
+    "answers": [
+     "*"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "8400"
+    },
+    "explanation": "총액은 개수 × 단가이므로 곱셈 *를 쓴다. 7 * 1200 = 8400이다. +는 1207, /는 0, %는 7이 되어 답이 아니다."
+   },
+   {
+    "id": "java3-q2",
+    "type": "mini_check",
+    "title": "정수 나눗셈 결과",
+    "prompt": "다음 코드의 실행 결과로 옳은 것은? (첫 줄 / 둘째 줄)",
+    "options": [
+     {
+      "id": "A",
+      "text": "`4` / `1`"
+     },
+     {
+      "id": "B",
+      "text": "`4.25` / `1`"
+     },
+     {
+      "id": "C",
+      "text": "`4` / `4`"
+     },
+     {
+      "id": "D",
+      "text": "`5` / `1`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "정수끼리 나누면 소수점 이하를 버려 17 / 4 = 4이고, %는 나머지라 17 % 4 = 1이다. 정수 나눗셈은 4.25가 아니라 4가 된다.",
+    "code": "int boxes = 17;\nint trucks = 4;\nSystem.out.println(boxes / trucks);\nSystem.out.println(boxes % trucks);"
+   },
+   {
+    "id": "java3-q3",
+    "type": "code_exercise",
+    "title": "복합 대입",
+    "prompt": "energy가 15 줄고 다시 2배가 되도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "int energy = 50;\nenergy [[0]] 15;\nenergy [[1]] 2;\nSystem.out.println(energy);",
+    "tokens": [
+     "-=",
+     "*=",
+     "+=",
+     "/="
+    ],
+    "answers": [
+     "-=",
+     "*="
+    ],
+    "result": {
+     "kind": "console",
+     "output": "70"
+    },
+    "explanation": "15를 빼므로 -=, 2배로 늘리므로 *=를 쓴다. 50 - 15 = 35, 35 * 2 = 70이다. +=·/= 이나 순서가 바뀌면 결과가 달라진다."
+   },
+   {
+    "id": "java3-q4",
+    "type": "code_exercise",
+    "title": "전위 증가",
+    "prompt": "turn을 1 증가시킨 값을 next에 저장하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "int turn = 8;\nint next = [[0]]turn;\nSystem.out.println(next);",
+    "tokens": [
+     "++",
+     "--",
+     "+",
+     "+="
+    ],
+    "answers": [
+     "++"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "9"
+    },
+    "explanation": "전위 증가 ++turn은 turn을 먼저 9로 만든 뒤 그 값을 next에 저장한다. --는 7, 단항 +는 8 그대로, +=는 이 자리에서 문법 오류가 난다."
+   },
+   {
+    "id": "java3-q5",
+    "type": "code_exercise",
+    "title": "비교 연산자",
+    "prompt": "remaining이 0과 같은지 비교해 empty에 저장하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "int remaining = 0;\nboolean empty = remaining [[0]] 0;\nSystem.out.println(empty);",
+    "tokens": [
+     "==",
+     "=",
+     "!=",
+     ">"
+    ],
+    "answers": [
+     "=="
+    ],
+    "result": {
+     "kind": "console",
+     "output": "true"
+    },
+    "explanation": "값이 같은지는 == 로 비교한다. 0 == 0은 true다. =는 대입이라 boolean에 int를 넣어 컴파일 오류, !=와 >는 false가 되어 답이 아니다."
+   },
+   {
+    "id": "java3-q6",
+    "type": "code_exercise",
+    "title": "논리 연산자",
+    "prompt": "month가 6 이상이면서 8 이하인지 두 조건을 모두 만족하는지 확인하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "int month = 10;\nboolean summer = month >= 6 [[0]] month <= 8;\nSystem.out.println(summer);",
+    "tokens": [
+     "&&",
+     "||",
+     "!=",
+     "!"
+    ],
+    "answers": [
+     "&&"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "false"
+    },
+    "explanation": "두 조건을 모두 만족해야 하므로 그리고를 뜻하는 &&를 쓴다. month가 10이면 6 이상은 참이지만 8 이하가 거짓이라 &&는 false다. ||는 하나만 참이어도 true라 결과가 달라지고, !·!=는 이 자리에 맞지 않는다."
+   },
+   {
+    "id": "java3-q8",
+    "type": "mini_check",
+    "title": "대입과 비교 구분",
+    "prompt": "mode에 3을 저장하는 코드 한 줄로 옳은 것은?",
+    "options": [
+     {
+      "id": "A",
+      "text": "`mode == 3;`"
+     },
+     {
+      "id": "B",
+      "text": "`mode = 3;`"
+     },
+     {
+      "id": "C",
+      "text": "`mode != 3;`"
+     },
+     {
+      "id": "D",
+      "text": "`int = mode 3;`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "값을 저장하는 것은 대입 연산자 =이므로 mode = 3;이 옳다. mode == 3;·mode != 3;은 비교식이라 단독 문장으로 쓸 수 없어 컴파일 오류이고, int = mode 3;도 문법에 맞지 않는다."
+   },
+   {
+    "id": "java3-q9",
+    "type": "mini_check",
+    "title": "우선순위 지정",
+    "prompt": "2와 5를 먼저 더한 뒤 3을 곱하는 코드 한 줄로 옳은 것은?",
+    "options": [
+     {
+      "id": "A",
+      "text": "`int result = 2 + 5 * 3;`"
+     },
+     {
+      "id": "B",
+      "text": "`int result = 2 + (5 * 3);`"
+     },
+     {
+      "id": "C",
+      "text": "`int result = (2 + 5) * 3;`"
+     },
+     {
+      "id": "D",
+      "text": "`int result = 2 * 5 + 3;`"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "괄호로 (2 + 5)를 먼저 계산해 7을 만든 뒤 3을 곱해야 21이 된다. 괄호가 없으면 곱셈이 먼저라 2 + 15 = 17, 2 * 5 + 3 = 13이 된다."
+   },
+   {
+    "id": "java3-q10",
+    "type": "mini_check",
+    "title": "자동 형변환",
+    "prompt": "컴파일되는 코드 한 줄로 옳은 것은?",
+    "options": [
+     {
+      "id": "A",
+      "text": "`int distance = 25.8;`"
+     },
+     {
+      "id": "B",
+      "text": "`byte distance = 200;`"
+     },
+     {
+      "id": "C",
+      "text": "`boolean distance = 1;`"
+     },
+     {
+      "id": "D",
+      "text": "`double distance = 25;`"
+     }
+    ],
+    "correctOptionId": "D",
+    "explanation": "정수 25는 double에 자동으로 변환되어 저장되므로 double distance = 25;는 컴파일된다. 실수 25.8을 int에 넣거나, 200을 byte(최대 127)에 넣거나, 1을 boolean에 넣으면 오류가 난다."
+   },
+   {
+    "id": "java3-q11",
+    "type": "code_exercise",
+    "title": "강제 형변환",
+    "prompt": "실수 temperature의 소수점 이하를 버리고 정수로 저장하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "double temperature = 18.9;\nint whole = [[0]] temperature;\nSystem.out.println(whole);",
+    "tokens": [
+     "(int)",
+     "(double)",
+     "int",
+     "parseInt"
+    ],
+    "answers": [
+     "(int)"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "18"
+    },
+    "explanation": "실수를 정수로 바꾸려면 (int)로 강제 형변환한다. (int)18.9는 소수점 이하를 버려 18이다. (double)은 int에 넣을 수 없어 오류, int·parseInt는 이 자리에서 문법 오류가 난다."
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}

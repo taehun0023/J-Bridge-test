@@ -1,0 +1,665 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "パッケージと import でプロジェクトを構成しよう",
+   "prompt": "クラスを機能ごとのパッケージに分け、別のパッケージのクラスは import で使おう。",
+   "takeaway": "package 宣言・フォルダ構造・import ルール・プロジェクト構造を9問で確認します。"
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "フォルダに合った package 宣言",
+    "prompt": "src/library/ の下にある Book.java が library パッケージに属するように空欄を埋めなさい。（空欄2つ）",
+    "lang": "java",
+    "codeTemplate": "[[0]] [[1]];\n\npublic class Book {\n}",
+    "tokens": [
+     "package",
+     "library",
+     "import",
+     "Book",
+     "src",
+     "class"
+    ],
+    "answers": [
+     "package",
+     "library"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "src の下の library フォルダにあるクラスは package library; で宣言する。package はクラスが所属するパッケージを指定し、import は別のパッケージのクラスを使うときに書く。"
+   },
+   {
+    "id": "q2",
+    "type": "code_exercise",
+    "title": "別のパッケージのクラスの使用",
+    "prompt": "app パッケージの Main で device パッケージの Printer を使うように空欄を埋めなさい。（空欄5つ）",
+    "lang": "java",
+    "codeTemplate": "package [[0]];\n\nimport [[1]].[[2]];\n\npublic class Main {\n    public static void main(String[] args) {\n        [[3]] printer = new [[4]]();\n\n        printer.print();\n    }\n}",
+    "tokens": [
+     "app",
+     "device",
+     "Printer",
+     "Printer",
+     "Printer",
+     "printer",
+     "Main",
+     "package",
+     "src"
+    ],
+    "answers": [
+     "app",
+     "device",
+     "Printer",
+     "Printer",
+     "Printer"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "印刷開始"
+    },
+    "explanation": "Main は app パッケージにあり、Printer は device パッケージにある。別のパッケージのクラスを短い名前で使うには import device.Printer; を書かなければならない。"
+   },
+   {
+    "id": "q3",
+    "type": "order",
+    "title": "package・import・class の順序の組み立て",
+    "prompt": "music パッケージの Song を app パッケージで使うように1行ずつ並べなさい。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "package app;"
+     },
+     {
+      "id": "c2",
+      "text": "import music.Song;"
+     },
+     {
+      "id": "c3",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c4",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c5",
+      "text": "        Song song = new Song();"
+     },
+     {
+      "id": "c6",
+      "text": "        song.play();"
+     },
+     {
+      "id": "c7",
+      "text": "    }"
+     },
+     {
+      "id": "c8",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "import music;"
+     },
+     {
+      "id": "w2",
+      "text": "Song.play();"
+     }
+    ],
+    "explanation": "package, import, class の順に書く。import にはパッケージ名だけでなく music.Song のように使うクラスまで書く。play() はインスタンスメソッドなので生成された song オブジェクトで呼び出す。"
+   },
+   {
+    "id": "q4",
+    "type": "mini_check",
+    "title": "import が必要な状況",
+    "prompt": "明示的な import が必ず必要な状況はどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "java.lang.String を String として使う。"
+     },
+     {
+      "id": "B",
+      "text": "school パッケージの Main で同じ school パッケージの Student を使う。"
+     },
+     {
+      "id": "C",
+      "text": "java.util.Scanner という完全な名前をコードに直接書く。"
+     },
+     {
+      "id": "D",
+      "text": "app パッケージの Main で school パッケージの Student を Student という短い名前で使う。"
+     }
+    ],
+    "correctOptionId": "D",
+    "explanation": "別のパッケージのクラスを短い名前で使うには import が必要である。同じパッケージのクラスと java.lang のクラスは import なしで使える。完全なパッケージ名を直接書いた場合も import は必要ない。"
+   },
+   {
+    "id": "q5",
+    "type": "code_exercise",
+    "title": "完全なクラス名で Scanner を使う",
+    "prompt": "import を書かずに Scanner の完全なクラス名を使って整数を入力するように空欄を埋めなさい。入力値は 25 である。（空欄2つ）",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    public static void main(String[] args) {\n        [[0]] scanner =\n                new [[1]](System.in);\n\n        int number = scanner.nextInt();\n\n        System.out.println(number);\n\n        scanner.close();\n    }\n}",
+    "tokens": [
+     "java.util.Scanner",
+     "java.util.Scanner",
+     "Scanner",
+     "java.lang.Scanner",
+     "java.util",
+     "System.in"
+    ],
+    "answers": [
+     "java.util.Scanner",
+     "java.util.Scanner"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "25"
+    },
+    "explanation": "import を使わない場合、java.util.Scanner という完全な名前を宣言とオブジェクト生成の両方に書かなければならない。import はこの完全な名前を Scanner という短い名前で使えるようにする。"
+   },
+   {
+    "id": "q6",
+    "type": "order",
+    "title": "同じパッケージのクラスの使用",
+    "prompt": "Teacher と SchoolMain がどちらも school パッケージにある。import なしで Teacher を使うように1行ずつ並べなさい。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "package school;"
+     },
+     {
+      "id": "c2",
+      "text": "public class SchoolMain {"
+     },
+     {
+      "id": "c3",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c4",
+      "text": "        Teacher teacher = new Teacher();"
+     },
+     {
+      "id": "c5",
+      "text": "        teacher.introduce();"
+     },
+     {
+      "id": "c6",
+      "text": "    }"
+     },
+     {
+      "id": "c7",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "import Teacher;"
+     },
+     {
+      "id": "w2",
+      "text": "Teacher.introduce();"
+     }
+    ],
+    "explanation": "Teacher と SchoolMain はどちらも school パッケージにあるので import は必要ない。import Teacher; はパッケージを含まない誤った import であり、introduce() は Teacher オブジェクトで呼び出さなければならない。"
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "多段階のパッケージ宣言",
+    "prompt": "フォルダ構造 src/com/acme/payment/Receipt.java と一致するように package 宣言を完成させなさい。（空欄3つ）",
+    "lang": "java",
+    "codeTemplate": "package [[0]].[[1]].[[2]];\n\npublic class Receipt {\n}",
+    "tokens": [
+     "com",
+     "acme",
+     "payment",
+     "src",
+     "Receipt",
+     "package",
+     "app"
+    ],
+    "answers": [
+     "com",
+     "acme",
+     "payment"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "src の下のフォルダ経路 com/acme/payment はパッケージ名 com.acme.payment に対応する。src はソースコードの基準フォルダなので package 名に含めない。"
+   },
+   {
+    "id": "q8",
+    "type": "code_exercise",
+    "title": "複数のクラスの import",
+    "prompt": "app パッケージの Main で model.User と admin.Permission を使うように import を完成させなさい。（空欄2つ）",
+    "lang": "java",
+    "codeTemplate": "package app;\n\nimport [[0]].User;\nimport [[1]].Permission;\n\npublic class Main {\n    public static void main(String[] args) {\n        User user = new User();\n        Permission permission = new Permission();\n\n        System.out.println(\"準備完了\");\n    }\n}",
+    "tokens": [
+     "model",
+     "admin",
+     "app",
+     "User",
+     "Permission",
+     "java.lang",
+     "src"
+    ],
+    "answers": [
+     "model",
+     "admin"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "準備完了"
+    },
+    "explanation": "User の完全な名前は model.User であり、Permission の完全な名前は admin.Permission である。異なるパッケージのクラスを使うので、それぞれのクラスを別々に import する。"
+   },
+   {
+    "id": "q9",
+    "type": "order",
+    "title": "総合 — 2つのクラスがあるプロジェクト",
+    "prompt": "library パッケージの Book と Member を app パッケージで使うように Main.java を1行ずつ並べなさい。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "package app;"
+     },
+     {
+      "id": "c2",
+      "text": "import library.Book;"
+     },
+     {
+      "id": "c3",
+      "text": "import library.Member;"
+     },
+     {
+      "id": "c4",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c5",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c6",
+      "text": "        Book book = new Book();"
+     },
+     {
+      "id": "c7",
+      "text": "        Member member = new Member();"
+     },
+     {
+      "id": "c8",
+      "text": "        book.showTitle();"
+     },
+     {
+      "id": "c9",
+      "text": "        member.showName();"
+     },
+     {
+      "id": "c10",
+      "text": "    }"
+     },
+     {
+      "id": "c11",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "import library.Book.Member;"
+     },
+     {
+      "id": "w2",
+      "text": "Book member = new Member();"
+     }
+    ],
+    "explanation": "Book と Member は library パッケージにあるので、それぞれ import する。library.Book.Member は Member が Book の内部にあるかのように書いた誤った経路である。Book 変数には Member オブジェクトを保存できない。"
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "패키지와 import로 프로젝트를 구성하자",
+   "prompt": "클래스를 기능별 패키지로 나누고, 다른 패키지의 클래스는 import로 사용하자.",
+   "takeaway": "package 선언·폴더 구조·import 규칙·프로젝트 구조를 9문제로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "폴더에 맞는 package 선언",
+    "prompt": "src/library/ 아래에 있는 Book.java가 library 패키지에 속하도록 빈칸을 채우시오. (빈칸 2곳)",
+    "lang": "java",
+    "codeTemplate": "[[0]] [[1]];\n\npublic class Book {\n}",
+    "tokens": [
+     "package",
+     "library",
+     "import",
+     "Book",
+     "src",
+     "class"
+    ],
+    "answers": [
+     "package",
+     "library"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "src 아래의 library 폴더에 있는 클래스는 package library;로 선언한다. package는 클래스가 소속된 패키지를 지정하고 import는 다른 패키지의 클래스를 사용할 때 작성한다."
+   },
+   {
+    "id": "q2",
+    "type": "code_exercise",
+    "title": "다른 패키지의 클래스 사용",
+    "prompt": "app 패키지의 Main에서 device 패키지의 Printer를 사용하도록 빈칸을 채우시오. (빈칸 5곳)",
+    "lang": "java",
+    "codeTemplate": "package [[0]];\n\nimport [[1]].[[2]];\n\npublic class Main {\n    public static void main(String[] args) {\n        [[3]] printer = new [[4]]();\n\n        printer.print();\n    }\n}",
+    "tokens": [
+     "app",
+     "device",
+     "Printer",
+     "Printer",
+     "Printer",
+     "printer",
+     "Main",
+     "package",
+     "src"
+    ],
+    "answers": [
+     "app",
+     "device",
+     "Printer",
+     "Printer",
+     "Printer"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "인쇄 시작"
+    },
+    "explanation": "Main은 app 패키지에 있고 Printer는 device 패키지에 있다. 다른 패키지의 클래스를 짧은 이름으로 사용하려면 import device.Printer;를 작성해야 한다."
+   },
+   {
+    "id": "q3",
+    "type": "order",
+    "title": "package·import·class 순서 조립",
+    "prompt": "music 패키지의 Song을 app 패키지에서 사용하도록 한 줄씩 배열하시오.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "package app;"
+     },
+     {
+      "id": "c2",
+      "text": "import music.Song;"
+     },
+     {
+      "id": "c3",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c4",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c5",
+      "text": "        Song song = new Song();"
+     },
+     {
+      "id": "c6",
+      "text": "        song.play();"
+     },
+     {
+      "id": "c7",
+      "text": "    }"
+     },
+     {
+      "id": "c8",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "import music;"
+     },
+     {
+      "id": "w2",
+      "text": "Song.play();"
+     }
+    ],
+    "explanation": "package, import, class 순서로 작성한다. import에는 패키지 이름만 적는 것이 아니라 music.Song처럼 사용할 클래스까지 작성한다. play()는 인스턴스 메서드이므로 생성된 song 객체로 호출한다."
+   },
+   {
+    "id": "q4",
+    "type": "mini_check",
+    "title": "import가 필요한 상황",
+    "prompt": "명시적인 import가 반드시 필요한 상황은?",
+    "options": [
+     {
+      "id": "A",
+      "text": "java.lang.String을 String으로 사용한다."
+     },
+     {
+      "id": "B",
+      "text": "school 패키지의 Main에서 같은 school 패키지의 Student를 사용한다."
+     },
+     {
+      "id": "C",
+      "text": "java.util.Scanner라는 전체 이름을 코드에 직접 작성한다."
+     },
+     {
+      "id": "D",
+      "text": "app 패키지의 Main에서 school 패키지의 Student를 Student라는 짧은 이름으로 사용한다."
+     }
+    ],
+    "correctOptionId": "D",
+    "explanation": "다른 패키지의 클래스를 짧은 이름으로 사용하려면 import가 필요하다. 같은 패키지의 클래스와 java.lang의 클래스는 import 없이 사용할 수 있다. 전체 패키지 이름을 직접 작성한 경우에도 import가 필요하지 않다."
+   },
+   {
+    "id": "q5",
+    "type": "code_exercise",
+    "title": "전체 클래스 이름으로 Scanner 사용",
+    "prompt": "import를 작성하지 않고 Scanner의 전체 클래스 이름을 사용해 정수를 입력받도록 빈칸을 채우시오. 입력값은 25다. (빈칸 2곳)",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    public static void main(String[] args) {\n        [[0]] scanner =\n                new [[1]](System.in);\n\n        int number = scanner.nextInt();\n\n        System.out.println(number);\n\n        scanner.close();\n    }\n}",
+    "tokens": [
+     "java.util.Scanner",
+     "java.util.Scanner",
+     "Scanner",
+     "java.lang.Scanner",
+     "java.util",
+     "System.in"
+    ],
+    "answers": [
+     "java.util.Scanner",
+     "java.util.Scanner"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "25"
+    },
+    "explanation": "import를 사용하지 않으면 java.util.Scanner라는 전체 이름을 선언과 객체 생성에 모두 작성해야 한다. import는 이 전체 이름을 Scanner라는 짧은 이름으로 사용할 수 있게 한다."
+   },
+   {
+    "id": "q6",
+    "type": "order",
+    "title": "같은 패키지의 클래스 사용",
+    "prompt": "Teacher와 SchoolMain이 모두 school 패키지에 있다. import 없이 Teacher를 사용하도록 한 줄씩 배열하시오.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "package school;"
+     },
+     {
+      "id": "c2",
+      "text": "public class SchoolMain {"
+     },
+     {
+      "id": "c3",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c4",
+      "text": "        Teacher teacher = new Teacher();"
+     },
+     {
+      "id": "c5",
+      "text": "        teacher.introduce();"
+     },
+     {
+      "id": "c6",
+      "text": "    }"
+     },
+     {
+      "id": "c7",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "import Teacher;"
+     },
+     {
+      "id": "w2",
+      "text": "Teacher.introduce();"
+     }
+    ],
+    "explanation": "Teacher와 SchoolMain은 모두 school 패키지에 있으므로 import가 필요하지 않다. import Teacher;는 패키지를 포함하지 않은 잘못된 import이며, introduce()는 Teacher 객체로 호출해야 한다."
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "여러 단계의 패키지 선언",
+    "prompt": "폴더 구조 src/com/acme/payment/Receipt.java와 일치하도록 package 선언을 완성하시오. (빈칸 3곳)",
+    "lang": "java",
+    "codeTemplate": "package [[0]].[[1]].[[2]];\n\npublic class Receipt {\n}",
+    "tokens": [
+     "com",
+     "acme",
+     "payment",
+     "src",
+     "Receipt",
+     "package",
+     "app"
+    ],
+    "answers": [
+     "com",
+     "acme",
+     "payment"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "src 아래의 폴더 경로 com/acme/payment는 패키지 이름 com.acme.payment에 대응한다. src는 소스 코드의 기준 폴더이므로 package 이름에 포함하지 않는다."
+   },
+   {
+    "id": "q8",
+    "type": "code_exercise",
+    "title": "여러 클래스 import",
+    "prompt": "app 패키지의 Main에서 model.User와 admin.Permission을 사용하도록 import를 완성하시오. (빈칸 2곳)",
+    "lang": "java",
+    "codeTemplate": "package app;\n\nimport [[0]].User;\nimport [[1]].Permission;\n\npublic class Main {\n    public static void main(String[] args) {\n        User user = new User();\n        Permission permission = new Permission();\n\n        System.out.println(\"준비 완료\");\n    }\n}",
+    "tokens": [
+     "model",
+     "admin",
+     "app",
+     "User",
+     "Permission",
+     "java.lang",
+     "src"
+    ],
+    "answers": [
+     "model",
+     "admin"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "준비 완료"
+    },
+    "explanation": "User의 전체 이름은 model.User이고 Permission의 전체 이름은 admin.Permission이다. 서로 다른 패키지의 클래스를 사용하므로 각 클래스를 별도로 import한다."
+   },
+   {
+    "id": "q9",
+    "type": "order",
+    "title": "종합 — 두 클래스가 있는 프로젝트",
+    "prompt": "library 패키지의 Book과 Member를 app 패키지에서 사용하도록 Main.java를 한 줄씩 배열하시오.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "package app;"
+     },
+     {
+      "id": "c2",
+      "text": "import library.Book;"
+     },
+     {
+      "id": "c3",
+      "text": "import library.Member;"
+     },
+     {
+      "id": "c4",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c5",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c6",
+      "text": "        Book book = new Book();"
+     },
+     {
+      "id": "c7",
+      "text": "        Member member = new Member();"
+     },
+     {
+      "id": "c8",
+      "text": "        book.showTitle();"
+     },
+     {
+      "id": "c9",
+      "text": "        member.showName();"
+     },
+     {
+      "id": "c10",
+      "text": "    }"
+     },
+     {
+      "id": "c11",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "import library.Book.Member;"
+     },
+     {
+      "id": "w2",
+      "text": "Book member = new Member();"
+     }
+    ],
+    "explanation": "Book과 Member는 library 패키지에 있으므로 각각 import한다. library.Book.Member는 Member가 Book 내부에 있는 것처럼 작성한 잘못된 경로다. Book 변수에는 Member 객체를 저장할 수 없다."
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}

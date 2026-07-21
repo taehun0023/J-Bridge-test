@@ -1,0 +1,278 @@
+---
+lesson_id: DEV-JAVA-01-17
+title: "Java初級17 メソッド③ オーバーロード・スコープ"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 18
+tags: [java, basics, method, overload, scope, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次の作業ができるようにならなければならない。
+
+- 同じ名前のメソッドを複数の形で定義する。
+- 引数の個数・型・順序でメソッドを区別する。
+- 仮引数とローカル変数を使うことができる範囲を理解する。
+- ブロックの外で変数を使うときに発生するエラーを区別する。
+
+## 授業内容
+
+### Part 1. メソッドのオーバーロード
+
+同じ作業でも入力の形ごとに違う名前でメソッドを作ると、呼び出す人がすべての名前を覚えなければならない。例えば整数の出力は displayInt()、文字列の出力は displayString() のように名前が分かれてしまう。
+
+```java
+displayInt(10);
+displayString("Java");
+```
+
+オーバーロードを使えば、入力値は違っても行う作業が同じメソッドを display() という一つの名前で使える。
+
+```java
+display(10);
+display("Java");
+```
+
+同じ意味の作業を一貫した名前で提供したいときにオーバーロードを使う。
+
+オーバーロードとは、名前が同じメソッドを引数の構成を変えて複数定義することである。
+
+```java
+static void display(int value) {
+    System.out.println("整数: " + value);
+}
+
+static void display(String value) {
+    System.out.println("文字列: " + value);
+}
+```
+
+呼び出し時に渡した実引数に応じて実行するメソッドが決まる。
+
+```java
+display(10);
+display("Java");
+```
+
+**実行結果**
+
+```
+整数: 10
+文字列: Java
+```
+
+10 は int、"Java" は String なので別々のメソッドが呼び出される。
+
+### Part 2. 引数の個数が異なるオーバーロード
+
+引数の個数が異なれば同じ名前を使うことができる。
+
+```java
+static void connect(String name) {
+    System.out.println(name);
+}
+
+static void connect(String first, String second) {
+    System.out.println(first + "-" + second);
+}
+```
+
+```java
+connect("サーバー");
+connect("サーバー", "データベース");
+```
+
+**実行結果**
+
+```
+サーバー
+サーバー-データベース
+```
+
+呼び出し時に渡した実引数の個数によってメソッドが区別される。
+
+### Part 3. 引数の型と順序
+
+引数の型や順序が異なればオーバーロードが成立する。
+
+```java
+static void describe(String name, int level) {
+    System.out.println(name + ": " + level);
+}
+
+static void describe(int level, String name) {
+    System.out.println(level + ": " + name);
+}
+```
+
+```java
+describe("戦士", 5);
+describe(5, "魔法使い");
+```
+
+最初の呼び出しは String, int、2番目の呼び出しは int, String 形式のメソッドを実行する。
+
+実引数を誤った順序で渡すと目的のメソッドが見つからずコンパイルエラーになることがある。
+
+### Part 4. 戻り値の型だけが違うメソッドは作れない
+
+戻り値の型はオーバーロードを区別する基準ではない。
+
+```java
+static int convert(int number) {
+    return number;
+}
+
+// コンパイルエラー
+static double convert(int number) {
+    return number;
+}
+```
+
+どちらのメソッドも名前が convert で、引数が int 1つである。呼び出し文だけを見てもどちらのメソッドを実行すべきか区別できない。
+
+```java
+convert(10);
+```
+
+オーバーロードが成立するには、戻り値の型ではなく次のいずれかが異なっている必要がある。
+
+- 引数の個数
+- 引数の型
+- 引数の順序
+
+### Part 5. 呼び出すメソッドの決定
+
+コンパイラはメソッド名と渡された実引数の型を確認する。
+
+```java
+static void printAmount(int amount) {
+    System.out.println("整数の金額");
+}
+
+static void printAmount(double amount) {
+    System.out.println("実数の金額");
+}
+```
+
+```java
+printAmount(5000);
+printAmount(5000.5);
+```
+
+**実行結果**
+
+```
+整数の金額
+実数の金額
+```
+
+5000 は int リテラルで 5000.5 は double リテラルである。したがって最初は int メソッド、2番目は double メソッドを呼び出す。
+
+### Part 6. 変数のスコープ
+
+プログラムでは、複数のメソッドやブロックで同じ名前の変数が必要になることがある。すべての変数がプログラム全体で使えるとすると、互いに名前が衝突し、関係のないコードが値を誤って変更してしまうことがある。スコープは変数を必要な範囲だけで使えるようにし、名前の衝突や誤ったアクセスを防ぐ。
+
+スコープとは、変数を使うことができるコードの範囲である。
+
+```java
+static void showPrice(int price) {
+    int tax = price / 10;
+
+    System.out.println(price);
+    System.out.println(tax);
+}
+```
+
+- price は仮引数であり、showPrice() の内部で使うことができる。
+- tax はローカル変数であり、宣言された位置からメソッドが終わるまで使うことができる。
+- showPrice() の外では両方の変数を使うことができない。
+
+```java
+showPrice(20000);
+
+// エラー
+System.out.println(price);
+```
+
+メソッドが終了すると、その呼び出しで使った仮引数とローカル変数も使えなくなる。
+
+### Part 7. ブロックスコープ
+
+中括弧 `{ }` の中で宣言した変数は、そのブロックの中だけで使うことができる。
+
+```java
+int price = 15000;
+
+if (price >= 10000) {
+    int discount = 1000;
+    System.out.println(discount);
+}
+
+// コンパイルエラー
+System.out.println(discount);
+```
+
+discount は if ブロック内で宣言されたので、ブロックの外では使えない。
+
+繰り返し文の変数も繰り返し文の内部だけで使うことができる。
+
+```java
+for (int i = 0; i < 3; i++) {
+    System.out.println(i);
+}
+
+// コンパイルエラー
+System.out.println(i);
+```
+
+### Part 8. 同じ範囲での同じ名前の使用
+
+同じ範囲では同じ名前のローカル変数を再び宣言することはできない。
+
+```java
+int count = 1;
+
+// コンパイルエラー
+int count = 2;
+```
+
+仮引数と同じ名前のローカル変数も、同じメソッドの中で再び宣言することはできない。
+
+```java
+static void update(int count) {
+    // コンパイルエラー
+    int count = 10;
+}
+```
+
+しかし、互いに重ならない別々のブロックであれば、同じ名前を再び使うことができる。
+
+```java
+if (true) {
+    int message = 1;
+    System.out.println(message);
+}
+
+if (true) {
+    int message = 2;
+    System.out.println(message);
+}
+```
+
+それぞれの message は別々のブロックに属する。
+
+## 核心まとめ
+
+- メソッド名が同じでも引数の構成が違えばオーバーロードできる。
+- 引数の個数・型・順序が区別の基準である。
+- 戻り値の型だけを変えたものはオーバーロードではない。
+- ローカル変数と仮引数は宣言されたメソッド内でのみ使う。
+- if, for などのブロックで宣言した変数は、そのブロックの外では使えない。
+- 同じ範囲で同じ名前のローカル変数を再宣言できない。
+
+## 次へ
+
+これで Java 初級の課程をすべて終えた。変数と型から条件文・繰り返し文・配列・文字列・メソッドまで、プログラムの基本構造を学んだ。ここまで学んだ内容をもとに、自分でコードを書いて実行しながら練習してみよう。

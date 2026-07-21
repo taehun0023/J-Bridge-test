@@ -1,16 +1,59 @@
 module:
   id: DEV-JAVA-02
-  title: Java - 実務でのオブジェクト指向
+  title: Java 中級（オブジェクト指向・コレクション・ラムダ）
   level: intermediate
-  description: "継承・インタフェース・ポリモーフィズムが実務コードでどう使われるかを解説する。"
+  description: "Java 중급 — 클래스·객체부터 시작해 객체지향과 실무 기초를 익힌다."
   subject: java
   content_mode: static-interpretive
   outcomes:
-    - "상속 관계에서 메서드 호출이 어떤 클래스의 구현을 실행하는지 추적할 수 있다."
-    - "인터페이스와 추상 클래스의 역할 차이를 설명할 수 있다."
-    - "다형성이 코드 유연성에 기여하는 방식을 설명할 수 있다."
+    - "クラス・オブジェクト・カプセル化・継承・多態性でオブジェクト指向を設計できる。"
+    - "例外・コレクション・ジェネリクス・ラムダ・Stream でデータ処理を書ける。"
   lessons:
     - id: DEV-JAVA-02-01
-      title: "상속과 인터페이스가 실무 코드에서 사용되는 방식 읽기"
-      est_minutes: 18
-      tags: [java, oop, inheritance, interface, polymorphism, static-content]
+      title: "Java中級01 クラスとオブジェクト"
+      est_minutes: 20
+      tags: [java, intermediate, static-content]
+    - id: DEV-JAVA-02-02
+      title: "Java中級02 フィールドとインスタンスメソッド"
+      est_minutes: 20
+      tags: [java, intermediate, static-content]
+    - id: DEV-JAVA-02-03
+      title: "Java中級03 コンストラクタと this"
+      est_minutes: 20
+      tags: [java, intermediate, static-content]
+    - id: DEV-JAVA-02-04
+      title: "Java中級04 コンストラクタのオーバーロード"
+      est_minutes: 20
+      tags: [java, intermediate, static-content]
+    - id: DEV-JAVA-02-05
+      title: "Java中級05 パッケージ・import・プロジェクト構造"
+      est_minutes: 20
+      tags: [java, intermediate, static-content]
+    - id: DEV-JAVA-02-06
+      title: "Java中級06 アクセス修飾子・アクセス範囲"
+      est_minutes: 20
+      tags: [java, intermediate, static-content]
+    - id: DEV-JAVA-02-07
+      title: "Java中級07 カプセル化・getter・setter"
+      est_minutes: 20
+      tags: [java, intermediate, static-content]
+    - id: DEV-JAVA-02-08
+      title: "Java中級08 static・final・クラス定数"
+      est_minutes: 20
+      tags: [java, intermediate, static-content]
+    - id: DEV-JAVA-02-09
+      title: "Java中級09 オブジェクト参照・null・引数渡し"
+      est_minutes: 20
+      tags: [java, intermediate, static-content]
+    - id: DEV-JAVA-02-10
+      title: "Java中級10 オブジェクト配列・オブジェクト間の協力"
+      est_minutes: 20
+      tags: [java, intermediate, static-content]
+    - id: DEV-JAVA-02-11
+      title: "Java中級11 継承の基本"
+      est_minutes: 20
+      tags: [java, intermediate, static-content]
+    - id: DEV-JAVA-02-12
+      title: "Java中級12 オーバーライド・super"
+      est_minutes: 20
+      tags: [java, intermediate, static-content]

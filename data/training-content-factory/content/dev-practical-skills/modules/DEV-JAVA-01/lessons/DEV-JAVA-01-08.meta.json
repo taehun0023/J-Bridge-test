@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-01-08",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-basics-loop-while",
+  "summary": "while の条件繰り返し、do-while が最低1回実行される点、条件変数の更新と無限ループを学ぶ。",
+  "key_points": [
+    "while は条件を先に検査し、0回のこともある。",
+    "do-while は本文を先に実行し最低1回。",
+    "条件変数を更新しないと無限ループ。"
+  ],
+  "misconceptions": [
+    "条件変数を更新せず無限ループにする。",
+    "while と do-while の実行順序を混同する。",
+    "0回実行がないと思い込む。"
+  ],
+  "check_questions": [
+    "while(false) の実行回数は？",
+    "do-while の特徴は？",
+    "無限ループのよくある原因は？"
+  ]
+}

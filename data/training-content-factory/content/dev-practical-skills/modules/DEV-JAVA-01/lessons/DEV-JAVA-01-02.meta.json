@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-01-02",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-basics-variables-types",
+  "summary": "変数の宣言と初期化、基本型8種と String、long/float リテラルの L/F、ローカル変数の初期化、final 定数を学ぶ。",
+  "key_points": [
+    "変数は 型 名前 = 値; で宣言する。基本型は8種、String は参照型。",
+    "大きい整数は L、float は F。char は 'A'、String は \"A\"。",
+    "ローカル変数は使う前に初期化が必要。final 変数は再代入できない。"
+  ],
+  "misconceptions": [
+    "int に小数を入れようとする。",
+    "char に二重引用符の文字列を入れる。",
+    "float リテラルに F を付け忘れる。"
+  ],
+  "check_questions": [
+    "基本型でないものはどれか？",
+    "char に値を入れる正しい書き方は？",
+    "final 変数に再代入するとどうなるか？"
+  ]
+}

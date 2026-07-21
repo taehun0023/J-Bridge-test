@@ -19,6 +19,9 @@ const serverSchema = z.object({
   // Azure Cognitive Services TTS (optional — TTS features disabled without it)
   AZURE_TTS_KEY: z.string().min(1).optional(),
   AZURE_TTS_REGION: z.string().min(1).optional(),
+
+  // weavusys HR-eval BFF integration (optional — readiness endpoint auth)
+  WEAVUSYS_API_KEY: z.string().min(1).optional(),
 })
 
 export type ServerEnv = z.infer<typeof serverSchema>

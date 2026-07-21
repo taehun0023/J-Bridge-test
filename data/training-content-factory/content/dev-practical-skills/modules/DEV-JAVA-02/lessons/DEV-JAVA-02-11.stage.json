@@ -1,0 +1,569 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "継承で共通機能を受け継ごう",
+   "prompt": "共通のフィールド・メソッドを親にまとめ extends で継承しよう。is-a と has-a を区別しよう。",
+   "takeaway": "extends・継承アクセス・private/protected・is-a/has-a の区別を10問で確認します。"
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "クラスの継承",
+    "prompt": "Dog が Animal を継承するように完成させなさい。（空欄1つ）",
+    "lang": "java",
+    "codeTemplate": "class Animal {\n}\n\nclass Dog [[0]] Animal {\n}",
+    "tokens": [
+     "extends",
+     "implements",
+     "super"
+    ],
+    "answers": [
+     "extends"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "クラスの継承は extends を使う。implements はインターフェースを実装するとき、super は親メンバーを呼ぶときに使う。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q2",
+    "type": "mini_check",
+    "title": "継承したメソッドの使用",
+    "prompt": "Cat は Animal を継承する。cat.eat() と cat.meow() の出力は？\n```java\nCat cat = new Cat();\ncat.eat();\ncat.meow();\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "食べます。 / ニャー"
+     },
+     {
+      "id": "B",
+      "text": "ニャー / 食べます。"
+     },
+     {
+      "id": "C",
+      "text": "コンパイルエラー"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "Cat は Animal の eat() を継承して使え、自分が定義した meow() も持つ。呼び出し順に 食べます。、ニャー が出力される。"
+   },
+   {
+    "id": "q3",
+    "type": "mini_check",
+    "title": "private フィールドアクセスのエラー修正",
+    "prompt": "Developer は Employee を継承するが、親の private name に直接アクセスできない。printName() の出力文を正しく直したものは？",
+    "options": [
+     {
+      "id": "A",
+      "text": "`System.out.println(getName());`"
+     },
+     {
+      "id": "B",
+      "text": "`System.out.println(this.name);`"
+     },
+     {
+      "id": "C",
+      "text": "`System.out.println(Employee.name);`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "親の private フィールドは子から直接使えないので、親が提供する getName() を呼ぶ。this.name も private でアクセスできず、Employee.name はインスタンスフィールドをクラス名でアクセスしようとしてエラーになる。"
+   },
+   {
+    "id": "q4",
+    "type": "code_exercise",
+    "title": "protected フィールドの使用",
+    "prompt": "子 Car で親の speed を使えるように完成させなさい。（空欄2つ）",
+    "lang": "java",
+    "codeTemplate": "class Vehicle {\n    [[0]] int speed;\n}\n\nclass Car extends Vehicle {\n    public void accelerate() {\n        [[1]]++;\n    }\n}",
+    "tokens": [
+     "protected",
+     "private",
+     "static",
+     "speed",
+     "Vehicle",
+     "Car"
+    ],
+    "answers": [
+     "protected",
+     "speed"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "protected メンバーは子クラスからアクセスできる。private だと子から speed にアクセスできずエラーになる。accelerate() は継承した speed フィールドを増やす。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q5",
+    "type": "mini_check",
+    "title": "親と子のフィールドの状態",
+    "prompt": "Developer は Employee を継承する。developer1・developer2 にそれぞれ名前を設定すると出力は？\n```java\ndeveloper1.setName(\"Minsu\");\ndeveloper2.setName(\"Jisu\");\nSystem.out.println(developer1.getName());\nSystem.out.println(developer2.getName());\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "Minsu / Jisu"
+     },
+     {
+      "id": "B",
+      "text": "Jisu / Jisu"
+     },
+     {
+      "id": "C",
+      "text": "Minsu / Minsu"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "継承したインスタンスフィールドも子オブジェクトごとに別々に存在する。developer1 と developer2 はそれぞれの name を持つので Minsu, Jisu がそのまま出力される。"
+   },
+   {
+    "id": "q6",
+    "type": "mini_check",
+    "title": "継承が適切な関係",
+    "prompt": "継承(is-a)が最も適切な関係を選びなさい。",
+    "options": [
+     {
+      "id": "A",
+      "text": "自動車はエンジンである。"
+     },
+     {
+      "id": "B",
+      "text": "注文は商品である。"
+     },
+     {
+      "id": "C",
+      "text": "開発者は従業員である。"
+     },
+     {
+      "id": "D",
+      "text": "教室は学生である。"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "継承は子が親の一種である is-a 関係のとき適切である。開発者は従業員の一種なので継承が適切。残りは持つ・使う has-a 関係である。"
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "重複メソッドの継承",
+    "prompt": "Student が Person を継承するように完成させなさい。（空欄1つ）",
+    "lang": "java",
+    "codeTemplate": "class Person {\n    public void introduce() {\n        System.out.println(\"自己紹介\");\n    }\n}\n\nclass Student [[0]] Person {\n    public void study() {\n        System.out.println(\"勉強\");\n    }\n}",
+    "tokens": [
+     "extends",
+     "implements",
+     "super"
+    ],
+    "answers": [
+     "extends"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "クラスを継承するときは extends を使う。Student は Person の introduce() を受け継ぎ、自分の study() を追加で持つ。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q8",
+    "type": "order",
+    "title": "子クラスを完成させる",
+    "prompt": "Bicycle が Vehicle を継承し、move() と ringBell() を順に実行するように並べなさい。（Vehicle の move() は \"移動します。\" を出力する）",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Bicycle extends Vehicle {"
+     },
+     {
+      "id": "c2",
+      "text": "    public void ringBell() {"
+     },
+     {
+      "id": "c3",
+      "text": "        System.out.println(\"ベルを鳴らします。\");"
+     },
+     {
+      "id": "c4",
+      "text": "    }"
+     },
+     {
+      "id": "c5",
+      "text": "}"
+     },
+     {
+      "id": "c6",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c7",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c8",
+      "text": "        Bicycle bicycle = new Bicycle();"
+     },
+     {
+      "id": "c9",
+      "text": "        bicycle.move();"
+     },
+     {
+      "id": "c10",
+      "text": "        bicycle.ringBell();"
+     },
+     {
+      "id": "c11",
+      "text": "    }"
+     },
+     {
+      "id": "c12",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "class Bicycle implements Vehicle {"
+     }
+    ],
+    "explanation": "Bicycle は extends で Vehicle を継承して move() を受け継ぎ、自分の ringBell() を追加する。Vehicle はクラスなので implements では継承できない。"
+   },
+   {
+    "id": "q9",
+    "type": "mini_check",
+    "title": "継承とオブジェクト協力の区別",
+    "prompt": "Car が Engine を使う関係を正しく書いたコードは？",
+    "options": [
+     {
+      "id": "A",
+      "text": "`class Car extends Engine {}`"
+     },
+     {
+      "id": "B",
+      "text": "`class Car { private Engine engine; }`"
+     },
+     {
+      "id": "C",
+      "text": "`class Engine extends Car {}`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "自動車はエンジンの一種ではなく、エンジンを持って使うオブジェクトである。したがって継承(extends)ではなくフィールドで Engine オブジェクトを持つ has-a 関係で書く。"
+   },
+   {
+    "id": "q10",
+    "type": "code_exercise",
+    "title": "継承の総合完成",
+    "prompt": "Designer が Employee を継承し、親の名前を使うように完成させなさい。（空欄2つ）",
+    "lang": "java",
+    "codeTemplate": "class Employee {\n    private String name;\n    public void setName(String name) { this.name = name; }\n    public String getName() { return name; }\n    public void work() { System.out.println(getName() + \" 勤務\"); }\n}\n\nclass Designer [[0]] Employee {\n    public void design() {\n        System.out.println([[1]]() + \" デザイン\");\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Designer designer = new Designer();\n        designer.setName(\"Minsu\");\n        designer.design();\n    }\n}",
+    "tokens": [
+     "extends",
+     "super",
+     "static",
+     "getName",
+     "setName",
+     "name"
+    ],
+    "answers": [
+     "extends",
+     "getName"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Minsu デザイン"
+    },
+    "explanation": "Designer は extends で Employee を継承し、setName() と getName() を受け継ぐ。design() で親の getName() で名前を得て出力する。",
+    "inputMode": "tokens"
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "상속으로 공통 기능을 물려주자",
+   "prompt": "공통 필드·메서드를 부모로 모으고 extends로 상속하자. is-a와 has-a를 구분하자.",
+   "takeaway": "extends·상속 접근·private/protected·is-a/has-a 구분을 10문제로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "클래스 상속하기",
+    "prompt": "Dog가 Animal을 상속하도록 완성하시오. (빈칸 1곳)",
+    "lang": "java",
+    "codeTemplate": "class Animal {\n}\n\nclass Dog [[0]] Animal {\n}",
+    "tokens": [
+     "extends",
+     "implements",
+     "super"
+    ],
+    "answers": [
+     "extends"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "클래스 상속은 extends를 사용한다. implements는 인터페이스를 구현할 때 쓰고, super는 부모 멤버를 호출할 때 쓴다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q2",
+    "type": "mini_check",
+    "title": "상속받은 메서드 사용",
+    "prompt": "Cat은 Animal을 상속한다. cat.eat()과 cat.meow()의 출력은?\n```java\nCat cat = new Cat();\ncat.eat();\ncat.meow();\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "먹습니다. / 야옹"
+     },
+     {
+      "id": "B",
+      "text": "야옹 / 먹습니다."
+     },
+     {
+      "id": "C",
+      "text": "컴파일 오류"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "Cat은 Animal의 eat()을 상속받아 사용할 수 있고, 자신이 정의한 meow()도 가진다. 호출 순서대로 먹습니다., 야옹이 출력된다."
+   },
+   {
+    "id": "q3",
+    "type": "mini_check",
+    "title": "private 필드 접근 오류 수정",
+    "prompt": "Developer는 Employee를 상속하지만 부모의 private name에 직접 접근할 수 없다. printName()의 출력문을 올바르게 고친 것은?",
+    "options": [
+     {
+      "id": "A",
+      "text": "`System.out.println(getName());`"
+     },
+     {
+      "id": "B",
+      "text": "`System.out.println(this.name);`"
+     },
+     {
+      "id": "C",
+      "text": "`System.out.println(Employee.name);`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "부모의 private 필드는 자식에서 직접 쓸 수 없으므로 부모가 제공하는 getName()을 호출한다. this.name도 private이라 접근할 수 없고, Employee.name은 인스턴스 필드를 클래스 이름으로 접근하려 해 오류가 난다."
+   },
+   {
+    "id": "q4",
+    "type": "code_exercise",
+    "title": "protected 필드 사용",
+    "prompt": "자식 Car에서 부모의 speed를 사용할 수 있도록 완성하시오. (빈칸 2곳)",
+    "lang": "java",
+    "codeTemplate": "class Vehicle {\n    [[0]] int speed;\n}\n\nclass Car extends Vehicle {\n    public void accelerate() {\n        [[1]]++;\n    }\n}",
+    "tokens": [
+     "protected",
+     "private",
+     "static",
+     "speed",
+     "Vehicle",
+     "Car"
+    ],
+    "answers": [
+     "protected",
+     "speed"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "protected 멤버는 자식 클래스에서 접근할 수 있다. private이면 자식에서 speed에 접근할 수 없어 오류가 난다. accelerate()는 상속받은 speed 필드를 증가시킨다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q5",
+    "type": "mini_check",
+    "title": "부모와 자식의 필드 상태",
+    "prompt": "Developer는 Employee를 상속한다. developer1·developer2에 각각 이름을 설정하면 출력은?\n```java\ndeveloper1.setName(\"민수\");\ndeveloper2.setName(\"지수\");\nSystem.out.println(developer1.getName());\nSystem.out.println(developer2.getName());\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "민수 / 지수"
+     },
+     {
+      "id": "B",
+      "text": "지수 / 지수"
+     },
+     {
+      "id": "C",
+      "text": "민수 / 민수"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "상속받은 인스턴스 필드도 자식 객체마다 따로 존재한다. developer1과 developer2는 각자의 name을 가지므로 민수, 지수가 그대로 출력된다."
+   },
+   {
+    "id": "q6",
+    "type": "mini_check",
+    "title": "상속이 적합한 관계",
+    "prompt": "상속(is-a)이 가장 적합한 관계를 고르시오.",
+    "options": [
+     {
+      "id": "A",
+      "text": "자동차는 엔진이다."
+     },
+     {
+      "id": "B",
+      "text": "주문은 상품이다."
+     },
+     {
+      "id": "C",
+      "text": "개발자는 직원이다."
+     },
+     {
+      "id": "D",
+      "text": "교실은 학생이다."
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "상속은 자식이 부모의 한 종류인 is-a 관계일 때 적합하다. 개발자는 직원의 한 종류이므로 상속이 알맞다. 나머지는 가지거나 사용하는 has-a 관계다."
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "중복 메서드 상속하기",
+    "prompt": "Student가 Person을 상속하도록 완성하시오. (빈칸 1곳)",
+    "lang": "java",
+    "codeTemplate": "class Person {\n    public void introduce() {\n        System.out.println(\"자기소개\");\n    }\n}\n\nclass Student [[0]] Person {\n    public void study() {\n        System.out.println(\"공부\");\n    }\n}",
+    "tokens": [
+     "extends",
+     "implements",
+     "super"
+    ],
+    "answers": [
+     "extends"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "클래스를 상속할 때는 extends를 사용한다. Student는 Person의 introduce()를 물려받고 자신의 study()를 추가로 가진다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q8",
+    "type": "order",
+    "title": "자식 클래스 완성하기",
+    "prompt": "Bicycle이 Vehicle을 상속하고, move()와 ringBell()을 차례로 실행하도록 배열하시오. (Vehicle의 move()는 \"이동합니다.\"를 출력한다)",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Bicycle extends Vehicle {"
+     },
+     {
+      "id": "c2",
+      "text": "    public void ringBell() {"
+     },
+     {
+      "id": "c3",
+      "text": "        System.out.println(\"벨을 울립니다.\");"
+     },
+     {
+      "id": "c4",
+      "text": "    }"
+     },
+     {
+      "id": "c5",
+      "text": "}"
+     },
+     {
+      "id": "c6",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c7",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c8",
+      "text": "        Bicycle bicycle = new Bicycle();"
+     },
+     {
+      "id": "c9",
+      "text": "        bicycle.move();"
+     },
+     {
+      "id": "c10",
+      "text": "        bicycle.ringBell();"
+     },
+     {
+      "id": "c11",
+      "text": "    }"
+     },
+     {
+      "id": "c12",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "class Bicycle implements Vehicle {"
+     }
+    ],
+    "explanation": "Bicycle은 extends로 Vehicle을 상속받아 move()를 물려받고, 자신의 ringBell()을 추가한다. Vehicle은 클래스이므로 implements로는 상속할 수 없다."
+   },
+   {
+    "id": "q9",
+    "type": "mini_check",
+    "title": "상속과 객체 협력 구분",
+    "prompt": "Car가 Engine을 사용하는 관계를 올바르게 작성한 코드는?",
+    "options": [
+     {
+      "id": "A",
+      "text": "`class Car extends Engine {}`"
+     },
+     {
+      "id": "B",
+      "text": "`class Car { private Engine engine; }`"
+     },
+     {
+      "id": "C",
+      "text": "`class Engine extends Car {}`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "자동차는 엔진의 한 종류가 아니라 엔진을 가지고 사용하는 객체다. 따라서 상속(extends)이 아니라 필드로 Engine 객체를 가지는 has-a 관계로 작성한다."
+   },
+   {
+    "id": "q10",
+    "type": "code_exercise",
+    "title": "상속 종합 완성",
+    "prompt": "Designer가 Employee를 상속하고 부모의 이름을 사용하도록 완성하시오. (빈칸 2곳)",
+    "lang": "java",
+    "codeTemplate": "class Employee {\n    private String name;\n    public void setName(String name) { this.name = name; }\n    public String getName() { return name; }\n    public void work() { System.out.println(getName() + \" 근무\"); }\n}\n\nclass Designer [[0]] Employee {\n    public void design() {\n        System.out.println([[1]]() + \" 디자인\");\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Designer designer = new Designer();\n        designer.setName(\"민수\");\n        designer.design();\n    }\n}",
+    "tokens": [
+     "extends",
+     "super",
+     "static",
+     "getName",
+     "setName",
+     "name"
+    ],
+    "answers": [
+     "extends",
+     "getName"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "민수 디자인"
+    },
+    "explanation": "Designer는 extends로 Employee를 상속받아 setName()과 getName()을 물려받는다. design()에서 부모의 getName()으로 이름을 얻어 출력한다.",
+    "inputMode": "tokens"
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}

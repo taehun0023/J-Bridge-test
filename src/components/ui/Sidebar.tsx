@@ -2,10 +2,22 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { X } from 'lucide-react'
+import { X, PanelLeftClose } from 'lucide-react'
 import { mainNavItems } from '@/lib/navigation'
 
-export default function Sidebar({ onClose, hiddenNav = [] }: { onClose?: () => void; hiddenNav?: string[] }) {
+export default function Sidebar({
+  onClose,
+  closeOnNavigate = false,
+  hiddenNav = [],
+  navOverrides = {},
+}: {
+  onClose?: () => void
+  /** 링크 클릭 시 닫기(모바일 드로어만). 데스크톱은 false */
+  closeOnNavigate?: boolean
+  hiddenNav?: string[]
+  /** href → 표시 이름 오버라이드(카테고리 관리에서 변경) */
+  navOverrides?: Record<string, string>
+}) {
   const pathname = usePathname()
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
@@ -22,9 +34,24 @@ export default function Sidebar({ onClose, hiddenNav = [] }: { onClose?: () => v
         </Link>
         <div className="flex items-center gap-2">
           {onClose && (
-            <button onClick={onClose} className="text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 lg:hidden">
-              <X className="h-5 w-5" />
-            </button>
+            <>
+              {/* 모바일 드로어 닫기 */}
+              <button
+                onClick={onClose}
+                aria-label="閉じる"
+                className="text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 lg:hidden"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              {/* 데스크톱 사이드바 접기 */}
+              <button
+                onClick={onClose}
+                aria-label="サイドバーを閉じる"
+                className="hidden text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 lg:block"
+              >
+                <PanelLeftClose className="h-5 w-5" />
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -36,13 +63,13 @@ export default function Sidebar({ onClose, hiddenNav = [] }: { onClose?: () => v
             <li key={item.key}>
               <Link
                 href={item.href}
-                onClick={onClose}
+                onClick={closeOnNavigate ? onClose : undefined}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                   isActive(item.href) ? activeClass : inactiveClass
                 }`}
               >
                 <Icon className="h-4 w-4 shrink-0" />
-                {item.label}
+                {navOverrides[item.href] ?? item.label}
               </Link>
             </li>
           )

@@ -1,0 +1,453 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "キーボード入力を受け取ろう",
+   "prompt": "Scanner で整数・小数・文字列を入力し、プログラムに使おう。",
+   "takeaway": "標準入力の基本を10ステップで確認します。"
+  },
+  "steps": [
+   {
+    "id": "java4-q1",
+    "type": "code_exercise",
+    "title": "Scanner の準備",
+    "prompt": "空欄を埋めて、キーボード入力を受け取る準備を完成させなさい。",
+    "lang": "java",
+    "codeTemplate": "import java.util.[[0]];\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner([[1]]);\n    }\n}",
+    "tokens": [
+     "Scanner",
+     "System.in",
+     "System.out",
+     "Scan"
+    ],
+    "answers": [
+     "Scanner",
+     "System.in"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "Scanner は java.util パッケージにあるので import java.util.Scanner; で読み込む。キーボード入力は System.in を渡して new Scanner(System.in) で準備する。System.out は出力用なので入れるとコンパイルエラーになる。"
+   },
+   {
+    "id": "java4-q2",
+    "type": "mini_check",
+    "title": "入力メソッドの対応",
+    "prompt": "入力する値と適切なメソッドを正しく対応させたものはどれか？\n① int 整数 ② double 実数 ③ boolean ④ 1単語 ⑤ 1行全体",
+    "options": [
+     {
+      "id": "A",
+      "text": "① `nextInt()`, ② `nextDouble()`, ③ `nextBoolean()`, ④ `next()`, ⑤ `nextLine()`"
+     },
+     {
+      "id": "B",
+      "text": "① `nextInt()`, ② `nextBoolean()`, ③ `nextDouble()`, ④ `nextLine()`, ⑤ `next()`"
+     },
+     {
+      "id": "C",
+      "text": "① `nextDouble()`, ② `nextInt()`, ③ `nextBoolean()`, ④ `next()`, ⑤ `nextLine()`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "整数は nextInt()、実数は nextDouble()、論理値は nextBoolean()、空白のない1単語は next()、Enter までの1行全体は nextLine() で受け取る。"
+   },
+   {
+    "id": "java4-q3",
+    "type": "code_exercise",
+    "title": "整数の入力",
+    "prompt": "整数を受け取って age 変数に保存するように空欄を埋めなさい。(入力値 25)",
+    "lang": "java",
+    "codeTemplate": "import java.util.Scanner;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        int age = scanner.[[0]]();\n        System.out.println(age);\n    }\n}",
+    "tokens": [
+     "nextInt",
+     "nextDouble",
+     "nextLine",
+     "next"
+    ],
+    "answers": [
+     "nextInt"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "25",
+     "stdin": "25"
+    },
+    "explanation": "整数を読むメソッドは nextInt()。nextDouble()・nextLine()・next() はそれぞれ double・String を返すので int 変数 age に直接保存するとコンパイルエラーになる。入力値 25 がそのまま出力される。"
+   },
+   {
+    "id": "java4-q4",
+    "type": "mini_check",
+    "title": "複数の型の入力",
+    "prompt": "次のコードに 25, 175.5, true を順に入力すると実行結果はどうなるか？",
+    "code": "Scanner scanner = new Scanner(System.in);\nint age = scanner.nextInt();\ndouble height = scanner.nextDouble();\nboolean student = scanner.nextBoolean();\nSystem.out.println(age);\nSystem.out.println(height);\nSystem.out.println(student);",
+    "options": [
+     {
+      "id": "A",
+      "text": "`25`, `175.5`, `true` が順に各行に出力される。"
+     },
+     {
+      "id": "B",
+      "text": "`25.0`, `175.5`, `true`"
+     },
+     {
+      "id": "C",
+      "text": "`25`, `175`, `true`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "各入力値が型に合ったメソッドで読まれ age=25, height=175.5, student=true として保存され順に出力される。int は 25(25.0 ではない)、double は 175.5(175 ではない)になる。"
+   },
+   {
+    "id": "java4-q5",
+    "type": "mini_check",
+    "title": "next() の後に残る文",
+    "prompt": "入力として open file を1行で入力したときの実行結果として正しいものはどれか？",
+    "code": "Scanner scanner = new Scanner(System.in);\nString command = scanner.next();\nString rest = scanner.nextLine();\n\nSystem.out.println(\"[\" + command + \"]\");\nSystem.out.println(\"[\" + rest + \"]\");",
+    "options": [
+     {
+      "id": "A",
+      "text": "`[open file]` / `[]`"
+     },
+     {
+      "id": "B",
+      "text": "`[open]` / `[file]`"
+     },
+     {
+      "id": "C",
+      "text": "`[open]` / `[ file]`"
+     },
+     {
+      "id": "D",
+      "text": "`[]` / `[open file]`"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "next() は open までしか読まず、空白から行末までは入力に残す。続く nextLine() は残った ' file' を読むので、前の空白も文字列に含まれ [ file] になる。"
+   },
+   {
+    "id": "java4-q6",
+    "type": "mini_check",
+    "title": "間違った入力メソッド",
+    "prompt": "次のうち、型が合わずエラーになるコードはどれか？",
+    "code": "int age = scanner.nextInt();\ndouble height = scanner.nextDouble();\nboolean passed = scanner.nextBoolean();\nint score = scanner.nextDouble();\nString name = scanner.next();",
+    "options": [
+     {
+      "id": "A",
+      "text": "`int score = scanner.nextDouble();`"
+     },
+     {
+      "id": "B",
+      "text": "`double height = scanner.nextDouble();`"
+     },
+     {
+      "id": "C",
+      "text": "`String name = scanner.next();`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "nextDouble() の戻り値は double なので int 変数 score に直接保存できず、コンパイルエラー(incompatible types)になる。整数を受け取るには scanner.nextInt() を使う。"
+   },
+   {
+    "id": "java4-q7",
+    "type": "code_exercise",
+    "title": "数値の次に文入力",
+    "prompt": "年齢を入力した後、1行の住所を正しく読み取るように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "Scanner scanner = new Scanner(System.in);\nint age = scanner.nextInt();\nscanner.[[0]]();\nString address = scanner.[[1]]();\nSystem.out.println(address);",
+    "tokens": [
+     "nextLine",
+     "nextLine",
+     "next",
+     "nextInt",
+     "close"
+    ],
+    "answers": [
+     "nextLine",
+     "nextLine"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Seoul City",
+     "stdin": "25\nSeoul City"
+    },
+    "explanation": "nextInt() の後には改行が残っているので、まず nextLine() でその改行を消してから、再び nextLine() で空白を含む1行の住所を読む。next() は空白の前までしか読まず、nextInt は数字ではないのでエラーになる。"
+   },
+   {
+    "id": "java4-q9",
+    "type": "code_exercise",
+    "title": "Scanner 変数の一致",
+    "prompt": "宣言した Scanner 変数名に合わせて空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "Scanner keyboard = new Scanner(System.in);\ndouble weight = [[0]].nextDouble();\nSystem.out.println(weight);",
+    "tokens": [
+     "keyboard",
+     "scanner",
+     "Scanner",
+     "input"
+    ],
+    "answers": [
+     "keyboard"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "65.5",
+     "stdin": "65.5"
+    },
+    "explanation": "Scanner オブジェクトを keyboard という名前で宣言したので、入力も keyboard.nextDouble() で受け取る。scanner・input は宣言されていない名前なのでエラー、Scanner はクラス名なのでこの位置には置けない。"
+   },
+   {
+    "id": "java4-q10",
+    "type": "code_exercise",
+    "title": "3つの型の入力",
+    "prompt": "有効か、価格、商品コードを順に入力するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "Scanner scanner = new Scanner(System.in);\n\nboolean active = scanner.[[0]]();\ndouble price = scanner.[[1]]();\nString code = scanner.[[2]]();\n\nSystem.out.println(active);\nSystem.out.println(price);\nSystem.out.println(code);",
+    "tokens": [
+     "nextBoolean",
+     "nextDouble",
+     "next",
+     "nextInt",
+     "nextLine"
+    ],
+    "answers": [
+     "nextBoolean",
+     "nextDouble",
+     "next"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "true\n15.5\nA12",
+     "stdin": "true 15.5 A12"
+    },
+    "explanation": "有効かは boolean なので nextBoolean()、価格は実数なので nextDouble()、商品コードは空白のない1単語なので next() で受け取る。型が合わないメソッドを使うとコンパイルエラーや入力エラーになり、nextLine() は前の空白まで読んで結果が変わる。"
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "키보드 입력을 받아보자",
+   "prompt": "Scanner로 정수·소수·문자열을 입력받아 프로그램에 사용하자.",
+   "takeaway": "표준입력의 기본을 10스텝으로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "java4-q1",
+    "type": "code_exercise",
+    "title": "Scanner 준비",
+    "prompt": "빈칸을 채워 키보드 입력을 받을 준비를 완성하시오.",
+    "lang": "java",
+    "codeTemplate": "import java.util.[[0]];\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner([[1]]);\n    }\n}",
+    "tokens": [
+     "Scanner",
+     "System.in",
+     "System.out",
+     "Scan"
+    ],
+    "answers": [
+     "Scanner",
+     "System.in"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "Scanner는 java.util 패키지에 있으므로 import java.util.Scanner; 로 불러온다. 키보드 입력은 System.in을 넘겨 new Scanner(System.in)으로 준비한다. System.out은 출력용이라 넣으면 컴파일 오류가 난다."
+   },
+   {
+    "id": "java4-q2",
+    "type": "mini_check",
+    "title": "입력 메서드 연결",
+    "prompt": "입력할 값과 알맞은 메서드를 바르게 연결한 것은?\n① int 정수 ② double 실수 ③ boolean ④ 한 단어 ⑤ 한 줄 전체",
+    "options": [
+     {
+      "id": "A",
+      "text": "① `nextInt()`, ② `nextDouble()`, ③ `nextBoolean()`, ④ `next()`, ⑤ `nextLine()`"
+     },
+     {
+      "id": "B",
+      "text": "① `nextInt()`, ② `nextBoolean()`, ③ `nextDouble()`, ④ `nextLine()`, ⑤ `next()`"
+     },
+     {
+      "id": "C",
+      "text": "① `nextDouble()`, ② `nextInt()`, ③ `nextBoolean()`, ④ `next()`, ⑤ `nextLine()`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "정수는 nextInt(), 실수는 nextDouble(), 논리값은 nextBoolean(), 공백 없는 한 단어는 next(), Enter 전까지 한 줄 전체는 nextLine()으로 입력받는다."
+   },
+   {
+    "id": "java4-q3",
+    "type": "code_exercise",
+    "title": "정수 입력",
+    "prompt": "정수를 입력받아 age 변수에 저장하도록 빈칸을 채우시오. (입력값 25)",
+    "lang": "java",
+    "codeTemplate": "import java.util.Scanner;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        int age = scanner.[[0]]();\n        System.out.println(age);\n    }\n}",
+    "tokens": [
+     "nextInt",
+     "nextDouble",
+     "nextLine",
+     "next"
+    ],
+    "answers": [
+     "nextInt"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "25",
+     "stdin": "25"
+    },
+    "explanation": "정수를 읽는 메서드는 nextInt()다. nextDouble()·nextLine()·next()는 각각 double·String을 돌려주므로 int 변수 age에 바로 저장하면 컴파일 오류가 난다. 입력값 25가 그대로 출력된다."
+   },
+   {
+    "id": "java4-q4",
+    "type": "mini_check",
+    "title": "여러 자료형 입력",
+    "prompt": "다음 코드에 25, 175.5, true 를 순서대로 입력하면 실행 결과는?",
+    "code": "Scanner scanner = new Scanner(System.in);\nint age = scanner.nextInt();\ndouble height = scanner.nextDouble();\nboolean student = scanner.nextBoolean();\nSystem.out.println(age);\nSystem.out.println(height);\nSystem.out.println(student);",
+    "options": [
+     {
+      "id": "A",
+      "text": "`25`, `175.5`, `true` 가 순서대로 각 줄에 출력된다."
+     },
+     {
+      "id": "B",
+      "text": "`25.0`, `175.5`, `true`"
+     },
+     {
+      "id": "C",
+      "text": "`25`, `175`, `true`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "각 입력값이 자료형에 맞는 메서드로 읽혀 age=25, height=175.5, student=true로 저장되고 순서대로 출력된다. int는 25(25.0이 아님), double은 175.5(175이 아님)로 나온다."
+   },
+   {
+    "id": "java4-q5",
+    "type": "mini_check",
+    "title": "next() 뒤 남은 문장",
+    "prompt": "입력으로 open file을 한 줄에 입력했을 때 실행 결과로 옳은 것은?",
+    "code": "Scanner scanner = new Scanner(System.in);\nString command = scanner.next();\nString rest = scanner.nextLine();\n\nSystem.out.println(\"[\" + command + \"]\");\nSystem.out.println(\"[\" + rest + \"]\");",
+    "options": [
+     {
+      "id": "A",
+      "text": "`[open file]` / `[]`"
+     },
+     {
+      "id": "B",
+      "text": "`[open]` / `[file]`"
+     },
+     {
+      "id": "C",
+      "text": "`[open]` / `[ file]`"
+     },
+     {
+      "id": "D",
+      "text": "`[]` / `[open file]`"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "next()는 open까지만 읽고 공백부터 줄 끝까지는 입력에 남긴다. 이어지는 nextLine()은 남은 ' file'을 읽으므로 앞쪽 공백도 문자열에 포함되어 [ file]이 된다."
+   },
+   {
+    "id": "java4-q6",
+    "type": "mini_check",
+    "title": "잘못된 입력 메서드",
+    "prompt": "다음 중 자료형에 맞지 않아 오류가 나는 코드는?",
+    "code": "int age = scanner.nextInt();\ndouble height = scanner.nextDouble();\nboolean passed = scanner.nextBoolean();\nint score = scanner.nextDouble();\nString name = scanner.next();",
+    "options": [
+     {
+      "id": "A",
+      "text": "`int score = scanner.nextDouble();`"
+     },
+     {
+      "id": "B",
+      "text": "`double height = scanner.nextDouble();`"
+     },
+     {
+      "id": "C",
+      "text": "`String name = scanner.next();`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "nextDouble()의 반환값은 double이므로 int 변수 score에 바로 저장할 수 없어 컴파일 오류(incompatible types)가 난다. 정수를 받으려면 scanner.nextInt()를 써야 한다."
+   },
+   {
+    "id": "java4-q7",
+    "type": "code_exercise",
+    "title": "숫자 다음 문장 입력",
+    "prompt": "나이를 입력한 다음 한 줄짜리 주소를 정상적으로 읽도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "Scanner scanner = new Scanner(System.in);\nint age = scanner.nextInt();\nscanner.[[0]]();\nString address = scanner.[[1]]();\nSystem.out.println(address);",
+    "tokens": [
+     "nextLine",
+     "nextLine",
+     "next",
+     "nextInt",
+     "close"
+    ],
+    "answers": [
+     "nextLine",
+     "nextLine"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Seoul City",
+     "stdin": "25\nSeoul City"
+    },
+    "explanation": "nextInt() 뒤에는 줄바꿈이 남아 있으므로 먼저 nextLine()으로 그 줄바꿈을 비운 뒤, 다시 nextLine()으로 공백이 포함된 한 줄 주소를 읽는다. next()는 공백 앞까지만 읽고, nextInt는 숫자가 아니라 오류가 난다."
+   },
+   {
+    "id": "java4-q9",
+    "type": "code_exercise",
+    "title": "Scanner 변수 일치",
+    "prompt": "선언한 Scanner 변수 이름에 맞게 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "Scanner keyboard = new Scanner(System.in);\ndouble weight = [[0]].nextDouble();\nSystem.out.println(weight);",
+    "tokens": [
+     "keyboard",
+     "scanner",
+     "Scanner",
+     "input"
+    ],
+    "answers": [
+     "keyboard"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "65.5",
+     "stdin": "65.5"
+    },
+    "explanation": "Scanner 객체를 keyboard라는 이름으로 선언했으므로 입력도 keyboard.nextDouble()로 받아야 한다. scanner·input은 선언되지 않은 이름이라 오류, Scanner는 클래스 이름이라 이 자리에 올 수 없다."
+   },
+   {
+    "id": "java4-q10",
+    "type": "code_exercise",
+    "title": "세 자료형 입력",
+    "prompt": "활성 여부, 가격, 상품 코드를 순서대로 입력받도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "Scanner scanner = new Scanner(System.in);\n\nboolean active = scanner.[[0]]();\ndouble price = scanner.[[1]]();\nString code = scanner.[[2]]();\n\nSystem.out.println(active);\nSystem.out.println(price);\nSystem.out.println(code);",
+    "tokens": [
+     "nextBoolean",
+     "nextDouble",
+     "next",
+     "nextInt",
+     "nextLine"
+    ],
+    "answers": [
+     "nextBoolean",
+     "nextDouble",
+     "next"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "true\n15.5\nA12",
+     "stdin": "true 15.5 A12"
+    },
+    "explanation": "활성 여부는 boolean이라 nextBoolean(), 가격은 실수라 nextDouble(), 상품 코드는 공백 없는 한 단어라 next()로 받는다. 자료형이 맞지 않는 메서드를 쓰면 컴파일 오류나 입력 오류가 나고, nextLine()은 앞 공백까지 읽어 결과가 달라진다."
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}

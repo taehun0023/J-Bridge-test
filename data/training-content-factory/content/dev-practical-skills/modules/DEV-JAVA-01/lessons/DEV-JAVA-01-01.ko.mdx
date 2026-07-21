@@ -1,96 +1,303 @@
 ---
 lesson_id: DEV-JAVA-01-01
-title: "Java 소스를 읽을 때 먼저 확인해야 할 것들"
+title: "Java초급01 시작·출력·주석"
 module: DEV-JAVA-01
+language: ko
 level: foundation
-est_minutes: 18
-tags: [java, code-reading, class-structure, types, static-content]
+est_minutes: 15
+tags: [java, basics, output, comment, static-content]
 ---
 
-## 1) 학습 목표
+## 학습 목표
 
-- Java 소스 파일의 기본 구성(패키지 선언, 임포트, 클래스 정의)을 설명할 수 있다.
-- 기본 타입(primitive)과 참조 타입(reference)의 차이를 설명할 수 있다.
-- 메서드 시그니처를 읽고 입력과 출력을 파악할 수 있다.
-- 접근 제어자(public, private, protected)의 역할을 설명할 수 있다.
+이 파트를 학습한 후 다음 작업을 할 수 있어야 합니다.
 
-## 2) 업무 맥락
+- Java 프로그램의 기본 형태를 작성할 수 있다.
+- main 메서드가 프로그램의 시작점임을 알 수 있다.
+- 화면에 문자를 출력할 수 있다.
+- print와 println의 차이를 구분할 수 있다.
+- 한 줄 주석과 여러 줄 주석을 작성할 수 있다.
+- 대소문자, 큰따옴표, 세미콜론과 관련된 오류를 찾을 수 있다.
 
-실무에서 새 프로젝트에 투입되면 가장 먼저 하는 일이 기존 코드를 읽는 것이다. Java 프로젝트는 파일 하나가 클래스 하나에 대응하고, 패키지 구조가 디렉토리 구조와 일치한다. 이 규칙을 알면 프로젝트에서 원하는 코드를 빠르게 찾을 수 있다. 반대로 이 구조를 모르면 수백 개의 파일 사이에서 길을 잃게 된다.
+## 수업 내용
 
-## 3) 핵심 설명
+### Part 1. Java 프로그램의 기본 구조
 
-Java 소스 파일은 세 부분으로 구성된다.
+**개념 설명**
 
-첫째, **패키지 선언**이다. `package com.example.service;`는 이 파일이 프로젝트 내 어디에 위치하는지를 나타낸다. 패키지는 디렉토리 경로와 1:1로 대응한다.
+- Java 코드는 클래스 내부에 작성한다.
+- 지금은 클래스를 프로그램을 담는 바깥 영역이라고 이해하면 된다.
+- Java 프로그램을 실행하면 main 메서드 내부의 코드가 위에서 아래로 실행된다.
+- 파일 이름이 `Main.java`라면 클래스 이름도 `Main`으로 작성한다.
+- 중괄호 `{ }`는 클래스와 메서드의 범위를 나타낸다.
+- 실행문 끝에는 세미콜론 `;`을 붙인다.
 
-둘째, **임포트 문**이다. 다른 패키지의 클래스를 사용하려면 `import` 문으로 선언한다. 임포트를 보면 이 클래스가 어떤 외부 의존성을 가지는지 빠르게 파악할 수 있다.
+**코드 문법 분해**
 
-셋째, **클래스 정의**다. 클래스 안에는 필드(데이터)와 메서드(동작)가 있다. 메서드 시그니처 `public String getUserName(int userId)`를 읽으면 접근 범위(public), 반환 타입(String), 메서드 이름(getUserName), 매개변수(int userId)를 한눈에 파악할 수 있다.
-
-기본 타입(`int`, `boolean`, `double` 등)은 값 자체를 저장하고, 참조 타입(`String`, `List`, 사용자 정의 클래스)은 객체의 주소를 저장한다. 이 차이는 비교 연산(`==` vs `equals`)에서 중요해진다. 기본 타입은 `==`로 값을 비교할 수 있지만, 참조 타입은 `equals` 메서드를 사용해야 내용을 비교할 수 있다.
-
-## 4) 실무 해석 시나리오
-
-### 시나리오 A
 ```java
-package com.example.user;
-
-import com.example.util.StringHelper;
-
-public class UserService {
-    private String defaultRole = "viewer";
-
-    public String assignRole(String userId, String role) {
-        if (role == null) {
-            return defaultRole;
-        }
-        return StringHelper.normalize(role);
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Java 시작");
     }
 }
 ```
-- 읽기 포인트:
-  - 패키지 `com.example.user`로 사용자 관련 서비스임을 알 수 있다.
-  - `StringHelper`를 임포트하므로 문자열 처리 유틸리티에 의존한다.
-  - `assignRole`은 `role`이 null이면 기본값을 반환하고, 아니면 정규화해서 반환한다.
 
-### 시나리오 B
+| 코드 | 의미 |
+|---|---|
+| `public class Main` | Main이라는 프로그램 영역을 만든다. |
+| `public static void main(String[] args)` | 프로그램이 시작되는 위치다. |
+| `{ }` | 코드가 포함되는 범위를 나타낸다. |
+| `System.out.println(...)` | 괄호 안의 내용을 화면에 출력한다. |
+| `;` | 하나의 실행문이 끝났음을 나타낸다. |
+
+`public`, `static`, `String[]`의 자세한 의미는 이후 파트에서 학습한다.
+이번 파트에서는 main 선언 전체를 Java 프로그램의 시작 형식으로 익힌다.
+
+**문제와 다른 예제**
+
 ```java
-String a = new String("hello");
-String b = new String("hello");
-System.out.println(a == b);      // false
-System.out.println(a.equals(b)); // true
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("첫 번째 Java 프로그램");
+    }
+}
 ```
-- 해석:
-  - `==`는 참조(주소)를 비교하므로 false다.
-  - `equals`는 내용을 비교하므로 true다.
-  - 이 차이를 모르면 문자열 비교 버그가 자주 발생한다.
 
-## 5) 자주 하는 실수
+**실행 흐름과 결과**
 
-1. 참조 타입을 `==`로 비교한다.
-`String`이나 `Integer` 같은 참조 타입은 `equals`로 비교해야 한다. `==`는 같은 객체인지만 확인한다.
+1. Java가 main 메서드를 찾는다.
+2. main 내부의 첫 번째 실행문을 실행한다.
+3. 화면에 문장을 출력한다.
+4. 더 이상 실행할 코드가 없으므로 프로그램이 끝난다.
 
-2. 패키지 구조를 무시하고 파일을 찾는다.
-패키지와 디렉토리가 대응한다는 규칙을 알면 원하는 클래스를 빠르게 찾을 수 있다.
+```
+첫 번째 Java 프로그램
+```
 
-3. 임포트 문을 건너뛰고 코드를 읽는다.
-임포트를 보면 이 클래스가 어떤 외부 모듈에 의존하는지 바로 알 수 있다.
+**자주 하는 실수**
 
-4. 접근 제어자를 무시한다.
-`private` 메서드는 클래스 내부에서만 호출 가능하므로 외부에서 사용할 수 없다.
+```java
+public class main {                            // 클래스 이름의 대소문자가 잘못됨
+    public static void Main(String[] args) {   // main의 대소문자가 잘못됨
+        system.out.println("Hello")            // System과 세미콜론 오류
+    }
+}
+```
 
-## 6) 확인 질문
+- 클래스 이름과 파일 이름을 다르게 작성한다.
+- main을 Main으로 잘못 작성한다.
+- 닫는 중괄호 `}`를 빠뜨린다.
+- 실행문 끝에 세미콜론을 붙이지 않는다.
+- System의 첫 글자를 소문자로 작성한다.
 
-1. Java 소스 파일의 세 가지 기본 구성 요소는 무엇인가?
-2. `package` 선언은 프로젝트 구조에서 어떤 역할을 하는가?
-3. `==`와 `equals`의 차이는 무엇이고, 언제 각각을 사용해야 하는가?
-4. 메서드 시그니처에서 읽을 수 있는 정보 네 가지는 무엇인가?
-5. 임포트 문을 먼저 확인하면 어떤 정보를 얻을 수 있는가?
+### Part 2. System.out.println() 출력
 
-## 7) 문항 발췌 메모
+**개념 설명**
 
-- 사실형 후보: Java 소스 파일 구성 요소, 기본 타입과 참조 타입의 차이
-- 판단형 후보: == vs equals 사용 적절성 판단
-- 시나리오형 후보: 코드에서 패키지와 임포트를 보고 의존 관계 파악
-- 오답 유도 포인트: 참조 타입 == 비교를 값 비교로 오인, private 메서드 외부 호출 가능으로 오인
+- `System.out.println()`은 괄호 안의 내용을 화면에 출력한다.
+- 출력할 문자는 큰따옴표 `" "`로 감싸야 한다.
+- `println`은 내용을 출력한 다음 줄을 바꾼다.
+- 따라서 `println`을 두 번 사용하면 결과도 두 줄로 표시된다.
+- Java는 대소문자를 구분하므로 정확한 철자로 작성해야 한다.
+
+**코드 문법 분해**
+
+```java
+System.out.println("Hello");
+```
+
+| 부분 | 의미 |
+|---|---|
+| `System.out` | 화면으로 출력할 때 사용하는 기본 형식 |
+| `println` | 내용을 출력한 후 줄을 바꾼다. |
+| `"Hello"` | 화면에 출력할 문자 |
+| `( )` | 출력할 내용을 작성하는 위치 |
+| `;` | 출력문의 끝 |
+
+**문제와 다른 예제**
+
+```java
+System.out.println("Java");
+System.out.println("Beginner");
+System.out.println("Lesson 01");
+```
+
+**실행 흐름과 결과**
+
+- 첫 번째 println이 `Java`를 출력하고 줄을 바꾼다.
+- 두 번째 println이 `Beginner`를 출력하고 줄을 바꾼다.
+- 세 번째 println이 `Lesson 01`을 출력한다.
+
+```
+Java
+Beginner
+Lesson 01
+```
+
+**자주 하는 실수**
+
+```java
+System.out.println(Hello);     // 큰따옴표가 없음
+system.out.println("Hello");   // System의 S가 소문자
+System.out.Println("Hello");   // println의 p가 대문자
+System.out.println("Hello")    // 세미콜론이 없음
+```
+
+문자를 출력할 때는 다음 형태를 정확히 지켜야 한다.
+
+```java
+System.out.println("출력할 문자");
+```
+
+### Part 3. print()와 println()의 차이
+
+**개념 설명**
+
+- `System.out.print()`도 괄호 안의 내용을 화면에 출력한다.
+- 하지만 `print`는 출력한 다음 줄을 바꾸지 않는다.
+- 다음 출력 내용은 같은 줄에 이어서 표시된다.
+- 반대로 `println`은 출력 후 다음 줄로 이동한다.
+- 두 출력문을 조합하면 같은 줄 출력과 줄바꿈을 조절할 수 있다.
+
+**코드 문법 분해**
+
+```java
+System.out.print("Java");
+System.out.println(" Start");
+System.out.print("Done");
+```
+
+- 첫 번째 print는 `Java`를 출력하고 같은 줄에 머문다.
+- 두 번째 println은 ` Start`를 이어서 출력한다.
+- println이 실행되었으므로 다음 출력 위치가 아랫줄로 이동한다.
+- 세 번째 print는 다음 줄에 `Done`을 출력한다.
+
+**실행 결과**
+
+```
+Java Start
+Done
+```
+
+**문제와 다른 예제**
+
+```java
+System.out.print("A");
+System.out.print("B");
+System.out.println("C");
+System.out.println("D");
+```
+
+**실행 흐름과 결과**
+
+- `A`를 출력하고 같은 줄에 머문다.
+- `B`를 같은 줄에 이어서 출력한다.
+- `C`를 이어서 출력하고 줄을 바꾼다.
+- 다음 줄에 `D`를 출력한다.
+
+```
+ABC
+D
+```
+
+**자주 하는 실수**
+
+- print도 자동으로 줄을 바꾼다고 생각한다.
+- 각 출력문 사이에 자동으로 공백이 생긴다고 생각한다.
+- 코드에서 줄을 바꾸면 출력 결과도 줄이 바뀐다고 생각한다.
+- print와 println의 철자를 혼동한다.
+
+다음 두 코드는 결과가 다르다.
+
+```java
+System.out.print("A");
+System.out.print("B");
+```
+
+```
+AB
+```
+
+```java
+System.out.println("A");
+System.out.println("B");
+```
+
+```
+A
+B
+```
+
+### Part 4. 주석
+
+**개념 설명**
+
+- 주석은 코드에 설명을 남길 때 사용한다.
+- 주석으로 작성된 내용은 프로그램이 실행하지 않는다.
+- `//` 뒤의 내용은 해당 줄의 끝까지 주석이 된다.
+- `/*`와 `*/` 사이의 내용은 여러 줄에 걸쳐 주석이 된다.
+- 주석은 코드의 목적이나 주의사항을 설명할 때 사용한다.
+- 실행해야 하는 코드를 주석 처리하지 않도록 주의해야 한다.
+
+**코드 문법 분해**
+
+```java
+// 한 줄 주석
+```
+
+`//` 뒤에서 현재 줄이 끝나는 부분까지 주석으로 처리된다.
+
+```java
+/*
+여러 줄을
+작성할 수 있는 주석
+*/
+```
+
+`/*`부터 `*/`까지의 모든 내용이 주석으로 처리된다.
+
+**문제와 다른 예제**
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        // 학습 시작 메시지를 출력한다.
+        System.out.println("학습 시작");
+
+        /*
+        다음 출력문은 주석 안에 있으므로
+        실행되지 않는다.
+        System.out.println("출력 안 됨");
+        */
+    }
+}
+```
+
+**실행 흐름과 결과**
+
+- 한 줄 주석은 실행하지 않는다.
+- `학습 시작`을 출력한다.
+- 여러 줄 주석 안의 출력문은 실행하지 않는다.
+- 프로그램이 종료된다.
+
+```
+학습 시작
+```
+
+**자주 하는 실수**
+
+```java
+/ 한 줄 주석          // 슬래시가 하나뿐임
+
+/*
+여러 줄 주석          // 닫는 */가 없음
+```
+
+- 한 줄 주석을 슬래시 `/` 하나만 사용하여 작성한다.
+- 여러 줄 주석의 마지막 `*/`를 빠뜨린다.
+- 실행해야 하는 코드 앞에 실수로 `//`를 붙인다.
+- 주석 안의 출력문도 실행된다고 생각한다.
+
+## 다음으로
+
+다음 학습 내용은 [Part 2「변수·기본형·리터럴·상수」](/dev/lessons/DEV-JAVA-01-02)이다.

@@ -104,16 +104,17 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    // カテゴリ管理: 無効化されたサブカテゴリのページはメンティーのアクセスを遮断
+    // カテゴリ管理: 削除(deleted)されたサブカテゴリは全員、無効化(is_active=false)はメンティーのアクセスを遮断
     const uRole = profile?.role ?? 'mentee'
     const LEARNING_PREFIXES = ['/japanese', '/cs', '/dev', '/business-literacy', '/coding', '/announcements']
-    if (uRole === 'mentee' && LEARNING_PREFIXES.some(p => pathname.startsWith(p))) {
-      const { data: disabled } = await supabase
+    if (LEARNING_PREFIXES.some(p => pathname.startsWith(p))) {
+      const { data: rows } = await supabase
         .from('subcategory_settings')
-        .select('subcat_key')
-        .eq('is_active', false)
-      const blocked = (disabled ?? []).some((d: { subcat_key: string }) =>
-        pathname === d.subcat_key || pathname.startsWith(d.subcat_key + '/'))
+        .select('subcat_key, is_active, deleted')
+      const blocked = (rows ?? []).some((d: { subcat_key: string; is_active: boolean; deleted: boolean }) => {
+        const matches = pathname === d.subcat_key || pathname.startsWith(d.subcat_key + '/')
+        return matches && (d.deleted || (uRole === 'mentee' && d.is_active === false))
+      })
       if (blocked) {
         const url = request.nextUrl.clone()
         url.pathname = '/dashboard'

@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-01-03",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-basics-operators-conversion",
+  "summary": "算術・剰余・複合代入・比較・論理演算子と、自動拡大変換・明示的キャスト、整数どうしの割り算の切り捨てを学ぶ。",
+  "key_points": [
+    "整数どうしの / は商、% は余り。整数割り算は切り捨て。",
+    "複合代入 += などは計算と代入を同時に行う。",
+    "double→int は (int) キャストが必要で小数点以下は切り捨て。"
+  ],
+  "misconceptions": [
+    "7 / 2 が 3.5 になると思う。",
+    "double r = 7 / 2; が 3.5 になると思う。",
+    "double→int を自動でできると思う。"
+  ],
+  "check_questions": [
+    "2 + 3 * 4 の結果は？",
+    "double r = 7 / 2; の値は？",
+    "整数を0で割ると何が起きるか？"
+  ]
+}

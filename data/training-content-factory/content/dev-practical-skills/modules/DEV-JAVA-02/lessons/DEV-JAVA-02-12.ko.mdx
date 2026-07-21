@@ -1,0 +1,312 @@
+---
+lesson_id: DEV-JAVA-02-12
+title: "Java중급12 오버라이딩·super"
+module: DEV-JAVA-01
+language: ko
+level: foundation
+est_minutes: 24
+tags: [java, intermediate, oop, override, super, static-content]
+---
+
+## 학습 목표
+
+이 파트를 학습한 후 다음 작업을 할 수 있어야 합니다.
+
+- 부모에게서 상속받은 메서드를 자식에게 맞게 재정의한다.
+- @Override로 오버라이딩 여부를 검사한다.
+- 오버라이딩과 메서드 오버로딩을 구분한다.
+- super로 부모 메서드를 호출한다.
+- super()로 부모 생성자를 호출한다.
+- 부모 생성자와 자식 생성자의 실행 순서를 설명한다.
+
+## 수업 내용
+
+### Part 1. 오버라이딩이 필요한 이유
+
+자식 클래스는 부모 메서드를 그대로 사용할 수 있다. 하지만 같은 행동이라도 자식마다 실행 내용이 달라야 할 수 있다.
+
+```java
+class Animal {
+    public void sound() {
+        System.out.println("동물이 소리를 냅니다.");
+    }
+}
+
+class Dog extends Animal {
+}
+```
+
+Dog에 맞는 소리를 출력하려면 부모의 sound()를 다시 정의한다.
+
+```java
+class Dog extends Animal {
+    @Override
+    public void sound() {
+        System.out.println("멍멍");
+    }
+}
+```
+
+```java
+Dog dog = new Dog();
+dog.sound();
+```
+
+**실행 결과**
+
+```text
+멍멍
+```
+
+### Part 2. 오버라이딩 작성 조건
+
+오버라이딩하려면 부모 메서드와 다음 내용이 일치해야 한다.
+
+- 메서드 이름
+- 매개변수의 개수
+- 매개변수의 타입
+- 매개변수의 순서
+- 호환되는 반환형
+
+```java
+class Parent {
+    public void print(int value) {
+        System.out.println(value);
+    }
+}
+
+class Child extends Parent {
+    @Override
+    public void print(int value) {
+        System.out.println("자식: " + value);
+    }
+}
+```
+
+매개변수가 달라지면 오버라이딩이 아니라 오버로딩이 된다.
+
+```java
+public void print(String value) {
+}
+```
+
+### Part 3. @Override
+
+@Override는 아래 메서드가 부모 메서드를 재정의한다는 것을 컴파일러에 알린다.
+
+```java
+@Override
+public void sound() {
+    System.out.println("멍멍");
+}
+```
+
+메서드 이름을 잘못 작성하면 컴파일러가 오류를 알려준다.
+
+```java
+@Override
+public void sounds() { // 컴파일 오류
+    System.out.println("멍멍");
+}
+```
+
+오버라이딩할 때는 @Override를 작성하는 것이 안전하다.
+
+### Part 4. 접근 범위 규칙
+
+자식의 오버라이딩 메서드는 부모 메서드보다 접근 범위를 좁힐 수 없다.
+
+```java
+class Parent {
+    public void run() {
+    }
+}
+
+class Child extends Parent {
+    @Override
+    private void run() { // 컴파일 오류
+    }
+}
+```
+
+부모가 public이면 자식도 public으로 작성해야 한다.
+
+또한 final 메서드는 자식에서 오버라이딩할 수 없다.
+
+```java
+class Parent {
+    public final void stop() {
+    }
+}
+```
+
+### Part 5. super로 부모 메서드 호출하기
+
+자식이 메서드를 완전히 교체하지 않고 부모 기능에 내용을 추가하고 싶을 수 있다.
+
+```java
+class Employee {
+    public void work() {
+        System.out.println("업무를 시작합니다.");
+    }
+}
+
+class Developer extends Employee {
+    @Override
+    public void work() {
+        super.work();
+        System.out.println("코드를 작성합니다.");
+    }
+}
+```
+
+```java
+Developer developer = new Developer();
+developer.work();
+```
+
+**실행 결과**
+
+```text
+업무를 시작합니다.
+코드를 작성합니다.
+```
+
+super.work()는 현재 객체의 부모 클래스에 정의된 work()를 호출한다.
+
+### Part 6. super()로 부모 생성자 호출하기
+
+부모 클래스에 매개변수가 있는 생성자만 있다면 자식 생성자에서 super(...)로 부모 생성자를 호출해야 한다.
+
+```java
+class Employee {
+    private String name;
+
+    public Employee(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+}
+```
+
+```java
+class Developer extends Employee {
+    private String language;
+
+    public Developer(String name, String language) {
+        super(name);
+        this.language = language;
+    }
+}
+```
+
+super(name)은 부모 클래스의 Employee(String name) 생성자를 호출한다.
+
+### Part 7. super()는 첫 번째 실행문이어야 한다
+
+```java
+public Developer(String name, String language) {
+    super(name);
+    this.language = language;
+}
+```
+
+다음 코드는 컴파일되지 않는다.
+
+```java
+public Developer(String name, String language) {
+    this.language = language;
+    super(name); // 컴파일 오류
+}
+```
+
+부모 부분을 먼저 초기화한 뒤 자식 부분을 초기화해야 하므로 super()는 생성자의 첫 번째 실행문이어야 한다.
+
+this()와 super()는 모두 첫 번째 실행문이어야 하므로 같은 생성자에서 둘을 함께 직접 호출할 수 없다.
+
+### Part 8. 부모 생성자와 자식 생성자의 실행 순서
+
+```java
+class Parent {
+    public Parent() {
+        System.out.println("부모 생성자");
+    }
+}
+
+class Child extends Parent {
+    public Child() {
+        System.out.println("자식 생성자");
+    }
+}
+```
+
+```java
+new Child();
+```
+
+**실행 결과**
+
+```text
+부모 생성자
+자식 생성자
+```
+
+자식 객체를 만들 때 부모 부분이 먼저 초기화되고 자식 부분이 나중에 초기화된다.
+
+### 종합 예제
+
+```java
+class Employee {
+    private String name;
+
+    public Employee(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void work() {
+        System.out.println(name + "이(가) 업무를 시작합니다.");
+    }
+}
+
+class Developer extends Employee {
+    private String language;
+
+    public Developer(String name, String language) {
+        super(name);
+        this.language = language;
+    }
+
+    @Override
+    public void work() {
+        super.work();
+        System.out.println(language + "로 개발합니다.");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Developer developer =
+                new Developer("민수", "Java");
+
+        developer.work();
+    }
+}
+```
+
+**실행 결과**
+
+```text
+민수이(가) 업무를 시작합니다.
+Java로 개발합니다.
+```
+
+## 다음으로
+
+다음 학습 내용은 [Part 13「다형성」](/dev/lessons/DEV-JAVA-02-13)이다.

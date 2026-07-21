@@ -61,7 +61,7 @@ export const categoryChildren: Record<
   },
   'business-jp': {
     title: 'ビジネス日本語',
-    description: '職場でよく使う表現、敬語、用語、文型を中心に学習します。',
+    description: '',
     children: [
       { href: '/japanese/business/glossary', label: 'ビジネス用語', description: '職場でよく使う基本用語を確認します' },
       { href: '/japanese/business/sentence-patterns', label: '文型', description: 'ビジネス文型を整理します' },

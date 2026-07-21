@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-01-11",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-basics-array-traverse",
+  "summary": "for と拡張for による巡回、合計・平均・最大値、条件検索と数えを学ぶ。",
+  "key_points": [
+    "値だけなら拡張for、インデックスが要れば通常for。",
+    "合計は0、最大値は先頭要素で初期化。",
+    "平均で整数割り算を避けるには double に変換。"
+  ],
+  "misconceptions": [
+    "最大値を0で初期化して負の配列で誤る。",
+    "整数割り算で平均が切り捨てられる。",
+    "拡張for でインデックスを使おうとする。"
+  ],
+  "check_questions": [
+    "拡張for が適する場面は？",
+    "最大値の安全な初期化は？",
+    "平均を実数にするには？"
+  ]
+}

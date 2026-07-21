@@ -1,0 +1,523 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "値を返すメソッドを書こう",
+   "prompt": "return・早期終了・配列引数を、手を動かして覚えよう。",
+   "takeaway": "戻り値と配列引数を10ステップで確認します。"
+  },
+  "steps": [
+   {
+    "id": "java16-q1",
+    "type": "code_exercise",
+    "title": "計算結果を返す",
+    "prompt": "長方形の面積を返すように、空欄に戻り値の型・キーワード・演算子を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    static [[0]] rectangle(int width, int height) {\n        [[1]] width [[2]] height;\n    }\n\n    public static void main(String[] args) {\n        System.out.println(rectangle(6, 4));\n    }\n}",
+    "tokens": [
+     "int",
+     "return",
+     "*",
+     "void",
+     "boolean",
+     "String",
+     "println",
+     "break",
+     "continue",
+     "+",
+     "/",
+     "%"
+    ],
+    "answers": [
+     "int",
+     "return",
+     "*"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "24"
+    },
+    "explanation": "面積は整数の積なので戻り値の型は int、値を返すので return、掛け算は * を使う。6 * 4 = 24 が返されて出力される。void は値を返せずエラーになり、+ は 10、/ は 1、% は 2 になるので答えではない。"
+   },
+   {
+    "id": "java16-q2",
+    "type": "order",
+    "title": "すべての経路で値を返す",
+    "prompt": "距離が 1 以下なら「徒歩」、10 以下なら「自転車」、それより遠ければ「バス」を返すように、条件を近い距離から検査する順に並べなさい。",
+    "items": [
+     {
+      "id": "i1",
+      "text": "static String selectTransport(int distance) {"
+     },
+     {
+      "id": "i2",
+      "text": "    if (distance <= 1) {"
+     },
+     {
+      "id": "i3",
+      "text": "        return \"徒歩\";"
+     },
+     {
+      "id": "i4",
+      "text": "    }"
+     },
+     {
+      "id": "i5",
+      "text": "    if (distance <= 10) {"
+     },
+     {
+      "id": "i6",
+      "text": "        return \"自転車\";"
+     },
+     {
+      "id": "i7",
+      "text": "    }"
+     },
+     {
+      "id": "i8",
+      "text": "    return \"バス\";"
+     },
+     {
+      "id": "i9",
+      "text": "}"
+     }
+    ],
+    "explanation": "戻り値の型が String なので、すべての実行経路で文字列を返す必要がある。1 以下なら「徒歩」、10 以下なら「自転車」、それ以外は「バス」を返す。selectTransport(7) は 1 より大きく 10 以下なので「自転車」が返される。",
+    "distractors": [
+     {
+      "id": "java16-q2_w01",
+      "text": "if (distance >= 10) {"
+     },
+     {
+      "id": "java16-q2_w02",
+      "text": "return \"自動車\";"
+     }
+    ]
+   },
+   {
+    "id": "java16-q3",
+    "type": "code_exercise",
+    "title": "void メソッドの早期終了",
+    "prompt": "数量が 0 以下なら何も出力せずメソッドを終了するように、空欄にキーワードを埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    static void printQuantity(int quantity) {\n        if (quantity <= 0) {\n            [[0]];\n        }\n\n        System.out.println(quantity);\n    }\n\n    public static void main(String[] args) {\n        printQuantity(-3);\n    }\n}",
+    "tokens": [
+     "return",
+     "break",
+     "continue",
+     "exit"
+    ],
+    "answers": [
+     "return"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "void メソッドは値なしの return; だけで即座に終了する。quantity が -3 なら条件が真なので return が実行され、下の出力文に到達しないため何も出力されない。break・continue はループ内でしか使えず、exit はそのようなキーワードが無いのでコンパイルエラーになる。"
+   },
+   {
+    "id": "java16-q4",
+    "type": "code_exercise",
+    "title": "配列を受け取り個数を返す",
+    "prompt": "戻り値の型・引数の型・演算子・return キーワードを埋めて 3 の倍数の個数を返すように完成させなさい。",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    static [[0]] countMultiplesOfThree([[1]] values) {\n        int count = 0;\n\n        for (int value : values) {\n            if (value [[2]] 3 [[3]] 0) {\n                count[[4]];\n            }\n        }\n\n        [[5]] count;\n    }\n\n    public static void main(String[] args) {\n        int[] data = {3, 4, 6, 8, 9};\n        System.out.println(countMultiplesOfThree(data));\n    }\n}",
+    "tokens": [
+     "int",
+     "int[]",
+     "%",
+     "==",
+     "++",
+     "return",
+     "void",
+     "String[]",
+     "/",
+     "!=",
+     "--",
+     "break"
+    ],
+    "answers": [
+     "int",
+     "int[]",
+     "%",
+     "==",
+     "++",
+     "return"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "3"
+    },
+    "explanation": "個数を返すので戻り値の型は int、引数は整数配列なので int[] である。value % 3 == 0 で 3 の倍数を確認し count++ で個数を数え、最後に return count で結果を返す。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "java16-q5",
+    "type": "mini_check",
+    "title": "配列要素の変更と再代入",
+    "prompt": "次のコードの実行結果として正しいものはどれか？",
+    "code": "public class Main {\n    static void edit(int[] data) {\n        data[1] = 50;\n\n        data = new int[]{7, 8};\n        data[0] = 99;\n    }\n\n    public static void main(String[] args) {\n        int[] numbers = {10, 20, 30};\n\n        edit(numbers);\n\n        System.out.println(numbers[0] + \",\" + numbers[1]);\n    }\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`99,50`"
+     },
+     {
+      "id": "B",
+      "text": "`10,50`"
+     },
+     {
+      "id": "C",
+      "text": "`99,8`"
+     },
+     {
+      "id": "D",
+      "text": "`10,20`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "data[1] = 50 は元の配列要素を変えるので numbers[1] が 50 になる。その後 data = new int[]{7, 8} は仮引数だけを新しい配列に向けるので numbers には影響せず、data[0] = 99 も新しい配列だけを変える。したがって numbers[0] は 10 のままで「10,50」が出力される。"
+   },
+   {
+    "id": "java16-q6",
+    "type": "mini_check",
+    "title": "配列を返す",
+    "prompt": "2つの値を入れた配列を返すコード1行として正しいものはどれか？",
+    "code": "public class Main {\n    static int[] makePair(int left, int right) {\n        ____\n    }\n\n    public static void main(String[] args) {\n        int[] pair = makePair(4, 9);\n\n        System.out.println(pair[0]);\n        System.out.println(pair[1]);\n    }\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`return left + right;`"
+     },
+     {
+      "id": "B",
+      "text": "`new int[]{left, right};`"
+     },
+     {
+      "id": "C",
+      "text": "`return new int[]{left, right};`"
+     },
+     {
+      "id": "D",
+      "text": "`return int[]{left, right};`"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "戻り値の型が int[] なので、return の後に new int[]{left, right} の形の配列を返す必要がある。makePair(4, 9) は {4, 9} を返して 4 と 9 が出力される。return left + right は整数を返すので型が合わず、return が無かったり new を抜かすとコンパイルエラーになる。"
+   },
+   {
+    "id": "java16-q7",
+    "type": "order",
+    "title": "配列を検索して早期 return",
+    "prompt": "配列に 0 があれば即座に true、最後まで無ければ false を返すように実行順に並べなさい。",
+    "items": [
+     {
+      "id": "i1",
+      "text": "static boolean hasZero(int[] values) {"
+     },
+     {
+      "id": "i2",
+      "text": "    for (int value : values) {"
+     },
+     {
+      "id": "i3",
+      "text": "        if (value == 0) {"
+     },
+     {
+      "id": "i4",
+      "text": "            return true;"
+     },
+     {
+      "id": "i5",
+      "text": "        }"
+     },
+     {
+      "id": "i6",
+      "text": "    }"
+     },
+     {
+      "id": "i7",
+      "text": "    return false;"
+     },
+     {
+      "id": "i8",
+      "text": "}"
+     }
+    ],
+    "explanation": "ループ内で 0 を見つけたら即座に return true でメソッドを終え、最後まで見つからなければループ後に return false を実行する。{4, 0, 7} には 0 があるので true が返される。return false をループ内に置くと最初の要素だけ確認して終わるので、ループの外に置く必要がある。",
+    "distractors": [
+     {
+      "id": "java16-q7_w01",
+      "text": "if (value != 0) {"
+     },
+     {
+      "id": "java16-q7_w02",
+      "text": "break;"
+     }
+    ]
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "값을 반환하는 메서드를 쓰자",
+   "prompt": "return·조기 종료·배열 인수를 손으로 익히자.",
+   "takeaway": "반환값과 배열 인수를 10스텝으로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "java16-q1",
+    "type": "code_exercise",
+    "title": "계산 결과 반환",
+    "prompt": "직사각형의 넓이를 반환하도록 빈칸에 반환형·키워드·연산자를 채우시오.",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    static [[0]] rectangle(int width, int height) {\n        [[1]] width [[2]] height;\n    }\n\n    public static void main(String[] args) {\n        System.out.println(rectangle(6, 4));\n    }\n}",
+    "tokens": [
+     "int",
+     "return",
+     "*",
+     "void",
+     "boolean",
+     "String",
+     "println",
+     "break",
+     "continue",
+     "+",
+     "/",
+     "%"
+    ],
+    "answers": [
+     "int",
+     "return",
+     "*"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "24"
+    },
+    "explanation": "넓이는 정수 곱이므로 반환형은 int, 값을 돌려주므로 return, 곱셈은 *를 쓴다. 6 * 4 = 24가 반환되어 출력된다. void는 값을 반환할 수 없어 오류이고, +는 10, /는 1, %는 2가 되어 답이 아니다."
+   },
+   {
+    "id": "java16-q2",
+    "type": "order",
+    "title": "모든 경로에서 값 반환",
+    "prompt": "거리가 1 이하이면 「도보」, 10 이하이면 「자전거」, 그보다 멀면 「버스」를 반환하도록 조건을 가까운 거리부터 검사하는 순서로 배열하시오.",
+    "items": [
+     {
+      "id": "i1",
+      "text": "static String selectTransport(int distance) {"
+     },
+     {
+      "id": "i2",
+      "text": "    if (distance <= 1) {"
+     },
+     {
+      "id": "i3",
+      "text": "        return \"도보\";"
+     },
+     {
+      "id": "i4",
+      "text": "    }"
+     },
+     {
+      "id": "i5",
+      "text": "    if (distance <= 10) {"
+     },
+     {
+      "id": "i6",
+      "text": "        return \"자전거\";"
+     },
+     {
+      "id": "i7",
+      "text": "    }"
+     },
+     {
+      "id": "i8",
+      "text": "    return \"버스\";"
+     },
+     {
+      "id": "i9",
+      "text": "}"
+     }
+    ],
+    "explanation": "반환형이 String이므로 모든 실행 경로에서 문자열을 반환해야 한다. 1 이하면 「도보」, 10 이하면 「자전거」, 그 외에는 「버스」를 반환한다. selectTransport(7)은 1보다 크고 10 이하라 「자전거」가 반환된다.",
+    "distractors": [
+     {
+      "id": "java16-q2_w01",
+      "text": "if (distance >= 10) {"
+     },
+     {
+      "id": "java16-q2_w02",
+      "text": "return \"자동차\";"
+     }
+    ]
+   },
+   {
+    "id": "java16-q3",
+    "type": "code_exercise",
+    "title": "void 메서드 조기 종료",
+    "prompt": "수량이 0 이하이면 아무것도 출력하지 않고 메서드를 종료하도록 빈칸에 키워드를 채우시오.",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    static void printQuantity(int quantity) {\n        if (quantity <= 0) {\n            [[0]];\n        }\n\n        System.out.println(quantity);\n    }\n\n    public static void main(String[] args) {\n        printQuantity(-3);\n    }\n}",
+    "tokens": [
+     "return",
+     "break",
+     "continue",
+     "exit"
+    ],
+    "answers": [
+     "return"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "void 메서드는 값 없이 return;만으로 즉시 종료한다. quantity가 -3이면 조건이 참이라 return이 실행되어 아래 출력문에 도달하지 않으므로 아무것도 출력되지 않는다. break·continue는 반복문 안에서만 쓸 수 있고 exit는 그런 키워드가 없어 컴파일 오류다."
+   },
+   {
+    "id": "java16-q4",
+    "type": "code_exercise",
+    "title": "배열을 받아 개수 반환",
+    "prompt": "반환형·매개변수 타입·연산자·반환 키워드를 채워 3의 배수 개수를 반환하도록 완성하시오.",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    static [[0]] countMultiplesOfThree([[1]] values) {\n        int count = 0;\n\n        for (int value : values) {\n            if (value [[2]] 3 [[3]] 0) {\n                count[[4]];\n            }\n        }\n\n        [[5]] count;\n    }\n\n    public static void main(String[] args) {\n        int[] data = {3, 4, 6, 8, 9};\n        System.out.println(countMultiplesOfThree(data));\n    }\n}",
+    "tokens": [
+     "int",
+     "int[]",
+     "%",
+     "==",
+     "++",
+     "return",
+     "void",
+     "String[]",
+     "/",
+     "!=",
+     "--",
+     "break"
+    ],
+    "answers": [
+     "int",
+     "int[]",
+     "%",
+     "==",
+     "++",
+     "return"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "3"
+    },
+    "explanation": "개수를 반환하므로 반환형은 int, 매개변수는 정수 배열이므로 int[]이다. value % 3 == 0으로 3의 배수를 확인해 count++로 개수를 세고, 마지막에 return count로 결과를 반환한다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "java16-q5",
+    "type": "mini_check",
+    "title": "배열 요소 변경과 재대입",
+    "prompt": "다음 코드의 실행 결과로 옳은 것은?",
+    "code": "public class Main {\n    static void edit(int[] data) {\n        data[1] = 50;\n\n        data = new int[]{7, 8};\n        data[0] = 99;\n    }\n\n    public static void main(String[] args) {\n        int[] numbers = {10, 20, 30};\n\n        edit(numbers);\n\n        System.out.println(numbers[0] + \",\" + numbers[1]);\n    }\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`99,50`"
+     },
+     {
+      "id": "B",
+      "text": "`10,50`"
+     },
+     {
+      "id": "C",
+      "text": "`99,8`"
+     },
+     {
+      "id": "D",
+      "text": "`10,20`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "data[1] = 50은 원본 배열 요소를 바꾸므로 numbers[1]이 50이 된다. 이후 data = new int[]{7, 8}은 매개변수만 새 배열을 가리키게 하므로 numbers에는 영향이 없고, data[0] = 99도 새 배열만 바꾼다. 따라서 numbers[0]은 10 그대로여서 「10,50」이 출력된다."
+   },
+   {
+    "id": "java16-q6",
+    "type": "mini_check",
+    "title": "배열 반환",
+    "prompt": "두 값을 담은 배열을 반환하는 코드 한 줄로 옳은 것은?",
+    "code": "public class Main {\n    static int[] makePair(int left, int right) {\n        ____\n    }\n\n    public static void main(String[] args) {\n        int[] pair = makePair(4, 9);\n\n        System.out.println(pair[0]);\n        System.out.println(pair[1]);\n    }\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`return left + right;`"
+     },
+     {
+      "id": "B",
+      "text": "`new int[]{left, right};`"
+     },
+     {
+      "id": "C",
+      "text": "`return new int[]{left, right};`"
+     },
+     {
+      "id": "D",
+      "text": "`return int[]{left, right};`"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "반환형이 int[]이므로 return 뒤에 new int[]{left, right} 형태의 배열을 돌려줘야 한다. makePair(4, 9)는 {4, 9}를 반환해 4와 9가 출력된다. return left + right는 정수를 반환해 형이 맞지 않고, return이 없거나 new를 빠뜨리면 컴파일 오류가 난다."
+   },
+   {
+    "id": "java16-q7",
+    "type": "order",
+    "title": "배열 검색 후 조기 반환",
+    "prompt": "배열에 0이 있으면 즉시 true, 끝까지 없으면 false를 반환하도록 실행 순서대로 배열하시오.",
+    "items": [
+     {
+      "id": "i1",
+      "text": "static boolean hasZero(int[] values) {"
+     },
+     {
+      "id": "i2",
+      "text": "    for (int value : values) {"
+     },
+     {
+      "id": "i3",
+      "text": "        if (value == 0) {"
+     },
+     {
+      "id": "i4",
+      "text": "            return true;"
+     },
+     {
+      "id": "i5",
+      "text": "        }"
+     },
+     {
+      "id": "i6",
+      "text": "    }"
+     },
+     {
+      "id": "i7",
+      "text": "    return false;"
+     },
+     {
+      "id": "i8",
+      "text": "}"
+     }
+    ],
+    "explanation": "반복문 안에서 0을 찾으면 즉시 return true로 메서드를 끝내고, 끝까지 못 찾으면 반복문이 끝난 뒤 return false를 실행한다. {4, 0, 7}에는 0이 있으므로 true가 반환된다. return false를 반복문 안에 두면 첫 요소만 확인하고 끝나므로 반복문 밖에 두어야 한다.",
+    "distractors": [
+     {
+      "id": "java16-q7_w01",
+      "text": "if (value != 0) {"
+     },
+     {
+      "id": "java16-q7_w02",
+      "text": "break;"
+     }
+    ]
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}

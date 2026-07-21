@@ -1,0 +1,933 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "static と final で共有値と定数を扱おう",
+   "prompt": "オブジェクトが共有する値は static、変えてはいけない値は final、クラス定数は static final で宣言しよう。",
+   "takeaway": "static フィールド・メソッド・final・クラス定数を15問で確認します。"
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "共有フィールドの宣言",
+    "prompt": "すべての Player オブジェクトが全プレイヤー数の1つを共有するように完成させなさい。（空欄1つ）",
+    "lang": "java",
+    "codeTemplate": "class Player {\n    private String nickname;\n    private [[0]] int totalPlayers;\n}",
+    "tokens": [
+     "static",
+     "final",
+     "public"
+    ],
+    "answers": [
+     "static"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "static フィールドはオブジェクトごとに作られず、クラスに1つだけ存在する。final は初期化が必要で、アクセス修飾子はすでに private が指定されている。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q2",
+    "type": "mini_check",
+    "title": "共有された値の予測",
+    "prompt": "3つの Member オブジェクトを作った後、Member.getCount() の実行結果は？（count は static）\n```java\nnew Member();\nnew Member();\nnew Member();\nSystem.out.println(Member.getCount());\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "0"
+     },
+     {
+      "id": "B",
+      "text": "1"
+     },
+     {
+      "id": "C",
+      "text": "3"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "コンストラクタが3回実行され、クラスが共有する count 1つが3回増えて 3 になる。"
+   },
+   {
+    "id": "q3",
+    "type": "code_exercise",
+    "title": "static メソッドの完成",
+    "prompt": "オブジェクトを作らずに全注文数を確認できるように完成させなさい。（空欄2つ）",
+    "lang": "java",
+    "codeTemplate": "class Order {\n    private static int count = 5;\n\n    public [[0]] int getCount() {\n        return count;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println([[1]].getCount());\n    }\n}",
+    "tokens": [
+     "static",
+     "final",
+     "private",
+     "Order",
+     "order",
+     "Main"
+    ],
+    "answers": [
+     "static",
+     "Order"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "5"
+    },
+    "explanation": "static メソッドはオブジェクト変数ではなくクラス名 Order で呼び出す。getCount() が static であってこそオブジェクトなしで呼べる。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q4",
+    "type": "mini_check",
+    "title": "static メソッドのエラー修正",
+    "prompt": "showName() は static メソッドなのでインスタンスフィールド name に直接アクセスできない。エラーの行 `System.out.println(name);` を正しく直したものは？",
+    "options": [
+     {
+      "id": "A",
+      "text": "`System.out.println(user.name);`"
+     },
+     {
+      "id": "B",
+      "text": "`System.out.println(this.name);`"
+     },
+     {
+      "id": "C",
+      "text": "`System.out.println(User.name);`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "static メソッドには現在のオブジェクトがないので、受け取った user オブジェクトを通してインスタンスフィールドにアクセスする。this は static メソッドで使えず、User.name はインスタンスフィールドをクラス名でアクセスしようとしてエラーになる。"
+   },
+   {
+    "id": "q5",
+    "type": "code_exercise",
+    "title": "static メソッドから this を除く",
+    "prompt": "クラス名で count にアクセスするように完成させなさい。（空欄1つ）",
+    "lang": "java",
+    "codeTemplate": "class Counter {\n    private static int count = 10;\n\n    public static int getCount() {\n        return [[0]].count;\n    }\n}",
+    "tokens": [
+     "Counter",
+     "this",
+     "new Counter()"
+    ],
+    "answers": [
+     "Counter"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "static メソッドでは this を使えない。クラス名 Counter で static フィールド count にアクセスする。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q6",
+    "type": "order",
+    "title": "生成されたオブジェクト数を数える",
+    "prompt": "Ticket オブジェクトを2つ生成し、static count で個数 2 を出力するように1行ずつ並べなさい。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Ticket {"
+     },
+     {
+      "id": "c2",
+      "text": "    private static int count;"
+     },
+     {
+      "id": "c3",
+      "text": "    public Ticket() {"
+     },
+     {
+      "id": "c4",
+      "text": "        count++;"
+     },
+     {
+      "id": "c5",
+      "text": "    }"
+     },
+     {
+      "id": "c6",
+      "text": "    public static int getCount() {"
+     },
+     {
+      "id": "c7",
+      "text": "        return count;"
+     },
+     {
+      "id": "c8",
+      "text": "    }"
+     },
+     {
+      "id": "c9",
+      "text": "}"
+     },
+     {
+      "id": "c10",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c11",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c12",
+      "text": "        new Ticket();"
+     },
+     {
+      "id": "c13",
+      "text": "        new Ticket();"
+     },
+     {
+      "id": "c14",
+      "text": "        System.out.println(Ticket.getCount());"
+     },
+     {
+      "id": "c15",
+      "text": "    }"
+     },
+     {
+      "id": "c16",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "    public int getCount() {"
+     },
+     {
+      "id": "w2",
+      "text": "        count = 1;"
+     }
+    ],
+    "explanation": "2つのコンストラクタが同じ static count を順に増やして 2 になる。getCount() は static でなければ Ticket.getCount() で呼べない。"
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "final フィールドの初期化",
+    "prompt": "機器ごとに異なるシリアル番号を持ち、生成後は変更できないように完成させなさい。（空欄3つ）",
+    "lang": "java",
+    "codeTemplate": "class Device {\n    private [[0]] String serialNumber;\n\n    public Device(String serialNumber) {\n        [[1]] = [[2]];\n    }\n\n    public String getSerialNumber() {\n        return serialNumber;\n    }\n}",
+    "tokens": [
+     "final",
+     "static",
+     "public",
+     "this.serialNumber",
+     "serialNumber",
+     "this",
+     "\"serialNumber\""
+    ],
+    "answers": [
+     "final",
+     "this.serialNumber",
+     "serialNumber"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "宣言時に値を入れなかった final フィールドはコンストラクタで一度だけ初期化できる。this.serialNumber に引数 serialNumber を代入する。static だとすべての機器が値を共有してしまう。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q8",
+    "type": "mini_check",
+    "title": "final 再代入エラーを探す",
+    "prompt": "final フィールド productCode を使う次の Product で、コンパイルエラーになる行はどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "`private final String productCode;`"
+     },
+     {
+      "id": "B",
+      "text": "`this.productCode = productCode;` (コンストラクタ)"
+     },
+     {
+      "id": "C",
+      "text": "`this.productCode = productCode;` (changeCode)"
+     },
+     {
+      "id": "D",
+      "text": "`return productCode;`"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "コンストラクタですでに値が決まった final フィールドには別の値を再代入できない。コンストラクタの最初の代入は正常だが、changeCode() の再代入でコンパイルエラーになる。"
+   },
+   {
+    "id": "q9",
+    "type": "code_exercise",
+    "title": "クラス定数の宣言",
+    "prompt": "最大ユーザー数をクラス定数として宣言しなさい。（空欄2つ）",
+    "lang": "java",
+    "codeTemplate": "class Config {\n    public [[0]] [[1]] int MAX_USERS = 100;\n}",
+    "tokens": [
+     "static",
+     "final",
+     "private",
+     "int"
+    ],
+    "answers": [
+     "static",
+     "final"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "クラスに1つだけ存在し変更できない値は static final で宣言する。private だと外部から使えず、int をもう一度書くと重複宣言になる。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q10",
+    "type": "order",
+    "title": "クラス定数の使用",
+    "prompt": "BASIC_FEE をクラス定数として宣言し、クラス名で使って基本料金に追加料金 2000 を足した 5000 を出力するように並べなさい。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Delivery {"
+     },
+     {
+      "id": "c2",
+      "text": "    public static final int BASIC_FEE = 3000;"
+     },
+     {
+      "id": "c3",
+      "text": "}"
+     },
+     {
+      "id": "c4",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c5",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c6",
+      "text": "        int total = Delivery.BASIC_FEE + 2000;"
+     },
+     {
+      "id": "c7",
+      "text": "        System.out.println(total);"
+     },
+     {
+      "id": "c8",
+      "text": "    }"
+     },
+     {
+      "id": "c9",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "    public static int BASIC_FEE = 3000;"
+     },
+     {
+      "id": "w2",
+      "text": "        int total = BASIC_FEE - 2000;"
+     }
+    ],
+    "explanation": "クラス定数はクラス名.定数名の形で使う。Delivery.BASIC_FEE(3000) に 2000 を足して 5000 になる。クラス名なしで BASIC_FEE だけ書くと Main で見つからない。"
+   },
+   {
+    "id": "q11",
+    "type": "mini_check",
+    "title": "インスタンス値と共有値の予測",
+    "prompt": "personal はインスタンスフィールド、total は static である。score1.add(10)・score2.add(20) の後、personal1・personal2・total の順で出力すると？",
+    "options": [
+     {
+      "id": "A",
+      "text": "10 / 20 / 30"
+     },
+     {
+      "id": "B",
+      "text": "30 / 30 / 30"
+     },
+     {
+      "id": "C",
+      "text": "10 / 20 / 20"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "personal はオブジェクトごとに存在してそれぞれ 10, 20 で、total は2つのオブジェクトが共有して 10+20=30 になる。"
+   },
+   {
+    "id": "q12",
+    "type": "mini_check",
+    "title": "適切なクラス定数の選択",
+    "prompt": "税率 0.1 をすべてのオブジェクトが共有し、実行中は変更できないようにしたい。最も適切な宣言は？",
+    "options": [
+     {
+      "id": "A",
+      "text": "`public double taxRate = 0.1;`"
+     },
+     {
+      "id": "B",
+      "text": "`public static double taxRate = 0.1;`"
+     },
+     {
+      "id": "C",
+      "text": "`public final double TAX_RATE = 0.1;`"
+     },
+     {
+      "id": "D",
+      "text": "`public static final double TAX_RATE = 0.1;`"
+     }
+    ],
+    "correctOptionId": "D",
+    "explanation": "1つだけ存在すべきなので static、変更できないようにするので final を一緒に使う。static がないとオブジェクトごとに作られ、final がないと値を変えられる。"
+   },
+   {
+    "id": "q13",
+    "type": "mini_check",
+    "title": "static と final の区別",
+    "prompt": "COMPANY は static final、employeeId は final フィールドである。Employee.COMPANY・employee1・employee2 の id の順で出力すると？",
+    "options": [
+     {
+      "id": "A",
+      "text": "コード会社 / E100 / E200"
+     },
+     {
+      "id": "B",
+      "text": "コード会社 / E100 / E100"
+     },
+     {
+      "id": "C",
+      "text": "E100 / E200 / コード会社"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "COMPANY はクラスが共有する定数で、employeeId はオブジェクトごとに異なる final フィールドである。したがって会社名と各社員の異なる社員番号が出力される。"
+   },
+   {
+    "id": "q14",
+    "type": "code_exercise",
+    "title": "static メソッドの直接アクセスの区別",
+    "prompt": "getUserCount() がコンパイルできるように完成させなさい。（空欄1つ）",
+    "lang": "java",
+    "codeTemplate": "class GameUser {\n    private String nickname;\n    private static int userCount;\n\n    public GameUser(String nickname) {\n        this.nickname = nickname;\n        userCount++;\n    }\n\n    public static int getUserCount() {\n        return [[0]];\n    }\n}",
+    "tokens": [
+     "userCount",
+     "nickname",
+     "this.userCount"
+    ],
+    "answers": [
+     "userCount"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "userCount は static フィールドなので static メソッドから直接使える。nickname はインスタンスフィールドで、this は static メソッドで使えない。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q15",
+    "type": "code_exercise",
+    "title": "口座クラスの完成",
+    "prompt": "銀行名はクラス定数、全口座数はクラスが1つだけ管理、口座番号は口座ごとに異なり変更不可、口座生成時に全数が増えるように完成させなさい。（空欄6つ）",
+    "lang": "java",
+    "codeTemplate": "class Account {\n    public [[0]] [[1]] String BANK_NAME = \"ハンビット銀行\";\n\n    private [[2]] int totalAccounts;\n    private [[3]] String accountNumber;\n\n    public Account(String accountNumber) {\n        this.accountNumber = accountNumber;\n        [[4]]++;\n    }\n\n    public static int getTotalAccounts() {\n        return [[5]];\n    }\n\n    public String getAccountNumber() {\n        return accountNumber;\n    }\n}",
+    "tokens": [
+     "static",
+     "final",
+     "private",
+     "public",
+     "totalAccounts",
+     "accountNumber",
+     "BANK_NAME",
+     "String",
+     "int"
+    ],
+    "answers": [
+     "static",
+     "final",
+     "static",
+     "final",
+     "totalAccounts",
+     "totalAccounts"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "BANK_NAME は static final のクラス定数、totalAccounts は変更可能な static 共有値、accountNumber はオブジェクトごとに異なる final の固定値である。コンストラクタで totalAccounts を増やし、static メソッドで返す。",
+    "inputMode": "tokens"
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "static과 final로 공유값과 상수를 다루자",
+   "prompt": "객체가 공유하는 값은 static, 바뀌면 안 되는 값은 final, 클래스 상수는 static final로 선언하자.",
+   "takeaway": "static 필드·메서드·final·클래스 상수를 15문제로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "공유 필드 선언하기",
+    "prompt": "모든 Player 객체가 전체 플레이어 수 하나를 공유하도록 완성하시오. (빈칸 1곳)",
+    "lang": "java",
+    "codeTemplate": "class Player {\n    private String nickname;\n    private [[0]] int totalPlayers;\n}",
+    "tokens": [
+     "static",
+     "final",
+     "public"
+    ],
+    "answers": [
+     "static"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "static 필드는 객체마다 만들어지지 않고 클래스에 하나만 존재한다. final은 초기화가 필요하고 접근 제어자는 이미 private으로 지정되어 있다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q2",
+    "type": "mini_check",
+    "title": "공유된 값 예측하기",
+    "prompt": "세 개의 Member 객체를 만든 뒤 Member.getCount()의 실행 결과는? (count는 static)\n```java\nnew Member();\nnew Member();\nnew Member();\nSystem.out.println(Member.getCount());\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "0"
+     },
+     {
+      "id": "B",
+      "text": "1"
+     },
+     {
+      "id": "C",
+      "text": "3"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "생성자가 세 번 실행되며 클래스가 공유하는 count 하나가 세 번 증가하여 3이 된다."
+   },
+   {
+    "id": "q3",
+    "type": "code_exercise",
+    "title": "static 메서드 완성하기",
+    "prompt": "객체를 만들지 않고 전체 주문 수를 확인할 수 있도록 완성하시오. (빈칸 2곳)",
+    "lang": "java",
+    "codeTemplate": "class Order {\n    private static int count = 5;\n\n    public [[0]] int getCount() {\n        return count;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println([[1]].getCount());\n    }\n}",
+    "tokens": [
+     "static",
+     "final",
+     "private",
+     "Order",
+     "order",
+     "Main"
+    ],
+    "answers": [
+     "static",
+     "Order"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "5"
+    },
+    "explanation": "static 메서드는 객체 변수가 아니라 클래스 이름 Order로 호출한다. getCount()가 static이어야 객체 없이 호출할 수 있다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q4",
+    "type": "mini_check",
+    "title": "static 메서드의 오류 수정",
+    "prompt": "showName()은 static 메서드라서 인스턴스 필드 name에 직접 접근할 수 없다. 오류가 발생한 줄 `System.out.println(name);`을 올바르게 고친 것은?",
+    "options": [
+     {
+      "id": "A",
+      "text": "`System.out.println(user.name);`"
+     },
+     {
+      "id": "B",
+      "text": "`System.out.println(this.name);`"
+     },
+     {
+      "id": "C",
+      "text": "`System.out.println(User.name);`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "static 메서드에는 현재 객체가 없으므로 전달받은 user 객체를 통해 인스턴스 필드에 접근해야 한다. this는 static 메서드에서 쓸 수 없고, User.name은 인스턴스 필드를 클래스 이름으로 접근하려 해 오류가 난다."
+   },
+   {
+    "id": "q5",
+    "type": "code_exercise",
+    "title": "static 메서드에서 this 제거하기",
+    "prompt": "클래스 이름으로 count에 접근하도록 완성하시오. (빈칸 1곳)",
+    "lang": "java",
+    "codeTemplate": "class Counter {\n    private static int count = 10;\n\n    public static int getCount() {\n        return [[0]].count;\n    }\n}",
+    "tokens": [
+     "Counter",
+     "this",
+     "new Counter()"
+    ],
+    "answers": [
+     "Counter"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "static 메서드에서는 this를 사용할 수 없다. 클래스 이름 Counter로 static 필드 count에 접근한다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q6",
+    "type": "order",
+    "title": "생성된 객체 수 세기",
+    "prompt": "Ticket 객체를 두 개 생성하고 static count로 개수 2를 출력하도록 한 줄씩 배열하시오.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Ticket {"
+     },
+     {
+      "id": "c2",
+      "text": "    private static int count;"
+     },
+     {
+      "id": "c3",
+      "text": "    public Ticket() {"
+     },
+     {
+      "id": "c4",
+      "text": "        count++;"
+     },
+     {
+      "id": "c5",
+      "text": "    }"
+     },
+     {
+      "id": "c6",
+      "text": "    public static int getCount() {"
+     },
+     {
+      "id": "c7",
+      "text": "        return count;"
+     },
+     {
+      "id": "c8",
+      "text": "    }"
+     },
+     {
+      "id": "c9",
+      "text": "}"
+     },
+     {
+      "id": "c10",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c11",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c12",
+      "text": "        new Ticket();"
+     },
+     {
+      "id": "c13",
+      "text": "        new Ticket();"
+     },
+     {
+      "id": "c14",
+      "text": "        System.out.println(Ticket.getCount());"
+     },
+     {
+      "id": "c15",
+      "text": "    }"
+     },
+     {
+      "id": "c16",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "    public int getCount() {"
+     },
+     {
+      "id": "w2",
+      "text": "        count = 1;"
+     }
+    ],
+    "explanation": "두 생성자가 같은 static count를 차례대로 증가시켜 2가 된다. getCount()는 static이어야 Ticket.getCount()로 호출할 수 있다."
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "final 필드 초기화하기",
+    "prompt": "기기마다 다른 일련번호를 가지며 생성 후에는 변경할 수 없도록 완성하시오. (빈칸 3곳)",
+    "lang": "java",
+    "codeTemplate": "class Device {\n    private [[0]] String serialNumber;\n\n    public Device(String serialNumber) {\n        [[1]] = [[2]];\n    }\n\n    public String getSerialNumber() {\n        return serialNumber;\n    }\n}",
+    "tokens": [
+     "final",
+     "static",
+     "public",
+     "this.serialNumber",
+     "serialNumber",
+     "this",
+     "\"serialNumber\""
+    ],
+    "answers": [
+     "final",
+     "this.serialNumber",
+     "serialNumber"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "선언할 때 값을 넣지 않은 final 필드는 생성자에서 한 번 초기화할 수 있다. this.serialNumber에 매개변수 serialNumber를 대입한다. static이면 모든 기기가 값을 공유해 버린다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q8",
+    "type": "mini_check",
+    "title": "final 재대입 오류 찾기",
+    "prompt": "final 필드 productCode를 사용하는 다음 Product에서 컴파일 오류가 발생하는 한 줄은?",
+    "options": [
+     {
+      "id": "A",
+      "text": "`private final String productCode;`"
+     },
+     {
+      "id": "B",
+      "text": "`this.productCode = productCode;` (생성자)"
+     },
+     {
+      "id": "C",
+      "text": "`this.productCode = productCode;` (changeCode)"
+     },
+     {
+      "id": "D",
+      "text": "`return productCode;`"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "생성자에서 이미 값이 정해진 final 필드에는 다른 값을 다시 대입할 수 없다. 생성자의 첫 대입은 정상이지만 changeCode()의 재대입에서 컴파일 오류가 난다."
+   },
+   {
+    "id": "q9",
+    "type": "code_exercise",
+    "title": "클래스 상수 선언하기",
+    "prompt": "최대 사용자 수를 클래스 상수로 선언하시오. (빈칸 2곳)",
+    "lang": "java",
+    "codeTemplate": "class Config {\n    public [[0]] [[1]] int MAX_USERS = 100;\n}",
+    "tokens": [
+     "static",
+     "final",
+     "private",
+     "int"
+    ],
+    "answers": [
+     "static",
+     "final"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "클래스에 하나만 존재하면서 변경할 수 없는 값은 static final로 선언한다. private이면 외부에서 사용할 수 없고, int를 한 번 더 쓰면 중복 선언이 된다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q10",
+    "type": "order",
+    "title": "클래스 상수 사용하기",
+    "prompt": "BASIC_FEE를 클래스 상수로 선언하고 클래스 이름으로 사용해 기본요금에 추가요금 2000을 더한 5000을 출력하도록 배열하시오.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Delivery {"
+     },
+     {
+      "id": "c2",
+      "text": "    public static final int BASIC_FEE = 3000;"
+     },
+     {
+      "id": "c3",
+      "text": "}"
+     },
+     {
+      "id": "c4",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c5",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c6",
+      "text": "        int total = Delivery.BASIC_FEE + 2000;"
+     },
+     {
+      "id": "c7",
+      "text": "        System.out.println(total);"
+     },
+     {
+      "id": "c8",
+      "text": "    }"
+     },
+     {
+      "id": "c9",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "    public static int BASIC_FEE = 3000;"
+     },
+     {
+      "id": "w2",
+      "text": "        int total = BASIC_FEE - 2000;"
+     }
+    ],
+    "explanation": "클래스 상수는 클래스명.상수명 형태로 사용한다. Delivery.BASIC_FEE(3000)에 2000을 더해 5000이 된다. 클래스 이름 없이 BASIC_FEE만 쓰면 Main에서 찾을 수 없다."
+   },
+   {
+    "id": "q11",
+    "type": "mini_check",
+    "title": "인스턴스 값과 공유값 예측하기",
+    "prompt": "personal은 인스턴스 필드, total은 static이다. score1.add(10)·score2.add(20) 후 personal1·personal2·total 순서로 출력하면?",
+    "options": [
+     {
+      "id": "A",
+      "text": "10 / 20 / 30"
+     },
+     {
+      "id": "B",
+      "text": "30 / 30 / 30"
+     },
+     {
+      "id": "C",
+      "text": "10 / 20 / 20"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "personal은 객체마다 따로 존재해 각각 10, 20이고, total은 두 객체가 공유하여 10+20=30이 된다."
+   },
+   {
+    "id": "q12",
+    "type": "mini_check",
+    "title": "알맞은 클래스 상수 선택하기",
+    "prompt": "세율 0.1을 모든 객체가 함께 사용하고 실행 중에는 변경하지 못하게 하려고 한다. 가장 알맞은 선언은?",
+    "options": [
+     {
+      "id": "A",
+      "text": "`public double taxRate = 0.1;`"
+     },
+     {
+      "id": "B",
+      "text": "`public static double taxRate = 0.1;`"
+     },
+     {
+      "id": "C",
+      "text": "`public final double TAX_RATE = 0.1;`"
+     },
+     {
+      "id": "D",
+      "text": "`public static final double TAX_RATE = 0.1;`"
+     }
+    ],
+    "correctOptionId": "D",
+    "explanation": "하나만 존재해야 하므로 static, 변경할 수 없어야 하므로 final을 함께 사용한다. static이 없으면 객체마다 생기고, final이 없으면 값을 바꿀 수 있다."
+   },
+   {
+    "id": "q13",
+    "type": "mini_check",
+    "title": "static과 final 구분하기",
+    "prompt": "COMPANY는 static final, employeeId는 final 필드다. Employee.COMPANY·employee1·employee2의 id 순서로 출력하면?",
+    "options": [
+     {
+      "id": "A",
+      "text": "코드회사 / E100 / E200"
+     },
+     {
+      "id": "B",
+      "text": "코드회사 / E100 / E100"
+     },
+     {
+      "id": "C",
+      "text": "E100 / E200 / 코드회사"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "COMPANY는 클래스가 공유하는 상수이고 employeeId는 객체마다 다른 final 필드다. 따라서 회사명과 각 사원의 서로 다른 사번이 출력된다."
+   },
+   {
+    "id": "q14",
+    "type": "code_exercise",
+    "title": "static 메서드의 직접 접근 구분하기",
+    "prompt": "getUserCount()가 컴파일되도록 완성하시오. (빈칸 1곳)",
+    "lang": "java",
+    "codeTemplate": "class GameUser {\n    private String nickname;\n    private static int userCount;\n\n    public GameUser(String nickname) {\n        this.nickname = nickname;\n        userCount++;\n    }\n\n    public static int getUserCount() {\n        return [[0]];\n    }\n}",
+    "tokens": [
+     "userCount",
+     "nickname",
+     "this.userCount"
+    ],
+    "answers": [
+     "userCount"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "userCount는 static 필드이므로 static 메서드에서 직접 사용할 수 있다. nickname은 인스턴스 필드이고 this는 static 메서드에서 사용할 수 없다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q15",
+    "type": "code_exercise",
+    "title": "계좌 클래스 완성하기",
+    "prompt": "은행 이름은 클래스 상수, 전체 계좌 수는 클래스가 하나만 관리, 계좌 번호는 계좌마다 다르며 변경 불가, 계좌 생성 시 전체 수 증가하도록 완성하시오. (빈칸 6곳)",
+    "lang": "java",
+    "codeTemplate": "class Account {\n    public [[0]] [[1]] String BANK_NAME = \"한빛은행\";\n\n    private [[2]] int totalAccounts;\n    private [[3]] String accountNumber;\n\n    public Account(String accountNumber) {\n        this.accountNumber = accountNumber;\n        [[4]]++;\n    }\n\n    public static int getTotalAccounts() {\n        return [[5]];\n    }\n\n    public String getAccountNumber() {\n        return accountNumber;\n    }\n}",
+    "tokens": [
+     "static",
+     "final",
+     "private",
+     "public",
+     "totalAccounts",
+     "accountNumber",
+     "BANK_NAME",
+     "String",
+     "int"
+    ],
+    "answers": [
+     "static",
+     "final",
+     "static",
+     "final",
+     "totalAccounts",
+     "totalAccounts"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "BANK_NAME은 static final 클래스 상수, totalAccounts는 변경 가능한 static 공유값, accountNumber는 객체마다 다른 final 고정값이다. 생성자에서 totalAccounts를 증가시키고 static 메서드로 반환한다.",
+    "inputMode": "tokens"
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}

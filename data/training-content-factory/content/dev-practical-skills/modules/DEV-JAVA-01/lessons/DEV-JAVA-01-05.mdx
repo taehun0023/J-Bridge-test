@@ -1,0 +1,338 @@
+---
+lesson_id: DEV-JAVA-01-05
+title: "Java初級05 条件分岐① if・else"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 18
+tags: [java, basics, if, conditionals, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次の作業ができるようになる。
+
+- if で条件が真のときだけコードを実行する。
+- if-else で条件によって2つの流れのうち1つを選ぶ。
+- 比較・論理演算子で条件式を書く。
+- 入れ子の if で条件を段階的に検査する。
+- 条件文の実行の流れと、よく発生するミスを理解する。
+
+## 授業内容
+
+### Part 1. if 条件文
+
+**概念説明**
+
+- if は条件によってコードの実行有無を決定する。
+- 括弧 `( )` の中には、結果が true または false になる条件式を書く。
+- 条件が true なら、中括弧内のコードを実行する。
+- 条件が false なら、中括弧内のコードをスキップする。
+- 条件文が終わった後は、次のコードを引き続き実行する。
+
+**コード文法**
+
+```java
+if (条件式) {
+    条件が true のときに実行するコード
+}
+```
+
+**例**
+
+```java
+int score = 80;
+
+if (score >= 60) {
+    System.out.println("合格");
+}
+
+System.out.println("検査完了");
+```
+
+**実行の流れと結果**
+
+1. `score >= 60` を計算する。
+2. 結果が true なので「合格」を出力する。
+3. 条件文が終わった後「検査完了」を出力する。
+
+```
+合格
+検査完了
+```
+
+score が 50 の場合、条件が false になるため、次のように出力される。
+
+```
+検査完了
+```
+
+**よくあるミス**
+
+条件式には boolean の結果が必要である。
+
+```java
+if (score) { // エラー: score は int
+    System.out.println("実行");
+}
+```
+
+次のように比較式を書く必要がある。
+
+```java
+if (score >= 60) {
+    System.out.println("実行");
+}
+```
+
+### Part 2. if-else 条件文
+
+**概念説明**
+
+- if-else は条件によって2つのコードのうち1つを実行する。
+- 条件が true なら if 領域を実行する。
+- 条件が false なら else 領域を実行する。
+- 2つの領域が同時に実行されることはない。
+- else には別の条件式を書かない。
+
+**コード文法**
+
+```java
+if (条件式) {
+    条件が true のときに実行するコード
+} else {
+    条件が false のときに実行するコード
+}
+```
+
+**例**
+
+```java
+int score = 55;
+
+if (score >= 60) {
+    System.out.println("合格");
+} else {
+    System.out.println("不合格");
+}
+```
+
+**実行の流れと結果**
+
+1. `score >= 60` を計算する。
+2. `55 >= 60` は false である。
+3. if 領域をスキップする。
+4. else 領域の「不合格」を出力する。
+
+```
+不合格
+```
+
+**よくあるミス**
+
+else の後ろには条件式を書かない。
+
+```java
+if (score >= 60) {
+    System.out.println("合格");
+} else (score < 60) { // エラー
+    System.out.println("不合格");
+}
+```
+
+正しいコードは次のとおりである。
+
+```java
+if (score >= 60) {
+    System.out.println("合格");
+} else {
+    System.out.println("不合格");
+}
+```
+
+複数の条件を順番に検査する else if は、次のパートで学習する。
+
+### Part 3. 比較・論理演算子を使った条件式
+
+**概念説明**
+
+- 条件式は比較演算子と論理演算子で書くことができる。
+- `&&` はすべての条件が真のときだけ全体の結果が真になる。
+- `||` は1つ以上の条件が真であれば全体の結果が真になる。
+- `!` は既存の条件の結果を反転させる。
+- 複雑な条件は括弧を使うと意味が明確になる。
+
+**例**
+
+```java
+int age = 20;
+boolean hasTicket = true;
+
+if (age >= 18 && hasTicket) {
+    System.out.println("入場可能");
+} else {
+    System.out.println("入場不可");
+}
+```
+
+**実行の流れと結果**
+
+1. `age >= 18` は true である。
+2. `hasTicket` も true である。
+3. `true && true` の結果は true である。
+4. 「入場可能」を出力する。
+
+```
+入場可能
+```
+
+**別の条件の例**
+
+```java
+boolean weekend = false;
+boolean holiday = true;
+
+if (weekend || holiday) {
+    System.out.println("休日");
+} else {
+    System.out.println("平日");
+}
+```
+
+```
+休日
+```
+
+**よくあるミス**
+
+代入演算子 `=` と比較演算子 `==` を混同しないようにする。
+
+```java
+boolean member = true;
+
+if (member == true) {
+    System.out.println("会員");
+}
+```
+
+boolean 変数は次のように直接条件として使う方がシンプルである。
+
+```java
+if (member) {
+    System.out.println("会員");
+}
+```
+
+反対の条件は `!` を使う。
+
+```java
+if (!member) {
+    System.out.println("非会員");
+}
+```
+
+### Part 4. 入れ子の if
+
+**概念説明**
+
+- if の内部に別の if を書くことができる。
+- これを入れ子の if(ネストした if)と呼ぶ。
+- 外側の条件が true のときだけ内側の条件を検査する。
+- 複数の条件を段階的に確認したいときに使うことができる。
+- ネストが多くなると実行の流れが複雑になるため、必要な場合にだけ使う。
+
+**例**
+
+```java
+int age = 20;
+boolean hasTicket = true;
+
+if (age >= 18) {
+    System.out.println("年齢確認完了");
+
+    if (hasTicket) {
+        System.out.println("入場可能");
+    }
+}
+```
+
+**実行の流れと結果**
+
+1. `age >= 18` を検査する。
+2. 結果が true なので「年齢確認完了」を出力する。
+3. 内側で `hasTicket` を検査する。
+4. 結果が true なので「入場可能」を出力する。
+
+```
+年齢確認完了
+入場可能
+```
+
+age が 18 より小さい場合、内側の if は検査しない。
+
+**よくあるミス**
+
+中括弧を省略すると、コードがどの条件に含まれるのか分かりにくくなる。
+
+```java
+if (age >= 18)
+    System.out.println("成人");
+    System.out.println("確認完了");
+```
+
+実際には最初の出力文だけが if に含まれる。初級段階では常に中括弧を書くのがよい。
+
+```java
+if (age >= 18) {
+    System.out.println("成人");
+    System.out.println("確認完了");
+}
+```
+
+## 総合例
+
+```java
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        int score = scanner.nextInt();
+
+        if (score >= 60) {
+            System.out.println("合格");
+        } else {
+            System.out.println("不合格");
+        }
+
+        System.out.println("採点完了");
+
+        scanner.close();
+    }
+}
+```
+
+入力:
+
+```
+75
+```
+
+実行結果:
+
+```
+合格
+採点完了
+```
+
+入力値が 40 の場合、次のように出力される。
+
+```
+不合格
+採点完了
+```
+
+## 次へ
+
+次は [Part 6「条件分岐② else if・switch・三項演算子」](/dev/lessons/DEV-JAVA-01-06)を学ぶ。

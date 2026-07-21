@@ -1,0 +1,453 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "多分岐と三項演算子を使おう",
+   "prompt": "else if・switch・三項演算子を、手を動かして覚えよう。",
+   "takeaway": "多分岐の基本を10ステップで確認します。"
+  },
+  "steps": [
+   {
+    "id": "java6-q1",
+    "type": "mini_check",
+    "title": "荷物の重さの分類",
+    "prompt": "重さが 5 以下なら 小型、15 以下なら 中型、それ以外は 大型 を出力するように、空欄に入るコード1行を選びなさい。",
+    "code": "int weight = 12;\n\nif (weight <= 5) {\n    System.out.println(\"小型\");\n[①]\n    System.out.println(\"中型\");\n} else {\n    System.out.println(\"大型\");\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`} else if (weight <= 15) {`"
+     },
+     {
+      "id": "B",
+      "text": "`} if (weight <= 15) {`"
+     },
+     {
+      "id": "C",
+      "text": "`} else if (weight >= 15) {`"
+     },
+     {
+      "id": "D",
+      "text": "`} else {`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "else if を使うと前の条件が偽のときだけ次の条件を調べる。weight が 12 なら 5 以下ではなく 15 以下なので「中型」が出力される。else if の代わりに別の if を使うと 5 以下の値も二重に調べられ、15 以上に条件を逆にすると「大型」になり、else だけだと else が2つになりコンパイルエラーになる。"
+   },
+   {
+    "id": "java6-q2",
+    "type": "order",
+    "title": "バッテリー状態の分類",
+    "prompt": "バッテリー値を宣言 → 高い状態の検査 → 普通状態の検査 → 低い状態の処理 の順に並べなさい。",
+    "items": [
+     {
+      "id": "p06q02_c1",
+      "text": "int battery = 27;"
+     },
+     {
+      "id": "p06q02_c2",
+      "text": "if (battery >= 80) {"
+     },
+     {
+      "id": "p06q02_c3",
+      "text": "    System.out.println(\"十分\");"
+     },
+     {
+      "id": "p06q02_c4",
+      "text": "} else if (battery >= 30) {"
+     },
+     {
+      "id": "p06q02_c5",
+      "text": "    System.out.println(\"普通\");"
+     },
+     {
+      "id": "p06q02_c6",
+      "text": "} else {"
+     },
+     {
+      "id": "p06q02_c7",
+      "text": "    System.out.println(\"充電が必要\");"
+     },
+     {
+      "id": "p06q02_c8",
+      "text": "}"
+     }
+    ],
+    "explanation": "battery の値を宣言し、高い状態から else if で順に検査する。27 は 80 以上でも 30 以上でもないので最後の else の「充電が必要」が出力される。",
+    "distractors": [
+     {
+      "id": "java6-q2_w01",
+      "text": "if (battery >= 20) {"
+     },
+     {
+      "id": "java6-q2_w02",
+      "text": "System.out.println(\"充電完了\");"
+     }
+    ]
+   },
+   {
+    "id": "java6-q3",
+    "type": "code_exercise",
+    "title": "switch の基本文法の完成",
+    "prompt": "day の値と一致する曜日を出力するように空欄を埋めなさい。(day = 3)",
+    "lang": "java",
+    "codeTemplate": "int day = 3;\n\nswitch (day) {\n    [[0]] 1:\n        System.out.println(\"月曜日\");\n        [[1]];\n    [[2]] 3:\n        System.out.println(\"水曜日\");\n        [[3]];\n    [[4]]:\n        System.out.println(\"他の曜日\");\n}",
+    "tokens": [
+     "case",
+     "case",
+     "break",
+     "break",
+     "default",
+     "if",
+     "continue",
+     "switch"
+    ],
+    "answers": [
+     "case",
+     "break",
+     "case",
+     "break",
+     "default"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "水曜日"
+    },
+    "explanation": "比較する値の前には case、各処理を終えるときは break、一致する値がないときは default を書く。day が 3 なので case 3 が実行され水曜日を出力し、break で switch を抜ける。continue はループのキーワードで、if は case の位置に書けない。"
+   },
+   {
+    "id": "java6-q4",
+    "type": "mini_check",
+    "title": "文字列 switch のフォールスルー",
+    "prompt": "次のコードの実行結果として正しいものはどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "`開く`, `保存`"
+     },
+     {
+      "id": "B",
+      "text": "`開く`"
+     },
+     {
+      "id": "C",
+      "text": "`保存`"
+     },
+     {
+      "id": "D",
+      "text": "`開く`, `不明`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "command が open なので case \"open\" が実行され「開く」を出力する。break が無いと次の case に進むので case \"save\" の「保存」も出力され、その後 break で switch を抜ける。そのため 開く と 保存 が一緒に出力される。",
+    "code": "String command = \"open\";\n\nswitch (command) {\n    case \"open\":\n        System.out.println(\"開く\");\n    case \"save\":\n        System.out.println(\"保存\");\n        break;\n    default:\n        System.out.println(\"不明\");\n}"
+   },
+   {
+    "id": "java6-q5",
+    "type": "code_exercise",
+    "title": "画面モードの選択",
+    "prompt": "18時前なら \"昼間\"、そうでなければ \"夜間\" が保存されるように三項演算子を完成させなさい。",
+    "lang": "java",
+    "codeTemplate": "int hour = 21;\nString mode = hour [[0]] 18 [[1]] \"昼間\" [[2]] \"夜間\";\n\nSystem.out.println(mode);",
+    "tokens": [
+     "<",
+     "?",
+     ":",
+     ">",
+     "->",
+     "else"
+    ],
+    "answers": [
+     "<",
+     "?",
+     ":"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "夜間"
+    },
+    "explanation": "三項演算子は 条件 ? 真のときの値 : 偽のときの値 の形である。hour が 21 なら 21 < 18 が false なので「夜間」が保存される。> は真になって「昼間」になり、->・else は三項演算子の記号ではないのでコンパイルエラーになる。"
+   },
+   {
+    "id": "java6-q7",
+    "type": "mini_check",
+    "title": "if-else を三項演算子に変える",
+    "prompt": "次の if-else と同じ結果になる三項演算子のコードはどれか？",
+    "code": "int age = 16;\nString result;\n\nif (age >= 18) {\n    result = \"成人\";\n} else {\n    result = \"未成年者\";\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`String result = age >= 18 ? \"成人\" : \"未成年者\";`"
+     },
+     {
+      "id": "B",
+      "text": "`String result = age >= 18 : \"成人\" ? \"未成年者\";`"
+     },
+     {
+      "id": "C",
+      "text": "`String result = age = 18 ? \"成人\" : \"未成年者\";`"
+     },
+     {
+      "id": "D",
+      "text": "`String result = age >= 18 ? \"未成年者\" : \"成人\";`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "条件が true なら ? の後の成人、false なら : の後の未成年者が選ばれる必要がある。B は ? と : の位置が逆でエラー、C は = 代入で条件にならず、D は真偽の値が入れ替わっている。"
+   },
+   {
+    "id": "java6-q8",
+    "type": "code_exercise",
+    "title": "入力値を else-if で分類",
+    "prompt": "空気質の数値を入力し、50 以下は 良い、100 以下は 普通、それ以外は 悪い を出力するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "Scanner scanner = new Scanner(System.in);\nint airQuality = scanner.[[0]]();\n\nif (airQuality [[1]] 50) {\n    System.out.println(\"良い\");\n} else if (airQuality [[2]] 100) {\n    System.out.println(\"普通\");\n} else {\n    System.out.println(\"悪い\");\n}",
+    "tokens": [
+     "nextInt",
+     "nextDouble",
+     "<=",
+     "<=",
+     ">=",
+     ">"
+    ],
+    "answers": [
+     "nextInt",
+     "<=",
+     "<="
+    ],
+    "result": {
+     "kind": "console",
+     "output": "普通",
+     "stdin": "51"
+    },
+    "explanation": "数値は整数なので nextInt() で受け取り、「以下」は小さいか等しいので <= で比較する。入力が 51 なら 50 以下ではなく 100 以下なので「普通」が出力される。>=・> は条件が逆になり別の結果になる。"
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "다중 분기와 삼항 연산자를 쓰자",
+   "prompt": "else if·switch·삼항 연산자를 손으로 익히자.",
+   "takeaway": "다중 분기의 기본을 10스텝으로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "java6-q1",
+    "type": "mini_check",
+    "title": "택배 무게 분류",
+    "prompt": "무게가 5 이하이면 소형, 15 이하이면 중형, 나머지는 대형을 출력하도록 빈칸에 들어갈 코드 한 줄을 고르시오.",
+    "code": "int weight = 12;\n\nif (weight <= 5) {\n    System.out.println(\"소형\");\n[①]\n    System.out.println(\"중형\");\n} else {\n    System.out.println(\"대형\");\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`} else if (weight <= 15) {`"
+     },
+     {
+      "id": "B",
+      "text": "`} if (weight <= 15) {`"
+     },
+     {
+      "id": "C",
+      "text": "`} else if (weight >= 15) {`"
+     },
+     {
+      "id": "D",
+      "text": "`} else {`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "else if를 사용해야 앞 조건이 거짓일 때만 다음 조건을 검사한다. weight가 12이면 5 이하가 아니고 15 이하이므로 「중형」이 출력된다. else if 대신 별도의 if를 쓰면 5 이하인 값도 두 번 검사되고, 15 이상으로 조건을 뒤집으면 「대형」이 나오며, else만 쓰면 else가 두 개가 되어 컴파일 오류다."
+   },
+   {
+    "id": "java6-q2",
+    "type": "order",
+    "title": "배터리 상태 분류",
+    "prompt": "배터리 값을 선언 → 높은 상태 검사 → 보통 상태 검사 → 낮은 상태 처리 순서로 배열하시오.",
+    "items": [
+     {
+      "id": "p06q02_c1",
+      "text": "int battery = 27;"
+     },
+     {
+      "id": "p06q02_c2",
+      "text": "if (battery >= 80) {"
+     },
+     {
+      "id": "p06q02_c3",
+      "text": "    System.out.println(\"충분\");"
+     },
+     {
+      "id": "p06q02_c4",
+      "text": "} else if (battery >= 30) {"
+     },
+     {
+      "id": "p06q02_c5",
+      "text": "    System.out.println(\"보통\");"
+     },
+     {
+      "id": "p06q02_c6",
+      "text": "} else {"
+     },
+     {
+      "id": "p06q02_c7",
+      "text": "    System.out.println(\"충전 필요\");"
+     },
+     {
+      "id": "p06q02_c8",
+      "text": "}"
+     }
+    ],
+    "explanation": "battery 값을 선언하고 높은 상태부터 else if로 차례로 검사한다. 27은 80 이상도 30 이상도 아니므로 마지막 else의 「충전 필요」가 출력된다.",
+    "distractors": [
+     {
+      "id": "java6-q2_w01",
+      "text": "if (battery >= 20) {"
+     },
+     {
+      "id": "java6-q2_w02",
+      "text": "System.out.println(\"충전 완료\");"
+     }
+    ]
+   },
+   {
+    "id": "java6-q3",
+    "type": "code_exercise",
+    "title": "switch 기본 문법 완성",
+    "prompt": "day 값과 일치하는 요일을 출력하도록 빈칸을 채우시오. (day = 3)",
+    "lang": "java",
+    "codeTemplate": "int day = 3;\n\nswitch (day) {\n    [[0]] 1:\n        System.out.println(\"월요일\");\n        [[1]];\n    [[2]] 3:\n        System.out.println(\"수요일\");\n        [[3]];\n    [[4]]:\n        System.out.println(\"다른 요일\");\n}",
+    "tokens": [
+     "case",
+     "case",
+     "break",
+     "break",
+     "default",
+     "if",
+     "continue",
+     "switch"
+    ],
+    "answers": [
+     "case",
+     "break",
+     "case",
+     "break",
+     "default"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "수요일"
+    },
+    "explanation": "비교할 값 앞에는 case, 각 처리를 끝낼 때는 break, 일치하는 값이 없을 때는 default를 쓴다. day가 3이라 case 3이 실행되어 수요일을 출력하고 break로 switch를 빠져나온다. continue는 반복문 키워드이고 if는 case 자리에 쓸 수 없다."
+   },
+   {
+    "id": "java6-q4",
+    "type": "mini_check",
+    "title": "문자열 switch의 fall-through",
+    "prompt": "다음 코드의 실행 결과로 옳은 것은?",
+    "options": [
+     {
+      "id": "A",
+      "text": "`열기`, `저장`"
+     },
+     {
+      "id": "B",
+      "text": "`열기`"
+     },
+     {
+      "id": "C",
+      "text": "`저장`"
+     },
+     {
+      "id": "D",
+      "text": "`열기`, `알 수 없음`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "command가 open이라 case \"open\"이 실행되어 「열기」를 출력한다. break가 없으면 다음 case로 넘어가므로 case \"save\"의 「저장」도 출력되고, 그 뒤 break로 switch를 빠져나온다. 그래서 열기와 저장이 함께 출력된다.",
+    "code": "String command = \"open\";\n\nswitch (command) {\n    case \"open\":\n        System.out.println(\"열기\");\n    case \"save\":\n        System.out.println(\"저장\");\n        break;\n    default:\n        System.out.println(\"알 수 없음\");\n}"
+   },
+   {
+    "id": "java6-q5",
+    "type": "code_exercise",
+    "title": "화면 모드 선택",
+    "prompt": "18시 전이면 \"주간\", 그렇지 않으면 \"야간\"이 저장되도록 삼항 연산자를 완성하시오.",
+    "lang": "java",
+    "codeTemplate": "int hour = 21;\nString mode = hour [[0]] 18 [[1]] \"주간\" [[2]] \"야간\";\n\nSystem.out.println(mode);",
+    "tokens": [
+     "<",
+     "?",
+     ":",
+     ">",
+     "->",
+     "else"
+    ],
+    "answers": [
+     "<",
+     "?",
+     ":"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "야간"
+    },
+    "explanation": "삼항 연산자는 조건 ? 참일 때 값 : 거짓일 때 값 형태다. hour가 21이면 21 < 18이 false이므로 「야간」이 저장된다. >는 참이 되어 「주간」이 나오고, ->·else는 삼항 연산자 기호가 아니라 컴파일 오류가 난다."
+   },
+   {
+    "id": "java6-q7",
+    "type": "mini_check",
+    "title": "if-else를 삼항 연산자로 변경",
+    "prompt": "다음 if-else와 같은 결과를 만드는 삼항 연산자 코드는?",
+    "code": "int age = 16;\nString result;\n\nif (age >= 18) {\n    result = \"성인\";\n} else {\n    result = \"미성년자\";\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`String result = age >= 18 ? \"성인\" : \"미성년자\";`"
+     },
+     {
+      "id": "B",
+      "text": "`String result = age >= 18 : \"성인\" ? \"미성년자\";`"
+     },
+     {
+      "id": "C",
+      "text": "`String result = age = 18 ? \"성인\" : \"미성년자\";`"
+     },
+     {
+      "id": "D",
+      "text": "`String result = age >= 18 ? \"미성년자\" : \"성인\";`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "조건이 true이면 ? 뒤의 성인, false이면 : 뒤의 미성년자가 선택되어야 한다. B는 ?와 :의 위치가 바뀌어 오류, C는 = 대입이라 조건이 아니고, D는 참/거짓의 값이 뒤바뀌었다."
+   },
+   {
+    "id": "java6-q8",
+    "type": "code_exercise",
+    "title": "입력값을 else-if로 분류",
+    "prompt": "공기질 수치를 입력받아 50 이하는 좋음, 100 이하는 보통, 나머지는 나쁨을 출력하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "Scanner scanner = new Scanner(System.in);\nint airQuality = scanner.[[0]]();\n\nif (airQuality [[1]] 50) {\n    System.out.println(\"좋음\");\n} else if (airQuality [[2]] 100) {\n    System.out.println(\"보통\");\n} else {\n    System.out.println(\"나쁨\");\n}",
+    "tokens": [
+     "nextInt",
+     "nextDouble",
+     "<=",
+     "<=",
+     ">=",
+     ">"
+    ],
+    "answers": [
+     "nextInt",
+     "<=",
+     "<="
+    ],
+    "result": {
+     "kind": "console",
+     "output": "보통",
+     "stdin": "51"
+    },
+    "explanation": "수치는 정수라 nextInt()로 받고, 「이하」는 작거나 같음이므로 <=로 비교한다. 입력이 51이면 50 이하가 아니고 100 이하라 「보통」이 출력된다. >=·>는 조건이 반대로 되어 다른 결과가 나온다."
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}

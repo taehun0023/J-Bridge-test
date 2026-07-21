@@ -1,159 +1,231 @@
 ---
 lesson_id: DEV-JAVA-02-01
-title: "상속과 인터페이스가 실무 코드에서 사용되는 방식 읽기"
-module: DEV-JAVA-02
-level: intermediate
+title: "Java중급01 클래스와 객체"
+module: DEV-JAVA-01
 language: ko
-est_minutes: 18
-tags: [java, oop, inheritance, interface, polymorphism, static-content]
+level: foundation
+est_minutes: 20
+tags: [java, intermediate, oop, class, object, static-content]
 ---
 
-## 1) 학습 목표
+## 학습 목표
 
-- 클래스의 상속 관계를 보고 메서드 호출이 어느 클래스에서 실행되는지 추적할 수 있다.
-- 인터페이스와 추상 클래스의 차이를 설명하고, 각각의 사용 기준을 판단할 수 있다.
-- 다형성(폴리모피즘)이 실무 코드에서 어떻게 활용되는지 읽을 수 있다.
-- `@Override` 어노테이션의 의미와 오버라이드된 메서드의 실행 순서를 설명할 수 있다.
+이 파트를 학습한 후 다음 작업을 할 수 있어야 합니다.
 
-## 2) 업무 맥락
+- 클래스와 객체의 관계를 설명한다.
+- 객체를 표현하는 클래스를 선언한다.
+- new를 사용하여 객체를 생성한다.
+- 점 연산자로 객체의 데이터에 접근한다.
+- 하나의 클래스로 여러 객체를 만든다.
 
-실무 Java 프로젝트에서는 공통 로직을 부모 클래스에 모으고 개별 로직을 서브클래스에서 구현하는 설계가 자주 등장한다. 예를 들어 알림 서비스에서 공통 검증을 부모 클래스에 정의하고, 이메일/SMS/푸시 알림을 각각 서브클래스에서 구현하는 패턴이다. 이 구조를 읽지 못하면 처리가 어디에서 실행되는지 파악할 수 없고, 버그 원인 추적에 시간이 걸린다.
+## 수업 내용
 
-## 3) 핵심 설명
+### Part 1. 클래스와 객체
 
-### 상속의 기본 구조
-
-Java의 `extends` 키워드로 클래스를 상속한다. 서브클래스는 부모 클래스의 필드와 메서드를 물려받는다.
+학생 한 명의 정보를 여러 변수로 표현할 수 있다.
 
 ```java
-public class Animal {
-    protected String name;
+String name = "민수";
+int score = 85;
+```
 
-    public String speak() {
-        return "...";
-    }
+학생이 여러 명이면 학생마다 변수를 따로 만들어야 한다.
+
+```java
+String name1 = "민수";
+int score1 = 85;
+
+String name2 = "지수";
+int score2 = 92;
+```
+
+클래스를 사용하면 이름과 점수처럼 서로 관련된 데이터를 하나의 객체로 묶을 수 있다.
+
+```java
+class Student {
+    String name;
+    int score;
+}
+```
+
+클래스는 객체가 어떤 데이터를 가질지 정의한 설계도다. 위 Student 클래스는 학생 객체가 이름과 점수를 가질 수 있도록 정의한다.
+
+클래스를 선언한 것만으로 학생 객체가 만들어지지는 않는다.
+
+### Part 2. 객체 생성
+
+클래스로 실제 객체를 만들 때는 new를 사용한다.
+
+```java
+Student student = new Student();
+```
+
+- `Student`: 객체를 만들 때 사용하는 클래스
+- `student`: 생성한 객체를 사용하는 변수
+- `new Student()`: 새로운 Student 객체 생성
+
+객체를 생성하는 기본 형식은 다음과 같다.
+
+```java
+클래스명 객체변수 = new 클래스명();
+```
+
+클래스로부터 생성된 객체를 해당 클래스의 인스턴스라고 한다.
+
+```java
+Student student = new Student();
+```
+
+위에서 생성한 객체는 Student 클래스의 인스턴스다. `Student()`가 동작하는 자세한 과정은 생성자 파트에서 학습한다.
+
+**자주 하는 실수**
+
+객체를 생성할 때 new를 빠뜨리면 안 된다.
+
+```java
+Student student = Student(); // 컴파일 오류
+```
+
+올바른 코드는 다음과 같다.
+
+```java
+Student student = new Student();
+```
+
+자바는 대소문자를 구분하므로 클래스 이름도 정확하게 작성해야 한다.
+
+```java
+Student student = new student(); // 컴파일 오류
+```
+
+### Part 3. 객체의 데이터 사용
+
+객체가 가진 데이터에는 점 연산자 `.`로 접근한다.
+
+```java
+Student student = new Student();
+
+student.name = "민수";
+student.score = 85;
+```
+
+객체의 데이터를 읽을 때도 점 연산자를 사용한다.
+
+```java
+System.out.println(student.name);
+System.out.println(student.score);
+```
+
+**실행 결과**
+
+```text
+민수
+85
+```
+
+기본 형식은 다음과 같다.
+
+```java
+객체변수.데이터이름 = 값;
+System.out.println(객체변수.데이터이름);
+```
+
+객체 내부에 선언된 변수의 정확한 명칭과 특징은 다음 파트에서 학습한다.
+
+**자주 하는 실수**
+
+점 연산자를 빠뜨리면 객체의 데이터를 사용할 수 없다.
+
+```java
+student name = "민수"; // 컴파일 오류
+student.name = "민수";
+```
+
+클래스에 선언되지 않은 데이터도 사용할 수 없다.
+
+```java
+class Student {
+    String name;
+    int score;
 }
 
-public class Dog extends Animal {
-    @Override
-    public String speak() {
-        return name + "가 멍멍 짖는다";
+Student student = new Student();
+
+student.age = 20; // age가 선언되어 있지 않으므로 컴파일 오류
+```
+
+### Part 4. 하나의 클래스로 여러 객체 만들기
+
+하나의 클래스로 여러 객체를 만들 수 있다.
+
+```java
+Student student1 = new Student();
+Student student2 = new Student();
+```
+
+두 객체에 서로 다른 값을 저장할 수 있다.
+
+```java
+student1.name = "민수";
+student1.score = 85;
+
+student2.name = "지수";
+student2.score = 92;
+```
+
+```java
+System.out.println(student1.name);
+System.out.println(student1.score);
+
+System.out.println(student2.name);
+System.out.println(student2.score);
+```
+
+**실행 결과**
+
+```text
+민수
+85
+지수
+92
+```
+
+student1과 student2는 같은 Student 클래스로 만들었지만 서로 다른 객체다. 클래스는 한 번 선언하고, 그 클래스를 이용하여 필요한 수만큼 객체를 만들 수 있다.
+
+### 종합 예제
+
+```java
+class Product {
+    String name;
+    int price;
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Product product1 = new Product();
+        Product product2 = new Product();
+
+        product1.name = "키보드";
+        product1.price = 35000;
+
+        product2.name = "마우스";
+        product2.price = 20000;
+
+        System.out.println(product1.name + ": " + product1.price + "원");
+        System.out.println(product2.name + ": " + product2.price + "원");
     }
 }
 ```
 
-`Dog` 인스턴스에서 `speak()`을 호출하면 `Dog`의 메서드가 실행된다. 이것이 메서드 오버라이드다. `@Override` 어노테이션은 "부모 클래스의 메서드를 덮어쓰고 있다"는 것을 컴파일러에 알려 시그니처 실수를 방지한다.
+**실행 결과**
 
-### 인터페이스와 추상 클래스
-
-**인터페이스**는 "무엇을 할 수 있는가"를 정의하는 계약이다. 구현 상세는 갖지 않는다.
-
-```java
-public interface Notifiable {
-    void send(String message, String recipient);
-}
+```text
+키보드: 35000원
+마우스: 20000원
 ```
 
-**추상 클래스**는 "공통 로직 + 미구현 부분"을 가진다.
+Product 클래스는 상품 객체가 이름과 가격을 가질 수 있도록 정의한다. product1과 product2는 같은 클래스로 생성된 서로 다른 객체다.
 
-```java
-public abstract class BaseNotifier {
-    protected boolean validate(String recipient) {
-        return recipient != null && !recipient.isEmpty();
-    }
+## 다음으로
 
-    public abstract void send(String message, String recipient);
-}
-```
-
-구분 기준은 명확하다. 공통 구현 코드를 공유하고 싶으면 추상 클래스, 여러 타입에 공통 능력을 부여하고 싶으면 인터페이스를 선택한다. Java에서 클래스 다중 상속은 불가능하지만, 인터페이스는 여러 개 구현할 수 있다.
-
-### 다형성의 활용
-
-부모 클래스나 인터페이스 타입의 변수로 서브클래스 인스턴스를 다루는 것이 다형성이다.
-
-```java
-List<Notifiable> notifiers = List.of(
-    new EmailNotifier(),
-    new SmsNotifier(),
-    new PushNotifier()
-);
-
-for (Notifiable n : notifiers) {
-    n.send("서버 복구 완료", recipient);
-}
-```
-
-`notifiers` 리스트의 각 요소는 다른 클래스이지만, 공통의 `send` 메서드로 통일적으로 다룰 수 있다. 새로운 알림 수단을 추가할 때도 `Notifiable`을 구현하는 클래스 하나만 추가하면 된다.
-
-## 4) 실무 해석 시나리오
-
-### 시나리오 A
-```java
-public interface PaymentProcessor {
-    PaymentResult process(Order order);
-}
-
-public class CreditCardProcessor implements PaymentProcessor {
-    @Override
-    public PaymentResult process(Order order) {
-        // 신용카드 결제 로직
-        return new PaymentResult(true, "CREDIT");
-    }
-}
-
-public class PaymentService {
-    private final PaymentProcessor processor;
-
-    public PaymentService(PaymentProcessor processor) {
-        this.processor = processor;
-    }
-
-    public PaymentResult pay(Order order) {
-        return processor.process(order);
-    }
-}
-```
-- 읽기 포인트:
-  - `PaymentService`는 인터페이스 타입의 필드를 가지므로 구체적 결제 방법에 의존하지 않는다.
-  - 생성자를 통해 주입되므로 테스트 시 목 객체를 전달할 수 있다.
-  - 새로운 결제 방법(편의점 결제 등)은 `PaymentProcessor`를 구현하기만 하면 추가할 수 있다.
-
-### 시나리오 B
-```java
-Animal animal = new Dog();
-animal.speak(); // → "null가 멍멍 짖는다" (name이 미설정인 경우)
-```
-- 해석:
-  - 변수 타입은 `Animal`이지만 실행되는 것은 `Dog`의 `speak()`이다.
-  - 컴파일 시점의 타입이 아니라 런타임 인스턴스의 타입으로 메서드가 결정된다.
-  - `name`이 초기화되지 않아 `null`이 된 점도 버그 원인이 된다.
-
-## 5) 자주 하는 실수
-
-1. 부모 클래스 타입으로 선언한 변수에서 서브클래스 고유 메서드를 호출하려 한다.
-`Animal animal = new Dog();`인 경우 `animal`로 호출할 수 있는 것은 `Animal`에 정의된 메서드뿐이다. `Dog` 고유 메서드는 캐스팅이 필요하다.
-
-2. `@Override`를 붙이지 않고 오버라이드하려다 시그니처를 잘못 작성한다.
-반환 타입이나 매개변수가 미묘하게 다르면 새 메서드 정의가 되어 부모의 메서드가 실행된다.
-
-3. 인터페이스와 추상 클래스의 구분을 이해하지 못하고 항상 추상 클래스를 선택한다.
-다중 구현이 필요한 장면에서 인터페이스를 사용하지 않으면 설계 유연성이 떨어진다.
-
-4. `super` 키워드를 잊고 부모 클래스의 처리를 건너뛴다.
-생성자나 오버라이드 메서드에서 `super()`나 `super.method()`를 호출하지 않으면 부모의 초기화나 공통 처리가 실행되지 않는다.
-
-## 6) 확인 질문
-
-1. `extends`와 `implements`의 차이는 무엇인가?
-2. `@Override` 어노테이션을 붙이는 이유는 무엇인가?
-3. 인터페이스와 추상 클래스는 각각 어떤 상황에서 사용하는가?
-4. 다형성에 의해 코드의 확장성은 어떻게 향상되는가?
-5. 부모 클래스 타입의 변수로 서브클래스 인스턴스를 참조할 때 어느 클래스의 메서드가 실행되는가?
-
-## 7) 문항 발췌 메모
-
-- 사실형 후보: 인터페이스와 추상 클래스의 정의상 차이, 다중 상속 제약
-- 판단형 후보: 인터페이스와 추상 클래스의 사용 구분 판단
-- 시나리오형 후보: 상속 관계 코드에서 메서드 호출처 추적, DI(의존성 주입) 패턴 읽기
-- 오답 유도 포인트: 컴파일 시점 타입과 런타임 타입 혼동, @Override 없는 시그니처 실수
+다음 학습 내용은 [Part 2「필드와 인스턴스 메서드」](/dev/lessons/DEV-JAVA-02-02)이다.

@@ -1,0 +1,437 @@
+---
+lesson_id: DEV-JAVA-01-09
+title: "Java初級09 繰り返し③ break・continue・ネスト"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 18
+tags: [java, basics, loop, break, continue, nested, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次の作業ができるようになる。
+
+- break で繰り返しを直ちに終了する。
+- continue で現在の繰り返しだけをスキップする。
+- ネストした繰り返しの外側・内側の実行順序を理解する。
+- ネストした繰り返しで表や簡単な形を出力する。
+- ネストした繰り返しで break と continue が適用される範囲を区別する。
+
+## 授業内容
+
+### Part 1. break
+
+**概念説明**
+
+- break は実行中の繰り返しを直ちに終了する。
+- break の下に残っているコードは実行しない。
+- 繰り返し条件がまだ true でも繰り返しの外へ移動する。
+- 特定の値を見つけたときや終了値が入力されたときに使用できる。
+- 前のパートでは switch を終了するときに使用したが、今回は繰り返しの終了に使用する。
+
+**コード文法の分解**
+
+```java
+for (int i = 1; i <= 10; i++) {
+    if (i == 4) {
+        break;
+    }
+
+    System.out.println(i);
+}
+```
+
+| コード | 意味 |
+|---|---|
+| `i <= 10` | 本来は 10 まで繰り返す |
+| `i == 4` | i が 4 かどうかを確認 |
+| `break` | 現在の繰り返しを直ちに終了 |
+| `println` | break されなかった値だけを出力 |
+
+**実行の流れと結果**
+
+- `i = 1` → 1 を出力
+- `i = 2` → 2 を出力
+- `i = 3` → 3 を出力
+- `i = 4` → break 実行
+
+```
+1
+2
+3
+```
+
+i が 4 のときは出力文より break が先に実行されるため、4 は出力されない。
+
+**入力終了の例**
+
+```java
+Scanner scanner = new Scanner(System.in);
+
+while (true) {
+    int number = scanner.nextInt();
+
+    if (number == 0) {
+        break;
+    }
+
+    System.out.println(number);
+}
+
+scanner.close();
+```
+
+入力:
+
+```
+5
+3
+0
+```
+
+出力:
+
+```
+5
+3
+```
+
+`while (true)` は条件が常に真だが、0 が入力されると break で終了する。
+
+**よくあるミス**
+
+break の後のコードは同じ繰り返しの中では実行されない。
+
+```java
+if (number == 0) {
+    break;
+    System.out.println("終了"); // 実行できないコード
+}
+```
+
+終了メッセージが必要なら break の前に書く。
+
+```java
+if (number == 0) {
+    System.out.println("終了");
+    break;
+}
+```
+
+### Part 2. continue
+
+**概念説明**
+
+- continue は現在の繰り返しの残りのコードだけをスキップする。
+- 繰り返し全体を終了するわけではない。
+- for文では増減式へ移動した後、次の条件を検査する。
+- while文では条件式の検査位置へ移動する。
+- 特定の値だけを出力や計算から除外するときに使用できる。
+
+**コード文法の分解**
+
+```java
+for (int i = 1; i <= 5; i++) {
+    if (i == 3) {
+        continue;
+    }
+
+    System.out.println(i);
+}
+```
+
+| コード | 意味 |
+|---|---|
+| `i == 3` | スキップする値を確認 |
+| `continue` | 現在の繰り返しの残りのコードを省略 |
+| `println` | 3 を除いた値だけを出力 |
+
+**実行の流れと結果**
+
+- `i = 1` → 1 を出力
+- `i = 2` → 2 を出力
+- `i = 3` → continue
+- `i = 4` → 4 を出力
+- `i = 5` → 5 を出力
+
+```
+1
+2
+4
+5
+```
+
+**条件に合う値を除外**
+
+```java
+for (int i = 1; i <= 6; i++) {
+    if (i % 2 == 0) {
+        continue;
+    }
+
+    System.out.println(i);
+}
+```
+
+偶数のときは出力文をスキップする。
+
+```
+1
+3
+5
+```
+
+**while での注意点**
+
+```java
+int i = 0;
+
+while (i < 5) {
+    i++;
+
+    if (i == 3) {
+        continue;
+    }
+
+    System.out.println(i);
+}
+```
+
+i を先に増加させた後 continue を検査する。
+
+```
+1
+2
+4
+5
+```
+
+**よくあるミス**
+
+次のコードは i が 3 のとき同じ繰り返しをずっと実行し続けることがある。
+
+```java
+int i = 1;
+
+while (i <= 5) {
+    if (i == 3) {
+        continue;
+    }
+
+    System.out.println(i);
+    i++;
+}
+```
+
+`i == 3` のとき i++ をスキップしてしまうためである。while で continue を使うときは変数を変更する位置を確認しなければならない。
+
+### Part 3. break と continue の比較
+
+| 区分 | break | continue |
+|---|---|---|
+| 役割 | 繰り返し全体を終了 | 現在の繰り返しだけをスキップ |
+| 次の実行位置 | 繰り返しの次のコード | 次の繰り返し |
+| 繰り返しの継続 | 終了 | 継続 |
+| 主な使用場面 | 値の発見・終了入力 | 特定の値を除外 |
+
+**比較の例**
+
+```java
+for (int i = 1; i <= 5; i++) {
+    if (i == 3) {
+        break;
+    }
+
+    System.out.println(i);
+}
+```
+
+```
+1
+2
+```
+
+```java
+for (int i = 1; i <= 5; i++) {
+    if (i == 3) {
+        continue;
+    }
+
+    System.out.println(i);
+}
+```
+
+```
+1
+2
+4
+5
+```
+
+break は繰り返しを終わらせるが、continue は次の繰り返しを続ける。
+
+### Part 4. ネストした繰り返し
+
+**概念説明**
+
+- 繰り返しの中に別の繰り返しを書くことができる。
+- これをネストした繰り返しという。
+- 外側の繰り返しが1回実行される間、内側の繰り返しは全体の繰り返しを行う。
+- 外側と内側の繰り返し変数は互いに異なる名前を使う。
+- 一般的に外側は行、内側は列を表すときに使う。
+
+**コード文法の分解**
+
+```java
+for (int row = 1; row <= 2; row++) {
+    for (int column = 1; column <= 3; column++) {
+        System.out.print(row);
+        System.out.print(" ");
+        System.out.println(column);
+    }
+}
+```
+
+| 変数 | 役割 |
+|---|---|
+| `row` | 外側の繰り返し位置 |
+| `column` | 内側の繰り返し位置 |
+| 外側の繰り返し回数 | 2回 |
+| 内側の繰り返し回数 | 外側1回ごとに3回 |
+| 全体の実行回数 | 2 × 3 で6回 |
+
+**実行の流れと結果**
+
+- `row = 1` → column = 1, 2, 3
+- `row = 2` → column = 1, 2, 3
+
+```
+1 1
+1 2
+1 3
+2 1
+2 2
+2 3
+```
+
+**星形の出力**
+
+```java
+for (int row = 1; row <= 3; row++) {
+    for (int column = 1; column <= row; column++) {
+        System.out.print("*");
+    }
+
+    System.out.println();
+}
+```
+
+**実行の流れ**
+
+- row が1のとき星を1個出力する。
+- row が2のとき星を2個出力する。
+- row が3のとき星を3個出力する。
+
+```
+*
+**
+***
+```
+
+**よくあるミス**
+
+内側の繰り返しの条件で間違った変数を使うと、正常に終了しないことがある。
+
+```java
+for (int row = 1; row <= 3; row++) {
+    for (int column = 1; row <= 3; column++) {
+        System.out.println(column);
+    }
+}
+```
+
+内側の繰り返しの条件には column を使わなければならない。
+
+```java
+for (int column = 1; column <= 3; column++) {
+```
+
+### Part 5. ネストした繰り返しの break
+
+**概念説明**
+
+- ネストした繰り返しで一般的な break は最も近い繰り返し1つだけを終了する。
+- 内側の繰り返しで break を実行しても外側の繰り返しは継続して実行される。
+- そのため外側の繰り返しが再び実行されると、内側の繰り返しも最初からやり直す。
+
+**例**
+
+```java
+for (int row = 1; row <= 2; row++) {
+    for (int column = 1; column <= 3; column++) {
+        if (column == 2) {
+            break;
+        }
+
+        System.out.print(row);
+        System.out.print(" ");
+        System.out.println(column);
+    }
+}
+```
+
+**実行の流れと結果**
+
+- `row = 1`
+  - column = 1 → 出力
+  - column = 2 → 内側の繰り返し終了
+- `row = 2`
+  - column = 1 → 出力
+  - column = 2 → 内側の繰り返し終了
+
+```
+1 1
+2 1
+```
+
+外側の繰り返しは終了しない。
+
+**ネストした繰り返しの continue**
+
+内側の繰り返しで continue を実行すると、内側の繰り返しの現在の回だけをスキップする。
+
+```java
+for (int row = 1; row <= 2; row++) {
+    for (int column = 1; column <= 3; column++) {
+        if (column == 2) {
+            continue;
+        }
+
+        System.out.print(row);
+        System.out.print(" ");
+        System.out.println(column);
+    }
+}
+```
+
+```
+1 1
+1 3
+2 1
+2 3
+```
+
+**よくあるミス**
+
+内側の break がすべての繰り返しを終了すると考えてはいけない。
+
+```java
+break;
+```
+
+一般的な break は最も近い繰り返し1つだけを終了する。ラベルを使って外側の繰り返しを終了する文法もあるが、初級課程では除外する。
+
+## 次へ
+
+次は [Part 10「配列① 宣言・生成・要素アクセス」](/dev/lessons/DEV-JAVA-01-10)を学ぶ。

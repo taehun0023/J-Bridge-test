@@ -1,16 +1,79 @@
 module:
   id: DEV-JAVA-01
-  title: Java - 言語基礎とコードリーディング
+  title: Java 基礎（初級）
   level: foundation
-  description: "Javaソースコードの構造を読み、実行フローを追跡する基礎を解説する。"
+  description: "Java 초급 — 시작·출력부터 변수·연산·입력·조건·반복·배열·문자열·메서드까지, 언어의 기초를 17파트로 손으로 익힌다(객체지향 직전까지). 파트당 10문제(코드빈칸7+객관식3)."
   subject: java
   content_mode: static-interpretive
   outcomes:
-    - "Java 소스 파일의 기본 구조(패키지, 임포트, 클래스, 메서드)를 설명할 수 있다."
-    - "기본 타입과 참조 타입의 차이를 설명할 수 있다."
-    - "제어 흐름(조건문, 반복문)을 읽고 실행 결과를 예측할 수 있다."
+    - "変数・型・演算・入力と、条件分岐・繰り返しで処理の流れを制御できる。"
+    - "配列・文字列を扱い、メソッドを定義・呼び出して小さなプログラムを書ける。"
   lessons:
     - id: DEV-JAVA-01-01
-      title: "Java 소스를 읽을 때 먼저 확인해야 할 것들"
+      title: "Java初級01 はじめ・出力・コメント"
+      est_minutes: 15
+      tags: [java, basics, static-content]
+    - id: DEV-JAVA-01-02
+      title: "Java初級02 変数・基本型・リテラル・定数"
       est_minutes: 18
-      tags: [java, code-reading, class-structure, types, static-content]
+      tags: [java, basics, static-content]
+    - id: DEV-JAVA-01-03
+      title: "Java初級03 演算子・型変換"
+      est_minutes: 18
+      tags: [java, basics, static-content]
+    - id: DEV-JAVA-01-04
+      title: "Java初級04 標準入力 Scanner"
+      est_minutes: 15
+      tags: [java, basics, static-content]
+    - id: DEV-JAVA-01-05
+      title: "Java初級05 条件分岐① if・else"
+      est_minutes: 18
+      tags: [java, basics, static-content]
+    - id: DEV-JAVA-01-06
+      title: "Java初級06 条件分岐② else if・switch・三項演算子"
+      est_minutes: 18
+      tags: [java, basics, static-content]
+    - id: DEV-JAVA-01-07
+      title: "Java初級07 繰り返し① for"
+      est_minutes: 18
+      tags: [java, basics, static-content]
+    - id: DEV-JAVA-01-08
+      title: "Java初級08 繰り返し② while・do-while"
+      est_minutes: 18
+      tags: [java, basics, static-content]
+    - id: DEV-JAVA-01-09
+      title: "Java初級09 繰り返し③ break・continue・ネスト"
+      est_minutes: 18
+      tags: [java, basics, static-content]
+    - id: DEV-JAVA-01-10
+      title: "Java初級10 配列① 宣言・生成・要素アクセス"
+      est_minutes: 18
+      tags: [java, basics, static-content]
+    - id: DEV-JAVA-01-11
+      title: "Java初級11 配列② 巡回・合計・検索"
+      est_minutes: 18
+      tags: [java, basics, static-content]
+    - id: DEV-JAVA-01-12
+      title: "Java初級12 配列③ 2次元配列"
+      est_minutes: 18
+      tags: [java, basics, static-content]
+    - id: DEV-JAVA-01-13
+      title: "Java初級13 文字列① 生成・連結・比較"
+      est_minutes: 18
+      tags: [java, basics, static-content]
+    - id: DEV-JAVA-01-14
+      title: "Java初級14 文字列② メソッド・分割・書式"
+      est_minutes: 18
+      tags: [java, basics, static-content]
+    - id: DEV-JAVA-01-15
+      title: "Java初級15 メソッド① 定義・呼び出し・引数"
+      est_minutes: 18
+      tags: [java, basics, static-content]
+    - id: DEV-JAVA-01-16
+      title: "Java初級16 メソッド② 戻り値・早期終了・配列"
+      est_minutes: 18
+      tags: [java, basics, static-content]
+    - id: DEV-JAVA-01-17
+      title: "Java初級17 メソッド③ オーバーロード・スコープ"
+      est_minutes: 18
+      tags: [java, basics, static-content]

@@ -1,0 +1,274 @@
+---
+lesson_id: DEV-JAVA-02-09
+title: "Java中級09 オブジェクト参照・null・引数渡し"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 22
+tags: [java, intermediate, oop, reference, null, parameter, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次の作業ができるようになります。
+
+- オブジェクト変数にはオブジェクトそのものではなく参照値が保存されることを理解する。
+- 二つの変数が同じオブジェクトを参照する状況を説明する。
+- nullを検査してNullPointerExceptionを防ぐ。
+- オブジェクトを引数として渡し、オブジェクトの状態を変更する。
+- 引数に新しいオブジェクトを代入しても呼び出し元の変数は変わらない理由を説明する。
+
+## 授業内容
+
+### Part 1. オブジェクト変数には参照値が保存される
+
+```java
+Member member = new Member("Minsu");
+```
+
+new Member("Minsu")はオブジェクトを生成し、memberにはそのオブジェクトを見つけられる参照値が保存される。
+
+```java
+class Member {
+    private String name;
+
+    public Member(String name) {
+        this.name = name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+}
+```
+
+```java
+Member member = new Member("Minsu");
+System.out.println(member.getName());
+```
+
+**実行結果**
+
+```text
+Minsu
+```
+
+### Part 2. 参照値をコピーすると同じオブジェクトを指す
+
+```java
+Member member1 = new Member("Minsu");
+Member member2 = member1;
+```
+
+新しいオブジェクトを作ったのではなく、member1の参照値をmember2にコピーしたのである。
+
+```java
+member2.setName("Jisu");
+
+System.out.println(member1.getName());
+System.out.println(member2.getName());
+```
+
+**実行結果**
+
+```text
+Jisu
+Jisu
+```
+
+二つの変数が同じオブジェクトを指しているため、どちらの変数を通して変更しても同じオブジェクトが変更される。
+
+### Part 3. 参照型変数の == 比較
+
+オブジェクト変数に==を使うと、二つの変数が同じオブジェクトを指しているかを検査する。
+
+```java
+Member member1 = new Member("Minsu");
+Member member2 = member1;
+Member member3 = new Member("Minsu");
+
+System.out.println(member1 == member2);
+System.out.println(member1 == member3);
+```
+
+**実行結果**
+
+```text
+true
+false
+```
+
+member1とmember3の名前は同じだが、互いに異なるオブジェクトである。
+
+### Part 4. null
+
+nullは参照型変数が現在どのオブジェクトも指していないという意味である。
+
+```java
+Member member = null;
+```
+
+nullの変数でフィールドやメソッドにアクセスするとNullPointerExceptionが発生する。
+
+```java
+Member member = null;
+System.out.println(member.getName()); // 実行時エラー
+```
+
+使用する前に検査できる。
+
+```java
+if (member != null) {
+    System.out.println(member.getName());
+}
+```
+
+ローカル変数は値を直接入れるまで使用できないため、必要であればnullで初期化する。
+
+### Part 5. 参照変数に別のオブジェクトを代入する
+
+```java
+Member member1 = new Member("Minsu");
+Member member2 = member1;
+
+member2 = new Member("Jisu");
+```
+
+member2が新しいオブジェクトを指すように変更されたが、member1は既存のオブジェクトを指し続ける。
+
+```java
+System.out.println(member1.getName());
+System.out.println(member2.getName());
+```
+
+**実行結果**
+
+```text
+Minsu
+Jisu
+```
+
+参照変数を変えることとオブジェクト内部の値を変えることは互いに異なる。
+
+### Part 6. オブジェクトを引数として渡す
+
+Javaはメソッドを呼び出す際に変数の値をコピーして渡す。オブジェクト変数には参照値が入っているため、参照値がコピーされる。
+
+```java
+class Counter {
+    private int value;
+
+    public void increase() {
+        value++;
+    }
+
+    public int getValue() {
+        return value;
+    }
+}
+```
+
+```java
+public static void increaseCounter(Counter counter) {
+    counter.increase();
+}
+```
+
+```java
+Counter counter = new Counter();
+
+increaseCounter(counter);
+
+System.out.println(counter.getValue());
+```
+
+**実行結果**
+
+```text
+1
+```
+
+呼び出し元と引数が同じオブジェクトを指しているため、オブジェクト内部の値が変更される。
+
+### Part 7. 引数に新しいオブジェクトを代入する場合
+
+```java
+public static void replace(Member member) {
+    member = new Member("交代した会員");
+}
+```
+
+```java
+Member member = new Member("既存の会員");
+
+replace(member);
+
+System.out.println(member.getName());
+```
+
+**実行結果**
+
+```text
+既存の会員
+```
+
+メソッドには参照値のコピーが渡される。引数memberに新しいオブジェクトを代入しても、呼び出し元のmemberは変わらない。
+
+### 総合例
+
+```java
+class Profile {
+    private String nickname;
+
+    public Profile(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void setNickname(String nickname) {
+        if (!nickname.isEmpty()) {
+            this.nickname = nickname;
+        }
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+}
+
+public class Main {
+    public static void rename(Profile profile) {
+        profile.setNickname("コード王");
+    }
+
+    public static void replace(Profile profile) {
+        profile = new Profile("新しいプロフィール");
+    }
+
+    public static void main(String[] args) {
+        Profile profile = new Profile("ゲスト");
+
+        rename(profile);
+        System.out.println(profile.getNickname());
+
+        replace(profile);
+        System.out.println(profile.getNickname());
+    }
+}
+```
+
+**実行結果**
+
+```text
+コード王
+コード王
+```
+
+rename()は同じオブジェクトの内部の値を変更する。replace()はコピーされた参照値だけを変更するため、呼び出し元の変数には影響を与えない。
+
+## 次へ
+
+次は [Part 10「オブジェクト配列・オブジェクト間の協力」](/dev/lessons/DEV-JAVA-02-10)を学ぶ。

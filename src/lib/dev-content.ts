@@ -87,7 +87,7 @@ const SUBJECT_CONFIG: Record<DevSubjectSlug, { moduleIds: string[] }> = {
       'DEV-CWF-05', 'DEV-CWF-06', 'DEV-CWF-07', 'DEV-CWF-08',
     ],
   },
-  java: { moduleIds: ['DEV-JAVA-01', 'DEV-JAVA-02', 'DEV-JAVA-03', 'DEV-JAVA-04'] },
+  java: { moduleIds: ['DEV-JAVA-01', 'DEV-JAVA-02'] },
   javascript: { moduleIds: ['DEV-JS-01', 'DEV-JS-02', 'DEV-JS-03', 'DEV-JS-04'] },
   python: { moduleIds: ['DEV-PY-01', 'DEV-PY-02', 'DEV-PY-03'] },
   sql: { moduleIds: ['DEV-SQL-01', 'DEV-SQL-02', 'DEV-SQL-03'] },

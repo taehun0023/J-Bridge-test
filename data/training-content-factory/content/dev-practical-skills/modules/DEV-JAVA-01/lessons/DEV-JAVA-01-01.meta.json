@@ -2,42 +2,21 @@
   "lesson_id": "DEV-JAVA-01-01",
   "category": "dev-practical-skills",
   "subject": "java",
-  "topic": "language-basics-code-reading",
-  "summary": "パッケージ・インポート・クラス定義を含むJavaソースファイルの構造と、プリミティブ型・参照型の違いを解説する。",
+  "topic": "java-basics-start-output-comment",
+  "summary": "Java の骨格と main、print/println の使い分け、1行・複数行コメント、改行・タブ・ダブルクオートのエスケープ文字を学ぶ。",
   "key_points": [
-    "Javaソースファイルはパッケージ宣言・インポート・クラス定義で構成される。",
-    "プリミティブ型は値を直接保持し、参照型はオブジェクトのアドレスを保持する。",
-    "メソッドシグネチャからアクセスレベル・戻り値型・名前・引数を読み取れる。"
+    "コードはクラスの中に書き、実行は main メソッドから始まる。",
+    "print は改行せず、println は出力後に改行する。",
+    "// は1行、/* */ は複数行コメント。\\n は改行、\\t はタブ、\\\" はダブルクオート。"
   ],
   "misconceptions": [
-    "Using == to compare String values works the same as equals.",
-    "Package structure has no relation to directory structure.",
-    "Import statements are not important for understanding code dependencies."
+    "println を Println と書き間違える。",
+    "print と println の改行の違いを混同する。",
+    "文字列内のダブルクオートをエスケープし忘れる。"
   ],
   "check_questions": [
-    "What are the three main sections of a Java source file?",
-    "When should you use equals instead of == in Java?",
-    "What information can you extract from a method signature?"
-  ],
-  "exam_extractables": {
-    "fact_candidates": [
-      "Components of a Java source file",
-      "Difference between primitive and reference types"
-    ],
-    "practical_judgment_candidates": [
-      "Choosing == vs equals for comparison",
-      "Identifying class dependencies from imports"
-    ],
-    "error_interpretation_candidates": [
-      "Diagnosing String comparison bugs"
-    ],
-    "scenario_candidates": [
-      "Reading a class to identify its dependencies and role",
-      "Unexpected false from String == comparison"
-    ],
-    "common_wrong_answer_patterns": [
-      "Assuming == compares content for reference types",
-      "Ignoring access modifiers when tracing method calls"
-    ]
-  }
+    "プログラムが最初に実行するメソッドは何か？",
+    "print と println の違いは？",
+    "文字列内でダブルクオートを出すには？"
+  ]
 }

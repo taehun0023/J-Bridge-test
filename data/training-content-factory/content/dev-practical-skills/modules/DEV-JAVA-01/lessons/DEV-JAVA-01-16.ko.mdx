@@ -1,0 +1,645 @@
+---
+lesson_id: DEV-JAVA-01-16
+title: "Java초급16 메서드② 반환값·조기 종료·배열"
+module: DEV-JAVA-01
+language: ko
+level: foundation
+est_minutes: 18
+tags: [java, basics, method, return, static-content]
+---
+
+## 학습 목표
+
+이 파트를 학습한 후 다음 작업을 할 수 있어야 합니다.
+
+- return으로 메서드의 실행 결과를 반환한다.
+- 반환값을 변수에 저장하거나 다른 코드에서 사용한다.
+- 반환형과 반환값의 자료형을 일치시킨다.
+- return으로 메서드를 조기에 종료한다.
+- 배열을 메서드의 매개변수로 전달한다.
+- 배열 요소를 변경했을 때 원본 배열에 미치는 영향을 이해한다.
+- 배열을 반환하는 메서드를 작성한다.
+
+## 수업 내용
+
+### Part 1. 반환값이 있는 메서드
+
+**개념 설명**
+
+- 메서드는 작업 결과를 호출한 위치로 돌려줄 수 있다.
+- 결과를 돌려주는 것을 반환이라고 한다.
+- 반환값이 있는 메서드는 void 대신 반환할 값의 자료형을 작성한다.
+- `return 값;`이 실행되면 해당 값이 호출한 위치로 전달된다.
+- 메서드의 반환형과 return 값의 자료형은 맞아야 한다.
+
+**기본 문법**
+
+```java
+static 반환형 메서드이름(매개변수) {
+    return 반환값;
+}
+```
+
+**코드 문법 분해**
+
+```java
+static int add(int first, int second) {
+    return first + second;
+}
+```
+
+| 부분 | 의미 |
+|---|---|
+| `static` | main에서 직접 호출할 수 있게 함 |
+| `int` | 메서드의 반환형 |
+| `add` | 메서드 이름 |
+| `int first, int second` | 매개변수 |
+| `return first + second` | 계산 결과를 호출한 위치로 반환 |
+
+**메서드 호출**
+
+```java
+int result = add(10, 20);
+
+System.out.println(result);
+```
+
+**실행 흐름과 결과**
+
+- add(10, 20)을 호출한다.
+- first에 10, second에 20이 전달된다.
+- first + second를 계산한다.
+- 결과 30을 반환한다.
+- 반환값을 result에 저장한다.
+
+```
+30
+```
+
+**출력만 하는 메서드와 비교**
+
+값을 출력만 하는 void 메서드는 결과를 화면에 보여줄 수 있지만 호출한 곳에서 그 결과를 다시 사용할 수 없다.
+
+```java
+static void printTotal(int first, int second) {
+    System.out.println(first + second);
+}
+```
+
+이 메서드는 결과를 화면에 보여줄 수 있지만 호출한 곳에서 다시 계산하거나 비교할 수 없다.
+
+반환값이 있는 메서드는 결과를 돌려주므로 호출한 곳에서 저장하거나 다시 활용할 수 있다.
+
+```java
+static int calculateTotal(int first, int second) {
+    return first + second;
+}
+```
+
+```java
+int total = calculateTotal(10, 20);
+int doubled = total * 2;
+boolean expensive = total >= 25;
+```
+
+계산 결과를 출력만 하는 것이 아니라 저장·비교·재계산하거나 다른 메서드에 전달해야 할 때 반환값을 사용한다. 메서드는 결과를 어떻게 사용할지 결정하지 않고 결과만 돌려주므로 여러 상황에서 재사용할 수 있다.
+
+**여러 반환형**
+
+```java
+static double getPrice() {
+    return 1500.5;
+}
+```
+
+```java
+static boolean isAdult(int age) {
+    return age >= 18;
+}
+```
+
+```java
+static String getMessage() {
+    return "학습 완료";
+}
+```
+
+**반환값 직접 사용**
+
+반환값을 반드시 변수에 저장할 필요는 없다.
+
+```java
+System.out.println(add(10, 20));
+```
+
+다른 계산에서도 사용할 수 있다.
+
+```java
+int result = add(10, 20) * 2;
+```
+
+**자주 하는 실수**
+
+반환형과 다른 자료형을 반환하면 오류가 발생한다.
+
+```java
+static int getScore() {
+    return "100"; // 오류
+}
+```
+
+올바른 코드는 다음과 같다.
+
+```java
+static int getScore() {
+    return 100;
+}
+```
+
+### Part 2. 모든 실행 경로의 return
+
+**개념 설명**
+
+- 반환값이 있는 메서드는 실행 가능한 모든 경로에서 값을 반환해야 한다.
+- 조건에 따라 return이 실행되지 않을 가능성이 있으면 컴파일 오류가 발생한다.
+- if-else의 각 영역에서 값을 반환하거나 조건문 뒤에 기본 반환값을 작성해야 한다.
+
+**잘못된 코드**
+
+```java
+static String checkScore(int score) {
+    if (score >= 60) {
+        return "합격";
+    }
+}
+```
+
+score가 60 미만이면 반환되는 값이 없으므로 오류가 발생한다.
+
+**수정 방법 1: if-else**
+
+```java
+static String checkScore(int score) {
+    if (score >= 60) {
+        return "합격";
+    } else {
+        return "불합격";
+    }
+}
+```
+
+**수정 방법 2: 조건문 뒤에서 반환**
+
+```java
+static String checkScore(int score) {
+    if (score >= 60) {
+        return "합격";
+    }
+
+    return "불합격";
+}
+```
+
+**실행 흐름**
+
+```java
+String result = checkScore(75);
+```
+
+- 75 >= 60은 true다.
+- "합격"을 반환한다.
+- 메서드가 즉시 종료된다.
+- 아래의 return "불합격"은 실행하지 않는다.
+
+**자주 하는 실수**
+
+return 다음에 실행문을 작성할 수 없다.
+
+```java
+static int getNumber() {
+    return 10;
+    System.out.println("종료"); // 실행할 수 없는 코드
+}
+```
+
+return이 실행되면 메서드가 즉시 종료된다.
+
+### Part 3. 조기 종료
+
+**개념 설명**
+
+- 메서드의 중간에서 return을 실행하면 남은 코드를 실행하지 않고 종료할 수 있다.
+- 이를 조기 종료라고 한다.
+- 잘못된 입력을 먼저 검사하고 메서드를 끝낼 때 유용하다.
+- void 메서드에서는 반환값 없이 `return;`만 작성한다.
+- 반환값이 있는 메서드에서는 반환형에 맞는 값을 함께 작성해야 한다.
+
+**void 메서드의 조기 종료**
+
+```java
+static void printScore(int score) {
+    if (score < 0) {
+        System.out.println("잘못된 점수");
+        return;
+    }
+
+    System.out.println(score);
+}
+```
+
+**실행 흐름**
+
+```java
+printScore(-10);
+```
+
+- score < 0이 true다.
+- "잘못된 점수"를 출력한다.
+- return;으로 메서드를 종료한다.
+- 마지막 출력문은 실행하지 않는다.
+
+```
+잘못된 점수
+```
+
+**반환값이 있는 메서드의 조기 종료**
+
+```java
+static int normalizeScore(int score) {
+    if (score < 0) {
+        return 0;
+    }
+
+    return score;
+}
+```
+
+호출:
+
+```java
+System.out.println(normalizeScore(-10));
+System.out.println(normalizeScore(80));
+```
+
+```
+0
+80
+```
+
+**조건문 중첩 줄이기**
+
+```java
+static void printUser(String name, boolean active) {
+    if (!active) {
+        return;
+    }
+
+    System.out.println(name);
+}
+```
+
+처리할 수 없는 조건을 먼저 종료하면 중첩된 else를 줄일 수 있다.
+
+**자주 하는 실수**
+
+void 메서드에서 값을 반환할 수 없다.
+
+```java
+static void printMessage() {
+    return "완료"; // 오류
+}
+```
+
+void 메서드의 조기 종료는 다음과 같이 작성한다.
+
+```java
+return;
+```
+
+### Part 4. 배열을 매개변수로 전달
+
+**개념 설명**
+
+- 배열도 일반 변수처럼 메서드의 매개변수로 전달할 수 있다.
+- 배열 매개변수는 `자료형[] 이름`으로 선언한다.
+- 메서드는 전달받은 배열의 length와 각 요소를 사용할 수 있다.
+- 배열 전체의 합계·검색·변경 작업을 메서드로 분리할 수 있다.
+
+**기본 문법**
+
+```java
+static void 메서드이름(int[] numbers) {
+    실행할 코드
+}
+```
+
+**배열 합계 메서드**
+
+```java
+static int sum(int[] numbers) {
+    int total = 0;
+
+    for (int number : numbers) {
+        total += number;
+    }
+
+    return total;
+}
+```
+
+**호출 예제**
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        int[] scores = {80, 90, 100};
+
+        int result = sum(scores);
+
+        System.out.println(result);
+    }
+
+    static int sum(int[] numbers) {
+        int total = 0;
+
+        for (int number : numbers) {
+            total += number;
+        }
+
+        return total;
+    }
+}
+```
+
+**실행 흐름과 결과**
+
+- scores 전달 → numbers로 배열 요소 확인 → 80 + 90 + 100 계산 → 270 반환
+
+```
+270
+```
+
+**배열 길이 반환**
+
+```java
+static int getLength(int[] numbers) {
+    return numbers.length;
+}
+```
+
+**자주 하는 실수**
+
+배열 매개변수의 대괄호를 빠뜨리면 값 하나를 받는 매개변수가 된다.
+
+```java
+static int sum(int numbers) { // 배열이 아님
+}
+```
+
+올바른 코드는 다음과 같다.
+
+```java
+static int sum(int[] numbers) {
+}
+```
+
+### Part 5. 메서드에서 배열 요소 변경
+
+**개념 설명**
+
+- Java는 모든 인수를 값으로 전달한다.
+- 배열을 전달할 때는 배열을 가리키는 참조값이 복사되어 전달된다.
+- 호출한 쪽과 메서드가 같은 배열을 가리키므로 메서드 안에서 요소를 변경하면 원본 배열도 변경된다.
+- 하지만 매개변수 자체에 새 배열을 대입해도 호출한 쪽의 배열 변수는 바뀌지 않는다.
+
+**배열 요소 변경**
+
+```java
+static void changeFirst(int[] numbers) {
+    numbers[0] = 100;
+}
+```
+
+호출:
+
+```java
+int[] values = {10, 20, 30};
+
+changeFirst(values);
+
+System.out.println(values[0]);
+```
+
+실행 결과:
+
+```
+100
+```
+
+메서드 안에서 변경한 배열 요소가 원본 배열에도 반영된다.
+
+**매개변수에 새 배열 대입**
+
+```java
+static void replaceArray(int[] numbers) {
+    numbers = new int[]{100, 200, 300};
+}
+```
+
+호출:
+
+```java
+int[] values = {10, 20, 30};
+
+replaceArray(values);
+
+System.out.println(values[0]);
+```
+
+실행 결과:
+
+```
+10
+```
+
+numbers에 새 배열을 대입해도 values가 가리키는 배열은 바뀌지 않는다.
+
+**동작 비교**
+
+| 메서드 내부 작업 | 원본 배열 |
+|---|---|
+| `numbers[0] = 100` | 요소가 변경됨 |
+| `numbers = new int[]{...}` | 원본 배열 변수는 변경되지 않음 |
+
+**자주 하는 실수**
+
+- 배열 전체가 복사되어 전달된다고 생각하면 안 된다.
+- 배열 요소를 변경하면 호출한 쪽에서도 변경된 값이 보인다.
+
+### Part 6. 배열을 반환하는 메서드
+
+**개념 설명**
+
+- 메서드는 배열도 반환할 수 있다.
+- 반환형을 `int[]`, `String[]`처럼 작성한다.
+- return 뒤에는 해당 자료형의 배열을 작성한다.
+- 호출한 쪽에서는 반환된 배열을 배열 변수에 저장한다.
+
+**배열 반환 문법**
+
+```java
+static int[] 메서드이름() {
+    return new int[]{값1, 값2};
+}
+```
+
+**예제**
+
+```java
+static int[] createScores() {
+    return new int[]{80, 90, 100};
+}
+```
+
+호출:
+
+```java
+int[] scores = createScores();
+
+System.out.println(scores[0]);
+System.out.println(scores[1]);
+System.out.println(scores[2]);
+```
+
+실행 결과:
+
+```
+80
+90
+100
+```
+
+**계산한 배열 반환**
+
+```java
+static int[] doubleValues(int[] numbers) {
+    int[] result = new int[numbers.length];
+
+    for (int i = 0; i < numbers.length; i++) {
+        result[i] = numbers[i] * 2;
+    }
+
+    return result;
+}
+```
+
+호출:
+
+```java
+int[] values = {10, 20, 30};
+int[] doubled = doubleValues(values);
+
+for (int value : doubled) {
+    System.out.println(value);
+}
+```
+
+실행 결과:
+
+```
+20
+40
+60
+```
+
+원본 배열을 직접 변경하지 않고 새로운 배열을 만들어 반환한다.
+
+**자주 하는 실수**
+
+배열을 반환하면서 반환형을 int로 작성하면 안 된다.
+
+```java
+static int createScores() {
+    return new int[]{80, 90, 100}; // 오류
+}
+```
+
+올바른 반환형은 int[]다.
+
+```java
+static int[] createScores() {
+    return new int[]{80, 90, 100};
+}
+```
+
+### Part 7. 배열 검색과 조기 반환
+
+**개념 설명**
+
+- 배열에서 원하는 값을 찾으면 즉시 return하여 검색을 끝낼 수 있다.
+- 검색한 인덱스를 반환하고, 찾지 못하면 -1을 반환할 수 있다.
+- 값을 찾은 후 별도의 found 변수를 만들거나 break를 사용할 필요가 없다.
+
+**예제**
+
+```java
+static int findIndex(int[] numbers, int target) {
+    for (int i = 0; i < numbers.length; i++) {
+        if (numbers[i] == target) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+```
+
+**호출**
+
+```java
+int[] numbers = {10, 20, 30, 40};
+
+System.out.println(findIndex(numbers, 30));
+System.out.println(findIndex(numbers, 50));
+```
+
+**실행 흐름과 결과**
+
+첫 번째 호출:
+
+- 10 확인 → 불일치
+- 20 확인 → 불일치
+- 30 확인 → 인덱스 2 반환 → 메서드 종료
+
+두 번째 호출:
+
+- 모든 요소 확인 → 찾지 못함 → -1 반환
+
+```
+2
+-1
+```
+
+**자주 하는 실수**
+
+반복문 안에 return -1을 작성하면 첫 번째 요소가 일치하지 않는 순간 검색이 끝난다.
+
+```java
+static int findIndex(int[] numbers, int target) {
+    for (int i = 0; i < numbers.length; i++) {
+        if (numbers[i] == target) {
+            return i;
+        }
+
+        return -1; // 잘못된 위치
+    }
+
+    return -1;
+}
+```
+
+검색 실패를 의미하는 return -1은 반복문이 모두 끝난 뒤 작성해야 한다.
+
+## 다음으로
+
+다음 학습 내용은 [Part 17「메서드③ 오버로딩·스코프」](/dev/lessons/DEV-JAVA-01-17)이다.

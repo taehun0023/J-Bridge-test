@@ -1,0 +1,463 @@
+---
+lesson_id: DEV-JAVA-01-12
+title: "Java初級12 配列③ 2次元配列"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 18
+tags: [java, basics, array, 2d, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次の作業ができるようにする。
+
+- 2次元配列を宣言して生成する。
+- 行と列のインデックスで要素にアクセスする。
+- 初期値を使って2次元配列を生成する。
+- lengthで行と列の長さを確認する。
+- ネストした繰り返し文ですべての要素を巡回する。
+- 行ごとに長さが異なる2次元配列を理解する。
+
+## 授業内容
+
+### Part 1. 2次元配列の宣言と生成
+
+**概念説明**
+
+- 2次元配列は複数の1次元配列を保存する配列である。
+- 表のように行と列で構成されたデータを表現するときに使う。
+- 最初のインデックスは行、2番目のインデックスは列を表す。
+- 行と列のインデックスはどちらも0から始まる。
+- `new int[2][3]`は2行3列の配列を生成する。
+
+**コード文法の分解**
+
+```java
+int[][] numbers = new int[2][3];
+```
+
+| コード | 意味 |
+|---|---|
+| `int[][]` | int 2次元配列の型 |
+| `numbers` | 配列変数の名前 |
+| `new int[2][3]` | 2行3列の配列を生成 |
+| 最初の `[]` | 行 |
+| 2番目の `[]` | 列 |
+
+**配列の構造**
+
+```
+        列 0   列 1   列 2
+行 0      0      0      0
+行 1      0      0      0
+```
+
+int配列なので各要素は基本値0で初期化される。
+
+**宣言と生成を分ける**
+
+```java
+int[][] numbers;
+numbers = new int[2][3];
+```
+
+**問題とは別の例**
+
+```java
+boolean[][] seats = new boolean[3][2];
+
+System.out.println(seats.length);
+System.out.println(seats[0].length);
+```
+
+実行結果:
+
+```
+3
+2
+```
+
+**よくあるミス**
+
+2次元配列には大括弧が2組必要である。
+
+```java
+int[] numbers = new int[2][3];   // エラー
+int[][] numbers = new int[2][3]; // 正しい
+```
+
+### Part 2. 初期値で2次元配列を生成
+
+**概念説明**
+
+- 保存する値がわかっていれば中括弧を使って2次元配列を作ることができる。
+- 外側の中括弧は配列全体を表す。
+- 内側の中括弧一つが1つの行を表す。
+- 各行の値はカンマで区切る。
+- 行の数と各行の列数は記述した値によって決まる。
+
+**基本の文法**
+
+```java
+int[][] numbers = {
+    {10, 20, 30},
+    {40, 50, 60}
+};
+```
+
+**構造**
+
+```
+        列 0   列 1   列 2
+行 0     10     20     30
+行 1     40     50     60
+```
+
+次のように1行で書くこともできる。
+
+```java
+int[][] numbers = {{10, 20, 30}, {40, 50, 60}};
+```
+
+**コード文法の分解**
+
+```java
+{
+    {10, 20, 30},
+    {40, 50, 60}
+}
+```
+
+| 部分 | 意味 |
+|---|---|
+| 外側の `{ }` | 2次元配列全体 |
+| `{10, 20, 30}` | 0 番目の行 |
+| `{40, 50, 60}` | 1 番目の行 |
+| 各数字 | その行の要素 |
+
+**問題とは別の例**
+
+```java
+String[][] names = {
+    {"Kim", "Lee"},
+    {"Park", "Choi"}
+};
+
+System.out.println(names[0][0]);
+System.out.println(names[1][1]);
+```
+
+実行結果:
+
+```
+Kim
+Choi
+```
+
+**よくあるミス**
+
+各行を区切る中括弧を省いてはいけない。
+
+```java
+int[][] numbers = {10, 20, 30, 40}; // エラー
+```
+
+2次元配列は行ごとに中括弧を書く。
+
+```java
+int[][] numbers = {
+    {10, 20},
+    {30, 40}
+};
+```
+
+### Part 3. 行と列で要素にアクセス
+
+**概念説明**
+
+- 2次元配列の要素には`配列名[行][列]`でアクセスする。
+- 最初の大括弧は行のインデックスである。
+- 2番目の大括弧はその行の中の列のインデックスである。
+- 要素は読み取ることも新しい値に変更することもできる。
+- 行や列の範囲を超えると実行中エラーが発生する。
+
+**要素の読み取り**
+
+```java
+int[][] numbers = {
+    {10, 20, 30},
+    {40, 50, 60}
+};
+
+System.out.println(numbers[0][1]);
+System.out.println(numbers[1][2]);
+```
+
+実行結果:
+
+```
+20
+60
+```
+
+**要素の変更**
+
+```java
+numbers[1][0] = 45;
+
+System.out.println(numbers[1][0]);
+```
+
+```
+45
+```
+
+**実行の流れ**
+
+- `numbers[1]` → 2番目の行 {40, 50, 60}
+- `numbers[1][0]` → 2番目の行の最初の値 40
+- 45を代入 → 40が45に変わる
+
+**1行へのアクセス**
+
+`numbers[0]`は最初の行全体を表す1次元配列である。
+
+```java
+int[] firstRow = numbers[0];
+
+System.out.println(firstRow[2]);
+```
+
+```
+30
+```
+
+**よくあるミス**
+
+行と列の順序を逆に考えてはいけない。`numbers[行][列]`の順であり、次の配列で50の位置は`[1][1]`である。
+
+```
+        列 0   列 1
+行 0     10     20
+行 1     40     50
+```
+
+### Part 4. 行と列の長さ
+
+**概念説明**
+
+- `配列.length`は2次元配列の行数を表す。
+- `配列[行].length`はその行の列数を表す。
+- lengthに小括弧は付けない。
+- 各行の長さが異なる場合があるため、列の長さは現在の行を基準に確認しなければならない。
+
+**例**
+
+```java
+int[][] numbers = {
+    {10, 20, 30},
+    {40, 50, 60}
+};
+
+System.out.println(numbers.length);
+System.out.println(numbers[0].length);
+System.out.println(numbers[1].length);
+```
+
+実行結果:
+
+```
+2
+3
+3
+```
+
+**最後の要素へのアクセス**
+
+```java
+int lastRow = numbers.length - 1;
+int lastColumn = numbers[lastRow].length - 1;
+
+System.out.println(numbers[lastRow][lastColumn]);
+```
+
+```
+60
+```
+
+**よくあるミス**
+
+次のコードは行数を列の長さとして誤って使っている。
+
+```java
+numbers.length
+```
+
+列の長さは現在の行で確認しなければならない。
+
+```java
+numbers[row].length
+```
+
+### Part 5. ネスト for 文で巡回
+
+**概念説明**
+
+- 2次元配列のすべての要素を処理するにはネストした繰り返し文を使う。
+- 外側の繰り返し文は行を移動する。
+- 内側の繰り返し文は現在の行の列を移動する。
+- 行の条件には`numbers.length`を使う。
+- 列の条件には`numbers[row].length`を使う。
+
+**コード文法の分解**
+
+```java
+int[][] numbers = {
+    {10, 20, 30},
+    {40, 50, 60}
+};
+
+for (int row = 0; row < numbers.length; row++) {
+    for (int column = 0; column < numbers[row].length; column++) {
+        System.out.println(numbers[row][column]);
+    }
+}
+```
+
+| 繰り返し文 | 役割 |
+|---|---|
+| 外側の for | 次の行へ移動 |
+| 内側の for | 現在の行の要素を順に処理 |
+| `numbers[row][column]` | 現在の要素 |
+
+**実行の流れと結果**
+
+- `row = 0` → 10, 20, 30
+- `row = 1` → 40, 50, 60
+
+```
+10
+20
+30
+40
+50
+60
+```
+
+**行と列の形で出力**
+
+```java
+for (int row = 0; row < numbers.length; row++) {
+    for (int column = 0; column < numbers[row].length; column++) {
+        System.out.print(numbers[row][column]);
+        System.out.print(" ");
+    }
+
+    System.out.println();
+}
+```
+
+```
+10 20 30
+40 50 60
+```
+
+**拡張 for 文**
+
+```java
+for (int[] row : numbers) {
+    for (int number : row) {
+        System.out.println(number);
+    }
+}
+```
+
+外側の繰り返しでは1つの行をint[]として取り出し、内側の繰り返しではその行の要素を1つずつ取り出す。
+
+**よくあるミス**
+
+内側の繰り返し文の条件に行の総数を使ってはいけない。
+
+```java
+for (int column = 0; column < numbers.length; column++) {
+```
+
+正しい条件は次のとおりである。
+
+```java
+for (int column = 0; column < numbers[row].length; column++) {
+```
+
+### Part 6. 行ごとに長さが異なる配列
+
+**概念説明**
+
+- Javaの2次元配列は複数の1次元配列を保存する構造である。
+- そのため、すべての行の長さが同じである必要はない。
+- 行ごとに列数が異なる配列を可変配列またはジャグ配列という。
+- このような配列を巡回するときは必ず各行のlengthを使わなければならない。
+
+**例**
+
+```java
+int[][] numbers = {
+    {10, 20},
+    {30, 40, 50},
+    {60}
+};
+```
+
+**構造**
+
+```
+行 0 → 10 20
+行 1 → 30 40 50
+行 2 → 60
+```
+
+**行ごとの長さ**
+
+```java
+System.out.println(numbers.length);
+System.out.println(numbers[0].length);
+System.out.println(numbers[1].length);
+System.out.println(numbers[2].length);
+```
+
+```
+3
+2
+3
+1
+```
+
+**全要素の巡回**
+
+```java
+for (int row = 0; row < numbers.length; row++) {
+    for (int column = 0; column < numbers[row].length; column++) {
+        System.out.println(numbers[row][column]);
+    }
+}
+```
+
+**よくあるミス**
+
+すべての行の長さが同じだと仮定すると範囲を超える可能性がある。
+
+```java
+for (int column = 0; column < numbers[0].length; column++) {
+    System.out.println(numbers[row][column]);
+}
+```
+
+各行の長さを使わなければならない。
+
+```java
+column < numbers[row].length
+```
+
+## 次へ
+
+次は [Part 13「文字列① 生成・連結・比較」](/dev/lessons/DEV-JAVA-01-13)を学ぶ。

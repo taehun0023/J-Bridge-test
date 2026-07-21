@@ -1,14 +1,13 @@
 import Link from 'next/link'
 import Card from '@/components/ui/Card'
-import { categoryChildren } from '@/lib/navigation'
+import { categoryChildren, mainNavItems } from '@/lib/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getSubcategorySettings } from '@/app/actions/admin/categories'
+import { getCategoryOverrides } from '@/app/actions/admin/categories'
 
 export default async function CategoryHubPage({ categoryKey }: { categoryKey: string }) {
   const config = categoryChildren[categoryKey]
   if (!config) return null
 
-  // 비활성 서브카테고리는 멘티에게 숨김 (관리자·멘토는 전부 표시)
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   let role = 'mentee'
@@ -16,16 +15,36 @@ export default async function CategoryHubPage({ categoryKey }: { categoryKey: st
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
     role = profile?.role ?? 'mentee'
   }
-  const settings = await getSubcategorySettings()
-  const children = role === 'mentee'
-    ? config.children.filter(c => settings[c.href] !== false)
-    : config.children
+
+  // 카테고리 관리 오버라이드: 이름·설명 덮어쓰기 + 삭제(전체 숨김) + 비활성(멘티 숨김)
+  const overrides = await getCategoryOverrides()
+  const topHref = mainNavItems.find((i) => i.key === categoryKey)?.href
+  const topOv = topHref ? overrides[topHref] : undefined
+  const title = topOv?.label_override ?? config.title
+  const description = topOv?.description_override ?? config.description
+
+  const children = config.children
+    .filter((c) => {
+      const ov = overrides[c.href]
+      if (!ov) return true
+      if (ov.deleted) return false
+      if (role === 'mentee' && ov.is_active === false) return false
+      return true
+    })
+    .map((c) => {
+      const ov = overrides[c.href]
+      return {
+        href: c.href,
+        label: ov?.label_override ?? c.label,
+        description: ov?.description_override ?? c.description,
+      }
+    })
 
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{config.title}</h1>
-        <p className="mt-1 text-gray-500 dark:text-gray-400">{config.description}</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
+        <p className="mt-1 text-gray-500 dark:text-gray-400">{description}</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

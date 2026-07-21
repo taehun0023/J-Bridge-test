@@ -4,7 +4,7 @@ import GlobalLoadingOverlay from '@/components/ui/GlobalLoadingOverlay'
 import Providers from '@/app/providers'
 import type { UserRole, JlptLevel } from '@/lib/supabase/types'
 import { kanjiOnly } from '@/lib/name-format'
-import { getSubcategorySettings } from '@/app/actions/admin/categories'
+import { getCategoryOverrides } from '@/app/actions/admin/categories'
 
 export default async function MainLayout({
   children,
@@ -30,17 +30,21 @@ export default async function MainLayout({
     jlptLevel = (profile?.jlpt_level as JlptLevel) ?? null
   }
 
-  // 카테고리 관리에서 비활성화한 항목은 멘티 메뉴에서 숨김 (관리자·멘토는 전부 노출)
-  let hiddenNav: string[] = []
-  if (userRole === 'mentee') {
-    const settings = await getSubcategorySettings()
-    hiddenNav = Object.entries(settings).filter(([, active]) => !active).map(([href]) => href)
+  // 카테고리 관리 오버라이드 적용:
+  //  - 삭제(deleted)된 항목은 전체 메뉴에서 숨김, 비활성(is_active=false)은 멘티 메뉴에서만 숨김
+  //  - 이름(label_override)은 사이드바 상단 카테고리에 반영
+  const overrides = user ? await getCategoryOverrides() : {}
+  const hiddenNav: string[] = []
+  const navOverrides: Record<string, string> = {}
+  for (const [href, ov] of Object.entries(overrides)) {
+    if (ov.deleted || (userRole === 'mentee' && ov.is_active === false)) hiddenNav.push(href)
+    if (ov.label_override) navOverrides[href] = ov.label_override
   }
 
   return (
     <Providers>
       <GlobalLoadingOverlay />
-      <MainShell userName={userName} avatarUrl={avatarUrl} userRole={userRole} jlptLevel={jlptLevel} hiddenNav={hiddenNav}>{children}</MainShell>
+      <MainShell userName={userName} avatarUrl={avatarUrl} userRole={userRole} jlptLevel={jlptLevel} hiddenNav={hiddenNav} navOverrides={navOverrides}>{children}</MainShell>
     </Providers>
   )
 }

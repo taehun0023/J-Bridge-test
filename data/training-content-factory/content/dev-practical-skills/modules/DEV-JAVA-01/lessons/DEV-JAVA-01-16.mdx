@@ -1,0 +1,645 @@
+---
+lesson_id: DEV-JAVA-01-16
+title: "Java初級16 メソッド② 戻り値・早期終了・配列"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 18
+tags: [java, basics, method, return, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次の作業ができるようにする。
+
+- return でメソッドの実行結果を返す。
+- 戻り値を変数に保存したり、他のコードで使用したりする。
+- 戻り値の型と return する値の型を一致させる。
+- return でメソッドを早期終了する。
+- 配列をメソッドの仮引数として渡す。
+- 配列要素を変更したときに元の配列に及ぼす影響を理解する。
+- 配列を返すメソッドを作成する。
+
+## 授業内容
+
+### Part 1. 戻り値のあるメソッド
+
+**概念説明**
+
+- メソッドは処理結果を呼び出した場所へ返すことができる。
+- 結果を返すことを返却という。
+- 戻り値のあるメソッドは void の代わりに返す値の型を記述する。
+- `return 値;` が実行されると、その値が呼び出した場所へ渡される。
+- メソッドの戻り値の型と return する値の型は一致していなければならない。
+
+**基本の文法**
+
+```java
+static 戻り値の型 メソッド名(仮引数) {
+    return 戻り値;
+}
+```
+
+**コード文法の分解**
+
+```java
+static int add(int first, int second) {
+    return first + second;
+}
+```
+
+| 部分 | 意味 |
+|---|---|
+| `static` | main から直接呼び出せるようにする |
+| `int` | メソッドの戻り値の型 |
+| `add` | メソッド名 |
+| `int first, int second` | 仮引数 |
+| `return first + second` | 計算結果を呼び出した場所へ返す |
+
+**メソッドの呼び出し**
+
+```java
+int result = add(10, 20);
+
+System.out.println(result);
+```
+
+**実行の流れと結果**
+
+- add(10, 20)を呼び出す。
+- firstに10、secondに20が渡される。
+- first + secondを計算する。
+- 結果30を返す。
+- 戻り値をresultに保存する。
+
+```
+30
+```
+
+**出力するだけのメソッドとの比較**
+
+値を出力するだけの void メソッドは、結果を画面に見せることはできるが、呼び出した場所でその結果を再び使うことができない。
+
+```java
+static void printTotal(int first, int second) {
+    System.out.println(first + second);
+}
+```
+
+このメソッドは結果を画面に見せることはできるが、呼び出した場所で再び計算したり比較したりできない。
+
+戻り値のあるメソッドは結果を返すので、呼び出した場所で保存したり再び活用したりできる。
+
+```java
+static int calculateTotal(int first, int second) {
+    return first + second;
+}
+```
+
+```java
+int total = calculateTotal(10, 20);
+int doubled = total * 2;
+boolean expensive = total >= 25;
+```
+
+計算結果を出力するだけでなく、保存・比較・再計算したり、別のメソッドに渡したりする必要があるときに戻り値を使う。メソッドは結果をどう使うかを決めずに結果だけを返すので、さまざまな状況で再利用できる。
+
+**さまざまな戻り値の型**
+
+```java
+static double getPrice() {
+    return 1500.5;
+}
+```
+
+```java
+static boolean isAdult(int age) {
+    return age >= 18;
+}
+```
+
+```java
+static String getMessage() {
+    return "学習完了";
+}
+```
+
+**戻り値の直接利用**
+
+戻り値を必ず変数に保存する必要はない。
+
+```java
+System.out.println(add(10, 20));
+```
+
+他の計算でも使用できる。
+
+```java
+int result = add(10, 20) * 2;
+```
+
+**よくあるミス**
+
+戻り値の型と異なる型を返すとエラーになる。
+
+```java
+static int getScore() {
+    return "100"; // エラー
+}
+```
+
+正しいコードは次のとおりである。
+
+```java
+static int getScore() {
+    return 100;
+}
+```
+
+### Part 2. すべての実行経路の return
+
+**概念説明**
+
+- 戻り値のあるメソッドは、実行されうるすべての経路で値を返さなければならない。
+- 条件によって return が実行されない可能性があるとコンパイルエラーになる。
+- if-else の各領域で値を返すか、条件文の後にデフォルトの戻り値を記述する必要がある。
+
+**間違ったコード**
+
+```java
+static String checkScore(int score) {
+    if (score >= 60) {
+        return "合格";
+    }
+}
+```
+
+score が 60 未満だと返す値が無いのでエラーになる。
+
+**修正方法1: if-else**
+
+```java
+static String checkScore(int score) {
+    if (score >= 60) {
+        return "合格";
+    } else {
+        return "不合格";
+    }
+}
+```
+
+**修正方法2: 条件文の後で返す**
+
+```java
+static String checkScore(int score) {
+    if (score >= 60) {
+        return "合格";
+    }
+
+    return "不合格";
+}
+```
+
+**実行の流れ**
+
+```java
+String result = checkScore(75);
+```
+
+- 75 >= 60はtrueである。
+- "合格"を返す。
+- メソッドが即座に終了する。
+- 下の return "不合格" は実行されない。
+
+**よくあるミス**
+
+return の後に実行文を書くことはできない。
+
+```java
+static int getNumber() {
+    return 10;
+    System.out.println("終了"); // 実行できないコード
+}
+```
+
+return が実行されるとメソッドは即座に終了する。
+
+### Part 3. 早期終了
+
+**概念説明**
+
+- メソッドの途中で return を実行すると、残りのコードを実行せずに終了できる。
+- これを早期終了という。
+- 不正な入力を先に検査してメソッドを終える際に便利である。
+- void メソッドでは戻り値なしで `return;` だけを記述する。
+- 戻り値のあるメソッドでは戻り値の型に合う値を一緒に記述しなければならない。
+
+**void メソッドの早期終了**
+
+```java
+static void printScore(int score) {
+    if (score < 0) {
+        System.out.println("不正な点数");
+        return;
+    }
+
+    System.out.println(score);
+}
+```
+
+**実行の流れ**
+
+```java
+printScore(-10);
+```
+
+- score < 0はtrueである。
+- "不正な点数"を出力する。
+- return;でメソッドを終了する。
+- 最後の出力文は実行されない。
+
+```
+不正な点数
+```
+
+**戻り値のあるメソッドの早期終了**
+
+```java
+static int normalizeScore(int score) {
+    if (score < 0) {
+        return 0;
+    }
+
+    return score;
+}
+```
+
+呼び出し:
+
+```java
+System.out.println(normalizeScore(-10));
+System.out.println(normalizeScore(80));
+```
+
+```
+0
+80
+```
+
+**条件文のネストを減らす**
+
+```java
+static void printUser(String name, boolean active) {
+    if (!active) {
+        return;
+    }
+
+    System.out.println(name);
+}
+```
+
+処理できない条件を先に終了させると、ネストしたelseを減らすことができる。
+
+**よくあるミス**
+
+void メソッドでは値を返すことができない。
+
+```java
+static void printMessage() {
+    return "完了"; // エラー
+}
+```
+
+void メソッドの早期終了は次のように記述する。
+
+```java
+return;
+```
+
+### Part 4. 配列を引数として渡す
+
+**概念説明**
+
+- 配列も一般的な変数と同じようにメソッドの仮引数として渡すことができる。
+- 配列の仮引数は `型[] 名前` で宣言する。
+- メソッドは渡された配列のlengthと各要素を使用できる。
+- 配列全体の合計・検索・変更処理をメソッドとして分離できる。
+
+**基本の文法**
+
+```java
+static void メソッド名(int[] numbers) {
+    実行するコード
+}
+```
+
+**配列の合計メソッド**
+
+```java
+static int sum(int[] numbers) {
+    int total = 0;
+
+    for (int number : numbers) {
+        total += number;
+    }
+
+    return total;
+}
+```
+
+**呼び出しの例**
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        int[] scores = {80, 90, 100};
+
+        int result = sum(scores);
+
+        System.out.println(result);
+    }
+
+    static int sum(int[] numbers) {
+        int total = 0;
+
+        for (int number : numbers) {
+            total += number;
+        }
+
+        return total;
+    }
+}
+```
+
+**実行の流れと結果**
+
+- scoresを渡す → numbersで配列要素を確認 → 80 + 90 + 100を計算 → 270を返す
+
+```
+270
+```
+
+**配列の長さを返す**
+
+```java
+static int getLength(int[] numbers) {
+    return numbers.length;
+}
+```
+
+**よくあるミス**
+
+配列の仮引数の角括弧を忘れると、値1つを受け取る仮引数になる。
+
+```java
+static int sum(int numbers) { // 配列ではない
+}
+```
+
+正しいコードは次のとおりである。
+
+```java
+static int sum(int[] numbers) {
+}
+```
+
+### Part 5. メソッドで配列要素を変更する
+
+**概念説明**
+
+- Java はすべての実引数を値として渡す。
+- 配列を渡すときは、配列を指す参照値がコピーされて渡される。
+- 呼び出した側とメソッドが同じ配列を指すため、メソッド内で要素を変更すると元の配列も変更される。
+- ただし、仮引数自体に新しい配列を代入しても、呼び出した側の配列変数は変わらない。
+
+**配列要素の変更**
+
+```java
+static void changeFirst(int[] numbers) {
+    numbers[0] = 100;
+}
+```
+
+呼び出し:
+
+```java
+int[] values = {10, 20, 30};
+
+changeFirst(values);
+
+System.out.println(values[0]);
+```
+
+実行結果:
+
+```
+100
+```
+
+メソッド内で変更した配列要素が元の配列にも反映される。
+
+**仮引数に新しい配列を代入**
+
+```java
+static void replaceArray(int[] numbers) {
+    numbers = new int[]{100, 200, 300};
+}
+```
+
+呼び出し:
+
+```java
+int[] values = {10, 20, 30};
+
+replaceArray(values);
+
+System.out.println(values[0]);
+```
+
+実行結果:
+
+```
+10
+```
+
+numbers に新しい配列を代入しても values が指す配列は変わらない。
+
+**動作の比較**
+
+| メソッド内部の操作 | 元の配列 |
+|---|---|
+| `numbers[0] = 100` | 要素が変更される |
+| `numbers = new int[]{...}` | 元の配列変数は変更されない |
+
+**よくあるミス**
+
+- 配列全体がコピーされて渡されると考えてはいけない。
+- 配列要素を変更すると、呼び出した側でも変更された値が見える。
+
+### Part 6. 配列を返すメソッド
+
+**概念説明**
+
+- メソッドは配列も返すことができる。
+- 戻り値の型を `int[]`、`String[]` のように記述する。
+- return の後にはその型の配列を記述する。
+- 呼び出した側では返された配列を配列変数に保存する。
+
+**配列を返す文法**
+
+```java
+static int[] メソッド名() {
+    return new int[]{値1, 値2};
+}
+```
+
+**例**
+
+```java
+static int[] createScores() {
+    return new int[]{80, 90, 100};
+}
+```
+
+呼び出し:
+
+```java
+int[] scores = createScores();
+
+System.out.println(scores[0]);
+System.out.println(scores[1]);
+System.out.println(scores[2]);
+```
+
+実行結果:
+
+```
+80
+90
+100
+```
+
+**計算した配列を返す**
+
+```java
+static int[] doubleValues(int[] numbers) {
+    int[] result = new int[numbers.length];
+
+    for (int i = 0; i < numbers.length; i++) {
+        result[i] = numbers[i] * 2;
+    }
+
+    return result;
+}
+```
+
+呼び出し:
+
+```java
+int[] values = {10, 20, 30};
+int[] doubled = doubleValues(values);
+
+for (int value : doubled) {
+    System.out.println(value);
+}
+```
+
+実行結果:
+
+```
+20
+40
+60
+```
+
+元の配列を直接変更せず、新しい配列を作って返す。
+
+**よくあるミス**
+
+配列を返すのに戻り値の型を int と記述してはいけない。
+
+```java
+static int createScores() {
+    return new int[]{80, 90, 100}; // エラー
+}
+```
+
+正しい戻り値の型は int[] である。
+
+```java
+static int[] createScores() {
+    return new int[]{80, 90, 100};
+}
+```
+
+### Part 7. 配列の検索と早期 return
+
+**概念説明**
+
+- 配列で目的の値を見つけたら即座に return して検索を終えることができる。
+- 検索したインデックスを返し、見つからなければ -1 を返すことができる。
+- 値を見つけた後に別途 found 変数を作ったり break を使ったりする必要がない。
+
+**例**
+
+```java
+static int findIndex(int[] numbers, int target) {
+    for (int i = 0; i < numbers.length; i++) {
+        if (numbers[i] == target) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+```
+
+**呼び出し**
+
+```java
+int[] numbers = {10, 20, 30, 40};
+
+System.out.println(findIndex(numbers, 30));
+System.out.println(findIndex(numbers, 50));
+```
+
+**実行の流れと結果**
+
+1回目の呼び出し:
+
+- 10を確認 → 不一致
+- 20を確認 → 不一致
+- 30を確認 → インデックス2を返す → メソッド終了
+
+2回目の呼び出し:
+
+- すべての要素を確認 → 見つからない → -1を返す
+
+```
+2
+-1
+```
+
+**よくあるミス**
+
+繰り返し文の中に return -1 を書くと、最初の要素が一致しない瞬間に検索が終わってしまう。
+
+```java
+static int findIndex(int[] numbers, int target) {
+    for (int i = 0; i < numbers.length; i++) {
+        if (numbers[i] == target) {
+            return i;
+        }
+
+        return -1; // 誤った位置
+    }
+
+    return -1;
+}
+```
+
+検索失敗を意味する return -1 はループがすべて終わった後に書く必要がある。
+
+## 次へ
+
+次は [Part 17「メソッド③ オーバーロード・スコープ」](/dev/lessons/DEV-JAVA-01-17)を学ぶ。

@@ -1,0 +1,448 @@
+---
+lesson_id: DEV-JAVA-02-06
+title: "Java중급06 접근 제어자·접근 범위"
+module: DEV-JAVA-01
+language: ko
+level: foundation
+est_minutes: 22
+tags: [java, intermediate, oop, access-modifier, static-content]
+---
+
+## 학습 목표
+
+이 파트를 학습한 후 다음 작업을 할 수 있어야 합니다.
+
+- 접근 범위를 제한해야 하는 이유를 설명한다.
+- public, protected, 접근 제어자 없음, private을 구분한다.
+- 같은 클래스·같은 패키지·다른 패키지의 접근 차이를 이해한다.
+- 클래스와 생성자의 접근 범위를 지정한다.
+- 외부에 공개할 기능과 내부에서만 사용할 기능을 구분한다.
+
+## 수업 내용
+
+### Part 1. 접근 제어자가 필요한 이유
+
+클래스의 모든 기능을 외부에서 사용할 필요는 없다.
+
+```java
+class OrderService {
+    void placeOrder() {
+        checkStock();
+        calculatePrice();
+    }
+
+    void checkStock() {
+        System.out.println("재고 확인");
+    }
+
+    void calculatePrice() {
+        System.out.println("가격 계산");
+    }
+}
+```
+
+외부에서는 주문 기능인 placeOrder()만 호출하면 된다. 재고 확인과 가격 계산은 주문 처리 과정에서 내부적으로 사용하는 기능이다.
+
+모든 메서드가 공개되면 외부 코드가 내부 처리 메서드를 직접 호출할 수 있다.
+
+```java
+service.checkStock();
+service.calculatePrice();
+```
+
+접근 제어자를 사용하면 다음을 구분할 수 있다.
+
+- 다른 패키지에서도 사용할 공개 기능
+- 같은 패키지에서만 공유할 기능
+- 현재 클래스 내부에서만 사용할 기능
+- 상속받은 클래스에서 사용할 기능
+
+접근 제어자는 클래스의 모든 코드를 공개하지 않고 필요한 부분만 사용할 수 있게 하기 위해 사용한다.
+
+### Part 2. 네 가지 접근 범위
+
+Java의 접근 범위는 네 가지다.
+
+| 접근 형태 | 같은 클래스 | 같은 패키지 | 다른 패키지의 자식 클래스 | 다른 패키지 |
+|---|---|---|---|---|
+| public | 가능 | 가능 | 가능 | 가능 |
+| protected | 가능 | 가능 | 가능 | 불가능 |
+| 접근 제어자 없음 | 가능 | 가능 | 불가능 | 불가능 |
+| private | 가능 | 불가능 | 불가능 | 불가능 |
+
+접근 범위는 다음 순서로 좁아진다.
+
+```text
+public → protected → 접근 제어자 없음 → private
+```
+
+**public**
+
+어디에서나 사용할 수 있다.
+
+```java
+public void placeOrder() {
+}
+```
+
+다른 패키지에 있는 클래스에도 제공해야 하는 기능에 사용한다.
+
+**private**
+
+선언된 클래스 내부에서만 사용할 수 있다.
+
+```java
+private void calculatePrice() {
+}
+```
+
+클래스의 내부 처리 과정처럼 외부에서 직접 호출할 필요가 없는 기능에 사용한다.
+
+**접근 제어자 없음**
+
+접근 제어자를 작성하지 않으면 같은 패키지에서만 사용할 수 있다.
+
+```java
+void checkStock() {
+}
+```
+
+이를 package-private 또는 기본 접근 범위라고 한다.
+
+default라는 접근 제어자를 작성하는 것은 아니다.
+
+```java
+// 잘못된 코드
+default void checkStock() {
+}
+```
+
+접근 제어자를 생략해야 한다.
+
+```java
+void checkStock() {
+}
+```
+
+**protected**
+
+같은 패키지와 상속받은 클래스에서 사용할 수 있다.
+
+```java
+protected void updateStatus() {
+}
+```
+
+다른 패키지에 있는 일반 클래스에는 공개되지 않는다. 상속받은 클래스에서의 정확한 사용 규칙은 상속 파트에서 학습한다.
+
+### Part 3. 같은 패키지와 다른 패키지
+
+ProductService가 shop 패키지에 있다고 가정한다.
+
+ProductService.java:
+
+```java
+package shop;
+
+public class ProductService {
+    public void sell() {
+        checkStock();
+        calculatePrice();
+    }
+
+    void checkStock() {
+        System.out.println("재고 확인");
+    }
+
+    private void calculatePrice() {
+        System.out.println("가격 계산");
+    }
+}
+```
+
+같은 shop 패키지의 클래스에서는 public과 접근 제어자 없는 메서드를 사용할 수 있다.
+
+ShopMain.java:
+
+```java
+package shop;
+
+public class ShopMain {
+    public static void main(String[] args) {
+        ProductService service =
+                new ProductService();
+
+        service.sell();
+        service.checkStock();
+
+        // private이므로 컴파일 오류
+        // service.calculatePrice();
+    }
+}
+```
+
+다른 app 패키지에서는 public 메서드만 사용할 수 있다.
+
+Main.java:
+
+```java
+package app;
+
+import shop.ProductService;
+
+public class Main {
+    public static void main(String[] args) {
+        ProductService service =
+                new ProductService();
+
+        service.sell();
+
+        // 같은 패키지가 아니므로 컴파일 오류
+        // service.checkStock();
+
+        // private이므로 컴파일 오류
+        // service.calculatePrice();
+    }
+}
+```
+
+패키지가 달라지면 접근 가능한 범위도 달라진다.
+
+### Part 4. private 메서드
+
+private 메서드는 해당 클래스 내부에서만 호출할 수 있다.
+
+```java
+class MessageService {
+    public void send() {
+        prepareMessage();
+        System.out.println("메시지 전송");
+    }
+
+    private void prepareMessage() {
+        System.out.println("메시지 준비");
+    }
+}
+```
+
+외부에서는 공개된 send()만 호출한다.
+
+```java
+MessageService service =
+        new MessageService();
+
+service.send();
+```
+
+**실행 결과**
+
+```text
+메시지 준비
+메시지 전송
+```
+
+다음 호출은 허용되지 않는다.
+
+```java
+// 컴파일 오류
+service.prepareMessage();
+```
+
+prepareMessage()는 외부에서 독립적으로 사용할 기능이 아니라 send()의 내부 처리 과정이다. 이처럼 클래스 내부에서만 필요한 보조 메서드에는 private을 사용한다.
+
+### Part 5. 클래스의 접근 범위
+
+다른 패키지에서 최상위 클래스를 사용하려면 클래스를 public으로 선언한다.
+
+```java
+package shop;
+
+public class Product {
+}
+```
+
+public 클래스의 이름은 파일 이름과 같아야 한다.
+
+```text
+Product.java
+```
+
+접근 제어자를 작성하지 않은 클래스는 같은 패키지에서만 사용할 수 있다.
+
+```java
+package shop;
+
+class ProductHelper {
+}
+```
+
+ProductHelper는 shop 패키지 내부에서만 사용할 수 있다.
+
+최상위 클래스에는 다음 두 접근 형태만 사용할 수 있다.
+
+```java
+public class Product {
+}
+```
+
+```java
+class ProductHelper {
+}
+```
+
+최상위 클래스에 private이나 protected는 사용할 수 없다.
+
+```java
+// 컴파일 오류
+private class Product {
+}
+```
+
+```java
+// 컴파일 오류
+protected class Product {
+}
+```
+
+### Part 6. 생성자의 접근 범위
+
+생성자에도 접근 제어자를 작성할 수 있다.
+
+```java
+public class Product {
+    public Product() {
+    }
+}
+```
+
+public 생성자는 다른 패키지에서도 호출할 수 있다.
+
+```java
+Product product = new Product();
+```
+
+접근 제어자가 없는 생성자는 같은 패키지에서만 호출할 수 있다.
+
+```java
+public class Product {
+    Product() {
+    }
+}
+```
+
+Product 클래스가 public이어도 생성자가 공개되지 않았으므로 다른 패키지에서는 객체를 만들 수 없다.
+
+```java
+// 다른 패키지에서는 컴파일 오류
+Product product = new Product();
+```
+
+private 생성자는 같은 클래스 내부에서만 호출할 수 있다.
+
+```java
+public class Product {
+    private Product() {
+    }
+}
+```
+
+이 경우 클래스 밖에서는 new Product()를 사용할 수 없다. private 생성자를 실제로 활용하는 방법은 이후 static을 학습한 뒤 다룰 수 있다.
+
+### Part 7. 접근 범위 선택 기준
+
+접근 범위는 기능을 어디까지 공개해야 하는지에 따라 결정한다.
+
+| 사용 상황 | 접근 형태 |
+|---|---|
+| 모든 패키지에 공개할 기능 | public |
+| 같은 패키지에서만 공유할 기능 | 접근 제어자 없음 |
+| 같은 패키지와 자식 클래스에서 사용할 기능 | protected |
+| 현재 클래스 내부에서만 사용할 기능 | private |
+
+일반적으로 외부에 제공해야 하는 기능은 public으로 선언한다.
+
+```java
+public void start() {
+}
+```
+
+내부 처리 과정은 private으로 제한한다.
+
+```java
+private void prepare() {
+}
+```
+
+패키지 내부의 여러 클래스가 함께 사용하는 기능은 접근 제어자를 생략할 수 있다.
+
+```java
+void check() {
+}
+```
+
+처음부터 모든 기능을 public으로 만들기보다는 실제로 외부에서 사용해야 하는 기능인지 확인한 뒤 공개하는 것이 좋다.
+
+### 종합 예제
+
+프로젝트 구조:
+
+```text
+src/
+├─ service/
+│  └─ DeliveryService.java
+└─ app/
+   └─ Main.java
+```
+
+DeliveryService.java:
+
+```java
+package service;
+
+public class DeliveryService {
+    public void deliver() {
+        checkAddress();
+        preparePackage();
+        System.out.println("배송 시작");
+    }
+
+    void checkAddress() {
+        System.out.println("주소 확인");
+    }
+
+    private void preparePackage() {
+        System.out.println("포장 준비");
+    }
+}
+```
+
+Main.java:
+
+```java
+package app;
+
+import service.DeliveryService;
+
+public class Main {
+    public static void main(String[] args) {
+        DeliveryService service =
+                new DeliveryService();
+
+        service.deliver();
+    }
+}
+```
+
+**실행 결과**
+
+```text
+주소 확인
+포장 준비
+배송 시작
+```
+
+app 패키지에서는 public인 deliver()만 호출할 수 있다. checkAddress()는 같은 service 패키지에서만 사용할 수 있고, preparePackage()는 DeliveryService 내부에서만 사용할 수 있다.
+
+## 다음으로
+
+다음 학습 내용은 [Part 7「캡슐화·getter·setter」](/dev/lessons/DEV-JAVA-02-07)이다.

@@ -1,0 +1,505 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "while でくり返そう",
+   "prompt": "条件で繰り返す while と、最低1回の do-while を覚えよう。",
+   "takeaway": "while と do-while の基本を10ステップで確認します。"
+  },
+  "steps": [
+   {
+    "id": "java8-q1",
+    "type": "code_exercise",
+    "title": "値を2倍に増やす",
+    "prompt": "3 から始め、40 より小さい間は値を出力して2倍に増やすように完成させなさい。",
+    "lang": "java",
+    "codeTemplate": "int value = 3;\n\nwhile (value [[0]] 40) {\n    System.out.println(value);\n    value [[1]] 2;\n}",
+    "tokens": [
+     "<",
+     "*=",
+     ">",
+     ">=",
+     "==",
+     "+=",
+     "/=",
+     "++"
+    ],
+    "answers": [
+     "<",
+     "*="
+    ],
+    "result": {
+     "kind": "console",
+     "output": "3\n6\n12\n24"
+    },
+    "explanation": "40 より小さい間は繰り返すので条件は < で、2倍にするので value *= 2 を使う。3, 6, 12, 24 が出力され、48 は 40 より小さくないので止まる。>・>=・== は最初から偽で何も出力されず、+= は 2 ずつしか増えず、/= は値が減って無限ループになる。"
+   },
+   {
+    "id": "java8-q2",
+    "type": "code_exercise",
+    "title": "一定量の減少",
+    "prompt": "10 から始め、0 より大きい間は値を出力して 3 ずつ減らすように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "int water = 10;\n\nwhile (water > 0) {\n    System.out.println(water);\n    water [[0]] 3;\n}",
+    "tokens": [
+     "-=",
+     "+=",
+     "*=",
+     "/="
+    ],
+    "answers": [
+     "-="
+    ],
+    "result": {
+     "kind": "console",
+     "output": "10\n7\n4\n1"
+    },
+    "explanation": "3 ずつ減らすので -= を使う。10, 7, 4, 1 が出力され、次は -2 なので 0 より大きくなく止まる。+=・*= は値が増えて無限ループ、/= は結果が変わる。"
+   },
+   {
+    "id": "java8-q3",
+    "type": "code_exercise",
+    "title": "桁数を数える",
+    "prompt": "4827 の桁数を while 文で数えるように完成させなさい。",
+    "lang": "java",
+    "codeTemplate": "int number = 4827;\nint digits = 0;\n\nwhile (number [[0]] 0) {\n    number [[1]] 10;\n    digits[[2]];\n}\n\nSystem.out.println(digits);",
+    "tokens": [
+     ">",
+     "/=",
+     "++",
+     "<",
+     "==",
+     ">=",
+     "%=",
+     "*=",
+     "-=",
+     "--",
+     "+= 2",
+     "+"
+    ],
+    "answers": [
+     ">",
+     "/=",
+     "++"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "4"
+    },
+    "explanation": "number が 0 より大きい間 number /= 10 で1桁ずつ減らし、digits++ で桁数を数える。4827 → 482 → 48 → 4 → 0 と4回繰り返して 4 になる。<・== は最初から偽で 0 になり、%=・*=・-= は桁が減らず無限ループや別の結果になる。"
+   },
+   {
+    "id": "java8-q4",
+    "type": "order",
+    "title": "各桁の逆順出力",
+    "prompt": "507 の各数字を右から出力するようにカードを並べなさい。",
+    "items": [
+     {
+      "id": "p08q04_c1",
+      "text": "int number = 507;"
+     },
+     {
+      "id": "p08q04_c2",
+      "text": "while (number > 0) {"
+     },
+     {
+      "id": "p08q04_c3",
+      "text": "    System.out.println(number % 10);"
+     },
+     {
+      "id": "p08q04_c4",
+      "text": "    number /= 10;"
+     },
+     {
+      "id": "p08q04_c5",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "p08q04_w1",
+      "text": "number *= 10;"
+     },
+     {
+      "id": "p08q04_w2",
+      "text": "System.out.println(number / 10);"
+     }
+    ],
+    "explanation": "number % 10 で最後の桁を取り出して出力し、number /= 10 で桁を1つずつ減らす。507 → 7, 0, 5 の順で出力される。number *= 10 や number / 10 の出力は右から桁を取り出すのに合わない。"
+   },
+   {
+    "id": "java8-q5",
+    "type": "code_exercise",
+    "title": "終了値までの合計",
+    "prompt": "-1 が入力されるまで入力値を合計するように空欄を埋めなさい。(入力 4, 6, -1)",
+    "lang": "java",
+    "codeTemplate": "Scanner scanner = new Scanner(System.in);\nint number = scanner.nextInt();\nint total = 0;\n\nwhile (number [[0]] -1) {\n    total [[1]] number;\n    number = scanner.[[2]]();\n}\n\nSystem.out.println(total);",
+    "tokens": [
+     "!=",
+     "+=",
+     "nextInt",
+     "==",
+     "-=",
+     "nextLine"
+    ],
+    "answers": [
+     "!=",
+     "+=",
+     "nextInt"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "10",
+     "stdin": "4 6 -1"
+    },
+    "explanation": "-1 でない間は繰り返すので条件は != で、値を足して累積するので += を使う。次の整数は nextInt() で受け取る。4 + 6 = 10 になり -1 で止まる。== は最初から偽で合計されず、-= は引き算、nextLine() は文字列なのでエラーになる。"
+   },
+   {
+    "id": "java8-q6",
+    "type": "mini_check",
+    "title": "実行結果の比較",
+    "prompt": "次のコードの実行結果として正しいものはどれか？",
+    "code": "int first = 5;\nwhile (first < 3) {\n    System.out.println(\"while\");\n}\n\nint second = 5;\ndo {\n    System.out.println(\"do-while\");\n} while (second < 3);",
+    "options": [
+     {
+      "id": "A",
+      "text": "何も出力されない。"
+     },
+     {
+      "id": "B",
+      "text": "`while` だけが出力される。"
+     },
+     {
+      "id": "C",
+      "text": "`do-while` だけが出力される。"
+     },
+     {
+      "id": "D",
+      "text": "`while` と `do-while` の両方が出力される。"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "while は条件(5 < 3)を先に検査するが false なので一度も実行されない。do-while はコードを先に実行してから条件を検査するので、条件が false でも do-while が1回出力される。"
+   },
+   {
+    "id": "java8-q8",
+    "type": "order",
+    "title": "正の数が入力されるまで繰り返す",
+    "prompt": "Scanner 生成 → 変数宣言 → do ブロックで入力 → 0 以下かの検査 → 最初に入力された正の数を出力 → Scanner 終了 の順に並べなさい。Scanner は正の数を出力した後に閉じる。",
+    "items": [
+     {
+      "id": "i1",
+      "text": "import java.util.Scanner;"
+     },
+     {
+      "id": "i2",
+      "text": "public class Main {"
+     },
+     {
+      "id": "i3",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "i4",
+      "text": "        Scanner scanner = new Scanner(System.in);"
+     },
+     {
+      "id": "i5",
+      "text": "        int number;"
+     },
+     {
+      "id": "i6",
+      "text": "        do {"
+     },
+     {
+      "id": "i7",
+      "text": "            number = scanner.nextInt();"
+     },
+     {
+      "id": "i8",
+      "text": "        } while (number <= 0);"
+     },
+     {
+      "id": "i9",
+      "text": "        System.out.println(number);"
+     },
+     {
+      "id": "i10",
+      "text": "        scanner.close();"
+     },
+     {
+      "id": "i11",
+      "text": "    }"
+     },
+     {
+      "id": "i12",
+      "text": "}"
+     }
+    ],
+    "explanation": "do-while は先に入力を受け取り(number = scanner.nextInt())、その値が 0 以下の間繰り返す。-2・0 は 0 以下なので再入力し、5 は正の数なので条件(5 <= 0)が false となり終了してから 5 が出力される。number は繰り返しの外で宣言しないと while 条件で使えない。",
+    "distractors": [
+     {
+      "id": "java8-q8_w01",
+      "text": "} while (number < 0);"
+     },
+     {
+      "id": "java8-q8_w02",
+      "text": "number = scanner.nextLine();"
+     }
+    ]
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "while로 반복하자",
+   "prompt": "조건으로 반복하는 while과 최소 한 번의 do-while을 익히자.",
+   "takeaway": "while과 do-while의 기본을 10스텝으로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "java8-q1",
+    "type": "code_exercise",
+    "title": "값을 두 배로 증가",
+    "prompt": "3에서 시작하여 40보다 작은 동안 값을 출력하고 두 배로 증가시키도록 완성하시오.",
+    "lang": "java",
+    "codeTemplate": "int value = 3;\n\nwhile (value [[0]] 40) {\n    System.out.println(value);\n    value [[1]] 2;\n}",
+    "tokens": [
+     "<",
+     "*=",
+     ">",
+     ">=",
+     "==",
+     "+=",
+     "/=",
+     "++"
+    ],
+    "answers": [
+     "<",
+     "*="
+    ],
+    "result": {
+     "kind": "console",
+     "output": "3\n6\n12\n24"
+    },
+    "explanation": "40보다 작은 동안 반복하므로 조건은 <이고, 두 배로 늘리므로 value *= 2를 쓴다. 3, 6, 12, 24가 출력되고 48은 40보다 작지 않아 멈춘다. >·>=·==는 처음부터 거짓이라 아무것도 출력되지 않고, +=는 2씩만 늘며, /=는 값이 줄어 무한 반복이 된다."
+   },
+   {
+    "id": "java8-q2",
+    "type": "code_exercise",
+    "title": "일정량 감소",
+    "prompt": "10에서 시작하여 0보다 큰 동안 값을 출력하고 3씩 줄이도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "int water = 10;\n\nwhile (water > 0) {\n    System.out.println(water);\n    water [[0]] 3;\n}",
+    "tokens": [
+     "-=",
+     "+=",
+     "*=",
+     "/="
+    ],
+    "answers": [
+     "-="
+    ],
+    "result": {
+     "kind": "console",
+     "output": "10\n7\n4\n1"
+    },
+    "explanation": "3씩 줄이므로 -=를 쓴다. 10, 7, 4, 1이 출력되고 다음은 -2라 0보다 크지 않아 멈춘다. +=·*=는 값이 늘어 무한 반복하고, /=는 결과가 달라진다."
+   },
+   {
+    "id": "java8-q3",
+    "type": "code_exercise",
+    "title": "자릿수 세기",
+    "prompt": "4827의 자릿수를 while문으로 세도록 완성하시오.",
+    "lang": "java",
+    "codeTemplate": "int number = 4827;\nint digits = 0;\n\nwhile (number [[0]] 0) {\n    number [[1]] 10;\n    digits[[2]];\n}\n\nSystem.out.println(digits);",
+    "tokens": [
+     ">",
+     "/=",
+     "++",
+     "<",
+     "==",
+     ">=",
+     "%=",
+     "*=",
+     "-=",
+     "--",
+     "+= 2",
+     "+"
+    ],
+    "answers": [
+     ">",
+     "/=",
+     "++"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "4"
+    },
+    "explanation": "number가 0보다 큰 동안 number /= 10으로 한 자리씩 줄이고 digits++로 자릿수를 센다. 4827 → 482 → 48 → 4 → 0으로 네 번 반복해 4가 된다. <·==는 처음부터 거짓이라 0이 나오고, %=·*=·-=는 자릿수가 줄지 않아 무한 반복하거나 결과가 달라진다."
+   },
+   {
+    "id": "java8-q4",
+    "type": "order",
+    "title": "각 자리 역순 출력",
+    "prompt": "507의 각 숫자를 오른쪽부터 출력하도록 카드를 배열하시오.",
+    "items": [
+     {
+      "id": "p08q04_c1",
+      "text": "int number = 507;"
+     },
+     {
+      "id": "p08q04_c2",
+      "text": "while (number > 0) {"
+     },
+     {
+      "id": "p08q04_c3",
+      "text": "    System.out.println(number % 10);"
+     },
+     {
+      "id": "p08q04_c4",
+      "text": "    number /= 10;"
+     },
+     {
+      "id": "p08q04_c5",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "p08q04_w1",
+      "text": "number *= 10;"
+     },
+     {
+      "id": "p08q04_w2",
+      "text": "System.out.println(number / 10);"
+     }
+    ],
+    "explanation": "number % 10으로 마지막 자리를 얻어 출력하고, number /= 10으로 자리를 하나씩 줄인다. 507 → 7, 0, 5 순으로 출력된다. number *= 10이나 number / 10 출력은 자리를 오른쪽부터 꺼내는 데 맞지 않는다."
+   },
+   {
+    "id": "java8-q5",
+    "type": "code_exercise",
+    "title": "종료값 전까지 합계",
+    "prompt": "-1이 입력될 때까지 입력값을 합산하도록 빈칸을 채우시오. (입력 4, 6, -1)",
+    "lang": "java",
+    "codeTemplate": "Scanner scanner = new Scanner(System.in);\nint number = scanner.nextInt();\nint total = 0;\n\nwhile (number [[0]] -1) {\n    total [[1]] number;\n    number = scanner.[[2]]();\n}\n\nSystem.out.println(total);",
+    "tokens": [
+     "!=",
+     "+=",
+     "nextInt",
+     "==",
+     "-=",
+     "nextLine"
+    ],
+    "answers": [
+     "!=",
+     "+=",
+     "nextInt"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "10",
+     "stdin": "4 6 -1"
+    },
+    "explanation": "-1이 아닌 동안 반복해야 하므로 조건은 !=이고, 값을 더해 누적하므로 +=를 쓴다. 다음 정수는 nextInt()로 받는다. 4 + 6 = 10이 되고 -1에서 멈춘다. ==는 처음부터 거짓이라 합산되지 않고, -=는 빼기, nextLine()은 문자열이라 오류가 난다."
+   },
+   {
+    "id": "java8-q6",
+    "type": "mini_check",
+    "title": "실행 결과 비교",
+    "prompt": "다음 코드의 실행 결과로 옳은 것은?",
+    "code": "int first = 5;\nwhile (first < 3) {\n    System.out.println(\"while\");\n}\n\nint second = 5;\ndo {\n    System.out.println(\"do-while\");\n} while (second < 3);",
+    "options": [
+     {
+      "id": "A",
+      "text": "아무것도 출력되지 않는다."
+     },
+     {
+      "id": "B",
+      "text": "`while` 만 출력된다."
+     },
+     {
+      "id": "C",
+      "text": "`do-while` 만 출력된다."
+     },
+     {
+      "id": "D",
+      "text": "`while` 과 `do-while` 이 모두 출력된다."
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "while은 조건(5 < 3)을 먼저 검사하는데 false라 한 번도 실행되지 않는다. do-while은 코드를 먼저 실행한 뒤 조건을 검사하므로, 조건이 false여도 do-while이 한 번 출력된다."
+   },
+   {
+    "id": "java8-q8",
+    "type": "order",
+    "title": "양수가 입력될 때까지 반복",
+    "prompt": "Scanner 생성 → 변수 선언 → do 블록에서 입력 → 0 이하인지 검사 → 처음 입력된 양수 출력 → Scanner 종료 순서로 배열하시오. Scanner는 양수를 출력한 뒤 닫는다.",
+    "items": [
+     {
+      "id": "i1",
+      "text": "import java.util.Scanner;"
+     },
+     {
+      "id": "i2",
+      "text": "public class Main {"
+     },
+     {
+      "id": "i3",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "i4",
+      "text": "        Scanner scanner = new Scanner(System.in);"
+     },
+     {
+      "id": "i5",
+      "text": "        int number;"
+     },
+     {
+      "id": "i6",
+      "text": "        do {"
+     },
+     {
+      "id": "i7",
+      "text": "            number = scanner.nextInt();"
+     },
+     {
+      "id": "i8",
+      "text": "        } while (number <= 0);"
+     },
+     {
+      "id": "i9",
+      "text": "        System.out.println(number);"
+     },
+     {
+      "id": "i10",
+      "text": "        scanner.close();"
+     },
+     {
+      "id": "i11",
+      "text": "    }"
+     },
+     {
+      "id": "i12",
+      "text": "}"
+     }
+    ],
+    "explanation": "do-while은 먼저 입력을 받고(number = scanner.nextInt()) 그 값이 0 이하인 동안 반복한다. -2·0은 0 이하라 다시 입력받고, 5는 양수라 조건(5 <= 0)이 false여서 종료된 뒤 5가 출력된다. number를 반복문 밖에서 선언해야 while 조건에서 쓸 수 있다.",
+    "distractors": [
+     {
+      "id": "java8-q8_w01",
+      "text": "} while (number < 0);"
+     },
+     {
+      "id": "java8-q8_w02",
+      "text": "number = scanner.nextLine();"
+     }
+    ]
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}

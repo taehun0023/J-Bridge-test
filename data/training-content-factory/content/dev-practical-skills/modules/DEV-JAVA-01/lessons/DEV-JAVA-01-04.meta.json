@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-01-04",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-basics-scanner-input",
+  "summary": "Scanner の準備、nextInt・nextDouble・next・nextLine の使い分け、nextInt 後の nextLine で残る改行の処理を学ぶ。",
+  "key_points": [
+    "import java.util.Scanner; と new Scanner(System.in) で用意する。",
+    "nextInt は整数、next は1単語、nextLine は1行を読む。",
+    "nextInt の後の nextLine は残った改行を消費する必要がある。"
+  ],
+  "misconceptions": [
+    "整数を読むのに nextLine を使う。",
+    "readInt のような存在しないメソッドを書く。",
+    "nextInt 後の nextLine で空文字になる。"
+  ],
+  "check_questions": [
+    "標準入力を読むクラスは何か？",
+    "空白を含む1行を読むメソッドは？",
+    "nextInt の直後に nextLine を呼ぶと何が起きやすいか？"
+  ]
+}

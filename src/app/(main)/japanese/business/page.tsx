@@ -62,7 +62,7 @@ export default async function BusinessJapaneseHubPage() {
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{config.title}</h1>
-            <p className="mt-1 text-gray-500 dark:text-gray-400">{config.description}</p>
+            {config.description && <p className="mt-1 text-gray-500 dark:text-gray-400">{config.description}</p>}
           </div>
           {canManage && (
             <Link

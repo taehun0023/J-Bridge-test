@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-01-13",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-basics-string-create-compare",
+  "summary": "String の宣言と連結、== と equals の違い、null と空文字の区別、null 安全な比較を学ぶ。",
+  "key_points": [
+    "+ で連結、内容比較は equals()。",
+    "== は参照、equals は内容を比較。",
+    "null と \"\" は別。null 呼び出しは NPE。"
+  ],
+  "misconceptions": [
+    "文字列比較に == を使う。",
+    "null と空文字を同じと思う。",
+    "null に直接メソッドを呼ぶ。"
+  ],
+  "check_questions": [
+    "== と equals の違いは？",
+    "null と空文字は同じか？",
+    "\"値=\" + 1 + 2 の結果は？"
+  ]
+}

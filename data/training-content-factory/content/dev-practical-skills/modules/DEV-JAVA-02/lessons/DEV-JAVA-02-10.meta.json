@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-02-10",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-oop-object-array",
+  "summary": "オブジェクトを格納する配列の宣言と生成、各要素が参照値を持つこと、配列の巡回・合計・検索、オブジェクトが他のオブジェクトを使う協力関係を学ぶ。",
+  "key_points": [
+    "new Type[n] は参照を格納する空間を作り、初期値は null である。",
+    "拡張 for と length でオブジェクト配列を巡回し、要素のメソッドで値を使う。",
+    "オブジェクトが他のオブジェクトをフィールドに持ち、機能を呼び出すのが協力である。"
+  ],
+  "misconceptions": [
+    "new Student[3] で Student オブジェクトが3つ作られると思う。",
+    "オブジェクト配列に値そのものが入ると思う。",
+    "協力すべき場面で情報をすべてコピーしてしまう。"
+  ],
+  "check_questions": [
+    "new Book[2] の直後、要素の値は？",
+    "オブジェクト配列の合計はどう求めるか？",
+    "Order が Product の価格を使うのは何と呼ぶか？"
+  ]
+}

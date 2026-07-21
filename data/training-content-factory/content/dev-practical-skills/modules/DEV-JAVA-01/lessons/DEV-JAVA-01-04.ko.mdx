@@ -1,0 +1,384 @@
+---
+lesson_id: DEV-JAVA-01-04
+title: "Java초급04 표준입력 Scanner"
+module: DEV-JAVA-01
+language: ko
+level: foundation
+est_minutes: 15
+tags: [java, basics, scanner, input, static-content]
+---
+
+## 학습 목표
+
+이 파트를 학습한 후 다음 작업을 할 수 있어야 합니다.
+
+- Scanner를 사용하기 위해 import를 작성한다.
+- 키보드로 입력한 값을 변수에 저장한다.
+- 자료형에 맞는 입력 메서드를 사용한다.
+- next()와 nextLine()의 차이를 구분한다.
+- 숫자 입력 후 nextLine()을 사용할 때 발생하는 문제를 해결한다.
+
+## 수업 내용
+
+### Part 1. Scanner 준비
+
+**개념 설명**
+
+- Scanner는 키보드로 입력한 값을 읽을 때 사용하는 기능이다.
+- 사용하려면 파일 위쪽에 `import java.util.Scanner;`를 작성한다.
+- 그다음 `new Scanner(System.in)`으로 입력을 받을 준비를 한다.
+- `System.in`은 키보드에서 입력된 값을 의미한다.
+- 클래스와 객체의 자세한 의미는 중급에서 배우므로 지금은 기본 형식으로 익힌다.
+
+**코드 문법 분해**
+
+```java
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        scanner.close();
+    }
+}
+```
+
+| 코드 | 의미 |
+|---|---|
+| `import java.util.Scanner;` | Scanner를 사용할 수 있게 불러온다. |
+| `Scanner` | 입력 기능의 자료형 |
+| `scanner` | 입력 기능을 사용할 변수 이름 |
+| `new Scanner(System.in)` | 키보드 입력을 받을 준비 |
+| `scanner.close()` | 입력 사용 종료 |
+
+**문제와 다른 예제**
+
+```java
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner input = new Scanner(System.in);
+
+        int number = input.nextInt();
+        System.out.println(number);
+
+        input.close();
+    }
+}
+```
+
+**실행 흐름과 결과**
+
+입력:
+
+```
+20
+```
+
+출력:
+
+```
+20
+```
+
+**자주 하는 실수**
+
+- `import java.util.Scanner;`를 작성하지 않는다.
+- import를 클래스 내부에 작성한다.
+- `System.in`을 `System.out`으로 잘못 작성한다.
+- 선언한 이름은 `scanner`인데 `input.nextInt()`처럼 다른 이름을 사용한다.
+
+### Part 2. 자료형에 맞는 입력 메서드
+
+**개념 설명**
+
+- 입력값의 자료형에 따라 사용하는 메서드가 다르다.
+- 정수는 `nextInt()`, 실수는 `nextDouble()`을 주로 사용한다.
+- 한 단어는 `next()`, 한 줄 전체는 `nextLine()`으로 입력받는다.
+- 입력한 값은 변수에 저장한 후 출력이나 계산에 사용할 수 있다.
+- 숫자 변수에 문자를 입력하면 실행 중 오류가 발생할 수 있다.
+
+**주요 입력 메서드**
+
+| 입력할 값 | 메서드 | 사용 예 |
+|---|---|---|
+| int 정수 | `nextInt()` | `int age = scanner.nextInt();` |
+| long 정수 | `nextLong()` | `long count = scanner.nextLong();` |
+| float 실수 | `nextFloat()` | `float rate = scanner.nextFloat();` |
+| double 실수 | `nextDouble()` | `double height = scanner.nextDouble();` |
+| boolean | `nextBoolean()` | `boolean passed = scanner.nextBoolean();` |
+| 한 단어 | `next()` | `String name = scanner.next();` |
+| 한 줄 | `nextLine()` | `String message = scanner.nextLine();` |
+
+**문제와 다른 예제**
+
+```java
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        int age = scanner.nextInt();
+        double height = scanner.nextDouble();
+        boolean student = scanner.nextBoolean();
+
+        System.out.println(age);
+        System.out.println(height);
+        System.out.println(student);
+
+        scanner.close();
+    }
+}
+```
+
+**실행 흐름과 결과**
+
+입력:
+
+```
+25
+175.5
+true
+```
+
+출력:
+
+```
+25
+175.5
+true
+```
+
+**자주 하는 실수**
+
+```java
+int age = scanner.nextDouble(); // 자료형이 맞지 않음
+```
+
+올바른 코드는 다음과 같다.
+
+```java
+int age = scanner.nextInt();
+```
+
+`nextInt()`를 사용할 때 `Java`와 같은 문자를 입력하면 정수로 읽을 수 없으므로 오류가 발생한다.
+
+### Part 3. next()와 nextLine()
+
+**개념 설명**
+
+- `next()`는 공백을 기준으로 한 단어만 읽는다.
+- `nextLine()`은 Enter를 누르기 전까지 한 줄 전체를 읽는다.
+- 이름이나 명령어처럼 공백이 없는 값은 `next()`로 받을 수 있다.
+- 주소나 문장처럼 공백이 포함된 값은 `nextLine()`을 사용해야 한다.
+
+**예제**
+
+```java
+Scanner scanner = new Scanner(System.in);
+
+String word = scanner.next();
+System.out.println(word);
+```
+
+입력:
+
+```
+Hello Java
+```
+
+출력:
+
+```
+Hello
+```
+
+`next()`는 첫 번째 공백 전까지만 읽는다.
+
+```java
+Scanner scanner = new Scanner(System.in);
+
+String line = scanner.nextLine();
+System.out.println(line);
+```
+
+같은 내용을 입력하면 한 줄 전체를 읽는다.
+
+입력:
+
+```
+Hello Java
+```
+
+출력:
+
+```
+Hello Java
+```
+
+**자주 하는 실수**
+
+공백이 포함된 이름이나 문장을 `next()`로 입력받으면 첫 번째 단어만 저장된다.
+
+```java
+String message = scanner.next();
+```
+
+한 줄 전체가 필요하다면 `nextLine()`을 사용한다.
+
+```java
+String message = scanner.nextLine();
+```
+
+### Part 4. 숫자 입력 후 nextLine()
+
+**개념 설명**
+
+- `nextInt()`와 `nextDouble()`은 숫자만 읽고 Enter 입력은 남겨둔다.
+- 그 직후 `nextLine()`을 호출하면 남아 있는 Enter를 먼저 읽을 수 있다.
+- 이 경우 사용자가 문장을 입력하기 전에 빈 문자열이 저장된다.
+- 숫자를 입력한 뒤 `nextLine()`을 사용하려면 중간에서 `nextLine()`을 한 번 더 호출한다.
+
+**문제가 발생하는 코드**
+
+```java
+Scanner scanner = new Scanner(System.in);
+
+int age = scanner.nextInt();
+String name = scanner.nextLine();
+
+System.out.println(age);
+System.out.println(name);
+```
+
+`nextInt()`가 숫자만 읽기 때문에 name에는 원하는 문장이 입력되지 않을 수 있다.
+
+**수정 코드**
+
+```java
+Scanner scanner = new Scanner(System.in);
+
+int age = scanner.nextInt();
+scanner.nextLine();
+
+String name = scanner.nextLine();
+
+System.out.println(age);
+System.out.println(name);
+```
+
+**실행 흐름과 결과**
+
+입력:
+
+```
+25
+이태훈
+```
+
+실행 순서는 다음과 같다.
+
+1. `nextInt()`가 25를 읽는다.
+2. 첫 번째 `nextLine()`이 남아 있는 Enter를 처리한다.
+3. 두 번째 `nextLine()`이 이태훈을 읽는다.
+
+출력:
+
+```
+25
+이태훈
+```
+
+**자주 하는 실수**
+
+다음 코드처럼 숫자 입력 직후 바로 `nextLine()`을 사용한다.
+
+```java
+int age = scanner.nextInt();
+String name = scanner.nextLine();
+```
+
+다음과 같이 남아 있는 Enter를 먼저 처리해야 한다.
+
+```java
+int age = scanner.nextInt();
+scanner.nextLine();
+String name = scanner.nextLine();
+```
+
+## 종합 예제
+
+```java
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        String name = scanner.nextLine();
+        int age = scanner.nextInt();
+        double height = scanner.nextDouble();
+
+        System.out.println(name);
+        System.out.println(age);
+        System.out.println(height);
+
+        scanner.close();
+    }
+}
+```
+
+입력:
+
+```
+이태훈
+25
+175.5
+```
+
+출력:
+
+```
+이태훈
+25
+175.5
+```
+
+## 커리큘럼 경계
+
+이번 파트에서는 키보드 입력값을 변수에 저장하는 방법까지만 학습합니다.
+
+- 입력값에 따라 분기: 초급 05
+- 입력값을 반복해서 받기: 초급 07∼09
+- 문자열 메서드 사용: 초급 14
+- 입력 오류를 예외로 처리: 중급 예외 파트
+
+`Scanner`에는 문자 하나를 직접 입력하는 `nextChar()`가 없습니다. 문자 한 개를 꺼내는 방법은 문자열 메서드를 배운 후 다룹니다.
+
+## 핵심 요약
+
+```java
+import java.util.Scanner;
+
+Scanner scanner = new Scanner(System.in);
+
+int age = scanner.nextInt();
+double height = scanner.nextDouble();
+
+scanner.nextLine();
+String name = scanner.nextLine();
+
+scanner.close();
+```
+
+- Scanner를 사용하려면 import가 필요하다.
+- 자료형에 맞는 입력 메서드를 사용한다.
+- `next()`는 한 단어, `nextLine()`은 한 줄을 읽는다.
+- 숫자 입력 후 `nextLine()`을 사용할 때는 남아 있는 Enter를 처리한다.
+
+## 다음으로
+
+다음 학습 내용은 [Part 5「조건분기① if·else」](/dev/lessons/DEV-JAVA-01-05)이다.

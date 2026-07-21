@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-02-04",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-oop-constructor-overloading",
+  "summary": "引数の異なる複数コンストラクタ、this() による委譲、デフォルト値の付与を学ぶ。",
+  "key_points": [
+    "オーバーロードは引数の個数・型・順序で区別する。",
+    "戻り値型や名前では区別できない。",
+    "this(...) で別のコンストラクタを呼べる。"
+  ],
+  "misconceptions": [
+    "同じ引数リストのコンストラクタを2つ書く。",
+    "this() を複数行の途中で呼ぶ。",
+    "戻り値型で区別できると思う。"
+  ],
+  "check_questions": [
+    "オーバーロードの区別条件は？",
+    "this(...) の意味は？",
+    "同じ引数リストの重複はどうなる？"
+  ]
+}

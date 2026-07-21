@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-01-06",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-basics-elseif-switch-ternary",
+  "summary": "else if の多分岐、switch の case・break・default、三項演算子による二択の選択を学ぶ。",
+  "key_points": [
+    "else if は上から最初に true のブロックだけ実行。",
+    "switch は case・break・default。break 省略で fall-through。",
+    "三項演算子は 条件 ? 値1 : 値2。"
+  ],
+  "misconceptions": [
+    "else if の順序を逆にして到達しない条件を作る。",
+    "switch で break を書き忘れる。",
+    "三項演算子の : を書き忘れる。"
+  ],
+  "check_questions": [
+    "else if の順序が重要な理由は？",
+    "break を省略すると？",
+    "三項演算子とは？"
+  ]
+}

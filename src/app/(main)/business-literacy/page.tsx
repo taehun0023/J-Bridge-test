@@ -1,21 +1,32 @@
 import Link from 'next/link'
 import Card from '@/components/ui/Card'
 import GuideCard from '@/components/japanese/JlptGuideCard'
-import { categoryChildren } from '@/lib/navigation'
-import { getMenteeHiddenSubcats } from '@/app/actions/admin/categories'
+import { categoryChildren, mainNavItems } from '@/lib/navigation'
+import { getMenteeHiddenSubcats, getCategoryOverrides } from '@/app/actions/admin/categories'
 import { BookOpen, FileText, CheckCircle2 } from 'lucide-react'
 
 export default async function BusinessLiteracyHubPage() {
   const config = categoryChildren['business-lit']
   if (!config) return null
   const hidden = await getMenteeHiddenSubcats()
-  const children = config.children.filter(c => !hidden.has(c.href))
+  const overrides = await getCategoryOverrides()
+  const topHref = mainNavItems.find(i => i.key === 'business-lit')?.href
+  const topOv = topHref ? overrides[topHref] : undefined
+  const title = topOv?.label_override ?? config.title
+  const description = topOv?.description_override ?? config.description
+  const children = config.children
+    .filter(c => !hidden.has(c.href))
+    .map(c => ({
+      href: c.href,
+      label: overrides[c.href]?.label_override ?? c.label,
+      description: overrides[c.href]?.description_override ?? c.description,
+    }))
 
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{config.title}</h1>
-        <p className="mt-1 text-gray-500 dark:text-gray-400">{config.description}</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
+        <p className="mt-1 text-gray-500 dark:text-gray-400">{description}</p>
       </div>
 
       <GuideCard storageKey="business-literacy-guide-dismissed">

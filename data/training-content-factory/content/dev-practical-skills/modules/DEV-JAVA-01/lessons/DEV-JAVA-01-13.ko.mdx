@@ -1,0 +1,458 @@
+---
+lesson_id: DEV-JAVA-01-13
+title: "Java초급13 문자열① 생성·연결·비교"
+module: DEV-JAVA-01
+language: ko
+level: foundation
+est_minutes: 18
+tags: [java, basics, string, compare, static-content]
+---
+
+## 학습 목표
+
+이 파트를 학습한 후 다음 작업을 할 수 있어야 합니다.
+
+- String 변수를 선언하고 문자열을 생성한다.
+- 문자열 리터럴과 new String()의 차이를 이해한다.
+- `+`와 `+=`로 문자열을 연결한다.
+- 문자열과 숫자가 함께 연결되는 순서를 이해한다.
+- `==`와 `equals()`의 차이를 구분한다.
+- 문자열 내용이 다른지 비교할 수 있다.
+
+## 수업 내용
+
+### Part 1. 문자열 생성
+
+**개념 설명**
+
+- 문자열은 여러 문자가 연결된 값을 의미한다.
+- Java에서는 문자열을 String 자료형으로 표현한다.
+- String은 기본형이 아니며 대문자 S로 시작한다.
+- 문자열 값은 큰따옴표 `" "`로 감싼다.
+- 일반적으로 문자열 리터럴을 변수에 직접 대입하여 생성한다.
+
+**기본 문법**
+
+```java
+String language = "Java";
+```
+
+**코드 문법 분해**
+
+| 코드 | 의미 |
+|---|---|
+| `String` | 문자열 자료형 |
+| `language` | 문자열 변수 이름 |
+| `"Java"` | 문자열 리터럴 |
+| `=` | 문자열을 변수에 저장 |
+
+**여러 문자열 생성**
+
+```java
+String name = "Lee";
+String language = "Java";
+String message = "학습 시작";
+String empty = "";
+```
+
+`""`는 문자가 하나도 없는 빈 문자열이다.
+
+**문자와 문자열 차이**
+
+```java
+char grade = 'A';
+String text = "A";
+```
+
+| 구분 | 자료형 | 작성 기호 |
+|---|---|---|
+| 문자 한 개 | `char` | 작은따옴표 `' '` |
+| 문자열 | `String` | 큰따옴표 `" "` |
+
+**new String()으로 생성**
+
+```java
+String first = "Java";
+String second = new String("Java");
+```
+
+두 변수의 문자열 내용은 모두 "Java"다. 하지만 문자열을 새로 만들기 위해 new String()을 직접 사용할 필요는 거의 없다. 일반적으로 다음 방식을 사용한다.
+
+```java
+String language = "Java";
+```
+
+**문제와 다른 예제**
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        String course = "Java 초급";
+        String part = "문자열";
+
+        System.out.println(course);
+        System.out.println(part);
+    }
+}
+```
+
+**실행 결과**
+
+```
+Java 초급
+문자열
+```
+
+**자주 하는 실수**
+
+String의 첫 글자를 소문자로 작성하면 안 된다.
+
+```java
+string language = "Java"; // 오류
+```
+
+올바른 코드는 다음과 같다.
+
+```java
+String language = "Java";
+```
+
+문자열에 작은따옴표를 사용해서도 안 된다.
+
+```java
+String language = 'Java'; // 오류
+String language = "Java"; // 올바름
+```
+
+### Part 2. 문자열 연결
+
+**개념 설명**
+
+- `+` 연산자를 사용하면 여러 문자열을 하나로 연결할 수 있다.
+- 문자열과 문자열뿐 아니라 문자열과 숫자도 연결할 수 있다.
+- 연결된 결과는 새로운 문자열이다.
+- `+=`를 사용하면 기존 변수에 문자열을 연결한 결과를 다시 저장할 수 있다.
+- 문자열은 한 번 만들어지면 내부 내용을 직접 변경할 수 없다.
+
+**문자열과 문자열 연결**
+
+```java
+String first = "Hello";
+String second = "Java";
+
+String result = first + " " + second;
+
+System.out.println(result);
+```
+
+**실행 결과**
+
+```
+Hello Java
+```
+
+**코드 문법 분해**
+
+```java
+String result = first + " " + second;
+```
+
+| 부분 | 의미 |
+|---|---|
+| `first` | "Hello" |
+| `" "` | 공백 하나 |
+| `second` | "Java" |
+| `+` | 문자열 연결 |
+| `result` | 연결 결과를 저장할 변수 |
+
+**+=로 연결**
+
+```java
+String message = "Java";
+
+message += " Beginner";
+
+System.out.println(message);
+```
+
+```
+Java Beginner
+```
+
+다음 코드와 같은 의미다.
+
+```java
+message = message + " Beginner";
+```
+
+**문자열과 숫자 연결**
+
+```java
+String name = "Java";
+int level = 1;
+
+String result = name + " Level " + level;
+
+System.out.println(result);
+```
+
+```
+Java Level 1
+```
+
+문자열과 숫자를 `+`로 연결하면 숫자가 문자열 형태로 연결된다.
+
+**계산과 문자열 연결 순서**
+
+```java
+System.out.println("결과: " + 10 + 20);
+```
+
+왼쪽부터 문자열 연결이 실행된다.
+
+- `"결과: " + 10` → `"결과: 10"`
+- `"결과: 10" + 20` → `"결과: 1020"`
+
+실행 결과:
+
+```
+결과: 1020
+```
+
+숫자를 먼저 계산하려면 괄호를 사용한다.
+
+```java
+System.out.println("결과: " + (10 + 20));
+```
+
+```
+결과: 30
+```
+
+**문자열 연결 결과 저장**
+
+```java
+String message = "Java";
+String result = message + " Beginner";
+
+System.out.println(message);
+```
+
+위 코드는 연결 결과를 result에 저장했으므로 message는 그대로 "Java"다. message 자체를 바꾸려면 다음과 같이 message에 다시 대입한다.
+
+```java
+message = message + " Beginner";
+```
+
+또는 다음과 같이 작성한다.
+
+```java
+message += " Beginner";
+```
+
+**자주 하는 실수**
+
+문자열 연결과 숫자 계산 순서를 혼동하지 않아야 한다.
+
+```java
+String result = "합계: " + 5 + 3;
+```
+
+```
+합계: 53
+```
+
+숫자를 먼저 더하려면 괄호를 사용한다.
+
+```java
+String result = "합계: " + (5 + 3);
+```
+
+```
+합계: 8
+```
+
+### Part 3. ==와 equals() 비교
+
+**개념 설명**
+
+- 문자열의 내용이 같은지 비교할 때는 `equals()`를 사용한다.
+- `==`는 두 변수가 같은 문자열 객체를 가리키는지 비교한다.
+- 문자열 리터럴끼리는 `==`가 true가 나올 때도 있지만 내용 비교에 사용하면 안 된다.
+- `equals()`는 실제 문자열 내용을 비교하여 true 또는 false를 반환한다.
+
+**equals() 기본 문법**
+
+```java
+문자열1.equals(문자열2)
+```
+
+**내용 비교**
+
+```java
+String first = "Java";
+String second = new String("Java");
+
+System.out.println(first.equals(second));
+```
+
+실행 결과:
+
+```
+true
+```
+
+두 문자열의 내용이 모두 "Java"이기 때문이다.
+
+**== 비교**
+
+```java
+String first = "Java";
+String second = new String("Java");
+
+System.out.println(first == second);
+```
+
+실행 결과:
+
+```
+false
+```
+
+second는 new String()으로 별도로 생성되었으므로 같은 대상을 가리키지 않는다.
+
+**비교 결과 확인**
+
+```java
+String input = "admin";
+
+if (input.equals("admin")) {
+    System.out.println("관리자");
+} else {
+    System.out.println("일반 사용자");
+}
+```
+
+```
+관리자
+```
+
+**문자열 내용이 다른지 비교**
+
+`equals()`의 결과 앞에 `!`를 붙이면 내용이 다른지 확인할 수 있다.
+
+```java
+String first = "Java";
+String second = "Python";
+
+boolean different = !first.equals(second);
+
+System.out.println(different);
+```
+
+```
+true
+```
+
+**실행 흐름**
+
+- `first.equals(second)` → false
+- `!false` → true
+
+**자주 하는 실수**
+
+문자열 내용을 `==`로 비교하지 않는다.
+
+```java
+String input = new String("admin");
+
+if (input == "admin") {
+    System.out.println("관리자");
+}
+```
+
+문자열 내용이 같아도 조건이 false가 될 수 있다. 올바른 코드는 다음과 같다.
+
+```java
+if (input.equals("admin")) {
+    System.out.println("관리자");
+}
+```
+
+### Part 4. 문자열 리터럴과 ==의 주의점
+
+**개념 설명**
+
+- Java는 같은 문자열 리터럴을 공유해서 사용할 수 있다.
+- 따라서 리터럴로 만든 두 문자열을 `==`로 비교하면 true가 나올 수 있다.
+- 하지만 new String()으로 만든 문자열과 비교하면 false가 될 수 있다.
+- 이러한 차이 때문에 `==`의 결과에 의존해서 문자열 내용을 비교하면 안 된다.
+
+**예제**
+
+```java
+String first = "Java";
+String second = "Java";
+String third = new String("Java");
+
+System.out.println(first == second);
+System.out.println(first == third);
+
+System.out.println(first.equals(second));
+System.out.println(first.equals(third));
+```
+
+**실행 결과**
+
+```
+true
+false
+true
+true
+```
+
+**결과 정리**
+
+| 비교 | 결과 | 이유 |
+|---|---|---|
+| `first == second` | true | 같은 문자열 리터럴 공유 |
+| `first == third` | false | third는 새로 생성 |
+| `first.equals(second)` | true | 내용이 같음 |
+| `first.equals(third)` | true | 내용이 같음 |
+
+**올바른 비교 기준**
+
+```java
+first.equals(second)
+```
+
+문자열을 비교할 때는 생성 방식과 관계없이 `equals()`를 사용한다.
+
+**char와 String 비교**
+
+| 구분 | char | String |
+|---|---|---|
+| 표현 대상 | 문자 한 개 | 문자열 |
+| 작성 기호 | `'A'` | `"A"` |
+| 자료형 종류 | 기본형 | 참조형 |
+| 같은지 비교 | `==` | `equals()` |
+
+```java
+char firstGrade = 'A';
+char secondGrade = 'A';
+
+System.out.println(firstGrade == secondGrade);
+```
+
+```java
+String firstText = "A";
+String secondText = new String("A");
+
+System.out.println(firstText.equals(secondText));
+```
+
+두 결과 모두 true다.
+
+## 다음으로
+
+다음 학습 내용은 [Part 14「문자열② 메서드·분할·포맷」](/dev/lessons/DEV-JAVA-01-14)이다.

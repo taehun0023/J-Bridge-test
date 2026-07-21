@@ -1,0 +1,522 @@
+---
+lesson_id: DEV-JAVA-01-14
+title: "Java初級14 文字列② メソッド・分割・書式"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 18
+tags: [java, basics, string, methods, format, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次の作業ができるようになる。
+
+- 文字列の長さと特定位置の文字を確認する。
+- 文字列の一部を切り取って新しい文字列を作る。
+- 文字列の中から目的の内容を検索したり変更したりする。
+- split() で文字列を複数の要素に分割する。
+- printf() と String.format() で出力形式を指定する。
+- 文字列メソッドの実行結果を新たに保存しなければならない理由を理解する。
+
+## 授業内容
+
+### Part 1. 長さ・文字・部分文字列
+
+**概念説明**
+
+- String は文字列を処理するさまざまなメソッドを提供する。
+- `length()` は文字列の文字数を返す。
+- `charAt(index)` は指定したインデックスの文字を1つ返す。
+- `substring()` は文字列の一部を切り取り、新しい文字列として返す。
+- 文字列の最初のインデックスは、配列と同様に0である。
+
+**主なメソッド**
+
+| メソッド | 機能 | 例 |
+|---|---|---|
+| `length()` | 文字列の長さ | `text.length()` |
+| `charAt(index)` | 指定位置の文字 | `text.charAt(0)` |
+| `substring(begin)` | begin から最後まで切り取り | `text.substring(2)` |
+| `substring(begin, end)` | begin から end の直前まで切り取り | `text.substring(1, 4)` |
+
+**length()**
+
+```java
+String text = "Java";
+
+System.out.println(text.length());
+```
+
+```
+4
+```
+
+**charAt()**
+
+```java
+String text = "Java";
+
+System.out.println(text.charAt(0));
+System.out.println(text.charAt(3));
+```
+
+```
+J
+a
+```
+
+使用できるインデックスは 0 から `text.length() - 1` までである。
+
+**substring()**
+
+```java
+String text = "JavaBasic";
+
+System.out.println(text.substring(4));
+System.out.println(text.substring(0, 4));
+```
+
+```
+Basic
+Java
+```
+
+`substring(0, 4)` はインデックス0から3までのみを含む。最後のインデックス4は結果に含まれない。
+
+**問題とは別の例**
+
+```java
+String code = "DEV-2026";
+
+String category = code.substring(0, 3);
+String year = code.substring(4);
+
+System.out.println(category);
+System.out.println(year);
+```
+
+```
+DEV
+2026
+```
+
+**よくあるミス**
+
+文字列の長さが4だからといって、インデックス4にアクセスできるわけではない。
+
+```java
+String text = "Java";
+
+System.out.println(text.charAt(4)); // 実行中のエラー
+```
+
+最後のインデックスは3である。
+
+```java
+text.charAt(text.length() - 1)
+```
+
+### Part 2. 検索・変換・置換
+
+**概念説明**
+
+- 文字列メソッドで特定内容が含まれているかどうかや位置を確認できる。
+- `contains()` は文字列が含まれているかを確認する。
+- `indexOf()` は文字列が最初に現れるインデックスを返す。
+- 見つからない場合は -1 を返す。
+- `replace()` は文字列の一部を別の内容に置き換えた新しい文字列を作る。
+- `trim()` は文字列前後の空白を除去した新しい文字列を作る。
+
+**主なメソッド**
+
+| メソッド | 機能 | 戻り値の例 |
+|---|---|---|
+| `contains("文字列")` | 含むかを確認 | true, false |
+| `indexOf("文字列")` | 最初に現れる位置 | インデックスまたは -1 |
+| `startsWith("文字列")` | その内容で始まるかを確認 | true, false |
+| `endsWith("文字列")` | その内容で終わるかを確認 | true, false |
+| `replace("既存", "変更")` | 文字列内容の置換 | 新しい文字列 |
+| `trim()` | 前後の空白を除去 | 新しい文字列 |
+| `toUpperCase()` | 英字を大文字に変換 | 新しい文字列 |
+| `toLowerCase()` | 英字を小文字に変換 | 新しい文字列 |
+
+**検索の例**
+
+```java
+String text = "Java Beginner";
+
+System.out.println(text.contains("Java"));
+System.out.println(text.indexOf("Beginner"));
+System.out.println(text.indexOf("Python"));
+```
+
+```
+true
+5
+-1
+```
+
+**変換の例**
+
+```java
+String text = "  java basic  ";
+
+String result = text.trim().toUpperCase();
+
+System.out.println(result);
+```
+
+```
+JAVA BASIC
+```
+
+**置換の例**
+
+```java
+String date = "2026/07/18";
+
+String result = date.replace("/", "-");
+
+System.out.println(result);
+```
+
+```
+2026-07-18
+```
+
+**文字列は直接変更されない**
+
+```java
+String text = "java";
+
+text.toUpperCase();
+
+System.out.println(text);
+```
+
+```
+java
+```
+
+メソッドが返した結果を保存する必要がある。
+
+```java
+text = text.toUpperCase();
+
+System.out.println(text);
+```
+
+```
+JAVA
+```
+
+**よくあるミス**
+
+`indexOf()` が値を見つけられなかったとき0を返すと考えてはいけない。
+
+```java
+String text = "Java";
+
+System.out.println(text.indexOf("Python"));
+```
+
+```
+-1
+```
+
+インデックス0は文字列の最初の位置であるため、検索失敗を表すことはできない。
+
+### Part 3. split() で文字列を分割
+
+**概念説明**
+
+- `split()` は文字列を基準文字で分割し、String[] 配列として返す。
+- 分割基準として使った文字は結果配列に含まれない。
+- 返された配列はインデックスや繰り返し文で処理できる。
+- カンマで区切られたデータや日付のように、一定の区切り文字がある文字列に使用する。
+
+**基本の文法**
+
+```java
+String[] 結果配列 = 文字列.split("区切り文字");
+```
+
+**カンマで分割**
+
+```java
+String data = "Java,Python,JavaScript";
+
+String[] languages = data.split(",");
+
+System.out.println(languages[0]);
+System.out.println(languages[1]);
+System.out.println(languages[2]);
+```
+
+```
+Java
+Python
+JavaScript
+```
+
+**コード文法の分解**
+
+```java
+String[] languages = data.split(",");
+```
+
+| 部分 | 意味 |
+|---|---|
+| `data` | 分割する元の文字列 |
+| `split(",")` | カンマで分割 |
+| `String[]` | 分割結果の型 |
+| `languages` | 結果配列の名前 |
+
+**分割結果の巡回**
+
+```java
+String data = "Kim,Lee,Park";
+String[] names = data.split(",");
+
+for (String name : names) {
+    System.out.println(name);
+}
+```
+
+```
+Kim
+Lee
+Park
+```
+
+**日付の分割**
+
+```java
+String date = "2026-07-18";
+String[] parts = date.split("-");
+
+System.out.println(parts[0]);
+System.out.println(parts[1]);
+System.out.println(parts[2]);
+```
+
+```
+2026
+07
+18
+```
+
+**ドットで分割**
+
+`split()` の区切り文字は正規表現として処理される。ドット `.` は特別な意味を持つため、バックスラッシュを使う必要がある。
+
+```java
+String address = "www.example.com";
+
+String[] parts = address.split("\\.");
+```
+
+結果:
+
+```
+www
+example
+com
+```
+
+**よくあるミス**
+
+次のコードはドットを普通の文字として処理しない。
+
+```java
+String[] parts = address.split(".");
+```
+
+ドットを基準に分割するには次のように書く。
+
+```java
+String[] parts = address.split("\\.");
+```
+
+### Part 4. printf() で書式出力
+
+**概念説明**
+
+- `System.out.printf()` は値を指定した書式に合わせて出力する。
+- 文字列の中に書式指定子を書き、その後に出力する値を渡す。
+- `%s` は文字列、`%d` は整数、`%f` は実数を表す。
+- `%.2f` は実数を小数第2位まで出力する。
+- `%n` は改行を意味する。
+
+**主な書式指定子**
+
+| 指定子 | 値の種類 | 例 |
+|---|---|---|
+| `%s` | 文字列 | "Java" |
+| `%d` | 整数 | 100 |
+| `%f` | 実数 | 3.14 |
+| `%.1f` | 小数第1位 | 3.1 |
+| `%.2f` | 小数第2位 | 3.14 |
+| `%n` | 改行 | 次の行へ移動 |
+
+**基本の文法**
+
+```java
+System.out.printf("書式文字列", 値1, 値2);
+```
+
+**例**
+
+```java
+String name = "Lee";
+int score = 95;
+double average = 92.345;
+
+System.out.printf("名前: %s%n", name);
+System.out.printf("点数: %d%n", score);
+System.out.printf("平均: %.2f%n", average);
+```
+
+**実行結果**
+
+```
+名前: Lee
+点数: 95
+平均: 92.35
+```
+
+92.345 は小数第2位まで出力され四捨五入される。
+
+**複数の値の出力**
+
+```java
+String product = "Keyboard";
+int quantity = 3;
+double price = 2500.5;
+
+System.out.printf("%s %d個 %.1f円%n", product, quantity, price);
+```
+
+```
+Keyboard 3個 2500.5円
+```
+
+**よくあるミス**
+
+`printf()` は自動的に改行しない。
+
+```java
+System.out.printf("%d", 10);
+System.out.printf("%d", 20);
+```
+
+```
+1020
+```
+
+改行が必要であれば `%n` を使う。
+
+```java
+System.out.printf("%d%n", 10);
+System.out.printf("%d%n", 20);
+```
+
+### Part 5. String.format() で書式文字列を生成
+
+**概念説明**
+
+- `String.format()` は指定した書式に合う文字列を作って返す。
+- `printf()` は即座に画面に出力するが、`String.format()` は出力しない。
+- 返された文字列を変数に保存した後、必要な箇所で使用できる。
+- 書式指定子は `printf()` と同じように使用する。
+
+**基本の文法**
+
+```java
+String 結果 = String.format("書式文字列", 値1, 値2);
+```
+
+**例**
+
+```java
+String name = "Lee";
+int score = 95;
+
+String result = String.format("%s さんの点数は %d点です。", name, score);
+
+System.out.println(result);
+```
+
+```
+Lee さんの点数は 95点です。
+```
+
+**printf() との比較**
+
+```java
+System.out.printf("点数: %d%n", score);
+```
+
+画面にすぐ出力する。
+
+```java
+String result = String.format("点数: %d", score);
+```
+
+文字列を作って result に保存する。
+
+**問題とは別の例**
+
+```java
+String item = "Monitor";
+double price = 19999.5;
+
+String message = String.format("%s: %.1f円", item, price);
+
+System.out.println(message);
+```
+
+```
+Monitor: 19999.5円
+```
+
+**よくあるミス**
+
+`String.format()` が自動的に出力すると考えてはいけない。
+
+```java
+String.format("点数: %d", 100);
+```
+
+戻り値を保存するか出力する必要がある。
+
+```java
+String result = String.format("点数: %d", 100);
+System.out.println(result);
+```
+
+または次のようにすぐ出力する。
+
+```java
+System.out.println(String.format("点数: %d", 100));
+```
+
+## メソッドの選び方
+
+| 必要な作業 | 使う機能 |
+|---|---|
+| 文字列の長さ | `length()` |
+| 特定位置の文字 | `charAt()` |
+| 文字列の一部を抽出 | `substring()` |
+| 含むかを確認 | `contains()` |
+| 位置の検索 | `indexOf()` |
+| 内容の置換 | `replace()` |
+| 前後の空白を除去 | `trim()` |
+| 文字列の分割 | `split()` |
+| 書式に合わせて即出力 | `printf()` |
+| 書式文字列の生成 | `String.format()` |
+
+## 次へ
+
+次は [Part 15「メソッド① 定義・呼び出し・引数」](/dev/lessons/DEV-JAVA-01-15)を学ぶ。

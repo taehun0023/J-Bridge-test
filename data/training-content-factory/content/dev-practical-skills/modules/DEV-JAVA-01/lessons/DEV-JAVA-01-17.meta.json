@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-01-17",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-basics-method-overload-scope",
+  "summary": "引数リストが違うオーバーロード、ローカル変数のブロックスコープ、フィールドとローカル変数の名前衝突を学ぶ。",
+  "key_points": [
+    "オーバーロードは引数リストを変える。戻り値型だけは不可。",
+    "ローカル変数は宣言ブロック内だけ。",
+    "同名ならローカルが優先、Main.count で static フィールド。"
+  ],
+  "misconceptions": [
+    "戻り値型だけ変えてオーバーロードと思う。",
+    "ブロック外でローカル変数を使う。",
+    "フィールドとローカルの優先を混同する。"
+  ],
+  "check_questions": [
+    "オーバーロードの条件は？",
+    "戻り値型だけ違うと？",
+    "ローカル変数の使用範囲は？"
+  ]
+}

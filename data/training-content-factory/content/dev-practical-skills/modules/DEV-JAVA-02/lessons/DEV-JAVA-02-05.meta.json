@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-02-05",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-oop-package-import",
+  "summary": "パッケージによるクラスの分類、package 宣言とフォルダ構造の一致、import による他パッケージのクラス利用、プロジェクトの基本構造を学ぶ。",
+  "key_points": [
+    "package はクラスを機能ごとにグループ化し、名前の衝突を防ぐ。",
+    "package 宣言はコメントを除いてファイルの最初の宣言でなければならない。",
+    "同じパッケージのクラスは import なしで使え、他パッケージのクラスは import で短い名前を使う。"
+  ],
+  "misconceptions": [
+    "import がクラスをコピー・インストールすると思う。",
+    "package より前に import を書く。",
+    "import java.util.* が下位パッケージまで含むと思う。"
+  ],
+  "check_questions": [
+    "package 宣言はどこに書くか？",
+    "同じパッケージのクラスに import は必要か？",
+    "import java.util.* は java.util.function を含むか？"
+  ]
+}

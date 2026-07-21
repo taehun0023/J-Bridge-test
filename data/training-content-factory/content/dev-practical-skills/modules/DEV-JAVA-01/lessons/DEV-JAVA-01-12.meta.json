@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-01-12",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-basics-array-2d",
+  "summary": "2次元配列の宣言・アクセス、行と列のネスト巡回、可変長配列の行ごとの長さを学ぶ。",
+  "key_points": [
+    "int[][] は配列の配列。matrix[row][col]。",
+    "行数は matrix.length、列数は matrix[row].length。",
+    "内側条件は matrix[row].length を使う。"
+  ],
+  "misconceptions": [
+    "内側の条件に matrix.length を使う。",
+    "全ての行が同じ長さと思い込む。",
+    "2次元を特別な基本型と思う。"
+  ],
+  "check_questions": [
+    "matrix.length は何を表すか？",
+    "可変長で内側条件は？",
+    "2次元配列の正体は？"
+  ]
+}

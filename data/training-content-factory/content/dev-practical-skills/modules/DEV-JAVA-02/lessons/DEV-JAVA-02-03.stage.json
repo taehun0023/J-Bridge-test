@@ -1,0 +1,821 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "コンストラクタと this でオブジェクトを初期化しよう",
+   "prompt": "コンストラクタでフィールドの初期値を渡し、this.field でフィールドと引数を区別しよう。",
+   "takeaway": "コンストラクタの宣言・引数・this.field・デフォルトコンストラクタを9問で確認します。"
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "コンストラクタの宣言と呼び出し",
+    "prompt": "目的地を受け取ってフィールドに保存するコンストラクタを宣言し、釜山 を渡してオブジェクトを生成するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "class Parcel {\n    String destination;\n\n    [[0]](String destination) {\n        [[1]].[[2]] = [[3]];\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Parcel parcel = new [[4]](\"釜山\");\n\n        System.out.println(parcel.destination);\n    }\n}",
+    "tokens": [
+     "Parcel",
+     "Parcel",
+     "this",
+     "destination",
+     "destination",
+     "parcel",
+     "void",
+     "String",
+     "new"
+    ],
+    "answers": [
+     "Parcel",
+     "this",
+     "destination",
+     "destination",
+     "Parcel"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "釜山"
+    },
+    "explanation": "コンストラクタ名はクラス名 Parcel と同じで、戻り値の型を書かない。this.destination は現在のオブジェクトのフィールドで、右側の destination はコンストラクタで受け取った引数である。"
+   },
+   {
+    "id": "q2",
+    "type": "code_exercise",
+    "title": "this.field でフィールドを初期化",
+    "prompt": "コンストラクタで受け取った名前とレベルを同じ名前のフィールドに保存するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "class Player {\n    String name;\n    int level;\n\n    Player(String name, int level) {\n        [[0]].name = [[1]];\n        [[2]].level = [[3]];\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Player player = new Player(\"Luna\", 8);\n\n        System.out.println(player.name);\n        System.out.println(player.level);\n    }\n}",
+    "tokens": [
+     "this",
+     "this",
+     "name",
+     "level",
+     "Player",
+     "player",
+     "\"name\"",
+     "\"level\""
+    ],
+    "answers": [
+     "this",
+     "name",
+     "this",
+     "level"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Luna\n8"
+    },
+    "explanation": "this.name と this.level は現在生成中のオブジェクトのフィールドである。右側の name と level はコンストラクタで受け取った引数である。二重引用符を使うと変数ではなく文字列そのものになる。"
+   },
+   {
+    "id": "q3",
+    "type": "order",
+    "title": "引数なしコンストラクタの組み立て",
+    "prompt": "Lamp・color 宣言 → 引数なしコンストラクタ宣言 → color を \"白\" で初期化 → Main・main 宣言 → オブジェクト生成 → color 出力 の順に並べて 白 を出力しなさい。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Lamp {"
+     },
+     {
+      "id": "c2",
+      "text": "    String color;"
+     },
+     {
+      "id": "c3",
+      "text": "    Lamp() {"
+     },
+     {
+      "id": "c4",
+      "text": "        color = \"白\";"
+     },
+     {
+      "id": "c5",
+      "text": "    }"
+     },
+     {
+      "id": "c6",
+      "text": "}"
+     },
+     {
+      "id": "c7",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c8",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c9",
+      "text": "        Lamp lamp = new Lamp();"
+     },
+     {
+      "id": "c10",
+      "text": "        System.out.println(lamp.color);"
+     },
+     {
+      "id": "c11",
+      "text": "    }"
+     },
+     {
+      "id": "c12",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "    void Lamp() {"
+     },
+     {
+      "id": "w2",
+      "text": "        Lamp lamp = Lamp();"
+     }
+    ],
+    "explanation": "コンストラクタには戻り値の型を書かない。new Lamp() が実行されると Lamp() コンストラクタが自動的に呼ばれ color に \"白\" が保存される。オブジェクトを生成するときは new が必要である。"
+   },
+   {
+    "id": "q4",
+    "type": "mini_check",
+    "title": "コンストラクタと同じ名前のメソッド",
+    "prompt": "次のコードをコンパイルした結果として正しいものはどれか？",
+    "code": "class Notice {\n    String message;\n\n    void Notice(String message) {\n        this.message = message;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Notice notice = new Notice(\"点検\");\n\n        System.out.println(notice.message);\n    }\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "点検が出力される。"
+     },
+     {
+      "id": "B",
+      "text": "Notice が出力される。"
+     },
+     {
+      "id": "C",
+      "text": "何も出力されない。"
+     },
+     {
+      "id": "D",
+      "text": "Notice(String) コンストラクタが無いのでコンパイルエラーになる。"
+     }
+    ],
+    "correctOptionId": "D",
+    "explanation": "void Notice(String message) は戻り値の型 void があるのでコンストラクタではなく普通のメソッドである。宣言されたコンストラクタが無いので引数なしのデフォルトコンストラクタだけが自動提供される。したがって文字列を受け取る new Notice(\"点検\") に一致するコンストラクタが無く、コンパイルエラーになる。"
+   },
+   {
+    "id": "q5",
+    "type": "code_exercise",
+    "title": "コンストラクタ実引数の型と順序",
+    "prompt": "サーバー名とポート番号をコンストラクタに正しい型と順序で渡して api:8080 を出力しなさい。",
+    "lang": "java",
+    "codeTemplate": "class Server {\n    String name;\n    int port;\n\n    Server(String name, int port) {\n        this.name = name;\n        this.port = port;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Server server = new Server([[0]], [[1]]);\n\n        System.out.println(server.name + \":\" + server.port);\n    }\n}",
+    "tokens": [
+     "\"api\"",
+     "8080",
+     "api",
+     "\"8080\"",
+     "80",
+     "8080.0",
+     "name",
+     "port"
+    ],
+    "answers": [
+     "\"api\"",
+     "8080"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "api:8080"
+    },
+    "explanation": "コンストラクタの1番目の引数は String、2番目は int である。したがって文字列 \"api\" と整数 8080 をその順で渡す。\"8080\" は文字列で 8080.0 は double なので int の引数に合わない。"
+   },
+   {
+    "id": "q6",
+    "type": "order",
+    "title": "引数のあるコンストラクタの組み立て",
+    "prompt": "Ticket・type 宣言 → 文字列を受け取るコンストラクタ宣言 → this.type に引数を保存 → Main・main 宣言 → \"VIP\" を渡してオブジェクト生成 → type 出力 の順に並べて VIP を出力しなさい。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Ticket {"
+     },
+     {
+      "id": "c2",
+      "text": "    String type;"
+     },
+     {
+      "id": "c3",
+      "text": "    Ticket(String type) {"
+     },
+     {
+      "id": "c4",
+      "text": "        this.type = type;"
+     },
+     {
+      "id": "c5",
+      "text": "    }"
+     },
+     {
+      "id": "c6",
+      "text": "}"
+     },
+     {
+      "id": "c7",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c8",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c9",
+      "text": "        Ticket ticket = new Ticket(\"VIP\");"
+     },
+     {
+      "id": "c10",
+      "text": "        System.out.println(ticket.type);"
+     },
+     {
+      "id": "c11",
+      "text": "    }"
+     },
+     {
+      "id": "c12",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "    void Ticket(String type) {"
+     },
+     {
+      "id": "w2",
+      "text": "        Ticket ticket = new Ticket();"
+     }
+    ],
+    "explanation": "Ticket(String type) を直接宣言したので、オブジェクトを生成するときに文字列を渡す必要がある。new Ticket() に一致する引数なしコンストラクタは自動提供されない。void を付けるとコンストラクタではなく普通のメソッドになる。"
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "コンストラクタで別々のオブジェクトを初期化",
+    "prompt": "2匹のペットオブジェクトを生成し、2番目のオブジェクトの名前と1番目のオブジェクトの年齢を使って Kongi / 2歳 を出力しなさい。",
+    "lang": "java",
+    "codeTemplate": "class Pet {\n    String name;\n    int age;\n\n    Pet(String name, int age) {\n        this.name = name;\n        this.age = age;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Pet pet1 = new Pet([[0]], [[1]]);\n        Pet pet2 = new Pet([[2]], [[3]]);\n\n        System.out.println(pet2.name + \" / \" + pet1.age + \"歳\");\n    }\n}",
+    "tokens": [
+     "\"Bori\"",
+     "2",
+     "\"Kongi\"",
+     "5",
+     "Bori_id",
+     "Kongi_id",
+     "\"2\"",
+     "\"5\""
+    ],
+    "answers": [
+     "\"Bori\"",
+     "2",
+     "\"Kongi\"",
+     "5"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Kongi / 2歳"
+    },
+    "explanation": "pet1 を生成するとき \"Bori\" と 2 が pet1 のフィールドに保存され、pet2 を生成するとき \"Kongi\" と 5 が pet2 のフィールドに保存される。各オブジェクトを生成するたびにコンストラクタが別々に実行される。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q8",
+    "type": "code_exercise",
+    "title": "デフォルトコンストラクタが提供されない場合",
+    "prompt": "Badge(String grade) コンストラクタが宣言されたクラスのオブジェクトを正しく生成し、等級を出力するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "class Badge {\n    String grade;\n\n    Badge(String grade) {\n        this.grade = grade;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Badge badge = new Badge([[0]]);\n\n        System.out.println(badge.[[1]]);\n    }\n}",
+    "tokens": [
+     "\"GOLD\"",
+     "grade",
+     "GOLD",
+     "\"grade\"",
+     "Badge",
+     "badge",
+     "String"
+    ],
+    "answers": [
+     "\"GOLD\"",
+     "grade"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "GOLD"
+    },
+    "explanation": "Badge(String grade) を直接宣言したので、オブジェクトを生成するときに文字列の実引数を渡す必要がある。実引数なしで new Badge() は呼び出せず、保存された値は badge.grade で読む。"
+   },
+   {
+    "id": "q9",
+    "type": "order",
+    "title": "総合 — コンストラクタとインスタンスメソッド",
+    "prompt": "Room・name・capacity 宣言 → 2つの値を受け取るコンストラクタ宣言 → this.field で初期化 → showInfo() 定義 → Main・main 宣言 → room1, room2 の順でオブジェクト生成 → room2, room1 の順で情報出力 の順に並べなさい。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Room {"
+     },
+     {
+      "id": "c2",
+      "text": "    String name;"
+     },
+     {
+      "id": "c3",
+      "text": "    int capacity;"
+     },
+     {
+      "id": "c4",
+      "text": "    Room(String name, int capacity) {"
+     },
+     {
+      "id": "c5",
+      "text": "        this.name = name;"
+     },
+     {
+      "id": "c6",
+      "text": "        this.capacity = capacity;"
+     },
+     {
+      "id": "c7",
+      "text": "    }"
+     },
+     {
+      "id": "c8",
+      "text": "    void showInfo() {"
+     },
+     {
+      "id": "c9",
+      "text": "        System.out.println(name + \": \" + capacity);"
+     },
+     {
+      "id": "c10",
+      "text": "    }"
+     },
+     {
+      "id": "c11",
+      "text": "}"
+     },
+     {
+      "id": "c12",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c13",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c14",
+      "text": "        Room room1 = new Room(\"Aルーム\", 20);"
+     },
+     {
+      "id": "c15",
+      "text": "        Room room2 = new Room(\"Bルーム\", 30);"
+     },
+     {
+      "id": "c16",
+      "text": "        room2.showInfo();"
+     },
+     {
+      "id": "c17",
+      "text": "        room1.showInfo();"
+     },
+     {
+      "id": "c18",
+      "text": "    }"
+     },
+     {
+      "id": "c19",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        Room room1 = new Room();"
+     },
+     {
+      "id": "w2",
+      "text": "        this.capacity = name;"
+     }
+    ],
+    "explanation": "コンストラクタは受け取った name と capacity を各オブジェクトのフィールドに保存する。room2.showInfo() は room2 のフィールドを、room1.showInfo() は room1 のフィールドを使う。引数のあるコンストラクタを宣言したので new Room() ではオブジェクトを生成できない。"
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "생성자와 this로 객체를 초기화하자",
+   "prompt": "생성자로 필드 초깃값을 전달하고, this.field로 필드와 매개변수를 구분하자.",
+   "takeaway": "생성자 선언·매개변수·this.field·기본 생성자를 9문제로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "생성자 선언과 호출",
+    "prompt": "목적지를 전달받아 필드에 저장하는 생성자를 선언하고 부산을 전달하여 객체를 생성하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "class Parcel {\n    String destination;\n\n    [[0]](String destination) {\n        [[1]].[[2]] = [[3]];\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Parcel parcel = new [[4]](\"부산\");\n\n        System.out.println(parcel.destination);\n    }\n}",
+    "tokens": [
+     "Parcel",
+     "Parcel",
+     "this",
+     "destination",
+     "destination",
+     "parcel",
+     "void",
+     "String",
+     "new"
+    ],
+    "answers": [
+     "Parcel",
+     "this",
+     "destination",
+     "destination",
+     "Parcel"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "부산"
+    },
+    "explanation": "생성자 이름은 클래스 이름 Parcel과 같아야 하며 반환형을 작성하지 않는다. this.destination은 현재 객체의 필드이고 오른쪽 destination은 생성자로 전달받은 매개변수다."
+   },
+   {
+    "id": "q2",
+    "type": "code_exercise",
+    "title": "this.field로 필드 초기화",
+    "prompt": "생성자로 전달받은 이름과 레벨을 같은 이름의 필드에 저장하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "class Player {\n    String name;\n    int level;\n\n    Player(String name, int level) {\n        [[0]].name = [[1]];\n        [[2]].level = [[3]];\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Player player = new Player(\"루나\", 8);\n\n        System.out.println(player.name);\n        System.out.println(player.level);\n    }\n}",
+    "tokens": [
+     "this",
+     "this",
+     "name",
+     "level",
+     "Player",
+     "player",
+     "\"name\"",
+     "\"level\""
+    ],
+    "answers": [
+     "this",
+     "name",
+     "this",
+     "level"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "루나\n8"
+    },
+    "explanation": "this.name과 this.level은 현재 생성 중인 객체의 필드다. 오른쪽의 name과 level은 생성자로 전달받은 매개변수다. 큰따옴표를 사용하면 변수가 아니라 문자열 자체가 된다."
+   },
+   {
+    "id": "q3",
+    "type": "order",
+    "title": "매개변수 없는 생성자 조립",
+    "prompt": "Lamp·color 선언 → 매개변수 없는 생성자 선언 → color를 \"하양\"으로 초기화 → Main·main 선언 → 객체 생성 → color 출력 순서로 배열하여 하양을 출력하시오.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Lamp {"
+     },
+     {
+      "id": "c2",
+      "text": "    String color;"
+     },
+     {
+      "id": "c3",
+      "text": "    Lamp() {"
+     },
+     {
+      "id": "c4",
+      "text": "        color = \"하양\";"
+     },
+     {
+      "id": "c5",
+      "text": "    }"
+     },
+     {
+      "id": "c6",
+      "text": "}"
+     },
+     {
+      "id": "c7",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c8",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c9",
+      "text": "        Lamp lamp = new Lamp();"
+     },
+     {
+      "id": "c10",
+      "text": "        System.out.println(lamp.color);"
+     },
+     {
+      "id": "c11",
+      "text": "    }"
+     },
+     {
+      "id": "c12",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "    void Lamp() {"
+     },
+     {
+      "id": "w2",
+      "text": "        Lamp lamp = Lamp();"
+     }
+    ],
+    "explanation": "생성자에는 반환형을 작성하지 않는다. new Lamp()가 실행되면 Lamp() 생성자가 자동으로 호출되어 color에 \"하양\"이 저장된다. 객체를 생성할 때는 new가 필요하다."
+   },
+   {
+    "id": "q4",
+    "type": "mini_check",
+    "title": "생성자와 같은 이름의 메서드",
+    "prompt": "다음 코드를 컴파일한 결과로 옳은 것은?",
+    "code": "class Notice {\n    String message;\n\n    void Notice(String message) {\n        this.message = message;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Notice notice = new Notice(\"점검\");\n\n        System.out.println(notice.message);\n    }\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "점검이 출력된다."
+     },
+     {
+      "id": "B",
+      "text": "Notice가 출력된다."
+     },
+     {
+      "id": "C",
+      "text": "아무것도 출력되지 않는다."
+     },
+     {
+      "id": "D",
+      "text": "Notice(String) 생성자가 없어서 컴파일 오류가 발생한다."
+     }
+    ],
+    "correctOptionId": "D",
+    "explanation": "void Notice(String message)는 반환형 void가 있으므로 생성자가 아니라 일반 메서드다. 선언된 생성자가 없으므로 매개변수 없는 기본 생성자만 자동 제공된다. 따라서 문자열을 받는 new Notice(\"점검\")과 일치하는 생성자가 없어 컴파일 오류가 발생한다."
+   },
+   {
+    "id": "q5",
+    "type": "code_exercise",
+    "title": "생성자 인수의 타입과 순서",
+    "prompt": "서버 이름과 포트 번호를 생성자에 올바른 타입과 순서로 전달하여 api:8080을 출력하시오.",
+    "lang": "java",
+    "codeTemplate": "class Server {\n    String name;\n    int port;\n\n    Server(String name, int port) {\n        this.name = name;\n        this.port = port;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Server server = new Server([[0]], [[1]]);\n\n        System.out.println(server.name + \":\" + server.port);\n    }\n}",
+    "tokens": [
+     "\"api\"",
+     "8080",
+     "api",
+     "\"8080\"",
+     "80",
+     "8080.0",
+     "name",
+     "port"
+    ],
+    "answers": [
+     "\"api\"",
+     "8080"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "api:8080"
+    },
+    "explanation": "생성자의 첫 번째 매개변수는 String, 두 번째는 int다. 따라서 문자열 \"api\"와 정수 8080을 해당 순서로 전달해야 한다. \"8080\"은 문자열이고 8080.0은 double이므로 int 매개변수에 맞지 않는다."
+   },
+   {
+    "id": "q6",
+    "type": "order",
+    "title": "매개변수가 있는 생성자 조립",
+    "prompt": "Ticket·type 선언 → 문자열을 받는 생성자 선언 → this.type에 매개변수 저장 → Main·main 선언 → \"VIP\" 전달하여 객체 생성 → type 출력 순서로 배열하여 VIP를 출력하시오.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Ticket {"
+     },
+     {
+      "id": "c2",
+      "text": "    String type;"
+     },
+     {
+      "id": "c3",
+      "text": "    Ticket(String type) {"
+     },
+     {
+      "id": "c4",
+      "text": "        this.type = type;"
+     },
+     {
+      "id": "c5",
+      "text": "    }"
+     },
+     {
+      "id": "c6",
+      "text": "}"
+     },
+     {
+      "id": "c7",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c8",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c9",
+      "text": "        Ticket ticket = new Ticket(\"VIP\");"
+     },
+     {
+      "id": "c10",
+      "text": "        System.out.println(ticket.type);"
+     },
+     {
+      "id": "c11",
+      "text": "    }"
+     },
+     {
+      "id": "c12",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "    void Ticket(String type) {"
+     },
+     {
+      "id": "w2",
+      "text": "        Ticket ticket = new Ticket();"
+     }
+    ],
+    "explanation": "Ticket(String type)을 직접 선언했으므로 객체를 생성할 때 문자열을 전달해야 한다. new Ticket()과 일치하는 매개변수 없는 생성자는 자동으로 제공되지 않는다. void를 붙이면 생성자가 아니라 일반 메서드가 된다."
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "생성자로 서로 다른 객체 초기화",
+    "prompt": "두 반려동물 객체를 생성하여 두 번째 객체의 이름과 첫 번째 객체의 나이를 이용해 콩이 / 2살을 출력하시오.",
+    "lang": "java",
+    "codeTemplate": "class Pet {\n    String name;\n    int age;\n\n    Pet(String name, int age) {\n        this.name = name;\n        this.age = age;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Pet pet1 = new Pet([[0]], [[1]]);\n        Pet pet2 = new Pet([[2]], [[3]]);\n\n        System.out.println(pet2.name + \" / \" + pet1.age + \"살\");\n    }\n}",
+    "tokens": [
+     "\"보리\"",
+     "2",
+     "\"콩이\"",
+     "5",
+     "보리_id",
+     "콩이_id",
+     "\"2\"",
+     "\"5\""
+    ],
+    "answers": [
+     "\"보리\"",
+     "2",
+     "\"콩이\"",
+     "5"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "콩이 / 2살"
+    },
+    "explanation": "pet1을 생성할 때 \"보리\"와 2가 pet1의 필드에 저장되고, pet2를 생성할 때 \"콩이\"와 5가 pet2의 필드에 저장된다. 각 객체를 생성할 때마다 생성자가 별도로 실행된다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q8",
+    "type": "code_exercise",
+    "title": "기본 생성자가 제공되지 않는 경우",
+    "prompt": "Badge(String grade) 생성자가 선언된 클래스의 객체를 올바르게 생성하고 등급을 출력하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "class Badge {\n    String grade;\n\n    Badge(String grade) {\n        this.grade = grade;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Badge badge = new Badge([[0]]);\n\n        System.out.println(badge.[[1]]);\n    }\n}",
+    "tokens": [
+     "\"GOLD\"",
+     "grade",
+     "GOLD",
+     "\"grade\"",
+     "Badge",
+     "badge",
+     "String"
+    ],
+    "answers": [
+     "\"GOLD\"",
+     "grade"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "GOLD"
+    },
+    "explanation": "Badge(String grade)를 직접 선언했으므로 객체를 생성할 때 문자열 인수를 전달해야 한다. 인수 없이 new Badge()를 호출할 수 없으며, 저장된 값은 badge.grade로 읽는다."
+   },
+   {
+    "id": "q9",
+    "type": "order",
+    "title": "종합 — 생성자와 인스턴스 메서드",
+    "prompt": "Room·name·capacity 선언 → 두 값을 받는 생성자 선언 → this.field로 초기화 → showInfo() 정의 → Main·main 선언 → room1, room2 순서로 객체 생성 → room2, room1 순서로 정보 출력 순서로 배열하시오.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Room {"
+     },
+     {
+      "id": "c2",
+      "text": "    String name;"
+     },
+     {
+      "id": "c3",
+      "text": "    int capacity;"
+     },
+     {
+      "id": "c4",
+      "text": "    Room(String name, int capacity) {"
+     },
+     {
+      "id": "c5",
+      "text": "        this.name = name;"
+     },
+     {
+      "id": "c6",
+      "text": "        this.capacity = capacity;"
+     },
+     {
+      "id": "c7",
+      "text": "    }"
+     },
+     {
+      "id": "c8",
+      "text": "    void showInfo() {"
+     },
+     {
+      "id": "c9",
+      "text": "        System.out.println(name + \": \" + capacity);"
+     },
+     {
+      "id": "c10",
+      "text": "    }"
+     },
+     {
+      "id": "c11",
+      "text": "}"
+     },
+     {
+      "id": "c12",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c13",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c14",
+      "text": "        Room room1 = new Room(\"A룸\", 20);"
+     },
+     {
+      "id": "c15",
+      "text": "        Room room2 = new Room(\"B룸\", 30);"
+     },
+     {
+      "id": "c16",
+      "text": "        room2.showInfo();"
+     },
+     {
+      "id": "c17",
+      "text": "        room1.showInfo();"
+     },
+     {
+      "id": "c18",
+      "text": "    }"
+     },
+     {
+      "id": "c19",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        Room room1 = new Room();"
+     },
+     {
+      "id": "w2",
+      "text": "        this.capacity = name;"
+     }
+    ],
+    "explanation": "생성자는 전달받은 name과 capacity를 각 객체의 필드에 저장한다. room2.showInfo()는 room2의 필드를, room1.showInfo()는 room1의 필드를 사용한다. 매개변수가 있는 생성자를 선언했으므로 new Room()으로는 객체를 생성할 수 없다."
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}

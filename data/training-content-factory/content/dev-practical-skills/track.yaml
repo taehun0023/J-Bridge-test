@@ -42,21 +42,9 @@ track:
       order: 17
     # ── Java ──
     - id: DEV-JAVA-01
-      title: Java - Language Basics and Code Reading
+      title: Java - Basics (Variables, Types, Output, Operators)
       level: foundation
       order: 110
-    - id: DEV-JAVA-02
-      title: Java - Object-Oriented Reasoning in Practice
-      level: intermediate
-      order: 111
-    - id: DEV-JAVA-03
-      title: Java - Error and Exception Interpretation
-      level: intermediate
-      order: 112
-    - id: DEV-JAVA-04
-      title: Java - Collections, Streams, and Practical Boundaries
-      level: advanced
-      order: 113
     # ── JavaScript ──
     - id: DEV-JS-01
       title: JavaScript - Language Basics and Runtime Behavior

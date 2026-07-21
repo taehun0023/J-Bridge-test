@@ -1,0 +1,492 @@
+---
+lesson_id: DEV-JAVA-01-02
+title: "Java初級02 変数・基本型・リテラル・定数"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 18
+tags: [java, basics, variables, types, literal, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次の作業ができるようにする。
+
+- 変数を宣言して初期化できる。
+- 変数に保存された値を出力できる。
+- Java の8つの基本型を区別できる。
+- 整数・実数・文字・論理リテラルを作成できる。
+- long、float リテラルの接尾辞を使用できる。
+- final を使用して定数を宣言できる。
+
+## 授業内容
+
+### Part 1. 変数の宣言と初期化
+
+**概念説明**
+
+- 変数はプログラムで値を保存する名前付きの空間である。
+- 変数を使うには、まず保存する値の種類と変数名を宣言しなければならない。
+- 変数に初めて値を保存することを初期化という。
+- 宣言と初期化は1つの文で一緒に書くことができる。
+- すでに値が保存された変数に新しい値を代入すると、既存の値は新しい値に置き換わる。
+- main メソッドの中で宣言した変数は、値を保存した後に使用しなければならない。
+
+**コード文法の分解**
+
+```java
+int age = 20;
+```
+
+| 部分 | 意味 |
+|---|---|
+| `int` | 変数に保存する値の型 |
+| `age` | 変数名 |
+| `=` | 右側の値を左側の変数に保存 |
+| `20` | 変数に保存する値 |
+| `;` | 変数宣言文の終わり |
+
+**宣言と初期化**
+
+変数だけを先に宣言できる。
+
+```java
+int age;
+```
+
+宣言した変数に後から値を保存できる。
+
+```java
+age = 20;
+```
+
+宣言と同時に値を保存することもできる。
+
+```java
+int age = 20;
+```
+
+**問題とは別の例**
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        int level = 1;
+        System.out.println(level);
+
+        level = 2;
+        System.out.println(level);
+    }
+}
+```
+
+**実行の流れと結果**
+
+1. `level` という int 変数を作る。
+2. `level` に 1 を保存する。
+3. 現在保存されている 1 を出力する。
+4. `level` に新しい値 2 を保存する。
+5. 既存の値 1 が消えて 2 が出力される。
+
+```
+1
+2
+```
+
+**変数名のルール**
+
+```java
+int age;
+int studentCount;
+int score2;
+```
+
+- 英字、数字、`_`、`$` を使用できる。
+- 数字で始めることはできない。
+- `int`、`class`、`public` のような Java の予約語は使用できない。
+- 大文字と小文字を区別する。
+- 一般的に小文字で始まるキャメルケース表記を使用する。
+
+```java
+int studentCount;
+int totalScore;
+int userLevel;
+```
+
+**よくあるミス**
+
+```java
+int 1score = 100;       // 数字で始めることはできない
+int class = 1;          // classは予約語
+int user age = 20;      // 名前に空白を使用できない
+int score;
+System.out.println(score); // 値を保存せずに使用
+```
+
+次の2つの変数は互いに異なる変数である。
+
+```java
+int score = 80;
+int Score = 90;
+```
+
+Java は大文字と小文字を区別するため、`score` と `Score` を異なるものとして扱う。
+
+### Part 2. Java の8つの基本型
+
+**概念説明**
+
+- 型は変数にどんな種類の値を保存するかを決定する。
+- Java の基本型は整数型、実数型、文字型、論理型に区分される。
+- 基本型は全部で8個である。
+- 同じ種類の値でも、保存範囲と精度によって複数の型に分かれる。
+- 初級段階では整数に `int`、実数に `double` を最もよく使用する。
+
+**基本型の種類**
+
+| 分類 | 型 | サイズ | 保存する値 | 例 |
+|---|---|---|---|---|
+| 整数型 | `byte` | 1バイト | 小さい範囲の整数 | `byte level = 10;` |
+| 整数型 | `short` | 2バイト | 比較的小さい整数 | `short year = 2026;` |
+| 整数型 | `int` | 4バイト | 一般的な整数 | `int score = 100;` |
+| 整数型 | `long` | 8バイト | 非常に大きい整数 | `long distance = 3000000000L;` |
+| 実数型 | `float` | 4バイト | 単精度実数 | `float rate = 3.5F;` |
+| 実数型 | `double` | 8バイト | 一般的な実数 | `double height = 175.5;` |
+| 文字型 | `char` | 2バイト | 文字1個 | `char grade = 'A';` |
+| 論理型 | `boolean` | JVM表現 | 真または偽 | `boolean passed = true;` |
+
+**整数型の格納範囲**
+
+| 型 | 格納範囲 |
+|---|---|
+| `byte` | -128 ∼ 127 |
+| `short` | -32,768 ∼ 32,767 |
+| `int` | -2,147,483,648 ∼ 2,147,483,647 |
+| `long` | 約 -922京 ∼ 922京 |
+
+**問題とは別の例**
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        byte level = 5;
+        short year = 2026;
+        int score = 95;
+        long population = 8000000000L;
+
+        float temperature = 24.5F;
+        double height = 175.8;
+
+        char grade = 'A';
+        boolean passed = true;
+
+        System.out.println(level);
+        System.out.println(year);
+        System.out.println(score);
+        System.out.println(population);
+        System.out.println(temperature);
+        System.out.println(height);
+        System.out.println(grade);
+        System.out.println(passed);
+    }
+}
+```
+
+**実行結果**
+
+```
+5
+2026
+95
+8000000000
+24.5
+175.8
+A
+true
+```
+
+**よくあるミス**
+
+```java
+byte number = 200;       // byteの格納範囲を超過
+int count = 3000000000;  // intの格納範囲を超過
+char grade = "A";        // charは一重引用符を使用しなければならない
+boolean result = "true"; // boolean値には二重引用符を使用しない
+```
+
+型が保存できる値の範囲を超えると、コンパイルエラーが発生することがある。
+
+### Part 3. リテラル
+
+**概念説明**
+
+- リテラルはコードに直接書いた値そのものを意味する。
+- `100`、`3.14`、`'A'`、`true` などがリテラルである。
+- 変数は値を保存する名前であり、リテラルは変数に実際に保存される値である。
+- リテラルの書き方は値の種類によって異なる。
+- 整数リテラルは基本的に int、実数リテラルは基本的に double として処理される。
+
+**コード文法の分解**
+
+```java
+int score = 100;
+```
+
+- `int`: 変数の型
+- `score`: 変数名
+- `100`: 整数リテラル
+
+```java
+double height = 175.5;
+```
+
+- `double`: 変数の型
+- `height`: 変数名
+- `175.5`: 実数リテラル
+
+**リテラルの種類**
+
+| 種類 | 記述例 | 説明 |
+|---|---|---|
+| 整数リテラル | `10`, `-20`, `2026` | 小数点のない数 |
+| long リテラル | `3000000000L` | 大きい整数の後ろにLを使用 |
+| 実数リテラル | `3.14`, `175.5` | 基本的に double |
+| float リテラル | `3.14F` | 実数の後ろにFを使用 |
+| 文字リテラル | `'A'`, `'あ'` | 一重引用符で文字1つを表現 |
+| 文字列リテラル | `"Java"` | 二重引用符で複数の文字を表現 |
+| 論理リテラル | `true`, `false` | 真と偽を表現 |
+
+**long リテラル**
+
+大きい整数をlong変数に保存するときは、値の後ろに `L` を付ける。
+
+```java
+long population = 8000000000L;
+```
+
+小文字の `l` も使用できるが、数字の1と混同されやすいため、大文字の `L` を使用することが望ましい。
+
+**float リテラル**
+
+小数点のある値は基本的にdoubleである。float変数に保存するには、値の後ろに `F` を付ける。
+
+```java
+float temperature = 24.5F;
+double height = 175.8;
+```
+
+**文字と文字列**
+
+文字1つには一重引用符を使用する。
+
+```java
+char grade = 'A';
+```
+
+文字列には二重引用符を使用する。
+
+```java
+String language = "Java";
+```
+
+`String` は基本型ではないが、文字と文字列の表記の違いを区別するために、ここでは書き方だけを確認する。詳しい使い方は文字列パートで学習する。
+
+**問題とは別の例**
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        int count = 30;
+        long worldPopulation = 8000000000L;
+        double price = 12.5;
+        float temperature = 23.5F;
+        char rank = 'S';
+        boolean available = true;
+        String message = "学習開始";
+
+        System.out.println(count);
+        System.out.println(worldPopulation);
+        System.out.println(price);
+        System.out.println(temperature);
+        System.out.println(rank);
+        System.out.println(available);
+        System.out.println(message);
+    }
+}
+```
+
+**実行結果**
+
+```
+30
+8000000000
+12.5
+23.5
+S
+true
+学習開始
+```
+
+**よくあるミス**
+
+```java
+long number = 3000000000; // 大きい整数にLがない
+float rate = 3.5;         // float値にFがない
+char grade = "A";         // charに二重引用符を使用
+String name = 'Java';     // 文字列に一重引用符を使用
+boolean passed = True;    // trueは小文字で書く
+```
+
+正しいコードは次の通りである。
+
+```java
+long number = 3000000000L;
+float rate = 3.5F;
+char grade = 'A';
+String name = "Java";
+boolean passed = true;
+```
+
+### Part 4. 定数と final
+
+**概念説明**
+
+- 一般的な変数は新しい値を再度保存できる。
+- 一方、定数は一度値を保存した後は変更しない値である。
+- Java では変数の前に `final` を付けて、値を再代入できないようにすることができる。
+- プログラム全体で変更されてはいけない基準値を表すときに使用する。
+- 定数名は一般的にすべての文字を大文字で書く。
+- 複数の単語からなる名前は、アンダースコア `_` でつなぐ。
+
+**コード文法の分解**
+
+```java
+final int MAX_SCORE = 100;
+```
+
+| 部分 | 意味 |
+|---|---|
+| `final` | 値を一度だけ保存できるようにする |
+| `int` | 定数に保存する値の型 |
+| `MAX_SCORE` | 定数名 |
+| `100` | 保存する整数リテラル |
+| `;` | 宣言文の終わり |
+
+**問題とは別の例**
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        final int DAILY_GOAL = 30;
+        final double TAX_RATE = 0.1;
+        final char TOP_GRADE = 'A';
+
+        System.out.println(DAILY_GOAL);
+        System.out.println(TAX_RATE);
+        System.out.println(TOP_GRADE);
+    }
+}
+```
+
+**実行結果**
+
+```
+30
+0.1
+A
+```
+
+**値の変更制限**
+
+一般的な変数は値を変更できる。
+
+```java
+int score = 80;
+score = 90;
+```
+
+final変数は一度値が保存されると変更できない。
+
+```java
+final int MAX_SCORE = 100;
+MAX_SCORE = 200; // コンパイルエラー
+```
+
+**定数名の書き方**
+
+```java
+final int MAX_COUNT = 100;
+final int DAILY_GOAL = 30;
+final double TAX_RATE = 0.1;
+```
+
+次のように書いても文法エラーではないが、定数であることが分かりにくい。
+
+```java
+final int maxCount = 100;
+```
+
+一般的に定数は `大文字_大文字` 形式を推奨する。
+
+**よくあるミス**
+
+```java
+final int MAX_SCORE = 100;
+MAX_SCORE = 200; // final値は変更できない
+
+final int MAX_SCORE;
+System.out.println(MAX_SCORE); // 値を保存する前に使用できない
+```
+
+- final値を再度変更しようとする。
+- 定数を宣言して値を保存していない状態で使用する。
+- 定数名を一般変数のように書く。
+- finalを付けると自動的に値が保存されると考える。
+
+## 総合例
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        String courseName = "Java 初級";
+        int partNumber = 2;
+        char level = 'A';
+        double studyHours = 1.5;
+        boolean completed = false;
+
+        final int DAILY_GOAL = 30;
+
+        System.out.println(courseName);
+        System.out.println(partNumber);
+        System.out.println(level);
+        System.out.println(studyHours);
+        System.out.println(completed);
+        System.out.println(DAILY_GOAL);
+    }
+}
+```
+
+**実行の流れ**
+
+1. `courseName` に文字列を保存する。
+2. `partNumber` に整数を保存する。
+3. `level` に文字1つを保存する。
+4. `studyHours` に実数を保存する。
+5. `completed` に論理値を保存する。
+6. `DAILY_GOAL` に変更できない値を保存する。
+7. 各変数と定数の値を順番に出力する。
+
+**実行結果**
+
+```
+Java 初級
+2
+A
+1.5
+false
+30
+```
+
+## 次へ
+
+次は [Part 3「演算子・型変換」](/dev/lessons/DEV-JAVA-01-03)を学ぶ。

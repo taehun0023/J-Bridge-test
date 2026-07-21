@@ -1,0 +1,523 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "文字列を作って比べよう",
+   "prompt": "文字列の宣言・連結・比較を、手を動かして覚えよう。",
+   "takeaway": "文字列の基本を10ステップで確認します。"
+  },
+  "steps": [
+   {
+    "id": "java13-q1",
+    "type": "mini_check",
+    "title": "文字列の生成",
+    "prompt": "language に文字列 \"Java\" を保存する正しいコードはどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "`String language = \"Java\";`"
+     },
+     {
+      "id": "B",
+      "text": "`String language = 'Java';`"
+     },
+     {
+      "id": "C",
+      "text": "`string language = \"Java\";`"
+     },
+     {
+      "id": "D",
+      "text": "`char language = \"Java\";`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "文字列の型は大文字 S で始まる String で、文字列の値は二重引用符で囲む。シングルクォートは文字(char)用で、string は小文字なので存在せず、char には文字列を入れられない。"
+   },
+   {
+    "id": "java13-q2",
+    "type": "code_exercise",
+    "title": "位置の文字列連結",
+    "prompt": "city と country をカンマでつないで \"Seoul, Korea\" を作るように空欄を埋めなさい。(① と ② には同じ演算子を入れる。)",
+    "lang": "java",
+    "codeTemplate": "String city = \"Seoul\";\nString country = \"Korea\";\nString location = city [[0]] \", \" [[1]] country;\nSystem.out.println(location);",
+    "tokens": [
+     "+",
+     "+",
+     "-",
+     "*",
+     "=="
+    ],
+    "answers": [
+     "+",
+     "+"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Seoul, Korea"
+    },
+    "explanation": "文字列は + 演算子で連結する。city + \", \" + country は Seoul と Korea をカンマでつないで Seoul, Korea になる。-・* は文字列に使えず、== は比較なので連結にならずエラーになる。"
+   },
+   {
+    "id": "java13-q3",
+    "type": "mini_check",
+    "title": "数字を先に計算して連結",
+    "prompt": "実行結果が \"結果: 30\" になるコードはどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "`String result = \"結果: \" + 10 + 20;`"
+     },
+     {
+      "id": "B",
+      "text": "`String result = \"結果: \" + (10 + 20);`"
+     },
+     {
+      "id": "C",
+      "text": "`String result = \"結果: \" + \"10 + 20\";`"
+     },
+     {
+      "id": "D",
+      "text": "`String result = \"結果: \" + 10 * 20;`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "括弧で (10 + 20) を先に計算して 30 を作ってから文字列に連結すると「結果: 30」になる。括弧がないと左から連結されて「結果: 1020」、掛け算だと「結果: 200」になる。"
+   },
+   {
+    "id": "java13-q4",
+    "type": "mini_check",
+    "title": "連結結果を再び保存する",
+    "prompt": "message に \" Ready\" を連結した結果を再び保存して \"System Ready\" が出力されるコードとして正しいものはどれか？",
+    "code": "String message = \"System\";\n\n____\n\nSystem.out.println(message);",
+    "options": [
+     {
+      "id": "A",
+      "text": "`message + \" Ready\";`"
+     },
+     {
+      "id": "B",
+      "text": "`message = message + \" Ready\";`"
+     },
+     {
+      "id": "C",
+      "text": "`message == \" Ready\";`"
+     },
+     {
+      "id": "D",
+      "text": "`message = \" Ready\";`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "文字列を連結した結果を message に再代入すると \"System Ready\" になる。message + \" Ready\"; と message == \" Ready\"; は代入・増減・呼び出しではない式なので単独の文として書けずコンパイルエラーで、message = \" Ready\" は元の値 System を消して Ready だけを保存する。"
+   },
+   {
+    "id": "java13-q5",
+    "type": "code_exercise",
+    "title": "文字列内容の比較",
+    "prompt": "2つの文字列の内容が等しいか比較するように、空欄にメソッド名を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "String first = \"Java\";\nString second = new String(\"Java\");\n\nboolean same = first.[[0]](second);\n\nSystem.out.println(same);",
+    "tokens": [
+     "equals",
+     "compare",
+     "equal",
+     "same"
+    ],
+    "answers": [
+     "equals"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "true"
+    },
+    "explanation": "文字列の内容比較は equals() メソッドで行う。2つの文字列の内容がどちらも \"Java\" なので first.equals(second) は true。compare・equal・same は String に無い名前なのでコンパイルエラーになる。"
+   },
+   {
+    "id": "java13-q6",
+    "type": "mini_check",
+    "title": "オブジェクトと内容の比較",
+    "prompt": "次のコードの実行結果として正しいものはどれか？（1行目 / 2行目）",
+    "options": [
+     {
+      "id": "A",
+      "text": "`true` / `true`"
+     },
+     {
+      "id": "B",
+      "text": "`false` / `false`"
+     },
+     {
+      "id": "C",
+      "text": "`false` / `true`"
+     },
+     {
+      "id": "D",
+      "text": "`true` / `false`"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "new String() で作った second は別のオブジェクトなので == で参照を比較すると false である。しかし equals() は内容を比較するので二つの文字列の内容が同じで true である。文字列の内容比較は必ず equals() を使う。",
+    "code": "String first = \"blue\";\nString second = new String(\"blue\");\n\nSystem.out.println(first == second);\nSystem.out.println(first.equals(second));"
+   },
+   {
+    "id": "java13-q7",
+    "type": "code_exercise",
+    "title": "異なるコマンドかの比較",
+    "prompt": "current と requested の内容が異なれば changed が true になるように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "String current = \"ON\";\nString requested = \"OFF\";\nboolean changed = [[0]]current.[[1]](requested);\nSystem.out.println(changed);",
+    "tokens": [
+     "!",
+     "equals",
+     "=",
+     "==",
+     "+",
+     "compare",
+     "same",
+     "equal"
+    ],
+    "answers": [
+     "!",
+     "equals"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "true"
+    },
+    "explanation": "equals() で内容を比較し、その前に ! を付けると「異なるか」を確認できる。\"ON\".equals(\"OFF\") は false で、!false は true である。==・= はこの位置に置けず、compare・same・equal は存在しないメソッドなのでエラーになる。"
+   },
+   {
+    "id": "java13-q8",
+    "type": "order",
+    "title": "入力文字列比較コードの組み立て",
+    "prompt": "import → クラス宣言 → main 宣言 → Scanner 生成 → 1行入力 → 文字列の比較と出力 → Scanner 終了 の順に並べなさい。Scanner は結果を出力した後に閉じる。",
+    "items": [
+     {
+      "id": "i1",
+      "text": "import java.util.Scanner;"
+     },
+     {
+      "id": "i2",
+      "text": "public class Main {"
+     },
+     {
+      "id": "i3",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "i4",
+      "text": "        Scanner scanner = new Scanner(System.in);"
+     },
+     {
+      "id": "i5",
+      "text": "        String input = scanner.nextLine();"
+     },
+     {
+      "id": "i6",
+      "text": "        if (input.equals(\"admin\")) {"
+     },
+     {
+      "id": "i7",
+      "text": "            System.out.println(\"管理者\");"
+     },
+     {
+      "id": "i8",
+      "text": "        } else {"
+     },
+     {
+      "id": "i9",
+      "text": "            System.out.println(\"一般ユーザー\");"
+     },
+     {
+      "id": "i10",
+      "text": "        }"
+     },
+     {
+      "id": "i11",
+      "text": "        scanner.close();"
+     },
+     {
+      "id": "i12",
+      "text": "    }"
+     },
+     {
+      "id": "i13",
+      "text": "}"
+     }
+    ],
+    "explanation": "1行入力は nextLine() で受け取り、文字列の内容比較は input.equals(\"admin\") で行う。== で比較すると内容が同じでも false になることがあるので必ず equals() を使う。admin なら管理者、それ以外は一般ユーザーが出力される。",
+    "distractors": [
+     {
+      "id": "java13-q8_w01",
+      "text": "String input = scanner.nextInt();"
+     },
+     {
+      "id": "java13-q8_w02",
+      "text": "if (input != \"admin\") {"
+     }
+    ]
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "문자열을 만들고 비교하자",
+   "prompt": "문자열의 선언·연결·비교를 손으로 익히자.",
+   "takeaway": "문자열의 기본을 10스텝으로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "java13-q1",
+    "type": "mini_check",
+    "title": "문자열 생성",
+    "prompt": "language에 문자열 \"Java\"를 저장하는 올바른 코드는?",
+    "options": [
+     {
+      "id": "A",
+      "text": "`String language = \"Java\";`"
+     },
+     {
+      "id": "B",
+      "text": "`String language = 'Java';`"
+     },
+     {
+      "id": "C",
+      "text": "`string language = \"Java\";`"
+     },
+     {
+      "id": "D",
+      "text": "`char language = \"Java\";`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "문자열 자료형은 대문자 S로 시작하는 String이고, 문자열 값은 큰따옴표로 감싼다. 작은따옴표는 문자(char)용이고, string은 소문자라 존재하지 않으며, char에는 문자열을 담을 수 없다."
+   },
+   {
+    "id": "java13-q2",
+    "type": "code_exercise",
+    "title": "위치 문자열 연결",
+    "prompt": "city와 country를 쉼표로 연결해 \"Seoul, Korea\"를 만들도록 빈칸을 채우시오. (①과 ②에는 같은 연산자를 넣는다.)",
+    "lang": "java",
+    "codeTemplate": "String city = \"Seoul\";\nString country = \"Korea\";\nString location = city [[0]] \", \" [[1]] country;\nSystem.out.println(location);",
+    "tokens": [
+     "+",
+     "+",
+     "-",
+     "*",
+     "=="
+    ],
+    "answers": [
+     "+",
+     "+"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Seoul, Korea"
+    },
+    "explanation": "문자열은 + 연산자로 연결한다. city + \", \" + country는 Seoul과 Korea를 쉼표로 이어 Seoul, Korea가 된다. -·*는 문자열에 쓸 수 없고, ==는 비교라 연결이 되지 않아 오류가 난다."
+   },
+   {
+    "id": "java13-q3",
+    "type": "mini_check",
+    "title": "숫자를 먼저 계산하여 연결",
+    "prompt": "실행 결과가 \"결과: 30\"이 되는 코드는?",
+    "options": [
+     {
+      "id": "A",
+      "text": "`String result = \"결과: \" + 10 + 20;`"
+     },
+     {
+      "id": "B",
+      "text": "`String result = \"결과: \" + (10 + 20);`"
+     },
+     {
+      "id": "C",
+      "text": "`String result = \"결과: \" + \"10 + 20\";`"
+     },
+     {
+      "id": "D",
+      "text": "`String result = \"결과: \" + 10 * 20;`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "괄호로 (10 + 20)을 먼저 계산해 30을 만든 뒤 문자열에 연결해야 「결과: 30」이 된다. 괄호가 없으면 왼쪽부터 연결되어 「결과: 1020」, 곱셈은 「결과: 200」이 된다."
+   },
+   {
+    "id": "java13-q4",
+    "type": "mini_check",
+    "title": "연결 결과 다시 저장하기",
+    "prompt": "message에 \" Ready\"를 연결한 결과를 다시 저장하여 \"System Ready\"가 출력되도록 하는 코드로 옳은 것은?",
+    "code": "String message = \"System\";\n\n____\n\nSystem.out.println(message);",
+    "options": [
+     {
+      "id": "A",
+      "text": "`message + \" Ready\";`"
+     },
+     {
+      "id": "B",
+      "text": "`message = message + \" Ready\";`"
+     },
+     {
+      "id": "C",
+      "text": "`message == \" Ready\";`"
+     },
+     {
+      "id": "D",
+      "text": "`message = \" Ready\";`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "문자열을 연결한 결과를 message에 다시 대입해야 \"System Ready\"가 된다. message + \" Ready\";와 message == \" Ready\";는 대입·증감·호출이 아닌 식이라 단독 문장으로 쓸 수 없어 컴파일 오류이고, message = \" Ready\"는 기존 값 System을 지우고 Ready만 저장한다."
+   },
+   {
+    "id": "java13-q5",
+    "type": "code_exercise",
+    "title": "문자열 내용 비교",
+    "prompt": "두 문자열의 내용이 같은지 비교하도록 빈칸에 메서드 이름을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "String first = \"Java\";\nString second = new String(\"Java\");\n\nboolean same = first.[[0]](second);\n\nSystem.out.println(same);",
+    "tokens": [
+     "equals",
+     "compare",
+     "equal",
+     "same"
+    ],
+    "answers": [
+     "equals"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "true"
+    },
+    "explanation": "문자열 내용 비교는 equals() 메서드로 한다. 두 문자열의 내용이 모두 \"Java\"이므로 first.equals(second)는 true다. compare·equal·same은 String에 없는 이름이라 컴파일 오류가 난다."
+   },
+   {
+    "id": "java13-q6",
+    "type": "mini_check",
+    "title": "객체와 내용 비교",
+    "prompt": "다음 코드의 실행 결과로 옳은 것은? (첫 줄 / 둘째 줄)",
+    "options": [
+     {
+      "id": "A",
+      "text": "`true` / `true`"
+     },
+     {
+      "id": "B",
+      "text": "`false` / `false`"
+     },
+     {
+      "id": "C",
+      "text": "`false` / `true`"
+     },
+     {
+      "id": "D",
+      "text": "`true` / `false`"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "new String()으로 만든 second는 별도의 객체라 == 로 참조를 비교하면 false다. 하지만 equals()는 내용을 비교하므로 두 문자열의 내용이 같아 true다. 문자열 내용 비교는 반드시 equals()를 쓴다.",
+    "code": "String first = \"blue\";\nString second = new String(\"blue\");\n\nSystem.out.println(first == second);\nSystem.out.println(first.equals(second));"
+   },
+   {
+    "id": "java13-q7",
+    "type": "code_exercise",
+    "title": "다른 명령인지 비교",
+    "prompt": "current와 requested의 내용이 다르면 changed가 true가 되도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "String current = \"ON\";\nString requested = \"OFF\";\nboolean changed = [[0]]current.[[1]](requested);\nSystem.out.println(changed);",
+    "tokens": [
+     "!",
+     "equals",
+     "=",
+     "==",
+     "+",
+     "compare",
+     "same",
+     "equal"
+    ],
+    "answers": [
+     "!",
+     "equals"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "true"
+    },
+    "explanation": "equals()로 내용을 비교하고 그 앞에 !를 붙이면 「다른지」를 확인할 수 있다. \"ON\".equals(\"OFF\")는 false이고, !false는 true다. ==·=는 이 자리에 올 수 없고, compare·same·equal은 존재하지 않는 메서드라 오류가 난다."
+   },
+   {
+    "id": "java13-q8",
+    "type": "order",
+    "title": "입력 문자열 비교 코드 조립",
+    "prompt": "import → 클래스 선언 → main 선언 → Scanner 생성 → 한 줄 입력 → 문자열 비교와 출력 → Scanner 종료 순서로 배열하시오. Scanner는 결과를 출력한 뒤 닫는다.",
+    "items": [
+     {
+      "id": "i1",
+      "text": "import java.util.Scanner;"
+     },
+     {
+      "id": "i2",
+      "text": "public class Main {"
+     },
+     {
+      "id": "i3",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "i4",
+      "text": "        Scanner scanner = new Scanner(System.in);"
+     },
+     {
+      "id": "i5",
+      "text": "        String input = scanner.nextLine();"
+     },
+     {
+      "id": "i6",
+      "text": "        if (input.equals(\"admin\")) {"
+     },
+     {
+      "id": "i7",
+      "text": "            System.out.println(\"관리자\");"
+     },
+     {
+      "id": "i8",
+      "text": "        } else {"
+     },
+     {
+      "id": "i9",
+      "text": "            System.out.println(\"일반 사용자\");"
+     },
+     {
+      "id": "i10",
+      "text": "        }"
+     },
+     {
+      "id": "i11",
+      "text": "        scanner.close();"
+     },
+     {
+      "id": "i12",
+      "text": "    }"
+     },
+     {
+      "id": "i13",
+      "text": "}"
+     }
+    ],
+    "explanation": "한 줄 입력은 nextLine()으로 받고, 문자열 내용 비교는 input.equals(\"admin\")으로 한다. ==로 비교하면 내용이 같아도 false가 될 수 있으므로 반드시 equals()를 쓴다. admin이면 관리자, 아니면 일반 사용자가 출력된다.",
+    "distractors": [
+     {
+      "id": "java13-q8_w01",
+      "text": "String input = scanner.nextInt();"
+     },
+     {
+      "id": "java13-q8_w02",
+      "text": "if (input != \"admin\") {"
+     }
+    ]
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}

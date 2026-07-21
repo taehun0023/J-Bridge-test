@@ -1,0 +1,459 @@
+---
+lesson_id: DEV-JAVA-02-08
+title: "Java중급08 static·final·클래스 상수"
+module: DEV-JAVA-01
+language: ko
+level: foundation
+est_minutes: 22
+tags: [java, intermediate, oop, static, final, constant, static-content]
+---
+
+## 학습 목표
+
+이 파트를 학습한 후 다음 작업을 할 수 있어야 합니다.
+
+- 인스턴스 필드와 static 필드의 차이를 설명한다.
+- static 필드와 메서드를 클래스 이름으로 사용한다.
+- 여러 객체가 하나의 static 필드를 공유하는 과정을 설명한다.
+- static 메서드에서 접근할 수 있는 멤버를 구분한다.
+- final 필드를 선언하고 생성자에서 초기화한다.
+- static final로 클래스 상수를 선언하고 사용한다.
+
+## 수업 내용
+
+### Part 1. 객체마다 필요한 값과 공유해야 하는 값
+
+일반 필드는 객체마다 따로 만들어진다.
+
+```java
+class Student {
+    private String name;
+    private int score;
+
+    public Student(String name, int score) {
+        this.name = name;
+        this.score = score;
+    }
+
+    public int getScore() {
+        return score;
+    }
+}
+```
+
+```java
+Student student1 = new Student("민수", 85);
+Student student2 = new Student("지수", 92);
+
+System.out.println(student1.getScore());
+System.out.println(student2.getScore());
+```
+
+**실행 결과**
+
+```text
+85
+92
+```
+
+student1과 student2는 서로 다른 score를 가진다. 이렇게 객체마다 따로 존재하는 필드를 인스턴스 필드라고 한다.
+
+하지만 전체 학생 수처럼 모든 객체가 함께 사용해야 하는 값도 있다. 일반 필드로 학생 수를 선언하면 객체마다 별도의 값이 생기므로 전체 수를 한곳에서 관리할 수 없다.
+
+### Part 2. static 필드
+
+static 필드는 객체마다 만들어지지 않고 클래스에 하나만 존재한다.
+
+```java
+class Student {
+    private String name;
+    private static int count;
+}
+```
+
+- name: 학생 객체마다 따로 존재
+- count: Student 클래스에 하나만 존재
+
+기본 형식은 다음과 같다.
+
+```java
+class 클래스명 {
+    static 자료형 필드이름;
+}
+```
+
+객체를 만들 때 전체 학생 수를 증가시키려면 생성자에서 count를 증가시킬 수 있다.
+
+```java
+class Student {
+    private String name;
+    private static int count;
+
+    public Student(String name) {
+        this.name = name;
+        count++;
+    }
+}
+```
+
+```java
+Student student1 = new Student("민수");
+Student student2 = new Student("지수");
+```
+
+두 객체를 만들었지만 count는 객체마다 생기지 않는다. 두 생성자가 같은 count 하나를 차례대로 증가시킨다.
+
+### Part 3. static 메서드
+
+count는 private이므로 외부에서 직접 접근할 수 없다. 클래스 전체의 학생 수를 반환하는 static 메서드를 제공할 수 있다.
+
+```java
+class Student {
+    private String name;
+    private static int count;
+
+    public Student(String name) {
+        this.name = name;
+        count++;
+    }
+
+    public static int getCount() {
+        return count;
+    }
+}
+```
+
+static 메서드는 객체가 아니라 클래스 이름으로 호출한다.
+
+```java
+new Student("민수");
+new Student("지수");
+
+System.out.println(Student.getCount());
+```
+
+**실행 결과**
+
+```text
+2
+```
+
+기본 형식은 다음과 같다.
+
+```java
+class 클래스명 {
+    public static 반환형 메서드명() {
+        // 실행할 코드
+    }
+}
+```
+
+```java
+클래스명.메서드명();
+```
+
+전체 학생 수는 특정 학생 한 명의 값이 아니므로 다음처럼 객체로 호출하지 않는다.
+
+```java
+Student student = new Student("민수");
+
+student.getCount();  // 동작하지만 권장하지 않음
+Student.getCount();  // 권장
+```
+
+### Part 4. static 메서드의 접근 범위
+
+static 메서드는 객체 없이 호출할 수 있다. 따라서 특정 객체에 속한 인스턴스 필드를 직접 사용할 수 없다.
+
+```java
+class Student {
+    private String name;
+    private static int count;
+
+    public static int getCount() {
+        return count;
+    }
+
+    public static void printName() {
+        System.out.println(name); // 컴파일 오류
+    }
+}
+```
+
+count는 클래스에 하나만 존재하므로 접근할 수 있다. 하지만 name은 학생 객체마다 다르기 때문에 어떤 학생의 이름인지 알 수 없다.
+
+static 메서드에서 인스턴스 필드가 필요하면 객체를 전달받아 사용해야 한다.
+
+```java
+class Student {
+    private String name;
+
+    public Student(String name) {
+        this.name = name;
+    }
+
+    public static void printName(Student student) {
+        System.out.println(student.name);
+    }
+}
+```
+
+```java
+Student student = new Student("민수");
+Student.printName(student);
+```
+
+**실행 결과**
+
+```text
+민수
+```
+
+static 메서드에는 현재 객체가 없으므로 this도 사용할 수 없다.
+
+```java
+public static void show() {
+    System.out.println(this.name); // 컴파일 오류
+}
+```
+
+### Part 5. final 필드
+
+final 필드는 값을 한 번만 정할 수 있다. 한 번 정한 뒤에는 다른 값을 다시 대입할 수 없다.
+
+회원 번호처럼 객체마다 값은 다르지만, 객체 생성 후 바뀌면 안 되는 값에 사용할 수 있다.
+
+```java
+class Member {
+    private final String memberId;
+
+    public Member(String memberId) {
+        this.memberId = memberId;
+    }
+
+    public String getMemberId() {
+        return memberId;
+    }
+}
+```
+
+```java
+Member member = new Member("M100");
+System.out.println(member.getMemberId());
+```
+
+**실행 결과**
+
+```text
+M100
+```
+
+다음과 같이 값을 다시 대입할 수 없다.
+
+```java
+class Member {
+    private final String memberId;
+
+    public Member(String memberId) {
+        this.memberId = memberId;
+    }
+
+    public void changeMemberId(String memberId) {
+        this.memberId = memberId; // 컴파일 오류
+    }
+}
+```
+
+final 필드를 선언하면서 값을 넣지 않았다면 생성자에서 반드시 값을 정해야 한다.
+
+```java
+class Product {
+    private final String productCode;
+
+    public Product(String productCode) {
+        this.productCode = productCode;
+    }
+}
+```
+
+final은 값을 바꾸지 못하게 할 뿐, 클래스에 하나만 존재하게 하지는 않는다. static이 없는 final 필드는 객체마다 따로 존재한다.
+
+### Part 6. static final 클래스 상수
+
+모든 객체가 함께 사용하면서 값도 바뀌면 안 되는 경우에는 static final을 사용한다.
+
+```java
+class Circle {
+    public static final double PI = 3.14;
+}
+```
+
+- static: 클래스에 하나만 존재
+- final: 값을 다시 변경할 수 없음
+
+클래스 상수는 클래스 이름으로 접근한다.
+
+```java
+double area = Circle.PI * 5 * 5;
+
+System.out.println(Circle.PI);
+System.out.println(area);
+```
+
+**실행 결과**
+
+```text
+3.14
+78.5
+```
+
+다음과 같이 클래스 상수에 다른 값을 다시 대입할 수 없다.
+
+```java
+Circle.PI = 3.14159; // 컴파일 오류
+```
+
+### Part 7. 클래스 상수 이름 작성하기
+
+클래스 상수는 모든 글자를 대문자로 작성하는 것이 관례다. 여러 단어로 이루어진 이름은 밑줄로 구분한다.
+
+```java
+class Config {
+    public static final int MAX_USERS = 100;
+    public static final String COUNTRY_CODE = "KR";
+    public static final int DEFAULT_TIMEOUT = 30;
+}
+```
+
+사용할 때는 숫자나 문자열을 코드에 반복해서 직접 작성하지 않고 상수 이름을 사용한다.
+
+```java
+if (userCount < Config.MAX_USERS) {
+    System.out.println("가입 가능");
+}
+```
+
+100이라는 숫자만 사용하면 그 숫자의 의미를 바로 알기 어렵다. MAX_USERS라는 이름을 사용하면 최대 사용자 수라는 의미가 분명해진다.
+
+### Part 8. static, final, static final 구분하기
+
+| 선언 | 존재하는 개수 | 변경 가능 여부 | 사용 예 |
+|---|---|---|---|
+| 인스턴스 필드 | 객체마다 하나 | 변경 가능 | 이름, 잔액, 점수 |
+| static 필드 | 클래스에 하나 | 변경 가능 | 생성된 객체 수 |
+| final 필드 | 객체마다 하나 | 변경 불가 | 회원 번호, 제품 번호 |
+| static final 필드 | 클래스에 하나 | 변경 불가 | 최대 인원, 원주율 |
+
+### Part 9. 언제 사용하는가
+
+static 필드는 클래스 전체에서 하나의 값을 공유해야 할 때 사용한다.
+
+```java
+private static int totalAccounts;
+```
+
+final 필드는 객체마다 값은 다르지만 생성된 뒤에는 바뀌면 안 될 때 사용한다.
+
+```java
+private final String accountNumber;
+```
+
+static final은 모든 객체가 함께 사용하며 프로그램 실행 중 변경되면 안 되는 값에 사용한다.
+
+```java
+public static final String BANK_NAME = "한빛은행";
+```
+
+변경 가능한 static 필드는 프로그램의 여러 곳에서 함께 바뀌므로 관리하기 어려워질 수 있다. 필요한 경우 private으로 보호하고 static 메서드로 사용하도록 만든다.
+
+### 종합 예제
+
+```java
+class Account {
+    public static final String BANK_NAME = "한빛은행";
+
+    private static int totalAccounts;
+
+    private final String accountNumber;
+    private String owner;
+    private int balance;
+
+    public Account(String accountNumber, String owner, int balance) {
+        this.accountNumber = accountNumber;
+        this.owner = owner;
+
+        if (balance >= 0) {
+            this.balance = balance;
+        }
+
+        totalAccounts++;
+    }
+
+    public static int getTotalAccounts() {
+        return totalAccounts;
+    }
+
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public int getBalance() {
+        return balance;
+    }
+
+    public void deposit(int amount) {
+        if (amount > 0) {
+            balance += amount;
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Account account1 =
+                new Account("A100", "지민", 10000);
+
+        Account account2 =
+                new Account("A200", "서준", 20000);
+
+        account1.deposit(5000);
+
+        System.out.println(Account.BANK_NAME);
+        System.out.println(
+                account1.getAccountNumber() + " / "
+                + account1.getOwner() + " / "
+                + account1.getBalance()
+        );
+        System.out.println(
+                account2.getAccountNumber() + " / "
+                + account2.getOwner() + " / "
+                + account2.getBalance()
+        );
+        System.out.println(
+                "총 계좌 수: " + Account.getTotalAccounts()
+        );
+    }
+}
+```
+
+**실행 결과**
+
+```text
+한빛은행
+A100 / 지민 / 15000
+A200 / 서준 / 20000
+총 계좌 수: 2
+```
+
+- BANK_NAME은 클래스에 하나만 있고 변경할 수 없다.
+- totalAccounts는 모든 계좌가 공유하며 계좌가 생성될 때 증가한다.
+- accountNumber는 계좌마다 다르지만 생성 후 변경할 수 없다.
+- owner와 balance는 각 계좌 객체가 따로 가진다.
+
+## 다음으로
+
+다음 학습 내용은 [Part 9「객체 참조·null·매개변수 전달」](/dev/lessons/DEV-JAVA-02-09)이다.

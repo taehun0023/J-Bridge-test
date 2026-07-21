@@ -1,0 +1,22 @@
+{
+  "lesson_id": "DEV-JAVA-02-07",
+  "category": "dev-practical-skills",
+  "subject": "java",
+  "topic": "java-oop-encapsulation",
+  "summary": "private フィールドと public メソッド（getter・setter）でデータを保護するカプセル化、setter での値の検査、必要なフィールドにだけメソッドを提供する設計を学ぶ。",
+  "key_points": [
+    "フィールドを private にし、必要な操作だけを public メソッドで公開する。",
+    "setter は値を保存する前に正しい値かを検査できる。",
+    "すべてのフィールドに getter/setter を作るのは正しいカプセル化ではない。"
+  ],
+  "misconceptions": [
+    "フィールドを private にすればカプセル化は完成だと思う。",
+    "すべてのフィールドに getter と setter を機械的に作る。",
+    "値の変更をいつも単純な setter で行う（行動を表すメソッドを使わない）。"
+  ],
+  "check_questions": [
+    "public フィールドを直接公開すると何が問題か？",
+    "setter で値を検査する利点は？",
+    "変更してはいけないフィールドにはどのメソッドを提供するか？"
+  ]
+}

@@ -1,0 +1,703 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "メソッドを定義して呼ぼう",
+   "prompt": "処理をまとめる static メソッドの定義・呼び出し・引数を覚えよう。",
+   "takeaway": "メソッドの基本を10ステップで確認します。"
+  },
+  "steps": [
+   {
+    "id": "java15-c1",
+    "type": "concept",
+    "title": "メソッドの定義と呼び出し",
+    "body": "static 戻り値型 名前(引数) { } で定義し、名前(引数) で呼び出す。",
+    "bullets": [
+     "定義: static 型 名前()",
+     "呼び出し: 名前()"
+    ]
+   },
+   {
+    "id": "java15-p1",
+    "type": "order",
+    "title": "メソッドを定義して呼び出す",
+    "prompt": "クラス宣言 → showStart() の定義 → main の定義 → showStart() の呼び出し の順に並べなさい。この問題では showStart() を main より先に書く。",
+    "items": [
+     {
+      "id": "i1",
+      "text": "public class Main {"
+     },
+     {
+      "id": "i2",
+      "text": "    static void showStart() {"
+     },
+     {
+      "id": "i3",
+      "text": "        System.out.println(\"開始\");"
+     },
+     {
+      "id": "i4",
+      "text": "    }"
+     },
+     {
+      "id": "i5",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "i6",
+      "text": "        showStart();"
+     },
+     {
+      "id": "i7",
+      "text": "    }"
+     },
+     {
+      "id": "i8",
+      "text": "}"
+     }
+    ],
+    "explanation": "メソッドはクラス内かつ main の外に static void showStart() で定義し、main から showStart(); で呼び出す。main が実行されると showStart() が呼ばれ「開始」が出力される。",
+    "distractors": [
+     {
+      "id": "java15-p1_w01",
+      "text": "static void showStart(String text) {"
+     },
+     {
+      "id": "java15-p1_w02",
+      "text": "showStart;"
+     }
+    ]
+   },
+   {
+    "id": "java15-c3",
+    "type": "concept",
+    "title": "引数を受け取る",
+    "body": "引数の型を書いて値を受け取る。",
+    "bullets": [
+     "型 引数名 で受け取る"
+    ]
+   },
+   {
+    "id": "java15-p3",
+    "type": "code_exercise",
+    "title": "名前を受け取って挨拶",
+    "prompt": "String の仮引数 name を受け取り Hello, Java を出力するように、型と文字列連結の演算子を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    static void greet([[0]] name) {\n        System.out.println(\"Hello, \" [[1]] name);\n    }\n    public static void main(String[] args) {\n        greet(\"Java\");\n    }\n}",
+    "tokens": [
+     "String",
+     "char",
+     "+",
+     "-"
+    ],
+    "answers": [
+     "String",
+     "+"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Hello, Java"
+    },
+    "explanation": "name には文字列が渡されるので仮引数の型は String である。\"Hello, \" と name は + で連結する。char は文字1個を保存する型で、- は文字列の連結には使えない。"
+   },
+   {
+    "id": "java15-c4",
+    "type": "concept",
+    "title": "複数の引数",
+    "body": "各引数に型をそれぞれ書く。",
+    "bullets": [
+     "各引数に型"
+    ]
+   },
+   {
+    "id": "java15-p4",
+    "type": "code_exercise",
+    "title": "2つの引数で範囲を出力",
+    "prompt": "戻り値の型・引数の型・呼び出しの実引数を埋めて 2 から 4 まで出力するように完成させなさい。",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    static [[0]] printRange([[1]] start, [[2]] end) {\n        for (int i = start; i <= end; i++) {\n            System.out.println(i);\n        }\n    }\n\n    public static void main(String[] args) {\n        printRange([[3]], [[4]]);\n    }\n}",
+    "tokens": [
+     "void",
+     "int",
+     "int",
+     "2",
+     "4",
+     "String",
+     "double",
+     "1",
+     "3"
+    ],
+    "answers": [
+     "void",
+     "int",
+     "int",
+     "2",
+     "4"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "2\n3\n4"
+    },
+    "explanation": "戻り値の無いメソッドなので void を使う。start と end は整数なのでそれぞれ int で、printRange(2, 4) を呼び出すと 2 から 4 まで出力される。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "java15-c5",
+    "type": "concept",
+    "title": "異なる型の引数",
+    "body": "String と int のように異なる型の引数を順に渡せる。",
+    "bullets": [
+     "異なる型を順に渡す"
+    ]
+   },
+   {
+    "id": "java15-p5",
+    "type": "code_exercise",
+    "title": "異なる型の実引数を渡す",
+    "prompt": "printUser(String name, int age) に名前 \"Kim\" と年齢 20 を、仮引数の型と順序に合わせて渡しなさい。",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    static void printUser(String name, int age) {\n        System.out.println(name + \": \" + age);\n    }\n    public static void main(String[] args) {\n        printUser([[0]], [[1]]);\n    }\n}",
+    "tokens": [
+     "\"Kim\"",
+     "20",
+     "Kim",
+     "\"20\""
+    ],
+    "answers": [
+     "\"Kim\"",
+     "20"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Kim: 20"
+    },
+    "explanation": "1番目の仮引数は String なので二重引用符で囲んだ \"Kim\" を渡し、2番目は int なので引用符なしの 20 を渡す。Kim は宣言されていない変数として扱われ、\"20\" は文字列なので int age には渡せない。"
+   },
+   {
+    "id": "java15-c6",
+    "type": "concept",
+    "title": "文字列と回数",
+    "body": "2つの引数を使って繰り返し出力する。",
+    "bullets": [
+     "引数を組み合わせる"
+    ]
+   },
+   {
+    "id": "java15-p6",
+    "type": "code_exercise",
+    "title": "文字列を複数回出力",
+    "prompt": "文字列と繰り返し回数を仮引数で受け取り、指定された回数だけ文字列を出力するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    static void repeat([[0]] text, [[1]] count) {\n        for (int i = 0; i < count; i++) {\n            System.out.println([[2]]);\n        }\n    }\n    public static void main(String[] args) {\n        repeat(\"A\", 2);\n    }\n}",
+    "tokens": [
+     "String",
+     "int",
+     "text",
+     "count",
+     "void"
+    ],
+    "answers": [
+     "String",
+     "int",
+     "text"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "A\nA"
+    },
+    "explanation": "出力する値 text は文字列なので String、繰り返し回数 count は整数なので int を使う。繰り返しの中では繰り返し回数ではなく出力する文字列 text を出力する。void は仮引数の型としては使えない。"
+   },
+   {
+    "id": "java15-c7",
+    "type": "concept",
+    "title": "入力値を渡す",
+    "body": "入力値を変数に入れ、引数として渡す。",
+    "bullets": [
+     "入力値を引数に"
+    ]
+   },
+   {
+    "id": "java15-p7",
+    "type": "code_exercise",
+    "title": "Scanner の値をメソッドに渡す",
+    "prompt": "nextLine() で空白を含む名前全体を入力し、greet() の実引数として渡すように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "import java.util.Scanner;\n\npublic class Main {\n    static void greet(String name) {\n        System.out.println(\"Hello, \" + name);\n    }\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        String name = sc.[[0]]();\n        [[1]](name);\n    }\n}",
+    "tokens": [
+     "next",
+     "nextLine",
+     "greet",
+     "print",
+     "name"
+    ],
+    "answers": [
+     "nextLine",
+     "greet"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Hello, Kim Lee",
+     "stdin": "Kim Lee"
+    },
+    "explanation": "nextLine() は Kim Lee のように空白を含む1行全体を読む。next() は最初の単語 Kim だけを読む。入力値を保存した後は greet(name) でメソッドを呼び出す。print は定義されたメソッドではなく、name(name) のように変数名をメソッドとして呼び出すこともできない。"
+   },
+   {
+    "id": "java15-c8",
+    "type": "concept",
+    "title": "仮引数と実引数",
+    "body": "仮引数は宣言側、実引数は呼び出し側の値。",
+    "bullets": [
+     "宣言側と呼び出し側"
+    ]
+   },
+   {
+    "id": "java15-p8",
+    "type": "mini_check",
+    "title": "仮引数と実引数の違いは？",
+    "prompt": "仮引数と実引数についての正しい説明はどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "仮引数は呼び出し時に渡す値で、実引数は宣言部の変数である。"
+     },
+     {
+      "id": "B",
+      "text": "仮引数はメソッド宣言部の変数で、実引数は呼び出し時に渡す値である。"
+     },
+     {
+      "id": "C",
+      "text": "仮引数と実引数は両方ともメソッド宣言部に書く。"
+     },
+     {
+      "id": "D",
+      "text": "仮引数と実引数は両方ともメソッド呼び出し文に書く。"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "greet(String name) の name はメソッド宣言部にある仮引数で、greet(\"Java\") の \"Java\" は呼び出し時に渡す実引数である。"
+   },
+   {
+    "id": "java15-c9",
+    "type": "concept",
+    "title": "void の意味",
+    "body": "void は戻り値が無いことを表す。",
+    "bullets": [
+     "void は戻り値無し"
+    ]
+   },
+   {
+    "id": "java15-p9",
+    "type": "mini_check",
+    "title": "void の意味は？",
+    "prompt": "メソッドの戻り値の型 void の意味として正しいものはどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "仮引数を宣言できないという意味である。"
+     },
+     {
+      "id": "B",
+      "text": "別のメソッドから呼び出せないという意味である。"
+     },
+     {
+      "id": "C",
+      "text": "戻り値は無いが、メソッド内部のコードは実行できる。"
+     },
+     {
+      "id": "D",
+      "text": "必ず出力文を含まなければならないという意味である。"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "void は呼び出し元へ返す戻り値が無いという意味である。仮引数を受け取れ、別のメソッドから呼び出すこともでき、出力文の有無とは関係ない。"
+   },
+   {
+    "id": "java15-c10",
+    "type": "concept",
+    "title": "メソッド呼び出しと復帰",
+    "body": "メソッドを呼び出すとその中を実行し、終わると呼び出した次の行に戻る。",
+    "bullets": [
+     "呼び出し → 実行 → 復帰"
+    ]
+   },
+   {
+    "id": "java15-p10",
+    "type": "mini_check",
+    "title": "メソッド呼び出しと復帰の順序",
+    "prompt": "次のコードの実行結果として正しいものはどれか？",
+    "code": "public class Main {\n    static void pack() {\n        System.out.println(\"梱包\");\n    }\n\n    public static void main(String[] args) {\n        System.out.println(\"注文受付\");\n        pack();\n        System.out.println(\"配送準備\");\n    }\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`梱包` / `注文受付` / `配送準備`"
+     },
+     {
+      "id": "B",
+      "text": "`注文受付` / `梱包` / `配送準備`"
+     },
+     {
+      "id": "C",
+      "text": "`注文受付` / `配送準備` / `梱包`"
+     },
+     {
+      "id": "D",
+      "text": "`注文受付` / `配送準備`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "main でまず注文受付を出力してから pack() を呼び出す。pack() が梱包を出力して終了すると、呼び出した位置に戻り次の文である配送準備を出力する。"
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "메서드를 정의하고 호출하자",
+   "prompt": "처리를 묶는 static 메서드의 정의·호출·매개변수를 익히자.",
+   "takeaway": "메서드의 기본을 10스텝으로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "java15-c1",
+    "type": "concept",
+    "title": "메서드 정의와 호출",
+    "body": "static 반환형 이름(매개변수) { }로 정의하고, 이름(인수)로 호출한다.",
+    "bullets": [
+     "정의: static 형 이름()",
+     "호출: 이름()"
+    ]
+   },
+   {
+    "id": "java15-p1",
+    "type": "order",
+    "title": "메서드 정의 후 호출",
+    "prompt": "클래스 선언 → showStart() 정의 → main 정의 → showStart() 호출 순서로 배열하시오. 이 문제에서는 showStart()를 main보다 먼저 작성한다.",
+    "items": [
+     {
+      "id": "i1",
+      "text": "public class Main {"
+     },
+     {
+      "id": "i2",
+      "text": "    static void showStart() {"
+     },
+     {
+      "id": "i3",
+      "text": "        System.out.println(\"시작\");"
+     },
+     {
+      "id": "i4",
+      "text": "    }"
+     },
+     {
+      "id": "i5",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "i6",
+      "text": "        showStart();"
+     },
+     {
+      "id": "i7",
+      "text": "    }"
+     },
+     {
+      "id": "i8",
+      "text": "}"
+     }
+    ],
+    "explanation": "메서드는 클래스 안이면서 main 밖에 static void showStart()로 정의하고, main에서 showStart();로 호출한다. main이 실행되면 showStart()가 호출되어 「시작」이 출력된다.",
+    "distractors": [
+     {
+      "id": "java15-p1_w01",
+      "text": "static void showStart(String text) {"
+     },
+     {
+      "id": "java15-p1_w02",
+      "text": "showStart;"
+     }
+    ]
+   },
+   {
+    "id": "java15-c3",
+    "type": "concept",
+    "title": "매개변수 받기",
+    "body": "매개변수의 타입을 써서 값을 받는다.",
+    "bullets": [
+     "타입 매개변수명 으로 받음"
+    ]
+   },
+   {
+    "id": "java15-p3",
+    "type": "code_exercise",
+    "title": "이름을 받아 인사",
+    "prompt": "String 매개변수 name을 받아 Hello, Java를 출력하도록 자료형과 문자열 연결 연산자를 채우시오.",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    static void greet([[0]] name) {\n        System.out.println(\"Hello, \" [[1]] name);\n    }\n    public static void main(String[] args) {\n        greet(\"Java\");\n    }\n}",
+    "tokens": [
+     "String",
+     "char",
+     "+",
+     "-"
+    ],
+    "answers": [
+     "String",
+     "+"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Hello, Java"
+    },
+    "explanation": "name에는 문자열이 전달되므로 매개변수 자료형은 String이다. \"Hello, \"와 name은 +로 연결한다. char는 문자 한 개를 저장하는 자료형이고, -는 문자열 연결에 사용할 수 없다."
+   },
+   {
+    "id": "java15-c4",
+    "type": "concept",
+    "title": "여러 매개변수",
+    "body": "각 매개변수에 타입을 각각 쓴다.",
+    "bullets": [
+     "각 매개변수에 타입"
+    ]
+   },
+   {
+    "id": "java15-p4",
+    "type": "code_exercise",
+    "title": "두 매개변수로 범위 출력",
+    "prompt": "반환형·매개변수 타입·호출 인수를 채워 2부터 4까지 출력하도록 완성하시오.",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    static [[0]] printRange([[1]] start, [[2]] end) {\n        for (int i = start; i <= end; i++) {\n            System.out.println(i);\n        }\n    }\n\n    public static void main(String[] args) {\n        printRange([[3]], [[4]]);\n    }\n}",
+    "tokens": [
+     "void",
+     "int",
+     "int",
+     "2",
+     "4",
+     "String",
+     "double",
+     "1",
+     "3"
+    ],
+    "answers": [
+     "void",
+     "int",
+     "int",
+     "2",
+     "4"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "2\n3\n4"
+    },
+    "explanation": "반환값이 없는 메서드이므로 void를 사용한다. start와 end는 정수이므로 각각 int이며, printRange(2, 4)를 호출하면 2부터 4까지 출력된다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "java15-c5",
+    "type": "concept",
+    "title": "다른 타입의 인수",
+    "body": "String과 int처럼 다른 타입의 인수를 순서대로 전달할 수 있다.",
+    "bullets": [
+     "다른 타입을 순서대로 전달"
+    ]
+   },
+   {
+    "id": "java15-p5",
+    "type": "code_exercise",
+    "title": "다른 타입의 인수 전달",
+    "prompt": "printUser(String name, int age)에 이름 \"Kim\"과 나이 20을 매개변수의 자료형과 순서에 맞게 전달하시오.",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    static void printUser(String name, int age) {\n        System.out.println(name + \": \" + age);\n    }\n    public static void main(String[] args) {\n        printUser([[0]], [[1]]);\n    }\n}",
+    "tokens": [
+     "\"Kim\"",
+     "20",
+     "Kim",
+     "\"20\""
+    ],
+    "answers": [
+     "\"Kim\"",
+     "20"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Kim: 20"
+    },
+    "explanation": "첫 번째 매개변수는 String이므로 큰따옴표로 감싼 \"Kim\"을 전달하고, 두 번째는 int이므로 따옴표 없는 20을 전달한다. Kim은 선언되지 않은 변수로 처리되고, \"20\"은 문자열이라 int age에 전달할 수 없다."
+   },
+   {
+    "id": "java15-c6",
+    "type": "concept",
+    "title": "문자열과 횟수",
+    "body": "두 매개변수를 사용해 반복 출력한다.",
+    "bullets": [
+     "매개변수를 조합"
+    ]
+   },
+   {
+    "id": "java15-p6",
+    "type": "code_exercise",
+    "title": "문자열 여러 번 출력",
+    "prompt": "문자열과 반복 횟수를 매개변수로 받아 지정된 횟수만큼 문자열을 출력하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    static void repeat([[0]] text, [[1]] count) {\n        for (int i = 0; i < count; i++) {\n            System.out.println([[2]]);\n        }\n    }\n    public static void main(String[] args) {\n        repeat(\"A\", 2);\n    }\n}",
+    "tokens": [
+     "String",
+     "int",
+     "text",
+     "count",
+     "void"
+    ],
+    "answers": [
+     "String",
+     "int",
+     "text"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "A\nA"
+    },
+    "explanation": "출력할 값 text는 문자열이므로 String, 반복 횟수 count는 정수이므로 int를 사용한다. 반복문 안에서는 반복 횟수가 아니라 출력할 문자열 text를 출력해야 한다. void는 매개변수 자료형으로 사용할 수 없다."
+   },
+   {
+    "id": "java15-c7",
+    "type": "concept",
+    "title": "입력값을 전달",
+    "body": "입력값을 변수에 넣고 인수로 전달한다.",
+    "bullets": [
+     "입력값을 인수로"
+    ]
+   },
+   {
+    "id": "java15-p7",
+    "type": "code_exercise",
+    "title": "Scanner 값을 메서드에 전달",
+    "prompt": "nextLine()으로 공백을 포함한 이름 전체를 입력받아 greet()의 인수로 전달하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "import java.util.Scanner;\n\npublic class Main {\n    static void greet(String name) {\n        System.out.println(\"Hello, \" + name);\n    }\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        String name = sc.[[0]]();\n        [[1]](name);\n    }\n}",
+    "tokens": [
+     "next",
+     "nextLine",
+     "greet",
+     "print",
+     "name"
+    ],
+    "answers": [
+     "nextLine",
+     "greet"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Hello, Kim Lee",
+     "stdin": "Kim Lee"
+    },
+    "explanation": "nextLine()은 Kim Lee처럼 공백이 포함된 한 줄 전체를 읽는다. next()는 첫 단어 Kim만 읽는다. 입력값을 저장한 뒤에는 greet(name)으로 메서드를 호출해야 한다. print는 정의된 메서드가 아니며, name(name)처럼 변수 이름을 메서드로 호출할 수도 없다."
+   },
+   {
+    "id": "java15-c8",
+    "type": "concept",
+    "title": "매개변수와 인수",
+    "body": "매개변수는 선언부, 인수는 호출부의 값.",
+    "bullets": [
+     "선언부와 호출부"
+    ]
+   },
+   {
+    "id": "java15-p8",
+    "type": "mini_check",
+    "title": "매개변수와 인수의 차이는?",
+    "prompt": "매개변수와 인수에 대한 올바른 설명은?",
+    "options": [
+     {
+      "id": "A",
+      "text": "매개변수는 호출할 때 전달하는 값이고, 인수는 선언부의 변수다."
+     },
+     {
+      "id": "B",
+      "text": "매개변수는 메서드 선언부의 변수이고, 인수는 호출할 때 전달하는 값이다."
+     },
+     {
+      "id": "C",
+      "text": "매개변수와 인수는 모두 메서드 선언부에 작성한다."
+     },
+     {
+      "id": "D",
+      "text": "매개변수와 인수는 모두 메서드 호출문에 작성한다."
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "greet(String name)의 name은 메서드 선언부에 있는 매개변수이고, greet(\"Java\")의 \"Java\"는 호출할 때 전달하는 인수다."
+   },
+   {
+    "id": "java15-c9",
+    "type": "concept",
+    "title": "void 의 의미",
+    "body": "void는 반환값이 없음을 나타낸다.",
+    "bullets": [
+     "void 는 반환값 없음"
+    ]
+   },
+   {
+    "id": "java15-p9",
+    "type": "mini_check",
+    "title": "void의 의미는?",
+    "prompt": "메서드 반환형 void의 의미로 옳은 것은?",
+    "options": [
+     {
+      "id": "A",
+      "text": "매개변수를 선언할 수 없다는 뜻이다."
+     },
+     {
+      "id": "B",
+      "text": "다른 메서드에서 호출할 수 없다는 뜻이다."
+     },
+     {
+      "id": "C",
+      "text": "반환값은 없지만 메서드 내부 코드는 실행할 수 있다."
+     },
+     {
+      "id": "D",
+      "text": "반드시 출력문을 포함해야 한다는 뜻이다."
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "void는 호출한 곳으로 돌려주는 반환값이 없다는 뜻이다. 매개변수를 받을 수 있고 다른 메서드에서 호출할 수도 있으며, 출력문 포함 여부와는 관계없다."
+   },
+   {
+    "id": "java15-c10",
+    "type": "concept",
+    "title": "메서드 호출과 복귀",
+    "body": "메서드를 호출하면 그 안을 실행하고, 끝나면 호출한 다음 줄로 돌아온다.",
+    "bullets": [
+     "호출 → 실행 → 복귀"
+    ]
+   },
+   {
+    "id": "java15-p10",
+    "type": "mini_check",
+    "title": "메서드 호출과 복귀 순서",
+    "prompt": "다음 코드의 실행 결과로 옳은 것은?",
+    "code": "public class Main {\n    static void pack() {\n        System.out.println(\"포장\");\n    }\n\n    public static void main(String[] args) {\n        System.out.println(\"주문 접수\");\n        pack();\n        System.out.println(\"배송 준비\");\n    }\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`포장` / `주문 접수` / `배송 준비`"
+     },
+     {
+      "id": "B",
+      "text": "`주문 접수` / `포장` / `배송 준비`"
+     },
+     {
+      "id": "C",
+      "text": "`주문 접수` / `배송 준비` / `포장`"
+     },
+     {
+      "id": "D",
+      "text": "`주문 접수` / `배송 준비`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "main에서 먼저 주문 접수를 출력한 뒤 pack()을 호출한다. pack()이 포장을 출력하고 종료되면 호출했던 위치로 돌아와 다음 문장인 배송 준비를 출력한다."
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}

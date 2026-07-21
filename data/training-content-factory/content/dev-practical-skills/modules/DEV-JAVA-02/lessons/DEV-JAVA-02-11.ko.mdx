@@ -1,0 +1,266 @@
+---
+lesson_id: DEV-JAVA-02-11
+title: "Java중급11 상속 기본"
+module: DEV-JAVA-01
+language: ko
+level: foundation
+est_minutes: 22
+tags: [java, intermediate, oop, inheritance, static-content]
+---
+
+## 학습 목표
+
+이 파트를 학습한 후 다음 작업을 할 수 있어야 합니다.
+
+- 여러 클래스의 공통 필드와 메서드를 부모 클래스로 분리한다.
+- extends로 부모 클래스를 상속한다.
+- 자식 객체에서 상속받은 메서드를 사용한다.
+- private과 protected 멤버의 상속 접근 차이를 구분한다.
+- 상속이 적합한 is-a 관계와 객체 협력이 적합한 has-a 관계를 구분한다.
+
+## 수업 내용
+
+### Part 1. 상속이 필요한 이유
+
+여러 클래스에 같은 코드가 반복될 수 있다.
+
+```java
+class Developer {
+    private String name;
+
+    public void introduce() {
+        System.out.println("이름: " + name);
+    }
+}
+
+class Designer {
+    private String name;
+
+    public void introduce() {
+        System.out.println("이름: " + name);
+    }
+}
+```
+
+공통 내용을 부모 클래스로 옮기면 중복을 줄일 수 있다.
+
+### Part 2. extends로 상속하기
+
+```java
+class Employee {
+    private String name;
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void introduce() {
+        System.out.println("이름: " + name);
+    }
+}
+```
+
+```java
+class Developer extends Employee {
+    public void code() {
+        System.out.println("코드를 작성합니다.");
+    }
+}
+```
+
+Developer는 Employee의 접근 가능한 필드와 메서드를 물려받는다.
+
+```java
+Developer developer = new Developer();
+
+developer.setName("민수");
+developer.introduce();
+developer.code();
+```
+
+**실행 결과**
+
+```text
+이름: 민수
+코드를 작성합니다.
+```
+
+### Part 3. 부모와 자식 관계
+
+Developer extends Employee는 "개발자는 직원이다"라는 관계를 나타낸다.
+
+```text
+Developer is an Employee
+```
+
+이처럼 자식이 부모의 한 종류라고 말할 수 있는 관계를 is-a 관계라고 한다.
+
+상속은 단순히 코드를 복사하기 위한 기능이 아니다. 실제로 부모와 자식의 종류 관계가 성립할 때 사용해야 한다.
+
+### Part 4. private 멤버 접근
+
+부모의 private 필드는 자식 클래스에서 직접 접근할 수 없다.
+
+```java
+class Employee {
+    private String name;
+}
+
+class Developer extends Employee {
+    public void printName() {
+        System.out.println(name); // 컴파일 오류
+    }
+}
+```
+
+부모가 제공하는 getter나 메서드를 사용한다.
+
+```java
+class Developer extends Employee {
+    public void printName() {
+        System.out.println(getName());
+    }
+}
+```
+
+### Part 5. protected 멤버
+
+protected 멤버는 자식 클래스에서 접근할 수 있다.
+
+```java
+class Employee {
+    protected String department;
+}
+
+class Developer extends Employee {
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+}
+```
+
+하지만 필드를 보호하려면 가능한 경우 private 필드와 메서드를 사용하는 편이 좋다.
+
+### Part 6. 자식 클래스의 멤버 추가
+
+자식 클래스는 부모에게서 받은 기능과 자기 기능을 함께 가진다.
+
+```java
+class Animal {
+    public void eat() {
+        System.out.println("먹습니다.");
+    }
+}
+
+class Dog extends Animal {
+    public void bark() {
+        System.out.println("짖습니다.");
+    }
+}
+```
+
+```java
+Dog dog = new Dog();
+
+dog.eat();
+dog.bark();
+```
+
+**실행 결과**
+
+```text
+먹습니다.
+짖습니다.
+```
+
+### Part 7. 상속과 객체 협력 구분하기
+
+자동차와 탈것은 종류 관계이므로 상속을 고려할 수 있다.
+
+```text
+Car is a Vehicle
+```
+
+자동차와 엔진은 자동차가 엔진을 사용하는 관계다.
+
+```text
+Car has an Engine
+```
+
+이 경우에는 상속하지 않고 필드로 객체를 가진다.
+
+```java
+class Car {
+    private Engine engine;
+}
+```
+
+### Part 8. 생성자는 상속되지 않는다
+
+부모의 필드와 메서드는 상속될 수 있지만 생성자는 상속되지 않는다.
+
+```java
+class Parent {
+    public Parent() {
+        System.out.println("부모 생성");
+    }
+}
+
+class Child extends Parent {
+}
+```
+
+Child 객체를 만들면 부모 부분도 필요하므로 부모 생성자가 먼저 실행된다. 자식 생성자에서 부모 생성자를 직접 선택하는 방법은 다음 파트의 super()에서 사용한다.
+
+### 종합 예제
+
+```java
+class Employee {
+    private String name;
+
+    public void setName(String name) {
+        if (!name.isEmpty()) {
+            this.name = name;
+        }
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void work() {
+        System.out.println(name + "이(가) 근무합니다.");
+    }
+}
+
+class Developer extends Employee {
+    public void develop() {
+        System.out.println(getName() + "이(가) 개발합니다.");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Developer developer = new Developer();
+
+        developer.setName("민수");
+        developer.work();
+        developer.develop();
+    }
+}
+```
+
+**실행 결과**
+
+```text
+민수이(가) 근무합니다.
+민수이(가) 개발합니다.
+```
+
+## 다음으로
+
+다음 학습 내용은 [Part 12「오버라이딩·super」](/dev/lessons/DEV-JAVA-02-12)이다.

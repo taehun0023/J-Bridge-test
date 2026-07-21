@@ -1,0 +1,266 @@
+---
+lesson_id: DEV-JAVA-02-11
+title: "Java中級11 継承の基本"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 22
+tags: [java, intermediate, oop, inheritance, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次の作業ができるようになる。
+
+- 複数のクラスの共通フィールドとメソッドを親クラスに分離する。
+- extends で親クラスを継承する。
+- 子オブジェクトから継承したメソッドを使用する。
+- private と protected メンバーの継承時のアクセスの違いを区別する。
+- 継承が適したis-a関係と、オブジェクト協力が適したhas-a関係を区別する。
+
+## 授業内容
+
+### Part 1. 継承が必要な理由
+
+複数のクラスに同じコードが繰り返されることがある。
+
+```java
+class Developer {
+    private String name;
+
+    public void introduce() {
+        System.out.println("名前: " + name);
+    }
+}
+
+class Designer {
+    private String name;
+
+    public void introduce() {
+        System.out.println("名前: " + name);
+    }
+}
+```
+
+共通の内容を親クラスに移せば重複を減らせる。
+
+### Part 2. extends で継承する
+
+```java
+class Employee {
+    private String name;
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void introduce() {
+        System.out.println("名前: " + name);
+    }
+}
+```
+
+```java
+class Developer extends Employee {
+    public void code() {
+        System.out.println("コードを作成します。");
+    }
+}
+```
+
+Developer は Employee のアクセス可能なフィールドとメソッドを受け継ぐ。
+
+```java
+Developer developer = new Developer();
+
+developer.setName("Minsu");
+developer.introduce();
+developer.code();
+```
+
+**実行結果**
+
+```text
+名前: Minsu
+コードを作成します。
+```
+
+### Part 3. 親と子の関係
+
+Developer extends Employee は「開発者は従業員である」という関係を表す。
+
+```text
+Developer is an Employee
+```
+
+このように子が親の一種であると言える関係を is-a 関係と呼ぶ。
+
+継承は単にコードをコピーするための機能ではない。実際に親と子の種類の関係が成立するときに使うべきである。
+
+### Part 4. private メンバーへのアクセス
+
+親の private フィールドは子クラスから直接アクセスできない。
+
+```java
+class Employee {
+    private String name;
+}
+
+class Developer extends Employee {
+    public void printName() {
+        System.out.println(name); // コンパイルエラー
+    }
+}
+```
+
+親が提供する getter やメソッドを使用する。
+
+```java
+class Developer extends Employee {
+    public void printName() {
+        System.out.println(getName());
+    }
+}
+```
+
+### Part 5. protected メンバー
+
+protected メンバーは子クラスからアクセスできる。
+
+```java
+class Employee {
+    protected String department;
+}
+
+class Developer extends Employee {
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+}
+```
+
+しかし、フィールドを保護するには可能な限り private フィールドとメソッドを使う方がよい。
+
+### Part 6. 子クラスのメンバー追加
+
+子クラスは親から受け継いだ機能と自分自身の機能を両方持つ。
+
+```java
+class Animal {
+    public void eat() {
+        System.out.println("食べます。");
+    }
+}
+
+class Dog extends Animal {
+    public void bark() {
+        System.out.println("吠えます。");
+    }
+}
+```
+
+```java
+Dog dog = new Dog();
+
+dog.eat();
+dog.bark();
+```
+
+**実行結果**
+
+```text
+食べます。
+吠えます。
+```
+
+### Part 7. 継承とオブジェクト協力の区別
+
+自動車と乗り物は種類の関係なので継承を検討できる。
+
+```text
+Car is a Vehicle
+```
+
+自動車とエンジンは、自動車がエンジンを使用する関係である。
+
+```text
+Car has an Engine
+```
+
+この場合は継承せず、フィールドとしてオブジェクトを持つ。
+
+```java
+class Car {
+    private Engine engine;
+}
+```
+
+### Part 8. コンストラクタは継承されない
+
+親のフィールドとメソッドは継承されるが、コンストラクタは継承されない。
+
+```java
+class Parent {
+    public Parent() {
+        System.out.println("親の生成");
+    }
+}
+
+class Child extends Parent {
+}
+```
+
+Child オブジェクトを作ると親の部分も必要になるため、親のコンストラクタが先に実行される。子のコンストラクタから親のコンストラクタを直接選択する方法は、次のパートの super() で使用する。
+
+### 総合例
+
+```java
+class Employee {
+    private String name;
+
+    public void setName(String name) {
+        if (!name.isEmpty()) {
+            this.name = name;
+        }
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void work() {
+        System.out.println(name + "が勤務します。");
+    }
+}
+
+class Developer extends Employee {
+    public void develop() {
+        System.out.println(getName() + "が開発します。");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Developer developer = new Developer();
+
+        developer.setName("Minsu");
+        developer.work();
+        developer.develop();
+    }
+}
+```
+
+**実行結果**
+
+```text
+Minsuが勤務します。
+Minsuが開発します。
+```
+
+## 次へ
+
+次は [Part 12「オーバーライド・super」](/dev/lessons/DEV-JAVA-02-12)を学ぶ。

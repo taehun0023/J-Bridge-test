@@ -1,241 +1,693 @@
 {
-  "version": 1,
-  "ja": {
-    "hook": {
-      "title": "Javaソースファイルを開いたら何を見る？",
-      "prompt": "初めて参加するプロジェクトで数百のJavaファイルがあります。目的のコードを素早く見つけるために、まずファイルのどの部分を確認すべきでしょうか？",
-      "takeaway": "Javaソースファイルの基本構成を理解し、コードリーディングの出発点を身につけます"
-    },
-    "steps": [
-      {
-        "id": "java-01-concept-1",
-        "type": "concept",
-        "title": "Javaソースファイルの3構成要素",
-        "body": "Javaソースファイルは「パッケージ宣言」「インポート文」「クラス定義」の3つで構成されます。パッケージ宣言はディレクトリ構造と1:1で対応し、ファイルの所在を示します。インポート文を見れば外部依存性を素早く把握できます。",
-        "bullets": [
-          "パッケージ宣言がディレクトリパスに対応し、プロジェクト内の位置を示す",
-          "インポート文から依存している外部クラスやモジュールが分かる"
-        ]
-      },
-      {
-        "id": "java-01-mini-1",
-        "type": "mini_check",
-        "title": "確認1",
-        "prompt": "`package com.example.service;`という宣言から読み取れる情報は何ですか？",
-        "options": [
-          { "id": "A", "text": "このクラスがserviceという名前であること" },
-          { "id": "B", "text": "このファイルがcom/example/serviceディレクトリに存在すること" },
-          { "id": "C", "text": "このクラスがpublicであること" }
-        ],
-        "correctOptionId": "B",
-        "explanation": "パッケージ宣言はディレクトリ構造と1:1で対応するため、`com.example.service`はcom/example/serviceディレクトリにファイルが存在することを意味します。"
-      },
-      {
-        "id": "java-01-concept-2",
-        "type": "concept",
-        "title": "基本型と参照型の違い",
-        "body": "基本型（int, boolean, double等）は値そのものを格納し、参照型（String, List, ユーザー定義クラス）はオブジェクトのアドレスを格納します。この違いは比較演算で重要になり、基本型は`==`で値を比較できますが、参照型は`equals`メソッドを使わなければ内容を比較できません。",
-        "bullets": [
-          "基本型は`==`で値を直接比較できる",
-          "参照型は`==`がアドレス比較になるため、内容比較には`equals`を使う"
-        ]
-      },
-      {
-        "id": "java-01-mini-2",
-        "type": "mini_check",
-        "title": "確認2",
-        "prompt": "`new String(\"hello\") == new String(\"hello\")`の結果はどれですか？",
-        "options": [
-          { "id": "A", "text": "true — 文字列の中身が同じだから" },
-          { "id": "B", "text": "コンパイルエラーが発生する" },
-          { "id": "C", "text": "false — 参照（アドレス）が異なるから" }
-        ],
-        "correctOptionId": "C",
-        "explanation": "Stringは参照型であり、`==`はオブジェクトのアドレスを比較します。`new`で生成した2つのオブジェクトはアドレスが異なるためfalseです。内容を比較するには`equals`を使います。"
-      },
-      {
-        "id": "java-01-worked",
-        "type": "worked_example",
-        "title": "具体例：UserServiceクラスを読み解く",
-        "situation": "新しいプロジェクトに配属され、UserService.javaというファイルを開いた場面を考えます。",
-        "reasoning": [
-          "パッケージ宣言`com.example.user`からユーザー関連の機能であることが分かる",
-          "インポート文に`StringHelper`があり、文字列処理ユーティリティに依存していると判断",
-          "メソッドシグネチャ`public String assignRole(String userId, String role)`からアクセス範囲・戻り値型・パラメータを把握",
-          "roleがnullの場合のデフォルト値処理を確認し、防御的プログラミングを読み取る"
-        ],
-        "takeaway": "パッケージ→インポート→クラス定義の順で読むことで、ファイルの役割と依存関係を素早く把握できます"
-      },
-      {
-        "id": "java-01-mini-3",
-        "type": "mini_check",
-        "title": "確認3",
-        "prompt": "メソッドシグネチャ`public String getUserName(int userId)`から読み取れない情報はどれですか？",
-        "options": [
-          { "id": "A", "text": "戻り値の型がStringであること" },
-          { "id": "B", "text": "メソッド内部の処理ロジック" },
-          { "id": "C", "text": "パラメータの型がintであること" }
-        ],
-        "correctOptionId": "B",
-        "explanation": "メソッドシグネチャからはアクセス修飾子、戻り値型、メソッド名、パラメータを読み取れますが、内部の処理ロジックはシグネチャには含まれません。"
-      },
-      {
-        "id": "java-01-apply-1",
-        "type": "apply_check",
-        "title": "応用1",
-        "prompt": "他のクラスから呼び出せないメソッドを定義したい場合、どのアクセス修飾子を使うべきですか？",
-        "options": [
-          { "id": "A", "text": "public — どこからでもアクセス可能" },
-          { "id": "B", "text": "protected — サブクラスからのみアクセス可能" },
-          { "id": "C", "text": "private — 同じクラス内からのみアクセス可能" }
-        ],
-        "correctOptionId": "C",
-        "explanation": "privateメソッドは定義されたクラス内部からのみ呼び出し可能であり、外部のクラスからはアクセスできません。内部実装の詳細を隠蔽する際に使用します。"
-      },
-      {
-        "id": "java-01-apply-2",
-        "type": "apply_check",
-        "title": "応用2",
-        "prompt": "コードレビューで`if (userRole == \"admin\")`という行を発見しました。どのような指摘が適切ですか？",
-        "options": [
-          { "id": "A", "text": "問題ない。Stringも==で比較できる" },
-          { "id": "B", "text": "`equals`を使うべき。参照型の==はアドレス比較であり意図通りに動かない場合がある" },
-          { "id": "C", "text": "intに変換してから比較すべき" }
-        ],
-        "correctOptionId": "B",
-        "explanation": "Stringは参照型であるため、`==`はアドレス比較になります。文字列リテラルとの比較では動く場合もありますが、`new String`やメソッド戻り値との比較ではfalseになる可能性があり、`equals`を使うべきです。"
-      },
-      {
-        "id": "java-01-summary",
-        "type": "summary",
-        "title": "学んだこと",
-        "bullets": [
-          "Javaソースファイルはパッケージ宣言・インポート文・クラス定義の3部構成",
-          "パッケージ宣言はディレクトリ構造と1:1対応し、ファイルの位置を示す",
-          "基本型は==で値を比較できるが、参照型はequalsで内容を比較する",
-          "メソッドシグネチャからアクセス範囲・戻り値型・メソッド名・パラメータを読み取れる"
-        ]
-      }
-    ],
-    "referenceLabel": "参考ノートを見る"
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "はじめの一歩 — 出力とコメント",
+   "prompt": "Java プログラムの骨格・print/println・コメント・エスケープ文字を、手を動かして覚えよう。",
+   "takeaway": "出力とコメントの基本を10ステップで確認します。"
   },
-  "ko": {
-    "hook": {
-      "title": "Java 소스 파일을 열면 무엇을 봐야 할까?",
-      "prompt": "처음 참여하는 프로젝트에 수백 개의 Java 파일이 있습니다. 원하는 코드를 빠르게 찾기 위해 파일의 어떤 부분을 먼저 확인해야 할까요?",
-      "takeaway": "Java 소스 파일의 기본 구성을 이해하고, 코드 리딩의 출발점을 익힙니다"
-    },
-    "steps": [
-      {
-        "id": "java-01-concept-1",
-        "type": "concept",
-        "title": "Java 소스 파일의 3가지 구성 요소",
-        "body": "Java 소스 파일은 '패키지 선언', '임포트 문', '클래스 정의'의 3가지로 구성됩니다. 패키지 선언은 디렉토리 구조와 1:1로 대응하며, 파일의 위치를 나타냅니다. 임포트 문을 보면 외부 의존성을 빠르게 파악할 수 있습니다.",
-        "bullets": [
-          "패키지 선언이 디렉토리 경로에 대응하여 프로젝트 내 위치를 나타낸다",
-          "임포트 문에서 의존하고 있는 외부 클래스나 모듈을 알 수 있다"
-        ]
-      },
-      {
-        "id": "java-01-mini-1",
-        "type": "mini_check",
-        "title": "확인1",
-        "prompt": "`package com.example.service;`라는 선언에서 읽을 수 있는 정보는 무엇인가요?",
-        "options": [
-          { "id": "A", "text": "이 클래스의 이름이 service라는 것" },
-          { "id": "B", "text": "이 파일이 com/example/service 디렉토리에 존재한다는 것" },
-          { "id": "C", "text": "이 클래스가 public이라는 것" }
-        ],
-        "correctOptionId": "B",
-        "explanation": "패키지 선언은 디렉토리 구조와 1:1로 대응하므로, `com.example.service`는 com/example/service 디렉토리에 파일이 존재한다는 의미입니다."
-      },
-      {
-        "id": "java-01-concept-2",
-        "type": "concept",
-        "title": "기본형과 참조형의 차이",
-        "body": "기본형(int, boolean, double 등)은 값 자체를 저장하고, 참조형(String, List, 사용자 정의 클래스)은 객체의 주소를 저장합니다. 이 차이는 비교 연산에서 중요하며, 기본형은 `==`로 값을 비교할 수 있지만 참조형은 `equals` 메서드를 사용해야 내용을 비교할 수 있습니다.",
-        "bullets": [
-          "기본형은 `==`로 값을 직접 비교할 수 있다",
-          "참조형은 `==`가 주소 비교이므로, 내용 비교에는 `equals`를 사용한다"
-        ]
-      },
-      {
-        "id": "java-01-mini-2",
-        "type": "mini_check",
-        "title": "확인2",
-        "prompt": "`new String(\"hello\") == new String(\"hello\")`의 결과는 어느 것인가요?",
-        "options": [
-          { "id": "A", "text": "true — 문자열 내용이 같으므로" },
-          { "id": "B", "text": "컴파일 에러가 발생한다" },
-          { "id": "C", "text": "false — 참조(주소)가 다르므로" }
-        ],
-        "correctOptionId": "C",
-        "explanation": "String은 참조형이며, `==`는 객체의 주소를 비교합니다. `new`로 생성한 두 객체는 주소가 다르므로 false입니다. 내용을 비교하려면 `equals`를 사용해야 합니다."
-      },
-      {
-        "id": "java-01-worked",
-        "type": "worked_example",
-        "title": "구체적 예: UserService 클래스 읽어보기",
-        "situation": "새 프로젝트에 배정되어 UserService.java라는 파일을 열어본 상황을 생각해 봅니다.",
-        "reasoning": [
-          "패키지 선언 `com.example.user`에서 사용자 관련 기능임을 알 수 있다",
-          "임포트 문에 `StringHelper`가 있어 문자열 처리 유틸리티에 의존하고 있다고 판단",
-          "메서드 시그니처 `public String assignRole(String userId, String role)`에서 접근 범위·반환형·파라미터를 파악",
-          "role이 null인 경우 기본값 처리를 확인하고, 방어적 프로그래밍을 읽어냄"
-        ],
-        "takeaway": "패키지 → 임포트 → 클래스 정의 순서로 읽으면 파일의 역할과 의존 관계를 빠르게 파악할 수 있습니다"
-      },
-      {
-        "id": "java-01-mini-3",
-        "type": "mini_check",
-        "title": "확인3",
-        "prompt": "메서드 시그니처 `public String getUserName(int userId)`에서 읽을 수 없는 정보는 어느 것인가요?",
-        "options": [
-          { "id": "A", "text": "반환 타입이 String이라는 것" },
-          { "id": "B", "text": "메서드 내부의 처리 로직" },
-          { "id": "C", "text": "파라미터 타입이 int라는 것" }
-        ],
-        "correctOptionId": "B",
-        "explanation": "메서드 시그니처에서는 접근 제어자, 반환 타입, 메서드 이름, 파라미터를 읽을 수 있지만, 내부 처리 로직은 시그니처에 포함되지 않습니다."
-      },
-      {
-        "id": "java-01-apply-1",
-        "type": "apply_check",
-        "title": "응용1",
-        "prompt": "다른 클래스에서 호출할 수 없는 메서드를 정의하려면 어떤 접근 제어자를 사용해야 하나요?",
-        "options": [
-          { "id": "A", "text": "public — 어디서든 접근 가능" },
-          { "id": "B", "text": "protected — 서브클래스에서만 접근 가능" },
-          { "id": "C", "text": "private — 같은 클래스 내에서만 접근 가능" }
-        ],
-        "correctOptionId": "C",
-        "explanation": "private 메서드는 정의된 클래스 내부에서만 호출할 수 있으며, 외부 클래스에서는 접근할 수 없습니다. 내부 구현을 은닉할 때 사용합니다."
-      },
-      {
-        "id": "java-01-apply-2",
-        "type": "apply_check",
-        "title": "응용2",
-        "prompt": "코드 리뷰에서 `if (userRole == \"admin\")`이라는 코드를 발견했습니다. 어떤 지적이 적절한가요?",
-        "options": [
-          { "id": "A", "text": "문제없다. String도 ==로 비교할 수 있다" },
-          { "id": "B", "text": "`equals`를 사용해야 한다. 참조형의 ==는 주소 비교이므로 의도대로 동작하지 않을 수 있다" },
-          { "id": "C", "text": "int로 변환한 후 비교해야 한다" }
-        ],
-        "correctOptionId": "B",
-        "explanation": "String은 참조형이므로 `==`는 주소 비교가 됩니다. 문자열 리터럴과의 비교에서는 동작할 수도 있지만, `new String`이나 메서드 반환값과의 비교에서는 false가 될 수 있으므로 `equals`를 사용해야 합니다."
-      },
-      {
-        "id": "java-01-summary",
-        "type": "summary",
-        "title": "배운 내용",
-        "bullets": [
-          "Java 소스 파일은 패키지 선언·임포트 문·클래스 정의의 3부 구성",
-          "패키지 선언은 디렉토리 구조와 1:1 대응하여 파일 위치를 나타낸다",
-          "기본형은 ==로 값을 비교할 수 있지만, 참조형은 equals로 내용을 비교한다",
-          "메서드 시그니처에서 접근 범위·반환 타입·메서드 이름·파라미터를 읽을 수 있다"
-        ]
-      }
+  "referenceLabel": "参考ノートを見る",
+  "steps": [
+   {
+    "id": "java1-q1",
+    "type": "mini_check",
+    "title": "プログラムの開始点",
+    "prompt": "次のうち、Java プログラムが実行を開始する位置はどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "class"
+     },
+     {
+      "id": "B",
+      "text": "main"
+     },
+     {
+      "id": "C",
+      "text": "println"
+     },
+     {
+      "id": "D",
+      "text": "System"
+     }
     ],
-    "referenceLabel": "참고 노트 보기"
-  }
+    "correctOptionId": "B",
+    "explanation": "Java プログラムは main メソッドから実行を開始する。class はプログラムを入れる領域、println は出力メソッド、System は標準入出力を持つクラスである。"
+   },
+   {
+    "id": "java1-q2",
+    "type": "mini_check",
+    "title": "開始メソッドを探す",
+    "prompt": "次のカードから main メソッド宣言の1行を選びなさい。",
+    "code": "public class Main {\n    [①]\n        System.out.println(\"準備完了\");\n    }\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`public static void main(String[] args) {`"
+     },
+     {
+      "id": "B",
+      "text": "`public void main(String args) {`"
+     },
+     {
+      "id": "C",
+      "text": "`public static int main(String[] args) {`"
+     },
+     {
+      "id": "D",
+      "text": "`static void start(String[] args) {`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "Java プログラムの開始点は public static void main(String[] args) の形でなければならない。引数は String 配列、戻り値の型は void、名前は必ず main である。String args のように配列でなかったり、int を返したり、名前が start だと開始メソッドとして認識されない。"
+   },
+   {
+    "id": "java1-q3",
+    "type": "order",
+    "title": "コードの順番を並べる",
+    "prompt": "クラス宣言 → main 宣言 → 出力文の順に並べて「実行準備」を出力するプログラムを完成させなさい。",
+    "items": [
+     {
+      "id": "p01q03_c01",
+      "text": "public class Main {"
+     },
+     {
+      "id": "p01q03_c02",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "p01q03_c03",
+      "text": "        System.out.println(\"実行準備\");"
+     },
+     {
+      "id": "p01q03_c04",
+      "text": "    }"
+     },
+     {
+      "id": "p01q03_c05",
+      "text": "}"
+     }
+    ],
+    "explanation": "Java プログラムの開始メソッドは main でなければならない。start と書くとプログラムの開始点にならず、「実行完了」は目標の出力とは異なる。",
+    "distractors": [
+     {
+      "id": "java1-q3_w01",
+      "text": "public static void start(String[] args) {"
+     },
+     {
+      "id": "java1-q3_w02",
+      "text": "System.out.println(\"実行完了\");"
+     }
+    ]
+   },
+   {
+    "id": "java1-q4",
+    "type": "mini_check",
+    "title": "正しい出力文",
+    "prompt": "画面に Hello Java を出力する正しいコードはどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "`System.out.println(\"Hello Java\");`"
+     },
+     {
+      "id": "B",
+      "text": "`System.out.println(Hello Java);`"
+     },
+     {
+      "id": "C",
+      "text": "`system.out.println(\"Hello Java\");`"
+     },
+     {
+      "id": "D",
+      "text": "`System.out.Println(\"Hello Java\");`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "出力する文字は二重引用符で囲み、System と println の大文字小文字も正確でなければならない。引用符を外す(B)、S を小文字にする(C)、p を大文字にする(D)といずれもエラーになる。"
+   },
+   {
+    "id": "java1-q7",
+    "type": "mini_check",
+    "title": "print の実行結果",
+    "prompt": "次のコードの実行結果として正しいものはどれか？",
+    "code": "System.out.print(\"左\");\nSystem.out.print(\"→\");\nSystem.out.print(\"右\");",
+    "options": [
+     {
+      "id": "A",
+      "text": "`左 → 右`"
+     },
+     {
+      "id": "B",
+      "text": "`左→右`"
+     },
+     {
+      "id": "C",
+      "text": "左, →, 右 がそれぞれ別の行"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "print は出力後に改行しないので、3つの文字列が1行にそのままつながる。間に空白がないので 左→右 がくっついて出力される。"
+   },
+   {
+    "id": "java1-q8",
+    "type": "code_exercise",
+    "title": "出力メソッドの選択",
+    "prompt": "「1行目」の次の行に「2行目」が来るように空欄にメソッド名を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "System.out.[[0]](\"1行目\");\nSystem.out.[[1]](\"2行\");\nSystem.out.print(\"目\");",
+    "tokens": [
+     "println",
+     "print",
+     "Print",
+     "Println"
+    ],
+    "answers": [
+     "println",
+     "print"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "1行目\n2行目"
+    },
+    "explanation": "println は出力後に改行するので「1行目」の後で行が変わる。print は改行しないので「2行」と最後の「目」が1行につながり「2行目」になる。最後の print は固定で、Print・Println は大文字で存在しないメソッドである。"
+   },
+   {
+    "id": "java1-q9",
+    "type": "mini_check",
+    "title": "正しい1行コメント",
+    "prompt": "次のうち、正しい1行コメントはどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "// 説明"
+     },
+     {
+      "id": "B",
+      "text": "/ 説明"
+     },
+     {
+      "id": "C",
+      "text": "/* 説明"
+     },
+     {
+      "id": "D",
+      "text": "説明 */"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "1行コメントはスラッシュ2つ // で始まり、その行の終わりまで適用される。スラッシュ1つ(/)や複数行コメント記号(/*、*/)は1行コメントではない。"
+   },
+   {
+    "id": "java1-q10",
+    "type": "code_exercise",
+    "title": "複数行コメントで隠す",
+    "prompt": "真ん中の出力文が実行されないように複数行コメントで囲んで空欄を埋めなさい。(開始と終了だけ出力される)",
+    "lang": "java",
+    "codeTemplate": "System.out.println(\"開始\");\n[[0]]\nSystem.out.println(\"これは実行されない\");\n[[1]]\nSystem.out.println(\"終了\");",
+    "tokens": [
+     "/*",
+     "*/",
+     "//"
+    ],
+    "answers": [
+     "/*",
+     "*/"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "開始\n終了"
+    },
+    "explanation": "複数行コメント /* */ で真ん中の出力文を囲むと、その行は実行されず開始と終了だけが出力される。// は自分の1行だけをコメント化するので、真ん中の出力文や後ろの */ がコードとして残りコンパイルエラーになる。"
+   },
+   {
+    "id": "java1-q11",
+    "type": "mini_check",
+    "title": "コメントと実行結果",
+    "prompt": "次のコードの実行結果として正しいものはどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "1番目と3番目が出力される。（2番目はコメントなので実行されない）"
+     },
+     {
+      "id": "B",
+      "text": "1番目、2番目、3番目がすべて出力される。"
+     },
+     {
+      "id": "C",
+      "text": "何も出力されない。"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "2番目の出力文は // でコメント化され実行されない。よって1番目と3番目だけが2行で出力される。",
+    "code": "System.out.println(\"1番目\");\n// System.out.println(\"2番目\");\nSystem.out.println(\"3番目\");"
+   },
+   {
+    "id": "java1-q12",
+    "type": "mini_check",
+    "title": "エラーの修正",
+    "prompt": "次のコードを正しく直した1行を選びなさい。 — System.out.Println(Java);",
+    "code": "System.out.Println(Java);",
+    "options": [
+     {
+      "id": "A",
+      "text": "`System.out.println(\"Java\");`"
+     },
+     {
+      "id": "B",
+      "text": "`System.out.Println(\"Java\");`"
+     },
+     {
+      "id": "C",
+      "text": "`System.out.println(Java);`"
+     },
+     {
+      "id": "D",
+      "text": "`system.out.println(\"Java\");`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "メソッド名は小文字の println でなければならず、出力する文字列は二重引用符で囲む必要がある。Println のように大文字にしたり、Java を引用符なしで書いたり、System を小文字の system にするとコンパイルエラーになる。"
+   },
+   {
+    "id": "java1-q13",
+    "type": "code_exercise",
+    "title": "完全なプログラム — 2行出力",
+    "prompt": "次の2行が出力されるように空欄を埋めてプログラムを完成させなさい。\n\n```text\nJava\nStart\n```",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    public static void main(String[] args) {\n        System.out.println(\"[[0]]\");\n        System.out.println(\"[[1]]\");\n    }\n}",
+    "tokens": [
+     "Java",
+     "Start",
+     "Basic",
+     "Done"
+    ],
+    "answers": [
+     "Java",
+     "Start"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Java\nStart"
+    },
+    "explanation": "2つの println がそれぞれ Java と Start を出力し、改行して2行になる。二重引用符の中の文字がそのまま出力される。"
+   },
+   {
+    "id": "java1-q14",
+    "type": "mini_check",
+    "title": "コメント範囲の確認",
+    "prompt": "次のコードの実行結果として正しいものはどれか？（1行目 / 2行目）",
+    "code": "System.out.println(\"上\");\n/*\nSystem.out.println(\"中央1\");\nSystem.out.println(\"中央2\");\n*/\nSystem.out.print(\"下\");",
+    "options": [
+     {
+      "id": "A",
+      "text": "`上` / `下`"
+     },
+     {
+      "id": "B",
+      "text": "`上` / `中央1` / `中央2` / `下`"
+     },
+     {
+      "id": "C",
+      "text": "`上下`"
+     },
+     {
+      "id": "D",
+      "text": "空の出力"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "/* */ の間のコードはコメントなので実行されない。したがって 上 は println で改行して出力され、中央1・中央2 はコメントなので飛ばされ、下 は print で出力される。結果は 上 の次の行に 下 が来る。"
+   },
+   {
+    "id": "java1-q15",
+    "type": "code_exercise",
+    "title": "総合 — print と println",
+    "prompt": "次の実行結果になるように空欄を埋めなさい。\n\n```text\nJava Beginner\nLesson 01\n```",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    public static void main(String[] args) {\n        System.out.[[0]](\"Java\");\n        System.out.[[1]](\" Beginner\");\n        System.out.println(\"Lesson 01\");\n    }\n}",
+    "tokens": [
+     "print",
+     "println",
+     "Print",
+     "Println"
+    ],
+    "answers": [
+     "print",
+     "println"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Java Beginner\nLesson 01"
+    },
+    "explanation": "print は改行しないので Java の後に Beginner が続き、println は改行するのでその後で行が変わる。最後の行は println で Lesson 01 を出力する。Print・Println は大文字で存在しないメソッドである。"
+   }
+  ]
+ },
+ "ko": {
+  "hook": {
+   "title": "첫걸음 — 출력과 주석",
+   "prompt": "Java 프로그램의 골격·print/println·주석·이스케이프 문자를 손으로 익히자.",
+   "takeaway": "출력과 주석의 기본을 10스텝으로 확인합니다."
+  },
+  "referenceLabel": "참고노트 보기",
+  "steps": [
+   {
+    "id": "java1-q1",
+    "type": "mini_check",
+    "title": "프로그램의 시작점",
+    "prompt": "다음 중 Java 프로그램이 실행을 시작하는 위치는 무엇인가?",
+    "options": [
+     {
+      "id": "A",
+      "text": "class"
+     },
+     {
+      "id": "B",
+      "text": "main"
+     },
+     {
+      "id": "C",
+      "text": "println"
+     },
+     {
+      "id": "D",
+      "text": "System"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "Java 프로그램은 main 메서드에서 실행을 시작한다. class는 프로그램을 담는 영역, println은 출력 메서드, System은 표준 입출력을 담은 클래스다."
+   },
+   {
+    "id": "java1-q2",
+    "type": "mini_check",
+    "title": "시작 메서드 찾기",
+    "prompt": "다음 카드 중 main 메서드 선언 한 줄을 고르시오.",
+    "code": "public class Main {\n    [①]\n        System.out.println(\"준비 완료\");\n    }\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`public static void main(String[] args) {`"
+     },
+     {
+      "id": "B",
+      "text": "`public void main(String args) {`"
+     },
+     {
+      "id": "C",
+      "text": "`public static int main(String[] args) {`"
+     },
+     {
+      "id": "D",
+      "text": "`static void start(String[] args) {`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "자바 프로그램의 시작점은 public static void main(String[] args) 형태여야 한다. 매개변수는 String 배열이어야 하고, 반환형은 void이며, 이름은 반드시 main이어야 한다. String args처럼 배열이 아니거나 int로 반환하거나 이름이 start이면 시작 메서드로 인식되지 않는다."
+   },
+   {
+    "id": "java1-q3",
+    "type": "order",
+    "title": "코드 순서 맞추기",
+    "prompt": "클래스 선언 → main 선언 → 출력문 순서로 배열하여 「실행 준비」를 출력하는 프로그램을 완성하시오.",
+    "items": [
+     {
+      "id": "p01q03_c01",
+      "text": "public class Main {"
+     },
+     {
+      "id": "p01q03_c02",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "p01q03_c03",
+      "text": "        System.out.println(\"실행 준비\");"
+     },
+     {
+      "id": "p01q03_c04",
+      "text": "    }"
+     },
+     {
+      "id": "p01q03_c05",
+      "text": "}"
+     }
+    ],
+    "explanation": "자바 프로그램의 시작 메서드는 main이어야 한다. start로 작성하면 프로그램의 시작점이 되지 않으며, 「실행 완료」는 목표 출력과 다르다.",
+    "distractors": [
+     {
+      "id": "java1-q3_w01",
+      "text": "public static void start(String[] args) {"
+     },
+     {
+      "id": "java1-q3_w02",
+      "text": "System.out.println(\"실행 완료\");"
+     }
+    ]
+   },
+   {
+    "id": "java1-q4",
+    "type": "mini_check",
+    "title": "올바른 출력문",
+    "prompt": "화면에 Hello Java를 출력하는 올바른 코드는 무엇인가?",
+    "options": [
+     {
+      "id": "A",
+      "text": "`System.out.println(\"Hello Java\");`"
+     },
+     {
+      "id": "B",
+      "text": "`System.out.println(Hello Java);`"
+     },
+     {
+      "id": "C",
+      "text": "`system.out.println(\"Hello Java\");`"
+     },
+     {
+      "id": "D",
+      "text": "`System.out.Println(\"Hello Java\");`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "출력할 문자는 큰따옴표로 감싸야 하고, System과 println의 대소문자도 정확해야 한다. 큰따옴표를 빼거나(B), S를 소문자로(C), p를 대문자로(D) 쓰면 모두 오류가 난다."
+   },
+   {
+    "id": "java1-q7",
+    "type": "mini_check",
+    "title": "print의 실행 결과",
+    "prompt": "다음 코드의 실행 결과로 옳은 것은?",
+    "code": "System.out.print(\"왼쪽\");\nSystem.out.print(\"→\");\nSystem.out.print(\"오른쪽\");",
+    "options": [
+     {
+      "id": "A",
+      "text": "`왼쪽 → 오른쪽`"
+     },
+     {
+      "id": "B",
+      "text": "`왼쪽→오른쪽`"
+     },
+     {
+      "id": "C",
+      "text": "왼쪽, →, 오른쪽이 각각 다른 줄"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "print는 출력 후 줄을 바꾸지 않으므로 세 문자열이 한 줄에 그대로 이어진다. 사이에 공백이 없으므로 왼쪽→오른쪽이 붙어서 출력된다."
+   },
+   {
+    "id": "java1-q8",
+    "type": "code_exercise",
+    "title": "출력 메서드 선택",
+    "prompt": "「첫 줄」 다음 줄에 「둘째 줄」이 오도록 빈칸에 메서드명을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "System.out.[[0]](\"첫 줄\");\nSystem.out.[[1]](\"둘째\");\nSystem.out.print(\" 줄\");",
+    "tokens": [
+     "println",
+     "print",
+     "Print",
+     "Println"
+    ],
+    "answers": [
+     "println",
+     "print"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "첫 줄\n둘째 줄"
+    },
+    "explanation": "println은 출력 후 줄을 바꾸므로 「첫 줄」 다음에 줄이 바뀐다. print는 줄을 바꾸지 않아 「둘째」와 마지막의 「 줄」이 한 줄로 붙어 「둘째 줄」이 된다. 마지막 print는 고정이며, Print·Println은 대문자라 존재하지 않는 메서드다."
+   },
+   {
+    "id": "java1-q9",
+    "type": "mini_check",
+    "title": "올바른 한 줄 주석",
+    "prompt": "다음 중 올바른 한 줄 주석은 무엇인가?",
+    "options": [
+     {
+      "id": "A",
+      "text": "// 설명"
+     },
+     {
+      "id": "B",
+      "text": "/ 설명"
+     },
+     {
+      "id": "C",
+      "text": "/* 설명"
+     },
+     {
+      "id": "D",
+      "text": "설명 */"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "한 줄 주석은 슬래시 두 개 //로 시작해 그 줄 끝까지 적용된다. 슬래시 하나(/)나 여러 줄 주석 기호(/*, */)는 한 줄 주석이 아니다."
+   },
+   {
+    "id": "java1-q10",
+    "type": "code_exercise",
+    "title": "여러 줄 주석으로 가리기",
+    "prompt": "가운데 출력문이 실행되지 않도록 여러 줄 주석으로 감싸 빈칸을 채우시오. (시작과 끝만 출력되어야 한다)",
+    "lang": "java",
+    "codeTemplate": "System.out.println(\"시작\");\n[[0]]\nSystem.out.println(\"이건 실행되지 않는다\");\n[[1]]\nSystem.out.println(\"끝\");",
+    "tokens": [
+     "/*",
+     "*/",
+     "//"
+    ],
+    "answers": [
+     "/*",
+     "*/"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "시작\n끝"
+    },
+    "explanation": "여러 줄 주석 /* */로 가운데 출력문을 감싸면 그 줄이 실행되지 않아 시작과 끝만 출력된다. //는 자기 한 줄만 주석 처리하므로, 가운데 출력문이나 뒤의 */가 코드로 남아 컴파일 오류가 난다."
+   },
+   {
+    "id": "java1-q11",
+    "type": "mini_check",
+    "title": "주석과 실행 결과",
+    "prompt": "다음 코드의 실행 결과로 옳은 것은?",
+    "options": [
+     {
+      "id": "A",
+      "text": "첫 번째와 세 번째가 출력된다. (두 번째는 주석이라 실행 안 됨)"
+     },
+     {
+      "id": "B",
+      "text": "첫 번째, 두 번째, 세 번째가 모두 출력된다."
+     },
+     {
+      "id": "C",
+      "text": "아무것도 출력되지 않는다."
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "두 번째 출력문은 //로 주석 처리되어 실행되지 않는다. 따라서 첫 번째와 세 번째만 두 줄로 출력된다.",
+    "code": "System.out.println(\"첫 번째\");\n// System.out.println(\"두 번째\");\nSystem.out.println(\"세 번째\");"
+   },
+   {
+    "id": "java1-q12",
+    "type": "mini_check",
+    "title": "오류 수정",
+    "prompt": "다음 코드를 올바르게 고친 한 줄을 고르시오. — System.out.Println(Java);",
+    "code": "System.out.Println(Java);",
+    "options": [
+     {
+      "id": "A",
+      "text": "`System.out.println(\"Java\");`"
+     },
+     {
+      "id": "B",
+      "text": "`System.out.Println(\"Java\");`"
+     },
+     {
+      "id": "C",
+      "text": "`System.out.println(Java);`"
+     },
+     {
+      "id": "D",
+      "text": "`system.out.println(\"Java\");`"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "메서드 이름은 소문자 println이어야 하고, 출력할 문자열은 큰따옴표로 감싸야 한다. Println처럼 대문자로 쓰거나, Java를 따옴표 없이 쓰거나, System을 소문자 system으로 쓰면 컴파일 오류가 난다."
+   },
+   {
+    "id": "java1-q13",
+    "type": "code_exercise",
+    "title": "완전한 프로그램 — 두 줄 출력",
+    "prompt": "다음 두 줄이 출력되도록 빈칸을 채워 프로그램을 완성하시오.\n\n```text\nJava\nStart\n```",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    public static void main(String[] args) {\n        System.out.println(\"[[0]]\");\n        System.out.println(\"[[1]]\");\n    }\n}",
+    "tokens": [
+     "Java",
+     "Start",
+     "Basic",
+     "Done"
+    ],
+    "answers": [
+     "Java",
+     "Start"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Java\nStart"
+    },
+    "explanation": "두 println이 각각 Java와 Start를 출력하고 줄을 바꿔 두 줄이 된다. 큰따옴표 안의 문자가 그대로 출력된다."
+   },
+   {
+    "id": "java1-q14",
+    "type": "mini_check",
+    "title": "주석 범위 확인",
+    "prompt": "다음 코드의 실행 결과로 옳은 것은? (첫 줄 / 둘째 줄)",
+    "code": "System.out.println(\"위\");\n/*\nSystem.out.println(\"가운데1\");\nSystem.out.println(\"가운데2\");\n*/\nSystem.out.print(\"아래\");",
+    "options": [
+     {
+      "id": "A",
+      "text": "`위` / `아래`"
+     },
+     {
+      "id": "B",
+      "text": "`위` / `가운데1` / `가운데2` / `아래`"
+     },
+     {
+      "id": "C",
+      "text": "`위아래`"
+     },
+     {
+      "id": "D",
+      "text": "빈 출력"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "/* */ 사이의 코드는 주석이라 실행되지 않는다. 따라서 위는 println으로 줄을 바꿔 출력되고, 가운데1·가운데2는 주석이라 건너뛰며, 아래는 print로 출력된다. 결과는 위 다음 줄에 아래가 온다."
+   },
+   {
+    "id": "java1-q15",
+    "type": "code_exercise",
+    "title": "종합 — print와 println",
+    "prompt": "다음 실행 결과가 나오도록 빈칸을 채우시오.\n\n```text\nJava Beginner\nLesson 01\n```",
+    "lang": "java",
+    "codeTemplate": "public class Main {\n    public static void main(String[] args) {\n        System.out.[[0]](\"Java\");\n        System.out.[[1]](\" Beginner\");\n        System.out.println(\"Lesson 01\");\n    }\n}",
+    "tokens": [
+     "print",
+     "println",
+     "Print",
+     "Println"
+    ],
+    "answers": [
+     "print",
+     "println"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Java Beginner\nLesson 01"
+    },
+    "explanation": "print는 줄을 바꾸지 않으므로 Java 다음에 Beginner가 이어지고, println은 줄을 바꾸므로 그 뒤에서 줄이 바뀐다. 마지막 줄은 println으로 Lesson 01을 출력한다. Print·Println은 대문자라 존재하지 않는 메서드다."
+   }
+  ]
+ }
 }

@@ -1,0 +1,461 @@
+{
+ "version": 1,
+ "ja": {
+  "steps": [
+   {
+    "id": "java14-q1",
+    "type": "code_exercise",
+    "title": "長さと文字の確認",
+    "prompt": "文字列の長さと最初の文字を出力するように、空欄にメソッド名を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "String text = \"Java\";\n\nSystem.out.println(text.[[0]]());\nSystem.out.println(text.[[1]](0));",
+    "tokens": [
+     "length",
+     "charAt",
+     "size",
+     "count",
+     "indexOf",
+     "substring"
+    ],
+    "answers": [
+     "length",
+     "charAt"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "4\nJ"
+    },
+    "explanation": "length() は文字数を返すので 4、charAt(0) はインデックス 0 の文字 J を返す。size()・count() は String に無い名前なのでコンパイルエラーで、indexOf・substring は引数が必要なのでこの位置にそのまま書くとエラーになる。"
+   },
+   {
+    "id": "java14-q2",
+    "type": "mini_check",
+    "title": "部分文字列の抽出",
+    "prompt": "\"JavaBasic\" から \"Basic\" だけを切り出すコード1行として正しいものはどれか？",
+    "code": "String text = \"JavaBasic\";\n\n____\n\nSystem.out.println(result);",
+    "options": [
+     {
+      "id": "A",
+      "text": "`String result = text.substring(0, 4);`"
+     },
+     {
+      "id": "B",
+      "text": "`String result = text.substring(4);`"
+     },
+     {
+      "id": "C",
+      "text": "`String result = text.charAt(4);`"
+     },
+     {
+      "id": "D",
+      "text": "`String result = text.substring(5);`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "substring(4) はインデックス 4 の B から文字列の最後までを返すので Basic になる。substring(0, 4) はインデックス 0〜3 の Java、substring(5) は asic になり、charAt(4) は文字1つ(char)なので String 変数に入れるとコンパイルエラーになる。"
+   },
+   {
+    "id": "java14-q3",
+    "type": "code_exercise",
+    "title": "文字列の検索",
+    "prompt": "\"Java\" を含むかと \"Beginner\" が始まるインデックスを求めるように、空欄にメソッド名を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "String text = \"Java Beginner\";\n\nboolean hasJava = text.[[0]](\"Java\");\nint beginnerIndex = text.[[1]](\"Beginner\");\n\nSystem.out.println(hasJava);\nSystem.out.println(beginnerIndex);",
+    "tokens": [
+     "contains",
+     "indexOf",
+     "equals",
+     "substring",
+     "replace",
+     "length"
+    ],
+    "answers": [
+     "contains",
+     "indexOf"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "true\n5"
+    },
+    "explanation": "contains() は含むかを boolean で返すので true、indexOf() は最初に現れる位置を返すので Beginner の開始インデックス 5 になる。equals() は全体の内容が等しいかを比較するので false であり、substring・replace・length はこの位置で戻り値の型が合わずコンパイルエラーになる。"
+   },
+   {
+    "id": "java14-q4",
+    "type": "mini_check",
+    "title": "文字列メソッドの戻り値",
+    "prompt": "次のコードの実行結果として正しいものはどれか？",
+    "code": "String text = \" java \";\n\ntext.trim();\ntext.toUpperCase();\n\nSystem.out.println(\"[\" + text + \"]\");",
+    "options": [
+     {
+      "id": "A",
+      "text": "`[JAVA]`"
+     },
+     {
+      "id": "B",
+      "text": "`[java]`"
+     },
+     {
+      "id": "C",
+      "text": "`[ java ]`"
+     },
+     {
+      "id": "D",
+      "text": "`[ JAVA ]`"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "trim() と toUpperCase() は新しい文字列を返すだけで text 自体は変えないが、戻り値を保存していないので text はそのまま \" java \" のままである。したがって前後の空白が残り [ java ] が出力される。実際に変えるには text = text.trim().toUpperCase(); のように結果を保存し直す必要がある。"
+   },
+   {
+    "id": "java14-q5",
+    "type": "code_exercise",
+    "title": "文字列の分割",
+    "prompt": "カンマで文字列を分割し、すべての結果を出力するように、空欄にメソッド・型・記号を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "String data = \"Java,Python,JavaScript\";\n\nString[] languages = data.[[0]](\",\");\n\nfor ([[1]] language [[2]] languages) {\n    System.out.println(language);\n}",
+    "tokens": [
+     "split",
+     "String",
+     ":",
+     "replace",
+     "String[]",
+     ";"
+    ],
+    "answers": [
+     "split",
+     "String",
+     ":"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Java\nPython\nJavaScript"
+    },
+    "explanation": "split(\",\") はカンマで区切って String[] 配列を返し、拡張 for 文は (String language : languages) の形で配列要素を1つずつ取り出す。要素の型は配列要素と同じ String で、区切り記号はコロン(:)である。String[] は要素ではなく配列全体の型なので合わず、replace は引数が2つ必要で、セミコロンはこの位置に置けないためコンパイルエラーになる。"
+   },
+   {
+    "id": "java14-q6",
+    "type": "mini_check",
+    "title": "縦棒で分割",
+    "prompt": "文字列 red|green|blue を縦棒 | で分割するコードとして正しいものはどれか？",
+    "code": "String colors = \"red|green|blue\";\n\n____",
+    "options": [
+     {
+      "id": "A",
+      "text": "`String[] parts = colors.split(\"|\");`"
+     },
+     {
+      "id": "B",
+      "text": "`String[] parts = colors.split(\"/\");`"
+     },
+     {
+      "id": "C",
+      "text": "`String[] parts = colors.split(\"\\\\|\");`"
+     },
+     {
+      "id": "D",
+      "text": "`String[] parts = colors.split(\",\");`"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "split() の区切りは正規表現として扱われる。| は正規表現で特別な意味を持つので、文字そのもので分けるにはバックスラッシュでエスケープし、Java の文字列内ではさらにもう一度書いて \"\\\\|\" とする。\"|\" だけだとすべての位置にマッチして意図どおりに分かれず、\"/\"・\",\" はこの文字列に無いので分割されない。"
+   },
+   {
+    "id": "java14-q7",
+    "type": "code_exercise",
+    "title": "printf() の書式の完成",
+    "prompt": "名前・点数・平均を指定された書式で出力するように、空欄にメソッド名と書式指定子を埋めなさい。(平均は小数第2位まで)",
+    "lang": "java",
+    "codeTemplate": "String name = \"Lee\";\nint score = 95;\ndouble average = 92.345;\n\nSystem.out.[[0]](\n    \"名前: [[1]], 点数: [[2]], 平均: [[3]][[4]]\",\n    name,\n    score,\n    average\n);",
+    "tokens": [
+     "printf",
+     "%s",
+     "%d",
+     "%.2f",
+     "%n",
+     "println",
+     "%f"
+    ],
+    "answers": [
+     "printf",
+     "%s",
+     "%d",
+     "%.2f",
+     "%n"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "名前: Lee, 点数: 95, 平均: 92.35"
+    },
+    "explanation": "printf() は書式文字列の指定子の位置に、後ろの値を順に入れて出力する。文字列 name は %s、整数 score は %d、実数 average は小数第2位まで %.2f で表し、最後の %n で改行する。92.345 は %.2f で四捨五入され 92.35 になる。%d の位置に文字列が来ると実行中のエラーになるので値の型に合った指定子を使い、printf の代わりに println を使うとこうした書式引数を受け取れずコンパイルエラーになる。"
+   },
+   {
+    "id": "java14-q8",
+    "type": "order",
+    "title": "注文文の作成",
+    "prompt": "商品名の宣言 → 数量の宣言 → 価格の宣言 → 書式文字列の生成 → 出力 の順にコードを並べなさい。",
+    "items": [
+     {
+      "id": "p14q08_c1",
+      "text": "String item = \"Book\";"
+     },
+     {
+      "id": "p14q08_c2",
+      "text": "int quantity = 2;"
+     },
+     {
+      "id": "p14q08_c3",
+      "text": "double price = 12500.5;"
+     },
+     {
+      "id": "p14q08_c4",
+      "text": "String result = String.format(\"%s %d個: %.1f円\", item, quantity, price);"
+     },
+     {
+      "id": "p14q08_c5",
+      "text": "System.out.println(result);"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "java14-q8_w01",
+      "text": "String result = String.format(\"%d %s個: %.1f円\", item, quantity, price);"
+     },
+     {
+      "id": "java14-q8_w02",
+      "text": "System.out.println(price);"
+     }
+    ],
+    "explanation": "String.format() では %s に商品名、%d に整数の数量、%.1f に実数の価格が入る。使う変数を先に宣言し、作られた文字列を result に保存してから出力する。結果は Book 2個: 12500.5円 である。"
+   }
+  ]
+ },
+ "ko": {
+  "steps": [
+   {
+    "id": "java14-q1",
+    "type": "code_exercise",
+    "title": "길이와 문자 확인",
+    "prompt": "문자열 길이와 첫 번째 문자를 출력하도록 빈칸에 메서드 이름을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "String text = \"Java\";\n\nSystem.out.println(text.[[0]]());\nSystem.out.println(text.[[1]](0));",
+    "tokens": [
+     "length",
+     "charAt",
+     "size",
+     "count",
+     "indexOf",
+     "substring"
+    ],
+    "answers": [
+     "length",
+     "charAt"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "4\nJ"
+    },
+    "explanation": "length()는 문자 개수를 반환해 4, charAt(0)은 인덱스 0의 문자 J를 반환한다. size()·count()는 String에 없는 이름이라 컴파일 오류이고, indexOf·substring은 인자가 필요해 이 자리에 그대로 쓰면 오류가 난다."
+   },
+   {
+    "id": "java14-q2",
+    "type": "mini_check",
+    "title": "부분 문자열 추출",
+    "prompt": "\"JavaBasic\"에서 \"Basic\"만 잘라내는 코드 한 줄로 옳은 것은?",
+    "code": "String text = \"JavaBasic\";\n\n____\n\nSystem.out.println(result);",
+    "options": [
+     {
+      "id": "A",
+      "text": "`String result = text.substring(0, 4);`"
+     },
+     {
+      "id": "B",
+      "text": "`String result = text.substring(4);`"
+     },
+     {
+      "id": "C",
+      "text": "`String result = text.charAt(4);`"
+     },
+     {
+      "id": "D",
+      "text": "`String result = text.substring(5);`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "substring(4)는 인덱스 4의 B부터 문자열 끝까지 반환해 Basic이 된다. substring(0, 4)는 인덱스 0~3인 Java, substring(5)는 asic이 되고, charAt(4)는 문자 하나(char)라 String 변수에 담으면 컴파일 오류가 난다."
+   },
+   {
+    "id": "java14-q3",
+    "type": "code_exercise",
+    "title": "문자열 검색",
+    "prompt": "\"Java\" 포함 여부와 \"Beginner\"가 시작되는 인덱스를 구하도록 빈칸에 메서드 이름을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "String text = \"Java Beginner\";\n\nboolean hasJava = text.[[0]](\"Java\");\nint beginnerIndex = text.[[1]](\"Beginner\");\n\nSystem.out.println(hasJava);\nSystem.out.println(beginnerIndex);",
+    "tokens": [
+     "contains",
+     "indexOf",
+     "equals",
+     "substring",
+     "replace",
+     "length"
+    ],
+    "answers": [
+     "contains",
+     "indexOf"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "true\n5"
+    },
+    "explanation": "contains()는 포함 여부를 boolean으로 돌려줘 true, indexOf()는 처음 나타난 위치를 돌려줘 Beginner의 시작 인덱스 5가 된다. equals()는 전체 내용이 같은지 비교하므로 false이고, substring·replace·length는 이 자리에서 반환값 자료형이 맞지 않아 컴파일 오류가 난다."
+   },
+   {
+    "id": "java14-q4",
+    "type": "mini_check",
+    "title": "문자열 메서드의 반환값",
+    "prompt": "다음 코드의 실행 결과로 옳은 것은?",
+    "code": "String text = \" java \";\n\ntext.trim();\ntext.toUpperCase();\n\nSystem.out.println(\"[\" + text + \"]\");",
+    "options": [
+     {
+      "id": "A",
+      "text": "`[JAVA]`"
+     },
+     {
+      "id": "B",
+      "text": "`[java]`"
+     },
+     {
+      "id": "C",
+      "text": "`[ java ]`"
+     },
+     {
+      "id": "D",
+      "text": "`[ JAVA ]`"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "trim()과 toUpperCase()는 새 문자열을 반환할 뿐 text 자체를 바꾸지 않는데, 반환값을 저장하지 않았으므로 text는 그대로 \" java \"다. 따라서 앞뒤 공백이 그대로 남아 [ java ]가 출력된다. 실제로 바꾸려면 text = text.trim().toUpperCase();처럼 결과를 다시 저장해야 한다."
+   },
+   {
+    "id": "java14-q5",
+    "type": "code_exercise",
+    "title": "문자열 분할",
+    "prompt": "쉼표를 기준으로 문자열을 분할하고 모든 결과를 출력하도록 빈칸에 메서드·자료형·기호를 채우시오.",
+    "lang": "java",
+    "codeTemplate": "String data = \"Java,Python,JavaScript\";\n\nString[] languages = data.[[0]](\",\");\n\nfor ([[1]] language [[2]] languages) {\n    System.out.println(language);\n}",
+    "tokens": [
+     "split",
+     "String",
+     ":",
+     "replace",
+     "String[]",
+     ";"
+    ],
+    "answers": [
+     "split",
+     "String",
+     ":"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Java\nPython\nJavaScript"
+    },
+    "explanation": "split(\",\")은 쉼표를 기준으로 나눠 String[] 배열을 돌려주고, 향상된 for문은 (String language : languages) 형태로 배열 요소를 하나씩 꺼낸다. 요소의 자료형은 배열 요소와 같은 String이고 구분 기호는 콜론(:)이다. String[]는 요소가 아니라 배열 전체의 자료형이라 맞지 않고, replace는 인자가 두 개 필요하며 세미콜론은 이 자리에 올 수 없어 컴파일 오류가 난다."
+   },
+   {
+    "id": "java14-q6",
+    "type": "mini_check",
+    "title": "세로 막대를 기준으로 분할",
+    "prompt": "문자열 red|green|blue를 세로 막대 문자 |를 기준으로 분할하는 코드로 옳은 것은?",
+    "code": "String colors = \"red|green|blue\";\n\n____",
+    "options": [
+     {
+      "id": "A",
+      "text": "`String[] parts = colors.split(\"|\");`"
+     },
+     {
+      "id": "B",
+      "text": "`String[] parts = colors.split(\"/\");`"
+     },
+     {
+      "id": "C",
+      "text": "`String[] parts = colors.split(\"\\\\|\");`"
+     },
+     {
+      "id": "D",
+      "text": "`String[] parts = colors.split(\",\");`"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "split()의 구분자는 정규 표현식으로 처리된다. |는 정규 표현식에서 특별한 의미가 있으므로 문자 자체로 나누려면 역슬래시로 이스케이프해야 하고, 자바 문자열 안에서는 역슬래시를 한 번 더 써 \"\\\\|\"로 작성한다. \"|\"만 쓰면 모든 위치에 매칭돼 의도대로 나뉘지 않고, \"/\"·\",\"는 이 문자열에 없어 분할되지 않는다."
+   },
+   {
+    "id": "java14-q7",
+    "type": "code_exercise",
+    "title": "printf() 형식 완성",
+    "prompt": "이름·점수·평균을 지정된 형식으로 출력하도록 빈칸에 메서드 이름과 형식 지정자를 채우시오. (평균은 소수점 둘째 자리까지)",
+    "lang": "java",
+    "codeTemplate": "String name = \"Lee\";\nint score = 95;\ndouble average = 92.345;\n\nSystem.out.[[0]](\n    \"이름: [[1]], 점수: [[2]], 평균: [[3]][[4]]\",\n    name,\n    score,\n    average\n);",
+    "tokens": [
+     "printf",
+     "%s",
+     "%d",
+     "%.2f",
+     "%n",
+     "println",
+     "%f"
+    ],
+    "answers": [
+     "printf",
+     "%s",
+     "%d",
+     "%.2f",
+     "%n"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "이름: Lee, 점수: 95, 평균: 92.35"
+    },
+    "explanation": "printf()는 형식 문자열의 지정자 자리에 뒤의 값을 순서대로 넣어 출력한다. 문자열 name은 %s, 정수 score는 %d, 실수 average는 소수점 둘째 자리까지 %.2f로 나타내고 마지막 %n으로 줄을 바꾼다. 92.345는 %.2f에서 반올림돼 92.35가 된다. %d 자리에 문자열이 오면 실행 중 오류가 나므로 값의 자료형에 맞는 지정자를 써야 하고, printf 대신 println을 쓰면 이런 형식 인자를 받을 수 없어 컴파일 오류가 난다."
+   },
+   {
+    "id": "java14-q8",
+    "type": "order",
+    "title": "주문 문장 만들기",
+    "prompt": "상품명 선언 → 수량 선언 → 가격 선언 → 형식 문자열 생성 → 출력 순서로 코드를 배열하시오.",
+    "items": [
+     {
+      "id": "p14q08_c1",
+      "text": "String item = \"Book\";"
+     },
+     {
+      "id": "p14q08_c2",
+      "text": "int quantity = 2;"
+     },
+     {
+      "id": "p14q08_c3",
+      "text": "double price = 12500.5;"
+     },
+     {
+      "id": "p14q08_c4",
+      "text": "String result = String.format(\"%s %d개: %.1f원\", item, quantity, price);"
+     },
+     {
+      "id": "p14q08_c5",
+      "text": "System.out.println(result);"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "java14-q8_w01",
+      "text": "String result = String.format(\"%d %s개: %.1f원\", item, quantity, price);"
+     },
+     {
+      "id": "java14-q8_w02",
+      "text": "System.out.println(price);"
+     }
+    ],
+    "explanation": "String.format()에서 %s에는 상품명, %d에는 정수 수량, %.1f에는 실수 가격이 들어간다. 사용할 변수들을 먼저 선언하고, 만들어진 문자열을 result에 저장한 다음 출력한다. 결과는 Book 2개: 12500.5원이다."
+   }
+  ]
+ }
+}

@@ -1,0 +1,543 @@
+---
+lesson_id: DEV-JAVA-02-05
+title: "Java중급05 패키지·import·프로젝트 구조"
+module: DEV-JAVA-01
+language: ko
+level: foundation
+est_minutes: 20
+tags: [java, intermediate, oop, package, import, static-content]
+---
+
+## 학습 목표
+
+이 파트를 학습한 후 다음 작업을 할 수 있어야 합니다.
+
+- 클래스가 많아질 때 패키지가 필요한 이유를 설명한다.
+- 클래스가 속할 패키지를 선언한다.
+- 패키지 이름과 폴더 구조를 일치시킨다.
+- 다른 패키지의 클래스를 import하여 사용한다.
+- 같은 패키지에서는 import가 필요하지 않음을 이해한다.
+- 여러 파일로 이루어진 Java 프로젝트의 기본 구조를 구성한다.
+
+## 수업 내용
+
+### Part 1. 패키지가 필요한 이유
+
+지금까지는 클래스 수가 적어 하나의 위치에서 관리할 수 있었다.
+
+```text
+Main.java
+Student.java
+Teacher.java
+Product.java
+Order.java
+```
+
+프로젝트가 커지면 클래스 파일이 계속 늘어난다.
+
+```text
+Main.java
+Student.java
+Teacher.java
+Product.java
+Order.java
+User.java
+Admin.java
+Payment.java
+Delivery.java
+Review.java
+```
+
+모든 클래스를 한곳에 두면 다음 문제가 생긴다.
+
+- 원하는 클래스를 찾기 어렵다.
+- 어떤 기능에 속한 클래스인지 구분하기 어렵다.
+- 같은 이름의 클래스를 만들 수 없다.
+- 프로젝트의 기능별 구조를 파악하기 어렵다.
+
+패키지는 관련 있는 클래스를 하나의 그룹으로 묶는다.
+
+```text
+school
+ ├─ Student.java
+ └─ Teacher.java
+
+shop
+ ├─ Product.java
+ └─ Order.java
+```
+
+학교와 관련된 클래스는 school, 쇼핑과 관련된 클래스는 shop 패키지로 나눌 수 있다.
+
+패키지가 다르면 같은 이름의 클래스도 구분할 수 있다.
+
+```text
+shop.User
+admin.User
+```
+
+두 클래스의 이름은 모두 User지만 전체 이름이 다르다.
+
+- shop.User: 쇼핑몰 사용자
+- admin.User: 관리자 사용자
+
+클래스가 많아졌을 때 기능별로 정리하고 이름 충돌을 막기 위해 패키지를 사용한다.
+
+### Part 2. package 선언
+
+클래스가 속할 패키지는 파일의 첫 부분에서 선언한다.
+
+```java
+package school;
+
+public class Student {
+}
+```
+
+기본 형식은 다음과 같다.
+
+```java
+package 패키지이름;
+```
+
+`package school;`은 Student 클래스가 school 패키지에 속한다는 뜻이다.
+
+일반적으로 패키지 이름은 영문 소문자로 작성한다.
+
+```java
+package school;
+package shop;
+package account;
+```
+
+여러 단계의 패키지는 점으로 구분한다.
+
+```java
+package school.student;
+package shop.order;
+```
+
+패키지 선언은 주석을 제외하고 파일의 첫 번째 실행 가능한 선언이어야 한다.
+
+```java
+package school;
+
+public class Student {
+}
+```
+
+다음 위치에는 작성할 수 없다.
+
+```java
+public class Student {
+    package school; // 컴파일 오류
+}
+```
+
+**자주 하는 실수**
+
+패키지 이름 뒤에는 세미콜론이 필요하다.
+
+```java
+package school // 컴파일 오류
+package school;
+```
+
+하나의 소스 파일에는 하나의 package 선언만 작성한다.
+
+```java
+package school;
+package shop; // 컴파일 오류
+```
+
+### Part 3. 패키지와 폴더 구조
+
+패키지 이름은 일반적으로 소스 파일이 들어 있는 폴더 구조와 일치시킨다.
+
+```text
+src/
+└─ school/
+   └─ Student.java
+```
+
+Student.java:
+
+```java
+package school;
+
+public class Student {
+}
+```
+
+여러 단계의 패키지는 폴더도 여러 단계로 구성한다.
+
+```text
+src/
+└─ school/
+   └─ student/
+      └─ Student.java
+```
+
+Student.java:
+
+```java
+package school.student;
+
+public class Student {
+}
+```
+
+다음 패키지 이름은:
+
+```java
+package school.student;
+```
+
+다음 폴더 구조에 대응한다.
+
+```text
+school/student/
+```
+
+패키지 이름과 폴더 구조가 다르면 IDE나 빌드 도구에서 클래스를 찾지 못하거나 잘못된 패키지 오류가 발생할 수 있다.
+
+public 클래스의 이름과 파일 이름도 일치시킨다.
+
+```java
+// Student.java
+public class Student {
+}
+```
+
+다음 구성은 잘못되었다.
+
+```java
+// Member.java
+public class Student {
+}
+```
+
+public 클래스 이름이 Student라면 파일 이름도 Student.java여야 한다.
+
+### Part 4. 같은 패키지의 클래스 사용
+
+같은 패키지에 있는 클래스는 import 없이 사용할 수 있다.
+
+프로젝트 구조:
+
+```text
+src/
+└─ school/
+   ├─ Student.java
+   └─ SchoolMain.java
+```
+
+Student.java:
+
+```java
+package school;
+
+public class Student {
+    public void introduce() {
+        System.out.println("학생입니다.");
+    }
+}
+```
+
+SchoolMain.java:
+
+```java
+package school;
+
+public class SchoolMain {
+    public static void main(String[] args) {
+        Student student = new Student();
+
+        student.introduce();
+    }
+}
+```
+
+두 클래스 모두 school 패키지에 속하므로 다음 import는 필요하지 않다.
+
+```java
+import school.Student;
+```
+
+같은 패키지의 클래스는 클래스 이름만으로 서로 찾을 수 있다.
+
+예제에 사용한 public의 자세한 접근 규칙은 다음 파트에서 학습한다. 여기서는 다른 파일에서 클래스를 사용하기 위한 형태로 사용한다.
+
+### Part 5. 다른 패키지와 import
+
+다른 패키지에 있는 클래스를 짧은 이름으로 사용하려면 import를 작성한다.
+
+프로젝트 구조:
+
+```text
+src/
+├─ school/
+│  └─ Student.java
+└─ app/
+   └─ Main.java
+```
+
+Student.java:
+
+```java
+package school;
+
+public class Student {
+    public void introduce() {
+        System.out.println("학생입니다.");
+    }
+}
+```
+
+Main.java:
+
+```java
+package app;
+
+import school.Student;
+
+public class Main {
+    public static void main(String[] args) {
+        Student student = new Student();
+
+        student.introduce();
+    }
+}
+```
+
+`import school.Student;`는 school 패키지의 Student 클래스를 현재 파일에서 Student라는 짧은 이름으로 사용할 수 있게 한다.
+
+import는 package 선언 다음, 클래스 선언 전에 작성한다.
+
+```java
+package app;
+
+import school.Student;
+
+public class Main {
+}
+```
+
+다음 순서로 작성하면 안 된다.
+
+```java
+import school.Student;
+package app; // 컴파일 오류
+```
+
+올바른 작성 순서는 다음과 같다.
+
+- package 선언
+- import 선언
+- class 선언
+
+### Part 6. import를 사용하는 이유
+
+import가 없더라도 클래스의 전체 이름을 작성하면 다른 패키지의 클래스를 사용할 수 있다.
+
+```java
+school.Student student = new school.Student();
+```
+
+이를 전체 패키지 이름을 포함한 클래스 이름이라고 한다.
+
+같은 클래스를 여러 번 사용하면 전체 이름을 반복해야 한다.
+
+```java
+school.Student first = new school.Student();
+school.Student second = new school.Student();
+```
+
+import를 사용하면 코드가 짧아진다.
+
+```java
+import school.Student;
+
+Student first = new Student();
+Student second = new Student();
+```
+
+다른 패키지의 클래스를 여러 번 사용하면서 전체 이름을 반복하지 않기 위해 import를 사용한다.
+
+import는 클래스를 설치하거나 파일을 복사하는 기능이 아니다. 컴파일러에게 짧은 클래스 이름이 어느 패키지의 클래스를 뜻하는지 알려준다.
+
+### Part 7. import가 필요하지 않은 경우
+
+다음 경우에는 import를 작성하지 않아도 된다.
+
+**현재 클래스와 같은 패키지에 있는 경우**
+
+```java
+package school;
+```
+
+같은 school 패키지에 있는 클래스는 바로 사용할 수 있다.
+
+**java.lang 패키지에 있는 경우**
+
+String과 System 등의 클래스는 java.lang 패키지에 속한다.
+
+```java
+String message = "Java";
+System.out.println(message);
+```
+
+다음 import는 자동으로 적용되므로 직접 작성하지 않는다.
+
+```java
+import java.lang.String;
+import java.lang.System;
+```
+
+**클래스의 전체 이름을 직접 작성하는 경우**
+
+```java
+java.util.Scanner scanner =
+        new java.util.Scanner(System.in);
+```
+
+전체 이름을 작성했으므로 다음 import는 필요하지 않다.
+
+```java
+import java.util.Scanner;
+```
+
+전체 이름은 서로 다른 패키지에 같은 이름의 클래스가 있을 때 구분하기 위해 사용할 수 있다.
+
+### Part 8. 여러 클래스를 import하기
+
+필요한 클래스를 각각 import할 수 있다.
+
+```java
+import java.util.Scanner;
+import java.util.ArrayList;
+```
+
+별표 `*`를 사용하면 한 패키지에 직접 포함된 여러 클래스를 불러올 수도 있다.
+
+```java
+import java.util.*;
+```
+
+하지만 `*`는 하위 패키지까지 포함하지 않는다.
+
+```java
+import java.util.*;
+```
+
+위 코드는 다음 패키지의 클래스를 자동으로 포함하지 않는다.
+
+```text
+java.util.concurrent
+java.util.function
+```
+
+어떤 클래스를 사용하는지 쉽게 확인하려면 필요한 클래스를 직접 작성하는 방식이 명확하다.
+
+```java
+import java.util.Scanner;
+import java.util.ArrayList;
+```
+
+### Part 9. 프로젝트 기본 구조
+
+여러 파일을 사용하는 Java 프로젝트는 일반적으로 소스 코드를 src 폴더 아래에 배치한다.
+
+```text
+project/
+└─ src/
+   ├─ app/
+   │  └─ Main.java
+   ├─ school/
+   │  ├─ Student.java
+   │  └─ Teacher.java
+   └─ shop/
+      ├─ Product.java
+      └─ Order.java
+```
+
+각 파일의 package 선언은 src 아래의 폴더 구조와 맞춘다.
+
+Main.java:
+
+```java
+package app;
+```
+
+Student.java:
+
+```java
+package school;
+```
+
+Product.java:
+
+```java
+package shop;
+```
+
+프로젝트를 기능별 패키지로 나누면 다음 장점이 있다.
+
+- 관련 클래스를 함께 찾을 수 있다.
+- 클래스의 역할과 소속을 파악하기 쉽다.
+- 같은 이름의 클래스를 서로 다른 패키지에서 사용할 수 있다.
+- 기능이 추가되어도 파일을 체계적으로 관리할 수 있다.
+
+처음부터 클래스가 한두 개뿐인 짧은 연습 프로그램이라면 패키지가 없어도 실행할 수 있다. 하지만 여러 기능과 파일을 가진 프로젝트에서는 패키지를 사용하는 것이 좋다.
+
+### 종합 예제
+
+프로젝트 구조:
+
+```text
+src/
+├─ app/
+│  └─ Main.java
+└─ library/
+   └─ Book.java
+```
+
+Book.java:
+
+```java
+package library;
+
+public class Book {
+    public void showTitle() {
+        System.out.println("Java Guide");
+    }
+}
+```
+
+Main.java:
+
+```java
+package app;
+
+import library.Book;
+
+public class Main {
+    public static void main(String[] args) {
+        Book book = new Book();
+
+        book.showTitle();
+    }
+}
+```
+
+**실행 결과**
+
+```text
+Java Guide
+```
+
+Book 클래스는 library 패키지에 있고 Main 클래스는 app 패키지에 있다. Main에서 다른 패키지의 Book을 짧은 이름으로 사용하기 위해 `import library.Book;`을 작성한다.
+
+## 다음으로
+
+다음 학습 내용은 [Part 6「접근 제어자·접근 범위」](/dev/lessons/DEV-JAVA-02-06)이다.

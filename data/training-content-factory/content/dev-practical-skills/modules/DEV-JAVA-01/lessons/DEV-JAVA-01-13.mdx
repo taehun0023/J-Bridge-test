@@ -1,0 +1,458 @@
+---
+lesson_id: DEV-JAVA-01-13
+title: "Java初級13 文字列① 生成・連結・比較"
+module: DEV-JAVA-01
+language: ja
+level: foundation
+est_minutes: 18
+tags: [java, basics, string, compare, static-content]
+---
+
+## 学習目標
+
+このパートを学習した後、次の作業ができるようにならなければならない。
+
+- String 変数を宣言し、文字列を生成する。
+- 文字列リテラルと new String() の違いを理解する。
+- `+` と `+=` で文字列を連結する。
+- 文字列と数字が一緒に連結される順序を理解する。
+- `==` と `equals()` の違いを区別する。
+- 文字列の内容が異なるかを比較できる。
+
+## 授業内容
+
+### Part 1. 文字列の生成
+
+**概念説明**
+
+- 文字列は複数の文字がつながった値を意味する。
+- Java では文字列を String 型で表現する。
+- String は基本型ではなく、大文字の S で始まる。
+- 文字列の値は二重引用符 `" "` で囲む。
+- 一般的に文字列リテラルを変数に直接代入して生成する。
+
+**基本の文法**
+
+```java
+String language = "Java";
+```
+
+**コード文法の分解**
+
+| コード | 意味 |
+|---|---|
+| `String` | 文字列の型 |
+| `language` | 文字列変数の名前 |
+| `"Java"` | 文字列リテラル |
+| `=` | 文字列を変数に保存 |
+
+**複数の文字列の生成**
+
+```java
+String name = "Lee";
+String language = "Java";
+String message = "学習開始";
+String empty = "";
+```
+
+`""` は文字が1つもない空文字列である。
+
+**文字と文字列の違い**
+
+```java
+char grade = 'A';
+String text = "A";
+```
+
+| 区分 | 型 | 書く記号 |
+|---|---|---|
+| 1文字 | `char` | 一重引用符 `' '` |
+| 文字列 | `String` | 二重引用符 `" "` |
+
+**new String() で生成**
+
+```java
+String first = "Java";
+String second = new String("Java");
+```
+
+両方の変数の文字列の内容はすべて "Java" である。しかし、文字列を新しく作るために new String() を直接使う必要はほとんどない。一般的には次の方法を使う。
+
+```java
+String language = "Java";
+```
+
+**問題とは別の例**
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        String course = "Java 初級";
+        String part = "文字列";
+
+        System.out.println(course);
+        System.out.println(part);
+    }
+}
+```
+
+**実行結果**
+
+```
+Java 初級
+文字列
+```
+
+**よくあるミス**
+
+String の最初の文字を小文字で書いてはいけない。
+
+```java
+string language = "Java"; // エラー
+```
+
+正しいコードは次の通りである。
+
+```java
+String language = "Java";
+```
+
+文字列に一重引用符を使ってもいけない。
+
+```java
+String language = 'Java'; // エラー
+String language = "Java"; // 正しい
+```
+
+### Part 2. 文字列の連結
+
+**概念説明**
+
+- `+` 演算子を使うと、複数の文字列を1つに連結できる。
+- 文字列と文字列だけでなく、文字列と数字も連結できる。
+- 連結された結果は新しい文字列である。
+- `+=` を使うと、既存の変数に文字列を連結した結果を再び保存できる。
+- 文字列は一度作られると内部の内容を直接変更できない。
+
+**文字列と文字列の連結**
+
+```java
+String first = "Hello";
+String second = "Java";
+
+String result = first + " " + second;
+
+System.out.println(result);
+```
+
+**実行結果**
+
+```
+Hello Java
+```
+
+**コード文法の分解**
+
+```java
+String result = first + " " + second;
+```
+
+| 部分 | 意味 |
+|---|---|
+| `first` | "Hello" |
+| `" "` | 空白1つ |
+| `second` | "Java" |
+| `+` | 文字列の連結 |
+| `result` | 連結結果を保存する変数 |
+
+**+= で連結**
+
+```java
+String message = "Java";
+
+message += " Beginner";
+
+System.out.println(message);
+```
+
+```
+Java Beginner
+```
+
+次のコードと同じ意味である。
+
+```java
+message = message + " Beginner";
+```
+
+**文字列と数字の連結**
+
+```java
+String name = "Java";
+int level = 1;
+
+String result = name + " Level " + level;
+
+System.out.println(result);
+```
+
+```
+Java Level 1
+```
+
+文字列と数字を `+` で連結すると、数字が文字列の形で連結される。
+
+**計算と文字列連結の順序**
+
+```java
+System.out.println("結果: " + 10 + 20);
+```
+
+左から文字列の連結が実行される。
+
+- `"結果: " + 10` → `"結果: 10"`
+- `"結果: 10" + 20` → `"結果: 1020"`
+
+実行結果:
+
+```
+結果: 1020
+```
+
+数字を先に計算するには括弧を使う。
+
+```java
+System.out.println("結果: " + (10 + 20));
+```
+
+```
+結果: 30
+```
+
+**文字列連結の結果を保存**
+
+```java
+String message = "Java";
+String result = message + " Beginner";
+
+System.out.println(message);
+```
+
+上のコードは連結結果を result に保存したので、message はそのまま "Java" である。message 自体を変えるには次のように message に再代入する。
+
+```java
+message = message + " Beginner";
+```
+
+または次のように書く。
+
+```java
+message += " Beginner";
+```
+
+**よくあるミス**
+
+文字列の連結と数字の計算の順序を混同してはいけない。
+
+```java
+String result = "合計: " + 5 + 3;
+```
+
+```
+合計: 53
+```
+
+数字を先に足すには括弧を使う。
+
+```java
+String result = "合計: " + (5 + 3);
+```
+
+```
+合計: 8
+```
+
+### Part 3. == と equals() の比較
+
+**概念説明**
+
+- 文字列の内容が同じかを比較するときは `equals()` を使う。
+- `==` は2つの変数が同じ文字列オブジェクトを指しているかを比較する。
+- 文字列リテラル同士は `==` が true になることもあるが、内容の比較には使ってはいけない。
+- `equals()` は実際の文字列の内容を比較して true または false を返す。
+
+**equals() の基本文法**
+
+```java
+文字列1.equals(文字列2)
+```
+
+**内容の比較**
+
+```java
+String first = "Java";
+String second = new String("Java");
+
+System.out.println(first.equals(second));
+```
+
+実行結果:
+
+```
+true
+```
+
+両方の文字列の内容がすべて "Java" だからである。
+
+**== の比較**
+
+```java
+String first = "Java";
+String second = new String("Java");
+
+System.out.println(first == second);
+```
+
+実行結果:
+
+```
+false
+```
+
+second は new String() で別途生成されたので、同じ対象を指していない。
+
+**比較結果の確認**
+
+```java
+String input = "admin";
+
+if (input.equals("admin")) {
+    System.out.println("管理者");
+} else {
+    System.out.println("一般ユーザー");
+}
+```
+
+```
+管理者
+```
+
+**文字列の内容が異なるかの比較**
+
+`equals()` の結果の前に `!` を付けると、内容が異なるかを確認できる。
+
+```java
+String first = "Java";
+String second = "Python";
+
+boolean different = !first.equals(second);
+
+System.out.println(different);
+```
+
+```
+true
+```
+
+**実行の流れ**
+
+- `first.equals(second)` → false
+- `!false` → true
+
+**よくあるミス**
+
+文字列の内容を `==` で比較しない。
+
+```java
+String input = new String("admin");
+
+if (input == "admin") {
+    System.out.println("管理者");
+}
+```
+
+文字列の内容が同じでも条件が false になることがある。正しいコードは次の通りである。
+
+```java
+if (input.equals("admin")) {
+    System.out.println("管理者");
+}
+```
+
+### Part 4. 文字列リテラルと == の注意点
+
+**概念説明**
+
+- Java は同じ文字列リテラルを共有して使うことができる。
+- したがって、リテラルで作った2つの文字列を `==` で比較すると true になることがある。
+- しかし、new String() で作った文字列と比較すると false になることがある。
+- この違いのため、`==` の結果に頼って文字列の内容を比較してはいけない。
+
+**例**
+
+```java
+String first = "Java";
+String second = "Java";
+String third = new String("Java");
+
+System.out.println(first == second);
+System.out.println(first == third);
+
+System.out.println(first.equals(second));
+System.out.println(first.equals(third));
+```
+
+**実行結果**
+
+```
+true
+false
+true
+true
+```
+
+**結果のまとめ**
+
+| 比較 | 結果 | 理由 |
+|---|---|---|
+| `first == second` | true | 同じ文字列リテラルを共有 |
+| `first == third` | false | third は新しく生成 |
+| `first.equals(second)` | true | 内容が同じ |
+| `first.equals(third)` | true | 内容が同じ |
+
+**正しい比較の基準**
+
+```java
+first.equals(second)
+```
+
+文字列を比較するときは、生成方法に関係なく `equals()` を使う。
+
+**char と String の比較**
+
+| 区分 | char | String |
+|---|---|---|
+| 表現する対象 | 1文字 | 文字列 |
+| 書く記号 | `'A'` | `"A"` |
+| 型の種類 | 基本型 | 参照型 |
+| 等しいかの比較 | `==` | `equals()` |
+
+```java
+char firstGrade = 'A';
+char secondGrade = 'A';
+
+System.out.println(firstGrade == secondGrade);
+```
+
+```java
+String firstText = "A";
+String secondText = new String("A");
+
+System.out.println(firstText.equals(secondText));
+```
+
+両方の結果とも true である。
+
+## 次へ
+
+次は [Part 14「文字列② メソッド・分割・書式」](/dev/lessons/DEV-JAVA-01-14)を学ぶ。

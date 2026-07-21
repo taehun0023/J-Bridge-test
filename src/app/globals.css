@@ -21,14 +21,14 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-geist-sans), var(--font-noto-jp);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-geist-sans), var(--font-noto-jp), system-ui, -apple-system, sans-serif;
 }
 
 /* Fallback styles for code blocks — ensures highlight.js theme applies */
@@ -74,4 +74,17 @@ body.navigating * {
     border: 1px solid rgba(0, 0, 0, 0.06);
     border-radius: 1rem;
   }
+
+  /* 오답 피드백 토스트 — 슥 나타났다 살짝 튕기고 사라짐 */
+  .animate-toast-pop {
+    animation: toast-pop 1.5s ease-in-out forwards;
+  }
+}
+
+@keyframes toast-pop {
+  0% { opacity: 0; transform: translate(-50%, 14px) scale(0.94); }
+  12% { opacity: 1; transform: translate(-50%, -4px) scale(1.03); }
+  20% { transform: translate(-50%, 0) scale(1); }
+  78% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, 8px) scale(0.98); }
 }

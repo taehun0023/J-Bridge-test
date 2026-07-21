@@ -1,0 +1,338 @@
+---
+lesson_id: DEV-JAVA-01-05
+title: "Java초급05 조건분기① if·else"
+module: DEV-JAVA-01
+language: ko
+level: foundation
+est_minutes: 18
+tags: [java, basics, if, conditionals, static-content]
+---
+
+## 학습 목표
+
+이 파트를 학습한 후 다음 작업을 할 수 있어야 합니다.
+
+- if로 조건이 참일 때만 코드를 실행한다.
+- if-else로 조건에 따라 두 가지 흐름 중 하나를 선택한다.
+- 비교·논리 연산자로 조건식을 작성한다.
+- 중첩 if로 조건을 단계적으로 검사한다.
+- 조건문의 실행 흐름과 자주 발생하는 오류를 이해한다.
+
+## 수업 내용
+
+### Part 1. if 조건문
+
+**개념 설명**
+
+- if는 조건에 따라 코드의 실행 여부를 결정한다.
+- 괄호 `( )` 안에는 결과가 true 또는 false인 조건식을 작성한다.
+- 조건이 true이면 중괄호 안의 코드를 실행한다.
+- 조건이 false이면 중괄호 안의 코드를 건너뛴다.
+- 조건문이 끝난 후에는 다음 코드를 계속 실행한다.
+
+**코드 문법**
+
+```java
+if (조건식) {
+    조건이 true일 때 실행할 코드
+}
+```
+
+**예제**
+
+```java
+int score = 80;
+
+if (score >= 60) {
+    System.out.println("합격");
+}
+
+System.out.println("검사 완료");
+```
+
+**실행 흐름과 결과**
+
+1. `score >= 60`을 계산한다.
+2. 결과가 true이므로 "합격"을 출력한다.
+3. 조건문이 끝난 후 "검사 완료"를 출력한다.
+
+```
+합격
+검사 완료
+```
+
+score가 50이라면 조건이 false이므로 다음과 같이 출력된다.
+
+```
+검사 완료
+```
+
+**자주 하는 실수**
+
+조건식에는 boolean 결과가 필요하다.
+
+```java
+if (score) { // 오류: score는 int
+    System.out.println("실행");
+}
+```
+
+다음과 같이 비교식을 작성해야 한다.
+
+```java
+if (score >= 60) {
+    System.out.println("실행");
+}
+```
+
+### Part 2. if-else 조건문
+
+**개념 설명**
+
+- if-else는 조건에 따라 두 가지 코드 중 하나를 실행한다.
+- 조건이 true이면 if 영역을 실행한다.
+- 조건이 false이면 else 영역을 실행한다.
+- 두 영역이 동시에 실행되는 경우는 없다.
+- else에는 별도의 조건식을 작성하지 않는다.
+
+**코드 문법**
+
+```java
+if (조건식) {
+    조건이 true일 때 실행할 코드
+} else {
+    조건이 false일 때 실행할 코드
+}
+```
+
+**예제**
+
+```java
+int score = 55;
+
+if (score >= 60) {
+    System.out.println("합격");
+} else {
+    System.out.println("불합격");
+}
+```
+
+**실행 흐름과 결과**
+
+1. `score >= 60`을 계산한다.
+2. `55 >= 60`은 false다.
+3. if 영역을 건너뛴다.
+4. else 영역의 "불합격"을 출력한다.
+
+```
+불합격
+```
+
+**자주 하는 실수**
+
+else 뒤에는 조건식을 작성하지 않는다.
+
+```java
+if (score >= 60) {
+    System.out.println("합격");
+} else (score < 60) { // 오류
+    System.out.println("불합격");
+}
+```
+
+올바른 코드는 다음과 같다.
+
+```java
+if (score >= 60) {
+    System.out.println("합격");
+} else {
+    System.out.println("불합격");
+}
+```
+
+여러 조건을 순서대로 검사하는 else if는 다음 파트에서 학습한다.
+
+### Part 3. 비교·논리 연산자를 사용한 조건식
+
+**개념 설명**
+
+- 조건식은 비교 연산자와 논리 연산자로 작성할 수 있다.
+- `&&`는 모든 조건이 참일 때만 전체 결과가 참이다.
+- `||`는 하나 이상의 조건이 참이면 전체 결과가 참이다.
+- `!`는 기존 조건의 결과를 반대로 바꾼다.
+- 복잡한 조건은 괄호를 사용하면 의미가 명확해진다.
+
+**예제**
+
+```java
+int age = 20;
+boolean hasTicket = true;
+
+if (age >= 18 && hasTicket) {
+    System.out.println("입장 가능");
+} else {
+    System.out.println("입장 불가");
+}
+```
+
+**실행 흐름과 결과**
+
+1. `age >= 18`은 true다.
+2. `hasTicket`도 true다.
+3. `true && true`의 결과는 true다.
+4. "입장 가능"을 출력한다.
+
+```
+입장 가능
+```
+
+**다른 조건 예제**
+
+```java
+boolean weekend = false;
+boolean holiday = true;
+
+if (weekend || holiday) {
+    System.out.println("휴일");
+} else {
+    System.out.println("평일");
+}
+```
+
+```
+휴일
+```
+
+**자주 하는 실수**
+
+대입 연산자 `=`와 비교 연산자 `==`를 혼동하지 않아야 한다.
+
+```java
+boolean member = true;
+
+if (member == true) {
+    System.out.println("회원");
+}
+```
+
+boolean 변수는 다음처럼 직접 조건으로 사용하는 것이 더 간단하다.
+
+```java
+if (member) {
+    System.out.println("회원");
+}
+```
+
+반대 조건은 `!`를 사용한다.
+
+```java
+if (!member) {
+    System.out.println("비회원");
+}
+```
+
+### Part 4. 중첩 if
+
+**개념 설명**
+
+- if 내부에 다른 if를 작성할 수 있다.
+- 이를 중첩 if라고 한다.
+- 바깥쪽 조건이 true일 때만 안쪽 조건을 검사한다.
+- 여러 조건을 단계적으로 확인할 때 사용할 수 있다.
+- 중첩이 많아지면 실행 흐름이 복잡해지므로 필요한 경우에만 사용한다.
+
+**예제**
+
+```java
+int age = 20;
+boolean hasTicket = true;
+
+if (age >= 18) {
+    System.out.println("나이 확인 완료");
+
+    if (hasTicket) {
+        System.out.println("입장 가능");
+    }
+}
+```
+
+**실행 흐름과 결과**
+
+1. `age >= 18`을 검사한다.
+2. 결과가 true이므로 "나이 확인 완료"를 출력한다.
+3. 안쪽에서 `hasTicket`을 검사한다.
+4. 결과가 true이므로 "입장 가능"을 출력한다.
+
+```
+나이 확인 완료
+입장 가능
+```
+
+age가 18보다 작으면 안쪽 if는 검사하지 않는다.
+
+**자주 하는 실수**
+
+중괄호를 생략하면 코드가 어느 조건에 포함되는지 알아보기 어려워진다.
+
+```java
+if (age >= 18)
+    System.out.println("성인");
+    System.out.println("확인 완료");
+```
+
+실제로는 첫 번째 출력문만 if에 포함된다. 초급 단계에서는 항상 중괄호를 작성하는 것이 좋다.
+
+```java
+if (age >= 18) {
+    System.out.println("성인");
+    System.out.println("확인 완료");
+}
+```
+
+## 종합 예제
+
+```java
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        int score = scanner.nextInt();
+
+        if (score >= 60) {
+            System.out.println("합격");
+        } else {
+            System.out.println("불합격");
+        }
+
+        System.out.println("채점 완료");
+
+        scanner.close();
+    }
+}
+```
+
+입력:
+
+```
+75
+```
+
+실행 결과:
+
+```
+합격
+채점 완료
+```
+
+입력값이 40이라면 다음과 같이 출력된다.
+
+```
+불합격
+채점 완료
+```
+
+## 다음으로
+
+다음 학습 내용은 [Part 6「조건분기② else if·switch·삼항연산자」](/dev/lessons/DEV-JAVA-01-06)이다.

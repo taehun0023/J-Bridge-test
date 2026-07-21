@@ -1,241 +1,775 @@
 {
-  "version": 1,
-  "ja": {
-    "hook": {
-      "title": "メソッド呼び出し、どのクラスが実行される？",
-      "prompt": "親クラス型の変数にサブクラスのインスタンスを代入した場合、メソッドを呼ぶとどちらのクラスの処理が実行されるでしょうか？",
-      "takeaway": "継承・インターフェース・ポリモーフィズムの仕組みを理解し、実務コードの呼び出し先を正確に追跡できるようになります"
-    },
-    "steps": [
-      {
-        "id": "java-02-concept-1",
-        "type": "concept",
-        "title": "継承とメソッドオーバーライド",
-        "body": "Javaの`extends`キーワードでクラスを継承し、サブクラスは親クラスのフィールドとメソッドを引き継ぎます。`@Override`アノテーションを付けて親メソッドを上書きでき、実行時にはインスタンスの実際の型のメソッドが呼ばれます。",
-        "bullets": [
-          "サブクラスは親クラスのフィールドとメソッドを引き継ぐ",
-          "@Overrideを付けるとコンパイラがシグネチャのミスを検出してくれる"
-        ]
-      },
-      {
-        "id": "java-02-mini-1",
-        "type": "mini_check",
-        "title": "確認1",
-        "prompt": "`Animal animal = new Dog();`で`animal.speak()`を呼ぶと、どのクラスのメソッドが実行されますか？",
-        "options": [
-          { "id": "A", "text": "Animalクラスのspeak()が実行される" },
-          { "id": "B", "text": "Dogクラスのspeak()が実行される" },
-          { "id": "C", "text": "コンパイルエラーになる" }
-        ],
-        "correctOptionId": "B",
-        "explanation": "変数の型はAnimalですが、実行時にはインスタンスの実際の型（Dog）のメソッドが呼ばれます。これがメソッドオーバーライドとポリモーフィズムの基本動作です。"
-      },
-      {
-        "id": "java-02-concept-2",
-        "type": "concept",
-        "title": "インターフェースと抽象クラスの使い分け",
-        "body": "インターフェースは「何ができるか」を定義する契約であり、実装の詳細は持ちません。抽象クラスは共通ロジックと未実装メソッドの両方を持てます。Javaではクラスの多重継承はできませんが、インターフェースは複数実装できるため、設計の柔軟性が異なります。",
-        "bullets": [
-          "共通の実装コードを共有したい場合は抽象クラスを選ぶ",
-          "複数の型に共通の能力を持たせたい場合はインターフェースを選ぶ"
-        ]
-      },
-      {
-        "id": "java-02-mini-2",
-        "type": "mini_check",
-        "title": "確認2",
-        "prompt": "Javaでクラスの多重継承が必要な場面では、どの方法を使いますか？",
-        "options": [
-          { "id": "A", "text": "extendsで複数のクラスを継承する" },
-          { "id": "B", "text": "複数のインターフェースをimplementsする" },
-          { "id": "C", "text": "abstractキーワードを付ければ多重継承できる" }
-        ],
-        "correctOptionId": "B",
-        "explanation": "Javaではクラスの多重継承（extends複数）はできません。複数の能力を持たせたい場合は、インターフェースを複数implementsします。"
-      },
-      {
-        "id": "java-02-worked",
-        "type": "worked_example",
-        "title": "具体例：決済サービスのインターフェース設計",
-        "situation": "ECサイトでクレジットカード・コンビニ・銀行振込の3つの決済方法をサポートする設計を考えます。",
-        "reasoning": [
-          "PaymentProcessorインターフェースにprocess(Order)メソッドを定義",
-          "CreditCardProcessor、ConvenienceProcessor、BankTransferProcessorがそれぞれ実装",
-          "PaymentServiceはPaymentProcessor型のフィールドを持ち、具体的な決済方法に依存しない",
-          "新しい決済方法の追加はインターフェースを実装するクラスを1つ追加するだけで済む"
-        ],
-        "takeaway": "インターフェースを使うことで、既存コードを変更せずに新しい実装を追加できる拡張性の高い設計になります"
-      },
-      {
-        "id": "java-02-mini-3",
-        "type": "mini_check",
-        "title": "確認3",
-        "prompt": "@Overrideアノテーションを付けずにメソッドを定義し、シグネチャを間違えるとどうなりますか？",
-        "options": [
-          { "id": "A", "text": "コンパイルエラーが発生する" },
-          { "id": "B", "text": "実行時にエラーが発生する" },
-          { "id": "C", "text": "親クラスのメソッドがオーバーライドされず、新しいメソッドとして定義される" }
-        ],
-        "correctOptionId": "C",
-        "explanation": "@Overrideがないと、コンパイラはオーバーライドの意図を検知できません。シグネチャが微妙に異なると、新しいメソッドの定義になり、親のメソッドがそのまま実行されるバグにつながります。"
-      },
-      {
-        "id": "java-02-apply-1",
-        "type": "apply_check",
-        "title": "応用1",
-        "prompt": "通知サービスで共通のバリデーション処理を複数の通知方法（メール、SMS、プッシュ）で共有したい場合、最適な設計はどれですか？",
-        "options": [
-          { "id": "A", "text": "インターフェースを使い、各クラスでバリデーションを個別に実装する" },
-          { "id": "B", "text": "抽象クラスに共通バリデーションを実装し、サブクラスで送信処理のみを実装する" },
-          { "id": "C", "text": "1つの巨大なクラスにすべての通知ロジックをまとめる" }
-        ],
-        "correctOptionId": "B",
-        "explanation": "共通の実装コード（バリデーション）を共有する場合は抽象クラスが適しています。送信処理は各サブクラスで個別に実装し、共通部分の重複を避けます。"
-      },
-      {
-        "id": "java-02-apply-2",
-        "type": "apply_check",
-        "title": "応用2",
-        "prompt": "テストコードで`PaymentService`を検証する際、実際のクレジットカード決済を実行せずにテストするにはどうしますか？",
-        "options": [
-          { "id": "A", "text": "テスト用のPaymentProcessor実装（モック）をコンストラクタに渡す" },
-          { "id": "B", "text": "PaymentServiceのソースコードを直接変更してテスト用ロジックを埋め込む" },
-          { "id": "C", "text": "テストでは決済処理をスキップし、他の部分だけ検証する" }
-        ],
-        "correctOptionId": "A",
-        "explanation": "PaymentServiceがインターフェース型のフィールドを持つため、テスト時にモック（偽の実装）を注入できます。これが依存性注入（DI）のメリットです。"
-      },
-      {
-        "id": "java-02-summary",
-        "type": "summary",
-        "title": "学んだこと",
-        "bullets": [
-          "extendsによる継承でサブクラスは親のフィールドとメソッドを引き継ぐ",
-          "メソッドオーバーライドにより、実行時のインスタンスの型のメソッドが呼ばれる",
-          "インターフェースは「能力の契約」、抽象クラスは「共通実装＋未実装の枠組み」",
-          "ポリモーフィズムにより、新しい実装の追加が既存コードに影響を与えない設計が可能"
-        ]
-      }
-    ],
-    "referenceLabel": "参考ノートを見る"
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "クラスでオブジェクトを作ろう",
+   "prompt": "クラスで関連するデータをまとめ、new でオブジェクトを作り、ドット演算子でデータを扱おう。",
+   "takeaway": "クラス宣言・オブジェクト生成・データアクセス・複数オブジェクトを9問で確認します。"
   },
-  "ko": {
-    "hook": {
-      "title": "메서드 호출, 어느 클래스가 실행될까?",
-      "prompt": "부모 클래스 타입의 변수에 서브클래스의 인스턴스를 대입한 경우, 메서드를 호출하면 어느 클래스의 처리가 실행될까요?",
-      "takeaway": "상속·인터페이스·다형성의 구조를 이해하고, 실무 코드의 호출 대상을 정확히 추적할 수 있게 됩니다"
-    },
-    "steps": [
-      {
-        "id": "java-02-concept-1",
-        "type": "concept",
-        "title": "상속과 메서드 오버라이드",
-        "body": "Java의 `extends` 키워드로 클래스를 상속하며, 서브클래스는 부모 클래스의 필드와 메서드를 물려받습니다. `@Override` 어노테이션을 붙여 부모 메서드를 덮어쓸 수 있으며, 실행 시에는 인스턴스의 실제 타입의 메서드가 호출됩니다.",
-        "bullets": [
-          "서브클래스는 부모 클래스의 필드와 메서드를 물려받는다",
-          "@Override를 붙이면 컴파일러가 시그니처 오류를 검출해 준다"
-        ]
-      },
-      {
-        "id": "java-02-mini-1",
-        "type": "mini_check",
-        "title": "확인1",
-        "prompt": "`Animal animal = new Dog();`에서 `animal.speak()`를 호출하면 어느 클래스의 메서드가 실행되나요?",
-        "options": [
-          { "id": "A", "text": "Animal 클래스의 speak()가 실행된다" },
-          { "id": "B", "text": "Dog 클래스의 speak()가 실행된다" },
-          { "id": "C", "text": "컴파일 에러가 발생한다" }
-        ],
-        "correctOptionId": "B",
-        "explanation": "변수의 타입은 Animal이지만, 실행 시에는 인스턴스의 실제 타입(Dog)의 메서드가 호출됩니다. 이것이 메서드 오버라이드와 다형성의 기본 동작입니다."
-      },
-      {
-        "id": "java-02-concept-2",
-        "type": "concept",
-        "title": "인터페이스와 추상 클래스의 구분",
-        "body": "인터페이스는 '무엇을 할 수 있는가'를 정의하는 계약이며, 구현 세부사항은 갖지 않습니다. 추상 클래스는 공통 로직과 미구현 메서드를 모두 가질 수 있습니다. Java에서는 클래스의 다중 상속은 불가능하지만, 인터페이스는 여러 개를 구현할 수 있어 설계 유연성이 다릅니다.",
-        "bullets": [
-          "공통 구현 코드를 공유하려면 추상 클래스를 선택한다",
-          "여러 타입에 공통 능력을 부여하려면 인터페이스를 선택한다"
-        ]
-      },
-      {
-        "id": "java-02-mini-2",
-        "type": "mini_check",
-        "title": "확인2",
-        "prompt": "Java에서 클래스의 다중 상속이 필요한 상황에서는 어떤 방법을 사용하나요?",
-        "options": [
-          { "id": "A", "text": "extends로 여러 클래스를 상속한다" },
-          { "id": "B", "text": "여러 인터페이스를 implements한다" },
-          { "id": "C", "text": "abstract 키워드를 붙이면 다중 상속이 가능하다" }
-        ],
-        "correctOptionId": "B",
-        "explanation": "Java에서는 클래스의 다중 상속(extends 여러 개)은 불가능합니다. 여러 능력을 부여하려면 인터페이스를 여러 개 implements합니다."
-      },
-      {
-        "id": "java-02-worked",
-        "type": "worked_example",
-        "title": "구체적 예: 결제 서비스의 인터페이스 설계",
-        "situation": "EC 사이트에서 신용카드·편의점·은행 이체의 3가지 결제 방법을 지원하는 설계를 생각해 봅니다.",
-        "reasoning": [
-          "PaymentProcessor 인터페이스에 process(Order) 메서드를 정의",
-          "CreditCardProcessor, ConvenienceProcessor, BankTransferProcessor가 각각 구현",
-          "PaymentService는 PaymentProcessor 타입의 필드를 가지며, 구체적인 결제 방법에 의존하지 않음",
-          "새로운 결제 방법 추가는 인터페이스를 구현하는 클래스를 하나 추가하면 된다"
-        ],
-        "takeaway": "인터페이스를 사용하면 기존 코드를 변경하지 않고도 새로운 구현을 추가할 수 있는 확장성 높은 설계가 됩니다"
-      },
-      {
-        "id": "java-02-mini-3",
-        "type": "mini_check",
-        "title": "확인3",
-        "prompt": "@Override 어노테이션을 붙이지 않고 메서드를 정의하면서 시그니처를 잘못 작성하면 어떻게 되나요?",
-        "options": [
-          { "id": "A", "text": "컴파일 에러가 발생한다" },
-          { "id": "B", "text": "실행 시 에러가 발생한다" },
-          { "id": "C", "text": "부모 클래스의 메서드가 오버라이드되지 않고, 새로운 메서드로 정의된다" }
-        ],
-        "correctOptionId": "C",
-        "explanation": "@Override가 없으면 컴파일러는 오버라이드 의도를 감지하지 못합니다. 시그니처가 미묘하게 다르면 새로운 메서드 정의가 되어, 부모의 메서드가 그대로 실행되는 버그로 이어집니다."
-      },
-      {
-        "id": "java-02-apply-1",
-        "type": "apply_check",
-        "title": "응용1",
-        "prompt": "알림 서비스에서 공통 검증 처리를 여러 알림 방식(이메일, SMS, 푸시)에서 공유하려면 가장 적합한 설계는 어느 것인가요?",
-        "options": [
-          { "id": "A", "text": "인터페이스를 사용하고 각 클래스에서 검증을 개별 구현한다" },
-          { "id": "B", "text": "추상 클래스에 공통 검증을 구현하고, 서브클래스에서 전송 처리만 구현한다" },
-          { "id": "C", "text": "하나의 거대한 클래스에 모든 알림 로직을 모은다" }
-        ],
-        "correctOptionId": "B",
-        "explanation": "공통 구현 코드(검증)를 공유하는 경우 추상 클래스가 적합합니다. 전송 처리는 각 서브클래스에서 개별 구현하여 공통 부분의 중복을 방지합니다."
-      },
-      {
-        "id": "java-02-apply-2",
-        "type": "apply_check",
-        "title": "응용2",
-        "prompt": "테스트 코드에서 `PaymentService`를 검증할 때, 실제 신용카드 결제를 실행하지 않고 테스트하려면 어떻게 해야 하나요?",
-        "options": [
-          { "id": "A", "text": "테스트용 PaymentProcessor 구현(목)을 생성자에 전달한다" },
-          { "id": "B", "text": "PaymentService의 소스 코드를 직접 수정하여 테스트용 로직을 삽입한다" },
-          { "id": "C", "text": "테스트에서는 결제 처리를 건너뛰고 다른 부분만 검증한다" }
-        ],
-        "correctOptionId": "A",
-        "explanation": "PaymentService가 인터페이스 타입의 필드를 가지므로, 테스트 시 목(가짜 구현)을 주입할 수 있습니다. 이것이 의존성 주입(DI)의 장점입니다."
-      },
-      {
-        "id": "java-02-summary",
-        "type": "summary",
-        "title": "배운 내용",
-        "bullets": [
-          "extends로 상속하면 서브클래스는 부모의 필드와 메서드를 물려받는다",
-          "메서드 오버라이드에 의해 실행 시 인스턴스의 실제 타입의 메서드가 호출된다",
-          "인터페이스는 '능력의 계약', 추상 클래스는 '공통 구현 + 미구현 틀'",
-          "다형성을 통해 새로운 구현 추가가 기존 코드에 영향을 주지 않는 설계가 가능하다"
-        ]
-      }
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "クラス宣言とオブジェクト生成",
+    "prompt": "ドローンを表すクラスを宣言し drone オブジェクトを生成するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "[[0]] Drone {\n    String model;\n    int altitude;\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        [[1]] drone = [[2]] [[3]]();\n\n        drone.model = \"A-10\";\n        drone.altitude = 120;\n\n        System.out.println(drone.model);\n        System.out.println(drone.altitude);\n    }\n}",
+    "tokens": [
+     "class",
+     "Drone",
+     "Drone",
+     "new",
+     "drone",
+     "String",
+     "void",
+     "Main"
     ],
-    "referenceLabel": "참고 노트 보기"
-  }
+    "answers": [
+     "class",
+     "Drone",
+     "new",
+     "Drone"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "A-10\n120"
+    },
+    "explanation": "クラスは class キーワードで宣言する。オブジェクト生成は クラス名 オブジェクト変数 = new クラス名(); の形なので、両方とも大文字で始まる Drone が入る。drone はオブジェクト変数なので型の位置には置けない。"
+   },
+   {
+    "id": "q2",
+    "type": "code_exercise",
+    "title": "オブジェクトのデータの使用",
+    "prompt": "利用券の所有者とエリア番号を保存し Harin / 3区域 を出力するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "class Pass {\n    String owner;\n    int zone;\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Pass pass = new Pass();\n\n        [[0]].owner = \"Harin\";\n        pass.[[1]] = 3;\n\n        System.out.println(\n            [[2]].owner + \" / \" + pass.[[3]] + \"区域\"\n        );\n    }\n}",
+    "tokens": [
+     "pass",
+     "pass",
+     "zone",
+     "zone",
+     "Pass",
+     "owner",
+     "name",
+     "\"3\""
+    ],
+    "answers": [
+     "pass",
+     "zone",
+     "pass",
+     "zone"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Harin / 3区域"
+    },
+    "explanation": "生成されたオブジェクトのデータは pass.owner, pass.zone のようにオブジェクト変数とドット演算子で使う。Pass はクラス名なので静的アクセスになりエラーで、name はクラスに宣言されていない名前である。"
+   },
+   {
+    "id": "q3",
+    "type": "order",
+    "title": "1つのオブジェクトを使うプログラム",
+    "prompt": "Badge クラス宣言 → grade 宣言 → Main・main 宣言 → オブジェクト生成 → 等級の保存 → 等級の出力 の順に1行ずつ並べなさい。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Badge {"
+     },
+     {
+      "id": "c2",
+      "text": "    String grade;"
+     },
+     {
+      "id": "c3",
+      "text": "}"
+     },
+     {
+      "id": "c4",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c5",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c6",
+      "text": "        Badge badge = new Badge();"
+     },
+     {
+      "id": "c7",
+      "text": "        badge.grade = \"GOLD\";"
+     },
+     {
+      "id": "c8",
+      "text": "        System.out.println(badge.grade);"
+     },
+     {
+      "id": "c9",
+      "text": "    }"
+     },
+     {
+      "id": "c10",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        Badge badge = Badge();"
+     },
+     {
+      "id": "w2",
+      "text": "        badge.level = \"GOLD\";"
+     }
+    ],
+    "explanation": "Badge クラスを先に宣言し Main で new Badge() でオブジェクトを生成する。オブジェクト生成には new が必要で、Badge クラスには level ではなく grade が宣言されている。"
+   },
+   {
+    "id": "q4",
+    "type": "code_exercise",
+    "title": "別々のオブジェクトのデータの選択",
+    "prompt": "2つのゲームプロフィールから必要な値を選んで Nova : 70点 を出力するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "class GameProfile {\n    String nickname;\n    int score;\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        GameProfile profile1 = new GameProfile();\n        GameProfile profile2 = new GameProfile();\n\n        profile1.nickname = \"Luke\";\n        profile1.score = 70;\n\n        profile2.nickname = \"Nova\";\n        profile2.score = 95;\n\n        System.out.println(\n            [[0]].nickname + \" : \" + [[1]].score + \"点\"\n        );\n    }\n}",
+    "tokens": [
+     "profile2",
+     "profile1",
+     "GameProfile",
+     "nickname",
+     "score"
+    ],
+    "answers": [
+     "profile2",
+     "profile1"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Nova : 70点"
+    },
+    "explanation": "「Nova」は profile2.nickname に、70 は profile1.score に保存されている。同じクラスで作ったオブジェクトでも、各オブジェクトのデータは互いに区別される。"
+   },
+   {
+    "id": "q5",
+    "type": "mini_check",
+    "title": "2つのオブジェクトの値の追跡",
+    "prompt": "次のコードの実行結果として正しいものはどれか？（1行目 / 2行目）",
+    "code": "class Storage {\n    int count;\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Storage storage1 = new Storage();\n        Storage storage2 = new Storage();\n\n        storage1.count = 8;\n        storage2.count = 3;\n\n        storage1.count = storage1.count + 2;\n        storage2.count = storage1.count + storage2.count;\n\n        System.out.println(storage1.count);\n        System.out.println(storage2.count);\n    }\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`10` / `11`"
+     },
+     {
+      "id": "B",
+      "text": "`10` / `13`"
+     },
+     {
+      "id": "C",
+      "text": "`8` / `11`"
+     },
+     {
+      "id": "D",
+      "text": "`13` / `13`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "まず storage1.count が 8 から 10 に変わる。次に storage2.count には現在の storage1.count である 10 と元の値 3 を足した 13 が保存される。"
+   },
+   {
+    "id": "q6",
+    "type": "order",
+    "title": "同じクラスで2つのオブジェクトを作る",
+    "prompt": "Seat・number 宣言 → Main・main 宣言 → left オブジェクト生成後 4 を保存 → right オブジェクト生成後 9 を保存 → right, left の順で番号を出力 の順に並べて 9, 4 を出力しなさい。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Seat {"
+     },
+     {
+      "id": "c2",
+      "text": "    int number;"
+     },
+     {
+      "id": "c3",
+      "text": "}"
+     },
+     {
+      "id": "c4",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c5",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c6",
+      "text": "        Seat left = new Seat();"
+     },
+     {
+      "id": "c7",
+      "text": "        left.number = 4;"
+     },
+     {
+      "id": "c8",
+      "text": "        Seat right = new Seat();"
+     },
+     {
+      "id": "c9",
+      "text": "        right.number = 9;"
+     },
+     {
+      "id": "c10",
+      "text": "        System.out.println(right.number);"
+     },
+     {
+      "id": "c11",
+      "text": "        System.out.println(left.number);"
+     },
+     {
+      "id": "c12",
+      "text": "    }"
+     },
+     {
+      "id": "c13",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        Seat right = new left();"
+     },
+     {
+      "id": "w2",
+      "text": "        System.out.println(Seat.number);"
+     }
+    ],
+    "explanation": "left と right は同じ Seat クラスで作った別々のオブジェクトである。new の後にはオブジェクト変数 left ではなくクラス名 Seat を書く。number はオブジェクトを通して使うので Seat.number では出力できない。"
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "クラスに合ったオブジェクト生成",
+    "prompt": "モニターとマウスをそれぞれ正しいクラスで生成するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "class Monitor {\n    int size;\n}\n\nclass Mouse {\n    String color;\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        [[0]] monitor = new [[1]]();\n        [[2]] mouse = new [[3]]();\n\n        monitor.size = 27;\n        mouse.color = \"黒\";\n\n        System.out.println(monitor.size);\n        System.out.println(mouse.color);\n    }\n}",
+    "tokens": [
+     "Monitor",
+     "Monitor",
+     "Mouse",
+     "Mouse",
+     "monitor",
+     "mouse",
+     "int",
+     "String"
+    ],
+    "answers": [
+     "Monitor",
+     "Monitor",
+     "Mouse",
+     "Mouse"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "27\n黒"
+    },
+    "explanation": "size は Monitor クラスに、color は Mouse クラスに宣言されている。各変数のクラスと new の後のクラスが一致してこそ、その後のデータアクセスも正しくコンパイルされる。"
+   },
+   {
+    "id": "q8",
+    "type": "code_exercise",
+    "title": "変更されたオブジェクトの値の確認",
+    "prompt": "値が変わる順序を確認して 70, 90 を順に出力するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "class Screen {\n    int brightness;\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Screen first = new Screen();\n        Screen second = new Screen();\n\n        first.brightness = 30;\n        second.brightness = 70;\n\n        first.brightness = second.brightness;\n        second.brightness = 90;\n\n        System.out.println([[0]].brightness);\n        System.out.println([[1]].brightness);\n    }\n}",
+    "tokens": [
+     "first",
+     "second",
+     "Screen",
+     "brightness",
+     "30",
+     "90"
+    ],
+    "answers": [
+     "first",
+     "second"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "70\n90"
+    },
+    "explanation": "first.brightness = second.brightness が実行されるとき、second の現在の値 70 が first に保存される。その後 second だけ 90 に変わるので、最終値は first が 70、second が 90 である。"
+   },
+   {
+    "id": "q9",
+    "type": "order",
+    "title": "異なる2つのクラスの全体コード",
+    "prompt": "Book・title 宣言 → Shelf・number 宣言 → Main・main 宣言 → book, shelf の順でオブジェクト生成 → 値の保存 → 出力 の順に並べなさい。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Book {"
+     },
+     {
+      "id": "c2",
+      "text": "    String title;"
+     },
+     {
+      "id": "c3",
+      "text": "}"
+     },
+     {
+      "id": "c4",
+      "text": "class Shelf {"
+     },
+     {
+      "id": "c5",
+      "text": "    int number;"
+     },
+     {
+      "id": "c6",
+      "text": "}"
+     },
+     {
+      "id": "c7",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c8",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c9",
+      "text": "        Book book = new Book();"
+     },
+     {
+      "id": "c10",
+      "text": "        Shelf shelf = new Shelf();"
+     },
+     {
+      "id": "c11",
+      "text": "        book.title = \"Javaの始まり\";"
+     },
+     {
+      "id": "c12",
+      "text": "        shelf.number = 5;"
+     },
+     {
+      "id": "c13",
+      "text": "        System.out.println(book.title);"
+     },
+     {
+      "id": "c14",
+      "text": "        System.out.println(shelf.number);"
+     },
+     {
+      "id": "c15",
+      "text": "    }"
+     },
+     {
+      "id": "c16",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        Book book = new Shelf();"
+     },
+     {
+      "id": "w2",
+      "text": "        shelf.title = \"Javaの始まり\";"
+     }
+    ],
+    "explanation": "book は Book オブジェクトを、shelf は Shelf オブジェクトを使う。Book 変数に Shelf オブジェクトは保存できず、title は Book クラスにのみ宣言されているので shelf.title は使えない。"
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "클래스로 객체를 만들자",
+   "prompt": "클래스로 관련 데이터를 묶고, new로 객체를 만들어 점 연산자로 데이터를 다루자.",
+   "takeaway": "클래스 선언·객체 생성·데이터 접근·여러 객체를 9문제로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "클래스 선언과 객체 생성",
+    "prompt": "드론을 표현하는 클래스를 선언하고 drone 객체를 생성하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "[[0]] Drone {\n    String model;\n    int altitude;\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        [[1]] drone = [[2]] [[3]]();\n\n        drone.model = \"A-10\";\n        drone.altitude = 120;\n\n        System.out.println(drone.model);\n        System.out.println(drone.altitude);\n    }\n}",
+    "tokens": [
+     "class",
+     "Drone",
+     "Drone",
+     "new",
+     "drone",
+     "String",
+     "void",
+     "Main"
+    ],
+    "answers": [
+     "class",
+     "Drone",
+     "new",
+     "Drone"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "A-10\n120"
+    },
+    "explanation": "클래스는 class 키워드로 선언한다. 객체 생성은 클래스명 객체변수 = new 클래스명(); 형식이므로 두 자리 모두 대문자로 시작하는 Drone이 들어간다. drone은 객체 변수라 타입 자리에 올 수 없다."
+   },
+   {
+    "id": "q2",
+    "type": "code_exercise",
+    "title": "객체의 데이터 사용",
+    "prompt": "이용권 소유자와 구역 번호를 저장하고 하린 / 3구역을 출력하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "class Pass {\n    String owner;\n    int zone;\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Pass pass = new Pass();\n\n        [[0]].owner = \"하린\";\n        pass.[[1]] = 3;\n\n        System.out.println(\n            [[2]].owner + \" / \" + pass.[[3]] + \"구역\"\n        );\n    }\n}",
+    "tokens": [
+     "pass",
+     "pass",
+     "zone",
+     "zone",
+     "Pass",
+     "owner",
+     "name",
+     "\"3\""
+    ],
+    "answers": [
+     "pass",
+     "zone",
+     "pass",
+     "zone"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "하린 / 3구역"
+    },
+    "explanation": "생성된 객체의 데이터는 pass.owner, pass.zone처럼 객체 변수와 점 연산자로 사용한다. Pass는 클래스 이름이라 정적 접근이 되어 오류이고, name은 클래스에 선언되지 않은 이름이다."
+   },
+   {
+    "id": "q3",
+    "type": "order",
+    "title": "객체 하나를 사용하는 프로그램",
+    "prompt": "Badge 클래스 선언 → grade 선언 → Main·main 선언 → 객체 생성 → 등급 저장 → 등급 출력 순서로 한 줄씩 배열하시오.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Badge {"
+     },
+     {
+      "id": "c2",
+      "text": "    String grade;"
+     },
+     {
+      "id": "c3",
+      "text": "}"
+     },
+     {
+      "id": "c4",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c5",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c6",
+      "text": "        Badge badge = new Badge();"
+     },
+     {
+      "id": "c7",
+      "text": "        badge.grade = \"GOLD\";"
+     },
+     {
+      "id": "c8",
+      "text": "        System.out.println(badge.grade);"
+     },
+     {
+      "id": "c9",
+      "text": "    }"
+     },
+     {
+      "id": "c10",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        Badge badge = Badge();"
+     },
+     {
+      "id": "w2",
+      "text": "        badge.level = \"GOLD\";"
+     }
+    ],
+    "explanation": "Badge 클래스를 먼저 선언하고 Main에서 new Badge()로 객체를 생성한다. 객체 생성에는 new가 필요하며, Badge 클래스에는 level이 아니라 grade가 선언되어 있다."
+   },
+   {
+    "id": "q4",
+    "type": "code_exercise",
+    "title": "서로 다른 객체의 데이터 선택",
+    "prompt": "두 게임 프로필에서 필요한 값을 선택하여 노바 : 70점을 출력하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "class GameProfile {\n    String nickname;\n    int score;\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        GameProfile profile1 = new GameProfile();\n        GameProfile profile2 = new GameProfile();\n\n        profile1.nickname = \"루크\";\n        profile1.score = 70;\n\n        profile2.nickname = \"노바\";\n        profile2.score = 95;\n\n        System.out.println(\n            [[0]].nickname + \" : \" + [[1]].score + \"점\"\n        );\n    }\n}",
+    "tokens": [
+     "profile2",
+     "profile1",
+     "GameProfile",
+     "nickname",
+     "score"
+    ],
+    "answers": [
+     "profile2",
+     "profile1"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "노바 : 70점"
+    },
+    "explanation": "「노바」는 profile2.nickname에, 70은 profile1.score에 저장되어 있다. 같은 클래스로 만든 객체라도 각 객체의 데이터는 서로 구분된다."
+   },
+   {
+    "id": "q5",
+    "type": "mini_check",
+    "title": "두 객체의 값 추적",
+    "prompt": "다음 코드의 실행 결과로 옳은 것은? (첫째 줄 / 둘째 줄)",
+    "code": "class Storage {\n    int count;\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Storage storage1 = new Storage();\n        Storage storage2 = new Storage();\n\n        storage1.count = 8;\n        storage2.count = 3;\n\n        storage1.count = storage1.count + 2;\n        storage2.count = storage1.count + storage2.count;\n\n        System.out.println(storage1.count);\n        System.out.println(storage2.count);\n    }\n}",
+    "options": [
+     {
+      "id": "A",
+      "text": "`10` / `11`"
+     },
+     {
+      "id": "B",
+      "text": "`10` / `13`"
+     },
+     {
+      "id": "C",
+      "text": "`8` / `11`"
+     },
+     {
+      "id": "D",
+      "text": "`13` / `13`"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "먼저 storage1.count가 8에서 10으로 변경된다. 그다음 storage2.count에는 현재 storage1.count인 10과 기존 값 3을 더한 13이 저장된다."
+   },
+   {
+    "id": "q6",
+    "type": "order",
+    "title": "같은 클래스로 두 객체 만들기",
+    "prompt": "Seat·number 선언 → Main·main 선언 → left 객체 생성 후 4 저장 → right 객체 생성 후 9 저장 → right, left 순서로 번호 출력 순서로 배열하여 9, 4를 출력하시오.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Seat {"
+     },
+     {
+      "id": "c2",
+      "text": "    int number;"
+     },
+     {
+      "id": "c3",
+      "text": "}"
+     },
+     {
+      "id": "c4",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c5",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c6",
+      "text": "        Seat left = new Seat();"
+     },
+     {
+      "id": "c7",
+      "text": "        left.number = 4;"
+     },
+     {
+      "id": "c8",
+      "text": "        Seat right = new Seat();"
+     },
+     {
+      "id": "c9",
+      "text": "        right.number = 9;"
+     },
+     {
+      "id": "c10",
+      "text": "        System.out.println(right.number);"
+     },
+     {
+      "id": "c11",
+      "text": "        System.out.println(left.number);"
+     },
+     {
+      "id": "c12",
+      "text": "    }"
+     },
+     {
+      "id": "c13",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        Seat right = new left();"
+     },
+     {
+      "id": "w2",
+      "text": "        System.out.println(Seat.number);"
+     }
+    ],
+    "explanation": "left와 right는 같은 Seat 클래스로 만든 서로 다른 객체다. new 뒤에는 객체 변수 left가 아니라 클래스 이름 Seat를 작성한다. number는 객체를 통해 사용하므로 Seat.number로 출력할 수 없다."
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "클래스에 맞는 객체 생성",
+    "prompt": "모니터와 마우스를 각각 올바른 클래스로 생성하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "class Monitor {\n    int size;\n}\n\nclass Mouse {\n    String color;\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        [[0]] monitor = new [[1]]();\n        [[2]] mouse = new [[3]]();\n\n        monitor.size = 27;\n        mouse.color = \"검정\";\n\n        System.out.println(monitor.size);\n        System.out.println(mouse.color);\n    }\n}",
+    "tokens": [
+     "Monitor",
+     "Monitor",
+     "Mouse",
+     "Mouse",
+     "monitor",
+     "mouse",
+     "int",
+     "String"
+    ],
+    "answers": [
+     "Monitor",
+     "Monitor",
+     "Mouse",
+     "Mouse"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "27\n검정"
+    },
+    "explanation": "size는 Monitor 클래스에, color는 Mouse 클래스에 선언되어 있다. 각 변수의 클래스와 new 뒤의 클래스가 일치해야 이후 데이터 접근도 올바르게 컴파일된다."
+   },
+   {
+    "id": "q8",
+    "type": "code_exercise",
+    "title": "변경된 객체의 값 확인",
+    "prompt": "값이 변경되는 순서를 확인하여 70, 90을 차례로 출력하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "class Screen {\n    int brightness;\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Screen first = new Screen();\n        Screen second = new Screen();\n\n        first.brightness = 30;\n        second.brightness = 70;\n\n        first.brightness = second.brightness;\n        second.brightness = 90;\n\n        System.out.println([[0]].brightness);\n        System.out.println([[1]].brightness);\n    }\n}",
+    "tokens": [
+     "first",
+     "second",
+     "Screen",
+     "brightness",
+     "30",
+     "90"
+    ],
+    "answers": [
+     "first",
+     "second"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "70\n90"
+    },
+    "explanation": "first.brightness = second.brightness가 실행될 때 second의 현재 값 70이 first에 저장된다. 이후 second만 90으로 변경되므로 최종값은 first가 70, second가 90이다."
+   },
+   {
+    "id": "q9",
+    "type": "order",
+    "title": "서로 다른 두 클래스의 전체 코드",
+    "prompt": "Book·title 선언 → Shelf·number 선언 → Main·main 선언 → book, shelf 순서로 객체 생성 → 값 저장 → 출력 순서로 배열하시오.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class Book {"
+     },
+     {
+      "id": "c2",
+      "text": "    String title;"
+     },
+     {
+      "id": "c3",
+      "text": "}"
+     },
+     {
+      "id": "c4",
+      "text": "class Shelf {"
+     },
+     {
+      "id": "c5",
+      "text": "    int number;"
+     },
+     {
+      "id": "c6",
+      "text": "}"
+     },
+     {
+      "id": "c7",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c8",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c9",
+      "text": "        Book book = new Book();"
+     },
+     {
+      "id": "c10",
+      "text": "        Shelf shelf = new Shelf();"
+     },
+     {
+      "id": "c11",
+      "text": "        book.title = \"자바의 시작\";"
+     },
+     {
+      "id": "c12",
+      "text": "        shelf.number = 5;"
+     },
+     {
+      "id": "c13",
+      "text": "        System.out.println(book.title);"
+     },
+     {
+      "id": "c14",
+      "text": "        System.out.println(shelf.number);"
+     },
+     {
+      "id": "c15",
+      "text": "    }"
+     },
+     {
+      "id": "c16",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        Book book = new Shelf();"
+     },
+     {
+      "id": "w2",
+      "text": "        shelf.title = \"자바의 시작\";"
+     }
+    ],
+    "explanation": "book은 Book 객체를, shelf는 Shelf 객체를 사용해야 한다. Book 변수에 Shelf 객체를 저장할 수 없으며, title은 Book 클래스에만 선언되어 있으므로 shelf.title은 사용할 수 없다."
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
 }

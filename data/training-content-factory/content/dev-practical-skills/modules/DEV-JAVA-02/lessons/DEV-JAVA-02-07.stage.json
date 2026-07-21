@@ -1,0 +1,895 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "カプセル化でデータを保護しよう",
+   "prompt": "フィールドは private で隠し、getter・setter や振る舞いメソッドでルールを守りながら値を扱おう。",
+   "takeaway": "private フィールド・getter・setter・値の検査・振る舞いメソッドを12問で確認します。"
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "フィールドを隠して値を読む",
+    "prompt": "name を外部から直接変更できないようにし、getter で読めるように完成させなさい。（空欄3つ）",
+    "lang": "java",
+    "codeTemplate": "class Member {\n    [[0]] String name;\n\n    public Member(String name) {\n        this.name = name;\n    }\n\n    [[1]] String getName() {\n        [[2]] name;\n    }\n}",
+    "tokens": [
+     "private",
+     "public",
+     "protected",
+     "void",
+     "return",
+     "print",
+     "this"
+    ],
+    "answers": [
+     "private",
+     "public",
+     "return"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "フィールドは private で保護し、外部から使う getter は public で宣言する。getter は return でフィールドの値を返す。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q2",
+    "type": "code_exercise",
+    "title": "getter を呼び出す",
+    "prompt": "直接フィールドにアクセスせず、学生の名前を出力するように完成させなさい。（空欄1つ）",
+    "lang": "java",
+    "codeTemplate": "class Student {\n    private String name;\n\n    public Student(String name) {\n        this.name = name;\n    }\n\n    public String getName() {\n        return name;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Student student = new Student(\"Minsu\");\n\n        System.out.println(student.[[0]]());\n    }\n}",
+    "tokens": [
+     "getName",
+     "setName",
+     "name"
+    ],
+    "answers": [
+     "getName"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Minsu"
+    },
+    "explanation": "name は private なので student.name でアクセスせず getName() を呼び出す。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q3",
+    "type": "code_exercise",
+    "title": "boolean getter を完成させる",
+    "prompt": "会員の有効状態を返すように完成させなさい。（空欄3つ）",
+    "lang": "java",
+    "codeTemplate": "class Member {\n    private boolean active;\n\n    public Member(boolean active) {\n        this.active = active;\n    }\n\n    public [[0]] [[1]]() {\n        [[2]] active;\n    }\n}",
+    "tokens": [
+     "boolean",
+     "String",
+     "void",
+     "isActive",
+     "setActive",
+     "getName",
+     "return",
+     "print",
+     "this"
+    ],
+    "answers": [
+     "boolean",
+     "isActive",
+     "return"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "論理値を返す getter は一般的に isActive() のように is で始まる。戻り値の型は boolean で、return で値を返す。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q4",
+    "type": "order",
+    "title": "基本の setter を書く",
+    "prompt": "score を変更する setter を完成させるようにカードを上から順に並べなさい。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "    public void setScore(int score) {"
+     },
+     {
+      "id": "c2",
+      "text": "        this.score = score;"
+     },
+     {
+      "id": "c3",
+      "text": "    }"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        score = this.score;"
+     },
+     {
+      "id": "w2",
+      "text": "    public int setScore(int score) {"
+     },
+     {
+      "id": "w3",
+      "text": "        return score;"
+     }
+    ],
+    "explanation": "this.score はフィールドで、右側の score は setter が受け取った引数である。戻り値がないので void で宣言する。"
+   },
+   {
+    "id": "q5",
+    "type": "code_exercise",
+    "title": "点数の範囲を検査する",
+    "prompt": "点数が 0 以上 100 以下のときだけ保存するように完成させなさい。（空欄5つ）",
+    "lang": "java",
+    "codeTemplate": "class Student {\n    private int score;\n\n    public void setScore(int score) {\n        if (score [[0]] 0 [[1]] score [[2]] 100) {\n            [[3]] = [[4]];\n        }\n    }\n\n    public int getScore() {\n        return score;\n    }\n}",
+    "tokens": [
+     ">=",
+     ">",
+     "&&",
+     "||",
+     "+",
+     "<=",
+     "<",
+     "!=",
+     "this.score",
+     "score",
+     "this",
+     "100"
+    ],
+    "answers": [
+     ">=",
+     "&&",
+     "<=",
+     "this.score",
+     "score"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "2つの範囲条件を両方満たす必要があるので && を使う。0 以上は >=、100 以下は <= で表し、this.score に引数 score を保存する。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q6",
+    "type": "code_exercise",
+    "title": "誤った値を拒否する",
+    "prompt": "負の年齢は保存しないように完成させなさい。（空欄3つ）",
+    "lang": "java",
+    "codeTemplate": "class Person {\n    private int age = 20;\n\n    public void setAge(int age) {\n        if ([[0]]) {\n            [[1]] = [[2]];\n        }\n    }\n\n    public int getAge() {\n        return age;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Person person = new Person();\n\n        person.setAge(-5);\n        System.out.println(person.getAge());\n    }\n}",
+    "tokens": [
+     "age >= 0",
+     "age < 0",
+     "age == 0",
+     "this.age",
+     "age",
+     "this",
+     "0"
+    ],
+    "answers": [
+     "age >= 0",
+     "this.age",
+     "age"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "20"
+    },
+    "explanation": "-5 は条件を満たさないので既存の値 20 が保たれる。年齢は 0 以上だけ許すので age >= 0 で検査し、this.age に引数 age を保存する。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "読み取り専用の商品番号",
+    "prompt": "商品番号は確認できるが、生成後は変更できないように完成させなさい。（空欄3つ）",
+    "lang": "java",
+    "codeTemplate": "class Product {\n    private String productCode;\n\n    public Product(String productCode) {\n        this.productCode = productCode;\n    }\n\n    public [[0]] [[1]]() {\n        return [[2]];\n    }\n}",
+    "tokens": [
+     "String",
+     "void",
+     "boolean",
+     "getProductCode",
+     "setProductCode",
+     "changeProductCode",
+     "productCode",
+     "\"productCode\"",
+     "this"
+    ],
+    "answers": [
+     "String",
+     "getProductCode",
+     "productCode"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "getter だけ提供し setter を提供しなければ、外部からは商品番号を読むことしかできない。戻り値の型は String で、フィールド productCode をそのまま返す。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q8",
+    "type": "mini_check",
+    "title": "正しいカプセル化の方法",
+    "prompt": "銀行口座の残高を管理する方法として最も適切なものを選びなさい。",
+    "options": [
+     {
+      "id": "A",
+      "text": "`public int balance;` でフィールドを直接公開する。"
+     },
+     {
+      "id": "B",
+      "text": "`private int balance;` で隠し、値をそのまま保存する `setBalance()` を提供する。"
+     },
+     {
+      "id": "C",
+      "text": "`private int balance;` で隠し、検査なしの `deposit()`・`withdraw()` を提供する。"
+     },
+     {
+      "id": "D",
+      "text": "`private int balance;` で隠し、入金・出金のルールを検査する `deposit()`・`withdraw()` を提供する。"
+     }
+    ],
+    "correctOptionId": "D",
+    "explanation": "フィールドを隠すだけでなく、オブジェクトが守るべき入金・出金のルールもメソッドの中で検査しなければならない。deposit() は正の数だけ受け取り、withdraw() は残高を超える出金を拒否する。"
+   },
+   {
+    "id": "q9",
+    "type": "code_exercise",
+    "title": "入金メソッドを完成させる",
+    "prompt": "正の数だけ残高に入金できるように完成させなさい。（空欄4つ）",
+    "lang": "java",
+    "codeTemplate": "class BankAccount {\n    private int balance;\n\n    public void deposit(int amount) {\n        if ([[0]]) {\n            [[1]] [[2]] [[3]];\n        }\n    }\n\n    public int getBalance() {\n        return balance;\n    }\n}",
+    "tokens": [
+     "amount > 0",
+     "amount < 0",
+     "balance > 0",
+     "balance",
+     "amount",
+     "this",
+     "+=",
+     "-=",
+     "=",
+     "0"
+    ],
+    "answers": [
+     "amount > 0",
+     "balance",
+     "+=",
+     "amount"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "setBalance() で残高を勝手に変更せず、deposit() で入金ルールを管理する。amount > 0 のときだけ balance += amount で加える。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q10",
+    "type": "code_exercise",
+    "title": "出金の成否を返す",
+    "prompt": "出金額が正しくないか残高より多ければ、出金せず false を返すように完成させなさい。（空欄6つ）",
+    "lang": "java",
+    "codeTemplate": "class BankAccount {\n    private int balance = 30000;\n\n    public boolean withdraw(int amount) {\n        if (amount [[0]] 0 [[1]] amount [[2]] balance) {\n            return [[3]];\n        }\n\n        balance [[4]] amount;\n        return [[5]];\n    }\n\n    public int getBalance() {\n        return balance;\n    }\n}",
+    "tokens": [
+     "<=",
+     "<",
+     ">=",
+     "||",
+     "&&",
+     "+",
+     ">",
+     "==",
+     "false",
+     "true",
+     "balance",
+     "-=",
+     "+=",
+     "=",
+     "amount"
+    ],
+    "answers": [
+     "<=",
+     "||",
+     ">",
+     "false",
+     "-=",
+     "true"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "使えない出金額なら残高を変える前に終了する。amount <= 0 または amount > balance なら false を返し、正常な場合だけ balance -= amount で差し引いてから true を返す。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q11",
+    "type": "order",
+    "title": "カプセル化された口座を完成させる",
+    "prompt": "owner と balance は private にし、balance の setter は作らない。deposit() で 5000 を入金した後、残高 15000 を出力するように1行ずつ並べなさい。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class BankAccount {"
+     },
+     {
+      "id": "c2",
+      "text": "    private String owner;"
+     },
+     {
+      "id": "c3",
+      "text": "    private int balance;"
+     },
+     {
+      "id": "c4",
+      "text": "    public BankAccount(String owner, int balance) {"
+     },
+     {
+      "id": "c5",
+      "text": "        this.owner = owner;"
+     },
+     {
+      "id": "c6",
+      "text": "        this.balance = balance;"
+     },
+     {
+      "id": "c7",
+      "text": "    }"
+     },
+     {
+      "id": "c8",
+      "text": "    public int getBalance() {"
+     },
+     {
+      "id": "c9",
+      "text": "        return balance;"
+     },
+     {
+      "id": "c10",
+      "text": "    }"
+     },
+     {
+      "id": "c11",
+      "text": "    public void deposit(int amount) {"
+     },
+     {
+      "id": "c12",
+      "text": "        balance += amount;"
+     },
+     {
+      "id": "c13",
+      "text": "    }"
+     },
+     {
+      "id": "c14",
+      "text": "}"
+     },
+     {
+      "id": "c15",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c16",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c17",
+      "text": "        BankAccount account = new BankAccount(\"Jisu\", 10000);"
+     },
+     {
+      "id": "c18",
+      "text": "        account.deposit(5000);"
+     },
+     {
+      "id": "c19",
+      "text": "        System.out.println(account.getBalance());"
+     },
+     {
+      "id": "c20",
+      "text": "    }"
+     },
+     {
+      "id": "c21",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "    public void setBalance(int balance) {"
+     },
+     {
+      "id": "w2",
+      "text": "        balance = amount;"
+     }
+    ],
+    "explanation": "残高を直接変える setter の代わりに、入金の目的を明確に表す deposit() を使う。deposit() は balance += amount で既存の残高に加える。"
+   },
+   {
+    "id": "q12",
+    "type": "code_exercise",
+    "title": "空文字列を拒否する setter",
+    "prompt": "空文字列はニックネームとして保存しないように完成させなさい。（空欄3つ）",
+    "lang": "java",
+    "codeTemplate": "class User {\n    private String nickname = \"ゲスト\";\n\n    public void setNickname(String nickname) {\n        if ([[0]]) {\n            [[1]] = [[2]];\n        }\n    }\n\n    public String getNickname() {\n        return nickname;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        User user = new User();\n\n        user.setNickname(\"\");\n        user.setNickname(\"コード王\");\n\n        System.out.println(user.getNickname());\n    }\n}",
+    "tokens": [
+     "!nickname.isEmpty()",
+     "nickname.isEmpty()",
+     "nickname.equals(\"\")",
+     "this.nickname",
+     "nickname",
+     "this",
+     "\"ゲスト\""
+    ],
+    "answers": [
+     "!nickname.isEmpty()",
+     "this.nickname",
+     "nickname"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "コード王"
+    },
+    "explanation": "setter は受け取った値をそのまま保存するメソッドではなく、保存できる値かを検査する役割も持てる。空文字列でないときだけ this.nickname に保存する。",
+    "inputMode": "tokens"
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "캡슐화로 데이터를 보호하자",
+   "prompt": "필드는 private으로 숨기고, getter·setter와 행동 메서드로 규칙을 지키며 값을 다루자.",
+   "takeaway": "private 필드·getter·setter·값 검사·행동 메서드를 12문제로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "필드를 숨기고 값 읽기",
+    "prompt": "name을 외부에서 직접 변경하지 못하게 하고, getter로 읽을 수 있도록 완성하시오. (빈칸 3곳)",
+    "lang": "java",
+    "codeTemplate": "class Member {\n    [[0]] String name;\n\n    public Member(String name) {\n        this.name = name;\n    }\n\n    [[1]] String getName() {\n        [[2]] name;\n    }\n}",
+    "tokens": [
+     "private",
+     "public",
+     "protected",
+     "void",
+     "return",
+     "print",
+     "this"
+    ],
+    "answers": [
+     "private",
+     "public",
+     "return"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "필드는 private으로 보호하고, 외부에서 사용할 getter는 public으로 선언한다. getter는 return으로 필드 값을 돌려준다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q2",
+    "type": "code_exercise",
+    "title": "getter 호출하기",
+    "prompt": "직접 필드에 접근하지 않고 학생의 이름을 출력하도록 완성하시오. (빈칸 1곳)",
+    "lang": "java",
+    "codeTemplate": "class Student {\n    private String name;\n\n    public Student(String name) {\n        this.name = name;\n    }\n\n    public String getName() {\n        return name;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Student student = new Student(\"민수\");\n\n        System.out.println(student.[[0]]());\n    }\n}",
+    "tokens": [
+     "getName",
+     "setName",
+     "name"
+    ],
+    "answers": [
+     "getName"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "민수"
+    },
+    "explanation": "name은 private이므로 student.name으로 접근하지 않고 getName()을 호출한다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q3",
+    "type": "code_exercise",
+    "title": "boolean getter 완성하기",
+    "prompt": "회원의 활성화 상태를 반환하도록 완성하시오. (빈칸 3곳)",
+    "lang": "java",
+    "codeTemplate": "class Member {\n    private boolean active;\n\n    public Member(boolean active) {\n        this.active = active;\n    }\n\n    public [[0]] [[1]]() {\n        [[2]] active;\n    }\n}",
+    "tokens": [
+     "boolean",
+     "String",
+     "void",
+     "isActive",
+     "setActive",
+     "getName",
+     "return",
+     "print",
+     "this"
+    ],
+    "answers": [
+     "boolean",
+     "isActive",
+     "return"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "논리값을 반환하는 getter는 일반적으로 isActive()처럼 is로 시작한다. 반환형은 boolean이고 return으로 값을 돌려준다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q4",
+    "type": "order",
+    "title": "기본 setter 작성하기",
+    "prompt": "score를 변경하는 setter를 완성하도록 카드를 위에서부터 순서대로 배열하시오.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "    public void setScore(int score) {"
+     },
+     {
+      "id": "c2",
+      "text": "        this.score = score;"
+     },
+     {
+      "id": "c3",
+      "text": "    }"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        score = this.score;"
+     },
+     {
+      "id": "w2",
+      "text": "    public int setScore(int score) {"
+     },
+     {
+      "id": "w3",
+      "text": "        return score;"
+     }
+    ],
+    "explanation": "this.score는 필드이고 오른쪽의 score는 setter가 전달받은 매개변수다. 반환값이 없으므로 void로 선언한다."
+   },
+   {
+    "id": "q5",
+    "type": "code_exercise",
+    "title": "점수 범위 검사하기",
+    "prompt": "점수가 0 이상 100 이하일 때만 저장하도록 완성하시오. (빈칸 5곳)",
+    "lang": "java",
+    "codeTemplate": "class Student {\n    private int score;\n\n    public void setScore(int score) {\n        if (score [[0]] 0 [[1]] score [[2]] 100) {\n            [[3]] = [[4]];\n        }\n    }\n\n    public int getScore() {\n        return score;\n    }\n}",
+    "tokens": [
+     ">=",
+     ">",
+     "&&",
+     "||",
+     "+",
+     "<=",
+     "<",
+     "!=",
+     "this.score",
+     "score",
+     "this",
+     "100"
+    ],
+    "answers": [
+     ">=",
+     "&&",
+     "<=",
+     "this.score",
+     "score"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "두 범위 조건을 모두 만족해야 하므로 &&를 사용한다. 0 이상은 >=, 100 이하는 <=로 표현하고, this.score에 매개변수 score를 저장한다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q6",
+    "type": "code_exercise",
+    "title": "잘못된 값 거부하기",
+    "prompt": "음수 나이는 저장하지 않도록 완성하시오. (빈칸 3곳)",
+    "lang": "java",
+    "codeTemplate": "class Person {\n    private int age = 20;\n\n    public void setAge(int age) {\n        if ([[0]]) {\n            [[1]] = [[2]];\n        }\n    }\n\n    public int getAge() {\n        return age;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Person person = new Person();\n\n        person.setAge(-5);\n        System.out.println(person.getAge());\n    }\n}",
+    "tokens": [
+     "age >= 0",
+     "age < 0",
+     "age == 0",
+     "this.age",
+     "age",
+     "this",
+     "0"
+    ],
+    "answers": [
+     "age >= 0",
+     "this.age",
+     "age"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "20"
+    },
+    "explanation": "-5는 조건을 만족하지 않으므로 기존 값 20이 유지된다. 나이는 0 이상만 허용하므로 age >= 0으로 검사하고, this.age에 매개변수 age를 저장한다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "읽기 전용 상품 번호",
+    "prompt": "상품 번호는 확인할 수 있지만 생성 후에는 변경할 수 없도록 완성하시오. (빈칸 3곳)",
+    "lang": "java",
+    "codeTemplate": "class Product {\n    private String productCode;\n\n    public Product(String productCode) {\n        this.productCode = productCode;\n    }\n\n    public [[0]] [[1]]() {\n        return [[2]];\n    }\n}",
+    "tokens": [
+     "String",
+     "void",
+     "boolean",
+     "getProductCode",
+     "setProductCode",
+     "changeProductCode",
+     "productCode",
+     "\"productCode\"",
+     "this"
+    ],
+    "answers": [
+     "String",
+     "getProductCode",
+     "productCode"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "getter만 제공하고 setter를 제공하지 않으면 외부에서 상품 번호를 읽을 수만 있다. 반환형은 String이고 필드 productCode를 그대로 반환한다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q8",
+    "type": "mini_check",
+    "title": "올바른 캡슐화 방법",
+    "prompt": "은행 계좌의 잔액을 관리하는 방법으로 가장 알맞은 것을 고르시오.",
+    "options": [
+     {
+      "id": "A",
+      "text": "`public int balance;`로 필드를 직접 공개한다."
+     },
+     {
+      "id": "B",
+      "text": "`private int balance;`로 숨기고 값을 그대로 저장하는 `setBalance()`를 제공한다."
+     },
+     {
+      "id": "C",
+      "text": "`private int balance;`로 숨기고 검사 없이 `deposit()`·`withdraw()`를 제공한다."
+     },
+     {
+      "id": "D",
+      "text": "`private int balance;`로 숨기고 입금·출금 규칙을 검사하는 `deposit()`·`withdraw()`를 제공한다."
+     }
+    ],
+    "correctOptionId": "D",
+    "explanation": "필드를 숨기는 것뿐 아니라 객체가 지켜야 하는 입금·출금 규칙도 메서드 안에서 검사해야 한다. deposit()은 양수만 받고, withdraw()는 잔액을 넘는 출금을 거부한다."
+   },
+   {
+    "id": "q9",
+    "type": "code_exercise",
+    "title": "입금 메서드 완성하기",
+    "prompt": "양수만 잔액에 입금할 수 있도록 완성하시오. (빈칸 4곳)",
+    "lang": "java",
+    "codeTemplate": "class BankAccount {\n    private int balance;\n\n    public void deposit(int amount) {\n        if ([[0]]) {\n            [[1]] [[2]] [[3]];\n        }\n    }\n\n    public int getBalance() {\n        return balance;\n    }\n}",
+    "tokens": [
+     "amount > 0",
+     "amount < 0",
+     "balance > 0",
+     "balance",
+     "amount",
+     "this",
+     "+=",
+     "-=",
+     "=",
+     "0"
+    ],
+    "answers": [
+     "amount > 0",
+     "balance",
+     "+=",
+     "amount"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "setBalance()로 잔액을 임의 변경하지 않고 deposit()으로 입금 규칙을 관리한다. amount > 0일 때만 balance += amount로 더한다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q10",
+    "type": "code_exercise",
+    "title": "출금 성공 여부 반환하기",
+    "prompt": "출금액이 올바르지 않거나 잔액보다 많으면 출금하지 않고 false를 반환하도록 완성하시오. (빈칸 6곳)",
+    "lang": "java",
+    "codeTemplate": "class BankAccount {\n    private int balance = 30000;\n\n    public boolean withdraw(int amount) {\n        if (amount [[0]] 0 [[1]] amount [[2]] balance) {\n            return [[3]];\n        }\n\n        balance [[4]] amount;\n        return [[5]];\n    }\n\n    public int getBalance() {\n        return balance;\n    }\n}",
+    "tokens": [
+     "<=",
+     "<",
+     ">=",
+     "||",
+     "&&",
+     "+",
+     ">",
+     "==",
+     "false",
+     "true",
+     "balance",
+     "-=",
+     "+=",
+     "=",
+     "amount"
+    ],
+    "answers": [
+     "<=",
+     "||",
+     ">",
+     "false",
+     "-=",
+     "true"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "사용할 수 없는 출금액이면 잔액을 변경하기 전에 종료한다. amount <= 0이거나 amount > balance이면 false를 반환하고, 정상적인 경우에만 balance -= amount로 차감한 뒤 true를 반환한다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q11",
+    "type": "order",
+    "title": "캡슐화된 계좌 완성하기",
+    "prompt": "owner와 balance는 private으로 두고 balance의 setter는 만들지 않는다. deposit()으로 5000을 입금한 뒤 잔액 15000을 출력하도록 한 줄씩 배열하시오.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "class BankAccount {"
+     },
+     {
+      "id": "c2",
+      "text": "    private String owner;"
+     },
+     {
+      "id": "c3",
+      "text": "    private int balance;"
+     },
+     {
+      "id": "c4",
+      "text": "    public BankAccount(String owner, int balance) {"
+     },
+     {
+      "id": "c5",
+      "text": "        this.owner = owner;"
+     },
+     {
+      "id": "c6",
+      "text": "        this.balance = balance;"
+     },
+     {
+      "id": "c7",
+      "text": "    }"
+     },
+     {
+      "id": "c8",
+      "text": "    public int getBalance() {"
+     },
+     {
+      "id": "c9",
+      "text": "        return balance;"
+     },
+     {
+      "id": "c10",
+      "text": "    }"
+     },
+     {
+      "id": "c11",
+      "text": "    public void deposit(int amount) {"
+     },
+     {
+      "id": "c12",
+      "text": "        balance += amount;"
+     },
+     {
+      "id": "c13",
+      "text": "    }"
+     },
+     {
+      "id": "c14",
+      "text": "}"
+     },
+     {
+      "id": "c15",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c16",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c17",
+      "text": "        BankAccount account = new BankAccount(\"지수\", 10000);"
+     },
+     {
+      "id": "c18",
+      "text": "        account.deposit(5000);"
+     },
+     {
+      "id": "c19",
+      "text": "        System.out.println(account.getBalance());"
+     },
+     {
+      "id": "c20",
+      "text": "    }"
+     },
+     {
+      "id": "c21",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "    public void setBalance(int balance) {"
+     },
+     {
+      "id": "w2",
+      "text": "        balance = amount;"
+     }
+    ],
+    "explanation": "잔액을 직접 바꾸는 setter 대신 입금 목적을 분명하게 나타내는 deposit()을 사용한다. deposit()은 balance += amount로 기존 잔액에 더한다."
+   },
+   {
+    "id": "q12",
+    "type": "code_exercise",
+    "title": "빈 문자열을 거부하는 setter",
+    "prompt": "빈 문자열은 닉네임으로 저장하지 않도록 완성하시오. (빈칸 3곳)",
+    "lang": "java",
+    "codeTemplate": "class User {\n    private String nickname = \"손님\";\n\n    public void setNickname(String nickname) {\n        if ([[0]]) {\n            [[1]] = [[2]];\n        }\n    }\n\n    public String getNickname() {\n        return nickname;\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        User user = new User();\n\n        user.setNickname(\"\");\n        user.setNickname(\"코딩왕\");\n\n        System.out.println(user.getNickname());\n    }\n}",
+    "tokens": [
+     "!nickname.isEmpty()",
+     "nickname.isEmpty()",
+     "nickname.equals(\"\")",
+     "this.nickname",
+     "nickname",
+     "this",
+     "\"손님\""
+    ],
+    "answers": [
+     "!nickname.isEmpty()",
+     "this.nickname",
+     "nickname"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "코딩왕"
+    },
+    "explanation": "setter는 전달받은 값을 그대로 저장하는 메서드가 아니라, 저장 가능한 값인지 검사하는 역할도 할 수 있다. 빈 문자열이 아닐 때만 this.nickname에 저장한다.",
+    "inputMode": "tokens"
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}

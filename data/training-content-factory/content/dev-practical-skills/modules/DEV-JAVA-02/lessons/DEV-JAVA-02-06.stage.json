@@ -1,0 +1,803 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "アクセス修飾子で公開範囲を決めよう",
+   "prompt": "外部に公開する機能は public、内部処理だけの機能は private でアクセス範囲を分けよう。",
+   "takeaway": "public・protected・package-private・private とクラス・コンストラクタのアクセス範囲を11問で確認します。"
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "公開メソッドと内部メソッド",
+    "prompt": "外部からは send() だけを呼び、prepare() は MessageService 内部だけで使うように空欄を埋めなさい。（空欄4つ）",
+    "lang": "java",
+    "codeTemplate": "class MessageService {\n    [[0]] void send() {\n        [[1]]();\n        System.out.println(\"メッセージ送信\");\n    }\n\n    [[2]] void prepare() {\n        System.out.println(\"メッセージ準備\");\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        MessageService service =\n                new MessageService();\n\n        service.[[3]]();\n    }\n}",
+    "tokens": [
+     "public",
+     "prepare",
+     "private",
+     "send",
+     "protected",
+     "service",
+     "MessageService",
+     "print"
+    ],
+    "answers": [
+     "public",
+     "prepare",
+     "private",
+     "send"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "メッセージ準備\nメッセージ送信"
+    },
+    "explanation": "外部から呼ぶ send() は public で公開する。prepare() は send() の内部処理なので private に制限する。private メソッドは同じクラスの send() 内からは呼び出せる。"
+   },
+   {
+    "id": "q2",
+    "type": "code_exercise",
+    "title": "同じパッケージの package-private メソッド",
+    "prompt": "Warehouse と WarehouseMain は同じ warehouse パッケージにある。アクセス修飾子のない inspect() を呼び出すように空欄を埋めなさい。（空欄2つ）",
+    "lang": "java",
+    "codeTemplate": "package warehouse;\n\npublic class WarehouseMain {\n    public static void main(String[] args) {\n        Warehouse warehouse =\n                new Warehouse();\n\n        [[0]].[[1]]();\n    }\n}",
+    "tokens": [
+     "warehouse",
+     "inspect",
+     "Warehouse",
+     "WarehouseMain",
+     "private",
+     "public"
+    ],
+    "answers": [
+     "warehouse",
+     "inspect"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "倉庫点検"
+    },
+    "explanation": "inspect() にはアクセス修飾子がないので同じ warehouse パッケージで使える。インスタンスメソッドなのでクラス名ではなく warehouse オブジェクトで呼び出す。"
+   },
+   {
+    "id": "q3",
+    "type": "order",
+    "title": "別のパッケージから public メソッド呼び出し",
+    "prompt": "app パッケージの Main で service パッケージの JobService を使うように1行ずつ並べなさい。別のパッケージからは public の execute() だけを呼ぶ。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "package app;"
+     },
+     {
+      "id": "c2",
+      "text": "import service.JobService;"
+     },
+     {
+      "id": "c3",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c4",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c5",
+      "text": "        JobService service ="
+     },
+     {
+      "id": "c6",
+      "text": "            new JobService();"
+     },
+     {
+      "id": "c7",
+      "text": "        service.execute();"
+     },
+     {
+      "id": "c8",
+      "text": "    }"
+     },
+     {
+      "id": "c9",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        service.prepare();"
+     },
+     {
+      "id": "w2",
+      "text": "        service.check();"
+     }
+    ],
+    "explanation": "Main は service と別のパッケージにあるので public の execute() だけを呼べる。prepare() は同じパッケージだけで、check() は JobService 内部だけで使える。"
+   },
+   {
+    "id": "q4",
+    "type": "mini_check",
+    "title": "アクセスできるメソッド",
+    "prompt": "コンパイルできる呼び出しはどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "同じパッケージの別のクラスから private メソッドを呼ぶ。"
+     },
+     {
+      "id": "B",
+      "text": "別のパッケージからアクセス修飾子のないメソッドを呼ぶ。"
+     },
+     {
+      "id": "C",
+      "text": "別のパッケージで public クラスを import した後 public メソッドを呼ぶ。"
+     },
+     {
+      "id": "D",
+      "text": "別のパッケージの無関係なクラスから protected メソッドを呼ぶ。"
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "public はすべてのパッケージからアクセスできる。private は同じクラスだけ、アクセス修飾子なしは同じパッケージだけで使える。protected の別パッケージからのアクセスには継承関係が必要である。"
+   },
+   {
+    "id": "q5",
+    "type": "code_exercise",
+    "title": "別のパッケージにクラスとコンストラクタを公開",
+    "prompt": "app パッケージで Printer オブジェクトを生成し print() を呼べるようにアクセス修飾子を埋めなさい。（空欄3つ）",
+    "lang": "java",
+    "codeTemplate": "package device;\n\n[[0]] class Printer {\n    [[1]] Printer() {\n    }\n\n    [[2]] void print() {\n        System.out.println(\"印刷\");\n    }\n}",
+    "tokens": [
+     "public",
+     "public",
+     "public",
+     "private",
+     "protected",
+     "class",
+     "Printer",
+     "device"
+    ],
+    "answers": [
+     "public",
+     "public",
+     "public"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "印刷"
+    },
+    "explanation": "別のパッケージからクラスを使うにはクラスが public でなければならない。オブジェクトを生成するにはコンストラクタも public、print() を呼ぶにはメソッドも public でなければならない。"
+   },
+   {
+    "id": "q6",
+    "type": "order",
+    "title": "同じパッケージで2つのメソッドの使用",
+    "prompt": "Worker と TeamMain はどちらも team パッケージにある。public の work() とアクセス修飾子のない report() を順に呼ぶように並べなさい。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "package team;"
+     },
+     {
+      "id": "c2",
+      "text": "public class TeamMain {"
+     },
+     {
+      "id": "c3",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c4",
+      "text": "        Worker worker = new Worker();"
+     },
+     {
+      "id": "c5",
+      "text": "        worker.work();"
+     },
+     {
+      "id": "c6",
+      "text": "        worker.report();"
+     },
+     {
+      "id": "c7",
+      "text": "    }"
+     },
+     {
+      "id": "c8",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        worker.reset();"
+     },
+     {
+      "id": "w2",
+      "text": "        Worker.work();"
+     }
+    ],
+    "explanation": "TeamMain は Worker と同じ team パッケージにあるので public の work() と package-private の report() を両方呼べる。private の reset() は Worker クラスの外からは呼べない。"
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "外部からのオブジェクト生成を防ぐコンストラクタ",
+    "prompt": "Token クラスの外から new Token() を呼べないようにコンストラクタのアクセス修飾子を埋めなさい。（空欄1つ）",
+    "lang": "java",
+    "codeTemplate": "package token;\n\npublic class Token {\n    [[0]] Token() {\n        System.out.println(\"トークン生成\");\n    }\n}",
+    "tokens": [
+     "private",
+     "public",
+     "protected",
+     "class",
+     "void",
+     "Token"
+    ],
+    "answers": [
+     "private"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "private コンストラクタは Token クラス内部だけで呼べる。したがって別のクラスからは new Token() でオブジェクトを直接生成できない。コンストラクタには void のような戻り値の型を書かない。"
+   },
+   {
+    "id": "q8",
+    "type": "code_exercise",
+    "title": "public クラスとパッケージ内部クラス",
+    "prompt": "ファイル名が Service.java のとき、Service は別のパッケージに公開し、ServiceHelper は service パッケージ内だけで使うように完成させなさい。（空欄2つ）",
+    "lang": "java",
+    "codeTemplate": "package service;\n\n[[0]] class [[1]] {\n}\n\nclass ServiceHelper {\n}",
+    "tokens": [
+     "public",
+     "Service",
+     "private",
+     "protected",
+     "ServiceHelper",
+     "service",
+     "class"
+    ],
+    "answers": [
+     "public",
+     "Service"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "別のパッケージに公開する Service は public で宣言し、ファイル名とクラス名を一致させる。ServiceHelper にはアクセス修飾子がないので同じ service パッケージだけで使える。1つのファイルには public トップレベルクラスを1つだけ置ける。"
+   },
+   {
+    "id": "q9",
+    "type": "order",
+    "title": "3つのアクセス範囲の組み立て",
+    "prompt": "OrderService のメソッドをアクセス範囲と実行順序に合わせて1行ずつ並べなさい。app パッケージの Main が placeOrder() を呼ぶ。",
+    "items": [
+     {
+      "id": "c1",
+      "text": "package shop;"
+     },
+     {
+      "id": "c2",
+      "text": "public class OrderService {"
+     },
+     {
+      "id": "c3",
+      "text": "    public void placeOrder() {"
+     },
+     {
+      "id": "c4",
+      "text": "        checkStock();"
+     },
+     {
+      "id": "c5",
+      "text": "        calculatePrice();"
+     },
+     {
+      "id": "c6",
+      "text": "        System.out.println(\"注文完了\");"
+     },
+     {
+      "id": "c7",
+      "text": "    }"
+     },
+     {
+      "id": "c8",
+      "text": "    void checkStock() {"
+     },
+     {
+      "id": "c9",
+      "text": "        System.out.println(\"在庫確認\");"
+     },
+     {
+      "id": "c10",
+      "text": "    }"
+     },
+     {
+      "id": "c11",
+      "text": "    private void calculatePrice() {"
+     },
+     {
+      "id": "c12",
+      "text": "        System.out.println(\"価格計算\");"
+     },
+     {
+      "id": "c13",
+      "text": "    }"
+     },
+     {
+      "id": "c14",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "    private void placeOrder() {"
+     },
+     {
+      "id": "w2",
+      "text": "    void calculatePrice(int price) {"
+     }
+    ],
+    "explanation": "app パッケージから呼ぶ placeOrder() は public でなければならない。checkStock() はアクセス修飾子がないので shop パッケージ内部で共有できる。calculatePrice() は placeOrder() の内部処理なので private に制限する。"
+   },
+   {
+    "id": "q10",
+    "type": "code_exercise",
+    "title": "protected メソッドの区別",
+    "prompt": "inspect() を protected で宣言し、別のパッケージの一般クラスには public の run() だけを公開するように空欄を埋めなさい。（空欄3つ）",
+    "lang": "java",
+    "codeTemplate": "// Tool.java\npackage core;\n\npublic class Tool {\n    [[0]] void inspect() {\n        System.out.println(\"内部点検\");\n    }\n\n    public void run() {\n        [[1]]();\n        System.out.println(\"道具実行\");\n    }\n}\n\n// Main.java\npackage app;\n\nimport core.Tool;\n\npublic class Main {\n    public static void main(String[] args) {\n        Tool tool = new Tool();\n\n        tool.[[2]]();\n    }\n}",
+    "tokens": [
+     "protected",
+     "inspect",
+     "run",
+     "public",
+     "private",
+     "Tool",
+     "tool"
+    ],
+    "answers": [
+     "protected",
+     "inspect",
+     "run"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "内部点検\n道具実行"
+    },
+    "explanation": "app の Main は Tool と別のパッケージにあり継承関係もないので、protected の inspect() を直接呼べない。外部には public の run() だけを公開し、run() がクラス内部で inspect() を呼ぶ。protected の継承に関するアクセス方法は継承パートで詳しく学ぶ。"
+   },
+   {
+    "id": "q11",
+    "type": "code_exercise",
+    "title": "ローカル変数とアクセス修飾子",
+    "prompt": "メソッド内部のローカル変数を正しく宣言して 15 を出力しなさい。（空欄1つ）",
+    "lang": "java",
+    "codeTemplate": "class Calculator {\n    public void calculate() {\n        [[0]]\n\n        total += 5;\n\n        System.out.println(total);\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Calculator calculator =\n                new Calculator();\n\n        calculator.calculate();\n    }\n}",
+    "tokens": [
+     "int total = 10;",
+     "private int total = 10;",
+     "public int total = 10;",
+     "protected int total = 10;",
+     "int total == 10;"
+    ],
+    "answers": [
+     "int total = 10;"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "15"
+    },
+    "explanation": "メソッド内部に宣言するローカル変数には public, protected, private のようなアクセス修飾子を使えない。アクセス修飾子はクラス・フィールド・メソッド・コンストラクタなどに使う。== は比較演算子なので、変数の初期化には代入演算子 = を使わなければならない。",
+    "inputMode": "tokens"
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "접근 제어자로 공개 범위를 정하자",
+   "prompt": "외부에 공개할 기능은 public, 내부 처리에만 쓸 기능은 private으로 접근 범위를 구분하자.",
+   "takeaway": "public·protected·package-private·private과 클래스·생성자의 접근 범위를 11문제로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "공개 메서드와 내부 메서드",
+    "prompt": "외부에서는 send()만 호출하고, prepare()는 MessageService 내부에서만 사용하도록 빈칸을 채우시오. (빈칸 4곳)",
+    "lang": "java",
+    "codeTemplate": "class MessageService {\n    [[0]] void send() {\n        [[1]]();\n        System.out.println(\"메시지 전송\");\n    }\n\n    [[2]] void prepare() {\n        System.out.println(\"메시지 준비\");\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        MessageService service =\n                new MessageService();\n\n        service.[[3]]();\n    }\n}",
+    "tokens": [
+     "public",
+     "prepare",
+     "private",
+     "send",
+     "protected",
+     "service",
+     "MessageService",
+     "print"
+    ],
+    "answers": [
+     "public",
+     "prepare",
+     "private",
+     "send"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "메시지 준비\n메시지 전송"
+    },
+    "explanation": "외부에서 호출할 send()는 public으로 공개한다. prepare()는 send()의 내부 처리 과정이므로 private으로 제한한다. private 메서드는 같은 클래스의 send() 안에서는 호출할 수 있다."
+   },
+   {
+    "id": "q2",
+    "type": "code_exercise",
+    "title": "같은 패키지의 package-private 메서드",
+    "prompt": "Warehouse와 WarehouseMain은 같은 warehouse 패키지에 있다. 접근 제어자가 없는 inspect()를 호출하도록 빈칸을 채우시오. (빈칸 2곳)",
+    "lang": "java",
+    "codeTemplate": "package warehouse;\n\npublic class WarehouseMain {\n    public static void main(String[] args) {\n        Warehouse warehouse =\n                new Warehouse();\n\n        [[0]].[[1]]();\n    }\n}",
+    "tokens": [
+     "warehouse",
+     "inspect",
+     "Warehouse",
+     "WarehouseMain",
+     "private",
+     "public"
+    ],
+    "answers": [
+     "warehouse",
+     "inspect"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "창고 점검"
+    },
+    "explanation": "inspect()에는 접근 제어자가 없으므로 같은 warehouse 패키지에서 사용할 수 있다. 인스턴스 메서드이므로 클래스 이름이 아니라 warehouse 객체로 호출한다."
+   },
+   {
+    "id": "q3",
+    "type": "order",
+    "title": "다른 패키지에서 public 메서드 호출",
+    "prompt": "app 패키지의 Main에서 service 패키지의 JobService를 사용하도록 한 줄씩 배열하시오. 다른 패키지에서는 public인 execute()만 호출한다.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "package app;"
+     },
+     {
+      "id": "c2",
+      "text": "import service.JobService;"
+     },
+     {
+      "id": "c3",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c4",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c5",
+      "text": "        JobService service ="
+     },
+     {
+      "id": "c6",
+      "text": "            new JobService();"
+     },
+     {
+      "id": "c7",
+      "text": "        service.execute();"
+     },
+     {
+      "id": "c8",
+      "text": "    }"
+     },
+     {
+      "id": "c9",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        service.prepare();"
+     },
+     {
+      "id": "w2",
+      "text": "        service.check();"
+     }
+    ],
+    "explanation": "Main은 service와 다른 패키지에 있으므로 public인 execute()만 호출할 수 있다. prepare()는 같은 패키지에서만 사용할 수 있고 check()는 JobService 내부에서만 사용할 수 있다."
+   },
+   {
+    "id": "q4",
+    "type": "mini_check",
+    "title": "접근 가능한 메서드",
+    "prompt": "컴파일되는 호출은?",
+    "options": [
+     {
+      "id": "A",
+      "text": "같은 패키지의 다른 클래스에서 private 메서드를 호출한다."
+     },
+     {
+      "id": "B",
+      "text": "다른 패키지에서 접근 제어자가 없는 메서드를 호출한다."
+     },
+     {
+      "id": "C",
+      "text": "다른 패키지에서 public 클래스를 import한 뒤 public 메서드를 호출한다."
+     },
+     {
+      "id": "D",
+      "text": "다른 패키지의 관계없는 클래스에서 protected 메서드를 호출한다."
+     }
+    ],
+    "correctOptionId": "C",
+    "explanation": "public은 모든 패키지에서 접근할 수 있다. private은 같은 클래스에서만 사용할 수 있고, 접근 제어자가 없으면 같은 패키지에서만 사용할 수 있다. protected의 다른 패키지 접근은 상속 관계가 필요하다."
+   },
+   {
+    "id": "q5",
+    "type": "code_exercise",
+    "title": "다른 패키지에 클래스와 생성자 공개",
+    "prompt": "app 패키지에서 Printer 객체를 생성하고 print()를 호출할 수 있도록 접근 제어자를 채우시오. (빈칸 3곳)",
+    "lang": "java",
+    "codeTemplate": "package device;\n\n[[0]] class Printer {\n    [[1]] Printer() {\n    }\n\n    [[2]] void print() {\n        System.out.println(\"인쇄\");\n    }\n}",
+    "tokens": [
+     "public",
+     "public",
+     "public",
+     "private",
+     "protected",
+     "class",
+     "Printer",
+     "device"
+    ],
+    "answers": [
+     "public",
+     "public",
+     "public"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "인쇄"
+    },
+    "explanation": "다른 패키지에서 클래스를 사용하려면 클래스가 public이어야 한다. 객체를 생성하려면 생성자도 public이어야 하고, print()를 호출하려면 메서드 역시 public이어야 한다."
+   },
+   {
+    "id": "q6",
+    "type": "order",
+    "title": "같은 패키지에서 두 메서드 사용",
+    "prompt": "Worker와 TeamMain은 모두 team 패키지에 있다. public인 work()와 접근 제어자가 없는 report()를 차례로 호출하도록 배열하시오.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "package team;"
+     },
+     {
+      "id": "c2",
+      "text": "public class TeamMain {"
+     },
+     {
+      "id": "c3",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c4",
+      "text": "        Worker worker = new Worker();"
+     },
+     {
+      "id": "c5",
+      "text": "        worker.work();"
+     },
+     {
+      "id": "c6",
+      "text": "        worker.report();"
+     },
+     {
+      "id": "c7",
+      "text": "    }"
+     },
+     {
+      "id": "c8",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        worker.reset();"
+     },
+     {
+      "id": "w2",
+      "text": "        Worker.work();"
+     }
+    ],
+    "explanation": "TeamMain은 Worker와 같은 team 패키지에 있으므로 public인 work()와 package-private인 report()를 모두 호출할 수 있다. private인 reset()은 Worker 클래스 밖에서 호출할 수 없다."
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "외부 객체 생성을 막는 생성자",
+    "prompt": "Token 클래스 밖에서 new Token()을 호출할 수 없도록 생성자의 접근 제어자를 채우시오. (빈칸 1곳)",
+    "lang": "java",
+    "codeTemplate": "package token;\n\npublic class Token {\n    [[0]] Token() {\n        System.out.println(\"토큰 생성\");\n    }\n}",
+    "tokens": [
+     "private",
+     "public",
+     "protected",
+     "class",
+     "void",
+     "Token"
+    ],
+    "answers": [
+     "private"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "private 생성자는 Token 클래스 내부에서만 호출할 수 있다. 따라서 다른 클래스에서는 new Token()으로 객체를 직접 생성할 수 없다. 생성자에는 void와 같은 반환형을 작성하지 않는다."
+   },
+   {
+    "id": "q8",
+    "type": "code_exercise",
+    "title": "public 클래스와 패키지 내부 클래스",
+    "prompt": "파일 이름이 Service.java일 때 Service는 다른 패키지에 공개하고, ServiceHelper는 service 패키지 안에서만 사용하도록 완성하시오. (빈칸 2곳)",
+    "lang": "java",
+    "codeTemplate": "package service;\n\n[[0]] class [[1]] {\n}\n\nclass ServiceHelper {\n}",
+    "tokens": [
+     "public",
+     "Service",
+     "private",
+     "protected",
+     "ServiceHelper",
+     "service",
+     "class"
+    ],
+    "answers": [
+     "public",
+     "Service"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "다른 패키지에 공개할 Service는 public으로 선언하고 파일 이름과 클래스 이름을 일치시킨다. ServiceHelper에는 접근 제어자가 없으므로 같은 service 패키지에서만 사용할 수 있다. 하나의 파일에는 public 최상위 클래스를 하나만 둘 수 있다."
+   },
+   {
+    "id": "q9",
+    "type": "order",
+    "title": "세 가지 접근 범위 조립",
+    "prompt": "OrderService의 메서드를 접근 범위와 실행 순서에 맞게 한 줄씩 배열하시오. app 패키지의 Main이 placeOrder()를 호출한다.",
+    "items": [
+     {
+      "id": "c1",
+      "text": "package shop;"
+     },
+     {
+      "id": "c2",
+      "text": "public class OrderService {"
+     },
+     {
+      "id": "c3",
+      "text": "    public void placeOrder() {"
+     },
+     {
+      "id": "c4",
+      "text": "        checkStock();"
+     },
+     {
+      "id": "c5",
+      "text": "        calculatePrice();"
+     },
+     {
+      "id": "c6",
+      "text": "        System.out.println(\"주문 완료\");"
+     },
+     {
+      "id": "c7",
+      "text": "    }"
+     },
+     {
+      "id": "c8",
+      "text": "    void checkStock() {"
+     },
+     {
+      "id": "c9",
+      "text": "        System.out.println(\"재고 확인\");"
+     },
+     {
+      "id": "c10",
+      "text": "    }"
+     },
+     {
+      "id": "c11",
+      "text": "    private void calculatePrice() {"
+     },
+     {
+      "id": "c12",
+      "text": "        System.out.println(\"가격 계산\");"
+     },
+     {
+      "id": "c13",
+      "text": "    }"
+     },
+     {
+      "id": "c14",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "    private void placeOrder() {"
+     },
+     {
+      "id": "w2",
+      "text": "    void calculatePrice(int price) {"
+     }
+    ],
+    "explanation": "app 패키지에서 호출할 placeOrder()는 public이어야 한다. checkStock()은 접근 제어자가 없으므로 shop 패키지 내부에서 공유할 수 있다. calculatePrice()는 placeOrder()의 내부 처리 과정이므로 private으로 제한한다."
+   },
+   {
+    "id": "q10",
+    "type": "code_exercise",
+    "title": "protected 메서드 구분",
+    "prompt": "inspect()를 protected로 선언하고, 다른 패키지의 일반 클래스에는 public인 run()만 공개하도록 빈칸을 채우시오. (빈칸 3곳)",
+    "lang": "java",
+    "codeTemplate": "// Tool.java\npackage core;\n\npublic class Tool {\n    [[0]] void inspect() {\n        System.out.println(\"내부 점검\");\n    }\n\n    public void run() {\n        [[1]]();\n        System.out.println(\"도구 실행\");\n    }\n}\n\n// Main.java\npackage app;\n\nimport core.Tool;\n\npublic class Main {\n    public static void main(String[] args) {\n        Tool tool = new Tool();\n\n        tool.[[2]]();\n    }\n}",
+    "tokens": [
+     "protected",
+     "inspect",
+     "run",
+     "public",
+     "private",
+     "Tool",
+     "tool"
+    ],
+    "answers": [
+     "protected",
+     "inspect",
+     "run"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "내부 점검\n도구 실행"
+    },
+    "explanation": "app의 Main은 Tool과 다른 패키지에 있고 상속 관계도 아니므로 protected인 inspect()를 직접 호출할 수 없다. 외부에는 public인 run()만 공개하고, run()이 클래스 내부에서 inspect()를 호출한다. protected의 상속 관련 접근 방법은 상속 파트에서 자세히 학습한다."
+   },
+   {
+    "id": "q11",
+    "type": "code_exercise",
+    "title": "지역변수와 접근 제어자",
+    "prompt": "메서드 내부의 지역변수를 올바르게 선언하여 15를 출력하시오. (빈칸 1곳)",
+    "lang": "java",
+    "codeTemplate": "class Calculator {\n    public void calculate() {\n        [[0]]\n\n        total += 5;\n\n        System.out.println(total);\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Calculator calculator =\n                new Calculator();\n\n        calculator.calculate();\n    }\n}",
+    "tokens": [
+     "int total = 10;",
+     "private int total = 10;",
+     "public int total = 10;",
+     "protected int total = 10;",
+     "int total == 10;"
+    ],
+    "answers": [
+     "int total = 10;"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "15"
+    },
+    "explanation": "메서드 내부에 선언하는 지역변수에는 public, protected, private 같은 접근 제어자를 사용할 수 없다. 접근 제어자는 클래스·필드·메서드·생성자 등에 사용한다. ==는 비교 연산자이므로 변수 초기화에는 대입 연산자 =를 사용해야 한다.",
+    "inputMode": "tokens"
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}

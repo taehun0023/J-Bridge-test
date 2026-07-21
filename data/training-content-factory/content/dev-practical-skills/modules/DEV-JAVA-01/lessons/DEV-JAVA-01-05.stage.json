@@ -1,0 +1,641 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "if で処理を分けよう",
+   "prompt": "条件によって処理を変える if・else を、手を動かして覚えよう。",
+   "takeaway": "条件分岐の基本を10ステップで確認します。"
+  },
+  "steps": [
+   {
+    "id": "java5-q1",
+    "type": "code_exercise",
+    "title": "if 条件の完成",
+    "prompt": "score が 60 以上のとき \"合格\" を出力するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "int score = 75;\n\nif (score [[0]] 60) {\n    System.out.println(\"合格\");\n}",
+    "tokens": [
+     ">=",
+     "==",
+     "=",
+     "<="
+    ],
+    "answers": [
+     ">="
+    ],
+    "result": {
+     "kind": "console",
+     "output": "合格"
+    },
+    "explanation": "「60 以上」は「大きいか等しい」なので >= を使う。score が 75 なので 75 >= 60 は true となり合格が出力される。== や <= は 75 に対して false なので何も出力されず、= は代入なので条件式(boolean)にならずコンパイルエラーになる。"
+   },
+   {
+    "id": "java5-q2",
+    "type": "code_exercise",
+    "title": "if-else の完成",
+    "prompt": "age が 18 以上なら \"成人\"、そうでなければ \"未成年者\" を出力するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "int age = 16;\n\nif (age [[0]] 18) {\n    System.out.println(\"成人\");\n} [[1]] {\n    System.out.println(\"未成年者\");\n}",
+    "tokens": [
+     ">=",
+     "<",
+     "else",
+     "if"
+    ],
+    "answers": [
+     ">=",
+     "else"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "未成年者"
+    },
+    "explanation": "条件は「18 以上」なので >=、条件が偽のときに実行するブロックは else。age が 16 なので 16 >= 18 は false となり else の未成年者が出力される。< を使うと 16 < 18 が true で成人が出力され、else の位置に if を入れると文法エラーになる。"
+   },
+   {
+    "id": "java5-q3",
+    "type": "code_exercise",
+    "title": "あらかじめ計算した条件の使用",
+    "prompt": "あらかじめ計算しておいた hot 変数を if の条件式に使って「冷房開始」を出力するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "int temperature = 28;\nboolean hot = temperature > 25;\n\nif ([[0]]) {\n    System.out.println(\"冷房開始\");\n}",
+    "tokens": [
+     "hot",
+     "!hot",
+     "temperature",
+     "\"hot\""
+    ],
+    "answers": [
+     "hot"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "冷房開始"
+    },
+    "explanation": "hot には temperature > 25 の結果である true が保存されている。if の条件式には boolean 値の hot をそのまま使える。!hot は false になり出力されず、temperature は int なので条件式に直接使えず、\"hot\" は文字列なのでコンパイルエラーになる。"
+   },
+   {
+    "id": "java5-q4",
+    "type": "code_exercise",
+    "title": "クーポン利用の条件",
+    "prompt": "注文金額が3万円以上かつクーポンがある場合のみ「クーポン利用可」を出力するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "int orderAmount = 35000;\nboolean hasCoupon = false;\n\nif (orderAmount >= 30000 [[0]] hasCoupon) {\n    System.out.println(\"クーポン利用可\");\n} else {\n    System.out.println(\"クーポン利用不可\");\n}",
+    "tokens": [
+     "&&",
+     "||",
+     "!",
+     "+"
+    ],
+    "answers": [
+     "&&"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "クーポン利用不可"
+    },
+    "explanation": "両方の条件を満たす必要があるので、かつ を意味する && を使う。金額は3万円以上だがクーポンが無い(false)ので && は偽になり「クーポン利用不可」が出力される。|| は片方だけ真でも真なので「クーポン利用可」になり、!・+ はこの位置に合わない。"
+   },
+   {
+    "id": "java5-q5",
+    "type": "mini_check",
+    "title": "if の外のコードの確認",
+    "prompt": "次のコードの実行結果として正しいものはどれか？",
+    "options": [
+     {
+      "id": "A",
+      "text": "`湿っている`, `測定終了`"
+     },
+     {
+      "id": "B",
+      "text": "`測定終了`"
+     },
+     {
+      "id": "C",
+      "text": "`湿っている`"
+     },
+     {
+      "id": "D",
+      "text": "空の出力"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "湿度が 40 なので 70 以上の条件が偽で、if 内の「湿っている」は出力されない。if の外の文は条件と無関係に実行されるので「測定終了」だけが出力される。",
+    "code": "int humidity = 40;\n\nif (humidity >= 70) {\n    System.out.println(\"湿っている\");\n}\n\nSystem.out.println(\"測定終了\");"
+   },
+   {
+    "id": "java5-q6",
+    "type": "code_exercise",
+    "title": "パスワード長の比較",
+    "prompt": "パスワードの長さが 8 と等しいか比較するように空欄を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "int passwordLength = 8;\n\nif (passwordLength [[0]] 8) {\n    System.out.println(\"基準の長さ\");\n} else {\n    System.out.println(\"別の長さ\");\n}",
+    "tokens": [
+     "==",
+     "!=",
+     ">",
+     "="
+    ],
+    "answers": [
+     "=="
+    ],
+    "result": {
+     "kind": "console",
+     "output": "基準の長さ"
+    },
+    "explanation": "値が等しいかは == で比較する。8 == 8 は真なので「基準の長さ」が出力される。!= と > は偽になり「別の長さ」になり、= は代入なので条件の位置でコンパイルエラーになる。"
+   },
+   {
+    "id": "java5-q7",
+    "type": "code_exercise",
+    "title": "入力された速度の判定",
+    "prompt": "速度を入力し、80 を超えたら \"過速\"、そうでなければ \"正常\" を出力するように空欄に演算子を埋めなさい。",
+    "lang": "java",
+    "codeTemplate": "import java.util.Scanner;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        int speed = scanner.nextInt();\n\n        if (speed [[0]] 80) {\n            System.out.println(\"過速\");\n        } else {\n            System.out.println(\"正常\");\n        }\n    }\n}",
+    "tokens": [
+     ">",
+     "<",
+     "<=",
+     "=="
+    ],
+    "answers": [
+     ">"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "過速",
+     "stdin": "95"
+    },
+    "explanation": "「超える」は大きいという意味なので > を使う。speed が 95 なら 95 > 80 が true になり「過速」が出力される。<・<=・== はすべて false になり else の「正常」が出力されるので答えではない。"
+   },
+   {
+    "id": "java5-q8",
+    "type": "order",
+    "title": "残高とカード状態のネスト検査",
+    "prompt": "balance の宣言 → cardActive の宣言 → カード有効の検査 → 残高の検査 → 出力 の順に並べなさい。カードが有効で残高が 5000 以上なら「決済可能」だけを出力する。",
+    "items": [
+     {
+      "id": "p05q08_c1",
+      "text": "int balance = 7000;"
+     },
+     {
+      "id": "p05q08_c2",
+      "text": "boolean cardActive = true;"
+     },
+     {
+      "id": "p05q08_c3",
+      "text": "if (cardActive) {"
+     },
+     {
+      "id": "p05q08_c4",
+      "text": "    if (balance >= 5000) {"
+     },
+     {
+      "id": "p05q08_c5",
+      "text": "        System.out.println(\"決済可能\");"
+     },
+     {
+      "id": "p05q08_c6",
+      "text": "    }"
+     },
+     {
+      "id": "p05q08_c7",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "java5-q8_w01",
+      "text": "if (balance < 5000) {"
+     },
+     {
+      "id": "java5-q8_w02",
+      "text": "System.out.println(\"決済不可\");"
+     }
+    ],
+    "explanation": "外側の if でカードの有効可否を確認し、その中で残高が 5000 以上かを検査する。balance < 5000 は条件が逆で、「決済不可」は問題が求める出力ではない。"
+   },
+   {
+    "id": "java5-q9",
+    "type": "order",
+    "title": "Scanner 全体コードの組み立て",
+    "prompt": "import → クラス宣言 → main 宣言 → Scanner 生成 → 整数入力 → 条件判定と出力 → Scanner 終了 の順に並べなさい。0 以上なら「0 以上」、そうでなければ「負数」を出力し、Scanner は判定と出力がすべて終わった後に閉じる。",
+    "items": [
+     {
+      "id": "i1",
+      "text": "import java.util.Scanner;"
+     },
+     {
+      "id": "i2",
+      "text": "public class Main {"
+     },
+     {
+      "id": "i3",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "i4",
+      "text": "        Scanner scanner = new Scanner(System.in);"
+     },
+     {
+      "id": "i5",
+      "text": "        int number = scanner.nextInt();"
+     },
+     {
+      "id": "i6",
+      "text": "        if (number >= 0) {"
+     },
+     {
+      "id": "i7",
+      "text": "            System.out.println(\"0以上\");"
+     },
+     {
+      "id": "i8",
+      "text": "        } else {"
+     },
+     {
+      "id": "i9",
+      "text": "            System.out.println(\"負の数\");"
+     },
+     {
+      "id": "i10",
+      "text": "        }"
+     },
+     {
+      "id": "i11",
+      "text": "        scanner.close();"
+     },
+     {
+      "id": "i12",
+      "text": "    }"
+     },
+     {
+      "id": "i13",
+      "text": "}"
+     }
+    ],
+    "explanation": "import → クラス宣言 → main 宣言 → Scanner 準備 → 整数入力 → if 条件 → 真のとき 0以上 → else → 偽のとき 負の数 → 条件を閉じる → close → main を閉じる → クラスを閉じる、の順。",
+    "distractors": [
+     {
+      "id": "java5-q9_w01",
+      "text": "int number = scanner.nextLine();"
+     },
+     {
+      "id": "java5-q9_w02",
+      "text": "if (number > 0) {"
+     }
+    ]
+   },
+   {
+    "id": "java5-q10",
+    "type": "code_exercise",
+    "title": "偶数・奇数の完成",
+    "prompt": "整数を入力受け取り、偶数なら \"偶数\"、そうでなければ \"奇数\" を出力するように空欄を埋めなさい。(入力値 4)",
+    "lang": "java",
+    "codeTemplate": "import java.util.Scanner;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        int number = scanner.nextInt();\n\n        if (number [[0]] 2 [[1]] 0) {\n            System.out.println(\"偶数\");\n        } [[2]] {\n            System.out.println(\"奇数\");\n        }\n\n        scanner.[[3]]();\n    }\n}",
+    "tokens": [
+     "%",
+     "==",
+     "else",
+     "close",
+     "/",
+     "!=",
+     "if",
+     "end"
+    ],
+    "answers": [
+     "%",
+     "==",
+     "else",
+     "close"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "偶数",
+     "stdin": "4"
+    },
+    "explanation": "偶数判定は 2 で割った余り(%)が 0 と等しい(==)かで行う。number が 4 なので 4 % 2 == 0 は true となり偶数が出力される。条件が偽のときのブロックは else、Scanner の終了は close()。/ は商なので判定が変わり、!= は奇数になり、end は存在しないメソッドなのでコンパイルエラーになる。"
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "if로 처리를 나누자",
+   "prompt": "조건에 따라 처리를 바꾸는 if·else를 손으로 익히자.",
+   "takeaway": "조건분기의 기본을 10스텝으로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "java5-q1",
+    "type": "code_exercise",
+    "title": "if 조건 완성",
+    "prompt": "score가 60 이상일 때 \"합격\"을 출력하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "int score = 75;\n\nif (score [[0]] 60) {\n    System.out.println(\"합격\");\n}",
+    "tokens": [
+     ">=",
+     "==",
+     "=",
+     "<="
+    ],
+    "answers": [
+     ">="
+    ],
+    "result": {
+     "kind": "console",
+     "output": "합격"
+    },
+    "explanation": "\"60 이상\"은 크거나 같음이므로 >=를 쓴다. score가 75라 75 >= 60은 true여서 합격이 출력된다. ==나 <=는 75에 대해 false라 아무것도 출력되지 않고, =는 대입이라 조건식(boolean)이 아니어서 컴파일 오류가 난다."
+   },
+   {
+    "id": "java5-q2",
+    "type": "code_exercise",
+    "title": "if-else 완성",
+    "prompt": "age가 18 이상이면 \"성인\", 아니면 \"미성년자\"를 출력하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "int age = 16;\n\nif (age [[0]] 18) {\n    System.out.println(\"성인\");\n} [[1]] {\n    System.out.println(\"미성년자\");\n}",
+    "tokens": [
+     ">=",
+     "<",
+     "else",
+     "if"
+    ],
+    "answers": [
+     ">=",
+     "else"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "미성년자"
+    },
+    "explanation": "조건은 \"18 이상\"이므로 >=, 조건이 거짓일 때 실행할 블록은 else다. age가 16이라 16 >= 18은 false여서 else의 미성년자가 출력된다. <를 쓰면 16 < 18이 true라 성인이 출력되고, else 자리에 if를 넣으면 문법 오류가 난다."
+   },
+   {
+    "id": "java5-q3",
+    "type": "code_exercise",
+    "title": "미리 계산한 조건 사용",
+    "prompt": "미리 계산해 둔 hot 변수를 if 조건식에 사용하여 「냉방 시작」을 출력하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "int temperature = 28;\nboolean hot = temperature > 25;\n\nif ([[0]]) {\n    System.out.println(\"냉방 시작\");\n}",
+    "tokens": [
+     "hot",
+     "!hot",
+     "temperature",
+     "\"hot\""
+    ],
+    "answers": [
+     "hot"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "냉방 시작"
+    },
+    "explanation": "hot에는 temperature > 25의 결과인 true가 저장되어 있다. if 조건식에는 boolean 값인 hot을 그대로 사용할 수 있다. !hot은 false가 되어 출력되지 않고, temperature는 int라 조건식에 바로 쓸 수 없으며, \"hot\"은 문자열이라 컴파일 오류가 난다."
+   },
+   {
+    "id": "java5-q4",
+    "type": "code_exercise",
+    "title": "쿠폰 사용 조건",
+    "prompt": "주문 금액이 3만원 이상이면서 쿠폰이 있을 때만 쿠폰 사용 가능을 출력하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "int orderAmount = 35000;\nboolean hasCoupon = false;\n\nif (orderAmount >= 30000 [[0]] hasCoupon) {\n    System.out.println(\"쿠폰 사용 가능\");\n} else {\n    System.out.println(\"쿠폰 사용 불가\");\n}",
+    "tokens": [
+     "&&",
+     "||",
+     "!",
+     "+"
+    ],
+    "answers": [
+     "&&"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "쿠폰 사용 불가"
+    },
+    "explanation": "두 조건을 모두 만족해야 하므로 그리고를 뜻하는 &&를 쓴다. 금액은 3만원 이상이지만 쿠폰이 없어(false) &&는 거짓이 되어 「쿠폰 사용 불가」가 출력된다. ||는 하나만 참이어도 참이라 「쿠폰 사용 가능」이 나오고, !·+는 이 자리에 맞지 않는다."
+   },
+   {
+    "id": "java5-q5",
+    "type": "mini_check",
+    "title": "if 밖의 코드 확인",
+    "prompt": "다음 코드의 실행 결과로 옳은 것은?",
+    "options": [
+     {
+      "id": "A",
+      "text": "`습함`, `측정 종료`"
+     },
+     {
+      "id": "B",
+      "text": "`측정 종료`"
+     },
+     {
+      "id": "C",
+      "text": "`습함`"
+     },
+     {
+      "id": "D",
+      "text": "빈 출력"
+     }
+    ],
+    "correctOptionId": "B",
+    "explanation": "습도가 40이라 70 이상 조건이 거짓이므로 if 안의 「습함」은 출력되지 않는다. if 밖의 문장은 조건과 무관하게 실행되므로 「측정 종료」만 출력된다.",
+    "code": "int humidity = 40;\n\nif (humidity >= 70) {\n    System.out.println(\"습함\");\n}\n\nSystem.out.println(\"측정 종료\");"
+   },
+   {
+    "id": "java5-q6",
+    "type": "code_exercise",
+    "title": "비밀번호 길이 비교",
+    "prompt": "비밀번호 길이가 8과 같은지 비교하도록 빈칸을 채우시오.",
+    "lang": "java",
+    "codeTemplate": "int passwordLength = 8;\n\nif (passwordLength [[0]] 8) {\n    System.out.println(\"기준 길이\");\n} else {\n    System.out.println(\"다른 길이\");\n}",
+    "tokens": [
+     "==",
+     "!=",
+     ">",
+     "="
+    ],
+    "answers": [
+     "=="
+    ],
+    "result": {
+     "kind": "console",
+     "output": "기준 길이"
+    },
+    "explanation": "값이 같은지는 == 로 비교한다. 8 == 8은 참이라 「기준 길이」가 출력된다. !=와 >는 거짓이 되어 「다른 길이」가 나오고, =는 대입이라 조건 자리에서 컴파일 오류가 난다."
+   },
+   {
+    "id": "java5-q7",
+    "type": "code_exercise",
+    "title": "입력받은 속도 판정",
+    "prompt": "속도를 입력받아 80을 초과하면 \"과속\", 그렇지 않으면 \"정상\"을 출력하도록 빈칸에 연산자를 채우시오.",
+    "lang": "java",
+    "codeTemplate": "import java.util.Scanner;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        int speed = scanner.nextInt();\n\n        if (speed [[0]] 80) {\n            System.out.println(\"과속\");\n        } else {\n            System.out.println(\"정상\");\n        }\n    }\n}",
+    "tokens": [
+     ">",
+     "<",
+     "<=",
+     "=="
+    ],
+    "answers": [
+     ">"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "과속",
+     "stdin": "95"
+    },
+    "explanation": "'초과'는 크다는 뜻이므로 > 를 쓴다. speed가 95이면 95 > 80이 true라 「과속」이 출력된다. <·<=·==는 모두 false가 되어 else의 「정상」이 출력되므로 답이 아니다."
+   },
+   {
+    "id": "java5-q8",
+    "type": "order",
+    "title": "잔액과 카드 상태 중첩 검사",
+    "prompt": "balance 선언 → cardActive 선언 → 카드 활성 검사 → 잔액 검사 → 출력 순서로 배열하시오. 카드가 활성 상태이고 잔액이 5000 이상이면 「결제 가능」만 출력한다.",
+    "items": [
+     {
+      "id": "p05q08_c1",
+      "text": "int balance = 7000;"
+     },
+     {
+      "id": "p05q08_c2",
+      "text": "boolean cardActive = true;"
+     },
+     {
+      "id": "p05q08_c3",
+      "text": "if (cardActive) {"
+     },
+     {
+      "id": "p05q08_c4",
+      "text": "    if (balance >= 5000) {"
+     },
+     {
+      "id": "p05q08_c5",
+      "text": "        System.out.println(\"결제 가능\");"
+     },
+     {
+      "id": "p05q08_c6",
+      "text": "    }"
+     },
+     {
+      "id": "p05q08_c7",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "java5-q8_w01",
+      "text": "if (balance < 5000) {"
+     },
+     {
+      "id": "java5-q8_w02",
+      "text": "System.out.println(\"결제 불가\");"
+     }
+    ],
+    "explanation": "바깥 if로 카드 활성 여부를 확인하고, 그 안에서 잔액이 5000 이상인지 검사한다. balance < 5000은 조건이 반대이며, 「결제 불가」는 문제에서 요구한 출력이 아니다."
+   },
+   {
+    "id": "java5-q9",
+    "type": "order",
+    "title": "Scanner 전체 코드 조립",
+    "prompt": "import → 클래스 선언 → main 선언 → Scanner 생성 → 정수 입력 → 조건 판정과 출력 → Scanner 종료 순서로 배열하시오. 0 이상이면 「0 이상」, 아니면 「음수」를 출력하며, Scanner는 판정과 출력이 모두 끝난 뒤 닫는다.",
+    "items": [
+     {
+      "id": "i1",
+      "text": "import java.util.Scanner;"
+     },
+     {
+      "id": "i2",
+      "text": "public class Main {"
+     },
+     {
+      "id": "i3",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "i4",
+      "text": "        Scanner scanner = new Scanner(System.in);"
+     },
+     {
+      "id": "i5",
+      "text": "        int number = scanner.nextInt();"
+     },
+     {
+      "id": "i6",
+      "text": "        if (number >= 0) {"
+     },
+     {
+      "id": "i7",
+      "text": "            System.out.println(\"0 이상\");"
+     },
+     {
+      "id": "i8",
+      "text": "        } else {"
+     },
+     {
+      "id": "i9",
+      "text": "            System.out.println(\"음수\");"
+     },
+     {
+      "id": "i10",
+      "text": "        }"
+     },
+     {
+      "id": "i11",
+      "text": "        scanner.close();"
+     },
+     {
+      "id": "i12",
+      "text": "    }"
+     },
+     {
+      "id": "i13",
+      "text": "}"
+     }
+    ],
+    "explanation": "import → 클래스 선언 → main 선언 → Scanner 준비 → 정수 입력 → if 조건 → 참일 때 0 이상 → else → 거짓일 때 음수 → 조건 닫기 → close → main 닫기 → 클래스 닫기 순서다.",
+    "distractors": [
+     {
+      "id": "java5-q9_w01",
+      "text": "int number = scanner.nextLine();"
+     },
+     {
+      "id": "java5-q9_w02",
+      "text": "if (number > 0) {"
+     }
+    ]
+   },
+   {
+    "id": "java5-q10",
+    "type": "code_exercise",
+    "title": "짝수·홀수 완성",
+    "prompt": "정수를 입력받아 짝수이면 \"짝수\", 아니면 \"홀수\"를 출력하도록 빈칸을 채우시오. (입력값 4)",
+    "lang": "java",
+    "codeTemplate": "import java.util.Scanner;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        int number = scanner.nextInt();\n\n        if (number [[0]] 2 [[1]] 0) {\n            System.out.println(\"짝수\");\n        } [[2]] {\n            System.out.println(\"홀수\");\n        }\n\n        scanner.[[3]]();\n    }\n}",
+    "tokens": [
+     "%",
+     "==",
+     "else",
+     "close",
+     "/",
+     "!=",
+     "if",
+     "end"
+    ],
+    "answers": [
+     "%",
+     "==",
+     "else",
+     "close"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "짝수",
+     "stdin": "4"
+    },
+    "explanation": "짝수 판정은 2로 나눈 나머지(%)가 0과 같은지(==)로 한다. number가 4라 4 % 2 == 0은 true여서 짝수가 출력된다. 조건이 거짓일 때 블록은 else, Scanner 종료는 close()다. /는 몫이라 판정이 달라지고, !=는 홀수가 되며, end는 없는 메서드라 컴파일 오류가 난다."
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}

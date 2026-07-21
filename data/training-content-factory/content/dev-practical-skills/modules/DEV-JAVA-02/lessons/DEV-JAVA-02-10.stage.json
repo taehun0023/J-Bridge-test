@@ -1,0 +1,641 @@
+{
+ "version": 1,
+ "ja": {
+  "hook": {
+   "title": "オブジェクト配列とオブジェクト間の協力を扱おう",
+   "prompt": "同じ種類のオブジェクトは配列で管理し、オブジェクトが他のオブジェクトの機能を使うよう協力させよう。",
+   "takeaway": "オブジェクト配列の宣言・巡回・合計・検索とオブジェクト間の協力を11問で確認します。"
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "オブジェクト配列の宣言",
+    "prompt": "Product オブジェクトを3つ格納する配列を宣言・生成しなさい。（空欄2つ）",
+    "lang": "java",
+    "codeTemplate": "class Product {\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        [[0]][] products = new [[1]][3];\n    }\n}",
+    "tokens": [
+     "Product",
+     "Product",
+     "products",
+     "String",
+     "new"
+    ],
+    "answers": [
+     "Product",
+     "Product"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "Product[] は Product オブジェクトの参照値を格納する配列型で、new Product[3] は参照値を入れる空間を3つ作る。まだオブジェクトは生成されず、すべて null である。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q2",
+    "type": "mini_check",
+    "title": "オブジェクト配列の初期値",
+    "prompt": "`Book[] books = new Book[2];` の直後に2要素を出力すると？\n```java\nSystem.out.println(books[0]);\nSystem.out.println(books[1]);\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "null / null"
+     },
+     {
+      "id": "B",
+      "text": "0 / 0"
+     },
+     {
+      "id": "C",
+      "text": "コンパイルエラー"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "配列だけを生成したので、まだ Book オブジェクトは格納されていない。参照型配列の初期値は null である。"
+   },
+   {
+    "id": "q3",
+    "type": "code_exercise",
+    "title": "オブジェクトを格納して使う",
+    "prompt": "配列に Book オブジェクトを格納してタイトルを出力しなさい。（空欄2つ）",
+    "lang": "java",
+    "codeTemplate": "class Book {\n    private String title;\n    public Book(String title) { this.title = title; }\n    public String getTitle() { return title; }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Book[] books = new Book[2];\n        books[0] = [[0]] Book(\"Java入門\");\n        System.out.println(books[0].[[1]]());\n    }\n}",
+    "tokens": [
+     "new",
+     "this",
+     "static",
+     "getTitle",
+     "setTitle",
+     "title"
+    ],
+    "answers": [
+     "new",
+     "getTitle"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Java入門"
+    },
+    "explanation": "new で Book オブジェクトを作り配列要素に格納し、getTitle() でタイトルを読む。title はフィールド名なのでメソッドのように呼べない。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q4",
+    "type": "code_exercise",
+    "title": "オブジェクト配列を巡回する",
+    "prompt": "インデックス for 文ですべての学生の名前を出力しなさい。（空欄2つ）",
+    "lang": "java",
+    "codeTemplate": "class Student {\n    private String name;\n    public Student(String name) { this.name = name; }\n    public String getName() { return name; }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Student[] students = { new Student(\"Minsu\"), new Student(\"Jisu\") };\n        for (int i = 0; i < students.[[0]]; i++) {\n            System.out.println(students[i].[[1]]());\n        }\n    }\n}",
+    "tokens": [
+     "length",
+     "size",
+     "count",
+     "getName",
+     "setName",
+     "name"
+    ],
+    "answers": [
+     "length",
+     "getName"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Minsu\nJisu"
+    },
+    "explanation": "配列の要素数は length フィールドで得る。各要素の名前は getName() で読む。size() や count は配列にはない。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q5",
+    "type": "code_exercise",
+    "title": "null 要素を飛ばす",
+    "prompt": "配列に null が混ざっているとき、null でない商品名だけ出力しなさい。（空欄1つ）",
+    "lang": "java",
+    "codeTemplate": "class Product {\n    private String name;\n    public Product(String name) { this.name = name; }\n    public String getName() { return name; }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Product[] products = { new Product(\"りんご\"), null, new Product(\"バナナ\") };\n        for (Product product : products) {\n            if ([[0]]) {\n                System.out.println(product.getName());\n            }\n        }\n    }\n}",
+    "tokens": [
+     "product != null",
+     "product == null",
+     "products != null"
+    ],
+    "answers": [
+     "product != null"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "りんご\nバナナ"
+    },
+    "explanation": "product != null の要素だけメソッドを呼べば安全。product == null だと null 要素で getName() を呼び実行時エラー(NullPointerException)になる。products != null は配列自体だけを検査する。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q6",
+    "type": "code_exercise",
+    "title": "点数の合計を計算する",
+    "prompt": "学生配列の点数の合計を求めるように完成させなさい。（空欄2つ）",
+    "lang": "java",
+    "codeTemplate": "class Student {\n    private int score;\n    public Student(int score) { this.score = score; }\n    public int getScore() { return score; }\n}\n\npublic class Main {\n    public static int sum(Student[] students) {\n        int total = 0;\n        for (Student student : students) {\n            total [[0]] student.[[1]]();\n        }\n        return total;\n    }\n\n    public static void main(String[] args) {\n        Student[] students = { new Student(80), new Student(90), new Student(70) };\n        System.out.println(sum(students));\n    }\n}",
+    "tokens": [
+     "+=",
+     "-=",
+     "=",
+     "getScore",
+     "setScore",
+     "getName"
+    ],
+    "answers": [
+     "+=",
+     "getScore"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "240"
+    },
+    "explanation": "total += student.getScore() で各学生の点数を累積する。-= や = では合計にならず、getName は点数ではなく名前を返す。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "名前でオブジェクトを検索する",
+    "prompt": "名前が正確に一致する学生を探して返すように完成させなさい。（空欄2つ）",
+    "lang": "java",
+    "codeTemplate": "class Student {\n    private String name;\n    public Student(String name) { this.name = name; }\n    public String getName() { return name; }\n}\n\npublic class Main {\n    public static Student find(Student[] students, String name) {\n        for (Student student : students) {\n            if (student != null && student.getName().[[0]](name)) {\n                return [[1]];\n            }\n        }\n        return null;\n    }\n\n    public static void main(String[] args) {\n        Student[] students = { new Student(\"LeeJisu\"), new Student(\"Jisu\") };\n        System.out.println(find(students, \"Jisu\").getName());\n    }\n}",
+    "tokens": [
+     "equals",
+     "contains",
+     "isEmpty",
+     "student",
+     "students",
+     "name"
+    ],
+    "answers": [
+     "equals",
+     "student"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "Jisu"
+    },
+    "explanation": "名前の比較は equals で完全一致を確認する。contains は部分一致なので \"LeeJisu\" も \"Jisu\" を含んで先に引っかかり、望む結果にならない。見つかったらその student オブジェクトを返す。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q8",
+    "type": "code_exercise",
+    "title": "商品と注文の協力",
+    "prompt": "注文金額が 商品価格 × 数量 になるように完成させなさい。（空欄3つ）",
+    "lang": "java",
+    "codeTemplate": "class Product {\n    private int price;\n    public Product(int price) { this.price = price; }\n    public int getPrice() { return price; }\n}\n\nclass Order {\n    private Product product;\n    private int quantity;\n    public Order(Product product, int quantity) {\n        this.product = product;\n        this.quantity = quantity;\n    }\n    public int getTotalPrice() {\n        return [[0]].[[1]]() * [[2]];\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Product product = new Product(30000);\n        Order order = new Order(product, 2);\n        System.out.println(order.getTotalPrice());\n    }\n}",
+    "tokens": [
+     "product",
+     "quantity",
+     "Order",
+     "getPrice",
+     "setPrice",
+     "getName",
+     "quantity",
+     "price"
+    ],
+    "answers": [
+     "product",
+     "getPrice",
+     "quantity"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "60000"
+    },
+    "explanation": "Order が product オブジェクトに getPrice() で価格を要求し、quantity を掛けて金額を計算する。このように他のオブジェクトの機能を使うのがオブジェクト間の協力である。",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q9",
+    "type": "mini_check",
+    "title": "オブジェクト間の協力の結果",
+    "prompt": "価格 15000 の product で order1(数量 2)、order2(数量 3)を作ると、それぞれの合計額は？\n```java\nProduct product = new Product(\"マウス\", 15000);\nOrder order1 = new Order(product, 2);\nOrder order2 = new Order(product, 3);\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "30000 / 45000"
+     },
+     {
+      "id": "B",
+      "text": "30000 / 30000"
+     },
+     {
+      "id": "C",
+      "text": "45000 / 45000"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "どちらの注文も同じ product の価格 15000 を使う。order1 は ×2 で 30000、order2 は ×3 で 45000。"
+   },
+   {
+    "id": "q10",
+    "type": "order",
+    "title": "オブジェクト配列を完成させる",
+    "prompt": "学生2人を配列に格納し、名前を順に出力するように並べなさい。（Student クラスは既にある）",
+    "items": [
+     {
+      "id": "c1",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c2",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c3",
+      "text": "        Student[] students = {"
+     },
+     {
+      "id": "c4",
+      "text": "            new Student(\"Minsu\"),"
+     },
+     {
+      "id": "c5",
+      "text": "            new Student(\"Jisu\")"
+     },
+     {
+      "id": "c6",
+      "text": "        };"
+     },
+     {
+      "id": "c7",
+      "text": "        for (Student student : students) {"
+     },
+     {
+      "id": "c8",
+      "text": "            System.out.println(student.getName());"
+     },
+     {
+      "id": "c9",
+      "text": "        }"
+     },
+     {
+      "id": "c10",
+      "text": "    }"
+     },
+     {
+      "id": "c11",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        Student student = new Student(\"Minsu\");"
+     }
+    ],
+    "explanation": "波かっこ初期化で学生2人を配列に格納し、拡張 for 文で各学生の名前を出力する。単一変数の宣言は配列ではないので巡回できない。"
+   },
+   {
+    "id": "q11",
+    "type": "code_exercise",
+    "title": "クラスの平均を求める",
+    "prompt": "学生の点数の平均を小数で求めるように完成させなさい。（空欄2つ）",
+    "lang": "java",
+    "codeTemplate": "class Student {\n    private int score;\n    public Student(int score) { this.score = score; }\n    public int getScore() { return score; }\n}\n\nclass Classroom {\n    private Student[] students;\n    public Classroom(Student[] students) { this.students = students; }\n    public double getAverage() {\n        int total = 0;\n        for (Student student : students) {\n            total += student.getScore();\n        }\n        return [[0]] / students.[[1]];\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Student[] students = { new Student(85), new Student(90) };\n        Classroom classroom = new Classroom(students);\n        System.out.println(classroom.getAverage());\n    }\n}",
+    "tokens": [
+     "(double) total",
+     "total",
+     "students",
+     "length",
+     "size",
+     "count"
+    ],
+    "answers": [
+     "(double) total",
+     "length"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "87.5"
+    },
+    "explanation": "double の平均を求めるには整数の割り算にならないよう (double) total で型変換する。total だけだと整数の割り算になり小数が消える。要素数は length で得る。",
+    "inputMode": "tokens"
+   }
+  ],
+  "referenceLabel": "参考ノートを見る"
+ },
+ "ko": {
+  "hook": {
+   "title": "객체 배열과 객체 간 협력을 다루자",
+   "prompt": "같은 종류의 객체는 배열로 관리하고, 객체가 다른 객체의 기능을 사용하도록 협력시키자.",
+   "takeaway": "객체 배열 선언·순회·합계·검색과 객체 간 협력을 11문제로 확인합니다."
+  },
+  "steps": [
+   {
+    "id": "q1",
+    "type": "code_exercise",
+    "title": "객체 배열 선언하기",
+    "prompt": "Product 객체 3개를 저장할 배열을 선언하고 생성하시오. (빈칸 2곳)",
+    "lang": "java",
+    "codeTemplate": "class Product {\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        [[0]][] products = new [[1]][3];\n    }\n}",
+    "tokens": [
+     "Product",
+     "Product",
+     "products",
+     "String",
+     "new"
+    ],
+    "answers": [
+     "Product",
+     "Product"
+    ],
+    "result": {
+     "kind": "console",
+     "output": ""
+    },
+    "explanation": "Product[]는 Product 객체의 참조값을 저장하는 배열 타입이고, new Product[3]은 참조값을 담을 공간 3개를 만든다. 아직 객체는 생성되지 않아 모두 null이다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q2",
+    "type": "mini_check",
+    "title": "객체 배열의 초기값",
+    "prompt": "`Book[] books = new Book[2];` 직후 두 요소를 출력하면?\n```java\nSystem.out.println(books[0]);\nSystem.out.println(books[1]);\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "null / null"
+     },
+     {
+      "id": "B",
+      "text": "0 / 0"
+     },
+     {
+      "id": "C",
+      "text": "컴파일 오류"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "배열만 생성했으므로 아직 Book 객체는 저장되지 않았다. 참조형 배열의 초기값은 null이다."
+   },
+   {
+    "id": "q3",
+    "type": "code_exercise",
+    "title": "객체 저장하고 사용하기",
+    "prompt": "배열에 Book 객체를 저장하고 제목을 출력하시오. (빈칸 2곳)",
+    "lang": "java",
+    "codeTemplate": "class Book {\n    private String title;\n    public Book(String title) { this.title = title; }\n    public String getTitle() { return title; }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Book[] books = new Book[2];\n        books[0] = [[0]] Book(\"자바 기초\");\n        System.out.println(books[0].[[1]]());\n    }\n}",
+    "tokens": [
+     "new",
+     "this",
+     "static",
+     "getTitle",
+     "setTitle",
+     "title"
+    ],
+    "answers": [
+     "new",
+     "getTitle"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "자바 기초"
+    },
+    "explanation": "new로 Book 객체를 만들어 배열 요소에 저장하고, getTitle()로 제목을 읽는다. title은 필드 이름이라 메서드처럼 호출할 수 없다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q4",
+    "type": "code_exercise",
+    "title": "객체 배열 순회하기",
+    "prompt": "인덱스 for문으로 모든 학생의 이름을 출력하시오. (빈칸 2곳)",
+    "lang": "java",
+    "codeTemplate": "class Student {\n    private String name;\n    public Student(String name) { this.name = name; }\n    public String getName() { return name; }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Student[] students = { new Student(\"민수\"), new Student(\"지수\") };\n        for (int i = 0; i < students.[[0]]; i++) {\n            System.out.println(students[i].[[1]]());\n        }\n    }\n}",
+    "tokens": [
+     "length",
+     "size",
+     "count",
+     "getName",
+     "setName",
+     "name"
+    ],
+    "answers": [
+     "length",
+     "getName"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "민수\n지수"
+    },
+    "explanation": "배열의 요소 개수는 length 필드로 얻는다. 각 요소의 이름은 getName()으로 읽는다. size()나 count는 배열에 없다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q5",
+    "type": "code_exercise",
+    "title": "null 요소 건너뛰기",
+    "prompt": "배열에 null이 섞여 있을 때 null이 아닌 상품 이름만 출력하시오. (빈칸 1곳)",
+    "lang": "java",
+    "codeTemplate": "class Product {\n    private String name;\n    public Product(String name) { this.name = name; }\n    public String getName() { return name; }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Product[] products = { new Product(\"사과\"), null, new Product(\"바나나\") };\n        for (Product product : products) {\n            if ([[0]]) {\n                System.out.println(product.getName());\n            }\n        }\n    }\n}",
+    "tokens": [
+     "product != null",
+     "product == null",
+     "products != null"
+    ],
+    "answers": [
+     "product != null"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "사과\n바나나"
+    },
+    "explanation": "product != null인 요소만 메서드를 호출해야 안전하다. product == null이면 null 요소에서 getName()을 호출해 실행 중 오류(NullPointerException)가 난다. products != null은 배열 자체만 검사한다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q6",
+    "type": "code_exercise",
+    "title": "점수 합계 계산하기",
+    "prompt": "학생 배열의 점수 합계를 구하도록 완성하시오. (빈칸 2곳)",
+    "lang": "java",
+    "codeTemplate": "class Student {\n    private int score;\n    public Student(int score) { this.score = score; }\n    public int getScore() { return score; }\n}\n\npublic class Main {\n    public static int sum(Student[] students) {\n        int total = 0;\n        for (Student student : students) {\n            total [[0]] student.[[1]]();\n        }\n        return total;\n    }\n\n    public static void main(String[] args) {\n        Student[] students = { new Student(80), new Student(90), new Student(70) };\n        System.out.println(sum(students));\n    }\n}",
+    "tokens": [
+     "+=",
+     "-=",
+     "=",
+     "getScore",
+     "setScore",
+     "getName"
+    ],
+    "answers": [
+     "+=",
+     "getScore"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "240"
+    },
+    "explanation": "total += student.getScore()로 각 학생의 점수를 누적한다. -=나 =를 쓰면 합계가 되지 않고, getName은 점수가 아니라 이름을 반환한다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q7",
+    "type": "code_exercise",
+    "title": "이름으로 객체 검색하기",
+    "prompt": "이름이 정확히 일치하는 학생을 찾아 반환하도록 완성하시오. (빈칸 2곳)",
+    "lang": "java",
+    "codeTemplate": "class Student {\n    private String name;\n    public Student(String name) { this.name = name; }\n    public String getName() { return name; }\n}\n\npublic class Main {\n    public static Student find(Student[] students, String name) {\n        for (Student student : students) {\n            if (student != null && student.getName().[[0]](name)) {\n                return [[1]];\n            }\n        }\n        return null;\n    }\n\n    public static void main(String[] args) {\n        Student[] students = { new Student(\"이지수\"), new Student(\"지수\") };\n        System.out.println(find(students, \"지수\").getName());\n    }\n}",
+    "tokens": [
+     "equals",
+     "contains",
+     "isEmpty",
+     "student",
+     "students",
+     "name"
+    ],
+    "answers": [
+     "equals",
+     "student"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "지수"
+    },
+    "explanation": "이름 비교는 equals로 정확히 같은지 확인한다. contains는 부분 포함이라 \"이지수\"도 \"지수\"를 포함해 먼저 걸리므로 원하는 결과가 아니다. 찾으면 그 student 객체를 반환한다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q8",
+    "type": "code_exercise",
+    "title": "상품과 주문의 협력",
+    "prompt": "주문 금액이 상품 가격 × 수량이 되도록 완성하시오. (빈칸 3곳)",
+    "lang": "java",
+    "codeTemplate": "class Product {\n    private int price;\n    public Product(int price) { this.price = price; }\n    public int getPrice() { return price; }\n}\n\nclass Order {\n    private Product product;\n    private int quantity;\n    public Order(Product product, int quantity) {\n        this.product = product;\n        this.quantity = quantity;\n    }\n    public int getTotalPrice() {\n        return [[0]].[[1]]() * [[2]];\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Product product = new Product(30000);\n        Order order = new Order(product, 2);\n        System.out.println(order.getTotalPrice());\n    }\n}",
+    "tokens": [
+     "product",
+     "quantity",
+     "Order",
+     "getPrice",
+     "setPrice",
+     "getName",
+     "quantity",
+     "price"
+    ],
+    "answers": [
+     "product",
+     "getPrice",
+     "quantity"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "60000"
+    },
+    "explanation": "Order가 product 객체에 getPrice()로 가격을 요청하고 quantity를 곱해 금액을 계산한다. 이렇게 다른 객체의 기능을 사용하는 것이 객체 간 협력이다.",
+    "inputMode": "tokens"
+   },
+   {
+    "id": "q9",
+    "type": "mini_check",
+    "title": "객체 간 협력 결과",
+    "prompt": "가격 15000인 product로 order1(수량 2), order2(수량 3)을 만들면 각 총액은?\n```java\nProduct product = new Product(\"마우스\", 15000);\nOrder order1 = new Order(product, 2);\nOrder order2 = new Order(product, 3);\n```",
+    "options": [
+     {
+      "id": "A",
+      "text": "30000 / 45000"
+     },
+     {
+      "id": "B",
+      "text": "30000 / 30000"
+     },
+     {
+      "id": "C",
+      "text": "45000 / 45000"
+     }
+    ],
+    "correctOptionId": "A",
+    "explanation": "두 주문 모두 같은 product의 가격 15000을 사용한다. order1은 ×2로 30000, order2는 ×3으로 45000이다."
+   },
+   {
+    "id": "q10",
+    "type": "order",
+    "title": "객체 배열 완성하기",
+    "prompt": "학생 두 명을 배열에 저장하고 이름을 차례대로 출력하도록 배열하시오. (Student 클래스는 이미 있다)",
+    "items": [
+     {
+      "id": "c1",
+      "text": "public class Main {"
+     },
+     {
+      "id": "c2",
+      "text": "    public static void main(String[] args) {"
+     },
+     {
+      "id": "c3",
+      "text": "        Student[] students = {"
+     },
+     {
+      "id": "c4",
+      "text": "            new Student(\"민수\"),"
+     },
+     {
+      "id": "c5",
+      "text": "            new Student(\"지수\")"
+     },
+     {
+      "id": "c6",
+      "text": "        };"
+     },
+     {
+      "id": "c7",
+      "text": "        for (Student student : students) {"
+     },
+     {
+      "id": "c8",
+      "text": "            System.out.println(student.getName());"
+     },
+     {
+      "id": "c9",
+      "text": "        }"
+     },
+     {
+      "id": "c10",
+      "text": "    }"
+     },
+     {
+      "id": "c11",
+      "text": "}"
+     }
+    ],
+    "distractors": [
+     {
+      "id": "w1",
+      "text": "        Student student = new Student(\"민수\");"
+     }
+    ],
+    "explanation": "중괄호 초기화로 학생 두 명을 배열에 저장하고, 향상된 for문으로 각 학생의 이름을 출력한다. 단일 변수 선언은 배열이 아니므로 순회할 수 없다."
+   },
+   {
+    "id": "q11",
+    "type": "code_exercise",
+    "title": "학급 평균 구하기",
+    "prompt": "학생 점수의 평균을 실수로 구하도록 완성하시오. (빈칸 2곳)",
+    "lang": "java",
+    "codeTemplate": "class Student {\n    private int score;\n    public Student(int score) { this.score = score; }\n    public int getScore() { return score; }\n}\n\nclass Classroom {\n    private Student[] students;\n    public Classroom(Student[] students) { this.students = students; }\n    public double getAverage() {\n        int total = 0;\n        for (Student student : students) {\n            total += student.getScore();\n        }\n        return [[0]] / students.[[1]];\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Student[] students = { new Student(85), new Student(90) };\n        Classroom classroom = new Classroom(students);\n        System.out.println(classroom.getAverage());\n    }\n}",
+    "tokens": [
+     "(double) total",
+     "total",
+     "students",
+     "length",
+     "size",
+     "count"
+    ],
+    "answers": [
+     "(double) total",
+     "length"
+    ],
+    "result": {
+     "kind": "console",
+     "output": "87.5"
+    },
+    "explanation": "double 평균을 구하려면 정수 나눗셈이 되지 않도록 (double) total로 형변환한다. total만 쓰면 정수 나눗셈이 되어 소수점이 사라진다. 요소 개수는 length로 얻는다.",
+    "inputMode": "tokens"
+   }
+  ],
+  "referenceLabel": "참고노트 보기"
+ }
+}
