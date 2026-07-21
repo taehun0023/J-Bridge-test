@@ -2,12 +2,10 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, BookOpen, User } from 'lucide-react'
+import { Home } from 'lucide-react'
 
 const TABS = [
   { href: '/dashboard', label: 'ホーム', icon: Home, match: (p: string) => p.startsWith('/dashboard') },
-  { href: '/dev', label: '学習', icon: BookOpen, match: (p: string) => p.startsWith('/dev') },
-  { href: '/profile', label: 'マイ', icon: User, match: (p: string) => p.startsWith('/profile') },
 ]
 
 export default function DevMobileShellLayout({ children }: { children: React.ReactNode }) {

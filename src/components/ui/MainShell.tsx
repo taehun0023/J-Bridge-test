@@ -32,7 +32,7 @@ export default function MainShell({
   const hideHeaderOnMobile = pathname.startsWith('/dev')
 
   return (
-    <div className="flex h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex h-dvh bg-zinc-50 dark:bg-zinc-950">
       {/* Desktop sidebar (collapsible) */}
       <div
         className={`hidden shrink-0 overflow-hidden transition-[width] duration-200 lg:block ${
